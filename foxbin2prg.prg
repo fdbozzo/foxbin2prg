@@ -167,7 +167,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
 	o_Conversor			= NULL
-	n_FB2PRG_Version	= 1.0
+	n_FB2PRG_Version	= 1.2
 
 	*******************************************************************************************************************
 	PROCEDURE INIT
@@ -940,9 +940,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarbloque_foxbin2prg" type="method" display="analizarBloque_FoxBin2Prg"/>] ;
-		+ [<memberdata name="classmethodcomment" type="method" display="classMethodComment"/>] ;
+		+ [<memberdata name="getclassmethodcomment" type="method" display="getClassMethodComment"/>] ;
 		+ [<memberdata name="classmethods2memo" type="method" display="classMethods2Memo"/>] ;
-		+ [<memberdata name="classpropertycomment" type="method" display="classPropertyComment"/>] ;
+		+ [<memberdata name="getclasspropertycomment" type="method" display="getClassPropertyComment"/>] ;
 		+ [<memberdata name="classprops2memo" type="method" display="classProps2Memo"/>] ;
 		+ [<memberdata name="createform" type="method" display="createForm"/>] ;
 		+ [<memberdata name="createclasslib" type="method" display="createClasslib"/>] ;
@@ -1199,7 +1199,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE classPropertyComment
+	PROCEDURE getClassPropertyComment
 		LPARAMETERS tcPropName AS STRING, toClase
 
 		#IF .F.
@@ -1221,7 +1221,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE classMethodComment
+	PROCEDURE getClassMethodComment
 		LPARAMETERS tcMethodName AS STRING, toClase
 
 		#IF .F.
@@ -1263,10 +1263,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				IF LEFT( lcPEM, 1 ) == '*'
 					*-- Método
-					lcComentario	= THIS.classMethodComment( SUBSTR(lcPEM,2), toClase )
+					lcComentario	= THIS.getClassMethodComment( SUBSTR(lcPEM,2), toClase )
 				ELSE
 					*-- Propiedad
-					lcComentario	= THIS.classPropertyComment( lcPEM, toClase )
+					lcComentario	= THIS.getClassPropertyComment( lcPEM, toClase )
 				ENDIF
 
 				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -1429,7 +1429,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						STORE '' TO lc_Comentario, lcProp, lcAddobjectAbierto
 						STORE 0 TO lnPropsObj
 
-						IF THIS.lineaExcluida( I, lnBloquesExclusion, @ta_Pos_BloquesExclusion )
+						lcLine = LTRIM( ta_Lineas(I), 0, ' ', CHR(9) )
+
+						IF THIS.lineaExcluida( I, lnBloquesExclusion, @ta_Pos_BloquesExclusion ) ;
+								OR .lineIsOnlyComment( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
+
 							IF NOT EMPTY(lcProcedureAbierto)	&& Líneas del PROCEDURE (de Clase u Objeto)
 								IF '.' $ lcProcedureAbierto AND loObjeto._Procedure_Count > 0
 									.evaluarLineaDeProcedure( @lcLine, ta_Lineas(I), loObjeto._Procedures(loObjeto._Procedure_Count), @lcProcedureAbierto )
@@ -1438,12 +1442,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 								ENDIF
 							ENDIF
 
-							LOOP
-						ENDIF
-
-						lcLine = LTRIM( ta_Lineas(I), 0, ' ', CHR(9) )
-
-						IF .lineIsOnlyComment( @lcLine, @lc_Comentario ) && Vacía o solo Comentarios
 							LOOP
 						ENDIF
 
@@ -1521,11 +1519,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 								lc_Comentario	= ''
 								lcLine 			= LTRIM( ta_Lineas(I), 0, ' ', CHR(9) )
 
-								IF THIS.lineaExcluida( I, lnBloquesExclusion, @ta_Pos_BloquesExclusion )
-									LOOP
-								ENDIF
-								
-								IF .lineIsOnlyComment( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
+								IF THIS.lineaExcluida( I, lnBloquesExclusion, @ta_Pos_BloquesExclusion ) ;
+										OR .lineIsOnlyComment( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
 
 									IF NOT EMPTY(lcProcedureAbierto)	&& Líneas del PROCEDURE
 										IF '.' $ lcProcName AND VARTYPE(loObjeto) = 'O' AND loObjeto._Procedure_Count > 0
@@ -3102,7 +3097,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
 
-			THIS.PROGRAM_HEADER()
+			THIS.write_PROGRAM_HEADER()
 
 			THIS.obtenerNombresObjetosOLEPublic( @la_NombresObjsOle )
 
@@ -3133,7 +3128,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 				THIS.INCLUDES( @loRegClass )
 
-				THIS.CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments )
+				THIS.CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments, @laProtected )
 
 
 				*-------------------------------------------------------------------------------
@@ -3240,7 +3235,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
 
-			THIS.PROGRAM_HEADER()
+			THIS.write_PROGRAM_HEADER()
 
 			THIS.obtenerNombresObjetosOLEPublic( @la_NombresObjsOle )
 
@@ -3285,7 +3280,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				THIS.INCLUDES( @loRegClass )
 
-				THIS.CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments )
+				THIS.CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments, @laProtected )
 
 
 				*-------------------------------------------------------------------------------
@@ -3360,8 +3355,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-	+ [</VFPData>]
+	*	+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
+	*	+ [</VFPData>]
 
 	*******************************************************************************************************************
 	PROCEDURE INIT
@@ -3372,6 +3367,20 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 	*******************************************************************************************************************
 	PROCEDURE DESTROY
 		DODEFAULT()
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_PROGRAM_HEADER
+		*-- Cabecera del PRG e inicio de DEF_CLASS
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
+			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			<<C_FB2PRG_META_I>> Version = "<<TRANSFORM(THIS.n_FB2PRG_Version)>>", SourceFile = "<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
+			*
+		ENDTEXT
 	ENDPROC
 
 
@@ -3435,15 +3444,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			ENDSCAN
 
 
-			*-- Cabecera del PRG e inicio de DEF_CLASS
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				*--------------------------------------------------------------------------------------------------------------------------------------------------------
-				* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
-				* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
-				*--------------------------------------------------------------------------------------------------------------------------------------------------------
-				<<C_FB2PRG_META_I>> Version = "<<TRANSFORM(THIS.n_FB2PRG_Version, '##.##')>>", SourceFile = "<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
-				*
-			ENDTEXT
+			THIS.write_PROGRAM_HEADER()
 
 
 			*-- Directorio de inicio
@@ -3652,7 +3653,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="includes" type="method" display="INCLUDES"/>] ;
 		+ [<memberdata name="obj_zorder_list" type="method" display="OBJ_ZORDER_List"/>] ;
 		+ [<memberdata name="class_properties" type="method" display="CLASS_PROPERTIES"/>] ;
-		+ [<memberdata name="program_header" type="method" display="PROGRAM_HEADER"/>] ;
+		+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_propswithcomments" type="method" display="Get_PropsWithComments"/>] ;
 		+ [<memberdata name="indentarmemo" type="method" display="IndentarMemo"/>] ;
@@ -3896,14 +3897,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE PROGRAM_HEADER
+	PROCEDURE write_PROGRAM_HEADER
 		*-- Cabecera del PRG e inicio de DEF_CLASS
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
 			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
 			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version = "<<TRANSFORM(THIS.n_FB2PRG_Version, '##.##')>>", SourceFile = "<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
+			<<C_FB2PRG_META_I>> Version = "<<TRANSFORM(THIS.n_FB2PRG_Version)>>", SourceFile = "<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
 			*
 		ENDTEXT
 	ENDPROC
@@ -3911,26 +3912,27 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE CLASS_PROPERTIES
-		LPARAMETERS toRegClass, taProps, taPropsWithComments
+		LPARAMETERS toRegClass, taProps, taPropsWithComments, taProtected
 
 		EXTERNAL ARRAY taProps, taPropsWithComments
 
 		TRY
 			LOCAL lnLineCount, lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, lnComments, I ;
-				, laProtected(1), lcPropName, lnProtectedItem, lcComentarios
+				, lcPropName, lnProtectedItem, lcComentarios
 
 			WITH THIS
 				*-- DEFINIR PROPIEDADES ( HIDDEN, PROTECTED, *DEFINED_PEM )
+				DIMENSION taProtected(1)
 				THIS.SortNames( toRegClass.PROPERTIES, @taProps, @lnLineCount, '' )
 				STORE '' TO lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd
 				THIS.Get_PropsWithComments( @taPropsWithComments, @lnComments, toRegClass.RESERVED3 )
-				=ALINES(laProtected, toRegClass.PROTECTED)
+				=ALINES(taProtected, toRegClass.PROTECTED)
 
 				IF lnLineCount > 0 THEN
 					*-- Recorro las propiedades (campo Properties)
 					FOR I = 1 TO lnLineCount
 						lcPropName		= RTRIM( GETWORDNUM( taProps(I), 1, '=' ) )
-						lnProtectedItem	= ASCAN(laProtected, lcPropName, 1, 0, 0, 0)
+						lnProtectedItem	= ASCAN(taProtected, lcPropName, 1, 0, 0, 0)
 
 						*-- Ajustes de algunos casos especiales
 						taProps(I)	= THIS.normalizarAsignacion( taProps(I), @lcComentarios )
@@ -3944,11 +3946,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						CASE lnProtectedItem = 0
 							*-- Propiedad común
 
-						CASE laProtected(lnProtectedItem) == lcPropName
+						CASE taProtected(lnProtectedItem) == lcPropName
 							*-- Propiedad protegida
 							lcProtectedProp	= lcProtectedProp + ',' + lcPropName
 
-						CASE laProtected(lnProtectedItem) == lcPropName + '^'
+						CASE taProtected(lnProtectedItem) == lcPropName + '^'
 							*-- Propiedad oculta
 							lcHiddenProp	= lcHiddenProp + ',' + lcPropName
 
