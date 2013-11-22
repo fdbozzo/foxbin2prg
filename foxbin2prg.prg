@@ -3099,9 +3099,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 			THIS.write_PROGRAM_HEADER()
 
-			THIS.obtenerNombresObjetosOLEPublic( @la_NombresObjsOle )
+			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
-			THIS.crearDefinicionObjetosOLE()
+			THIS.write_DefinicionObjetosOLE()
 
 			*-- Escribo los métodos ordenados
 			lnLastClass		= 0
@@ -3116,19 +3116,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				SCATTER MEMO NAME loRegClass
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
-				THIS.ENDDEFINE_SiCorresponde( lnLastClass )
+				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
-				THIS.DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
+				THIS.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
 
-				THIS.DEFINE_CLASS_AddComments( @loRegClass )
+				THIS.write_Define_Class_COMMENTS( @loRegClass )
 
-				THIS.METADATA( @loRegClass )
+				THIS.write_METADATA( @loRegClass )
 
 				THIS.OBJ_ZORDER_List( @loRegClass )
 
-				THIS.INCLUDES( @loRegClass )
+				THIS.write_INCLUDE( @loRegClass )
 
-				THIS.CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments, @laProtected )
+				THIS.write_CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments, @laProtected )
 
 
 				*-------------------------------------------------------------------------------
@@ -3140,7 +3140,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 					SCATTER MEMO NAME loRegObj
 
-					THIS.ADD_OBJECTS_withProperties( @loRegObj )
+					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
 				ENDSCAN
 
 				GOTO RECORD (lnRecno)
@@ -3151,7 +3151,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				lcMethods	= ''
 				THIS.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
 
-				THIS.CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsWithComments )
+				THIS.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsWithComments )
 
 				lnLastClass		= 1
 				lcMethods		= ''
@@ -3165,7 +3165,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
-					THIS.ADD_OBJECT_Methods( @loRegObj, @loRegClass, @lcMethods )
+					THIS.get_ADD_OBJECT_Methods( @loRegObj, @loRegClass, @lcMethods )
 				ENDSCAN
 
 				THIS.write_ALL_METHODS( @lcMethods )
@@ -3173,7 +3173,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				GOTO RECORD (lnRecno)
 			ENDSCAN
 
-			THIS.ENDDEFINE_SiCorresponde( lnLastClass )
+			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
 			*-- Genero el VC2
 			STRTOFILE( C_FB2PRG_CODE, THIS.c_outputFile )
@@ -3237,9 +3237,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 			THIS.write_PROGRAM_HEADER()
 
-			THIS.obtenerNombresObjetosOLEPublic( @la_NombresObjsOle )
+			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
-			THIS.crearDefinicionObjetosOLE()
+			THIS.write_DefinicionObjetosOLE()
 
 			*-- Escribo los métodos ordenados
 			lnLastObj		= 0
@@ -3268,19 +3268,19 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				SCATTER MEMO NAME loRegClass
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
-				THIS.ENDDEFINE_SiCorresponde( lnLastClass )
+				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
-				THIS.DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
+				THIS.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
 
-				THIS.DEFINE_CLASS_AddComments( @loRegClass )
+				THIS.write_Define_Class_COMMENTS( @loRegClass )
 
-				THIS.METADATA( @loRegClass )
+				THIS.write_METADATA( @loRegClass )
 
 				THIS.OBJ_ZORDER_List( @loRegClass )
 
-				THIS.INCLUDES( @loRegClass )
+				THIS.write_INCLUDE( @loRegClass )
 
-				THIS.CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments, @laProtected )
+				THIS.write_CLASS_PROPERTIES( @loRegClass, @laProps, @laPropsWithComments, @laProtected )
 
 
 				*-------------------------------------------------------------------------------
@@ -3292,7 +3292,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 					SCATTER MEMO NAME loRegObj
 
-					THIS.ADD_OBJECTS_withProperties( @loRegObj )
+					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
 				ENDSCAN
 
 				GOTO RECORD (lnRecno)
@@ -3303,7 +3303,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				lcMethods	= ''
 				THIS.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
 
-				THIS.CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsWithComments )
+				THIS.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsWithComments )
 
 				lnLastClass		= 1
 				lcMethods		= ''
@@ -3317,7 +3317,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
-					THIS.ADD_OBJECT_Methods( @loRegObj, @loRegClass, @lcMethods )
+					THIS.get_ADD_OBJECT_Methods( @loRegObj, @loRegClass, @lcMethods )
 				ENDSCAN
 
 				THIS.write_ALL_METHODS( @lcMethods )
@@ -3325,7 +3325,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				GOTO RECORD (lnRecno)
 			ENDSCAN
 
-			THIS.ENDDEFINE_SiCorresponde( lnLastClass )
+			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
 			*-- Genero el SC2
 			STRTOFILE( C_FB2PRG_CODE, THIS.c_outputFile )
@@ -3640,19 +3640,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="write_all_methods" type="method" display="write_ALL_METHODS"/>] ;
-		+ [<memberdata name="add_object_methods" type="method" display="ADD_OBJECT_Methods"/>] ;
-		+ [<memberdata name="add_objects_withproperties" type="method" display="ADD_OBJECTS_withProperties"/>] ;
-		+ [<memberdata name="define_class_addcomments" type="method" display="DEFINE_CLASS_AddComments"/>] ;
-		+ [<memberdata name="enddefine_sicorresponde" type="method" display="ENDDEFINE_SiCorresponde"/>] ;
+		+ [<memberdata name="get_add_object_methods" type="method" display="get_ADD_OBJECT_Methods"/>] ;
+		+ [<memberdata name="write_add_objects_withproperties" type="method" display="write_ADD_OBJECTS_WithProperties"/>] ;
+		+ [<memberdata name="write_define_class_comments" type="method" display="write_Define_Class_COMMENTS"/>] ;
+		+ [<memberdata name="write_enddefine_sicorresponde" type="method" display="write_ENDDEFINE_SiCorresponde"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" type="method" display="ComprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-		+ [<memberdata name="creardefinicionobjetosole" type="method" display="crearDefinicionObjetosOLE"/>] ;
-		+ [<memberdata name="class_methods" type="method" display="CLASS_METHODS"/>] ;
-		+ [<memberdata name="define_class" type="method" display="DEFINE_CLASS"/>] ;
-		+ [<memberdata name="metadata" type="method" display="METADATA"/>] ;
-		+ [<memberdata name="includes" type="method" display="INCLUDES"/>] ;
+		+ [<memberdata name="write_definicionobjetosole" type="method" display="write_DefinicionObjetosOLE"/>] ;
+		+ [<memberdata name="write_class_methods" type="method" display="write_CLASS_METHODS"/>] ;
+		+ [<memberdata name="write_define_class" type="method" display="write_DEFINE_CLASS"/>] ;
+		+ [<memberdata name="write_metadata" type="method" display="write_METADATA"/>] ;
+		+ [<memberdata name="write_include" type="method" display="write_INCLUDE"/>] ;
 		+ [<memberdata name="obj_zorder_list" type="method" display="OBJ_ZORDER_List"/>] ;
-		+ [<memberdata name="class_properties" type="method" display="CLASS_PROPERTIES"/>] ;
+		+ [<memberdata name="write_class_properties" type="method" display="write_CLASS_PROPERTIES"/>] ;
 		+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_propswithcomments" type="method" display="Get_PropsWithComments"/>] ;
@@ -3660,7 +3660,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="memoinoneline" type="method" display="MemoInOneLine"/>] ;
 		+ [<memberdata name="memowithmultiplelines" type="method" display="MemoWithMultipleLines"/>] ;
 		+ [<memberdata name="normalizarasignacion" type="method" display="normalizarAsignacion"/>] ;
-		+ [<memberdata name="obtenernombresobjetosolepublic" type="method" display="obtenerNombresObjetosOLEPublic"/>] ;
+		+ [<memberdata name="get_nombresobjetosolepublic" type="method" display="get_NombresObjetosOLEPublic"/>] ;
 		+ [<memberdata name="sortnames" type="method" display="SortNames"/>] ;
 		+ [<memberdata name="sortmethod" type="method" display="SortMethod"/>] ;
 		+ [</VFPData>]
@@ -3710,7 +3710,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE ADD_OBJECT_Methods
+	PROCEDURE get_ADD_OBJECT_Methods
 		LPARAMETERS toRegObj, toRegClass, tcMethods
 
 		TRY
@@ -3761,7 +3761,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE ADD_OBJECTS_withProperties
+	PROCEDURE write_ADD_OBJECTS_WithProperties
 		LPARAMETERS toRegObj
 
 		TRY
@@ -3829,7 +3829,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE CLASS_METHODS
+	PROCEDURE write_CLASS_METHODS
 		LPARAMETERS tnMethodCount, taMethods, taCode, taProtected, taPropsWithComments
 		*-- DEFINIR MÉTODOS DE LA CLASE
 		*-- Ubico los métodos protegidos y les cambio la definición
@@ -3911,7 +3911,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE CLASS_PROPERTIES
+	PROCEDURE write_CLASS_PROPERTIES
 		LPARAMETERS toRegClass, taProps, taPropsWithComments, taProtected
 
 		EXTERNAL ARRAY taProps, taPropsWithComments
@@ -4018,7 +4018,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE INCLUDES
+	PROCEDURE write_INCLUDE
 		LPARAMETERS toReg
 		*-- #INCLUDE
 		IF NOT EMPTY(toReg.RESERVED8) THEN
@@ -4058,7 +4058,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE METADATA
+	PROCEDURE write_METADATA
 		LPARAMETERS toRegClass
 
 		*-- Agrego Metadatos de la clase (Baseclass, Timestamp, Scale, Uniqueid)
@@ -4091,7 +4091,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE DEFINE_CLASS_AddComments
+	PROCEDURE write_Define_Class_COMMENTS
 		LPARAMETERS toRegClass
 		*-- Comentario de la clase
 		IF NOT EMPTY(toRegClass.RESERVED7) THEN
@@ -4103,7 +4103,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE DEFINE_CLASS
+	PROCEDURE write_DEFINE_CLASS
 		LPARAMETERS ta_NombresObjsOle, toRegClass
 
 		LOCAL lcOF_Classlib, llOleObject
@@ -4123,7 +4123,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE ENDDEFINE_SiCorresponde
+	PROCEDURE write_ENDDEFINE_SiCorresponde
 		LPARAMETERS tnLastClass
 		IF tnLastClass = 1
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -4135,7 +4135,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE obtenerNombresObjetosOLEPublic
+	PROCEDURE get_NombresObjetosOLEPublic
 		LPARAMETERS ta_NombresObjsOle
 		*-- Obtengo los objetos "OLEPublic"
 		SELECT PADR(OBJNAME,100) OBJNAME ;
@@ -4147,7 +4147,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE crearDefinicionObjetosOLE
+	PROCEDURE write_DefinicionObjetosOLE
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
 
