@@ -3165,10 +3165,10 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
-					THIS.get_ADD_OBJECT_Methods( @loRegObj, @loRegClass, @lcMethods )
+					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
 				ENDSCAN
 
-				THIS.write_ALL_METHODS( @lcMethods )
+				THIS.write_ALL_OBJECT_METHODS( @lcMethods )
 
 				GOTO RECORD (lnRecno)
 			ENDSCAN
@@ -3317,10 +3317,10 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
-					THIS.get_ADD_OBJECT_Methods( @loRegObj, @loRegClass, @lcMethods )
+					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
 				ENDSCAN
 
-				THIS.write_ALL_METHODS( @lcMethods )
+				THIS.write_ALL_OBJECT_METHODS( @lcMethods )
 
 				GOTO RECORD (lnRecno)
 			ENDSCAN
@@ -3639,8 +3639,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="write_all_methods" type="method" display="write_ALL_METHODS"/>] ;
-		+ [<memberdata name="get_add_object_methods" type="method" display="get_ADD_OBJECT_Methods"/>] ;
+		+ [<memberdata name="write_all_object_methods" type="method" display="write_ALL_OBJECT_METHODS"/>] ;
+		+ [<memberdata name="get_add_object_methods" type="method" display="get_ADD_OBJECT_METHODS"/>] ;
 		+ [<memberdata name="write_add_objects_withproperties" type="method" display="write_ADD_OBJECTS_WithProperties"/>] ;
 		+ [<memberdata name="write_define_class_comments" type="method" display="write_Define_Class_COMMENTS"/>] ;
 		+ [<memberdata name="write_enddefine_sicorresponde" type="method" display="write_ENDDEFINE_SiCorresponde"/>] ;
@@ -3684,7 +3684,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_ALL_METHODS
+	PROCEDURE write_ALL_OBJECT_METHODS
 		LPARAMETERS tcMethods
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
@@ -3710,7 +3710,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE get_ADD_OBJECT_Methods
+	PROCEDURE get_ADD_OBJECT_METHODS
 		LPARAMETERS toRegObj, toRegClass, tcMethods
 
 		TRY
@@ -4925,6 +4925,7 @@ DEFINE CLASS CL_OBJETO AS CUSTOM
 		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
 		+ [<memberdata name="_uniqueid" type="property" display="_UniqueID"/>] ;
 		+ [<memberdata name="_user" type="property" display="_User"/>] ;
+		+ [<memberdata name="_zorder" type="property" display="_ZOrder"/>] ;
 		+ [</VFPData>]
 
 	DIMENSION _Props[1,1], _Procedures[1]
@@ -4942,6 +4943,7 @@ DEFINE CLASS CL_OBJETO AS CUSTOM
 	_Procedure_Count	= 0
 	_User				= ''
 	_Pendiente			= .T.
+	_ZOrder				= 0
 
 
 	************************************************************************************************
