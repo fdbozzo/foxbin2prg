@@ -24,4 +24,6 @@ AutoIncrement=.T.
 [OLEServers]
 [OLEServersEnd]
 [ProjectFiles]
+1130644423,P,foxbin2prg.prg,.F.,.T.,1252,,,Conversor
+1131721714,T,config\config.fpw,.F.,.F.,1252,,,
 [EOF]
