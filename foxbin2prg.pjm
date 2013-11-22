@@ -1,0 +1,27 @@
+Version=  1.20
+Author=Fernando D. Bozzo
+Company=
+Address=
+City=Madrid
+State=
+Zip=
+Country=Spain
+SaveCode=.T.
+Debug=.T.
+Encrypt=.F.
+NoLogo=.F.
+CommentStyle=1
+Comments=
+CompanyName= 
+FileDescription= 
+LegalCopyright=
+LegalTrademarks=
+ProductName= 
+Major=1
+Minor=0
+Revision=   2
+AutoIncrement=.T.
+[OLEServers]
+[OLEServersEnd]
+[ProjectFiles]
+[EOF]
