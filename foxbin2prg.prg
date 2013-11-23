@@ -2557,32 +2557,32 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						ENDIF
 
 						DO CASE
-						CASE NOT llProjectProperties_Completed AND .analizarBloque_ProjectProperties( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llProjectProperties_Completed	= .T.
-
-						CASE NOT llTextFiles_Completed AND .analizarBloque_TextFiles( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llTextFiles_Completed	= .T.
-
-						CASE NOT llExcludedFiles_Completed AND .analizarBloque_ExcludedFiles( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llExcludedFiles_Completed	= .T.
-
-						CASE NOT llFileComments_Completed AND .analizarBloque_FileComments( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llFileComments_Completed	= .T.
-
-						CASE NOT llBuildProj_Completed AND .analizarBloque_BuildProj( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llBuildProj_Completed	= .T.
-
-						CASE .analizarBloque_ServerData( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							*-- Puede haber varios servidores, por eso se siguen valuando
-
-						CASE NOT llServerHead_Completed AND .analizarBloque_ServerHead( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llServerHead_Completed	= .T.
+						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llFoxBin2Prg_Completed	= .T.
 
 						CASE NOT llDevInfo_Completed AND .analizarBloque_DevInfo( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
 							llDevInfo_Completed	= .T.
 
-						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
-							llFoxBin2Prg_Completed	= .T.
+						CASE NOT llServerHead_Completed AND .analizarBloque_ServerHead( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llServerHead_Completed	= .T.
+
+						CASE .analizarBloque_ServerData( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							*-- Puede haber varios servidores, por eso se siguen valuando
+
+						CASE NOT llBuildProj_Completed AND .analizarBloque_BuildProj( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llBuildProj_Completed	= .T.
+
+						CASE NOT llFileComments_Completed AND .analizarBloque_FileComments( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llFileComments_Completed	= .T.
+
+						CASE NOT llExcludedFiles_Completed AND .analizarBloque_ExcludedFiles( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llExcludedFiles_Completed	= .T.
+
+						CASE NOT llTextFiles_Completed AND .analizarBloque_TextFiles( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llTextFiles_Completed	= .T.
+
+						CASE NOT llProjectProperties_Completed AND .analizarBloque_ProjectProperties( toProject, @lcLine, @ta_Lineas, @I, lnLineas )
+							llProjectProperties_Completed	= .T.
 
 						ENDCASE
 
@@ -2867,7 +2867,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						LOOP	&& Saltear comentarios
 
 					OTHERWISE
-						lcFile				= ALLTRIM( STRTRAN( CHRTRAN( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ), [' ], [] ), 'lcCurDir+', '', 1, 1, 1) )
+						lcFile				= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 						lcComment			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) )
 						loFile				= toProject( lcFile )
 						loFile._Comments	= lcComment
@@ -2925,7 +2925,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						LOOP	&& Saltear comentarios
 
 					OTHERWISE
-						lcFile			= ALLTRIM( STRTRAN( CHRTRAN( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ), [' ], [] ), 'lcCurDir+', '', 1, 1, 1) )
+						lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 						llExclude		= EVALUATE( ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) ) )
 						loFile			= toProject( lcFile )
 						loFile._Exclude	= llExclude
@@ -2983,7 +2983,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						LOOP	&& Saltear comentarios
 
 					OTHERWISE
-						lcFile			= ALLTRIM( STRTRAN( CHRTRAN( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ), [' ], [] ), 'lcCurDir+', '', 1, 1, 1) )
+						lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 						lcType			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) )
 						loFile			= toProject( lcFile )
 						loFile._Type	= lcType
@@ -3040,7 +3040,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 					CASE LEFT( tcLine, 9 ) == '.SetMain('
 						*-- Cambio "SetMain()" por "_MainProg ="
-						lcLine		= '._MainProg = ' + STREXTRACT( ALLTRIM( tcLine), '.SetMain(', ')', 1, 1 )
+						lcLine		= '._MainProg = ' + LOWER( STREXTRACT( ALLTRIM( tcLine), '.SetMain(', ')', 1, 1 ) )
 						toProject.setParsedProjInfoLine( lcLine )
 
 					OTHERWISE
@@ -3420,7 +3420,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR MAINPROG
 
 			IF FOUND()
-				loProject._MainProg	= ALLTRIM( NAME, 0, ' ', CHR(0) )
+				loProject._MainProg	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
 			ENDIF
 
 
@@ -3428,8 +3428,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR TYPE == 'W'
 
 			IF FOUND()
-				loProject._ProjectHookLibrary	= ALLTRIM( NAME, 0, ' ', CHR(0) )
-				loProject._ProjectHookClass	= ALLTRIM( RESERVED1, 0, ' ', CHR(0) )
+				loProject._ProjectHookLibrary	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
+				loProject._ProjectHookClass	= LOWER( ALLTRIM( RESERVED1, 0, ' ', CHR(0) ) )
 			ENDIF
 
 
@@ -3437,14 +3437,14 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR TYPE == 'i'
 
 			IF FOUND()
-				loProject._Icon	= ALLTRIM( NAME, 0, ' ', CHR(0) )
+				loProject._Icon	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
 			ENDIF
 
 
 			*-- Escaneo el proyecto
 			SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS MEMO NAME loReg
-				loReg.NAME		= ALLTRIM( loReg.NAME, 0, ' ', CHR(0) )
+				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
 				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
 				loProject.ADD( loReg, loReg.NAME )
 			ENDSCAN
