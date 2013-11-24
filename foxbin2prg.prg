@@ -1,5 +1,5 @@
 *---------------------------------------------------------------------------------------------------
-* Módulo.........: FOXBIN2PRG.PRG
+* Módulo.........: FOXBIN2PRG.PRG - PARA VISUAL FOXPRO 9.0
 * Autor..........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com)
 * Fecha creación.: 04/11/2013
 *
@@ -28,8 +28,10 @@
 *
 *---------------------------------------------------------------------------------------------------
 * Historial de cambios y notas importantes
-* 04/11/2013	FDBOZZO		Creación inicial de las clases y soporte de los archivos VCX
-*
+* 04/11/2013	FDBOZZO		v1.0 Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
+* 22/11/2013	FDBOZZO		v1.1 Corrección de bugs
+* 23/11/2013	FDBOZZO		v1.2 Corrección de bugs, limpieza de código y refactorización
+* 24/11/2013	FDBOZZO		v1.3 Corrección de bugs, limpieza de código y refactorización
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
 *	PROPIEDAD				ARREGLO Y EJEMPLO
@@ -83,6 +85,8 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_BUILDPROJ_F	'*</BuildProj>'
 #DEFINE C_PROJPROPS_I	'*<ProjectProperties>'
 #DEFINE C_PROJPROPS_F	'*</ProjectProperties>'
+#DEFINE C_FILE_META_I	'*< FileMetadata:'
+#DEFINE C_FILE_META_F	'/>'
 #DEFINE C_FILE_CMTS_I	'*<FileComments>'
 #DEFINE C_FILE_CMTS_F	'*</FileComments>'
 #DEFINE C_FILE_EXCL_I	'*<ExcludedFiles>'
@@ -165,7 +169,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
 	o_Conversor			= NULL
-	n_FB2PRG_Version	= 1.2
+	n_FB2PRG_Version	= 1.3
 
 	*******************************************************************************************************************
 	PROCEDURE INIT
@@ -288,7 +292,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
 			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CR_LF ;
 			+ toEx.LINECONTENTS + CR_LF + CR_LF ;
-			+ EVL(toEx.UserValue,'')
+			+ EVL(toEx.USERVALUE,'')
 		RETURN lcError
 	ENDPROC
 
@@ -310,6 +314,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="evaluarlineadeprocedure" type="method" display="evaluarLineaDeProcedure"/>] ;
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
 		+ [<memberdata name="getnext_bak" type="method" display="getNext_BAK"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" type="method" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="identificarbloquesdeexclusion" type="method" display="identificarBloquesDeExclusion"/>] ;
 		+ [<memberdata name="lineisonlycomment" type="method" display="lineIsOnlyComment"/>] ;
 		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
@@ -332,6 +337,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	c_Type				= ''
 	includeFile			= ''
 	c_CurDir			= ''
+
 
 	*******************************************************************************************************************
 	PROCEDURE INIT
@@ -383,6 +389,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			, tcExtension = 'EXE', 'Z' ;
 			, tcExtension = 'MNX', 'M' ;
 			, tcExtension = 'TXT', 'T' ;
+			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
 			, 'x' )
 	ENDPROC
@@ -393,11 +400,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS tcLine, tcComment
 		LOCAL llLineIsOnlyComment, ln_AT_Cmt
 
-		IF '&'+'&' $ tcLine
-			ln_AT_Cmt	= AT( '&'+'&', tcLine)
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito comentarios. Ej: '#IF .F.&&cmt' ==> '#IF .F.'
-		ENDIF
+		THIS.get_SeparatedLineAndComment( @tcLine, @tcComment )
 
 		DO CASE
 		CASE LEFT(tcLine,2) == '*<'
@@ -409,6 +412,21 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ENDCASE
 
 		RETURN llLineIsOnlyComment
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_SeparatedLineAndComment
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+
+		IF '&'+'&' $ tcLine
+			ln_AT_Cmt	= AT( '&'+'&', tcLine)
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito comentarios. Ej: '#IF .F.&&cmt' ==> '#IF .F.'
+		ENDIF
+
+		RETURN
 	ENDPROC
 
 
@@ -683,7 +701,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		CASE lcPropName == '_memberdata'
 			tcAsignacion = STUFF( tcAsignacion, 15, 0, '[') + ']'
 
-		CASE NOT THIS.ComprobarExpresionValida( tcAsignacion, @lnCodError, @lcExpNormalizada )
+		CASE NOT THIS.comprobarExpresionValida( tcAsignacion, @lnCodError, @lcExpNormalizada )
 			*-- La mayoría de los errores deben relanzarse, ya que intentar arreglarlos
 			*-- puede empeorar las cosas con asignaciones válidas para guardar pero no
 			*-- para la lógica del programa.
@@ -756,6 +774,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="getclassmethodcomment" type="method" display="getClassMethodComment"/>] ;
 		+ [<memberdata name="classmethods2memo" type="method" display="classMethods2Memo"/>] ;
 		+ [<memberdata name="getclasspropertycomment" type="method" display="getClassPropertyComment"/>] ;
+		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" type="method" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
 		+ [<memberdata name="classprops2memo" type="method" display="classProps2Memo"/>] ;
 		+ [<memberdata name="createform" type="method" display="createForm"/>] ;
 		+ [<memberdata name="createclasslib" type="method" display="createClasslib"/>] ;
@@ -767,7 +786,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="insert_allobjects" type="method" display="insert_AllObjects"/>] ;
 		+ [<memberdata name="insert_object" type="method" display="insert_Object"/>] ;
 		+ [<memberdata name="objectmethods2memo" type="method" display="objectMethods2Memo"/>] ;
+		+ [<memberdata name="get_valuebyname_fromlistnameswithvalues" type="method" display="get_ValueByName_FromListNamesWithValues"/>] ;
 		+ [</VFPData>]
+
 
 	*******************************************************************************************************************
 	PROCEDURE INIT
@@ -786,6 +807,90 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*LPARAMETERS
 
 		DODEFAULT()
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	FUNCTION get_ValueByName_FromListNamesWithValues
+		*-- ASIGNO EL VALOR DEL ARRAY DE DATOS Y VALORES PARA LA PROPIEDAD INDICADA
+		LPARAMETERS tcPropName, tcValueType, taPropsAndValues_List
+		LOCAL lnPos, luPropValue
+		
+		lnPos	= ASCAN( taPropsAndValues_List, tcPropName, 1, 0, 1, 1+2+4+8)
+
+		IF lnPos = 0 OR EMPTY( taPropsAndValues_List( lnPos, 2 ) )
+			*-- Valores no encontrados o vacíos
+			luPropValue	= ''
+		ELSE
+			luPropValue	= taPropsAndValues_List( lnPos, 2 )
+		ENDIF
+		
+		DO CASE
+		CASE tcValueType = 'I'
+			luPropValue	= CAST( luPropValue AS Integer )
+
+		CASE tcValueType = 'N'
+			luPropValue	= CAST( luPropValue AS Double )
+
+		CASE tcValueType = 'T'
+			luPropValue	= CAST( luPropValue AS Datetime )
+
+		CASE tcValueType = 'D'
+			luPropValue	= CAST( luPropValue AS Date )
+
+		CASE tcValueType = 'E'
+			luPropValue	= EVALUATE( luPropValue )
+
+		OTHERWISE && Asumo 'C' para lo demás
+			luPropValue	= luPropValue
+
+		ENDCASE
+		
+		RETURN luPropValue
+	ENDFUNC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_ListNamesWithValuesFrom_InLine_MetadataTag
+		*-- OBTENGO EL ARRAY DE DATOS Y VALORES DE LA LINEA DE METADATOS INDICADA
+		*-- NOTA: Los valores NO PUEDEN contener comillas dobles en su valor, ya que generaría un error al parsearlos.
+		*-- Ejemplo:
+		*< FileMetadata: Type="V" Cpid="1252" Timestamp="1131901580" ID="1129207528" ObjRev="544" />
+		*< OLE: Nombre="frm_form.Pageframe1.Page1.Cnt_controles_h.Olecontrol1" Parent="frm_form.Pageframe1.Page1.Cnt_controles_h" ObjName="Olecontrol1" Checksum="1685567300" Value="0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPg...ADAP7AAAA==" />
+		*--
+		LPARAMETERS tcLineWithMetadata, taPropsAndValues_List, tnPropsAndValues_Count, tcLeftTag, tcRightTag
+		EXTERNAL ARRAY taPropsAndValues_List
+		LOCAL lcMetadatos, I, X, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+		STORE '' TO lcVirtualMeta
+		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I, X
+
+		lcMetadatos		= ALLTRIM( STREXTRACT( tcLineWithMetadata, tcLeftTag, tcRightTag, 1, 1) )
+		lnCantComillas	= OCCURS( '"', lcMetadatos )
+		
+		IF lnCantComillas % 2 <> 0	&& Valido que las comillas "" sean pares
+			ERROR "Error de datos: No se puede parsear porque las comillas no son pares en la línea [" + lcMetadatos + "]"
+		ENDIF
+		
+		lnLastPos	= 1
+		DIMENSION taPropsAndValues_List( lnCantComillas / 2, 2 )
+		
+		FOR I = 1 TO lnCantComillas STEP 2
+			X	= X + 1
+
+			*  Type="V" Cpid="1252" 
+			*       ^ ^					=> Posiciones del par de comillas dobles
+			lnPos1	= AT( '"', lcMetadatos, I )
+			lnPos2	= AT( '"', lcMetadatos, I + 1 )
+			
+			*  Type="V" Cpid="1252" 
+			*          ^     ^    ^			=> LastPos, lnPos1 y lnPos2
+			taPropsAndValues_List(X,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
+			taPropsAndValues_List(X,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
+
+			lnLastPos = lnPos2 + 1
+		ENDFOR
+
+		RETURN
 	ENDPROC
 
 
@@ -986,16 +1091,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*------------------------------------------------------
 		LPARAMETERS toModulo, tcLine, ta_Lineas, I, tnLineas
 
-		LOCAL llBloqueEncontrado, X
+		LOCAL llBloqueEncontrado, X, laPropsAndValues_List(1,2), lnPropsAndValues_Count
 
 		IF LEFT( tcLine + ' ', LEN(C_FB2PRG_META_I) + 1 ) == C_FB2PRG_META_I + ' '
 			llBloqueEncontrado	= .T.
 
 			*-- Metadatos del módulo
-			tcLine					= ALLTRIM( STREXTRACT( tcLine, C_FB2PRG_META_I, C_FB2PRG_META_F, 1, 1 ) )
-			tcLine					= CHRTRAN( tcLine, ['], ["] )
-			toModulo._Version		= VAL( ALLTRIM( STREXTRACT( tcLine, 'version = "', '"', 1, 1 ) ) )
-			toModulo._SourceFile	= ALLTRIM( STREXTRACT( tcLine, 'SourceFile = "', '"', 1, 1 ) )
+			THIS.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues_List, @lnPropsAndValues_Count ;
+				, C_FB2PRG_META_I, C_FB2PRG_META_F )
+			toModulo._Version		= THIS.get_ValueByName_FromListNamesWithValues( 'Version', 'N', @laPropsAndValues_List )
+			toModulo._SourceFile	= THIS.get_ValueByName_FromListNamesWithValues( 'SourceFile', 'C', @laPropsAndValues_List )
 		ENDIF
 
 		RETURN llBloqueEncontrado
@@ -1204,6 +1309,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE getClassPropertyComment
+		*-- Devuelve el comentario (columna 2 del array toClase._Props) de la propiedad indicada,
+		*-- buscándola en la columna 2 por su nombre.
 		LPARAMETERS tcPropName AS STRING, toClase
 
 		#IF .F.
@@ -1393,7 +1500,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		TRY
 			LOCAL loObjeto, X, lcObjName
-	
+
 			IF toClase._AddObject_Count > 0
 
 				*-- Armo array con el orden Z de los objetos
@@ -1406,7 +1513,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDFOR
 
 				ASORT( laObjNames, 2, -1, 0, 1 )
-				
+
 
 				*-- Escribo los objetos en el orden Z
 				FOR X = 1 TO toClase._AddObject_Count
@@ -1463,9 +1570,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL I, X, Z, lnCodError, loEx as Exception, lnPrimerID, lnLineas, lnBloquesExclusion ;
+			LOCAL I, X, Z, lnCodError, loEx AS EXCEPTION, lnPrimerID, lnLineas, lnBloquesExclusion ;
 				, ln_ID_LimitesDeCabecera, ln_AT_Cmt, lc_Comentario, la_cab_props(1) ;
-				, ln_cab_props, lcProp, lnPropsObj, ln_AT, lnOle_Len ;
+				, ln_cab_props, lcProp, lnPropsObj, ln_AT, lnOle_Len, laPropsAndValues_List(1,2), lnPropsAndValues_Count ;
 				, lcProcedureAbierto, lcAddobjectAbierto, lcLine, lnLine_Len, lcProcName ;
 				, loOle AS CL_OLE OF 'FOXBIN2PRG.PRG' ;
 				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG' ;
@@ -1527,17 +1634,19 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						CASE LEFT( lcLine + ' ', lnOle_Len + 1 ) == C_OLE_I + ' '
 							*-- Se encontró una definición de objeto OLE
-							*< OLE: Nombre = "frm_d.ole_ImageControl2" parent = "frm_d" objname = "ole_ImageControl2" checksum = "4171274922" value = "b64-value" />
-							lcLine			= STREXTRACT( lcLine, C_OLE_I, C_OLE_F, 1, 1 )
-							lcLine			= CHRTRAN( lcLine, ['], ["] )
+							*< OLE: Nombre="frm_d.ole_ImageControl2" parent="frm_d" objname="ole_ImageControl2" checksum="4171274922" value="b64-value" />
 							loOle			= NULL
 							loOle			= CREATEOBJECT('CL_OLE')
+							
+							.get_ListNamesWithValuesFrom_InLine_MetadataTag( @lcLine, @laPropsAndValues_List, @lnPropsAndValues_Count ;
+								, C_OLE_I, C_OLE_F )
 
-							loOle._Nombre	= ALLTRIM( STREXTRACT( lcLine, ' Nombre = "', '"', 1, 1 ) )
-							loOle._Parent	= ALLTRIM( STREXTRACT( lcLine, ' Parent = "', '"', 1, 1 ) )
-							loOle._ObjName	= ALLTRIM( STREXTRACT( lcLine, ' ObjName = "', '"', 1, 1 ) )
-							loOle._CheckSum	= ALLTRIM( STREXTRACT( lcLine, ' CheckSum = "', '"', 1, 1 ) )
-							loOle._Value	= STRCONV( ALLTRIM( STREXTRACT( lcLine, ' value = "', '"', 1, 1 ) ), 14 )
+							loOle._Nombre		= .get_ValueByName_FromListNamesWithValues( 'Nombre', 'C', @laPropsAndValues_List )
+							loOle._Parent		= .get_ValueByName_FromListNamesWithValues( 'Parent', 'C', @laPropsAndValues_List )
+							loOle._ObjName		= .get_ValueByName_FromListNamesWithValues( 'ObjName', 'C', @laPropsAndValues_List )
+							loOle._CheckSum		= .get_ValueByName_FromListNamesWithValues( 'CheckSum', 'C', @laPropsAndValues_List )
+							loOle._Value		= .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues_List )
+
 							toModulo.add_OLE( loOle )
 
 							IF EMPTY( loOle._Value )
@@ -1575,6 +1684,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							loClase._Comentario		= lc_Comentario
 							loClase._Inicio			= I
 							loClase._Ini_Cab		= I + 1
+
 							toModulo.add_Class( loClase )
 
 							*-- Ubico el objeto ole por su nombre (parent+objname), que no se repite.
@@ -1632,15 +1742,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 								CASE LEFT(lcLine, LEN(C_METADATA_I)) == C_METADATA_I	&& METADATA de la CLASE
-									lcLine						= CHRTRAN( lcLine, ['], ["] )
-									loClase._MetaData			= STREXTRACT( lcLine, C_METADATA_I, C_METADATA_F, 1, 1 )
-									loClase._BaseClass			= ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' BaseClass = "', '"', 1, 1 ) )
-									loClase._TimeStamp			= INT( .RowTimeStamp( EVALUATE( '{^' + ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' Timestamp = "', '"', 1, 1 ) ) + '}') ) )
-									loClase._Scale				= ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' Scale = "', '"', 1, 1 ) )
-									loClase._UniqueID			= ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' UniqueID = "', '"', 1, 1 ) )
-									loClase._ProjectClassIcon	= ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' ProjectClassIcon = "', '"', 1, 1 ) )
-									loClase._ClassIcon			= ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' ClassIcon = "', '"', 1, 1 ) )
-									loClase._Ole2				= ALLTRIM( STREXTRACT( loClase._MetaData + ',', ' OLEObject = "', '"', 1, 1 ) )
+									*< CLASSDATA: Baseclass="custom" Timestamp="2013/11/19 11:51:04" Scale="Foxels" Uniqueid="_3WF0VSTN1" ProjectClassIcon="container.ico" ClassIcon="toolbar.ico" />
+
+									.get_ListNamesWithValuesFrom_InLine_MetadataTag( @lcLine, @laPropsAndValues_List, @lnPropsAndValues_Count ;
+										, C_METADATA_I, C_METADATA_F )
+
+									loClase._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues_List )
+									loClase._TimeStamp			= INT( .RowTimeStamp(  .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues_List ) ) )
+									loClase._Scale				= .get_ValueByName_FromListNamesWithValues( 'Scale', 'C', @laPropsAndValues_List )
+									loClase._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues_List )
+									loClase._ProjectClassIcon	= .get_ValueByName_FromListNamesWithValues( 'ProjectClassIcon', 'C', @laPropsAndValues_List )
+									loClase._ClassIcon			= .get_ValueByName_FromListNamesWithValues( 'ClassIcon', 'C', @laPropsAndValues_List )
+									loClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'Ole2', 'C', @laPropsAndValues_List )
 
 									IF NOT EMPTY( loClase._Ole2 )	&& Le agrego "OLEObject = " delante
 										loClase._Ole2	= 'OLEObject = ' + loClase._Ole2 + CR_LF
@@ -1720,14 +1833,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 									IF NOT EMPTY(lc_Comentario) AND C_END_OBJECT_I $ lc_Comentario && Fin del ADD OBJECT y METADATOS
 										*< END OBJECT: baseclass = "olecontrol" Uniqueid = "_3X50L3I7V" OLEObject = "C:\WINDOWS\system32\FOXTLIB.OCX" checksum = "4101493921" />
-										lc_Comentario		= ALLTRIM( STREXTRACT( lc_Comentario, C_END_OBJECT_I, C_END_OBJECT_F, 1, 1 ) ) + ','
-										lc_Comentario		= CHRTRAN( lc_Comentario, ['], ["] )
-										loObjeto._ClassLib	= ALLTRIM( STREXTRACT( lc_Comentario, 'ClassLib = "', '"', 1, 1 ) )
-										loObjeto._BaseClass	= ALLTRIM( STREXTRACT( lc_Comentario, 'BaseClass = "', '"', 1, 1 ) )
-										loObjeto._UniqueID	= ALLTRIM( STREXTRACT( lc_Comentario, 'UniqueID = "', '"', 1, 1 ) )
-										loObjeto._Ole2		= ALLTRIM( STREXTRACT( lc_Comentario, 'OLEObject = "', '"', 1, 1 ) )
-										loObjeto._ZOrder	= INT( VAL( ALLTRIM( STREXTRACT( lc_Comentario, 'ZOrder = "', '"', 1, 1 ) ) ) )
-										loObjeto._TimeStamp	= INT( .RowTimeStamp( EVALUATE( '{^' + ALLTRIM( STREXTRACT( lc_Comentario + ',', 'Timestamp = "', '"', 1, 1 ) ) + '}' ) ) )
+
+										.get_ListNamesWithValuesFrom_InLine_MetadataTag( @lc_Comentario, @laPropsAndValues_List, @lnPropsAndValues_Count ;
+											, C_END_OBJECT_I, C_END_OBJECT_F )
+
+										loObjeto._ClassLib			= .get_ValueByName_FromListNamesWithValues( 'ClassLib', 'C', @laPropsAndValues_List )
+										loObjeto._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues_List )
+										loObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues_List )
+										loObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'Ole2', 'C', @laPropsAndValues_List )
+										loObjeto._ZOrder			= .get_ValueByName_FromListNamesWithValues( 'ZOrder', 'I', @laPropsAndValues_List )
+										loObjeto._TimeStamp			= INT( .RowTimeStamp( .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues_List ) ) )
 
 										IF NOT EMPTY( loObjeto._Ole2 )	&& Le agrego "OLEObject = " delante
 											loObjeto._Ole2		= 'OLEObject = ' + loObjeto._Ole2 + CR_LF
@@ -1773,7 +1888,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 			*loEx.UserValue	= 'ATENCION: EL ERROR PODRIA SER DEL PROGRAMA FUENTE' + CR_LF + CR_LF ;
-				+ JUSTEXT(THIS.c_inputFile) + ' Line ' + TRANSFORM(I) + ':' + ta_Lineas(I)
+			+ JUSTEXT(THIS.c_inputFile) + ' Line ' + TRANSFORM(I) + ':' + ta_Lineas(I)
 
 			IF THIS.l_Debug
 				SET STEP ON
@@ -2426,24 +2541,28 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 			THIS.doBackup()
 
+			*-- Creo solo la cabecera del proyecto
 			STRTOFILE( '', '__newproject.f2b' )
 			BUILD PROJECT (THIS.c_outputFile) FROM '__newproject.f2b'
 			ERASE ( '__newproject.f2b' )
 
 			USE (THIS.c_outputFile) ALIAS TABLABIN AGAIN SHARED
-			
+
 			lcMainProg	= ''
-			
+
 			IF NOT EMPTY(toProject._MainProg)
-				lcMainProg	= LOWER( SYS(2014, toProject._MainProg, ADDBS(JUSTPATH(toProject._HomeDir)) ) )			
+				lcMainProg	= LOWER( SYS(2014, toProject._MainProg, ADDBS(JUSTPATH(toProject._HomeDir)) ) )
 			ENDIF
 
-			*-- Actualizo información del Header
-			SCATTER FIELDS DEVINFO,RESERVED2 MEMO NAME loReg
-			loReg.DEVINFO	= toProject.getRowDeviceInfo()
-			loServerHead	= toProject._ServerHead
-			loReg.RESERVED2	= loServerHead.getRowServerInfo()
-			GATHER NAME loReg FIELDS DEVINFO,RESERVED2 MEMO
+			*-- Actualizo información del HEADER
+			SCATTER FIELDS DEVINFO,RESERVED2,CMNTSTYLE,NOLOGO,SAVECODE MEMO NAME loReg
+			loReg.DEVINFO		= toProject.getRowDeviceInfo()
+			loServerHead		= toProject._ServerHead
+			loReg.RESERVED2		= loServerHead.getRowServerInfo()
+			loReg.CMNTSTYLE		= toProject._CmntStyle
+			loReg.NOLOGO		= toProject._NoLogo
+			loReg.SAVECODE		= toProject._SaveCode
+			GATHER NAME loReg FIELDS DEVINFO,RESERVED2,CMNTSTYLE,NOLOGO,SAVECODE MEMO
 
 			*-- Si hay ProjectHook, reutilizo registro del archivo dummy
 			GOTO RECORD 2
@@ -2452,7 +2571,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				*-- Erase Dummy file record '__newproject.f2b'
 				DELETE
 			ELSE
-				*-- Project Hook
+				*-- PROJECT HOOK
 				REPLACE ;
 					NAME WITH toProject._ProjectHookLibrary + CHR(0), ;
 					TYPE WITH 'W', ;
@@ -2461,7 +2580,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					RESERVED1 WITH toProject._ProjectHookClass + CHR(0)
 			ENDIF
 
-			*-- Si hay icono de proyecto, lo inserto
+			*-- Si hay ICONO de proyecto, lo inserto
 			IF NOT EMPTY(toProject._Icon)
 				INSERT INTO TABLABIN ;
 					( NAME ;
@@ -2475,7 +2594,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					, UPPER(JUSTSTEM(toProject._Icon)) )
 			ENDIF
 
-			*-- Agrego los archivos
+			*-- Agrego los ARCHIVOS
 			FOR EACH loFile IN toProject FOXOBJECT
 				INSERT INTO TABLABIN ;
 					( NAME ;
@@ -2484,6 +2603,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					, MAINPROG ;
 					, COMMENTS ;
 					, LOCAL ;
+					, CPID ;
+					, ID ;
+					, TIMESTAMP ;
+					, OBJREV ;
 					, KEY ) ;
 					VALUES ;
 					( loFile._Name + CHR(0) ;
@@ -2492,6 +2615,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					, (loFile._Name == lcMainProg) ;
 					, loFile._Comments ;
 					, .T. ;
+					, loFile._CPID ;
+					, loFile._ID ;
+					, loFile._TimeStamp ;
+					, loFile._ObjRev ;
 					, UPPER(JUSTSTEM(loFile._Name)) )
 			ENDFOR
 
@@ -2617,7 +2744,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, X ;
+			LOCAL llBloqueEncontrado, lcComment, lcMetadatos, X, luValor ;
+				, laPropsAndValues_List(1,2), lnPropsAndValues_Count ;
 				, loFile AS CL_PROJ_FILE OF 'FOXBIN2PRG.PRG'
 
 			IF LEFT( tcLine, LEN(C_BUILDPROJ_I) ) == C_BUILDPROJ_I
@@ -2625,28 +2753,43 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				STORE NULL TO loProject, loFile
 				X = I + 1
 
-				FOR I = X TO tnLineas
-					tcLine = LTRIM( ta_Lineas(I), 0, ' ', CHR(9) )
+				WITH THIS
+					FOR I = X TO tnLineas
+						lcComment	= ''
+						tcLine		= LTRIM( ta_Lineas(I), 0, ' ', CHR(9) )
 
-					DO CASE
-					CASE LEFT( tcLine, LEN(C_BUILDPROJ_F) ) == C_BUILDPROJ_F
-						I = I + 1
-						EXIT
+						DO CASE
+						CASE LEFT( tcLine, LEN(C_BUILDPROJ_F) ) == C_BUILDPROJ_F
+							I = I + 1
+							EXIT
 
-					CASE THIS.lineIsOnlyComment( @tcLine )
-						LOOP	&& Saltear comentarios
+						CASE .lineIsOnlyComment( @tcLine, @lcComment )
+							LOOP	&& Saltear comentarios
 
-					CASE UPPER( LEFT( tcLine, 14 ) ) == 'BUILD PROJECT '
-						LOOP
+						CASE UPPER( LEFT( tcLine, 14 ) ) == 'BUILD PROJECT '
+							LOOP
 
-					CASE UPPER( LEFT( tcLine, 5 ) ) == '.ADD('
-						* loFile: NAME,TYPE,EXCLUDE,COMMENTS
-						tcLine			= CHRTRAN( tcLine, ["] + '[]', "'''" )	&& Convierto "[] en '
-						loFile			= CREATEOBJECT('CL_PROJ_FILE')
-						loFile._Name	= ALLTRIM( STREXTRACT( tcLine, ['], ['] ) )
-						toProject.ADD( loFile, loFile._Name )
-					ENDCASE
-				ENDFOR
+						CASE UPPER( LEFT( tcLine, 5 ) ) == '.ADD('
+							* loFile: NAME,TYPE,EXCLUDE,COMMENTS
+							tcLine			= CHRTRAN( tcLine, ["] + '[]', "'''" )	&& Convierto "[] en '
+							loFile			= CREATEOBJECT('CL_PROJ_FILE')
+							loFile._Name	= ALLTRIM( STREXTRACT( tcLine, ['], ['] ) )
+
+							*-- Obtengo metadatos de los comentarios de FileMetadata:
+							*< FileMetadata: Type="V" Cpid="1252" Timestamp="1131901580" ID="1129207528" ObjRev="544" />
+							.get_ListNamesWithValuesFrom_InLine_MetadataTag( @lcComment, @laPropsAndValues_List ;
+								, @lnPropsAndValues_Count, C_FILE_META_I, C_FILE_META_F )
+
+							loFile._Type		= .get_ValueByName_FromListNamesWithValues( 'Type', 'C', @laPropsAndValues_List )
+							loFile._CPID		= .get_ValueByName_FromListNamesWithValues( 'CPID', 'I', @laPropsAndValues_List )
+							loFile._Timestamp	= .get_ValueByName_FromListNamesWithValues( 'Timestamp', 'I', @laPropsAndValues_List )
+							loFile._ID			= .get_ValueByName_FromListNamesWithValues( 'ID', 'I', @laPropsAndValues_List )
+							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues_List )
+
+							toProject.ADD( loFile, loFile._Name )
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
 
 				I = I - 1
 			ENDIF
@@ -3038,7 +3181,12 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					CASE THIS.lineIsOnlyComment( @tcLine )
 						LOOP	&& Saltear comentarios
 
-					CASE LEFT( tcLine, 9 ) == '.SetMain('
+					CASE LEFT( tcLine ,2 ) == '*<'
+						*--- Se asigna con EVALUATE() tal cual está en el PJ2, pero quitando el marcador *< />
+						lcLine		= STUFF( ALLTRIM( STREXTRACT( tcLine, '*<', '/>' ) ), 2, 0, '_' )
+						toProject.setParsedProjInfoLine( lcLine )
+
+					CASE UPPER( LEFT( tcLine, 9 ) ) == '.SETMAIN('
 						*-- Cambio "SetMain()" por "_MainProg ="
 						lcLine		= '._MainProg = ' + LOWER( STREXTRACT( ALLTRIM( tcLine), '.SetMain(', ')', 1, 1 ) )
 						toProject.setParsedProjInfoLine( lcLine )
@@ -3386,7 +3534,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
 			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version = "<<TRANSFORM(THIS.n_FB2PRG_Version)>>", SourceFile = "<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
 			*
 		ENDTEXT
 	ENDPROC
@@ -3443,7 +3591,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			*-- Escaneo el proyecto
 			SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
-				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS MEMO NAME loReg
+				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
 				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
 				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
 				loProject.ADD( loReg, loReg.NAME )
@@ -3502,14 +3650,22 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			ENDTEXT
 
 
-			*-- Definir archivos del proyecto
+			*-- Definir archivos del proyecto y metadata: CPID, Timestamp, ID, etc.
 			loProject.KEYSORT = 2
 
 			FOR EACH loReg IN loProject &&FOXOBJECT
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<C_TAB>>.ADD('<<loReg.NAME>>')
 				ENDTEXT
-
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+					<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<C_FILE_META_I>>
+					Type="<<loReg.TYPE>>"
+					Cpid="<<INT( loReg.CPID )>>"
+					Timestamp="<<INT( loReg.TIMESTAMP )>>"
+					ID="<<INT( loReg.ID )>>"
+					ObjRev="<<INT( loReg.OBJREV )>>"
+					<<C_FILE_META_F>>
+				ENDTEXT
 			ENDFOR
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -3592,6 +3748,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				<<C_TAB>>.Icon = lcCurdir + '<<loProject._Icon>>'
 				<<C_TAB>>.Debug = <<loProject._Debug>>
 				<<C_TAB>>.Encrypted = <<loProject._Encrypted>>
+				<<C_TAB>>*<.CmntStyle = <<loProject._CmntStyle>> />
+				<<C_TAB>>*<.NoLogo = <<loProject._NoLogo>> />
+				<<C_TAB>>*<.SaveCode = <<loProject._SaveCode>> />
 				<<C_TAB>>.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
 				<<C_TAB>>.ProjectHookClass = '<<loProject._ProjectHookClass>>'
 				<<C_TAB>><<C_PROJPROPS_F>>
@@ -3650,7 +3809,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_add_objects_withproperties" type="method" display="write_ADD_OBJECTS_WithProperties"/>] ;
 		+ [<memberdata name="write_define_class_comments" type="method" display="write_Define_Class_COMMENTS"/>] ;
 		+ [<memberdata name="write_enddefine_sicorresponde" type="method" display="write_ENDDEFINE_SiCorresponde"/>] ;
-		+ [<memberdata name="comprobarexpresionvalida" type="method" display="ComprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
 		+ [<memberdata name="write_definicionobjetosole" type="method" display="write_DefinicionObjetosOLE"/>] ;
 		+ [<memberdata name="write_class_methods" type="method" display="write_CLASS_METHODS"/>] ;
@@ -3768,7 +3926,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_ADD_OBJECTS_WithProperties
 		LPARAMETERS toRegObj
-		
+
 		#IF .F.
 			LOCAL toRegObj AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -3805,22 +3963,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			IF NOT EMPTY(toRegObj.CLASSLOC)
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-					ClassLib = "<<toRegObj.ClassLoc>>" <<>>
+					ClassLib="<<toRegObj.ClassLoc>>" <<>>
 				ENDTEXT
 			ENDIF
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				BaseClass = "<<toRegObj.Baseclass>>" Uniqueid = "<<toRegObj.Uniqueid>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				Timestamp = "<<THIS.getTimeStamp(toRegObj.Timestamp)>>"  ZOrder = "<<TRANSFORM(toRegObj._ZOrder)>>" <<>>
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+				BaseClass="<<toRegObj.Baseclass>>" UniqueID="<<toRegObj.Uniqueid>>"
+				Timestamp="<<THIS.getTimeStamp(toRegObj.Timestamp)>>" ZOrder="<<TRANSFORM(toRegObj._ZOrder)>>" <<>>
 			ENDTEXT
 
 			*-- Agrego metainformación para objetos OLE
 			IF toRegObj.BASECLASS == 'olecontrol'
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-					OLEObject = "<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" checksum = "<<SYS(2007, toRegObj.ole, 0, 1)>>" <<>>
+					OLEObject="<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" CheckSum="<<SYS(2007, toRegObj.ole, 0, 1)>>" <<>>
 				ENDTEXT
 			ENDIF
 
@@ -3880,7 +4035,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					IF lnCommentRow > 0 AND NOT EMPTY(taPropsWithComments(lnCommentRow,2))
 						TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-							<<C_TAB + C_TAB>>&& <<taPropsWithComments(lnCommentRow,2)>>
+							<<C_TAB>><<C_TAB>>&& <<taPropsWithComments(lnCommentRow,2)>>
 						ENDTEXT
 					ENDIF
 
@@ -3917,7 +4072,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
 			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version = "<<TRANSFORM(THIS.n_FB2PRG_Version)>>", SourceFile = "<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>>
 			*
 		ENDTEXT
 	ENDPROC
@@ -4000,14 +4155,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						lcPropName		= RTRIM( GETWORDNUM( taProps(I), 1, '=' ) )
 
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_TAB + taProps(I)>>
+						<<C_TAB>><<taProps(I)>>
 						ENDTEXT
 
 						lnComment	= ASCAN( taPropsWithComments, lcPropName, 1, 0, 1, 8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsWithComments(lnComment,2))
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-							<<C_TAB + C_TAB>>&& <<taPropsWithComments(lnComment,2)>>
+							<<C_TAB>><<C_TAB>>&& <<taPropsWithComments(lnComment,2)>>
 							ENDTEXT
 						ENDIF
 					ENDFOR
@@ -4048,28 +4203,36 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*-- Agrego Metadatos de la clase (Baseclass, Timestamp, Scale, Uniqueid)
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>><<C_METADATA_I>> Baseclass = "<<toRegClass.Baseclass>>" Timestamp = "<<THIS.getTimeStamp(toRegClass.Timestamp)>>" Scale = "<<toRegClass.Reserved6>>" Uniqueid = "<<EVL(toRegClass.Uniqueid,SYS(2015))>>" <<>>
+
+		ENDTEXT
+
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+8
+			<<C_TAB>><<C_METADATA_I>>
+			Baseclass="<<toRegClass.Baseclass>>"
+			Timestamp="<<THIS.getTimeStamp(toRegClass.Timestamp)>>"
+			Scale="<<toRegClass.Reserved6>>"
+			Uniqueid="<<EVL(toRegClass.Uniqueid,SYS(2015))>>"
 		ENDTEXT
 
 		IF NOT EMPTY(toRegClass.OLE2)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				OLEObject = "<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" <<>>
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+				OLEObject = "<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
 			ENDTEXT
 		ENDIF
 
 		IF NOT EMPTY(toRegClass.RESERVED5)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ProjectClassIcon = "<<toRegClass.Reserved5>>" <<>>
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+				ProjectClassIcon="<<toRegClass.Reserved5>>"
 			ENDTEXT
 		ENDIF
 
 		IF NOT EMPTY(toRegClass.RESERVED4)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ClassIcon = "<<toRegClass.Reserved4>>" <<>>
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+				ClassIcon="<<toRegClass.Reserved4>>"
 			ENDTEXT
 		ENDIF
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<C_METADATA_F>>
 		ENDTEXT
 	ENDPROC
@@ -4081,7 +4244,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Comentario de la clase
 		IF NOT EMPTY(toRegClass.RESERVED7) THEN
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<<C_TAB + C_TAB + '&& ' + toRegClass.Reserved7>>
+				<<C_TAB>><<C_TAB>><<'&'+'&'>> <<toRegClass.Reserved7>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -4155,12 +4318,20 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				laOLE( lnOLECount )	= lcOLEChecksum
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_OLE_I>> Nombre = "<<IIF(EMPTY(loReg.Parent),'',loReg.Parent+'.') + loReg.objName>>" parent = "<<loReg.Parent>>" objname = "<<loReg.objname>>" checksum = "<<lcOLEChecksum>>" <<>>
+				
+				ENDTEXT
+
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
+					<<C_OLE_I>>
+					Nombre="<<IIF(EMPTY(loReg.Parent),'',loReg.Parent+'.') + loReg.objName>>"
+					Parent="<<loReg.Parent>>"
+					ObjName="<<loReg.objname>>"
+					Checksum="<<lcOLEChecksum>>" <<>>
 				ENDTEXT
 
 				IF NOT llOleExistente
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						value = "<<STRCONV(loReg.ole,13)>>" <<>>
+						Value="<<STRCONV(loReg.ole,13)>>" <<>>
 					ENDTEXT
 				ENDIF
 
@@ -4271,7 +4442,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					*ENDIF
 
 					*lcLine		= lcLine + CR_LF
-					
+
 					lcLine			= lcLine + tcLeftIndentation + laLines(I) + lcFinDeLinea
 				ENDFOR
 
@@ -4291,8 +4462,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		CATCH TO loEx
 			*loEx.UserValue	= 'ATENCION: EL ERROR PODRIA SER DEL PROGRAMA FUENTE' + CR_LF + CR_LF ;
-				+ JUSTEXT(THIS.c_inputFile) + ' MEMO Line ' + TRANSFORM(I) + ':' + laLines(I) + CR_LF + CR_LF ;
-				+ 'Analyzed memo content:' + CR_LF + tcMethod
+			+ JUSTEXT(THIS.c_inputFile) + ' MEMO Line ' + TRANSFORM(I) + ':' + laLines(I) + CR_LF + CR_LF ;
+			+ 'Analyzed memo content:' + CR_LF + tcMethod
 			IF THIS.l_Debug
 				SET STEP ON
 			ENDIF
@@ -4973,16 +5144,21 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
 
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_cmntstyle" type="property" display="_CmntStyle"/>] ;
 		+ [<memberdata name="_debug" type="property" display="_Debug"/>] ;
 		+ [<memberdata name="_encrypted" type="property" display="_Encrypted"/>] ;
 		+ [<memberdata name="_homedir" type="property" display="_HomeDir"/>] ;
 		+ [<memberdata name="_icon" type="property" display="_Icon"/>] ;
 		+ [<memberdata name="_mainprog" type="property" display="_MainProg"/>] ;
+		+ [<memberdata name="_nologo" type="property" display="_NoLogo"/>] ;
+		+ [<memberdata name="_objrev" type="property" display="_ObjRev"/>] ;
 		+ [<memberdata name="_projecthookclass" type="property" display="_ProjectHookClass"/>] ;
 		+ [<memberdata name="_projecthooklibrary" type="property" display="_ProjectHookLibrary"/>] ;
+		+ [<memberdata name="_savecode" type="property" display="_SaveCode"/>] ;
 		+ [<memberdata name="_serverinfo" type="property" display="_ServerInfo"/>] ;
 		+ [<memberdata name="_serverhead" type="property" display="_ServerHead"/>] ;
 		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
+		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
 		+ [<memberdata name="_version" type="property" display="_Version"/>] ;
 		+ [<memberdata name="_address" type="property" display="_Address"/>] ;
 		+ [<memberdata name="_autor" type="property" display="_Autor"/>] ;
@@ -5010,17 +5186,23 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		+ [</VFPData>]
 
 	*-- Proj.Info
-	_HomeDir			= ''
-	_ServerInfo			= ''
+	_CmntStyle			= 1
 	_Debug				= .F.
 	_Encrypted			= .F.
-	_MainProg			= ''
-	_ProjectHookLibrary	= ''
-	_ProjectHookClass	= ''
+	_HomeDir			= ''
 	_Icon				= ''
+	_ID					= ''
+	_MainProg			= ''
+	_NoLogo				= .F.
+	_ObjRev				= 0
+	_ProjectHookClass	= ''
+	_ProjectHookLibrary	= ''
+	_SaveCode			= .T.
 	_ServerHead			= NULL
-	_Version			= ''
+	_ServerInfo			= ''
 	_SourceFile			= ''
+	_TimeStamp			= 0
+	_Version			= ''
 
 	*-- Dev.info
 	_Autor				= ''
@@ -5387,7 +5569,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CUSTOM
 				WITH THIS
 					lnPos		= 1
 					lnLen		= 4
-					lnLenH		= 8 + 8 + LEN(._LibraryName) + 4 + LEN(._InternalName) + 4 + LEN(._ProjectName) + 4 + LEN(._TypeLibDesc) - 1
+					lnLenH		= 8 + LEN(._LibraryName) + 4 + LEN(._InternalName) + 4 + LEN(._ProjectName) + 4 + LEN(._TypeLibDesc) - 1
 
 					*-- Header
 					lcStr		= lcStr + PADL( 4, 4, ' ' ) + PADL( lnLenH, 4, ' ' )
@@ -5604,15 +5786,23 @@ DEFINE CLASS CL_PROJ_FILE AS CUSTOM
 		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_name" type="property" display="_Name"/>] ;
-		+ [<memberdata name="_type" type="property" display="_Type"/>] ;
-		+ [<memberdata name="_exclude" type="property" display="_Exclude"/>] ;
 		+ [<memberdata name="_comments" type="property" display="_Comments"/>] ;
+		+ [<memberdata name="_cpid" type="property" display="_CPID"/>] ;
+		+ [<memberdata name="_exclude" type="property" display="_Exclude"/>] ;
+		+ [<memberdata name="_id" type="property" display="_ID"/>] ;
+		+ [<memberdata name="_name" type="property" display="_Name"/>] ;
+		+ [<memberdata name="_objrev" type="property" display="_ObjRev"/>] ;
+		+ [<memberdata name="_timestamp" type="property" display="_Timestamp"/>] ;
+		+ [<memberdata name="_type" type="property" display="_Type"/>] ;
 		+ [</VFPData>]
 
-	_Name			= ''
-	_Type			= ''
-	_Exclude		= .F.
-	_Comments		= ''
+	_Name				= ''
+	_Type				= ''
+	_Exclude			= .F.
+	_Comments			= ''
+	_CPID				= 0
+	_ID					= 0
+	_ObjRev				= 0
+	_TimeStamp			= 0
 
 ENDDEFINE
