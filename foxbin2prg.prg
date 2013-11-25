@@ -776,8 +776,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="getclasspropertycomment" type="method" display="getClassPropertyComment"/>] ;
 		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" type="method" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
 		+ [<memberdata name="classprops2memo" type="method" display="classProps2Memo"/>] ;
-		+ [<memberdata name="createform" type="method" display="createForm"/>] ;
 		+ [<memberdata name="createclasslib" type="method" display="createClasslib"/>] ;
+		+ [<memberdata name="createform" type="method" display="createForm"/>] ;
+		+ [<memberdata name="createproject" type="method" display="createProject"/>] ;
 		+ [<memberdata name="defined_pem2memo" type="method" display="defined_PEM2Memo"/>] ;
 		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
 		+ [<memberdata name="evaluate_pem" type="method" display="Evaluate_PEM"/>] ;
@@ -1108,10 +1109,129 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE createProject
+		LPARAMETERS toProject
+
+		#IF .F.
+			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		*-- Esto no funciona con el runtime
+		*STRTOFILE( '', '__newproject.f2b' )
+		*BUILD PROJECT (THIS.c_outputFile) FROM '__newproject.f2b'
+		*ERASE ( '__newproject.f2b' )
+		
+		CREATE TABLE (THIS.c_outputFile) ;
+			( NAME			M ;
+			, TYPE			C(1) ;
+			, ID			N(10) ;
+			, TIMESTAMP		N(10) ;
+			, OUTFILE		M ;
+			, HOMEDIR		M ;
+			, EXCLUDE		L ;
+			, MAINPROG		L ;
+			, SAVECODE		L ;
+			, DEBUG			L ;
+			, ENCRYPT		L ;
+			, NOLOGO		L ;
+			, CMNTSTYLE		N(1) ;
+			, OBJREV		N(5) ;
+			, DEVINFO		M ;
+			, SYMBOLS		M ;
+			, OBJECT		M ;
+			, CKVAL			N(6) ;
+			, CPID			N(5) ;
+			, OSTYPE		C(4) ;
+			, OSCREATOR		C(4) ;
+			, COMMENTS		M ;
+			, RESERVED1		M ;
+			, RESERVED2		M ;
+			, SCCDATA		M ;
+			, LOCAL			L ;
+			, KEY			C(32) ;
+			, USER			M )
+
+		USE (THIS.c_outputFile) ALIAS TABLABIN AGAIN SHARED
+		INSERT INTO TABLABIN ;
+			( NAME ;
+			, TYPE ;
+			, TIMESTAMP ;
+			, OUTFILE ;
+			, HOMEDIR ;
+			, SAVECODE ;
+			, DEBUG ;
+			, ENCRYPT ;
+			, NOLOGO ;
+			, CMNTSTYLE ;
+			, OBJREV ;
+			, DEVINFO ;
+			, OBJECT ;
+			, RESERVED1 ;
+			, RESERVED2 ;
+			, LOCAL ;
+			, KEY ) ;
+			VALUES ;
+			( UPPER(THIS.c_outputFile) ;
+			, 'H' ;
+			, 0 ;
+			, '<Source>' + CHR(0) ;
+			, toProject._HomeDir + CHR(0) ;
+			, toProject._SaveCode ;
+			, toProject._Debug ;
+			, toProject._Encrypted ;
+			, toProject._NoLogo ;
+			, toProject._CmntStyle ;
+			, 260 ;
+			, toProject.getRowDeviceInfo() ;
+			, toProject._HomeDir + CHR(0) ;
+			, UPPER(THIS.c_outputFile) ;
+			, toProject._ServerHead.getRowServerInfo() ;
+			, .T. ;
+			, UPPER( JUSTSTEM( THIS.c_outputFile) ) )
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE createClasslib
 
-		CREATE CLASSLIB (THIS.c_outputFile)
+		* No funciona con el EXE
+		*CREATE CLASSLIB (THIS.c_outputFile)
+
+		CREATE TABLE (THIS.c_outputFile) ;
+			( PLATFORM		C(8) ;
+			, UNIQUEID		C(10) ;
+			, TIMESTAMP		N(10) ;
+			, CLASS			M ;
+			, CLASSLOC		M ;
+			, BASECLASS		M ;
+			, OBJNAME		M ;
+			, PARENT		M ;
+			, PROPERTIES	M ;
+			, PROTECTED		M ;
+			, METHODS		M ;
+			, OBJCODE		M NOCPTRANS ;
+			, OLE			M ;
+			, OLE2			M ;
+			, RESERVED1		M ;
+			, RESERVED2		M ;
+			, RESERVED3		M ;
+			, RESERVED4		M ;
+			, RESERVED5		M ;
+			, RESERVED6		M ;
+			, RESERVED7		M ;
+			, RESERVED8		M ;
+			, USER			M )
+
 		USE (THIS.c_outputFile) ALIAS TABLABIN AGAIN SHARED
+		INSERT INTO TABLABIN ;
+			( PLATFORM ;
+			, UNIQUEID ;
+			, RESERVED1 ) ;
+			VALUES ;
+			( 'COMMENT' ;
+			, 'Class' ;
+			, 'VERSION =   3.00' )
 
 	ENDPROC
 
@@ -2542,11 +2662,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			THIS.doBackup()
 
 			*-- Creo solo la cabecera del proyecto
-			STRTOFILE( '', '__newproject.f2b' )
-			BUILD PROJECT (THIS.c_outputFile) FROM '__newproject.f2b'
-			ERASE ( '__newproject.f2b' )
-
-			USE (THIS.c_outputFile) ALIAS TABLABIN AGAIN SHARED
+			THIS.createProject( toProject )
 
 			lcMainProg	= ''
 
@@ -2555,29 +2671,46 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			ENDIF
 
 			*-- Actualizo información del HEADER
-			SCATTER FIELDS DEVINFO,RESERVED2,CMNTSTYLE,NOLOGO,SAVECODE MEMO NAME loReg
-			loReg.DEVINFO		= toProject.getRowDeviceInfo()
-			loServerHead		= toProject._ServerHead
-			loReg.RESERVED2		= loServerHead.getRowServerInfo()
-			loReg.CMNTSTYLE		= toProject._CmntStyle
-			loReg.NOLOGO		= toProject._NoLogo
-			loReg.SAVECODE		= toProject._SaveCode
-			GATHER NAME loReg FIELDS DEVINFO,RESERVED2,CMNTSTYLE,NOLOGO,SAVECODE MEMO
+			*SCATTER FIELDS DEVINFO,RESERVED2,CMNTSTYLE,NOLOGO,SAVECODE MEMO NAME loReg
+			*loReg.DEVINFO		= toProject.getRowDeviceInfo()
+			*loServerHead		= toProject._ServerHead
+			*loReg.RESERVED2		= loServerHead.getRowServerInfo()
+			*loReg.CMNTSTYLE		= toProject._CmntStyle
+			*loReg.NOLOGO		= toProject._NoLogo
+			*loReg.SAVECODE		= toProject._SaveCode
+			*GATHER NAME loReg FIELDS DEVINFO,RESERVED2,CMNTSTYLE,NOLOGO,SAVECODE MEMO
 
 			*-- Si hay ProjectHook, reutilizo registro del archivo dummy
-			GOTO RECORD 2
+			*GOTO RECORD 2
 
-			IF EMPTY(toProject._ProjectHookLibrary)
-				*-- Erase Dummy file record '__newproject.f2b'
-				DELETE
-			ELSE
-				*-- PROJECT HOOK
-				REPLACE ;
-					NAME WITH toProject._ProjectHookLibrary + CHR(0), ;
-					TYPE WITH 'W', ;
-					EXCLUDE WITH .T., ;
-					KEY WITH UPPER(JUSTSTEM(toProject._ProjectHookLibrary)), ;
-					RESERVED1 WITH toProject._ProjectHookClass + CHR(0)
+			*IF EMPTY(toProject._ProjectHookLibrary)
+			*	*-- Erase Dummy file record '__newproject.f2b'
+			*	DELETE
+			*ELSE
+			*	*-- PROJECT HOOK
+			*	REPLACE ;
+			*		NAME WITH toProject._ProjectHookLibrary + CHR(0), ;
+			*		TYPE WITH 'W', ;
+			*		EXCLUDE WITH .T., ;
+			*		KEY WITH UPPER(JUSTSTEM(toProject._ProjectHookLibrary)), ;
+			*		RESERVED1 WITH toProject._ProjectHookClass + CHR(0)
+			*ENDIF
+
+
+			*-- Si hay ProjectHook de proyecto, lo inserto
+			IF NOT EMPTY(toProject._ProjectHookLibrary)
+				INSERT INTO TABLABIN ;
+					( NAME ;
+					, TYPE ;
+					, EXCLUDE ;
+					, KEY ;
+					, RESERVED1 ) ;
+					VALUES ;
+					( toProject._ProjectHookLibrary + CHR(0) ;
+					, 'W' ;
+					, .T. ;
+					, UPPER(JUSTSTEM(toProject._ProjectHookLibrary)) ;
+					, toProject._ProjectHookClass + CHR(0) )
 			ENDIF
 
 			*-- Si hay ICONO de proyecto, lo inserto
@@ -3744,8 +3877,13 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				ENDTEXT
 			ENDIF
 
+			IF NOT EMPTY(loProject._Icon)
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.Icon = lcCurdir + '<<loProject._Icon>>'
+				ENDTEXT
+			ENDIF
+
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>.Icon = lcCurdir + '<<loProject._Icon>>'
 				<<C_TAB>>.Debug = <<loProject._Debug>>
 				<<C_TAB>>.Encrypted = <<loProject._Encrypted>>
 				<<C_TAB>>*<.CmntStyle = <<loProject._CmntStyle>> />
