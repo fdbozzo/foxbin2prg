@@ -38,6 +38,12 @@
 * 22/11/2013	FDBOZZO		v1.1 Corrección de bugs
 * 23/11/2013	FDBOZZO		v1.2 Corrección de bugs, limpieza de código y refactorización
 * 24/11/2013	FDBOZZO		v1.3 Corrección de bugs, limpieza de código y refactorización
+*
+*---------------------------------------------------------------------------------------------------
+* TESTEO Y REPORTE DE BUGS
+* 23/11/2013	Luis Martínez	En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
+* 27/11/2013	Fidel Charny	Error en el guardado de ciertas propiedades de array
+*								
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
 *	PROPIEDAD				ARREGLO Y EJEMPLO
@@ -99,10 +105,13 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_FILE_EXCL_F	'*</ExcludedFiles>'
 #DEFINE C_FILE_TXT_I	'*<TextFiles>'
 #DEFINE C_FILE_TXT_F	'*</TextFiles>'
+#DEFINE C_FB2P_VALUE_I	'<fb2p_value>'
+#DEFINE C_FB2P_VALUE_F	'</fb2p_value>'
 #DEFINE C_TAB			CHR(9)
 #DEFINE C_CR			CHR(13)
 #DEFINE C_LF			CHR(10)
 #DEFINE CR_LF			C_CR + C_LF
+#DEFINE C_MPROPHEADER	REPLICATE( CHR(1), 517 )
 *-- Fin / End
 
 *-- From FOXPRO.H
@@ -140,7 +149,8 @@ IF EMPTY(tc_InputFile)
 ELSE
 	lcSys16	= SYS(16)
 	lcPath	= SET("Path")
-	SET PATH TO (JUSTPATH(lcSys16))
+	*SET PATH TO (JUSTPATH(lcSys16))
+	SET PATH TO
 	loCnv	= CREATEOBJECT("c_foxbin2prg")
 	loCnv.l_Debug		= (TRANSFORM(tcDebug)=='1')
 	loCnv.l_ShowErrors	= NOT (TRANSFORM(tcDontShowErrors) == '1')
@@ -154,7 +164,7 @@ ELSE
 		FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
 			lcExt	= 'c_' + ALLTRIM( GETWORDNUM( laConfig(I), 1, '=' ) )
 			IF PEMSTATUS( loCnv, lcExt, 5 )
-				loCnv.AddProperty( lcExt, ALLTRIM( GETWORDNUM( laConfig(I), 2, '=' ) ) )
+				loCnv.AddProperty( lcExt, UPPER( ALLTRIM( GETWORDNUM( laConfig(I), 2, '=' ) ) ) )
 			ENDIF
 		ENDFOR
 	ENDIF
@@ -249,7 +259,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors		= .F.
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
-	n_FB2PRG_Version	= 1.4
+	n_FB2PRG_Version	= 1.6
 	o_Conversor			= NULL
 	c_VC2				= 'VC2'
 	c_SC2				= 'SC2'
@@ -404,6 +414,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="comprobarexpresionvalida" type="method" display="comprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
 		+ [<memberdata name="desnormalizarasignacion" type="method" display="desnormalizarAsignacion"/>] ;
+		+ [<memberdata name="desnormalizarvalorpropiedad" type="method" display="desnormalizarValorPropiedad"/>] ;
 		+ [<memberdata name="dobackup" type="method" display="doBackup"/>] ;
 		+ [<memberdata name="evaluarlineadeprocedure" type="method" display="evaluarLineaDeProcedure"/>] ;
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
@@ -413,21 +424,23 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="identificarbloquesdeexclusion" type="method" display="identificarBloquesDeExclusion"/>] ;
 		+ [<memberdata name="lineisonlycomment" type="method" display="lineIsOnlyComment"/>] ;
 		+ [<memberdata name="normalizarasignacion" type="method" display="normalizarAsignacion"/>] ;
+		+ [<memberdata name="normalizarvalorpropiedad" type="method" display="normalizarValorPropiedad"/>] ;
 		+ [<memberdata name="writelog" type="method" display="writeLog"/>] ;
 		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
-		+ [<memberdata name="c_inputfile" type="property" display="c_inputFile"/>] ;
+		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_logfile" type="property" display="c_LogFile"/>] ;
-		+ [<memberdata name="c_outputfile" type="property" display="c_outputFile"/>] ;
+		+ [<memberdata name="c_outputfile" type="property" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_type" type="property" display="c_Type"/>] ;
 		+ [<memberdata name="includefile" type="property" display="includeFile"/>] ;
 		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
 		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
 
+
 	l_Debug				= .F.
-	c_inputFile			= ''
-	c_outputFile		= ''
-	lFileMode			= .F.
+	c_InputFile			= ''
+	c_OutputFile		= ''
+	lFileMode			= .T.
 	nClassTimeStamp		= ''
 	n_FB2PRG_Version	= 1.0
 	c_Type				= ''
@@ -673,7 +686,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -691,10 +704,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LOCAL cTimeValue, tnTimeStamp
 
 		IF VARTYPE(m.tDateTime) <> 'T'
-			m.tDateTime = DATETIME()
-			m.cTimeValue = TIME()
+			m.tDateTime		= DATETIME()
+			m.cTimeValue	= TIME()
 		ELSE
-			m.cTimeValue = TTOC(m.tDateTime, 2)
+			m.cTimeValue	= TTOC(m.tDateTime, 2)
 		ENDIF
 
 		tnTimeStamp = ((YEAR(m.tDateTime) - 1980) * 2 ** 25);
@@ -709,50 +722,66 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	FUNCTION GetTimeStamp(tnTimeStamp)
-		LOCAL lcTimeStamp,lnYear,lnMonth,lnDay,lnHour,lnMinutes,lnSeconds,lcTime,lnHour,ldTimeStamp,lnResto
-		LOCAL laDir[1]
+		TRY
+			LOCAL lcTimeStamp,lnYear,lnMonth,lnDay,lnHour,lnMinutes,lnSeconds,lcTime,lnHour,ldTimeStamp,lnResto ;
+				,lcTimeStamp_Ret, laDir[1], loEx as Exception
+			
+			lcTimeStamp_Ret	= ''
 
-		IF EMPTY(tnTimeStamp)
-			IF THIS.lFileMode
-				IF ADIR(laDir,THIS.cFileName)=0
-					RETURN ""
-				ENDIF
-				lcTime=laDir[1,4]
-				lnHour=VAL(lcTime)
-				IF lnHour<12
-					lcTime=ALLTRIM(STR(IIF(lnHour=0,12,lnHour),2))+SUBSTR(lcTime,3)+" AM"
-				ELSE
-					lcTime=ALLTRIM(STR(IIF(lnHour=12,24,lnHour)-12,2))+SUBSTR(lcTime,3)+" PM"
-				ENDIF
-				IF VAL(lcTime)<10
-					lcTime="0"+lcTime
-				ENDIF
-				RETURN DTOC(laDir[1,3])+" "+lcTime
-			ENDIF
-			tnTimeStamp=THIS.nClassTimeStamp
 			IF EMPTY(tnTimeStamp)
-				RETURN ""
+				IF THIS.lFileMode
+					IF ADIR(laDir,THIS.c_inputFile)=0
+						EXIT
+					ENDIF
+					lcTime=laDir[1,4]
+					lnHour=VAL(lcTime)
+					IF lnHour<12
+						lcTime=ALLTRIM(STR(IIF(lnHour=0,12,lnHour),2))+SUBSTR(lcTime,3)+" AM"
+					ELSE
+						lcTime=ALLTRIM(STR(IIF(lnHour=12,24,lnHour)-12,2))+SUBSTR(lcTime,3)+" PM"
+					ENDIF
+					IF VAL(lcTime)<10
+						lcTime="0"+lcTime
+					ENDIF
+					lcTimeStamp_Ret	= DTOC(laDir[1,3])+" "+lcTime
+					EXIT
+				ENDIF
+
+				tnTimeStamp=THIS.nClassTimeStamp
+
+				IF EMPTY(tnTimeStamp)
+					EXIT
+				ENDIF
 			ENDIF
-		ENDIF
 
-		*-- YYYY YYYM MMMD DDDD HHHH HMMM MMMS SSSS
-		lnResto		= tnTimeStamp
-		lnYear		= INT( lnResto / 2**25 + 1980)
-		lnResto		= lnResto % 2**25
-		lnMonth		= INT( lnResto / 2**21 )
-		lnResto		= lnResto % 2**21
-		lnDay		= INT( lnResto / 2**16 )
-		lnResto		= lnResto % 2**16
-		lnHour		= INT( lnResto / 2**11 )
-		lnResto		= lnResto % 2**11
-		lnMinutes	= INT( lnResto / 2**5 )
-		lnResto		= lnResto % 2**5
-		lnSeconds	= lnResto
+			*-- YYYY YYYM MMMD DDDD HHHH HMMM MMMS SSSS
+			lnResto		= tnTimeStamp
+			lnYear		= INT( lnResto / 2**25 + 1980)
+			lnResto		= lnResto % 2**25
+			lnMonth		= INT( lnResto / 2**21 )
+			lnResto		= lnResto % 2**21
+			lnDay		= INT( lnResto / 2**16 )
+			lnResto		= lnResto % 2**16
+			lnHour		= INT( lnResto / 2**11 )
+			lnResto		= lnResto % 2**11
+			lnMinutes	= INT( lnResto / 2**5 )
+			lnResto		= lnResto % 2**5
+			lnSeconds	= lnResto
 
-		lcTimeStamp	= STR(lnYear,4) + "-" + STR(lnMonth,2) + "-" + STR(lnDay,2) + " " ;
-			+ STR(lnHour,2) + ":" + STR(lnMinutes,2) + ":" + STR(lnSeconds,2)
-		ldTimeStamp	= TTOC( EVALUATE( "{^" + lcTimeStamp + "}" ) )
-		RETURN ldTimeStamp
+			lcTimeStamp	= STR(lnYear,4) + "-" + STR(lnMonth,2) + "-" + STR(lnDay,2) + " " ;
+				+ STR(lnHour,2) + ":" + STR(lnMinutes,2) + ":" + STR(lnSeconds,2)
+			lcTimeStamp_Ret	= TTOC( EVALUATE( "{^" + lcTimeStamp + "}" ) )
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.StartMode = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcTimeStamp_Ret
 	ENDPROC
 
 
@@ -768,31 +797,64 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	FUNCTION desnormalizarAsignacion(tcAsignacion)
-		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada
-		*-- Tipos de asignación posibles:
-		*lcPropName		= ALLTRIM( STREXTRACT( tcAsignacion, '', '=' ) )
-		*lcValor			= ALLTRIM( STREXTRACT( tcAsignacion, '=', '' ) )
+	FUNCTION desnormalizarAsignacion( tcAsignacion )
+		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
+		lnPos			= AT( '=', tcAsignacion )
+		lcPropName		= ALLTRIM( LEFT( tcAsignacion, lnPos - 2 ) )
+		lcValor			= ALLTRIM( SUBSTR( tcAsignacion, lnPos + 2 ) )
+		lcComentario	= ''
 
-		RETURN tcAsignacion
+		THIS.desnormalizarValorPropiedad( @lcPropName, @lcValor, @lcComentario )
+
+		RETURN lcPropName + ' = ' + lcValor
 	ENDFUNC
 
 
 	*******************************************************************************************************************
-	FUNCTION normalizarAsignacion(tcAsignacion, tcComentario)
-		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada
-		lcPropName		= ALLTRIM( STREXTRACT( tcAsignacion, '', '=' ) )
-		lcValor			= ALLTRIM( STREXTRACT( tcAsignacion, '=', '' ) )
+	FUNCTION desnormalizarValorPropiedad(tcProp, tcValue, tcComentario)
+		LOCAL lnCodError, lnPos
 		tcComentario	= ''
 
 		*-- Ajustes de algunos casos especiales
 		DO CASE
-		CASE lcPropName == '_memberdata'
+		CASE tcProp == '_memberdata'
 			*-- Me quedo con lo importante y quito los CHR(0) y longitud que a veces agrega al inicio
-			tcAsignacion = lcPropName + ' = ' + STREXTRACT( lcValor, '<VFPData>', '</VFPData>', 1, 1+4 )
+			SET STEP ON
+			tcValue = CHRTRAN( STREXTRACT( tcValue, '<VFPData>', '</VFPData>', 1, 1+4 ), CR_LF + C_TAB, '' )
 		ENDCASE
 
-		RETURN tcAsignacion
+		RETURN tcValue
+	ENDFUNC
+
+
+	*******************************************************************************************************************
+	FUNCTION normalizarAsignacion( tcAsignacion, tcComentario )
+		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
+		lnPos			= AT( '=', tcAsignacion )
+		lcPropName		= ALLTRIM( LEFT( tcAsignacion, lnPos - 2 ) )
+		lcValor			= ALLTRIM( SUBSTR( tcAsignacion, lnPos + 2 ) )
+		tcComentario	= ''
+
+		THIS.normalizarValorPropiedad( @lcPropName, @lcValor, @tcComentario )
+
+		RETURN lcPropName + ' = ' + lcValor
+	ENDFUNC
+
+
+	*******************************************************************************************************************
+	FUNCTION normalizarValorPropiedad(tcProp, tcValue, tcComentario)
+		LOCAL lnCodError, lnPos
+		tcComentario	= ''
+
+		*-- Ajustes de algunos casos especiales
+		*DO CASE
+		*CASE tcProp == '_memberdata'
+		*	*-- Me quedo con lo importante y quito los CHR(0) y longitud que a veces agrega al inicio
+		*	SET STEP ON
+		*	tcValue = CHRTRAN( STREXTRACT( tcValue, '<VFPData>', '</VFPData>', 1, 1+4 ), CR_LF + C_TAB, '' )
+		*ENDCASE
+
+		RETURN tcValue
 	ENDFUNC
 
 
@@ -996,7 +1058,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -1111,7 +1173,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -1698,7 +1760,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF	&& toClase._AddObject_Count > 0
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -1803,7 +1865,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							loOle._Parent		= .get_ValueByName_FromListNamesWithValues( 'Parent', 'C', @laPropsAndValues_List )
 							loOle._ObjName		= .get_ValueByName_FromListNamesWithValues( 'ObjName', 'C', @laPropsAndValues_List )
 							loOle._CheckSum		= .get_ValueByName_FromListNamesWithValues( 'CheckSum', 'C', @laPropsAndValues_List )
-							loOle._Value		= .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues_List )
+							loOle._Value		= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues_List ), 14 )
 
 							toModulo.add_OLE( loOle )
 
@@ -1998,7 +2060,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 										loObjeto._ClassLib			= .get_ValueByName_FromListNamesWithValues( 'ClassLib', 'C', @laPropsAndValues_List )
 										loObjeto._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues_List )
 										loObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues_List )
-										loObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'Ole2', 'C', @laPropsAndValues_List )
+										loObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues_List )
 										loObjeto._ZOrder			= .get_ValueByName_FromListNamesWithValues( 'ZOrder', 'I', @laPropsAndValues_List )
 										loObjeto._TimeStamp			= INT( .RowTimeStamp( .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues_List ) ) )
 
@@ -2025,7 +2087,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 								OTHERWISE
 									IF .l_Debug
 										MESSAGEBOX( 'Se escapó esta línea del análisis. Ver que es en el DEBUG que se va a abrir.' )
-										IF _VFP.StartMode > 0
+										IF _VFP.StartMode = 0
 											SET STEP ON
 										ENDIF
 									ENDIF
@@ -2050,7 +2112,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			*loEx.UserValue	= 'ATENCION: EL ERROR PODRIA SER DEL PROGRAMA FUENTE' + CR_LF + CR_LF ;
 			+ JUSTEXT(THIS.c_inputFile) + ' Line ' + TRANSFORM(I) + ':' + ta_Lineas(I)
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2104,7 +2166,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2311,7 +2373,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2364,7 +2426,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2578,7 +2640,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2640,7 +2702,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2768,7 +2830,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2859,7 +2921,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2936,7 +2998,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -2990,7 +3052,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3046,7 +3108,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3105,7 +3167,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3163,7 +3225,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3221,7 +3283,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3279,7 +3341,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3343,7 +3405,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3468,7 +3530,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3542,7 +3604,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			ENDIF
 
 
-			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND (TABLABIN.CLASS == 'dataenvironment' OR TABLABIN.CLASS == 'form')
+			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
+					AND (EMPTY(TABLABIN.PARENT) ;
+					AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
 				SCATTER MEMO NAME loRegClass
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
@@ -3589,7 +3653,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 				SCAN REST ;
-						FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT (TABLABIN.CLASS == 'dataenvironment' OR TABLABIN.CLASS == 'form') ;
+						FOR TABLABIN.PLATFORM = "WINDOWS" ;
+						AND NOT (EMPTY(TABLABIN.PARENT) ;
+						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
@@ -3609,7 +3675,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -3908,7 +3974,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				loEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
 			ENDCASE
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4027,7 +4093,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4047,11 +4113,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL lcMemo
+			LOCAL lcMemo, laProps(1,2), lnLineCount
 
 			*-- Defino los objetos a cargar
-			THIS.SortNames( toRegObj.PROPERTIES, '', '', @lcMemo )
-			lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( lcMemo, C_TAB + C_TAB, .T. )
+			THIS.SortNames( toRegObj.PROPERTIES, @laProps, @lnLineCount, @lcMemo )
+			*lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( lcMemo, C_TAB + C_TAB, .T. )
+			lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( @laProps, @lnLineCount, C_TAB + C_TAB, .T. )
 
 			IF '.' $ toRegObj.PARENT
 				*-- Este caso: clase.objeto.objeto ==> se quita clase
@@ -4100,7 +4167,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4168,7 +4235,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4214,11 +4281,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				IF lnLineCount > 0 THEN
 					*-- Recorro las propiedades (campo Properties)
 					FOR I = 1 TO lnLineCount
-						lcPropName		= RTRIM( GETWORDNUM( taProps(I), 1, '=' ) )
-						lnProtectedItem	= ASCAN(taProtected, lcPropName, 1, 0, 0, 0)
+						*lcPropName		= RTRIM( GETWORDNUM( taProps(I), 1, '=' ) )
+						*lcPropName		= taProps(I,1)
+						lnProtectedItem	= ASCAN(taProtected, taProps(I,1), 1, 0, 0, 0)
 
 						*-- Ajustes de algunos casos especiales
-						taProps(I)	= THIS.normalizarAsignacion( taProps(I), @lcComentarios )
+						*FDB*
+						*taProps(I)	= THIS.normalizarAsignacion( taProps(I), @lcComentarios )
+						taProps(I,2)	= THIS.normalizarValorPropiedad( taProps(I,1), taProps(I,2), @lcComentarios )
 
 						*-- Estos comentarios solo son los generados como metadados por los autoajustes especiales
 						*IF NOT EMPTY( lcComentarios )
@@ -4229,13 +4299,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						CASE lnProtectedItem = 0
 							*-- Propiedad común
 
-						CASE taProtected(lnProtectedItem) == lcPropName
+						CASE taProtected(lnProtectedItem) == taProps(I,1)
 							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + lcPropName
+							lcProtectedProp	= lcProtectedProp + ',' + taProps(I,1)
 
-						CASE taProtected(lnProtectedItem) == lcPropName + '^'
+						CASE taProtected(lnProtectedItem) == taProps(I,1) + '^'
 							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + lcPropName
+							lcHiddenProp	= lcHiddenProp + ',' + taProps(I,1)
 
 						ENDCASE
 					ENDFOR
@@ -4267,13 +4337,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					*-- Escribo las propiedades de la clase y sus comentarios
 					FOR I = 1 TO ALEN(taProps, 1)
-						lcPropName		= RTRIM( GETWORDNUM( taProps(I), 1, '=' ) )
+						*lcPropName		= RTRIM( GETWORDNUM( taProps(I), 1, '=' ) )
 
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_TAB>><<taProps(I)>>
+						<<C_TAB>><<taProps(I,1)>> = <<taProps(I,2)>>
 						ENDTEXT
 
-						lnComment	= ASCAN( taPropsWithComments, lcPropName, 1, 0, 1, 8)
+						lnComment	= ASCAN( taPropsWithComments, taProps(I,1), 1, 0, 1, 8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsWithComments(lnComment,2))
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -4289,7 +4359,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDWITH && THIS
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4461,7 +4531,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4494,7 +4564,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDFOR
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4520,7 +4590,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4532,23 +4602,29 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE set_MultilineMemoWithAddObjectProperties( tcMethod, tcLeftIndentation, tlNormalizeLine )
+	*PROCEDURE set_MultilineMemoWithAddObjectProperties( tcMethod, tcLeftIndentation, tlNormalizeLine )
+	PROCEDURE set_MultilineMemoWithAddObjectProperties( taProps, tnPropCount, tcLeftIndentation, tlNormalizeLine )
+		EXTERNAL ARRAY taProps
+
 		TRY
 			LOCAL lcLine, I, lcComentarios, laLines(1), lcFinDeLinea_Coma_PuntoComa_CR
 			lcLine			= ''
 			lcFinDeLinea	= ', ;' + CR_LF
 
-			IF NOT EMPTY(tcMethod)
+			*IF NOT EMPTY(tcMethod)
+			IF tnPropCount > 0
 				IF VARTYPE(tcLeftIndentation) # 'C'
 					tcLeftIndentation	= ''
 				ENDIF
 
-				FOR I = 1 TO ALINES(laLines, m.tcMethod, 0)
+				*FOR I = 1 TO ALINES(laLines, m.tcMethod, 0)
+				FOR I = 1 TO tnPropCount
 					*lcComentarios	= ''
 					*lcLine			= lcLine + tcLeftIndentation
 
 					*-- Ajustes de algunos casos especiales
-					laLines(I)		= THIS.normalizarAsignacion( laLines(I), @lcComentarios )
+					*laLines(I)		= THIS.normalizarAsignacion( laLines(I), @lcComentarios )
+					taProps(I,2)	= THIS.normalizarValorPropiedad( taProps(I,1), taProps(I,2), @lcComentarios )
 					*lcLine			= lcLine + laLines(I) + ', ;'
 
 					*-- Estos comentarios solo con los metadatos autogenerados por los ajustes especiales
@@ -4558,7 +4634,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					*lcLine		= lcLine + CR_LF
 
-					lcLine			= lcLine + tcLeftIndentation + laLines(I) + lcFinDeLinea
+					lcLine			= lcLine + tcLeftIndentation + taProps(I,1) + ' = ' + taProps(I,2) + lcFinDeLinea
 				ENDFOR
 
 				*-- Si la última propiedad tiene comentarios, los quito temporalmente
@@ -4579,7 +4655,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			*loEx.UserValue	= 'ATENCION: EL ERROR PODRIA SER DEL PROGRAMA FUENTE' + CR_LF + CR_LF ;
 			+ JUSTEXT(THIS.c_inputFile) + ' MEMO Line ' + TRANSFORM(I) + ':' + laLines(I) + CR_LF + CR_LF ;
 			+ 'Analyzed memo content:' + CR_LF + tcMethod
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4619,7 +4695,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			lcMethod	= SUBSTR(lcMethod,3)	&& Quito el primer ENTER
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4744,7 +4820,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -4758,25 +4834,68 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE SortNames( tcMemo, taSortedItems, tnLineCount, tcSortedMemo )
 		*-- 29/10/2013	Fernando D. Bozzo
-		*-- Sort method for Reserved3, Properties and Protected memo fields
+		*-- Sort method used for RESERVED3, PROPERTIES and PROTECTED memo fields
 		TRY
-			LOCAL lcMethods, loEx AS EXCEPTION
-			DIMENSION taSortedItems(1)
+			LOCAL lcMethods, laItems(1), lnItemCount, I, X, lnPosEQ, lcProp, lcValue, lcPart, lnLenVal, lnLenAcum ;
+				, loEx AS EXCEPTION
+			DIMENSION taSortedItems(1,2)
 			STORE '' TO tcSortedMemo, lcMethods, taSortedItems, I
-			tnLineCount	= 0
+			STORE 0 TO tnLineCount, lnItemCount, I, X, lnLenVal, lnLenAcum
 
 			IF NOT EMPTY(m.tcMemo)
-				tnLineCount = ALINES(taSortedItems, m.tcMemo, 1+4)
+				lnItemCount = ALINES(laItems, m.tcMemo, 1+4, CR_LF)	&& Específicamente CR+LF para que no reconozca los CR
+
+				*-- Crear un array con los valores especiales que pueden estar repartidos entre varias lineas
+				FOR I = 1 TO m.lnItemCount
+					X	= X + 1
+					DIMENSION taSortedItems(X,2)
+					
+					IF C_MPROPHEADER $ laItems(I)
+						*-- Solo entrará por aquí cuando se evalúe una propiedad de PROPERTIES con un valor especial (largo)
+						lnLenAcum	= 0
+						lnPosEQ		= AT( '=', laItems(I) )
+						lcProp		= LEFT( laItems(I), lnPosEQ - 2 )
+						lnLenVal	= INT( VAL( SUBSTR( laItems(I), lnPosEQ + 2 + 517, 8) ) )
+						lcValue		= SUBSTR( laItems(I), lnPosEQ + 2 + 517 + 8 )
+						
+						IF LEN( lcValue ) < lnLenVal
+							*-- Como el valor es multi-línea, debo agregarle los CR_LF que le quitó el ALINES()
+							FOR I = I + 1 TO m.lnItemCount
+								lcValue	= lcValue + CR_LF + laItems(I)
+
+								IF LEN( lcValue ) >= lnLenVal
+									EXIT
+								ENDIF
+							ENDFOR
+						ENDIF
+						
+						*-- Es un valor especial, por lo que se encapsula en un marcador especial
+						taSortedItems(X,1)	= lcProp
+						taSortedItems(X,2)	= C_FB2P_VALUE_I + lcValue + C_FB2P_VALUE_F
+
+					ELSE
+						IF LEFT(laItems(I), 1) == '*'	&& Only Reserved3 have this
+							LOOP
+						ENDIF
+
+						lnPosEQ				= AT( '=', laItems(I) )
+						taSortedItems(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
+						taSortedItems(X,2)	= SUBSTR( laItems(I), lnPosEQ + 2 )
+					ENDIF
+				ENDFOR
+
+				tnLineCount	= X
+
 				ASORT(taSortedItems,1,-1,0,1)
 
 				*-- Add properties first
 				FOR I = 1 TO m.tnLineCount
 					IF LEFT(taSortedItems(I), 1) == '*'	&& Only Reserved3 have this
-						lcMethods	= m.lcMethods + m.taSortedItems(I) + CR_LF
+						lcMethods	= m.lcMethods + m.taSortedItems(I,1) + ' = ' + m.taSortedItems(I,2) + CR_LF
 						LOOP
 					ENDIF
 
-					tcSortedMemo	= m.tcSortedMemo + m.taSortedItems(I) + CR_LF
+					tcSortedMemo	= m.tcSortedMemo + m.taSortedItems(I,1) + ' = ' + m.taSortedItems(I,2) + CR_LF
 				ENDFOR
 
 				*-- Add methods to the end
@@ -4784,7 +4903,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5405,7 +5524,7 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5450,7 +5569,7 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5498,7 +5617,7 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5660,7 +5779,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CUSTOM
 			CATCH TO loEx
 				lnCodError	= loEx.ERRORNO
 
-				IF THIS.l_Debug AND _VFP.StartMode > 0
+				IF THIS.l_Debug AND _VFP.StartMode = 0
 					SET STEP ON
 				ENDIF
 
@@ -5706,7 +5825,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CUSTOM
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5746,7 +5865,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CUSTOM
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5834,7 +5953,7 @@ DEFINE CLASS CL_PROJ_SRV_DATA AS CUSTOM
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
@@ -5871,7 +5990,7 @@ DEFINE CLASS CL_PROJ_SRV_DATA AS CUSTOM
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
 
-			IF THIS.l_Debug AND _VFP.StartMode > 0
+			IF THIS.l_Debug AND _VFP.StartMode = 0
 				SET STEP ON
 			ENDIF
 
