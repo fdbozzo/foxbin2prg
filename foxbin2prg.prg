@@ -3,10 +3,13 @@
 * Autor..........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com)
 * Fecha creación.: 04/11/2013
 *
-* LICENCIA:	Reconocimiento – CompartirIgual (by-sa):
-* 		Se permite el uso comercial de la obra y de las posibles obras derivadas, la distribución de las cuales
-* 		se debe hacer con una licencia igual a la que regula la obra original.
-* 		(http://es.creativecommons.org/blog/licencias/)
+* LICENCIA:
+* Esta obra está sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons.
+* Para ver una copia de esta licencia, visite http://creativecommons.org/licenses/by-sa/4.0/deed.es_ES.
+*
+* LICENCE:
+* This work is licensed under the Creative Commons Attribution 4.0 International License.
+* To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
 *
 *---------------------------------------------------------------------------------------------------
 * DESCRIPCIÓN....: CONVIERTE EL ARCHIVO VCX/SCX/PJX INDICADO A UN "PRG HÍBRIDO" PARA POSTERIOR RECONVERSIÓN.
@@ -41,7 +44,7 @@
 * 27/11/2013	FDBOZZO		v1.4 Agregado soporte comodines *.VCX, configuración de extensiones (vca), parámetro p/log
 * 27/11/2013	FDBOZZO		v1.5 Arreglo bug que no generaba form completo
 * 01/12/2013	FDBOZZO		v1.6 Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
-* 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
+* 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -63,10 +66,11 @@
 * tlGenText_na				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
+* tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
-LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug
+LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress
 
 *-- Internacionalización / Internationalization
 *-- Fin / End
@@ -150,103 +154,136 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE SERVERINSTANCE_MULTIUSE      3  && Multi-use server
 *-- Fin / End
 
-LOCAL lcSys16, I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt, llExisteConfig ;
-	, loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-lnResp	= 0
+TRY
+	LOCAL lcSys16, I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
+		, llExisteConfig, llShowProgress, lcConfData, lnFileCount ;
+		, loEx as Exception
 
-SET DELETED ON
-SET DATE YMD
-SET HOURS TO 24
-SET CENTURY ON
-SET SAFETY OFF
-SET TABLEPROMPT OFF
+	PUBLIC goFrm_Avance AS frm_avance OF 'FOXBIN2PRG.PRG' ;
+		, goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+	lnResp	= 0
 
-IF _VFP.STARTMODE > 0
-	SET ESCAPE OFF
-ENDIF
+	SET DELETED ON
+	SET DATE YMD
+	SET HOURS TO 24
+	SET CENTURY ON
+	SET SAFETY OFF
+	SET TABLEPROMPT OFF
 
-IF EMPTY(tc_InputFile)
-	lnResp	= 1
-	MESSAGEBOX( 'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
-		+ 'Ejemplo para generar los TXT de todos los VCX de c:\desa\clases, sin mostrar ventana de error y generando LOG: ' + CR_LF ;
-		+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
-		+ 'Ejemplo para generar los VCX de todos los TXT de c:\desa\clases, sin mostrar ventana de error y sin LOG: ' + CR_LF ;
-		+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"' ;
-		, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
-ELSE
-	lcSys16	= SYS(16)
-	lcPath	= SET("Path")
-	*SET PATH TO (JUSTPATH(lcSys16))
-	SET PATH TO
-	loCnv	= CREATEOBJECT("c_foxbin2prg")
-	loCnv.l_Debug		= (TRANSFORM(tcDebug)=='1')
-	loCnv.l_ShowErrors	= NOT (TRANSFORM(tcDontShowErrors) == '1')
-
-
-	*-- Configuración
-	lcConfigFile	= FORCEEXT( lcSys16, 'CFG' )
-	llExisteConfig	= FILE( lcConfigFile )
-
-	IF llExisteConfig
-		FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-			lcExt	= 'c_' + ALLTRIM( GETWORDNUM( laConfig(I), 1, '=' ) )
-			IF PEMSTATUS( loCnv, lcExt, 5 )
-				loCnv.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( laConfig(I), 2, '=' ) ) ) )
-			ENDIF
-		ENDFOR
+	IF _VFP.STARTMODE > 0
+		SET ESCAPE OFF
 	ENDIF
 
+	IF EMPTY(tc_InputFile)
+		lnResp	= 1
+		MESSAGEBOX( 'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
+			+ 'Ejemplo para generar los TXT de todos los VCX de c:\desa\clases, sin mostrar ventana de error y generando LOG: ' + CR_LF ;
+			+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
+			+ 'Ejemplo para generar los VCX de todos los TXT de c:\desa\clases, sin mostrar ventana de error y sin LOG: ' + CR_LF ;
+			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"' ;
+			, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
+	ELSE
+		lcSys16	= SYS(16)
+		lcPath	= SET("Path")
+		*SET PATH TO (JUSTPATH(lcSys16))
+		SET PATH TO
+		llShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
+		goCnv	= CREATEOBJECT("c_foxbin2prg")
+		goCnv.l_Debug		= (TRANSFORM(tcDebug)=='1')
+		goCnv.l_ShowErrors	= NOT (TRANSFORM(tcDontShowErrors) == '1')
 
-	*-- Evaluación de FileSpec de entrada
-	DO CASE
-	CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
-		MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).' ;
-			, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
-	
-	CASE '*' $ JUSTSTEM( tc_InputFile )
-		*-- Se quieren todos los archivos de una extensión
-		lcFileSpec	= FULLPATH( tc_InputFile )
-		CD (JUSTPATH(lcFileSpec))
-		loCnv.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-		IF loCnv.l_Debug
-			IF FILE( loCnv.c_LogFile )
-				ERASE ( loCnv.c_LogFile )
-			ENDIF
-			loCnv.writeLog( lcSys16 + ' - FileSpec: ' + EVL(tc_InputFile,'') )
-			IF llExisteConfig
-				loCnv.writeLog( 'ConfigFile: ' + lcConfigFile )
-			ENDIF
+		IF llShowProgress
+			goFrm_Avance	= CREATEOBJECT("frm_avance")
 		ENDIF
 
-		FOR I = 1 TO ADIR( laFiles, lcFileSpec )
-			lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
+		*-- Configuración
+		lcConfigFile	= FORCEEXT( lcSys16, 'CFG' )
+		llExisteConfig	= FILE( lcConfigFile )
 
-			IF FILE( lcFile )
-				lnResp = loCnv.Convertir( lcFile )
-			ENDIF
-		ENDFOR
-
-	OTHERWISE
-		*-- Un archivo individual
-		IF FILE(tc_InputFile)
-			CD (JUSTPATH(tc_InputFile))
-			loCnv.c_LogFile	= tc_InputFile + '.LOG'
-
-			IF loCnv.l_Debug
-				IF FILE( loCnv.c_LogFile )
-					ERASE ( loCnv.c_LogFile )
+		IF llExisteConfig
+			FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
+				IF LOWER( LEFT( laConfig(I), 10 ) ) == 'extension:'
+					lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
+					lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+					IF PEMSTATUS( goCnv, lcExt, 5 )
+						goCnv.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+					ENDIF
 				ENDIF
-				loCnv.writeLog( lcSys16 + ' - FileSpec: ' + EVL(tc_InputFile,'') )
+			ENDFOR
+		ENDIF
+
+
+		*-- Evaluación de FileSpec de entrada
+		DO CASE
+		CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
+			MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).' ;
+				, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+		
+		CASE '*' $ JUSTSTEM( tc_InputFile )
+			*-- Se quieren todos los archivos de una extensión
+			lcFileSpec	= FULLPATH( tc_InputFile )
+			CD (JUSTPATH(lcFileSpec))
+			goCnv.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+			IF goCnv.l_Debug
+				IF FILE( goCnv.c_LogFile )
+					ERASE ( goCnv.c_LogFile )
+				ENDIF
+				goCnv.writeLog( lcSys16 + ' - FileSpec: ' + EVL(tc_InputFile,'') )
+				IF llExisteConfig
+					goCnv.writeLog( 'ConfigFile: ' + lcConfigFile )
+				ENDIF
 			ENDIF
 
-			lnResp = loCnv.Convertir( tc_InputFile )
-		ENDIF
-	ENDCASE
+			lnFileCount	= ADIR( laFiles, lcFileSpec )
 
-	CD (JUSTPATH(lcSys16))
-	SET PATH TO (lcPath)
-ENDIF
+			IF llShowProgress
+				goFrm_Avance.nMAX_VALUE	= lnFileCount
+			ENDIF
+			
+			FOR I = 1 TO lnFileCount
+				lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
+				goFrm_Avance.lbl_TAREA.Caption = 'Procesando archivo ' + lcFile + '...'
+				goFrm_Avance.nVALUE = I
+
+				IF llShowProgress
+					goFrm_Avance.Show()
+				ENDIF
+
+				IF FILE( lcFile )
+					lnResp = goCnv.Convertir( lcFile )
+				ENDIF
+			ENDFOR
+
+		OTHERWISE
+			*-- Un archivo individual
+			IF FILE(tc_InputFile)
+				CD (JUSTPATH(tc_InputFile))
+				goCnv.c_LogFile	= tc_InputFile + '.LOG'
+
+				IF goCnv.l_Debug
+					IF FILE( goCnv.c_LogFile )
+						ERASE ( goCnv.c_LogFile )
+					ENDIF
+					goCnv.writeLog( lcSys16 + ' - FileSpec: ' + EVL(tc_InputFile,'') )
+				ENDIF
+
+				lnResp = goCnv.Convertir( tc_InputFile )
+			ENDIF
+		ENDCASE
+
+		CD (JUSTPATH(lcSys16))
+		SET PATH TO (lcPath)
+	ENDIF
+
+CATCH TO loEx
+
+FINALLY
+	goFrm_Avance.Hide()
+	goFrm_Avance.Release()
+	STORE NULL TO goCnv, goFrm_Avance
+	RELEASE goCnv, goFrm_Avance
+ENDTRY
 
 IF _VFP.STARTMODE > 0
 	QUIT
@@ -429,6 +466,70 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			+ toEx.LINECONTENTS + CR_LF + CR_LF ;
 			+ EVL(toEx.USERVALUE,'')
 		RETURN lcError
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS frm_avance AS form
+	Height = 79
+	Width = 628
+	ShowWindow = 2
+	DoCreate = .T.
+	AutoCenter = .T.
+	BorderStyle = 2
+	Caption = "Avance del proceso"
+	ControlBox = .F.
+	BackColor = RGB(255,255,255)
+	nmax_value = 100
+	nvalue = 0
+	Name = "FRM_AVANCE"
+
+
+	ADD OBJECT shp_base AS shape WITH ;
+		Top = 40, ;
+		Left = 12, ;
+		Height = 21, ;
+		Width = 601, ;
+		Curvature = 15, ;
+		Name = "shp_base"
+
+
+	ADD OBJECT shp_avance AS shape WITH ;
+		Top = 40, ;
+		Left = 12, ;
+		Height = 21, ;
+		Width = 36, ;
+		Curvature = 15, ;
+		BackColor = RGB(255,255,128), ;
+		BorderColor = RGB(255,0,0), ;
+		Name = "shp_Avance"
+
+
+	ADD OBJECT lbl_tarea AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 20, ;
+		Width = 604, ;
+		Name = "lbl_Tarea"
+
+
+	PROCEDURE nvalue_assign
+		LPARAMETERS vNewVal
+
+		WITH THIS
+			.nvalue = m.vNewVal
+			.shp_Avance.Width = m.vNewVal * .shp_base.Width / .nMax_Value
+		ENDWITH
+	ENDPROC
+
+
+	PROCEDURE Init
+		THIS.nvalue = 0
 	ENDPROC
 
 
