@@ -41,11 +41,13 @@
 * 27/11/2013	FDBOZZO		v1.4 Agregado soporte comodines *.VCX, configuración de extensiones (vca), parámetro p/log
 * 27/11/2013	FDBOZZO		v1.5 Arreglo bug que no generaba form completo
 * 01/12/2013	FDBOZZO		v1.6 Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
+* 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
 * 23/11/2013	Luis Martínez	REPORTE BUG: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny	REPORTE BUG: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
+* 02/12/2013	Fidel Charny	REPORTE BUG: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -165,6 +167,12 @@ ENDIF
 
 IF EMPTY(tc_InputFile)
 	lnResp	= 1
+	MESSAGEBOX( 'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
+		+ 'Ejemplo para generar los TXT de todos los VCX de c:\desa\clases, sin mostrar ventana de error y generando LOG: ' + CR_LF ;
+		+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
+		+ 'Ejemplo para generar los VCX de todos los TXT de c:\desa\clases, sin mostrar ventana de error y sin LOG: ' + CR_LF ;
+		+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"' ;
+		, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
 ELSE
 	lcSys16	= SYS(16)
 	lcPath	= SET("Path")
@@ -190,7 +198,12 @@ ELSE
 
 
 	*-- Evaluación de FileSpec de entrada
-	IF '*' $ JUSTSTEM( tc_InputFile )
+	DO CASE
+	CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
+		MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).' ;
+			, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+	
+	CASE '*' $ JUSTSTEM( tc_InputFile )
 		*-- Se quieren todos los archivos de una extensión
 		lcFileSpec	= FULLPATH( tc_InputFile )
 		CD (JUSTPATH(lcFileSpec))
@@ -214,7 +227,8 @@ ELSE
 			ENDIF
 		ENDFOR
 
-	ELSE
+	OTHERWISE
+		*-- Un archivo individual
 		IF FILE(tc_InputFile)
 			CD (JUSTPATH(tc_InputFile))
 			loCnv.c_LogFile	= tc_InputFile + '.LOG'
@@ -228,7 +242,7 @@ ELSE
 
 			lnResp = loCnv.Convertir( tc_InputFile )
 		ENDIF
-	ENDIF
+	ENDCASE
 
 	CD (JUSTPATH(lcSys16))
 	SET PATH TO (lcPath)
@@ -385,7 +399,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.writeLog( lcErrorInfo )
 			ENDIF
 			IF THIS.l_Debug AND THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!', 5*60*1000 )
+				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
 			ENDIF
 		ENDTRY
 
@@ -3928,9 +3942,6 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 
-			*IF FILE('C_SUB_OBJS.CDX')
-			*	ERASE 'C_SUB_OBJS.CDX'
-			*ENDIF
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
 
@@ -4011,7 +4022,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
 			*-- Genero el VC2
-			STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile )
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
@@ -4154,7 +4167,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
 			*-- Genero el SC2
-			STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile )
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
@@ -4446,7 +4461,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 			*-- Genero el PJ2
-			STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile )
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
 			*COMPILE ( THIS.c_outputFile )
 
 
@@ -4604,7 +4621,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL lcMemo, laPropsAndValues(1,2), lnPropsAndValues_Count
 
 			*-- Defino los objetos a cargar
-			THIS.get_PropsAndValuesFrom_PROPERTIES( toRegObj.PROPERTIES, .T., @laPropsAndValues, @lnPropsAndValues_Count, @lcMemo )
+			THIS.get_PropsAndValuesFrom_PROPERTIES( toRegObj.PROPERTIES, 1, @laPropsAndValues, @lnPropsAndValues_Count, @lcMemo )
 			*lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( lcMemo, C_TAB + C_TAB, .T. )
 			lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( @laPropsAndValues, @lnPropsAndValues_Count, C_TAB + C_TAB, .T. )
 
@@ -4831,7 +4848,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				*-- DEFINIR PROPIEDADES ( HIDDEN, PROTECTED, *DEFINED_PAM )
 				DIMENSION taProtected(1)
 				STORE '' TO lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd
-				THIS.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, .T., @taPropsAndValues, @lnPropsAndValues_Count, '' )
+				THIS.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, 1, @taPropsAndValues, @lnPropsAndValues_Count, '' )
 				THIS.get_PropsAndCommentsFrom_RESERVED3( toRegClass.RESERVED3, .T., @taPropsAndComments, @lnPropsAndComments_Count, '' )
 				THIS.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, 0, '' )
 
@@ -5128,19 +5145,23 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE get_PropsAndValuesFrom_PROPERTIES
 		*-- Sirve para el memo PROPERTIES
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* tcMemo					(v! IN    ) Contenido de un campo MEMO
-		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
-		* taPropsAndValues			(@!    OUT) Array con las propiedades y comentarios
-		* tnPropsAndValues_Count	(@!    OUT) Cantidad de propiedades
-		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
-		*---------------------------------------------------------------------------------------------------
 		* KNOWLEDGE BASE:
 		* 29/11/2013	FDBOZZO		En un pageframe, si las props.nativas del mismo no están antes que las de
 		*							los objetos contenidos, causa un error. Se deben ordenar primero las
 		*							props.nativas (sin punto) y luego las de los objetos (con punto)
+		*
+		* 02/12/2013	FDBOZZO		Fidel Charny me pasó un ejemplo donde se pierden propiedades físicamente
+		*							si se ordenan alfabéticamente en un ADD OBJECT. Pierde "picture" y otras más.
+		*							Pareciera que la última debe ser "Name".
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcMemo, tlSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcMemo					(v! IN    ) Contenido de un campo MEMO
+		* tnSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los objetos y props (1), o no (0)
+		* taPropsAndValues			(@!    OUT) Array con las propiedades y comentarios
+		* tnPropsAndValues_Count	(@!    OUT) Cantidad de propiedades
+		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
 		EXTERNAL ARRAY taPropsAndValues
 		TRY
 			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods, laPropsAndValues(1,2)
@@ -5156,6 +5177,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					EXIT
 				ENDIF
 
+
+				*-- 1) OBTENCIÓN Y SEPARACIÓN DE PROPIEDADES Y VALORES
 				*-- Crear un array con los valores especiales que pueden estar repartidos entre varias lineas
 				FOR I = 1 TO m.lnItemCount
 					IF EMPTY( laItems(I) )
@@ -5205,16 +5228,26 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 				ENDFOR
 
+
+				*-- 2) SORT
 				tnPropsAndValues_Count	= X
 				lcMethods	= ''
 
-				IF m.tlSort
-					*-- CON SORT: A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
+				DO CASE
+				CASE m.tnSort = 1
+					* CON SORT:
+					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
+					* - Las "Name" deben estar al final, por lo que les agrego "_" pro delante
 					FOR I = 1 TO m.tnPropsAndValues_Count
 						IF '.' $ laPropsAndValues(I,1)
 							laPropsAndValues(I,1)	= 'B' + laPropsAndValues(I,1)
 						ELSE
 							laPropsAndValues(I,1)	= 'A' + laPropsAndValues(I,1)
+						ENDIF
+
+						*-- "Name" debe ser la última. La modifico temporalmente.	02/12/2013	FDBOZZO
+						IF JUSTEXT( laPropsAndValues(I,1) ) == 'Name'
+							laPropsAndValues(I,1)	= JUSTSTEM( laPropsAndValues(I,1) ) + '.' + CHR(255) + 'Name'
 						ENDIF
 					ENDFOR
 
@@ -5226,9 +5259,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					FOR I = 1 TO m.tnPropsAndValues_Count
 						taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
 						taPropsAndValues(I,2)	= laPropsAndValues(I,2)
+
+						*-- Restauro "Name".	02/12/2013	FDBOZZO
+						IF JUSTEXT( taPropsAndValues(I,1) ) == CHR(255) + 'Name'
+							taPropsAndValues(I,1)	= JUSTSTEM( taPropsAndValues(I,1) ) + '.Name'
+						ENDIF
 					ENDFOR
-				ELSE
-					*-- SIN SORT: Creo 2 arrays, el bueno y el otro, y al terminar agrego el otro al bueno.
+
+				CASE m.tnSort = 0
+					*-- SIN SORT: Creo 2 arrays, el bueno y el temporal, y al terminar agrego el temporal al bueno.
 					*-- Debo separar las props.normales de las de los objetos (ocurre cuando es un ADD OBJECT)
 					X	= 0
 					DIMENSION taPropsAndValues( tnPropsAndValues_Count, 2 )
@@ -5258,7 +5297,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							taPropsAndValues(X,2)	= laPropsAndValues(I,2)
 						ENDIF
 					ENDFOR
-				ENDIF
+				ENDCASE
 
 				*-- Agregar propiedades primero
 				FOR I = 1 TO m.tnPropsAndValues_Count
@@ -6304,6 +6343,8 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_BASE
 		+ [<memberdata name="setparsedheadinfoline" type="property" display="setParsedHeadInfoLine"/>] ;
 		+ [<memberdata name="setparsedinfoline" type="property" display="setParsedInfoLine"/>] ;
 		+ [</VFPData>]
+
+	*-- Información interesante sobre Servidores OLE y corrupción de IDs: http://www.west-wind.com/wconnect/weblog/ShowEntry.blog?id=880
 
 	*-- Server Head info
 	DIMENSION _Servers[1]
