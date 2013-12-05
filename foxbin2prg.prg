@@ -249,7 +249,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors		= .F.
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
-	n_FB2PRG_Version	= 1.4
+	n_FB2PRG_Version	= 1.5
 	o_Conversor			= NULL
 	c_VC2				= 'VC2'
 	c_SC2				= 'SC2'
@@ -1803,7 +1803,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							loOle._Parent		= .get_ValueByName_FromListNamesWithValues( 'Parent', 'C', @laPropsAndValues_List )
 							loOle._ObjName		= .get_ValueByName_FromListNamesWithValues( 'ObjName', 'C', @laPropsAndValues_List )
 							loOle._CheckSum		= .get_ValueByName_FromListNamesWithValues( 'CheckSum', 'C', @laPropsAndValues_List )
-							loOle._Value		= .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues_List )
+							loOle._Value		= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues_List ), 14 )
 
 							toModulo.add_OLE( loOle )
 
@@ -1998,7 +1998,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 										loObjeto._ClassLib			= .get_ValueByName_FromListNamesWithValues( 'ClassLib', 'C', @laPropsAndValues_List )
 										loObjeto._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues_List )
 										loObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues_List )
-										loObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'Ole2', 'C', @laPropsAndValues_List )
+										loObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues_List )
 										loObjeto._ZOrder			= .get_ValueByName_FromListNamesWithValues( 'ZOrder', 'I', @laPropsAndValues_List )
 										loObjeto._TimeStamp			= INT( .RowTimeStamp( .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues_List ) ) )
 
@@ -3542,7 +3542,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			ENDIF
 
 
-			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND (TABLABIN.CLASS == 'dataenvironment' OR TABLABIN.CLASS == 'form')
+			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
+					AND (EMPTY(TABLABIN.PARENT) ;
+					AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
 				SCATTER MEMO NAME loRegClass
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
@@ -3589,7 +3591,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 				SCAN REST ;
-						FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT (TABLABIN.CLASS == 'dataenvironment' OR TABLABIN.CLASS == 'form') ;
+						FOR TABLABIN.PLATFORM = "WINDOWS" ;
+						AND NOT (EMPTY(TABLABIN.PARENT) ;
+						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
