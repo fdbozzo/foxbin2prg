@@ -21,9 +21,9 @@
 *                  * CONFIGURACIÓN: SI SE CREA UN ARCHIVO FOXBIN2PRG.CFG, SE PUEDEN CAMBIAR LAS EXTENSIONES
 *                    PARA PODER USARLO CON SOURCESAFE PONIENDO LAS EQUIVALENCIAS ASÍ:
 *
-*                        VC2=VCA
-*                        SC2=SCA
-*                        PJ2=PJA
+*                        extension: VC2=VCA
+*                        extension: SC2=SCA
+*                        extension: PJ2=PJA
 *
 *	USO/USE:
 *		DO FOXBIN2PRG.PRG WITH "<path>\FILE.VCX"	&& Genera "<path>\FILE.VC2" (BIN TO PRG CONVERSION)
@@ -45,12 +45,14 @@
 * 27/11/2013	FDBOZZO		v1.5 Arreglo bug que no generaba form completo
 * 01/12/2013	FDBOZZO		v1.6 Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
 * 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
+* 03/12/2013	FDBOZZO		v1.8 Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
 * 23/11/2013	Luis Martínez	REPORTE BUG: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny	REPORTE BUG: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny	REPORTE BUG: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
+* 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa del arreglo anterior (arreglado en v.1.8)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -157,7 +159,7 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 TRY
 	LOCAL lcSys16, I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
 		, llExisteConfig, llShowProgress, lcConfData, lnFileCount ;
-		, loEx as Exception
+		, loEx AS EXCEPTION
 
 	PUBLIC goFrm_Avance AS frm_avance OF 'FOXBIN2PRG.PRG' ;
 		, goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -218,7 +220,7 @@ TRY
 		CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
 			MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).' ;
 				, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
-		
+
 		CASE '*' $ JUSTSTEM( tc_InputFile )
 			*-- Se quieren todos los archivos de una extensión
 			lcFileSpec	= FULLPATH( tc_InputFile )
@@ -240,14 +242,14 @@ TRY
 			IF llShowProgress
 				goFrm_Avance.nMAX_VALUE	= lnFileCount
 			ENDIF
-			
+
 			FOR I = 1 TO lnFileCount
 				lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-				goFrm_Avance.lbl_TAREA.Caption = 'Procesando archivo ' + lcFile + '...'
+				goFrm_Avance.lbl_TAREA.CAPTION = 'Procesando archivo ' + lcFile + '...'
 				goFrm_Avance.nVALUE = I
 
 				IF llShowProgress
-					goFrm_Avance.Show()
+					goFrm_Avance.SHOW()
 				ENDIF
 
 				IF FILE( lcFile )
@@ -279,8 +281,8 @@ TRY
 CATCH TO loEx
 
 FINALLY
-	goFrm_Avance.Hide()
-	goFrm_Avance.Release()
+	goFrm_Avance.HIDE()
+	goFrm_Avance.RELEASE()
 	STORE NULL TO goCnv, goFrm_Avance
 	RELEASE goCnv, goFrm_Avance
 ENDTRY
@@ -325,7 +327,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors		= .F.
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
-	n_FB2PRG_Version	= 1.6
+	n_FB2PRG_Version	= 1.8
 	o_Conversor			= NULL
 	c_VC2				= 'VC2'
 	c_SC2				= 'SC2'
@@ -473,63 +475,63 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS frm_avance AS form
-	Height = 79
-	Width = 628
-	ShowWindow = 2
-	DoCreate = .T.
-	AutoCenter = .T.
-	BorderStyle = 2
-	Caption = "Avance del proceso"
-	ControlBox = .F.
-	BackColor = RGB(255,255,255)
-	nmax_value = 100
-	nvalue = 0
-	Name = "FRM_AVANCE"
+DEFINE CLASS frm_avance AS FORM
+	HEIGHT = 79
+	WIDTH = 628
+	SHOWWINDOW = 2
+	DOCREATE = .T.
+	AUTOCENTER = .T.
+	BORDERSTYLE = 2
+	CAPTION = "Avance del proceso"
+	CONTROLBOX = .F.
+	BACKCOLOR = RGB(255,255,255)
+	nMAX_VALUE = 100
+	nVALUE = 0
+	NAME = "FRM_AVANCE"
 
 
-	ADD OBJECT shp_base AS shape WITH ;
-		Top = 40, ;
-		Left = 12, ;
-		Height = 21, ;
-		Width = 601, ;
-		Curvature = 15, ;
-		Name = "shp_base"
+	ADD OBJECT shp_base AS SHAPE WITH ;
+		TOP = 40, ;
+		LEFT = 12, ;
+		HEIGHT = 21, ;
+		WIDTH = 601, ;
+		CURVATURE = 15, ;
+		NAME = "shp_base"
 
 
-	ADD OBJECT shp_avance AS shape WITH ;
-		Top = 40, ;
-		Left = 12, ;
-		Height = 21, ;
-		Width = 36, ;
-		Curvature = 15, ;
-		BackColor = RGB(255,255,128), ;
-		BorderColor = RGB(255,0,0), ;
-		Name = "shp_Avance"
+	ADD OBJECT shp_avance AS SHAPE WITH ;
+		TOP = 40, ;
+		LEFT = 12, ;
+		HEIGHT = 21, ;
+		WIDTH = 36, ;
+		CURVATURE = 15, ;
+		BACKCOLOR = RGB(255,255,128), ;
+		BORDERCOLOR = RGB(255,0,0), ;
+		NAME = "shp_Avance"
 
 
-	ADD OBJECT lbl_tarea AS label WITH ;
-		BackStyle = 0, ;
-		Caption = ".", ;
-		Height = 17, ;
-		Left = 12, ;
-		Top = 20, ;
-		Width = 604, ;
-		Name = "lbl_Tarea"
+	ADD OBJECT lbl_TAREA AS LABEL WITH ;
+		BACKSTYLE = 0, ;
+		CAPTION = ".", ;
+		HEIGHT = 17, ;
+		LEFT = 12, ;
+		TOP = 20, ;
+		WIDTH = 604, ;
+		NAME = "lbl_Tarea"
 
 
 	PROCEDURE nvalue_assign
 		LPARAMETERS vNewVal
 
 		WITH THIS
-			.nvalue = m.vNewVal
-			.shp_Avance.Width = m.vNewVal * .shp_base.Width / .nMax_Value
+			.nVALUE = m.vNewVal
+			.shp_avance.WIDTH = m.vNewVal * .shp_base.WIDTH / .nMAX_VALUE
 		ENDWITH
 	ENDPROC
 
 
-	PROCEDURE Init
-		THIS.nvalue = 0
+	PROCEDURE INIT
+		THIS.nVALUE = 0
 	ENDPROC
 
 
@@ -559,6 +561,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="normalizarasignacion" type="method" display="normalizarAsignacion"/>] ;
 		+ [<memberdata name="normalizarvalorpropiedad" type="method" display="normalizarValorPropiedad"/>] ;
 		+ [<memberdata name="normalizarvalorxml" type="method" display="normalizarValorXML"/>] ;
+		+ [<memberdata name="sortpropsandvalues" type="method" display="sortPropsAndValues"/>] ;
 		+ [<memberdata name="writelog" type="method" display="writeLog"/>] ;
 		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
@@ -859,7 +862,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		IF VARTYPE(m.ltDateTime) <> 'T'
 			m.ltDateTime		= DATETIME()
 		ENDIF
-		
+
 		tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
 			+ MONTH(m.ltDateTime) * 2^21 ;
 			+ DAY(m.ltDateTime) * 2^16 ;
@@ -899,7 +902,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 					*lcTimeStamp_Ret	= DTOC(laDir[1,3])+" "+lcTime
 
 					ltTimeStamp	= EVALUATE( '{^' + DTOC(laDir(1,3)) + ' ' + TRANSFORM(laDir(1,4)) + '}' )
-					
+
 					*-- En mi arreglo, si la hora pasada tiene 32 segundos o más, redondeo al siguiente minuto, ya que
 					*-- la descodificación posterior de GetTimeStamp tiene ese margen de error.
 					IF SEC(m.ltTimeStamp) >= 32
@@ -935,7 +938,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 				+ STR(lnHour,2) + ":" + STR(lnMinutes,2) + ":" + STR(lnSeconds,2)
 
 			ltTimeStamp	= EVALUATE( "{^" + lcTimeStamp + "}" )
-			
+
 			lcTimeStamp_Ret	= TTOC( ltTimeStamp )
 
 		CATCH TO loEx
@@ -1131,6 +1134,126 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDFUNC
 
 
+	*******************************************************************************************************************
+	PROCEDURE sortPropsAndValues
+		* KNOWLEDGE BASE:
+		* 02/12/2013	FDBOZZO		Fidel Charny me pasó un ejemplo donde se pierden propiedades físicamente
+		*							si se ordenan alfabéticamente en un ADD OBJECT. Pierde "picture" y otras más.
+		*							Pareciera que la última debe ser "Name".
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taPropsAndValues			(!@ IN    ) El array con las propiedades y valores del objeto o clase
+		* tnPropsAndValues_Count	(!v IN    ) Cantidad de propiedades
+		* tnSortType				(!v IN    ) Tipo de sort:
+		*											0=Solo separar propiedades de clase y de objetos (.)
+		*											1=Sort completo de propiedades (para la versión TEXTO)
+		*											2=Sort completo de propiedades con "Name" al final (para la versión BIN)
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS taPropsAndValues, tnPropsAndValues_Count, tnSortType
+		EXTERNAL ARRAY taPropsAndValues
+
+		TRY
+			LOCAL I, X, laPropsAndValues(1,2)
+			DIMENSION laPropsAndValues( tnPropsAndValues_Count, 2 )
+			ACOPY( taPropsAndValues, laPropsAndValues )
+
+			IF m.tnSortType >= 1
+				* CON SORT:
+				* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
+				FOR I = 1 TO m.tnPropsAndValues_Count
+					IF '.' $ laPropsAndValues(I,1)
+						IF m.tnSortType = 2 AND JUSTEXT( laPropsAndValues(I,1) ) == 'Name'
+							laPropsAndValues(I,1)	= JUSTSTEM( laPropsAndValues(I,1) ) + '.' + CHR(255) + 'Name'
+						ENDIF
+
+						laPropsAndValues(I,1)	= 'B' + laPropsAndValues(I,1)
+					ELSE
+						IF m.tnSortType = 2 AND laPropsAndValues(I,1) == 'Name'
+							laPropsAndValues(I,1)	= CHR(255) + 'Name'
+						ENDIF
+
+						laPropsAndValues(I,1)	= 'A' + laPropsAndValues(I,1)
+					ENDIF
+				ENDFOR
+
+				ASORT( laPropsAndValues, 1, -1, 0, 1)
+
+				*-- Quitar el agregado
+
+				FOR I = 1 TO m.tnPropsAndValues_Count
+					taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
+					taPropsAndValues(I,2)	= laPropsAndValues(I,2)
+
+					DO CASE
+					CASE m.tnSortType <> 2
+						*-- Saltear
+					CASE taPropsAndValues(I,1) == CHR(255) + 'Name'
+						taPropsAndValues(I,1)	= 'Name'
+					CASE JUSTEXT( taPropsAndValues(I,1) ) == CHR(255) + 'Name'
+						taPropsAndValues(I,1)	= JUSTSTEM( taPropsAndValues(I,1) ) + '.Name'
+					ENDCASE
+				ENDFOR
+
+			ELSE	&& m.tnSortType = 0
+				*-- SIN SORT: Creo 2 arrays, el bueno y el temporal, y al terminar agrego el temporal al bueno.
+				*-- Debo separar las props.normales de las de los objetos (ocurre cuando es un ADD OBJECT)
+				X	= 0
+
+				*-- PRIMERO las que no tienen punto
+				FOR I = 1 TO m.tnPropsAndValues_Count
+					IF EMPTY( laPropsAndValues(I,1) )
+						LOOP
+					ENDIF
+
+					IF NOT '.' $ laPropsAndValues(I,1)
+						X	= X + 1
+						taPropsAndValues(X,1)	= laPropsAndValues(I,1)
+						taPropsAndValues(X,2)	= laPropsAndValues(I,2)
+					ENDIF
+				ENDFOR
+
+				*-- LUEGO las demás props.
+				FOR I = 1 TO m.tnPropsAndValues_Count
+					IF EMPTY( laPropsAndValues(I,1) )
+						LOOP
+					ENDIF
+
+					IF '.' $ laPropsAndValues(I,1)
+						X	= X + 1
+						taPropsAndValues(X,1)	= laPropsAndValues(I,1)
+						taPropsAndValues(X,2)	= laPropsAndValues(I,2)
+					ENDIF
+				ENDFOR
+			ENDIF
+
+			*-- VER ESTO SI HACE FALTA, SOBRE LO DE PONER LOS METODOS AL FINAL Y ADAPTAR
+			*-- Agregar propiedades primero
+			*FOR I = 1 TO m.tnPropsAndValues_Count
+			*	*-- SI HACE FALTA QUE LOS MÉTODOS ESTÉN AL FINAL, DESCOMENTAR ESTO (Y EL DE MÁS ARRIBA)
+			*	*IF LEFT(taPropsAndValues(I), 1) == '*'	&& Only Reserved3 have this
+			*	*	lcMethods	= m.lcMethods + m.taPropsAndValues(I,1) + ' = ' + m.taPropsAndValues(I,2) + CR_LF
+			*	*	LOOP
+			*	*ENDIF
+
+			*	tcSortedMemo	= m.tcSortedMemo + m.laPropsAndValues(I,1) + ' = ' + m.laPropsAndValues(I,2) + CR_LF
+			*ENDFOR
+
+			*-- Agregar métodos al final
+			*tcSortedMemo	= m.tcSortedMemo + m.lcMethods
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -1281,6 +1404,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		* LOS BLOQUES DE EXCLUSIÓN SON AQUELLOS QUE TIENEN TEXT/ENDTEXT OF #IF .F./#ENDIF Y SE USAN PARA NO BUSCAR
 		* INSTRUCCIONES COMO "DEFINE CLASS" O "PROCEDURE" EN LOS MISMOS.
 		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
 		* tnCodeLines				(?@ IN    ) Cantidad de líneas de código
 		* ta_ID_Bloques				(?@ IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
@@ -1344,8 +1468,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -1579,14 +1701,17 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*-- Fin: ESTRUCTURA A ANALIZAR:
 
 		TRY
-			LOCAL lcDefinedPAM, lnPos, lnPos2, laProps(1,2), lcLine, lcPropName, lcValue, I, lcAsignacion, lcMemo
+			LOCAL lcDefinedPAM, lnPos, lnPos2, laProps(1,2), lcLine, lcPropName, lcValue, I, lcAsignacion, lcMemo ;
+				, laPropsAndValues(1,2), lnPropsAndValues_Count
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
 				DIMENSION laProps( toClase._Prop_Count, 2 )
 				ACOPY( toClase._Props, laProps )
+				lnPropsAndValues_Count	= 0
 
 				WITH THIS
+					*-- OBTENGO LAS PROPIEDADES Y SUS VALORES
 					FOR I = 1 TO toClase._Prop_Count
 						.get_SeparatedPropAndValue( toClase._Props(I,1), @lcPropName, @lcValue )
 
@@ -1597,20 +1722,36 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						CASE THIS.analizarAsignacion_TAG_Indicado( @lcPropName, @lcValue, @laProps, toClase._Prop_Count, @I ;
 								, C_FB2P_VALUE_I, C_FB2P_VALUE_F, C_LEN_FB2P_VALUE_I, C_LEN_FB2P_VALUE_F, @lcAsignacion )
 							*-- FB2P_VALUE
+							lnPropsAndValues_Count	= lnPropsAndValues_Count + 1
 
 						CASE THIS.analizarAsignacion_TAG_Indicado( @lcPropName, @lcValue, @laProps, toClase._Prop_Count, @I ;
 								, C_MEMBERDATA_I, C_MEMBERDATA_F, C_LEN_MEMBERDATA_I, C_LEN_MEMBERDATA_F, @lcAsignacion )
 							*-- MEMBERDATA
+							lnPropsAndValues_Count	= lnPropsAndValues_Count + 1
 
 						OTHERWISE
 							*-- Propiedad normal
 							THIS.desnormalizarValorPropiedad( @lcPropName, @lcValue, '' )
+							lnPropsAndValues_Count	= lnPropsAndValues_Count + 1
 
 						ENDCASE
 
-						lcMemo	= lcMemo + lcPropName + ' = ' + lcValue + CR_LF
+						DIMENSION laPropsAndValues(lnPropsAndValues_Count,2)
+						laPropsAndValues(lnPropsAndValues_Count,1)	= lcPropName
+						laPropsAndValues(lnPropsAndValues_Count,2)	= lcValue
 
 					ENDFOR
+
+
+					*-- REORDENO LAS PROPIEDADES
+					THIS.sortPropsAndValues( @laPropsAndValues, lnPropsAndValues_Count, 2 )
+
+
+					*-- ARMO EL MEMO A DEVOLVER
+					FOR I = 1 TO lnPropsAndValues_Count
+						lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
+					ENDFOR
+
 				ENDWITH && THIS
 			ENDIF && laProps > 0
 
@@ -1629,6 +1770,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE objectProps2Memo
+		*-- ARMA EL MEMO DE PROPERTIES CON LAS PROPIEDADES Y SUS VALORES
 		LPARAMETERS toObjeto, toClase
 
 		#IF .F.
@@ -1636,15 +1778,31 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				, toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcMemo, I
+		LOCAL lcMemo, I, laPropsAndValues(1,2), lcPropName, lcValue
 		lcMemo	= ''
 
-		FOR I = 1 TO toObjeto._Prop_Count
-			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<<toObjeto._Props(I,1)>>
+		IF toObjeto._Prop_Count > 0
+			DIMENSION laPropsAndValues( toObjeto._Prop_Count, 2 )
 
-			ENDTEXT
-		ENDFOR
+			WITH THIS
+				FOR I = 1 TO toObjeto._Prop_Count
+					.get_SeparatedPropAndValue( toObjeto._Props(I,1), @lcPropName, @lcValue )
+					laPropsAndValues(I,1)	= lcPropName
+					laPropsAndValues(I,2)	= lcValue
+				ENDFOR
+			ENDWITH && THIS
+
+
+			*-- REORDENO LAS PROPIEDADES
+			THIS.sortPropsAndValues( @laPropsAndValues, toObjeto._Prop_Count, 2 )
+
+
+			*-- ARMO EL MEMO A DEVOLVER
+			FOR I = 1 TO toObjeto._Prop_Count
+				lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
+			ENDFOR
+
+		ENDIF
 
 		RETURN lcMemo
 	ENDPROC
@@ -4309,7 +4467,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
 			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
 			*
 		ENDTEXT
 	ENDPROC
@@ -4860,7 +5018,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
 			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
 			*
 		ENDTEXT
 	ENDPROC
@@ -5251,9 +5409,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*							los objetos contenidos, causa un error. Se deben ordenar primero las
 		*							props.nativas (sin punto) y luego las de los objetos (con punto)
 		*
-		* 02/12/2013	FDBOZZO		Fidel Charny me pasó un ejemplo donde se pierden propiedades físicamente
-		*							si se ordenan alfabéticamente en un ADD OBJECT. Pierde "picture" y otras más.
-		*							Pareciera que la última debe ser "Name".
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
 		* tcMemo					(v! IN    ) Contenido de un campo MEMO
@@ -5265,7 +5420,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
 		EXTERNAL ARRAY taPropsAndValues
 		TRY
-			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods, laPropsAndValues(1,2)
+			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
 			tcSortedMemo			= ''
 			tnPropsAndValues_Count	= 0
 
@@ -5287,7 +5442,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 
 					X	= X + 1
-					DIMENSION laPropsAndValues(X,2)
+					DIMENSION taPropsAndValues(X,2)
 
 					IF C_MPROPHEADER $ laItems(I)
 						*-- Solo entrará por aquí cuando se evalúe una propiedad de PROPERTIES con un valor especial (largo)
@@ -5313,8 +5468,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 
 						*-- Es un valor especial, por lo que se encapsula en un marcador especial
-						laPropsAndValues(X,1)	= lcPropName
-						laPropsAndValues(X,2)	= THIS.normalizarValorPropiedad( lcPropName, lcValue, '' )
+						taPropsAndValues(X,1)	= lcPropName
+						taPropsAndValues(X,2)	= THIS.normalizarValorPropiedad( lcPropName, lcValue, '' )
 
 					ELSE
 						*-- Propiedad normal
@@ -5324,81 +5479,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						*ENDIF
 
 						lnPosEQ					= AT( '=', laItems(I) )
-						laPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
-						laPropsAndValues(X,2)	=  THIS.normalizarValorPropiedad( laPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
+						taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
+						taPropsAndValues(X,2)	=  THIS.normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
 					ENDIF
 				ENDFOR
 
 
-				*-- 2) SORT
 				tnPropsAndValues_Count	= X
 				lcMethods	= ''
 
-				DO CASE
-				CASE m.tnSort = 1
-					* CON SORT:
-					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
-					* - Las "Name" deben estar al final, por lo que les agrego "_" pro delante
-					FOR I = 1 TO m.tnPropsAndValues_Count
-						IF '.' $ laPropsAndValues(I,1)
-							laPropsAndValues(I,1)	= 'B' + laPropsAndValues(I,1)
-						ELSE
-							laPropsAndValues(I,1)	= 'A' + laPropsAndValues(I,1)
-						ENDIF
 
-						*-- "Name" debe ser la última. La modifico temporalmente.	02/12/2013	FDBOZZO
-						IF JUSTEXT( laPropsAndValues(I,1) ) == 'Name'
-							laPropsAndValues(I,1)	= JUSTSTEM( laPropsAndValues(I,1) ) + '.' + CHR(255) + 'Name'
-						ENDIF
-					ENDFOR
+				*-- 2) SORT
+				THIS.sortPropsAndValues( @taPropsAndValues, tnPropsAndValues_Count, tnSort )
 
-					ASORT(laPropsAndValues,1,-1,0,1)
-
-					*-- Quitar el agregado
-					DIMENSION taPropsAndValues( tnPropsAndValues_Count, 2 )
-
-					FOR I = 1 TO m.tnPropsAndValues_Count
-						taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
-						taPropsAndValues(I,2)	= laPropsAndValues(I,2)
-
-						*-- Restauro "Name".	02/12/2013	FDBOZZO
-						IF JUSTEXT( taPropsAndValues(I,1) ) == CHR(255) + 'Name'
-							taPropsAndValues(I,1)	= JUSTSTEM( taPropsAndValues(I,1) ) + '.Name'
-						ENDIF
-					ENDFOR
-
-				CASE m.tnSort = 0
-					*-- SIN SORT: Creo 2 arrays, el bueno y el temporal, y al terminar agrego el temporal al bueno.
-					*-- Debo separar las props.normales de las de los objetos (ocurre cuando es un ADD OBJECT)
-					X	= 0
-					DIMENSION taPropsAndValues( tnPropsAndValues_Count, 2 )
-
-					*-- PRIMERO las que no tienen punto
-					FOR I = 1 TO m.tnPropsAndValues_Count
-						IF EMPTY( laPropsAndValues(I,1) )
-							LOOP
-						ENDIF
-
-						IF NOT '.' $ laPropsAndValues(I,1)
-							X	= X + 1
-							taPropsAndValues(X,1)	= laPropsAndValues(I,1)
-							taPropsAndValues(X,2)	= laPropsAndValues(I,2)
-						ENDIF
-					ENDFOR
-
-					*-- LUEGO las demás props.
-					FOR I = 1 TO m.tnPropsAndValues_Count
-						IF EMPTY( laPropsAndValues(I,1) )
-							LOOP
-						ENDIF
-
-						IF '.' $ laPropsAndValues(I,1)
-							X	= X + 1
-							taPropsAndValues(X,1)	= laPropsAndValues(I,1)
-							taPropsAndValues(X,2)	= laPropsAndValues(I,2)
-						ENDIF
-					ENDFOR
-				ENDCASE
 
 				*-- Agregar propiedades primero
 				FOR I = 1 TO m.tnPropsAndValues_Count
