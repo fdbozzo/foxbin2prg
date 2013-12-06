@@ -104,7 +104,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ENDIF
 
 			IF EMPTY(tcParent) AND EMPTY(tcClass) AND EMPTY(tcObjName)
-				LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Screen    "
+				DO CASE
+				CASE lcTipoBinario = 'SCX'
+					LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Screen    "
+				CASE lcTipoBinario = 'VCX'
+					LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Class     "
+				ENDCASE
 			ELSE
 				LOCATE FOR CLASS==tcClass AND PARENT==tcParent AND objName==tcObjName
 			ENDIF
@@ -114,7 +119,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ENDIF
 			SCATTER MEMO NAME toReg
 
-		CATCH TO loEx
+		CATCH TO toEx
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
@@ -981,12 +986,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			Column5.Name = "Column5"
 		ENDTEXT
 		TEXT TO loReg_Esperado.Methods NOSHOW FLAGS 1+2 PRETEXT 1+2+4
-			PROCEDURE AfterRowColChange
+			<<'PROCEDURE AfterRowColChange'>>
 			LPARAMETERS nColIndex
 
 			thisform.Refresh()
 
-			ENDPROC
+			<<'ENDPROC'>>
 		ENDTEXT
 
 
@@ -1564,74 +1569,599 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	ENDFUNC
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_optiongroup
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('optiongroup')
+		lcParent			= ''
+		lcObjName			= 'cl_optiongroup'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		loReg_Esperado.Reserved1	= 'Class'
+		loReg_Esperado.Reserved2	= '1'
+		TEXT TO loReg_Esperado.Reserved3 NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			propiedad_de_clase_con_valor Tiene un valor por defecto
+			propiedad_de_clase_sin_valor Una propiedad sin valor para heredar
+			*propiedad_de_clase_con_valor_access
+			*propiedad_de_clase_con_valor_assign
+
+		ENDTEXT
+		loReg_Esperado.Reserved6	= 'Pixels'
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			ButtonCount = 2
+			Value = 1
+			Height = 46
+			Width = 71
+			propiedad_de_clase_con_valor = UN VALOR DE LA CLASE
+			propiedad_de_clase_sin_valor = .F.
+			Name = "cl_optiongroup"
+			Option1.Caption = "Option1"
+			Option1.Value = 1
+			Option1.Height = 17
+			Option1.Left = 5
+			Option1.Top = 5
+			Option1.Width = 61
+			Option1.Name = "Option1"
+			Option2.Caption = "Option2"
+			Option2.Height = 17
+			Option2.Left = 5
+			Option2.Top = 24
+			Option2.Width = 61
+			Option2.Name = "Option2"
+
+		ENDTEXT
+		TEXT TO loReg_Esperado.METHODS NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			<<'PROCEDURE propiedad_de_clase_con_valor_access'>>
+			*To do: Modify this routine for the Access method
+			RETURN THIS.propiedad_de_clase_con_valor
+			<<'ENDPROC'>>
+			<<'PROCEDURE propiedad_de_clase_con_valor_assign'>>
+			LPARAMETERS vNewVal
+			*To do: Modify this routine for the Assign method
+			THIS.propiedad_de_clase_con_valor = m.vNewVal
+
+			<<'ENDPROC'>>
+
+		ENDTEXT
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+	ENDFUNC
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_optiongroup
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('')
+		lcParent			= ''
+		lcObjName			= 'cl_optiongroup'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Arial, 0, 9, 5, 15, 12, 32, 3, 0
+		ENDTEXT
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+	ENDFUNC
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_commandgroup
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('commandgroup')
+		lcParent			= ''
+		lcObjName			= 'cl_commandgroup'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		loReg_Esperado.Reserved1	= 'Class'
+		loReg_Esperado.Reserved2	= '1'
+		TEXT TO loReg_Esperado.Reserved3 NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			una_prop_cmgroup Con comentario, pero sin valor
+
+		ENDTEXT
+		loReg_Esperado.Reserved6	= 'Pixels'
+		loReg_Esperado.Reserved7	= 'Descripción de cl_CommandGroup'
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			ButtonCount = 2
+Value = 1
+Height = 66
+Width = 94
+una_prop_cmgroup = .F.
+Name = "cl_commandgroup"
+Command1.Top = 5
+Command1.Left = 5
+Command1.Height = 27
+Command1.Width = 84
+Command1.Caption = "Command1"
+Command1.Name = "Command1"
+Command2.Top = 34
+Command2.Left = 5
+Command2.Height = 27
+Command2.Width = 84
+Command2.Caption = "Command2"
+Command2.Name = "Command2"
+
+		ENDTEXT
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
 
 
-*!*		*******************************************************************************************************************************************
-*!*		FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__Cl_form1___Cl_olecontrol1
-*!*		ENDFUNC
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_commandgroup
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('')
+		lcParent			= ''
+		lcObjName			= 'cl_commandgroup'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Arial, 0, 9, 5, 15, 12, 32, 3, 0
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_imagen
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('image')
+		lcParent			= ''
+		lcObjName			= 'cl_imagen'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		loReg_Esperado.Reserved1	= 'Class'
+		loReg_Esperado.Reserved2	= '1'
+		loReg_Esperado.Reserved6	= 'Pixels'
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Picture = bmps\sobrepostal.bmp
+Height = 16
+Width = 17
+Name = "cl_imagen"
+
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_imagen
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('')
+		lcParent			= ''
+		lcObjName			= 'cl_imagen'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_form
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('form')
+		lcParent			= ''
+		lcObjName			= 'cl_form'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		loReg_Esperado.Reserved1	= 'Class'
+		loReg_Esperado.Reserved2	= '5'
+		loReg_Esperado.Reserved6	= 'Pixels'
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Top = 0
+Left = 0
+Height = 345
+Width = 570
+DoCreate = .T.
+Caption = "Form"
+Name = "cl_form"
+
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__cl_form__Cl_optiongroup1
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('cl_optiongroup')
+		lcParent			= 'cl_form'
+		lcObjName			= 'Cl_optiongroup1'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Height = 68
+Left = 8
+Top = 12
+Width = 244
+BackColor = 0,128,255
+Name = "Cl_optiongroup1"
+Option1.Picture = bmps\scccheckout.bmp
+Option1.Height = 52
+Option1.Left = 8
+Option1.Style = 1
+Option1.Top = 8
+Option1.Width = 104
+Option1.Name = "Option1"
+Option2.Picture = bmps\scccheckout.bmp
+Option2.Height = 52
+Option2.Left = 124
+Option2.Style = 1
+Option2.Top = 8
+Option2.Width = 104
+Option2.Name = "Option2"
+
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__cl_form__Cl_commandgroup1
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('cl_commandgroup')
+		lcParent			= 'cl_form'
+		lcObjName			= 'Cl_commandgroup1'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Height = 66
+Left = 8
+Top = 88
+Width = 244
+BackColor = 255,128,192
+Name = "Cl_commandgroup1"
+Command1.Top = 4
+Command1.Left = 8
+Command1.Height = 52
+Command1.Width = 104
+Command1.Picture = bmps\carpetaabierta.bmp
+Command1.Caption = "Abrir"
+Command1.Name = "Command1"
+Command2.Top = 4
+Command2.Left = 124
+Command2.Height = 52
+Command2.Width = 104
+Command2.Picture = bmps\carpetacerrada.bmp
+Command2.Caption = "Cerrar"
+Command2.Name = "Command2"
+
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__cl_form__Cl_imagen1
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('cl_imagen')
+		lcParent			= 'cl_form'
+		lcObjName			= 'Cl_imagen1'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Picture = bmps\sobrepostal.bmp
+Stretch = 1
+Height = 34
+Left = 452
+Top = 276
+Width = 38
+Name = "Cl_imagen1"
+
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto__cl_form__Cl_imagen2
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('cl_imagen')
+		lcParent			= 'cl_form'
+		lcObjName			= 'Cl_imagen2'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Picture = bmps\treeview.bmp
+Stretch = 1
+Height = 34
+Left = 500
+Top = 276
+Width = 38
+Name = "Cl_imagen2"
+
+		ENDTEXT
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
+
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarLosCampos_MEMO_ParaElObjeto____cl_olecontrol
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_InputFile, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_TEST.VC?' )
+
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_test.vcx'
+		lcDontShowErrors	= '1'
+
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		lcClass				= LOWER('olecontrol')
+		lcParent			= ''
+		lcObjName			= 'cl_olecontrol'
+		oFXU_LIB.prepararObjetoReg_VCX(	@loReg_Esperado, lcClass, lcParent, lcObjName )
+		loReg_Esperado.Reserved1	= 'Class'
+		loReg_Esperado.Reserved2	= '1'
+		loReg_Esperado.Reserved6	= 'Pixels'
+		TEXT TO loReg_Esperado.Properties NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			Height = 67
+Width = 131
+Name = "cl_olecontrol"
+
+		ENDTEXT
+		TEXT TO loReg_Esperado.OLE2 NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+			OLEObject = C:\Windows\system32\richtx32.ocx
+
+		ENDTEXT
+		TEXT TO lcOLE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+3
+			0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPgADAP7/CQAGAAAAAAAAAAAAAAABAAAAAQAAAAAAAAAAEAAAAgAAAAEAAAD+////AAAAAAAAAAD////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9/////v////7////+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////1IAbwBvAHQAIABFAG4AdAByAHkAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAWAAUA//////////8BAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADDfG05c8M4BAwAAAAACAAAAAAAAAwBPAGwAZQBPAGIAagBlAGMAdABEAGEAdABhAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAB4AAgEDAAAAAgAAAP////8AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAzAAAAAAAAAADAEEAYwBjAGUAcwBzAE8AYgBqAFMAaQB0AGUARABhAHQAYQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJgACAP///////////////wAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEAAABPAAAAAAAAAAMAQwBoAGEAbgBnAGUAZABQAHIAbwBwAHMAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAcAAIA////////////////AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAAEoAAAAAAAAABAAAAAIAAAD+////BQAAAAYAAAD+////BwAAAP7///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////9giHw7j9cbELm1BAIcAJQCIUM0EggAAACKDQAA7QYAACFDNBIBAAYAoAAAAAAA//8AAP//AQAAAAAAAAAAAAAATwAAAAAAAAABAAAAAAAAAAAAAAAAAAAAAAAAABcAAAA4AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgcWhqIFp0dVFoYTtqZGZuW2lhZXRyIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAACADAAAAFJpZ2h0TWFyZ2luABEAAABODQAAAAcAAAAAAAAAAAAAAAUAAABUZXh0ABQAAABIAAAAAAsAAABPAAAAAAUAAIAAAAAAAAABAAAAAQABAAIACAAAAHtccnRmMVxhbnNpXGRlZmYwe1xmb250dGJse1xmMFxmbmlsXGxlY29udHJvbDEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmY2hhcnNldDAgQXJpYWw7fX0NClx2aWV3a2luZDRcdWMxXHBhcmRcbGFuZzMwODJcZnMxOCBPbGVjb250cm9sMQ0KXHBhciB9DQoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==
+		ENDTEXT
+		loReg_Esperado.OLE	= STRCONV( lcOLE,14 )
+
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+ENDFUNC
 
 
 ENDDEFINE
