@@ -2670,7 +2670,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, lcDefinedPAM, lnPos, lnPos2
+			LOCAL llBloqueEncontrado, lcDefinedPAM, lnPos, lnPos2, lcPAM_Name
 
 			IF LEFT( tcLine, C_LEN_DEFINED_PAM_I) == C_DEFINED_PAM_I
 				llBloqueEncontrado	= .T.
@@ -2691,13 +2691,15 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 							IF lnPos2 > 0
 								*-- Con comentarios
+								lcPAM_Name		= RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) )
 								lcDefinedPAM	= lcDefinedPAM ;
-									+ RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) ;
+									+ lcPAM_Name + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) ;
 									+ CR_LF
 							ELSE
 								*-- Sin comentarios
+								lcPAM_Name		= RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) )
 								lcDefinedPAM	= lcDefinedPAM ;
-									+ RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) + ' ' ;
+									+ lcPAM_Name + IIF(ISALPHA(lcPAM_Name), '', ' ') ;
 									+ CR_LF
 							ENDIF
 						ENDCASE
@@ -5689,13 +5691,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		TRY
 			LOCAL laLines(1), I, lnPos, loEx AS EXCEPTION
 			tcSortedMemo	= ''
-			tnPropsAndComments_Count	= ALINES(laLines, tcMemo)
-			DIMENSION taPropsAndComments(tnPropsAndComments_Count,2)
+			tnPropsAndComments_Count	= ALINES(laLines, tcMemo, 1+4)
 
-			IF tnPropsAndComments_Count = 1 AND EMPTY(taPropsAndComments)
+			IF tnPropsAndComments_Count <= 1 AND EMPTY(laLines)
 				tnPropsAndComments_Count	= 0
 				EXIT
 			ENDIF
+
+			DIMENSION taPropsAndComments(tnPropsAndComments_Count,2)
 
 			FOR I = 1 TO tnPropsAndComments_Count
 				lnPos			= AT(' ', laLines(I))	&& Un espacio separa la propiedad de su comentario (si tiene)
@@ -5753,7 +5756,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				lnItemCount = ALINES(laItems, m.tcMemo, 0, CR_LF)	&& Específicamente CR+LF para que no reconozca los CR o LF por separado
 				X	= 0
 
-				IF lnItemCount = 1 AND EMPTY(laItems)
+				IF lnItemCount <= 1 AND EMPTY(laItems)
 					lnItemCount	= 0
 					EXIT
 				ENDIF
@@ -5861,9 +5864,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		EXTERNAL ARRAY taProtected
 
 		tcSortedMemo		= ''
-		tnProtected_Count	= ALINES(taProtected, tcMemo)
+		tnProtected_Count	= ALINES(taProtected, tcMemo, 1+4)
 
-		IF tnProtected_Count = 1 AND EMPTY(taProtected)
+		IF tnProtected_Count <= 1 AND EMPTY(taProtected)
 			tnProtected_Count	= 0
 		ELSE
 			IF tlSort
