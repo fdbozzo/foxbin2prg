@@ -131,7 +131,11 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_MEMBERDATA_F		C_VFPDATA_F
 #DEFINE C_LEN_MEMBERDATA_I	LEN(C_MEMBERDATA_I)
 #DEFINE C_LEN_MEMBERDATA_F	LEN(C_MEMBERDATA_F)
-#DEFINE C_TAG_REPORTE		'reportes'
+#DEFINE C_DATA_I			'<![CDATA['
+#DEFINE C_DATA_F			']]>'
+#DEFINE C_TAG_REPORTE		'Reportes'
+#DEFINE C_TAG_REPORTE_I		'<' + C_TAG_REPORTE + '>'
+#DEFINE C_TAG_REPORTE_F		'</' + C_TAG_REPORTE + '>'
 #DEFINE C_TAB				CHR(9)
 #DEFINE C_CR				CHR(13)
 #DEFINE C_LF				CHR(10)
@@ -798,6 +802,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 				ENDIF
 			ENDIF
 
+		CASE JUSTEXT( THIS.c_OutputFile ) = 'FRX'
+			IF FILE( FORCEEXT(THIS.c_OutputFile,'FRX') )
+				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'FRX') + '/FRT' )
+				COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRX')) TO (FORCEEXT(THIS.c_OutputFile,'FRX' + lcNext_Bak))
+
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'FRT') )
+					COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRT')) TO (FORCEEXT(THIS.c_OutputFile,'FRT' + lcNext_Bak))
+				ENDIF
+			ENDIF
+
 		OTHERWISE
 			ERROR 'Tipo de archivo [' + JUSTFNAME(THIS.c_OutputFile) + '] no soportado para backup!'
 
@@ -1330,9 +1344,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="classmethods2memo" type="method" display="classMethods2Memo"/>] ;
 		+ [<memberdata name="classprops2memo" type="method" display="classProps2Memo"/>] ;
 		+ [<memberdata name="createclasslib" type="method" display="createClasslib"/>] ;
+		+ [<memberdata name="createclasslib_recordheader" type="method" display="createClasslib_RecordHeader"/>] ;
 		+ [<memberdata name="createform" type="method" display="createForm"/>] ;
+		+ [<memberdata name="createform_recordheader" type="method" display="createForm_RecordHeader"/>] ;
 		+ [<memberdata name="createproject" type="method" display="createProject"/>] ;
+		+ [<memberdata name="createproject_recordheader" type="method" display="createProject_RecordHeader"/>] ;
+		+ [<memberdata name="createreport" type="method" display="createReport"/>] ;
 		+ [<memberdata name="defined_pam2memo" type="method" display="defined_PAM2Memo"/>] ;
+		+ [<memberdata name="emptyrecord" type="method" display="emptyRecord"/>] ;
 		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
 		+ [<memberdata name="evaluate_pam" type="method" display="Evaluate_PAM"/>] ;
 		+ [<memberdata name="evaluardefiniciondeprocedure" type="method" display="evaluarDefinicionDeProcedure"/>] ;
@@ -1555,11 +1574,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createProject
-		LPARAMETERS toProject
-
-		#IF .F.
-			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
 
 		CREATE TABLE (THIS.c_OutputFile) ;
 			( NAME			M ;
@@ -1592,6 +1606,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, USER			M )
 
 		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE createProject_RecordHeader
+		LPARAMETERS toProject
+
+		#IF .F.
+			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
 		INSERT INTO TABLABIN ;
 			( NAME ;
 			, TYPE ;
@@ -1635,9 +1661,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE createClasslib
 
-		* No funciona con el EXE
-		*CREATE CLASSLIB (THIS.c_outputFile)
-
 		CREATE TABLE (THIS.c_OutputFile) ;
 			( PLATFORM		C(8) ;
 			, UNIQUEID		C(10) ;
@@ -1664,6 +1687,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, USER			M )
 
 		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE createClasslib_RecordHeader
+
 		INSERT INTO TABLABIN ;
 			( PLATFORM ;
 			, UNIQUEID ;
@@ -1705,6 +1735,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, USER			M )
 
 		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE createForm_RecordHeader
+
 		INSERT INTO TABLABIN ;
 			( PLATFORM ;
 			, UNIQUEID ;
@@ -1714,6 +1751,99 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, 'Screen' ;
 			, 'VERSION =   3.00' )
 
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE createReport
+
+		CREATE TABLE (THIS.c_OutputFile) ;
+			( 'PLATFORM'	C(8) ;
+			, 'UNIQUEID'	C(10) ;
+			, 'TIMESTAMP'	N(10) ;
+			, 'OBJTYPE'		N(2) ;
+			, 'OBJCODE'		N(3) ;
+			, 'NAME'		M ;
+			, 'EXPR'		M ;
+			, 'VPOS'		N(9,3) ;
+			, 'HPOS'		N(9,3) ;
+			, 'HEIGHT'		N(9,3) ;
+			, 'WIDTH'		N(9,3) ;
+			, 'STYLE'		M ;
+			, 'PICTURE'		M ;
+			, 'ORDER'		M NOCPTRANS ;
+			, 'UNIQUE'		L ;
+			, 'COMMENT'		M ;
+			, 'ENVIRON'		L ;
+			, 'BOXCHAR'		C(1) ;
+			, 'FILLCHAR'	C(1) ;
+			, 'TAG'			M ;
+			, 'TAG2'		M NOCPTRANS ;
+			, 'PENRED'		N(5) ;
+			, 'PENGREEN'	N(5) ;
+			, 'PENBLUE'		N(5) ;
+			, 'FILLRED'		N(5) ;
+			, 'FILLGREEN'	N(5) ;
+			, 'FILLBLUE'	N(5) ;
+			, 'PENSIZE'		N(5) ;
+			, 'PENPAT'		N(5) ;
+			, 'FILLPAT'		N(5) ;
+			, 'FONTFACE'	M ;
+			, 'FONTSTYLE'	N(3) ;
+			, 'FONTSIZE'	N(3) ;
+			, 'MODE'		N(3) ;
+			, 'RULER'		N(1) ;
+			, 'RULERLINES'	N(1) ;
+			, 'GRID'		L ;
+			, 'GRIDV'		N(2) ;
+			, 'GRIDH'		N(2) ;
+			, 'FLOAT'		L ;
+			, 'STRETCH'		L ;
+			, 'STRETCHTOP'	L ;
+			, 'TOP'			L ;
+			, 'BOTTOM'		L ;
+			, 'SUPTYPE'		N(1) ;
+			, 'SUPREST'		N(1) ;
+			, 'NOREPEAT'	L ;
+			, 'RESETRPT'	N(2) ;
+			, 'PAGEBREAK'	L ;
+			, 'COLBREAK'	L ;
+			, 'RESETPAGE'	L ;
+			, 'GENERAL'		N(3) ;
+			, 'SPACING'		N(3) ;
+			, 'DOUBLE'		L ;
+			, 'SWAPHEADER'	L ;
+			, 'SWAPFOOTER'	L ;
+			, 'EJECTBEFOR'	L ;
+			, 'EJECTAFTER'	L ;
+			, 'PLAIN'		L ;
+			, 'SUMMARY'		L ;
+			, 'ADDALIAS'	L ;
+			, 'OFFSET'		N(3) ;
+			, 'TOPMARGIN'	N(3) ;
+			, 'BOTMARGIN'	N(3) ;
+			, 'TOTALTYPE'	N(2) ;
+			, 'RESETTOTAL'	N(2) ;
+			, 'RESOID'		N(2) ;
+			, 'CURPOS'		L ;
+			, 'SUPALWAYS'	L ;
+			, 'SUPOVFLOW'	L ;
+			, 'SUPRPCOL'	N(1) ;
+			, 'SUPGROUP'	N(2) ;
+			, 'SUPVALCHNG'	L ;
+			, 'SUPEXPR'		M ;
+			, 'USER'		M )
+
+		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE emptyRecord
+		LOCAL loReg
+		SCATTER MEMO BLANK NAME loReg
+		RETURN loReg
 	ENDPROC
 
 
@@ -2205,6 +2335,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE analizarAsignacion_TAG_Indicado
+		*-- DETALLES: Este método está pensado para leer los tags FB2P_VALUE y MEMBERDATA, que tienen esta sintaxis:
+		*
+		*	_memberdata = <VFPData>
+		*		<memberdata name="mimetodo" display="miMetodo"/>
+		*		</VFPData>		&& XML Metadata for customizable properties
+		*
+		*	<fb2p_value>Este es un&#13;valor especial</fb2p_value>
+		*
 		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F, tcMemo
 		EXTERNAL ARRAY taProps
 		LOCAL llBloqueEncontrado, loEx AS EXCEPTION
@@ -3046,6 +3184,11 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
+			THIS.doBackup()
+			
+			*-- Creo la librería
+			THIS.createClasslib()
+			
 			*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
 			THIS.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
 
@@ -3145,8 +3288,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
-			THIS.doBackup()
-			THIS.createClasslib()
+			*-- Creo el registro de cabecera
+			THIS.createClasslib_RecordHeader()
 
 
 			*-- Recorro las CLASES
@@ -3305,6 +3448,11 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
+			THIS.doBackup()
+
+			*-- Creo el form
+			THIS.createForm()
+
 			*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
 			THIS.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
 
@@ -3404,8 +3552,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
-			THIS.doBackup()
-			THIS.createForm()
+			*-- Creo el registro de cabecera
+			THIS.createForm_RecordHeader()
 
 			*-- El SCX tiene el INCLUDE en el primer registro
 			IF NOT EMPTY(toModulo._includeFile)
@@ -3581,6 +3729,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
+			THIS.doBackup()
+
+			*-- Creo solo la cabecera del proyecto
+			THIS.createProject()
+
 			*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
 			*THIS.identificarBloquesDeExclusion( @laCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
 
@@ -3616,10 +3769,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
 				, loFile AS CL_PROJ_FILE OF 'FOXBIN2PRG.PRG'
 
-			THIS.doBackup()
-
-			*-- Creo solo la cabecera del proyecto
-			THIS.createProject( toProject )
+			*-- Creo solo el registro de cabecera del proyecto
+			THIS.createProject_RecordHeader( toProject )
 
 			lcMainProg	= ''
 
@@ -4256,6 +4407,318 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
+DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
+	#IF .F.
+		LOCAL THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
+		+ [<memberdata name="analizarbloque_cdata_inline" type="method" display="analizarBloque_CDATA_inline"/>] ;
+		+ [<memberdata name="analizarbloque_platform" type="method" display="analizarBloque_platform"/>] ;
+		+ [<memberdata name="analizarbloque_reportes" type="method" display="analizarBloque_Reportes"/>] ;
+		+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		DODEFAULT()
+
+		TRY
+			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I ;
+				, loReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
+			STORE '' TO lcLine, lcSourceFile
+			STORE NULL TO loReg, toModulo
+
+			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
+			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+
+			THIS.doBackup()
+
+			*-- Creo el reporte
+			THIS.createReport()
+
+			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @loReport )
+
+			THIS.escribirArchivoBin( @loReport )
+
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE escribirArchivoBin
+		LPARAMETERS toReport
+		*-- -----------------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL loReg, lnCodError, loEx AS EXCEPTION
+
+			*-- Agrego los ARCHIVOS
+			FOR EACH loReg IN toReport FOXOBJECT
+				INSERT INTO TABLABIN FROM NAME loReg
+			ENDFOR
+
+			USE IN (SELECT("TABLABIN"))
+
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE identificarBloquesDeCodigo
+		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toReport
+		*--------------------------------------------------------------------------------------------------------------
+		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
+		* taBloquesExclusion		(?@ IN    ) Sin uso
+		* tnBloquesExclusion		(?@ IN    ) Sin uso
+		* toReport					(?@    OUT) Objeto con toda la información del reporte analizado
+		*
+		* NOTA:
+		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
+		*--------------------------------------------------------------------------------------------------------------
+		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+
+		#IF .F.
+			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL I, lc_Comentario, lcLine, llFoxBin2Prg_Completed
+			STORE 0 TO I
+
+			THIS.c_Type	= UPPER(JUSTEXT(THIS.c_OutputFile))
+
+			IF tnCodeLines > 1
+				toReport			= NULL
+				toReport			= CREATEOBJECT('CL_REPORT')
+
+				WITH THIS
+					FOR I = 1 TO tnCodeLines
+						.set_Line( @lcLine, @taCodeLines, I )
+
+						IF .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Vacía o solo Comentarios
+							LOOP
+						ENDIF
+
+						DO CASE
+						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toReport, @lcLine, @taCodeLines, @I, tnCodeLines )
+							llFoxBin2Prg_Completed	= .T.
+
+						CASE .analizarBloque_Reportes( toReport, @lcLine, @taCodeLines, @I, tnCodeLines )
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_Reportes
+		*------------------------------------------------------
+		*-- Analiza el bloque <reportes>
+		*------------------------------------------------------
+		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines
+
+		#IF .F.
+			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL llBloqueEncontrado, lcComment, lcMetadatos, luValor ;
+				, laPropsAndValues(1,2), lnPropsAndValues_Count ;
+				, loReg
+
+			IF LEFT( tcLine, LEN(C_TAG_REPORTE) + 1 ) == '<' + C_TAG_REPORTE + ''
+				llBloqueEncontrado	= .T.
+				loReg	= THIS.emptyRecord()
+
+				WITH THIS
+					FOR I = I + 1 TO tnCodeLines
+						lcComment	= ''
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE LEFT( tcLine, LEN(C_TAG_REPORTE_F) ) == C_TAG_REPORTE_F
+							I = I + 1
+							EXIT
+
+						CASE .lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+							LOOP	&& Saltear comentarios
+
+						*CASE UPPER( LEFT( tcLine, 14 ) ) == 'BUILD PROJECT '
+						*	LOOP
+
+						CASE .analizarBloque_platform( toReport, @tcLine, @taCodeLines, @I, @tnCodeLines, @loReg )
+							
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'picture' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag2' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'penred' )
+
+						*CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'style' )
+
+						*CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'expr' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'user' )
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+
+				I = I - 1
+				toReport.Add( loReg )
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_platform
+		*------------------------------------------------------
+		*-- Analiza el bloque <platform=>
+		*------------------------------------------------------
+		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg
+
+		#IF .F.
+			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL llBloqueEncontrado, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps(1) ;
+				, lcComment, lcMetadatos, luValor ;
+				, laPropsAndValues(1,2), lnPropsAndValues_Count
+
+			IF LOWER( LEFT(tcLine, 10) ) == 'platform="'
+				llBloqueEncontrado	= .T.
+				lnLastPos	= 1
+
+				FOR X = 1 TO AMEMBERS( laProps, toReg, 0 )
+					lnPos	= AT( LOWER(laProps(X)) + '="', tcLine )
+
+					IF lnPos > 0
+						lnLenPropName	= LEN(laProps(X))
+						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
+						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
+						ADDPROPERTY( toReg, laProps(X), lcValue )
+					ENDIF
+				ENDFOR
+				
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_CDATA_inline
+		*------------------------------------------------------
+		*-- Analiza el bloque <picture>
+		*------------------------------------------------------
+		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
+
+		#IF .F.
+			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL llBloqueEncontrado, lcValue, loEx as Exception
+
+			IF LEFT(tcLine, 9) == '<' + tcPropName + '>'
+				llBloqueEncontrado	= .T.
+
+				lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
+				ADDPROPERTY( toReg, tcPropName, lcValue )
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ErrorNo = 1470	&& Incorrect property name.
+				loEx.UserValue	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
 DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
@@ -4796,94 +5259,96 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		TRY
 			LOCAL lc_TAG_REPORTE
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
-			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
+			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_I>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>"
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>>platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>"
+				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="toReg.height" width="toReg.width"
+				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="<<toReg.height>>" width="<<toReg.width>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				picture="<<toReg.picture>>" order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>"
+				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>"
+				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>" tag2="<<STRCONV( toReg.tag2,13 )>>" penred="<<toReg.penred>>"
+				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>"
+				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>"
+				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>"
+				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>"
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1
-				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>"
+				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>"
+				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>"
+				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>"
+				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>"
+				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>"
+				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>"
+				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>"
+				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" user="<<toReg.user>>"
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" >
+			ENDTEXT
+
+			*	<<C_TAB>>tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>"
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
+				<<C_TAB>><tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
+				<<C_TAB>><tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
+				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
+				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
+				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
+				<<C_TAB>><user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				style=<![CDATA[<<toReg.style>>]]>
-				expr=<![CDATA[<<toReg.expr>>]]>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
 			ENDTEXT
 
@@ -4907,94 +5372,96 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		TRY
 			LOCAL lc_TAG_REPORTE
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
-			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
+			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_I>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>"
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>>platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>"
+				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="toReg.height" width="toReg.width"
+				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="<<toReg.height>>" width="<<toReg.width>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				picture="<<toReg.picture>>" order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>"
+				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>"
+				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				tag="<<STRCONV( toReg.tag,13 )>>" tag2="<<toReg.tag2>>" penred="<<toReg.penred>>"
+				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>"
+				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>"
+				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>"
+				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>"
+				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>"
+				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>"
+				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>"
+				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>"
+				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>"
+				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>"
+				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>"
+				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>"
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" user="<<toReg.user>>"
+			*	<<C_TAB>>tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>"
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
+				<<C_TAB>><tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
+				<<C_TAB>><tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
+				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
+				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
+				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
+				<<C_TAB>><user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				style="<<toReg.style>>"
-				expr="<<toReg.expr>>"
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
 			ENDTEXT
 
@@ -5018,94 +5485,96 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		TRY
 			LOCAL lc_TAG_REPORTE
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
-			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
+			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_I>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>"
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>>platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>"
+				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="toReg.height" width="toReg.width"
+				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="<<toReg.height>>" width="<<toReg.width>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				picture="<<toReg.picture>>" order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>"
+				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>"
+				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				tag="<<STRCONV( toReg.tag,13 )>>" tag2="<<toReg.tag2>>" penred="<<toReg.penred>>"
+				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>"
+				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>"
+				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>"
+				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>"
+				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>"
+				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>"
+				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>"
+				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>"
+				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>"
+				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>"
+				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>"
+				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>"
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" user="<<toReg.user>>"
+			*	<<C_TAB>>tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>"
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
+				<<C_TAB>><tag><![CDATA[<<CR_LF>><<toReg.tag>>]]>
+				<<C_TAB>><tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
+				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
+				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
+				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
+				<<C_TAB>><user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				style="<<toReg.style>>"
-				expr="<<toReg.expr>>"
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
 			ENDTEXT
 
@@ -6786,6 +7255,53 @@ DEFINE CLASS CL_OBJETO AS CL_BASE
 		DIMENSION THIS._Props( THIS._Prop_Count, 2 )
 		THIS._Props( THIS._Prop_Count, 1 )	= tcProperty
 		THIS._Props( THIS._Prop_Count, 2 )	= tcValue
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_REPORT AS COLLECTION
+	#IF .F.
+		LOCAL THIS AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*-- Propiedades. CLASS,
+	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CONTROLS, CLASSLIBRARY, COMMENT ;
+		, CONTROLCOUNT, HEIGHT, HELPCONTEXTID, LEFT, NAME, OBJECTS, PARENT ;
+		, PARENTCLASS, PICTURE, TAG, WHATSTHISHELPID
+
+	*-- Métodos (Se preservan: init, destroy, error)
+	HIDDEN ADDOBJECT, ADDPROPERTY, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
+		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
+		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
+		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
+		+ [<memberdata name="_version" type="property" display="_Version"/>] ;
+		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
+		+ [<memberdata name="l_debug" type="method" display="l_Debug"/>] ;
+		+ [</VFPData>]
+
+	*-- Proj.Info
+	l_Debug				= .F.
+	_TimeStamp			= 0
+	_Version			= ''
+	_SourceFile			= ''
+
+
+	************************************************************************************************
+	PROCEDURE INIT
+		SET DELETED ON
+		SET DATE YMD
+		SET HOURS TO 24
+		SET CENTURY ON
+		SET SAFETY OFF
+		SET TABLEPROMPT OFF
+
+		THIS.l_Debug	= (_VFP.STARTMODE=0)
 	ENDPROC
 
 
