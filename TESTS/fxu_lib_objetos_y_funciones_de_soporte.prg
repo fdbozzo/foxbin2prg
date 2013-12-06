@@ -51,13 +51,13 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 
 	*----------------------------------------------------------------------------------------
 	PROCEDURE SETUP_COMUN
-
+		ERASE (FORCEPATH( '*.*', THIS.cPathDatosTest ) )
 	ENDPROC
 
 
 	*----------------------------------------------------------------------------------------
 	PROCEDURE TEARDOWN_COMUN
-
+		USE IN (SELECT("TABLABIN"))
 	ENDPROC
 
 

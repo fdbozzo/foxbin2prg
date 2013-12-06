@@ -283,9 +283,9 @@ TRY
 
 CATCH TO loEx
 	IF llExisteConfig
-		goCnv.writeLog( 'ERROR: ' + TRANSFORM(loEx.ErrorNo) + ', ' + loEx.Message + CR_LF ;
-			+ loEx.Procedure + ', line ' + TRANSFORM(loEx.LineNo) + CR_LF ;
-			+ loEx.Details )
+		goCnv.writeLog( 'ERROR: ' + TRANSFORM(loEx.ERRORNO) + ', ' + loEx.MESSAGE + CR_LF ;
+			+ loEx.PROCEDURE + ', line ' + TRANSFORM(loEx.LINENO) + CR_LF ;
+			+ loEx.DETAILS )
 	ENDIF
 
 FINALLY
@@ -314,6 +314,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
 		+ [<memberdata name="writelog" type="method" display="writeLog"/>] ;
 		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
+		+ [<memberdata name="l_test" type="property" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" type="property" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
@@ -337,6 +338,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_LogFile			= ''
 	c_OutputFile		= ''
 	l_Debug				= .F.
+	l_Test				= .F.
 	l_ShowErrors		= .F.
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
@@ -380,10 +382,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS tc_InputFile
+		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, lcErrorInfo
+			LOCAL lnCodError, lcErrorInfo
 			lnCodError			= 0
 			THIS.c_InputFile	= FULLPATH( tc_InputFile )
 			THIS.c_CurDir		= JUSTPATH( THIS.c_InputFile )
@@ -442,13 +444,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			THIS.o_Conversor.c_OutputFile		= THIS.c_OutputFile
 			THIS.o_Conversor.c_LogFile			= THIS.c_LogFile
 			THIS.o_Conversor.l_Debug			= THIS.l_Debug
+			THIS.o_Conversor.l_Test				= THIS.l_Test
 			THIS.o_Conversor.n_FB2PRG_Version	= THIS.n_FB2PRG_Version
-			THIS.o_Conversor.Convertir()
+			THIS.o_Conversor.Convertir( @toModulo )
 			THIS.o_Conversor	= NULL
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-			lcErrorInfo	= THIS.Exception2Str(loEx) + CR_LF + CR_LF + 'Fuente: ' + THIS.c_InputFile
+		CATCH TO toEx
+			lnCodError	= toEx.ERRORNO
+			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + 'Fuente: ' + THIS.c_InputFile
 
 			TRY
 				STRTOFILE( lcErrorInfo, THIS.c_InputFile + '.ERR' )
@@ -651,6 +654,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
+		LPARAMETERS toModulo, toEx AS EXCEPTION
 		THIS.writeLog( '' )
 		THIS.writeLog( 'Convirtiendo archivo ' + THIS.c_OutputFile + '...' )
 	ENDPROC
@@ -1348,7 +1352,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
 
 
@@ -1752,14 +1757,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
-				DIMENSION laProps( toClase._Prop_Count, 2 )
+				DIMENSION laProps( toClase._Prop_Count, 3 )
 				ACOPY( toClase._Props, laProps )
 				lnPropsAndValues_Count	= 0
 
 				WITH THIS
 					*-- OBTENGO LAS PROPIEDADES Y SUS VALORES
 					FOR I = 1 TO toClase._Prop_Count
-						.get_SeparatedPropAndValue( toClase._Props(I,1), @lcPropName, @lcValue )
+						*.get_SeparatedPropAndValue( toClase._Props(I,1), @lcPropName, @lcValue )
+						lcPropName	= toClase._Props(I,1)
+						lcValue		= toClase._Props(I,2)
 
 						DO CASE
 						CASE EMPTY(lcPropName)
@@ -1829,14 +1836,15 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		IF toObjeto._Prop_Count > 0
 			DIMENSION laPropsAndValues( toObjeto._Prop_Count, 2 )
+			ACOPY( toObjeto._Props, laPropsAndValues )
 
-			WITH THIS
-				FOR I = 1 TO toObjeto._Prop_Count
-					.get_SeparatedPropAndValue( toObjeto._Props(I,1), @lcPropName, @lcValue )
-					laPropsAndValues(I,1)	= lcPropName
-					laPropsAndValues(I,2)	= lcValue
-				ENDFOR
-			ENDWITH && THIS
+			*WITH THIS
+			*	FOR I = 1 TO toObjeto._Prop_Count
+			*		.get_SeparatedPropAndValue( toObjeto._Props(I,1), @lcPropName, @lcValue )
+			*		laPropsAndValues(I,1)	= lcPropName
+			*		laPropsAndValues(I,2)	= lcValue
+			*	ENDFOR
+			*ENDWITH && THIS
 
 
 			*-- REORDENO LAS PROPIEDADES
@@ -2537,7 +2545,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							*toProject.setParsedProjInfoLine( @tcLine )
 							lnPos			= AT( ' ', tcLine, 1 )
 							lnPos2			= AT( '&'+'&', tcLine )
-							
+
 							IF lnPos2 > 0
 								*-- Con comentarios
 								lcDefinedPAM	= lcDefinedPAM ;
@@ -2590,7 +2598,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			IF LEFT( tcLine, 11 ) == 'ADD OBJECT '
 				*-- Estructura a reconocer: ADD OBJECT 'frm_a.Check1' AS check [WITH]
 				llBloqueEncontrado	= .T.
-				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z
+				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue
 				tcLine		= CHRTRAN( tcLine, ['], ["] )
 
 				IF EMPTY(toClase._Fin_Cab)
@@ -2647,10 +2655,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						IF RIGHT(tcLine, 3) == ', ;'
 							*toObjeto.add_Property( .desnormalizarAsignacion( LEFT(tcLine, LEN(tcLine) - 3) ) )
-							toObjeto.add_Property( LEFT(tcLine, LEN(tcLine) - 3) )
+							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue )
+							toObjeto.add_Property( @lcProp, @lcValue )
 						ELSE
 							*toObjeto.add_Property( .desnormalizarAsignacion( RTRIM(tcLine) ) )
-							toObjeto.add_Property( RTRIM(tcLine) )
+							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue )
+							toObjeto.add_Property( @lcProp, @lcValue )
 						ENDIF
 
 					ENDFOR
@@ -2719,7 +2729,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		IF LEFT(tcLine + ' ', 13) == C_DEFINE_CLASS + ' '
 			TRY
 				llBloqueEncontrado = .T.
-				LOCAL Z, loEx AS EXCEPTION ;
+				LOCAL Z, lcProp, lcValue, loEx AS EXCEPTION ;
 					, llMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
 					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed
 
@@ -2803,7 +2813,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						CASE NOT llCLASS_PROPERTY_Completed AND EMPTY( toClase._Fin_Cab ) && Propiedades del DEFINE CLASS
 							*toClase.add_Property( THIS.desnormalizarAsignacion( RTRIM(tcLine) ), RTRIM(tc_Comentario) )
-							toClase.add_Property( RTRIM(tcLine), RTRIM(tc_Comentario) )
+							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue )
+							toClase.add_Property( @lcProp, @lcValue, RTRIM(tc_Comentario) )
 
 
 						OTHERWISE
@@ -2821,6 +2832,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						+ 'de la línea ' + TRANSFORM( toClase._Inicio ) + ' ' ;
 						+ 'para el identificador [' + toClase._Nombre + ']'
 				ENDIF
+
+				toClase._PROPERTIES		= THIS.classProps2Memo( toClase )
+				toClase._PROTECTED		= THIS.hiddenAndProtected_PAM( toClase )
+				toClase._METHODS		= THIS.classMethods2Memo( toClase )
+				*toClase._RESERVED1		= IIF( THIS.c_Type = 'SCX', 'Screen', 'Class' )
+				toClase._RESERVED2		= TRANSFORM( toClase._AddObject_Count + 1 )
+				toClase._RESERVED3		= THIS.defined_PAM2Memo( toClase )
+				toClase._RESERVED4		= toClase._ClassIcon
+				toClase._RESERVED5		= toClase._ProjectClassIcon
+				toClase._RESERVED6		= toClase._Scale
+				toClase._RESERVED7		= toClase._Comentario
+				toClase._RESERVED8		= toClase._includeFile
 
 			CATCH TO loEx
 				IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -3010,11 +3033,12 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I, toModulo
+			LOCAL lnCodError, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
 			STORE '' TO lcLine, lcSourceFile
 			STORE NULL TO loReg, toModulo
@@ -3031,9 +3055,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			THIS.escribirArchivoBin( @toModulo )
 
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
+		CATCH TO toEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -3042,7 +3064,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 
 
@@ -3165,14 +3187,14 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					, loClase._BaseClass ;
 					, loClase._ObjName ;
 					, loClase._Parent ;
-					, THIS.classProps2Memo( loClase ) ;
-					, THIS.hiddenAndProtected_PAM( loClase ) ;
-					, THIS.classMethods2Memo( loClase ) ;
+					, loClase._PROPERTIES ;
+					, loClase._PROTECTED ;
+					, loClase._METHODS ;
 					, loClase._Ole ;
 					, loClase._Ole2 ;
-					, 'Class' ;
-					, TRANSFORM( loClase._AddObject_Count + 1 ) ;
-					, THIS.defined_PAM2Memo( loClase ) ;
+					, loClase._RESERVED1 ;
+					, loClase._RESERVED2 ;
+					, loClase._RESERVED3 ;
 					, loClase._ClassIcon ;
 					, loClase._ProjectClassIcon ;
 					, loClase._Scale ;
@@ -3270,11 +3292,12 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I, toModulo
+			LOCAL lnCodError, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
 			STORE '' TO lcLine, lcSourceFile
 			STORE NULL TO loReg, toModulo
@@ -3291,9 +3314,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			THIS.escribirArchivoBin( @toModulo )
 
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
+		CATCH TO toEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -3302,7 +3323,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 
 
@@ -3430,14 +3451,14 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 					, loClase._BaseClass ;
 					, loClase._ObjName ;
 					, loClase._Parent ;
-					, THIS.classProps2Memo( loClase ) ;
-					, THIS.hiddenAndProtected_PAM( loClase ) ;
-					, THIS.classMethods2Memo( loClase ) ;
+					, loClase._PROPERTIES ;
+					, loClase._PROTECTED ;
+					, loClase._METHODS ;
 					, loClase._Ole ;
 					, loClase._Ole2 ;
-					, '' ;
-					, TRANSFORM( loClase._AddObject_Count + 1 ) ;
-					, THIS.defined_PAM2Memo( loClase ) ;
+					, loClase._RESERVED1 ;
+					, loClase._RESERVED2 ;
+					, loClase._RESERVED3 ;
 					, loClase._ClassIcon ;
 					, loClase._ProjectClassIcon ;
 					, loClase._Scale ;
@@ -3506,8 +3527,6 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 
 		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -3519,7 +3538,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 
 	ENDPROC
 ENDDEFINE
@@ -3545,12 +3564,16 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
+
+		#IF .F.
+			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I ;
-				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+			LOCAL lnCodError, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
 			STORE '' TO lcLine, lcSourceFile
 			STORE NULL TO loReg, toModulo
@@ -3562,14 +3585,12 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			*THIS.identificarBloquesDeExclusion( @laCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
 
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @loProject )
+			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toProject )
 
-			THIS.escribirArchivoBin( @loProject )
+			THIS.escribirArchivoBin( @toProject )
 
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
+		CATCH TO toEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -3578,7 +3599,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 
 
@@ -4274,7 +4295,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
 
 
@@ -4306,38 +4328,36 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE get_ADD_OBJECT_METHODS
-		LPARAMETERS toRegObj, toRegClass, tcMethods
+		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount
 
 		TRY
-			LOCAL laMethods(1,3), laCode(1), lnMethodCount
-
-			THIS.SortMethod( toRegObj.METHODS, @laMethods, @laCode, '', @lnMethodCount )
+			THIS.SortMethod( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount )
 
 			*-- Ubico los métodos protegidos y les cambio la definición.
 			*-- Los métodos se deben generar con la ruta completa, porque si no es imposible saber a que objeto corresponden,
 			*-- o si son de la clase.
-			IF lnMethodCount > 0 THEN
-				FOR I = 1 TO lnMethodCount
+			IF tnMethodCount > 0 THEN
+				FOR I = 1 TO tnMethodCount
 					IF EMPTY(toRegObj.PARENT)
-						lcMethodName	= toRegObj.OBJNAME + '.' + laMethods(I,1)
+						tcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
 					ELSE
 						DO CASE
 						CASE '.' $ toRegObj.PARENT
-							lcMethodName	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT) + 1) + '.' + toRegObj.OBJNAME + '.' + laMethods(I,1)
+							tcMethodName	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT) + 1) + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 						CASE LEFT(toRegObj.PARENT + '.', LEN( toRegClass.OBJNAME + '.' ) ) == toRegClass.OBJNAME + '.'
-							lcMethodName	= toRegObj.OBJNAME + '.' + laMethods(I,1)
+							tcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 						OTHERWISE
-							lcMethodName	= toRegObj.PARENT + '.' + toRegObj.OBJNAME + '.' + laMethods(I,1)
+							tcMethodName	= toRegObj.PARENT + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 						ENDCASE
 					ENDIF
 
 					*-- Genero el método SIN indentar, ya que se hace luego
 					TEXT TO tcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<'PROCEDURE'>> <<lcMethodName>>
-						<<THIS.IndentarMemo( laCode(laMethods(I,2)) )>>
+						<<'PROCEDURE'>> <<tcMethodName>>
+						<<THIS.IndentarMemo( taCode(taMethods(I,2)) )>>
 						<<'ENDPROC'>>
 					ENDTEXT
 				ENDFOR
@@ -4767,8 +4787,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 		ENDIF
 	ENDPROC
-	
-	
+
+
 	*******************************************************************************************************************
 	PROCEDURE write_CABECERA_REPORTE
 		LPARAMETERS toReg
@@ -4777,7 +4797,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL lc_TAG_REPORTE
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
 			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
-			
+
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_I>>
 			ENDTEXT
@@ -4878,8 +4898,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		RETURN
 	ENDPROC
-	
-	
+
+
 	*******************************************************************************************************************
 	PROCEDURE write_DETALLE_REPORTE
 		LPARAMETERS toReg
@@ -4888,7 +4908,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL lc_TAG_REPORTE
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
 			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
-			
+
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_I>>
 			ENDTEXT
@@ -4989,8 +5009,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		RETURN
 	ENDPROC
-	
-	
+
+
 	*******************************************************************************************************************
 	PROCEDURE write_DATAENVIRONMENT_REPORTE
 		LPARAMETERS toReg
@@ -4999,7 +5019,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL lc_TAG_REPORTE
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
 			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
-			
+
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_I>>
 			ENDTEXT
@@ -5721,10 +5741,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
 			STORE 0 TO lnCodError, lnLastClass
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
@@ -5812,13 +5833,16 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
 			*-- Genero el VC2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			IF THIS.l_Test
+				toModulo	= C_FB2PRG_CODE
+			ELSE
+				IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+					ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+				ENDIF
 			ENDIF
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
 
+		CATCH TO toEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -5830,7 +5854,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 ENDDEFINE
 
@@ -5847,10 +5871,15 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
 			STORE 0 TO lnCodError, lnLastClass
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
@@ -5860,6 +5889,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
+
+			*toModulo	= NULL
+			*toModulo	= CREATEOBJECT('CL_MODULO')
 
 			THIS.write_PROGRAM_HEADER()
 
@@ -5891,7 +5923,10 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
 					AND (EMPTY(TABLABIN.PARENT) ;
 					AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
+
+				*loRegClass	= NULL
 				SCATTER MEMO NAME loRegClass
+				*toModulo.add_Class( loRegClass )
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
 				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
@@ -5954,13 +5989,16 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
 			*-- Genero el SC2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			IF THIS.l_Test
+				toModulo	= C_FB2PRG_CODE
+			ELSE
+				IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+					ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+				ENDIF
 			ENDIF
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
 
+		CATCH TO toEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -5968,11 +6006,13 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			THROW
 
 		FINALLY
+			loRegObj	= NULL
+			loRegClass	= NULL
 			USE IN (SELECT("TABLABIN"))
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 ENDDEFINE
 
@@ -6003,7 +6043,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 
 		TRY
 			LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo ;
@@ -6248,18 +6289,22 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 			*-- Genero el PJ2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			IF THIS.l_Test
+				toModulo	= C_FB2PRG_CODE
+			ELSE
+				IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+					ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+				ENDIF
+				*COMPILE ( THIS.c_outputFile )
 			ENDIF
-			*COMPILE ( THIS.c_outputFile )
 
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
+		CATCH TO toEx
+			lnCodError	= toEx.ERRORNO
 
 			DO CASE
 			CASE lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
-				loEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
+				toEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
 			ENDCASE
 
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -6273,7 +6318,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 ENDDEFINE
 
@@ -6290,17 +6335,18 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loRegCab, loRegDataEnv, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+			LOCAL lnCodError, loRegCab, loRegDataEnv, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
 			STORE 0 TO lnCodError, lnLastClass
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
 			STORE NULL TO loRegObj, loRegCab, loRegDataEnv
 
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN_0
-			
+
 			GO TOP			&& Tiene que ser objType = 1
 			SCATTER MEMO NAME loRegCab
 			GOTO BOTTOM		&& Tiene que ser objType = 25
@@ -6321,7 +6367,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			SELECT TABLABIN
 			GOTO TOP
 			THIS.write_CABECERA_REPORTE( @loRegCab )
-			
+
 			SCAN ALL
 				SCATTER MEMO NAME loRegObj
 				THIS.write_DETALLE_REPORTE( @loRegObj )
@@ -6330,13 +6376,16 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			THIS.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
 
 			*-- Genero el SC2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			IF THIS.l_Test
+				toModulo	= C_FB2PRG_CODE
+			ELSE
+				IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+					ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+				ENDIF
 			ENDIF
 
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
 
+		CATCH TO toEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -6349,7 +6398,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 		ENDTRY
 
-		RETURN lnCodError
+		RETURN
 	ENDPROC
 ENDDEFINE
 
@@ -6528,8 +6577,20 @@ DEFINE CLASS CL_CLASE AS CL_BASE
 		+ [<memberdata name="_scale" type="property" display="_Scale"/>] ;
 		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
 		+ [<memberdata name="_uniqueid" type="property" display="_UniqueID"/>] ;
-		+ [<memberdata name="_user" type="property" display="_User"/>] ;
+		+ [<memberdata name="_properties" type="property" display="_PROPERTIES"/>] ;
+		+ [<memberdata name="_protected" type="property" display="_PROTECTED"/>] ;
+		+ [<memberdata name="_methods" type="property" display="_METHODS"/>] ;
+		+ [<memberdata name="_reserved1" type="property" display="_RESERVED1"/>] ;
+		+ [<memberdata name="_reserved2" type="property" display="_RESERVED2"/>] ;
+		+ [<memberdata name="_reserved3" type="property" display="_RESERVED3"/>] ;
+		+ [<memberdata name="_reserved4" type="property" display="_RESERVED4"/>] ;
+		+ [<memberdata name="_reserved5" type="property" display="_RESERVED5"/>] ;
+		+ [<memberdata name="_reserved6" type="property" display="_RESERVED6"/>] ;
+		+ [<memberdata name="_reserved7" type="property" display="_RESERVED7"/>] ;
+		+ [<memberdata name="_reserved8" type="property" display="_RESERVED8"/>] ;
+		+ [<memberdata name="_user" type="property" display="_USER"/>] ;
 		+ [</VFPData>]
+
 
 	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1]
 	_Nombre				= ''
@@ -6564,6 +6625,17 @@ DEFINE CLASS CL_CLASE AS CL_BASE
 	_includeFile		= ''
 	_AddObject_Count	= 0
 	_Procedure_Count	= 0
+	_PROPERTIES			= ''
+	_PROTECTED			= ''
+	_METHODS			= ''
+	_RESERVED1			= ''
+	_RESERVED2			= ''
+	_RESERVED3			= ''
+	_RESERVED4			= ''
+	_RESERVED5			= ''
+	_RESERVED6			= ''
+	_RESERVED7			= ''
+	_RESERVED8			= ''
 	_User				= ''
 
 
@@ -6583,11 +6655,12 @@ DEFINE CLASS CL_CLASE AS CL_BASE
 
 	************************************************************************************************
 	PROCEDURE add_Property
-		LPARAMETERS tcProperty AS STRING, tcComment AS STRING
+		LPARAMETERS tcProperty AS STRING, tcValue AS STRING, tcComment AS STRING
 		THIS._Prop_Count	= THIS._Prop_Count + 1
-		DIMENSION THIS._Props( THIS._Prop_Count, 2 )
+		DIMENSION THIS._Props( THIS._Prop_Count, 3 )
 		THIS._Props( THIS._Prop_Count, 1 )	= tcProperty
-		THIS._Props( THIS._Prop_Count, 2 )	= tcComment
+		THIS._Props( THIS._Prop_Count, 2 )	= tcValue
+		THIS._Props( THIS._Prop_Count, 3 )	= tcComment
 	ENDPROC
 
 
@@ -6708,10 +6781,11 @@ DEFINE CLASS CL_OBJETO AS CL_BASE
 
 	************************************************************************************************
 	PROCEDURE add_Property
-		LPARAMETERS tcProperty
+		LPARAMETERS tcProperty AS STRING, tcValue AS STRING
 		THIS._Prop_Count	= THIS._Prop_Count + 1
-		DIMENSION THIS._Props( THIS._Prop_Count, 1 )
+		DIMENSION THIS._Props( THIS._Prop_Count, 2 )
 		THIS._Props( THIS._Prop_Count, 1 )	= tcProperty
+		THIS._Props( THIS._Prop_Count, 2 )	= tcValue
 	ENDPROC
 
 

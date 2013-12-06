@@ -54,9 +54,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 	*******************************************************************************************************************************************
 	FUNCTION Evaluate_results
-		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado ;
-			, tc_InputFile, taPropsAndValues, tnPropsAndValues_Count ;
-			, taPropsAndValues_Esperado, tnPropsAndValues_Count_Esperado, tcParent, tcClass, tcObjName
+		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado, tc_InputFile, tcParent, tcClass, tcObjName, toReg, toReg_Esperado
 
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
@@ -70,24 +68,110 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		ENDIF
 
 		IF ISNULL(toEx)
+			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
+				, lnPropsAndComments_Count, lnPropsAndComments_Count_Esperado, laPropsAndComments(1,2), laPropsAndComments_Esperado(1,2) ;
+				, laProtected(1), lnProtected_Count, laProtected_Esperado(1), lnProtected_Count_Esperado ;
+				, laMethods(1,2), lnMethods_Count, laMethods_Esperado(1,2), lnMethods_Count_Esperado
+			LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
+
 			*-- Algunos ajustes para mejor visualización de caracteres especiales
 			*tcPropValue				= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcPropValue )
+			loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
+
+			*-- Reserved3
+			loObj.get_PropsAndCommentsFrom_RESERVED3( toReg.RESERVED3, .F., @laPropsAndComments, @lnPropsAndComments_Count, '' )
+			loObj.get_PropsAndCommentsFrom_RESERVED3( toReg_Esperado.RESERVED3, .F., @laPropsAndComments_Esperado, @lnPropsAndComments_Count_Esperado, '' )
+
+			*-- Properties
+			loObj.get_PropsAndValuesFrom_PROPERTIES( toReg.PROPERTIES, 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+			loObj.get_PropsAndValuesFrom_PROPERTIES( toReg_Esperado.PROPERTIES, 0, @laPropsAndValues_Esperado, @lnPropsAndValues_Count_Esperado, '' )
+			
+			*-- Protected
+			loObj.get_PropsFrom_PROTECTED( toReg.PROTECTED, .F., @laProtected, @lnProtected_Count, '' )
+			loObj.get_PropsFrom_PROTECTED( toReg_Esperado.PROTECTED, .F., @laProtected_Esperado, @lnProtected_Count_Esperado, '' )
+			
+			*-- Methods
+			loObj.get_ADD_OBJECT_METHODS( toReg, toReg, '', @laMethods, '', @lnMethods_Count )
+			loObj.get_ADD_OBJECT_METHODS( toReg_Esperado, toReg_Esperado, '', @laMethods_Esperado, '', @lnMethods_Count_Esperado )
+			
 
 
 			*-- Visualización de valores
 			THIS.messageout( LOWER(PROGRAM(PROGRAM(-1)-1)) )
+
 			THIS.messageout( '' )
-			THIS.messageout( 'Propiedades esperadas para ' + tcParent + '.' + tcObjName + ' (' + tcClass + ')' + ': ' )
-			THIS.messageout( REPLICATE('-',80) )
-			FOR I = 1 TO tnPropsAndValues_Count_Esperado
-				THIS.messageout( 'PropName = ' + TRANSFORM(taPropsAndValues_Esperado(I,1)) )
-			ENDFOR
+			THIS.messageout( 'PROPERTIES esperadas para ' + tcParent + '.' + tcObjName + ' (' + tcClass + ')' + ': ' + TRANSFORM(lnPropsAndValues_Count_Esperado) )
+			*THIS.messageout( REPLICATE('-',80) )
+			*FOR I = 1 TO lnPropsAndValues_Count_Esperado
+			*	THIS.messageout( 'PropName = ' + TRANSFORM(laPropsAndValues_Esperado(I,1)) )
+			*ENDFOR
+
+			THIS.messageout( '' )
+			THIS.messageout( 'PROTECTED esperadas para ' + tcParent + '.' + tcObjName + ' (' + tcClass + ')' + ': ' + TRANSFORM(lnProtected_Count_Esperado) )
+			*THIS.messageout( REPLICATE('-',80) )
+			*FOR I = 1 TO lnProtected_Count_Esperado
+			*	THIS.messageout( 'PropName = ' + TRANSFORM(laProtected_Esperado(I,1)) )
+			*ENDFOR
+
+			THIS.messageout( '' )
+			THIS.messageout( 'RESERVED3 esperadas para ' + tcParent + '.' + tcObjName + ' (' + tcClass + ')' + ': ' + TRANSFORM(lnPropsAndComments_Count_Esperado) )
+			*THIS.messageout( REPLICATE('-',80) )
+			*FOR I = 1 TO lnPropsAndComments_Count_Esperado
+			*	THIS.messageout( 'PropName = ' + TRANSFORM(laPropsAndComments_Esperado(I,1)) )
+			*ENDFOR
+
+			THIS.messageout( '' )
+			THIS.messageout( 'METHODS esperadas para ' + tcParent + '.' + tcObjName + ' (' + tcClass + ')' + ': ' + TRANSFORM(lnMethods_Count_Esperado) )
+			*THIS.messageout( REPLICATE('-',80) )
+			*FOR I = 1 TO lnMethods_Count_Esperado
+			*	THIS.messageout( 'Name = ' + TRANSFORM(laMethods_Esperado(I,1)) )
+			*ENDFOR
 
 
 			*-- Evaluación de valores
-			THIS.assertequals( tnPropsAndValues_Count_Esperado, tnPropsAndValues_Count, "Cantidad de propiedades" )
-			FOR I = 1 TO tnPropsAndValues_Count_Esperado
-				THIS.asserttrue( ASCAN( taPropsAndValues, taPropsAndValues_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la propiedad "' + TRANSFORM(taPropsAndValues_Esperado(I,1)) + '"' )
+			*-- Reserved1
+			THIS.assertequals( toReg_Esperado.Reserved1, toReg.Reserved1, "Valor de Reserved1" )
+
+			*-- Reserved2
+			THIS.assertequals( toReg_Esperado.Reserved2, toReg.Reserved2, "Valor de Reserved2" )
+
+			*-- Reserved4
+			THIS.assertequals( toReg_Esperado.Reserved4, toReg.Reserved4, "Valor de Reserved4" )
+
+			*-- Reserved5
+			THIS.assertequals( toReg_Esperado.Reserved5, toReg.Reserved5, "Valor de Reserved5" )
+
+			*-- Reserved6
+			THIS.assertequals( toReg_Esperado.Reserved6, toReg.Reserved6, "Valor de Reserved6" )
+
+			*-- Reserved7
+			THIS.assertequals( toReg_Esperado.Reserved7, toReg.Reserved7, "Valor de Reserved7" )
+
+			*-- Reserved8
+			THIS.assertequals( toReg_Esperado.Reserved8, toReg.Reserved8, "Valor de Reserved8" )
+
+			*-- PROPERTIES
+			THIS.assertequals( lnPropsAndValues_Count_Esperado, lnPropsAndValues_Count, "Cantidad de Properties" )
+			FOR I = 1 TO lnPropsAndValues_Count_Esperado
+				THIS.asserttrue( ASCAN( laPropsAndValues, laPropsAndValues_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Property "' + TRANSFORM(taPropsAndValues_Esperado(I,1)) + '"' )
+			ENDFOR
+
+			*-- RESERVED3
+			THIS.assertequals( lnPropsAndValues_Count_Esperado, lnPropsAndValues_Count, "Cantidad de Reserved3" )
+			FOR I = 1 TO lnPropsAndValues_Count_Esperado
+				THIS.asserttrue( ASCAN( laPropsAndComments, laPropsAndComments_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Reserved3 "' + TRANSFORM(taPropsAndValues_Esperado(I,1)) + '"' )
+			ENDFOR
+
+			*-- PROTECTED
+			THIS.assertequals( lnProtected_Count_Esperado, lnProtected_Count, "Cantidad de Protected" )
+			FOR I = 1 TO lnProtected_Count_Esperado
+				THIS.asserttrue( ASCAN( laProtected, laProtected_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Protected "' + TRANSFORM(taPropsAndValues_Esperado(I,1)) + '"' )
+			ENDFOR
+
+			*-- METHODS
+			THIS.assertequals( lnMethods_Count_Esperado, lnMethods_Count, "Cantidad de Methods" )
+			FOR I = 1 TO lnPropsAndValues_Count_Esperado
+				THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe el Method "' + TRANSFORM(taPropsAndValues_Esperado(I,1)) + '"' )
 			ENDFOR
 
 		ELSE
@@ -102,15 +186,14 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 	*******************************************************************************************************************************************
-	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__dataenvironment
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarLosCampos_MEMO_ParaElRegistroDeCabecera
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -121,11 +204,101 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', 'VERSION =   3.00' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('dataenvironment')
 		lcParent						= ''
 		lcObjName						= 'Dataenvironment'
 
-		TEXT TO lcMemo NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+
+		*-- TEST
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
+
+			LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Screen    "
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro de cabecera "Screen"'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
+
+		*--
+		CATCH TO loEx
+		ENDTRY
+
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__dataenvironment
+		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
+			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
+			, loEx AS EXCEPTION
+
+		loEx		= NULL
+		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
+
+		*-- DATOS DE ENTRADA
+		STORE 0 TO lnCodError
+		lc_InputFile		= 'TESTS\DATOS_TEST\fb2p_frm_1.scx'
+		lcDontShowErrors	= '1'
+
+		*-- DATOS ESPERADOS
+		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		TEXT TO loReg_Esperado.Reserved3 NOSHOW FLAGS 1+2 PRETEXT 1+2+4
 			Top = 404
 			Left = 11
 			Width = 520
@@ -133,33 +306,60 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			DataSource = .NULL.
 			Name = "Dataenvironment"
 		ENDTEXT
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
 
-		lnPropsAndValues_Count_Esperado	= ALINES( laProps, lcMemo, 1+4 )
-		DIMENSION laPropsAndValues_Esperado(lnPropsAndValues_Count_Esperado,2)
-		
-		FOR I = 1 TO lnPropsAndValues_Count_Esperado
-			loObj.get_SeparatedPropAndValue( laProps(I), @lcProp, @lcValue )
-			laPropsAndValues_Esperado(I,1)	= lcProp
-			laPropsAndValues_Esperado(I,2)	= lcValue
-		ENDFOR
+		lcClass							= LOWER('dataenvironment')
+		lcParent						= ''
+		lcObjName						= 'Dataenvironment'
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
+SET STEP ON
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+		CATCH TO loEx
+		ENDTRY
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
-
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -168,12 +368,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__dataenvironment__Cursor1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -184,6 +383,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('cursor')
 		lcParent						= 'Dataenvironment'
 		lcObjName						= 'Cursor1'
@@ -209,21 +433,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -232,12 +472,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -248,6 +487,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('cl_form')
 		lcParent						= ''
 		lcObjName						= 'Cl_form1'
@@ -301,21 +565,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -324,12 +604,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__shape1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -340,6 +619,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('shape')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'Shape1'
@@ -368,21 +672,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -391,12 +711,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__txtPromotor
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -407,6 +726,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'txtPromotor'
@@ -438,21 +782,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -461,12 +821,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__lblPromotor
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -477,6 +836,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('label')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'lblPromotor'
@@ -505,21 +889,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -528,12 +928,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__txtIdenc
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -544,6 +943,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'txtIdenc'
@@ -575,21 +999,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -598,12 +1038,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__lblIdenc
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -614,6 +1053,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('label')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'lblIdenc'
@@ -642,21 +1106,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -665,12 +1145,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__txtCalific
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -681,6 +1160,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'txtCalific'
@@ -712,21 +1216,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -735,12 +1255,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__lblCalific
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -751,6 +1270,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('label')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'lblCalific'
@@ -779,21 +1323,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -802,12 +1362,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__lblCalific
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -818,6 +1377,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'txtFecha'
@@ -848,21 +1432,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -871,12 +1471,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__lblFecha
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -887,6 +1486,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('label')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'lblFecha'
@@ -915,21 +1539,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -938,12 +1578,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__txtResultado
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -954,6 +1593,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'txtResultado'
@@ -985,21 +1649,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1008,12 +1688,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__lblResultado
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1024,6 +1703,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('label')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'lblResultado'
@@ -1052,21 +1756,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1075,12 +1795,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1__grdEncuestas
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1091,6 +1810,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('grid')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'grdEncuestas'
@@ -1141,21 +1885,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1164,12 +1924,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column1__Header1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1180,6 +1939,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('header')
 		lcParent						= 'Cl_form1.grdEncuestas.Column1'
 		lcObjName						= 'Header1'
@@ -1200,21 +1984,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1223,12 +2023,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column1__Text1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1239,6 +2038,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1.grdEncuestas.Column1'
 		lcObjName						= 'Text1'
@@ -1263,21 +2087,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1286,12 +2126,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column2__Header1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1302,6 +2141,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('header')
 		lcParent						= 'Cl_form1.grdEncuestas.Column2'
 		lcObjName						= 'Header1'
@@ -1322,21 +2186,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1345,12 +2225,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column2__Text1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1361,6 +2240,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1.grdEncuestas.Column2'
 		lcObjName						= 'Text1'
@@ -1385,21 +2289,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1408,12 +2328,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column3__Header1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1424,6 +2343,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('header')
 		lcParent						= 'Cl_form1.grdEncuestas.Column3'
 		lcObjName						= 'Header1'
@@ -1444,21 +2388,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1467,12 +2427,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column3__Text1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1483,6 +2442,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1.grdEncuestas.Column3'
 		lcObjName						= 'Text1'
@@ -1507,21 +2491,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1530,12 +2530,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column4__Header1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1546,6 +2545,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('header')
 		lcParent						= 'Cl_form1.grdEncuestas.Column4'
 		lcObjName						= 'Header1'
@@ -1566,21 +2590,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1589,12 +2629,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column4__Text1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1605,6 +2644,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1.grdEncuestas.Column4'
 		lcObjName						= 'Text1'
@@ -1629,21 +2693,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1652,12 +2732,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column5__Header1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1668,6 +2747,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('header')
 		lcParent						= 'Cl_form1.grdEncuestas.Column5'
 		lcObjName						= 'Header1'
@@ -1688,21 +2792,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1711,12 +2831,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1_grdEncuestas_Column5__Text1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1727,6 +2846,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('textbox')
 		lcParent						= 'Cl_form1.grdEncuestas.Column5'
 		lcObjName						= 'Text1'
@@ -1751,21 +2895,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1774,12 +2934,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1___Commandgroup1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1790,6 +2949,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('commandgroup')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'Commandgroup1'
@@ -1831,21 +3015,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1854,12 +3054,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1___Optiongroup1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1870,6 +3069,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('Optiongroup')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'Optiongroup1'
@@ -1915,21 +3139,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
@@ -1938,12 +3178,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarElCampo_PROPERTIES_ParaElObjeto__Cl_form1___Cl_olecontrol1
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress ;
-			, laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
-			, laDatos(1,1), lcParent, lcClass, lcObjName, lcMemo, laProps(1), lcProp, lcValue ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, lcParent, lcClass, lcObjName, lcMemo, loReg, loReg_Esperado ;
 			, loEx AS EXCEPTION
 
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 		loEx		= NULL
 		oFXU_LIB.copiarArchivosParaTest( 'FB2P_FRM_1.SC?' )
 
@@ -1954,6 +3193,31 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
+		loReg_Esperado					= CREATEOBJECT("EMPTY")
+
+		*-- Reserved1
+		ADDPROPERTY( loReg_Esperado, 'Reserved1', '' )
+		*-- Reserved2
+		ADDPROPERTY( loReg_Esperado, 'Reserved2', '' )
+		*-- Reserved3
+		ADDPROPERTY( loReg_Esperado, 'Reserved3', '' )
+		*-- Reserved4
+		ADDPROPERTY( loReg_Esperado, 'Reserved4', '' )
+		*-- Reserved5
+		ADDPROPERTY( loReg_Esperado, 'Reserved5', '' )
+		*-- Reserved6
+		ADDPROPERTY( loReg_Esperado, 'Reserved6', '' )
+		*-- Reserved7
+		ADDPROPERTY( loReg_Esperado, 'Reserved7', '' )
+		*-- Reserved8
+		ADDPROPERTY( loReg_Esperado, 'Reserved8', '' )
+		*-- Properties
+		ADDPROPERTY( loReg_Esperado, 'Properties', '' )
+		*-- Protected
+		ADDPROPERTY( loReg_Esperado, 'Protected', '' )
+		*-- Methods
+		ADDPROPERTY( loReg_Esperado, 'Methods', '' )
+
 		lcClass							= LOWER('Cl_olecontrol')
 		lcParent						= 'Cl_form1'
 		lcObjName						= 'Cl_olecontrol1'
@@ -1977,21 +3241,37 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 		*-- TEST
-		DO FOXBIN2PRG.prg WITH lc_InputFile, lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
-		DO FOXBIN2PRG.prg WITH FORCEEXT(lc_InputFile,'VC2'), lcType_na, lcTextName_na, llGenText_na, lcDontShowErrors, lcDebug, lcDontShowProgress
+		TRY
+			loCnv	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			lnCodError	= loCnv.Convertir( lc_InputFile, @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			lnCodError	= loCnv.Convertir( FORCEEXT(lc_InputFile,'SC2'), @loModulo, @loEx )
+			IF lnCodError > 0
+				EXIT
+			ENDIF
+			
+			IF FILE(lc_InputFile)
+				USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			ELSE
+				ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
+			ENDIF
 
-		IF FILE(lc_InputFile)
-			USE (lc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-		ELSE
-			ERROR 'No se encontró el archivo "' + lc_InputFile + '"'
-		ENDIF
+			LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+			IF NOT FOUND()
+				ERROR 'No se encontró el registro buscado'
+			ENDIF
+			SCATTER MEMO NAME loReg
+			USE IN (SELECT("TABLABIN"))
 
-		SELECT Properties FROM TABLABIN WHERE CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName INTO ARRAY laDatos
-		USE IN (SELECT("TABLABIN"))
-		loObj.get_PropsAndValuesFrom_PROPERTIES( laDatos(1), 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
+		CATCH TO loEx
+		ENDTRY
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, @laPropsAndValues, lnPropsAndValues_Count ;
-			, @laPropsAndValues_Esperado, lnPropsAndValues_Count_Esperado, lcParent, lcClass, lcObjName )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_InputFile, lcParent, lcClass, lcObjName, loReg, loReg_Esperado )
 
 	ENDFUNC
 
