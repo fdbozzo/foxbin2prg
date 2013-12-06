@@ -279,17 +279,22 @@ TRY
 			ENDIF
 		ENDCASE
 
-		CD (JUSTPATH(lcSys16))
-		SET PATH TO (lcPath)
 	ENDIF
 
 CATCH TO loEx
+	IF llExisteConfig
+		goCnv.writeLog( 'ERROR: ' + TRANSFORM(loEx.ErrorNo) + ', ' + loEx.Message + CR_LF ;
+			+ loEx.Procedure + ', line ' + TRANSFORM(loEx.LineNo) + CR_LF ;
+			+ loEx.Details )
+	ENDIF
 
 FINALLY
 	goFrm_Avance.HIDE()
 	goFrm_Avance.RELEASE()
 	STORE NULL TO goCnv, goFrm_Avance
 	RELEASE goCnv, goFrm_Avance
+	CD (JUSTPATH(lcSys16))
+	SET PATH TO (lcPath)
 ENDTRY
 
 IF _VFP.STARTMODE > 0
@@ -335,7 +340,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors		= .F.
 	lFileMode			= .F.
 	nClassTimeStamp		= ''
-	n_FB2PRG_Version	= 1.8
+	n_FB2PRG_Version	= 1.9
 	o_Conversor			= NULL
 	c_VC2				= 'VC2'
 	c_SC2				= 'SC2'
@@ -3444,7 +3449,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				THIS.insert_AllObjects( @loClase )
 
 
-				IF NOT loClase._BaseClass == 'dataenvironment'
+				IF .F. &&NOT loClase._BaseClass == 'dataenvironment'
 					*-- Inserto el COMMENT
 					INSERT INTO TABLABIN ;
 						( PLATFORM ;
