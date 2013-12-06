@@ -386,7 +386,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION
+		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION, tlRelanzarError
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo
@@ -470,6 +470,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 			IF THIS.l_Debug AND THIS.l_ShowErrors
 				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+			ENDIF
+			IF tlRelanzarError	&& Usado en Unit Testing
+				THROW
 			ENDIF
 		ENDTRY
 
@@ -1448,6 +1451,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lnLastPos	= 1
 		DIMENSION taPropsAndValues( lnCantComillas / 2, 2 )
 
+		*-------------------------------------------------------------------------------------
+		* IMPORTANTE!!
+		* ------------
+		* SI SE SEPARAN LAS IGUALDADES CON ESPACIOS, ÉSTAS DEJAN DE RECONOCERSE!!  (prop = "valor" en vez de prop="valor")
+		* TENER EN CUENTA AL GENERAR EL TEXTO O AL MODIFICARLO MANUALMENTE AL MERGEAR
+		*-------------------------------------------------------------------------------------
 		FOR I = 1 TO lnCantComillas STEP 2
 			X	= X + 1
 
@@ -2592,7 +2601,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toClase._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
 				toClase._ProjectClassIcon	= .get_ValueByName_FromListNamesWithValues( 'ProjectClassIcon', 'C', @laPropsAndValues )
 				toClase._ClassIcon			= .get_ValueByName_FromListNamesWithValues( 'ClassIcon', 'C', @laPropsAndValues )
-				toClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'Ole2', 'C', @laPropsAndValues )
+				toClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
 			ENDWITH && THIS
 
 			IF NOT EMPTY( toClase._Ole2 )	&& Le agrego "OLEObject = " delante
@@ -2974,7 +2983,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toClase._PROPERTIES		= THIS.classProps2Memo( toClase )
 				toClase._PROTECTED		= THIS.hiddenAndProtected_PAM( toClase )
 				toClase._METHODS		= THIS.classMethods2Memo( toClase )
-				*toClase._RESERVED1		= IIF( THIS.c_Type = 'SCX', 'Screen', 'Class' )
+				toClase._RESERVED1		= IIF( THIS.c_Type = 'SCX', '', 'Class' )
 				toClase._RESERVED2		= IIF( THIS.c_Type = 'VCX' OR toClase._Nombre == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
 				toClase._RESERVED3		= THIS.defined_PAM2Memo( toClase )
 				toClase._RESERVED4		= toClase._ClassIcon
@@ -5185,8 +5194,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTEXT
 
 		IF NOT EMPTY(toRegClass.OLE2)
+			*FDB*	OLEObject="<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
-				OLEObject = "<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
+				OLEObject="<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" CheckSum="<<SYS(2007, toRegClass.ole, 0, 1)>>" <<>>
 			ENDTEXT
 		ENDIF
 
@@ -5635,6 +5645,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					Nombre="<<IIF(EMPTY(loReg.Parent),'',loReg.Parent+'.') + loReg.objName>>"
 					Parent="<<loReg.Parent>>"
 					ObjName="<<loReg.objname>>"
+					OLEObject="<<STREXTRACT(loReg.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
 					Checksum="<<lcOLEChecksum>>" <<>>
 				ENDTEXT
 
