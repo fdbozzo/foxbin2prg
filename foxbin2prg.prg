@@ -2685,11 +2685,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							I = I + 1
 							EXIT
 
-							*CASE .lineIsOnlyCommentAndNoMetadata( @tcLine )
-							*	LOOP	&& Saltear comentarios
-
 						OTHERWISE
-							*toProject.setParsedProjInfoLine( @tcLine )
 							lnPos			= AT( ' ', tcLine, 1 )
 							lnPos2			= AT( '&'+'&', tcLine )
 
@@ -5194,7 +5190,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTEXT
 
 		IF NOT EMPTY(toRegClass.OLE2)
-			*FDB*	OLEObject="<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 				OLEObject="<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" CheckSum="<<SYS(2007, toRegClass.ole, 0, 1)>>" <<>>
 			ENDTEXT

@@ -216,19 +216,19 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*-- RESERVED3
 			THIS.assertequals( lnPropsAndComments_Count_Esperado, lnPropsAndComments_Count, "Cantidad de RESERVED3" )
 			FOR I = 1 TO lnPropsAndComments_Count_Esperado
-				THIS.asserttrue( ASCAN( laPropsAndComments, laPropsAndComments_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Reserved3 "' + TRANSFORM(laPropsAndValues_Esperado(I,1)) + '"' )
+				THIS.asserttrue( ASCAN( laPropsAndComments, laPropsAndComments_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Reserved3 "' + TRANSFORM(laPropsAndComments_Esperado(I,1)) + '"' )
 			ENDFOR
 
 			*-- PROTECTED
 			THIS.assertequals( lnProtected_Count_Esperado, lnProtected_Count, "Cantidad de PROTECTED" )
 			FOR I = 1 TO lnProtected_Count_Esperado
-				THIS.asserttrue( ASCAN( laProtected, laProtected_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Protected "' + TRANSFORM(laPropsAndValues_Esperado(I,1)) + '"' )
+				THIS.asserttrue( ASCAN( laProtected, laProtected_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe la Protected "' + TRANSFORM(laProtected_Esperado(I,1)) + '"' )
 			ENDFOR
 
 			*-- METHODS
 			THIS.assertequals( lnMethods_Count_Esperado, lnMethods_Count, "Cantidad de METHODS" )
 			FOR I = 1 TO lnMethods_Count_Esperado
-				THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe el Method "' + TRANSFORM(laPropsAndValues_Esperado(I,1)) + '"' )
+				THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 0+2+4) > 0, ' Comprobación de que existe el Method "' + TRANSFORM(laMethods_Esperado(I,1)) + '"' )
 			ENDFOR
 
 		ELSE
