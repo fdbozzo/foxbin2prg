@@ -46,6 +46,7 @@
 * 01/12/2013	FDBOZZO		v1.6 Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
 * 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
 * 03/12/2013	FDBOZZO		v1.8 Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
+* 03/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -53,6 +54,7 @@
 * 27/11/2013	Fidel Charny	REPORTE BUG: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny	REPORTE BUG: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
 * 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa del arreglo anterior (arreglado en v.1.8)
+* 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa de una mejora anterior (arreglado en v.1.9)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -121,12 +123,15 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_FILE_TXT_F		'*</TextFiles>'
 #DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
 #DEFINE C_FB2P_VALUE_F		'</fb2p_value>'
-#DEFINE C_MEMBERDATA_I		'<VFPData>'
-#DEFINE C_MEMBERDATA_F		'</VFPData>'
-#DEFINE C_LEN_MEMBERDATA_I	LEN(C_MEMBERDATA_I)
-#DEFINE C_LEN_MEMBERDATA_F	LEN(C_MEMBERDATA_F)
 #DEFINE C_LEN_FB2P_VALUE_I	LEN(C_FB2P_VALUE_I)
 #DEFINE C_LEN_FB2P_VALUE_F	LEN(C_FB2P_VALUE_F)
+#DEFINE C_VFPDATA_I			'<VFPData>'
+#DEFINE C_VFPDATA_F			'</VFPData>'
+#DEFINE C_MEMBERDATA_I		C_VFPDATA_I
+#DEFINE C_MEMBERDATA_F		C_VFPDATA_F
+#DEFINE C_LEN_MEMBERDATA_I	LEN(C_MEMBERDATA_I)
+#DEFINE C_LEN_MEMBERDATA_F	LEN(C_MEMBERDATA_F)
+#DEFINE C_TAG_REPORTE		'reportes'
 #DEFINE C_TAB				CHR(9)
 #DEFINE C_CR				CHR(13)
 #DEFINE C_LF				CHR(10)
@@ -315,6 +320,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_mn2" type="property" display="c_MN2"/>] ;
 		+ [<memberdata name="c_fr2" type="property" display="c_FR2"/>] ;
 		+ [<memberdata name="c_lb2" type="property" display="c_LB2"/>] ;
+		+ [<memberdata name="c_db2" type="property" display="c_DB2"/>] ;
+		+ [<memberdata name="c_cd2" type="property" display="c_CD2"/>] ;
+		+ [<memberdata name="c_dc2" type="property" display="c_DC2"/>] ;
 		+ [<memberdata name="o_conversor" type="property" display="o_Conversor"/>] ;
 		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
@@ -335,6 +343,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_MN2				= 'MN2'
 	c_FR2				= 'FR2'
 	c_LB2				= 'LB2'
+	c_DB2				= 'DB2'
+	c_CD2				= 'CD2'
+	c_DC2				= 'DC2'
 
 
 	*******************************************************************************************************************
@@ -397,6 +408,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_PJ2 )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
 
+			CASE JUSTEXT(THIS.c_InputFile) = 'FRX'
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_FR2 )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_VC2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'VCX' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
@@ -408,6 +423,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_PJ2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'PJX' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
+
+			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_FR2
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'FRX' )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 
 			OTHERWISE
 				ERROR 'El archivo [' + THIS.c_InputFile + '] no está soportado'
@@ -547,10 +566,12 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="buscarobjetodelmetodopornombre" type="method" display="buscarObjetoDelMetodoPorNombre"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" type="method" display="comprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+		+ [<memberdata name="decode_specialcodes_1_31" type="method" display="decode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="desnormalizarasignacion" type="method" display="desnormalizarAsignacion"/>] ;
 		+ [<memberdata name="desnormalizarvalorpropiedad" type="method" display="desnormalizarValorPropiedad"/>] ;
 		+ [<memberdata name="desnormalizarvalorxml" type="method" display="desnormalizarValorXML"/>] ;
 		+ [<memberdata name="dobackup" type="method" display="doBackup"/>] ;
+		+ [<memberdata name="encode_specialcodes_1_31" type="method" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
 		+ [<memberdata name="filetypecode" type="method" display="fileTypeCode"/>] ;
 		+ [<memberdata name="getnext_bak" type="method" display="getNext_BAK"/>] ;
@@ -1254,6 +1275,26 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE encode_SpecialCodes_1_31
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
+		ENDFOR
+		RETURN tcText
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE decode_SpecialCodes_1_31
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
+		ENDFOR
+		RETURN tcText
+	ENDPROC
 ENDDEFINE
 
 
@@ -2491,9 +2532,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							*toProject.setParsedProjInfoLine( @tcLine )
 							lnPos			= AT( ' ', tcLine, 1 )
 							lnPos2			= AT( '&'+'&', tcLine )
-							lcDefinedPAM	= lcDefinedPAM ;
-								+ RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) ;
-								+ CR_LF
+							
+							IF lnPos2 > 0
+								*-- Con comentarios
+								lcDefinedPAM	= lcDefinedPAM ;
+									+ RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) ;
+									+ CR_LF
+							ELSE
+								*-- Sin comentarios
+								lcDefinedPAM	= lcDefinedPAM ;
+									+ RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) + ' ' ;
+									+ CR_LF
+							ENDIF
 						ENDCASE
 					ENDFOR
 				ENDWITH && THIS
@@ -4180,577 +4230,6 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
-	#IF .F.
-		LOCAL THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
-	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-	+ [</VFPData>]
-
-	*******************************************************************************************************************
-	PROCEDURE Convertir
-		DODEFAULT()
-
-		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
-				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-			STORE 0 TO lnCodError, lnLastClass
-			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
-			STORE NULL TO loRegClass, loRegObj
-
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-
-			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
-			SET ORDER TO 0 IN TABLABIN
-
-			THIS.write_PROGRAM_HEADER()
-
-			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
-
-			THIS.write_DefinicionObjetosOLE()
-
-			*-- Escribo los métodos ordenados
-			lnLastClass		= 0
-
-			*----------------------------------------------
-			*-- RECORRO LAS CLASES
-			*----------------------------------------------
-			SELECT TABLABIN
-			SET ORDER TO PARENT_OBJ
-
-			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
-				SCATTER MEMO NAME loRegClass
-				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
-
-				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
-
-				THIS.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
-
-				THIS.write_Define_Class_COMMENTS( @loRegClass )
-
-				THIS.write_METADATA( @loRegClass )
-
-				THIS.write_INCLUDE( @loRegClass )
-
-				THIS.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
-
-
-				*-------------------------------------------------------------------------------
-				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
-				*-------------------------------------------------------------------------------
-				lnRecno	= RECNO()
-				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-					SCATTER MEMO NAME loRegObj
-					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
-					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
-				ENDSCAN
-
-				GOTO RECORD (lnRecno)
-
-
-				*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
-				DIMENSION laMethods(1,3)
-				lcMethods	= ''
-				THIS.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
-
-				THIS.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
-
-				lnLastClass		= 1
-				lcMethods		= ''
-
-				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
-				lnRecno	= RECNO()
-				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-				SCAN REST ;
-						FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT TABLABIN.RESERVED1=="Class" ;
-						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-					SCATTER MEMO NAME loRegObj
-					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
-				ENDSCAN
-
-				THIS.write_ALL_OBJECT_METHODS( @lcMethods )
-
-				GOTO RECORD (lnRecno)
-			ENDSCAN
-
-			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
-
-			*-- Genero el VC2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
-			ENDIF
-
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			USE IN (SELECT("TABLABIN"))
-
-		ENDTRY
-
-		RETURN lnCodError
-	ENDPROC
-ENDDEFINE
-
-
-*******************************************************************************************************************
-DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
-	#IF .F.
-		LOCAL THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
-	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-	+ [</VFPData>]
-
-
-	*******************************************************************************************************************
-	PROCEDURE Convertir
-		DODEFAULT()
-
-		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
-				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-			STORE 0 TO lnCodError, lnLastClass
-			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
-			STORE NULL TO loRegClass, loRegObj
-
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-
-			*IF FILE('C_SUB_OBJS.CDX')
-			*	ERASE 'C_SUB_OBJS.CDX'
-			*ENDIF
-			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
-			SET ORDER TO 0 IN TABLABIN
-
-			THIS.write_PROGRAM_HEADER()
-
-			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
-
-			THIS.write_DefinicionObjetosOLE()
-
-			*-- Escribo los métodos ordenados
-			lnLastObj		= 0
-			lnLastClass		= 0
-
-			*----------------------------------------------
-			*-- RECORRO LAS CLASES
-			*----------------------------------------------
-			SELECT TABLABIN
-			SET ORDER TO PARENT_OBJ
-			GOTO RECORD 1
-
-			SCATTER FIELDS RESERVED8 MEMO NAME loRegClass
-
-			IF NOT EMPTY(loRegClass.RESERVED8) THEN
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					#INCLUDE "<<loRegClass.Reserved8>>"
-
-				ENDTEXT
-			ENDIF
-
-
-			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
-					AND (EMPTY(TABLABIN.PARENT) ;
-					AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
-				SCATTER MEMO NAME loRegClass
-				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
-
-				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
-
-				THIS.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
-
-				THIS.write_Define_Class_COMMENTS( @loRegClass )
-
-				THIS.write_METADATA( @loRegClass )
-
-				THIS.write_INCLUDE( @loRegClass )
-
-				THIS.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
-
-
-				*-------------------------------------------------------------------------------
-				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
-				*-------------------------------------------------------------------------------
-				lnRecno	= RECNO()
-				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-					SCATTER MEMO NAME loRegObj
-					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
-					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
-				ENDSCAN
-
-				GOTO RECORD (lnRecno)
-
-
-				*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
-				DIMENSION laMethods(1,3)
-				lcMethods	= ''
-				THIS.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
-
-				THIS.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
-
-				lnLastClass		= 1
-				lcMethods		= ''
-
-				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
-				lnRecno	= RECNO()
-				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-				SCAN REST ;
-						FOR TABLABIN.PLATFORM = "WINDOWS" ;
-						AND NOT (EMPTY(TABLABIN.PARENT) ;
-						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
-						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-					SCATTER MEMO NAME loRegObj
-					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
-				ENDSCAN
-
-				THIS.write_ALL_OBJECT_METHODS( @lcMethods )
-
-				GOTO RECORD (lnRecno)
-			ENDSCAN
-
-			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
-
-			*-- Genero el SC2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
-			ENDIF
-
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			USE IN (SELECT("TABLABIN"))
-
-		ENDTRY
-
-		RETURN lnCodError
-	ENDPROC
-ENDDEFINE
-
-
-*******************************************************************************************************************
-DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
-	#IF .F.
-		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
-	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
-	*	+ [</VFPData>]
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_PROGRAM_HEADER
-		*-- Cabecera del PRG e inicio de DEF_CLASS
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
-			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
-			*
-		ENDTEXT
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE Convertir
-		DODEFAULT()
-
-		TRY
-			LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo ;
-				, loEx AS EXCEPTION ;
-				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
-				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
-
-			STORE NULL TO loProject, loReg, loServerHead, loServerData
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-			loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
-
-
-			*-- Obtengo los archivos del proyecto
-			loProject		= CREATEOBJECT('CL_PROJECT')
-			SCATTER MEMO NAME loReg
-			loProject._HomeDir		= ALLTRIM( loReg.HOMEDIR )
-			loProject._ServerInfo	= loReg.RESERVED2
-			loProject._Debug		= loReg.DEBUG
-			loProject._Encrypted	= loReg.ENCRYPT
-			lcDevInfo				= loReg.DEVINFO
-
-
-			*--- Ubico el programa principal
-			LOCATE FOR MAINPROG
-
-			IF FOUND()
-				loProject._MainProg	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
-			ENDIF
-
-
-			*-- Ubico el Project Hook
-			LOCATE FOR TYPE == 'W'
-
-			IF FOUND()
-				loProject._ProjectHookLibrary	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
-				loProject._ProjectHookClass	= LOWER( ALLTRIM( RESERVED1, 0, ' ', CHR(0) ) )
-			ENDIF
-
-
-			*-- Ubico el icono del proyecto
-			LOCATE FOR TYPE == 'i'
-
-			IF FOUND()
-				loProject._Icon	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
-			ENDIF
-
-
-			*-- Escaneo el proyecto
-			SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
-				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
-				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
-				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
-
-				TRY
-					loProject.ADD( loReg, loReg.NAME )
-				CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
-					*-- Saltear y no agregar el archivo duplicado / Bypass and not add the duplicated file
-				ENDTRY
-			ENDSCAN
-
-
-			THIS.write_PROGRAM_HEADER()
-
-
-			*-- Directorio de inicio
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				LPARAMETERS tcDir
-
-				lcCurdir = SYS(5)+CURDIR()
-				CD ( EVL( tcDir, JUSTPATH( SYS(16) ) ) )
-
-			ENDTEXT
-
-
-			*-- Información del programa
-			loProject.parseDeviceInfo( lcDevInfo )
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + loProject.getFormattedDeviceInfoText() + CR_LF
-
-
-			*-- Información de los Servidores definidos
-			IF NOT EMPTY(loProject._ServerInfo)
-				loServerHead.parseServerInfo( loProject._ServerInfo )
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + loServerHead.getFormattedServerText() + CR_LF
-				loServerHead	= NULL
-			ENDIF
-
-
-			*-- Generación del proyecto
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_BUILDPROJ_I>>
-				FOR EACH loProj IN _VFP.Projects FOXOBJECT
-				<<C_TAB>>loProj.Close()
-				ENDFOR
-
-				STRTOFILE( '', '__newproject.f2b' )
-				BUILD PROJECT <<JUSTFNAME( THIS.c_inputFile )>> FROM '__newproject.f2b'
-			ENDTEXT
-
-
-			*-- Abro el proyecto
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				FOR EACH loProj IN _VFP.Projects FOXOBJECT
-				<<C_TAB>>loProj.Close()
-				ENDFOR
-
-				MODIFY PROJECT '<<JUSTFNAME( THIS.c_inputFile )>>' NOWAIT NOSHOW NOPROJECTHOOK
-
-				loProject = _VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>')
-
-				WITH loProject.FILES
-			ENDTEXT
-
-
-			*-- Definir archivos del proyecto y metadata: CPID, Timestamp, ID, etc.
-			loProject.KEYSORT = 2
-
-			FOR EACH loReg IN loProject &&FOXOBJECT
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ADD('<<loReg.NAME>>')
-				ENDTEXT
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-					<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<C_FILE_META_I>>
-					Type="<<loReg.TYPE>>"
-					Cpid="<<INT( loReg.CPID )>>"
-					Timestamp="<<INT( loReg.TIMESTAMP )>>"
-					ID="<<INT( loReg.ID )>>"
-					ObjRev="<<INT( loReg.OBJREV )>>"
-					<<C_FILE_META_F>>
-				ENDTEXT
-			ENDFOR
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_BUILDPROJ_F>>
-
-				<<C_TAB>>.ITEM('__newproject.f2b').Remove()
-
-			ENDTEXT
-
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_CMTS_I>>
-			ENDTEXT
-
-
-			*-- Agrego los comentarios
-			loProject.KEYSORT = 2
-
-			FOR EACH loReg IN loProject &&FOXOBJECT
-				IF NOT EMPTY(loReg.COMMENTS)
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
-					ENDTEXT
-				ENDIF
-			ENDFOR
-
-
-			*-- Exclusiones
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_CMTS_F>>
-
-				<<C_TAB>><<C_FILE_EXCL_I>>
-			ENDTEXT
-
-			loProject.KEYSORT = 2
-
-			FOR EACH loReg IN loProject &&FOXOBJECT
-				IF loReg.EXCLUDE
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
-					ENDTEXT
-				ENDIF
-			ENDFOR
-
-
-			*-- Tipos de archivos especiales
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_EXCL_F>>
-
-				<<C_TAB>><<C_FILE_TXT_I>>
-			ENDTEXT
-
-			loProject.KEYSORT = 2
-
-			FOR EACH loReg IN loProject &&FOXOBJECT
-				IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
-					ENDTEXT
-				ENDIF
-			ENDFOR
-
-
-			*-- ProjectHook, Debug, Encrypt, Build y cierre
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_TXT_F>>
-				ENDWITH
-
-				WITH loProject
-				<<C_TAB>><<C_PROJPROPS_I>>
-			ENDTEXT
-
-			IF NOT EMPTY(loProject._MainProg)
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.SetMain(lcCurdir + '<<loProject._MainProg>>')
-				ENDTEXT
-			ENDIF
-
-			IF NOT EMPTY(loProject._Icon)
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.Icon = lcCurdir + '<<loProject._Icon>>'
-				ENDTEXT
-			ENDIF
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>.Debug = <<loProject._Debug>>
-				<<C_TAB>>.Encrypted = <<loProject._Encrypted>>
-				<<C_TAB>>*<.CmntStyle = <<loProject._CmntStyle>> />
-				<<C_TAB>>*<.NoLogo = <<loProject._NoLogo>> />
-				<<C_TAB>>*<.SaveCode = <<loProject._SaveCode>> />
-				<<C_TAB>>.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
-				<<C_TAB>>.ProjectHookClass = '<<loProject._ProjectHookClass>>'
-				<<C_TAB>><<C_PROJPROPS_F>>
-				ENDWITH
-
-			ENDTEXT
-
-
-			*-- Build y cierre
-			*	_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').FILES('__newproject.f2b').Remove()
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
-				_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').Close()
-			ENDTEXT
-
-			*-- Restauro Directorio de inicio
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				*ERASE '__newproject.f2b'
-				CD (lcCurdir)
-				RETURN
-			ENDTEXT
-
-
-			*-- Genero el PJ2
-			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
-				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
-			ENDIF
-			*COMPILE ( THIS.c_outputFile )
-
-
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
-			DO CASE
-			CASE lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
-				loEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
-			ENDCASE
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			USE IN (SELECT("TABLABIN"))
-
-		ENDTRY
-
-		RETURN lnCodError
-	ENDPROC
-ENDDEFINE
-
-
-*******************************************************************************************************************
 DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
@@ -4770,8 +4249,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="sortmethod" type="method" display="SortMethod"/>] ;
 		+ [<memberdata name="write_add_objects_withproperties" type="method" display="write_ADD_OBJECTS_WithProperties"/>] ;
 		+ [<memberdata name="write_all_object_methods" type="method" display="write_ALL_OBJECT_METHODS"/>] ;
+		+ [<memberdata name="write_cabecera_reporte" type="method" display="write_CABECERA_REPORTE"/>] ;
 		+ [<memberdata name="write_class_methods" type="method" display="write_CLASS_METHODS"/>] ;
 		+ [<memberdata name="write_class_properties" type="method" display="write_CLASS_PROPERTIES"/>] ;
+		+ [<memberdata name="write_dataenvironment_reporte" type="method" display="write_DATAENVIRONMENT_REPORTE"/>] ;
+		+ [<memberdata name="write_detalle_reporte" type="method" display="write_DETALLE_REPORTE"/>] ;
 		+ [<memberdata name="write_defined_pam" type="method" display="write_DEFINED_PAM"/>] ;
 		+ [<memberdata name="write_define_class" type="method" display="write_DEFINE_CLASS"/>] ;
 		+ [<memberdata name="write_define_class_comments" type="method" display="write_Define_Class_COMMENTS"/>] ;
@@ -5045,18 +4527,28 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			lcPropsMethodsDefd	= ''
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>><<C_DEFINED_PAM_I>>
+				<<C_TAB>><<C_DEFINED_PAM_I>>
 			ENDTEXT
 
 			FOR I = 1 TO tnPropsAndComments_Count
+				IF EMPTY(taPropsAndComments(I,1))
+					LOOP
+				ENDIF
+
 				lcType	= LEFT( taPropsAndComments(I,1), 1 )
 				lcType	= ICASE( lcType == '*', 'm' ;
 					, lcType == '^', 'a' ;
 					, 'p' )
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_TAB>>*<<lcType>>: <<taPropsAndComments(I,1)>>		<<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
+				<<C_TAB>><<C_TAB>>*<<lcType>>: <<taPropsAndComments(I,1)>>
 				ENDTEXT
+
+				IF NOT EMPTY(taPropsAndComments(I,2))
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
+					ENDTEXT
+				ENDIF
 			ENDFOR
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -5269,6 +4761,339 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			ENDTEXT
 		ENDIF
+	ENDPROC
+	
+	
+	*******************************************************************************************************************
+	PROCEDURE write_CABECERA_REPORTE
+		LPARAMETERS toReg
+
+		TRY
+			LOCAL lc_TAG_REPORTE
+			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
+			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
+			
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<lc_TAG_REPORTE_I>>
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="toReg.height" width="toReg.width"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				picture="<<toReg.picture>>" order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>" tag2="<<STRCONV( toReg.tag2,13 )>>" penred="<<toReg.penred>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1
+				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" user="<<toReg.user>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				style=<![CDATA[<<toReg.style>>]]>
+				expr=<![CDATA[<<toReg.expr>>]]>
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				<<lc_TAG_REPORTE_F>>
+			ENDTEXT
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+	
+	
+	*******************************************************************************************************************
+	PROCEDURE write_DETALLE_REPORTE
+		LPARAMETERS toReg
+
+		TRY
+			LOCAL lc_TAG_REPORTE
+			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
+			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
+			
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<lc_TAG_REPORTE_I>>
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="toReg.height" width="toReg.width"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				picture="<<toReg.picture>>" order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				tag="<<STRCONV( toReg.tag,13 )>>" tag2="<<toReg.tag2>>" penred="<<toReg.penred>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" user="<<toReg.user>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				style="<<toReg.style>>"
+				expr="<<toReg.expr>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				<<lc_TAG_REPORTE_F>>
+			ENDTEXT
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+	
+	
+	*******************************************************************************************************************
+	PROCEDURE write_DATAENVIRONMENT_REPORTE
+		LPARAMETERS toReg
+
+		TRY
+			LOCAL lc_TAG_REPORTE
+			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
+			lc_TAG_REPORTE_F	= ' ></' + C_TAG_REPORTE + '>'
+			
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<lc_TAG_REPORTE_I>>
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="toReg.height" width="toReg.width"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				picture="<<toReg.picture>>" order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				tag="<<STRCONV( toReg.tag,13 )>>" tag2="<<toReg.tag2>>" penred="<<toReg.penred>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" user="<<toReg.user>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				style="<<toReg.style>>"
+				expr="<<toReg.expr>>"
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				<<lc_TAG_REPORTE_F>>
+			ENDTEXT
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -5877,6 +5702,650 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	*_MEMBERDATA	= [<VFPData>] ;
+	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [</VFPData>]
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		DODEFAULT()
+
+		TRY
+			LOCAL lnCodError, loEx AS EXCEPTION, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
+			STORE 0 TO lnCodError, lnLastClass
+			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
+			STORE NULL TO loRegClass, loRegObj
+
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+
+			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
+			SET ORDER TO 0 IN TABLABIN
+
+			THIS.write_PROGRAM_HEADER()
+
+			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
+
+			THIS.write_DefinicionObjetosOLE()
+
+			*-- Escribo los métodos ordenados
+			lnLastClass		= 0
+
+			*----------------------------------------------
+			*-- RECORRO LAS CLASES
+			*----------------------------------------------
+			SELECT TABLABIN
+			SET ORDER TO PARENT_OBJ
+
+			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
+				SCATTER MEMO NAME loRegClass
+				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
+
+				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
+
+				THIS.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
+
+				THIS.write_Define_Class_COMMENTS( @loRegClass )
+
+				THIS.write_METADATA( @loRegClass )
+
+				THIS.write_INCLUDE( @loRegClass )
+
+				THIS.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
+
+
+				*-------------------------------------------------------------------------------
+				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
+				*-------------------------------------------------------------------------------
+				lnRecno	= RECNO()
+				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+
+				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCATTER MEMO NAME loRegObj
+					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
+					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
+				ENDSCAN
+
+				GOTO RECORD (lnRecno)
+
+
+				*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
+				DIMENSION laMethods(1,3)
+				lcMethods	= ''
+				THIS.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
+
+				THIS.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
+
+				lnLastClass		= 1
+				lcMethods		= ''
+
+				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
+				lnRecno	= RECNO()
+				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+
+				SCAN REST ;
+						FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT TABLABIN.RESERVED1=="Class" ;
+						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+
+					SCATTER MEMO NAME loRegObj
+					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
+				ENDSCAN
+
+				THIS.write_ALL_OBJECT_METHODS( @lcMethods )
+
+				GOTO RECORD (lnRecno)
+			ENDSCAN
+
+			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
+
+			*-- Genero el VC2
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	*_MEMBERDATA	= [<VFPData>] ;
+	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		DODEFAULT()
+
+		TRY
+			LOCAL lnCodError, loEx AS EXCEPTION, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
+			STORE 0 TO lnCodError, lnLastClass
+			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
+			STORE NULL TO loRegClass, loRegObj
+
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+
+			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
+			SET ORDER TO 0 IN TABLABIN
+
+			THIS.write_PROGRAM_HEADER()
+
+			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
+
+			THIS.write_DefinicionObjetosOLE()
+
+			*-- Escribo los métodos ordenados
+			lnLastObj		= 0
+			lnLastClass		= 0
+
+			*----------------------------------------------
+			*-- RECORRO LAS CLASES
+			*----------------------------------------------
+			SELECT TABLABIN
+			SET ORDER TO PARENT_OBJ
+			GOTO RECORD 1
+
+			SCATTER FIELDS RESERVED8 MEMO NAME loRegClass
+
+			IF NOT EMPTY(loRegClass.RESERVED8) THEN
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					#INCLUDE "<<loRegClass.Reserved8>>"
+
+				ENDTEXT
+			ENDIF
+
+
+			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
+					AND (EMPTY(TABLABIN.PARENT) ;
+					AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
+				SCATTER MEMO NAME loRegClass
+				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
+
+				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
+
+				THIS.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
+
+				THIS.write_Define_Class_COMMENTS( @loRegClass )
+
+				THIS.write_METADATA( @loRegClass )
+
+				THIS.write_INCLUDE( @loRegClass )
+
+				THIS.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
+
+
+				*-------------------------------------------------------------------------------
+				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
+				*-------------------------------------------------------------------------------
+				lnRecno	= RECNO()
+				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+
+				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCATTER MEMO NAME loRegObj
+					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
+					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
+				ENDSCAN
+
+				GOTO RECORD (lnRecno)
+
+
+				*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
+				DIMENSION laMethods(1,3)
+				lcMethods	= ''
+				THIS.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
+
+				THIS.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
+
+				lnLastClass		= 1
+				lcMethods		= ''
+
+				*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
+				lnRecno	= RECNO()
+				LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+
+				SCAN REST ;
+						FOR TABLABIN.PLATFORM = "WINDOWS" ;
+						AND NOT (EMPTY(TABLABIN.PARENT) ;
+						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
+						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+
+					SCATTER MEMO NAME loRegObj
+					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
+				ENDSCAN
+
+				THIS.write_ALL_OBJECT_METHODS( @lcMethods )
+
+				GOTO RECORD (lnRecno)
+			ENDSCAN
+
+			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
+
+			*-- Genero el SC2
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_PROGRAM_HEADER
+		*-- Cabecera del PRG e inicio de DEF_CLASS
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
+			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
+			*
+		ENDTEXT
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		DODEFAULT()
+
+		TRY
+			LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo ;
+				, loEx AS EXCEPTION ;
+				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
+				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
+				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
+
+			STORE NULL TO loProject, loReg, loServerHead, loServerData
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
+
+
+			*-- Obtengo los archivos del proyecto
+			loProject		= CREATEOBJECT('CL_PROJECT')
+			SCATTER MEMO NAME loReg
+			loProject._HomeDir		= ALLTRIM( loReg.HOMEDIR )
+			loProject._ServerInfo	= loReg.RESERVED2
+			loProject._Debug		= loReg.DEBUG
+			loProject._Encrypted	= loReg.ENCRYPT
+			lcDevInfo				= loReg.DEVINFO
+
+
+			*--- Ubico el programa principal
+			LOCATE FOR MAINPROG
+
+			IF FOUND()
+				loProject._MainProg	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
+			ENDIF
+
+
+			*-- Ubico el Project Hook
+			LOCATE FOR TYPE == 'W'
+
+			IF FOUND()
+				loProject._ProjectHookLibrary	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
+				loProject._ProjectHookClass	= LOWER( ALLTRIM( RESERVED1, 0, ' ', CHR(0) ) )
+			ENDIF
+
+
+			*-- Ubico el icono del proyecto
+			LOCATE FOR TYPE == 'i'
+
+			IF FOUND()
+				loProject._Icon	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
+			ENDIF
+
+
+			*-- Escaneo el proyecto
+			SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
+				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
+				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
+				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
+
+				TRY
+					loProject.ADD( loReg, loReg.NAME )
+				CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
+					*-- Saltear y no agregar el archivo duplicado / Bypass and not add the duplicated file
+				ENDTRY
+			ENDSCAN
+
+
+			THIS.write_PROGRAM_HEADER()
+
+
+			*-- Directorio de inicio
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				LPARAMETERS tcDir
+
+				lcCurdir = SYS(5)+CURDIR()
+				CD ( EVL( tcDir, JUSTPATH( SYS(16) ) ) )
+
+			ENDTEXT
+
+
+			*-- Información del programa
+			loProject.parseDeviceInfo( lcDevInfo )
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + loProject.getFormattedDeviceInfoText() + CR_LF
+
+
+			*-- Información de los Servidores definidos
+			IF NOT EMPTY(loProject._ServerInfo)
+				loServerHead.parseServerInfo( loProject._ServerInfo )
+				C_FB2PRG_CODE	= C_FB2PRG_CODE + loServerHead.getFormattedServerText() + CR_LF
+				loServerHead	= NULL
+			ENDIF
+
+
+			*-- Generación del proyecto
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_BUILDPROJ_I>>
+				FOR EACH loProj IN _VFP.Projects FOXOBJECT
+				<<C_TAB>>loProj.Close()
+				ENDFOR
+
+				STRTOFILE( '', '__newproject.f2b' )
+				BUILD PROJECT <<JUSTFNAME( THIS.c_inputFile )>> FROM '__newproject.f2b'
+			ENDTEXT
+
+
+			*-- Abro el proyecto
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				FOR EACH loProj IN _VFP.Projects FOXOBJECT
+				<<C_TAB>>loProj.Close()
+				ENDFOR
+
+				MODIFY PROJECT '<<JUSTFNAME( THIS.c_inputFile )>>' NOWAIT NOSHOW NOPROJECTHOOK
+
+				loProject = _VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>')
+
+				WITH loProject.FILES
+			ENDTEXT
+
+
+			*-- Definir archivos del proyecto y metadata: CPID, Timestamp, ID, etc.
+			loProject.KEYSORT = 2
+
+			FOR EACH loReg IN loProject &&FOXOBJECT
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.ADD('<<loReg.NAME>>')
+				ENDTEXT
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+					<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<C_FILE_META_I>>
+					Type="<<loReg.TYPE>>"
+					Cpid="<<INT( loReg.CPID )>>"
+					Timestamp="<<INT( loReg.TIMESTAMP )>>"
+					ID="<<INT( loReg.ID )>>"
+					ObjRev="<<INT( loReg.OBJREV )>>"
+					<<C_FILE_META_F>>
+				ENDTEXT
+			ENDFOR
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_BUILDPROJ_F>>
+
+				<<C_TAB>>.ITEM('__newproject.f2b').Remove()
+
+			ENDTEXT
+
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_FILE_CMTS_I>>
+			ENDTEXT
+
+
+			*-- Agrego los comentarios
+			loProject.KEYSORT = 2
+
+			FOR EACH loReg IN loProject &&FOXOBJECT
+				IF NOT EMPTY(loReg.COMMENTS)
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
+					ENDTEXT
+				ENDIF
+			ENDFOR
+
+
+			*-- Exclusiones
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_FILE_CMTS_F>>
+
+				<<C_TAB>><<C_FILE_EXCL_I>>
+			ENDTEXT
+
+			loProject.KEYSORT = 2
+
+			FOR EACH loReg IN loProject &&FOXOBJECT
+				IF loReg.EXCLUDE
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
+					ENDTEXT
+				ENDIF
+			ENDFOR
+
+
+			*-- Tipos de archivos especiales
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_FILE_EXCL_F>>
+
+				<<C_TAB>><<C_FILE_TXT_I>>
+			ENDTEXT
+
+			loProject.KEYSORT = 2
+
+			FOR EACH loReg IN loProject &&FOXOBJECT
+				IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
+					ENDTEXT
+				ENDIF
+			ENDFOR
+
+
+			*-- ProjectHook, Debug, Encrypt, Build y cierre
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_FILE_TXT_F>>
+				ENDWITH
+
+				WITH loProject
+				<<C_TAB>><<C_PROJPROPS_I>>
+			ENDTEXT
+
+			IF NOT EMPTY(loProject._MainProg)
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.SetMain(lcCurdir + '<<loProject._MainProg>>')
+				ENDTEXT
+			ENDIF
+
+			IF NOT EMPTY(loProject._Icon)
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>>.Icon = lcCurdir + '<<loProject._Icon>>'
+				ENDTEXT
+			ENDIF
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>>.Debug = <<loProject._Debug>>
+				<<C_TAB>>.Encrypted = <<loProject._Encrypted>>
+				<<C_TAB>>*<.CmntStyle = <<loProject._CmntStyle>> />
+				<<C_TAB>>*<.NoLogo = <<loProject._NoLogo>> />
+				<<C_TAB>>*<.SaveCode = <<loProject._SaveCode>> />
+				<<C_TAB>>.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
+				<<C_TAB>>.ProjectHookClass = '<<loProject._ProjectHookClass>>'
+				<<C_TAB>><<C_PROJPROPS_F>>
+				ENDWITH
+
+			ENDTEXT
+
+
+			*-- Build y cierre
+			*	_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').FILES('__newproject.f2b').Remove()
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+				_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').Close()
+			ENDTEXT
+
+			*-- Restauro Directorio de inicio
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*ERASE '__newproject.f2b'
+				CD (lcCurdir)
+				RETURN
+			ENDTEXT
+
+
+			*-- Genero el PJ2
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
+			*COMPILE ( THIS.c_outputFile )
+
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			DO CASE
+			CASE lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
+				loEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
+			ENDCASE
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_frx_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	*_MEMBERDATA	= [<VFPData>] ;
+	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		DODEFAULT()
+
+		TRY
+			LOCAL lnCodError, loEx AS EXCEPTION, loRegCab, loRegDataEnv, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
+			STORE 0 TO lnCodError, lnLastClass
+			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
+			STORE NULL TO loRegObj, loRegCab, loRegDataEnv
+
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN_0
+			
+			GO TOP			&& Tiene que ser objType = 1
+			SCATTER MEMO NAME loRegCab
+			GOTO BOTTOM		&& Tiene que ser objType = 25
+			SCATTER MEMO NAME loRegDataEnv
+
+			SELECT * FROM TABLABIN_0 ;
+				WHERE objType NOT IN (1,25) ;
+				ORDER BY vpos,hpos ;
+				INTO CURSOR TABLABIN READWRITE
+
+			loRegObj	= NULL
+			USE IN (SELECT("TABLABIN_0"))
+
+
+			THIS.write_PROGRAM_HEADER()
+
+			*----------------------------------------------
+			SELECT TABLABIN
+			GOTO TOP
+			THIS.write_CABECERA_REPORTE( @loRegCab )
+			
+			SCAN ALL
+				SCATTER MEMO NAME loRegObj
+				THIS.write_DETALLE_REPORTE( @loRegObj )
+			ENDSCAN
+
+			THIS.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
+
+			*-- Genero el SC2
+			IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+			ENDIF
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("TABLABIN_0"))
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
 ENDDEFINE
 
 
