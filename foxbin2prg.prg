@@ -2975,7 +2975,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toClase._PROTECTED		= THIS.hiddenAndProtected_PAM( toClase )
 				toClase._METHODS		= THIS.classMethods2Memo( toClase )
 				*toClase._RESERVED1		= IIF( THIS.c_Type = 'SCX', 'Screen', 'Class' )
-				toClase._RESERVED2		= TRANSFORM( toClase._AddObject_Count + 1 )
+				toClase._RESERVED2		= IIF( THIS.c_Type = 'VCX' OR toClase._Nombre == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
 				toClase._RESERVED3		= THIS.defined_PAM2Memo( toClase )
 				toClase._RESERVED4		= toClase._ClassIcon
 				toClase._RESERVED5		= toClase._ProjectClassIcon

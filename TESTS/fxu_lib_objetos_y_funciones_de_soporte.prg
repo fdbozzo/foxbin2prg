@@ -17,6 +17,8 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 		+ [<memberdata name="copiararchivosparatest" display="copiarArchivosParaTest"/>] ;
 		+ [<memberdata name="csetdate" display="cSetDate"/>] ;
 		+ [<memberdata name="mejorarpresentacioncaracteresespeciales" display="mejorarPresentacionCaracteresEspeciales"/>] ;
+		+ [<memberdata name="prepararobjetoreg_scx" display="prepararObjetoReg_SCX"/>] ;
+		+ [<memberdata name="prepararobjetoreg_vcx" display="prepararObjetoReg_VCX"/>] ;
 		+ [</VFPData>]
 
 
@@ -84,6 +86,50 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 			, ' ', '·' ) ;
 			, '<CRLF>', '<CRLF>'+CHR(13)+CHR(10) )
 	ENDFUNC
+
+
+	*----------------------------------------------------------------------------------------
+	PROCEDURE prepararObjetoReg_SCX
+		LPARAMETERS toReg, tcClass, tcParent, tcObjName
+
+		toReg	= CREATEOBJECT("EMPTY")
+		ADDPROPERTY( toReg, 'Class', tcClass )
+		ADDPROPERTY( toReg, 'Parent', tcParent )
+		ADDPROPERTY( toReg, 'objName', tcObjName )
+		ADDPROPERTY( toReg, 'Reserved1', '' )
+		ADDPROPERTY( toReg, 'Reserved2', '' )
+		ADDPROPERTY( toReg, 'Reserved3', '' )
+		ADDPROPERTY( toReg, 'Reserved4', '' )
+		ADDPROPERTY( toReg, 'Reserved5', '' )
+		ADDPROPERTY( toReg, 'Reserved6', '' )
+		ADDPROPERTY( toReg, 'Reserved7', '' )
+		ADDPROPERTY( toReg, 'Reserved8', '' )
+		ADDPROPERTY( toReg, 'Properties', '' )
+		ADDPROPERTY( toReg, 'Protected', '' )
+		ADDPROPERTY( toReg, 'Methods', '' )
+	ENDPROC
+
+
+	*----------------------------------------------------------------------------------------
+	PROCEDURE prepararObjetoReg_VCX
+		LPARAMETERS toReg, tcClass, tcParent, tcObjName
+
+		toReg	= CREATEOBJECT("EMPTY")
+		ADDPROPERTY( toReg, 'Class', tcClass )
+		ADDPROPERTY( toReg, 'Parent', tcParent )
+		ADDPROPERTY( toReg, 'objName', tcObjName )
+		ADDPROPERTY( toReg, 'Reserved1', '' )
+		ADDPROPERTY( toReg, 'Reserved2', '' )
+		ADDPROPERTY( toReg, 'Reserved3', '' )
+		ADDPROPERTY( toReg, 'Reserved4', '' )
+		ADDPROPERTY( toReg, 'Reserved5', '' )
+		ADDPROPERTY( toReg, 'Reserved6', '' )
+		ADDPROPERTY( toReg, 'Reserved7', '' )
+		ADDPROPERTY( toReg, 'Reserved8', '' )
+		ADDPROPERTY( toReg, 'Properties', '' )
+		ADDPROPERTY( toReg, 'Protected', '' )
+		ADDPROPERTY( toReg, 'Methods', '' )
+	ENDPROC
 
 
 ENDDEFINE
