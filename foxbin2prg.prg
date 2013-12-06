@@ -320,6 +320,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
 		+ [<memberdata name="l_test" type="property" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" type="property" display="l_ShowErrors"/>] ;
+		+ [<memberdata name="l_methodsort_enabled" type="property" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_propsort_enabled" type="property" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_outputfile" type="property" display="c_OutputFile"/>] ;
@@ -337,26 +339,28 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
 
-	c_CurDir			= ''
-	c_InputFile			= ''
-	c_LogFile			= ''
-	c_OutputFile		= ''
-	l_Debug				= .F.
-	l_Test				= .F.
-	l_ShowErrors		= .F.
-	lFileMode			= .F.
-	nClassTimeStamp		= ''
-	n_FB2PRG_Version	= 1.9
-	o_Conversor			= NULL
-	c_VC2				= 'VC2'
-	c_SC2				= 'SC2'
-	c_PJ2				= 'PJ2'
-	c_MN2				= 'MN2'
-	c_FR2				= 'FR2'
-	c_LB2				= 'LB2'
-	c_DB2				= 'DB2'
-	c_CD2				= 'CD2'
-	c_DC2				= 'DC2'
+	c_CurDir				= ''
+	c_InputFile				= ''
+	c_LogFile				= ''
+	c_OutputFile			= ''
+	l_Debug					= .F.
+	l_Test					= .F.
+	l_ShowErrors			= .F.
+	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	lFileMode				= .F.
+	nClassTimeStamp			= ''
+	n_FB2PRG_Version		= 1.9
+	o_Conversor				= NULL
+	c_VC2					= 'VC2'
+	c_SC2					= 'SC2'
+	c_PJ2					= 'PJ2'
+	c_MN2					= 'MN2'
+	c_FR2					= 'FR2'
+	c_LB2					= 'LB2'
+	c_DB2					= 'DB2'
+	c_CD2					= 'CD2'
+	c_DC2					= 'DC2'
 
 
 	*******************************************************************************************************************
@@ -444,13 +448,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			ENDCASE
 
-			THIS.o_Conversor.c_InputFile		= THIS.c_InputFile
-			THIS.o_Conversor.c_OutputFile		= THIS.c_OutputFile
-			THIS.o_Conversor.c_LogFile			= THIS.c_LogFile
-			THIS.o_Conversor.l_Debug			= THIS.l_Debug
-			THIS.o_Conversor.l_Test				= THIS.l_Test
-			THIS.o_Conversor.n_FB2PRG_Version	= THIS.n_FB2PRG_Version
+			THIS.o_Conversor.c_InputFile			= THIS.c_InputFile
+			THIS.o_Conversor.c_OutputFile			= THIS.c_OutputFile
+			THIS.o_Conversor.c_LogFile				= THIS.c_LogFile
+			THIS.o_Conversor.l_Debug				= THIS.l_Debug
+			THIS.o_Conversor.l_Test					= THIS.l_Test
+			THIS.o_Conversor.n_FB2PRG_Version		= THIS.n_FB2PRG_Version
 			THIS.o_Conversor.Convertir( @toModulo )
+			THIS.o_Conversor.l_MethodSort_Enabled	= THIS.l_MethodSort_Enabled
+			THIS.o_Conversor.l_PropSort_Enabled		= THIS.l_PropSort_Enabled
 			THIS.o_Conversor	= NULL
 
 		CATCH TO toEx
@@ -606,20 +612,24 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="c_type" type="property" display="c_Type"/>] ;
 		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
 		+ [<memberdata name="l_test" type="property" display="l_Test"/>] ;
+		+ [<memberdata name="l_methodsort_enabled" type="property" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_propsort_enabled" type="property" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
 
 
-	l_Debug				= .F.
-	l_Test				= .F.
-	c_InputFile			= ''
-	c_OutputFile		= ''
-	lFileMode			= .T.
-	nClassTimeStamp		= ''
-	n_FB2PRG_Version	= 1.0
-	c_Type				= ''
-	c_CurDir			= ''
-	c_LogFile			= ''
+	l_Debug					= .F.
+	l_Test					= .F.
+	c_InputFile				= ''
+	c_OutputFile			= ''
+	lFileMode				= .T.
+	nClassTimeStamp			= ''
+	n_FB2PRG_Version		= 1.0
+	c_Type					= ''
+	c_CurDir				= ''
+	c_LogFile				= ''
+	l_MethodSort_Enabled	= .T.
+	l_PropSort_Enabled		= .T.
 
 
 	*******************************************************************************************************************
@@ -638,211 +648,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	PROCEDURE writeLog
-		LPARAMETERS tcText
-
-		IF THIS.l_Debug
-			TRY
-				STRTOFILE( TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF, THIS.c_LogFile, 1 )
-			CATCH
-			ENDTRY
-		ENDIF
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE DESTROY
 		C_FB2PRG_CODE	= ''
 		USE IN (SELECT("TABLABIN"))
 
 		THIS.writeLog( 'Descarga del conversor' )
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE Convertir
-		LPARAMETERS toModulo, toEx AS EXCEPTION
-		THIS.writeLog( '' )
-		THIS.writeLog( 'Convirtiendo archivo ' + THIS.c_OutputFile + '...' )
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE fileTypeCode
-		LPARAMETERS tcExtension
-		tcExtension	= UPPER(tcExtension)
-		RETURN ICASE( tcExtension = 'DBC', 'd' ;
-			, tcExtension = 'DBF', 'D' ;
-			, tcExtension = 'QPR', 'Q' ;
-			, tcExtension = 'SCX', 'K' ;
-			, tcExtension = 'FRX', 'R' ;
-			, tcExtension = 'LBX', 'B' ;
-			, tcExtension = 'VCX', 'V' ;
-			, tcExtension = 'PRG', 'P' ;
-			, tcExtension = 'FLL', 'L' ;
-			, tcExtension = 'APP', 'Z' ;
-			, tcExtension = 'EXE', 'Z' ;
-			, tcExtension = 'MNX', 'M' ;
-			, tcExtension = 'TXT', 'T' ;
-			, tcExtension = 'FPW', 'T' ;
-			, tcExtension = 'H', 'T' ;
-			, 'x' )
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE lineIsOnlyCommentAndNoMetadata
-		LPARAMETERS tcLine, tcComment
-		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
-
-		THIS.get_SeparatedLineAndComment( @tcLine, @tcComment )
-
-		DO CASE
-		CASE LEFT(tcLine,2) == '*<'
-			tcComment	= tcLine
-
-		CASE EMPTY(tcLine) OR LEFT(tcLine, 1) == '*' OR LEFT(tcLine + ' ', 5) == 'NOTE ' && Vacía o Comentarios
-			lllineIsOnlyCommentAndNoMetadata = .T.
-
-		ENDCASE
-
-		RETURN lllineIsOnlyCommentAndNoMetadata
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE get_SeparatedLineAndComment
-		LPARAMETERS tcLine, tcComment
-		LOCAL ln_AT_Cmt
-		tcComment	= ''
-
-		IF '&'+'&' $ tcLine
-			ln_AT_Cmt	= AT( '&'+'&', tcLine)
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
-		ENDIF
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE get_SeparatedPropAndValue
-		LPARAMETERS tcAsignacion, tcProp, tcValue
-		LOCAL ln_AT_Cmt
-		STORE '' TO tcProp, tcValue
-
-		IF '=' $ tcAsignacion
-			ln_AT_Cmt	= AT( '=', tcAsignacion)
-			tcProp		= ALLTRIM( LEFT( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
-			tcValue		= ALLTRIM( SUBSTR( tcAsignacion, ln_AT_Cmt + 2 ) )
-		ENDIF
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE getNext_BAK
-		LPARAMETERS tcOutputFileName
-		LOCAL lcNext_Bak, I
-		lcNext_Bak = ''
-
-		FOR I = 0 TO 99
-			IF I = 0
-				IF NOT FILE( tcOutputFileName + '.BAK' )
-					lcNext_Bak	= '.BAK'
-					EXIT
-				ENDIF
-			ELSE
-				IF NOT FILE( tcOutputFileName + '.' + PADL(I,2,'0') + '.BAK' )
-					lcNext_Bak	= '.' + PADL(I,2,'0') + '.BAK'
-					EXIT
-				ENDIF
-			ENDIF
-		ENDFOR
-
-		lcNext_Bak	= EVL( lcNext_Bak, '.100.BAK' )	&& Para que no quede nunca vacío
-
-		RETURN lcNext_Bak
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE doBackup
-		LOCAL lcNext_Bak
-		lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
-
-		DO CASE
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'VCX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'VCX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'VCX') + '/VCT' )
-
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'VCX')) TO (FORCEEXT(THIS.c_OutputFile, 'VCX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'VCT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'VCT')) TO (FORCEEXT(THIS.c_OutputFile,'VCT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'SCX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'SCX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'SCX') + '/SCT' )
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'SCX')) TO (FORCEEXT(THIS.c_OutputFile,'SCX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'SCT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'SCT')) TO (FORCEEXT(THIS.c_OutputFile,'SCT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'PJX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'PJX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'PJX') + '/PJT' )
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'PJX')) TO (FORCEEXT(THIS.c_OutputFile,'PJX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'PJT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'PJT')) TO (FORCEEXT(THIS.c_OutputFile,'PJT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'FRX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'FRX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'FRX') + '/FRT' )
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRX')) TO (FORCEEXT(THIS.c_OutputFile,'FRX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'FRT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRT')) TO (FORCEEXT(THIS.c_OutputFile,'FRT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
-		OTHERWISE
-			ERROR 'Tipo de archivo [' + JUSTFNAME(THIS.c_OutputFile) + '] no soportado para backup!'
-
-		ENDCASE
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE lineaExcluida
-		LPARAMETERS tn_Linea, tnBloquesExclusion, taBloquesExclusion
-
-		EXTERNAL ARRAY taBloquesExclusion
-		LOCAL X, llExcluida
-
-		FOR X = 1 TO tnBloquesExclusion
-			IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
-				llExcluida	= .T.
-				EXIT
-			ENDIF
-		ENDFOR
-
-		RETURN llExcluida
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toModulo
 	ENDPROC
 
 
@@ -901,23 +711,250 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	FUNCTION RowTimeStamp(ltDateTime)
-		* Generate a FoxPro 3.0-style row timestamp
-		*-- CONVIERTE UN DATO TIPO DATETIME EN TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc.
-		LOCAL lcTimeValue, tnTimeStamp
+	FUNCTION comprobarExpresionValida( tcAsignacion, tnCodError, tcExpNormalizada )
+		LOCAL llError, loEx AS EXCEPTION
 
-		IF VARTYPE(m.ltDateTime) <> 'T'
-			m.ltDateTime		= DATETIME()
-		ENDIF
+		TRY
+			tcExpNormalizada	= NORMALIZE( tcAsignacion )
 
-		tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
-			+ MONTH(m.ltDateTime) * 2^21 ;
-			+ DAY(m.ltDateTime) * 2^16 ;
-			+ HOUR(m.ltDateTime) * 2^11 ;
-			+ MINUTE(m.ltDateTime) * 2^5 ;
-			+ SEC(m.ltDateTime)
-		RETURN INT(tnTimeStamp)
+		CATCH TO loEx
+			llError		= .T.
+			tnCodError	= loEx.ERRORNO
+		ENDTRY
+
+		RETURN NOT llError
 	ENDFUNC
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		THIS.writeLog( '' )
+		THIS.writeLog( 'Convirtiendo archivo ' + THIS.c_OutputFile + '...' )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE decode_SpecialCodes_1_31
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
+		ENDFOR
+		RETURN tcText
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE desnormalizarAsignacion
+		LPARAMETERS tcAsignacion
+		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
+		THIS.get_SeparatedPropAndValue( @tcAsignacion, @lcPropName, @lcValor )
+		lcComentario	= ''
+		THIS.desnormalizarValorPropiedad( @lcPropName, @lcValor, @lcComentario )
+		tcAsignacion	= lcPropName + ' = ' + lcValor
+
+		RETURN tcAsignacion
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE desnormalizarValorPropiedad
+		LPARAMETERS tcProp, tcValue, tcComentario
+		LOCAL lnCodError, lnPos, lcValue
+		tcComentario	= ''
+
+		*-- Ajustes de algunos casos especiales
+		DO CASE
+		CASE tcProp == '_memberdata'
+			*-- Me quedo con lo importante y quito los CHR(0) y longitud que a veces agrega al inicio
+			lcValue	= ''
+
+			FOR I = 1 TO OCCURS( '/>', tcValue )
+				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 )>>
+				ENDTEXT
+			ENDFOR
+
+			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				<VFPData>
+				<<SUBSTR( lcValue, 3)>>
+				</VFPData>
+			ENDTEXT
+
+			tcValue	= C_MPROPHEADER + STR( LEN(tcValue), 8 ) + tcValue
+
+		CASE LEFT( tcValue, C_LEN_FB2P_VALUE_I ) == C_FB2P_VALUE_I
+			*-- Valor especial Fox con cabecera CHR(1): Debo agregarla y desnormalizar el valor
+			tcValue	= STRTRAN( STRTRAN( STREXTRACT( tcValue, C_FB2P_VALUE_I, C_FB2P_VALUE_F, 1, 1 ), '&#13;', C_CR ), '&#10;', C_LF  )
+			tcValue	= C_MPROPHEADER + STR( LEN(tcValue), 8 ) + tcValue
+
+		ENDCASE
+
+		RETURN tcValue
+	ENDFUNC
+
+
+	*******************************************************************************************************************
+	PROCEDURE desnormalizarValorXML
+		LPARAMETERS tcValor
+		*-- DESNORMALIZA EL TEXTO INDICADO, EXPANDIENDO LOS SÍMBOLOS XML ESPECIALES.
+		LOCAL lnPos, lnPos2, lnAscii
+		tcValor	= STRTRAN(tcValor, CHR(38)+'gt;', '>')			&&	>
+		tcValor	= STRTRAN(tcValor, CHR(38)+'lt;', '<')			&&	<
+		tcValor	= STRTRAN(tcValor, CHR(38)+'quot;', CHR(34))	&&	"
+		tcValor	= STRTRAN(tcValor, CHR(38)+'apos;', CHR(39))	&&	'
+		tcValor	= STRTRAN(tcValor, CHR(38)+'amp;', CHR(38))		&&	&
+
+		*-- Obtengo los Hex
+		DO WHILE .T.
+			lnPos	= AT( CHR(38)+'#x', tcValor )
+			IF lnPos = 0
+				EXIT
+			ENDIF
+			lnPos2	= lnPos + 1 + AT( ';', SUBSTR( tcValor, lnPos + 2, 4 ) )
+			lnAscii	= EVALUATE( '0' + SUBSTR( tcValor, lnPos + 3, lnPos2 - lnPos - 3 ) )
+			tcValor	= STUFF(tcValor, lnPos, lnPos2 - lnPos + 1, CHR(lnAscii))		&&	ASCII
+		ENDDO
+
+		*-- Obtengo los Dec
+		DO WHILE .T.
+			lnPos	= AT( CHR(38)+'#', tcValor )
+			IF lnPos = 0
+				EXIT
+			ENDIF
+			lnPos2	= lnPos + 1 + AT( ';', SUBSTR( tcValor, lnPos + 2, 4 ) )
+			lnAscii	= EVALUATE( SUBSTR( tcValor, lnPos + 2, lnPos2 - lnPos - 2 ) )
+			tcValor	= STUFF(tcValor, lnPos, lnPos2 - lnPos + 1, CHR(lnAscii))		&&	ASCII
+		ENDDO
+
+		RETURN tcValor
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE doBackup
+		LOCAL lcNext_Bak
+		lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
+
+		DO CASE
+		CASE JUSTEXT( THIS.c_OutputFile ) = 'VCX'
+			IF FILE( FORCEEXT(THIS.c_OutputFile,'VCX') )
+				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'VCX') + '/VCT' )
+
+				COPY FILE (FORCEEXT(THIS.c_OutputFile,'VCX')) TO (FORCEEXT(THIS.c_OutputFile, 'VCX' + lcNext_Bak))
+
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'VCT') )
+					COPY FILE (FORCEEXT(THIS.c_OutputFile,'VCT')) TO (FORCEEXT(THIS.c_OutputFile,'VCT' + lcNext_Bak))
+				ENDIF
+			ENDIF
+
+		CASE JUSTEXT( THIS.c_OutputFile ) = 'SCX'
+			IF FILE( FORCEEXT(THIS.c_OutputFile,'SCX') )
+				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'SCX') + '/SCT' )
+				COPY FILE (FORCEEXT(THIS.c_OutputFile,'SCX')) TO (FORCEEXT(THIS.c_OutputFile,'SCX' + lcNext_Bak))
+
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'SCT') )
+					COPY FILE (FORCEEXT(THIS.c_OutputFile,'SCT')) TO (FORCEEXT(THIS.c_OutputFile,'SCT' + lcNext_Bak))
+				ENDIF
+			ENDIF
+
+		CASE JUSTEXT( THIS.c_OutputFile ) = 'PJX'
+			IF FILE( FORCEEXT(THIS.c_OutputFile,'PJX') )
+				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'PJX') + '/PJT' )
+				COPY FILE (FORCEEXT(THIS.c_OutputFile,'PJX')) TO (FORCEEXT(THIS.c_OutputFile,'PJX' + lcNext_Bak))
+
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'PJT') )
+					COPY FILE (FORCEEXT(THIS.c_OutputFile,'PJT')) TO (FORCEEXT(THIS.c_OutputFile,'PJT' + lcNext_Bak))
+				ENDIF
+			ENDIF
+
+		CASE JUSTEXT( THIS.c_OutputFile ) = 'FRX'
+			IF FILE( FORCEEXT(THIS.c_OutputFile,'FRX') )
+				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'FRX') + '/FRT' )
+				COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRX')) TO (FORCEEXT(THIS.c_OutputFile,'FRX' + lcNext_Bak))
+
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'FRT') )
+					COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRT')) TO (FORCEEXT(THIS.c_OutputFile,'FRT' + lcNext_Bak))
+				ENDIF
+			ENDIF
+
+		OTHERWISE
+			ERROR 'Tipo de archivo [' + JUSTFNAME(THIS.c_OutputFile) + '] no soportado para backup!'
+
+		ENDCASE
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE encode_SpecialCodes_1_31
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
+		ENDFOR
+		RETURN tcText
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	HIDDEN PROCEDURE Exception2Str
+		LPARAMETERS toEx AS EXCEPTION
+		LOCAL lcError
+		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CHR(13) + CHR(13) ;
+			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CHR(13) + CHR(13) ;
+			+ toEx.LINECONTENTS
+		RETURN lcError
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE fileTypeCode
+		LPARAMETERS tcExtension
+		tcExtension	= UPPER(tcExtension)
+		RETURN ICASE( tcExtension = 'DBC', 'd' ;
+			, tcExtension = 'DBF', 'D' ;
+			, tcExtension = 'QPR', 'Q' ;
+			, tcExtension = 'SCX', 'K' ;
+			, tcExtension = 'FRX', 'R' ;
+			, tcExtension = 'LBX', 'B' ;
+			, tcExtension = 'VCX', 'V' ;
+			, tcExtension = 'PRG', 'P' ;
+			, tcExtension = 'FLL', 'L' ;
+			, tcExtension = 'APP', 'Z' ;
+			, tcExtension = 'EXE', 'Z' ;
+			, tcExtension = 'MNX', 'M' ;
+			, tcExtension = 'TXT', 'T' ;
+			, tcExtension = 'FPW', 'T' ;
+			, tcExtension = 'H', 'T' ;
+			, 'x' )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE getNext_BAK
+		LPARAMETERS tcOutputFileName
+		LOCAL lcNext_Bak, I
+		lcNext_Bak = ''
+
+		FOR I = 0 TO 99
+			IF I = 0
+				IF NOT FILE( tcOutputFileName + '.BAK' )
+					lcNext_Bak	= '.BAK'
+					EXIT
+				ENDIF
+			ELSE
+				IF NOT FILE( tcOutputFileName + '.' + PADL(I,2,'0') + '.BAK' )
+					lcNext_Bak	= '.' + PADL(I,2,'0') + '.BAK'
+					EXIT
+				ENDIF
+			ENDIF
+		ENDFOR
+
+		lcNext_Bak	= EVL( lcNext_Bak, '.100.BAK' )	&& Para que no quede nunca vacío
+
+		RETURN lcNext_Bak
+	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -1002,117 +1039,79 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	HIDDEN PROCEDURE Exception2Str
-		LPARAMETERS toEx AS EXCEPTION
-		LOCAL lcError
-		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CHR(13) + CHR(13) ;
-			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CHR(13) + CHR(13) ;
-			+ toEx.LINECONTENTS
-		RETURN lcError
+	PROCEDURE get_SeparatedLineAndComment
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+		tcComment	= ''
+
+		IF '&'+'&' $ tcLine
+			ln_AT_Cmt	= AT( '&'+'&', tcLine)
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+		ENDIF
+
+		RETURN
 	ENDPROC
 
 
 	*******************************************************************************************************************
-	PROCEDURE normalizarValorXML
-		LPARAMETERS tcValor
-		*-- NORMALIZA EL TEXTO INDICADO, COMPRIMIENDO LOS SÍMBOLOS XML ESPECIALES.
-		tcValor = STRTRAN(tcValor, CHR(38), CHR(38) + 'amp;')	&& reemplaza &  por  &amp;		&&
-		tcValor = STRTRAN(tcValor, CHR(39), CHR(38) + 'apos;')	&& reemplaza '  por  &apos;		&&
-		tcValor = STRTRAN(tcValor, CHR(34), CHR(38) + 'quot;')	&& reemplaza "  por  &quot;		&&
-		tcValor = STRTRAN(tcValor, '<', CHR(38) + 'lt;') 		&&  reemplaza <  por  &lt;		&&
-		tcValor = STRTRAN(tcValor, '>', CHR(38) + 'gt;')		&&  reemplaza >  por  &gt;		&&
-		tcValor = STRTRAN(tcValor, CHR(13)+CHR(10), CHR(10))	&& reeemplaza CR+LF por LF
-		tcValor = CHRTRAN(tcValor, CHR(13), CHR(10))			&& reemplaza CR por LF
+	PROCEDURE get_SeparatedPropAndValue
+		LPARAMETERS tcAsignacion, tcProp, tcValue
+		LOCAL ln_AT_Cmt
+		STORE '' TO tcProp, tcValue
 
-		RETURN tcValor
+		IF '=' $ tcAsignacion
+			ln_AT_Cmt	= AT( '=', tcAsignacion)
+			tcProp		= ALLTRIM( LEFT( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcValue		= ALLTRIM( SUBSTR( tcAsignacion, ln_AT_Cmt + 2 ) )
+		ENDIF
+
+		RETURN
 	ENDPROC
 
 
 	*******************************************************************************************************************
-	PROCEDURE desnormalizarValorXML
-		LPARAMETERS tcValor
-		*-- DESNORMALIZA EL TEXTO INDICADO, EXPANDIENDO LOS SÍMBOLOS XML ESPECIALES.
-		LOCAL lnPos, lnPos2, lnAscii
-		tcValor	= STRTRAN(tcValor, CHR(38)+'gt;', '>')			&&	>
-		tcValor	= STRTRAN(tcValor, CHR(38)+'lt;', '<')			&&	<
-		tcValor	= STRTRAN(tcValor, CHR(38)+'quot;', CHR(34))	&&	"
-		tcValor	= STRTRAN(tcValor, CHR(38)+'apos;', CHR(39))	&&	'
-		tcValor	= STRTRAN(tcValor, CHR(38)+'amp;', CHR(38))		&&	&
+	PROCEDURE identificarBloquesDeCodigo
+		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toModulo
+	ENDPROC
 
-		*-- Obtengo los Hex
-		DO WHILE .T.
-			lnPos	= AT( CHR(38)+'#x', tcValor )
-			IF lnPos = 0
+
+	*******************************************************************************************************************
+	PROCEDURE lineaExcluida
+		LPARAMETERS tn_Linea, tnBloquesExclusion, taBloquesExclusion
+
+		EXTERNAL ARRAY taBloquesExclusion
+		LOCAL X, llExcluida
+
+		FOR X = 1 TO tnBloquesExclusion
+			IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
+				llExcluida	= .T.
 				EXIT
 			ENDIF
-			lnPos2	= lnPos + 1 + AT( ';', SUBSTR( tcValor, lnPos + 2, 4 ) )
-			lnAscii	= EVALUATE( '0' + SUBSTR( tcValor, lnPos + 3, lnPos2 - lnPos - 3 ) )
-			tcValor	= STUFF(tcValor, lnPos, lnPos2 - lnPos + 1, CHR(lnAscii))		&&	ASCII
-		ENDDO
+		ENDFOR
 
-		*-- Obtengo los Dec
-		DO WHILE .T.
-			lnPos	= AT( CHR(38)+'#', tcValor )
-			IF lnPos = 0
-				EXIT
-			ENDIF
-			lnPos2	= lnPos + 1 + AT( ';', SUBSTR( tcValor, lnPos + 2, 4 ) )
-			lnAscii	= EVALUATE( SUBSTR( tcValor, lnPos + 2, lnPos2 - lnPos - 2 ) )
-			tcValor	= STUFF(tcValor, lnPos, lnPos2 - lnPos + 1, CHR(lnAscii))		&&	ASCII
-		ENDDO
-
-		RETURN tcValor
+		RETURN llExcluida
 	ENDPROC
 
 
 	*******************************************************************************************************************
-	PROCEDURE desnormalizarAsignacion
-		LPARAMETERS tcAsignacion
-		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
-		THIS.get_SeparatedPropAndValue( @tcAsignacion, @lcPropName, @lcValor )
-		lcComentario	= ''
-		THIS.desnormalizarValorPropiedad( @lcPropName, @lcValor, @lcComentario )
-		tcAsignacion	= lcPropName + ' = ' + lcValor
+	PROCEDURE lineIsOnlyCommentAndNoMetadata
+		LPARAMETERS tcLine, tcComment
+		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
-		RETURN tcAsignacion
-	ENDPROC
+		THIS.get_SeparatedLineAndComment( @tcLine, @tcComment )
 
-
-	*******************************************************************************************************************
-	PROCEDURE desnormalizarValorPropiedad
-		LPARAMETERS tcProp, tcValue, tcComentario
-		LOCAL lnCodError, lnPos, lcValue
-		tcComentario	= ''
-
-		*-- Ajustes de algunos casos especiales
 		DO CASE
-		CASE tcProp == '_memberdata'
-			*-- Me quedo con lo importante y quito los CHR(0) y longitud que a veces agrega al inicio
-			lcValue	= ''
+		CASE LEFT(tcLine,2) == '*<'
+			tcComment	= tcLine
 
-			FOR I = 1 TO OCCURS( '/>', tcValue )
-				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 )>>
-				ENDTEXT
-			ENDFOR
-
-			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<VFPData>
-				<<SUBSTR( lcValue, 3)>>
-				</VFPData>
-			ENDTEXT
-
-			tcValue	= C_MPROPHEADER + STR( LEN(tcValue), 8 ) + tcValue
-
-		CASE LEFT( tcValue, C_LEN_FB2P_VALUE_I ) == C_FB2P_VALUE_I
-			*-- Valor especial Fox con cabecera CHR(1): Debo agregarla y desnormalizar el valor
-			tcValue	= STRTRAN( STRTRAN( STREXTRACT( tcValue, C_FB2P_VALUE_I, C_FB2P_VALUE_F, 1, 1 ), '&#13;', C_CR ), '&#10;', C_LF  )
-			tcValue	= C_MPROPHEADER + STR( LEN(tcValue), 8 ) + tcValue
+		CASE EMPTY(tcLine) OR LEFT(tcLine, 1) == '*' OR LEFT(tcLine + ' ', 5) == 'NOTE ' && Vacía o Comentarios
+			lllineIsOnlyCommentAndNoMetadata = .T.
 
 		ENDCASE
 
-		RETURN tcValue
-	ENDFUNC
+		RETURN lllineIsOnlyCommentAndNoMetadata
+	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -1166,18 +1165,38 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	FUNCTION comprobarExpresionValida( tcAsignacion, tnCodError, tcExpNormalizada )
-		LOCAL llError, loEx AS EXCEPTION
+	PROCEDURE normalizarValorXML
+		LPARAMETERS tcValor
+		*-- NORMALIZA EL TEXTO INDICADO, COMPRIMIENDO LOS SÍMBOLOS XML ESPECIALES.
+		tcValor = STRTRAN(tcValor, CHR(38), CHR(38) + 'amp;')	&& reemplaza &  por  &amp;		&&
+		tcValor = STRTRAN(tcValor, CHR(39), CHR(38) + 'apos;')	&& reemplaza '  por  &apos;		&&
+		tcValor = STRTRAN(tcValor, CHR(34), CHR(38) + 'quot;')	&& reemplaza "  por  &quot;		&&
+		tcValor = STRTRAN(tcValor, '<', CHR(38) + 'lt;') 		&&  reemplaza <  por  &lt;		&&
+		tcValor = STRTRAN(tcValor, '>', CHR(38) + 'gt;')		&&  reemplaza >  por  &gt;		&&
+		tcValor = STRTRAN(tcValor, CHR(13)+CHR(10), CHR(10))	&& reeemplaza CR+LF por LF
+		tcValor = CHRTRAN(tcValor, CHR(13), CHR(10))			&& reemplaza CR por LF
 
-		TRY
-			tcExpNormalizada	= NORMALIZE( tcAsignacion )
+		RETURN tcValor
+	ENDPROC
 
-		CATCH TO loEx
-			llError		= .T.
-			tnCodError	= loEx.ERRORNO
-		ENDTRY
 
-		RETURN NOT llError
+	*******************************************************************************************************************
+	FUNCTION RowTimeStamp(ltDateTime)
+		* Generate a FoxPro 3.0-style row timestamp
+		*-- CONVIERTE UN DATO TIPO DATETIME EN TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc.
+		LOCAL lcTimeValue, tnTimeStamp
+
+		IF VARTYPE(m.ltDateTime) <> 'T'
+			m.ltDateTime		= DATETIME()
+		ENDIF
+
+		tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
+			+ MONTH(m.ltDateTime) * 2^21 ;
+			+ DAY(m.ltDateTime) * 2^16 ;
+			+ HOUR(m.ltDateTime) * 2^11 ;
+			+ MINUTE(m.ltDateTime) * 2^5 ;
+			+ SEC(m.ltDateTime)
+		RETURN INT(tnTimeStamp)
 	ENDFUNC
 
 
@@ -1223,7 +1242,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 					ENDIF
 				ENDFOR
 
-				ASORT( laPropsAndValues, 1, -1, 0, 1)
+				IF THIS.l_PropSort_Enabled
+					ASORT( laPropsAndValues, 1, -1, 0, 1)
+				ENDIF
 
 				*-- Quitar el agregado
 
@@ -1302,25 +1323,18 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	PROCEDURE encode_SpecialCodes_1_31
+	PROCEDURE writeLog
 		LPARAMETERS tcText
-		LOCAL I
-		FOR I = 0 TO 31
-			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
-		ENDFOR
-		RETURN tcText
+
+		IF THIS.l_Debug
+			TRY
+				STRTOFILE( TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF, THIS.c_LogFile, 1 )
+			CATCH
+			ENDTRY
+		ENDIF
 	ENDPROC
 
 
-	*******************************************************************************************************************
-	PROCEDURE decode_SpecialCodes_1_31
-		LPARAMETERS tcText
-		LOCAL I
-		FOR I = 0 TO 31
-			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
-		ENDFOR
-		RETURN tcText
-	ENDPROC
 ENDDEFINE
 
 
@@ -2038,8 +2052,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDTEXT
 			ENDIF
 
-			*-- Comentarios (NO DEBEN IR EN EL VCX!!)
-
 			*-- Incluir las líneas del método
 			FOR X = 1 TO loProcedure._ProcLine_Count
 				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -2405,77 +2417,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE evaluarDefinicionDeProcedure
-		LPARAMETERS toClase, tnX, tc_Comentario, tcProcName, tcProcType, toObjeto
-		*--------------------------------------------------------------------------------------------------------------
-		#IF .F.
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
-				, toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL I, lcNombreObjeto, lnObjProc ;
-				, loProcedure AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
-
-			IF EMPTY(toClase._Fin_Cab)
-				toClase._Fin_Cab	= tnX-1
-				toClase._Ini_Cuerpo	= tnX
-			ENDIF
-
-			loProcedure		= CREATEOBJECT("CL_PROCEDURE")
-			loProcedure._Nombre			= tcProcName
-			loProcedure._ProcType		= tcProcType
-			loProcedure._Comentario		= tc_Comentario
-
-			*-- Anoto en HiddenMethods y ProtectedMethods según corresponda
-			DO CASE
-			CASE loProcedure._ProcType == 'hidden'
-				toClase._HiddenMethods	= toClase._HiddenMethods + ',' + tcProcName
-
-			CASE loProcedure._ProcType == 'protected'
-				toClase._ProtectedMethods	= toClase._ProtectedMethods + ',' + tcProcName
-
-			ENDCASE
-
-			*-- Agrego el objeto Procedimiento a la clase, o a un objeto de la clase.
-			IF '.' $ tcProcName
-				*-- Procedimiento de objeto
-				lcNombreObjeto	= LOWER( JUSTSTEM( tcProcName ) )
-
-				*-- Busco el objeto al que corresponde el método
-				lnObjProc	= THIS.buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase )
-
-				IF lnObjProc = 0
-					*-- Procedimiento de clase
-					toClase.add_Procedure( loProcedure )
-				ELSE
-					*-- Procedimiento de objeto
-					toObjeto	= toClase._AddObjects( lnObjProc )
-					toObjeto.add_Procedure( loProcedure )
-				ENDIF
-			ELSE
-				*-- Procedimiento de clase
-				toClase.add_Procedure( loProcedure )
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			STORE NULL TO loProcedure
-			RELEASE loProcedure
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 			, taBloquesExclusion, tnBloquesExclusion
@@ -2530,196 +2471,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDTRY
 
 		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_PROCEDURE
-		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
-			, tc_Comentario, taBloquesExclusion, tnBloquesExclusion
-
-		#IF .F.
-			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
-			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		LOCAL llBloqueEncontrado
-
-		DO CASE
-		CASE LEFT( tcLine, 20 ) == 'PROTECTED PROCEDURE '
-			*-- Estructura a reconocer: PROTECTED PROCEDURE nombre_del_procedimiento
-			llBloqueEncontrado	= .T.
-			tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 21 ) )
-			THIS.evaluarDefinicionDeProcedure( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'protected', @toObjeto )
-
-
-		CASE LEFT( tcLine, 17 ) == 'HIDDEN PROCEDURE '
-			*-- Estructura a reconocer: HIDDEN PROCEDURE nombre_del_procedimiento
-			llBloqueEncontrado	= .T.
-			tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 18 ) )
-			THIS.evaluarDefinicionDeProcedure( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'hidden', @toObjeto )
-
-		CASE LEFT( tcLine, 10 ) == 'PROCEDURE '
-			*-- Estructura a reconocer: PROCEDURE [objeto.]nombre_del_procedimiento
-			llBloqueEncontrado	= .T.
-			tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 11 ) )
-			THIS.evaluarDefinicionDeProcedure( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'normal', @toObjeto )
-
-		ENDCASE
-
-		IF llBloqueEncontrado
-			*-- Evalúo todo el contenido del PROCEDURE
-			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, tcProcedureAbierto ;
-				, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
-		ENDIF
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_METADATA
-		LPARAMETERS toClase, tcLine
-
-		#IF .F.
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		LOCAL llBloqueEncontrado
-
-		IF LEFT(tcLine, C_LEN_METADATA_I) == C_METADATA_I	&& METADATA de la CLASE
-			*< CLASSDATA: Baseclass="custom" Timestamp="2013/11/19 11:51:04" Scale="Foxels" Uniqueid="_3WF0VSTN1" ProjectClassIcon="container.ico" ClassIcon="toolbar.ico" />
-			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
-			llBloqueEncontrado	= .T.
-			WITH THIS
-				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_METADATA_I, C_METADATA_F )
-
-				toClase._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues )
-				toClase._TimeStamp			= INT( .RowTimeStamp(  .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
-				toClase._Scale				= .get_ValueByName_FromListNamesWithValues( 'Scale', 'C', @laPropsAndValues )
-				toClase._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
-				toClase._ProjectClassIcon	= .get_ValueByName_FromListNamesWithValues( 'ProjectClassIcon', 'C', @laPropsAndValues )
-				toClase._ClassIcon			= .get_ValueByName_FromListNamesWithValues( 'ClassIcon', 'C', @laPropsAndValues )
-				toClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
-			ENDWITH && THIS
-
-			IF NOT EMPTY( toClase._Ole2 )	&& Le agrego "OLEObject = " delante
-				toClase._Ole2	= 'OLEObject = ' + toClase._Ole2 + CR_LF
-			ENDIF
-		ENDIF
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_PROTECTED
-		LPARAMETERS toClase, tcLine
-
-		#IF .F.
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		LOCAL llBloqueEncontrado
-
-		IF LEFT(tcLine, 10) == 'PROTECTED '
-			llBloqueEncontrado	= .T.
-			toClase._ProtectedProps		= ALLTRIM( SUBSTR( tcLine, 11 ) )
-		ENDIF
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_HIDDEN
-		LPARAMETERS toClase, tcLine
-
-		#IF .F.
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		LOCAL llBloqueEncontrado
-
-		IF LEFT(tcLine, 7) == 'HIDDEN '
-			llBloqueEncontrado	= .T.
-			toClase._HiddenProps		= ALLTRIM( SUBSTR( tcLine, 8 ) )
-		ENDIF
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_DEFINED_PAM
-		*-- ESTRUCTURA A ANALIZAR:
-		*<DefinedPropArrayMethod>
-		*m: *metodovacio_con_comentarios		&& Este método no tiene código, pero tiene comentarios. A ver que pasa!
-		*m: *mimetodo		&& Mi metodo
-		*p: prop1		&& Mi prop 1
-		*p: prop_especial_cr		&&
-		*a: ^array_1_d[1,0]		&& Array 1 dimensión (1)
-		*a: ^array_2_d[1,2]		&& Array una dimension (1,2)
-		*p: _memberdata		&& XML Metadata for customizable properties
-		*</DefinedPropArrayMethod>
-		LPARAMETERS toClase, tcLine, taCodeLines, tnCodeLines, I
-
-		#IF .F.
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcDefinedPAM, lnPos, lnPos2
-
-			IF LEFT( tcLine, C_LEN_DEFINED_PAM_I) == C_DEFINED_PAM_I
-				llBloqueEncontrado	= .T.
-				lcDefinedPAM		= ''
-
-				WITH THIS
-					FOR I = I + 1 TO tnCodeLines
-						.set_Line( @tcLine, @taCodeLines, I )
-
-						DO CASE
-						CASE LEFT( tcLine, C_LEN_DEFINED_PAM_F ) == C_DEFINED_PAM_F
-							I = I + 1
-							EXIT
-
-						OTHERWISE
-							lnPos			= AT( ' ', tcLine, 1 )
-							lnPos2			= AT( '&'+'&', tcLine )
-
-							IF lnPos2 > 0
-								*-- Con comentarios
-								lcDefinedPAM	= lcDefinedPAM ;
-									+ RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) ;
-									+ CR_LF
-							ELSE
-								*-- Sin comentarios
-								lcDefinedPAM	= lcDefinedPAM ;
-									+ RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) + ' ' ;
-									+ CR_LF
-							ENDIF
-						ENDCASE
-					ENDFOR
-				ENDWITH && THIS
-
-				toClase._Defined_PAM	= lcDefinedPAM
-				I = I - 1
-			ENDIF
-
-		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
 	ENDPROC
 
 
@@ -2824,31 +2575,74 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE analizarBloque_ENDDEFINE
-		LPARAMETERS toClase, tcLine, I, tcProcedureAbierto
+	PROCEDURE analizarBloque_DEFINED_PAM
+		*-- ESTRUCTURA A ANALIZAR:
+		*<DefinedPropArrayMethod>
+		*m: *metodovacio_con_comentarios		&& Este método no tiene código, pero tiene comentarios. A ver que pasa!
+		*m: *mimetodo		&& Mi metodo
+		*p: prop1		&& Mi prop 1
+		*p: prop_especial_cr		&&
+		*a: ^array_1_d[1,0]		&& Array 1 dimensión (1)
+		*a: ^array_2_d[1,2]		&& Array una dimension (1,2)
+		*p: _memberdata		&& XML Metadata for customizable properties
+		*</DefinedPropArrayMethod>
+		LPARAMETERS toClase, tcLine, taCodeLines, tnCodeLines, I
 
 		#IF .F.
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL llBloqueEncontrado
+		TRY
+			LOCAL llBloqueEncontrado, lcDefinedPAM, lnPos, lnPos2, lcPAM_Name
 
-		IF LEFT( tcLine + ' ', 10 ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEF / ENDPROC) encontrado
-			llBloqueEncontrado	= .T.
-			toClase._Fin		= I
+			IF LEFT( tcLine, C_LEN_DEFINED_PAM_I) == C_DEFINED_PAM_I
+				llBloqueEncontrado	= .T.
+				lcDefinedPAM		= ''
 
-			IF EMPTY( toClase._Ini_Cuerpo )
-				toClase._Ini_Cuerpo	= I-1
+				WITH THIS
+					FOR I = I + 1 TO tnCodeLines
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE LEFT( tcLine, C_LEN_DEFINED_PAM_F ) == C_DEFINED_PAM_F
+							I = I + 1
+							EXIT
+
+						OTHERWISE
+							lnPos			= AT( ' ', tcLine, 1 )
+							lnPos2			= AT( '&'+'&', tcLine )
+
+							IF lnPos2 > 0
+								*-- Con comentarios
+								lcPAM_Name		= RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) )
+								lcDefinedPAM	= lcDefinedPAM ;
+									+ lcPAM_Name + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) ;
+									+ CR_LF
+							ELSE
+								*-- Sin comentarios
+								lcPAM_Name		= RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) )
+								lcDefinedPAM	= lcDefinedPAM ;
+									+ lcPAM_Name + IIF(ISALPHA(lcPAM_Name), '', ' ') ;
+									+ CR_LF
+							ENDIF
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+
+				toClase._Defined_PAM	= lcDefinedPAM
+				I = I - 1
 			ENDIF
 
-			toClase._Fin_Cuerpo	= I-1
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
 
-			IF EMPTY( toClase._Fin_Cab )
-				toClase._Fin_Cab	= I-1
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
 			ENDIF
 
-			STORE '' TO tcProcedureAbierto
-		ENDIF
+			THROW
+
+		ENDTRY
 
 		RETURN llBloqueEncontrado
 	ENDPROC
@@ -3003,6 +2797,56 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE analizarBloque_ENDDEFINE
+		LPARAMETERS toClase, tcLine, I, tcProcedureAbierto
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		IF LEFT( tcLine + ' ', 10 ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEF / ENDPROC) encontrado
+			llBloqueEncontrado	= .T.
+			toClase._Fin		= I
+
+			IF EMPTY( toClase._Ini_Cuerpo )
+				toClase._Ini_Cuerpo	= I-1
+			ENDIF
+
+			toClase._Fin_Cuerpo	= I-1
+
+			IF EMPTY( toClase._Fin_Cab )
+				toClase._Fin_Cab	= I-1
+			ENDIF
+
+			STORE '' TO tcProcedureAbierto
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_HIDDEN
+		LPARAMETERS toClase, tcLine
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		IF LEFT(tcLine, 7) == 'HIDDEN '
+			llBloqueEncontrado	= .T.
+			toClase._HiddenProps		= ALLTRIM( SUBSTR( tcLine, 8 ) )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE analizarBloque_INCLUDE
 		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		LOCAL llBloqueEncontrado
@@ -3018,6 +2862,41 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toModulo._includeFile	= ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) )
 			ELSE
 				toClase._includeFile	= ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) )
+			ENDIF
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_METADATA
+		LPARAMETERS toClase, tcLine
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		IF LEFT(tcLine, C_LEN_METADATA_I) == C_METADATA_I	&& METADATA de la CLASE
+			*< CLASSDATA: Baseclass="custom" Timestamp="2013/11/19 11:51:04" Scale="Foxels" Uniqueid="_3WF0VSTN1" ProjectClassIcon="container.ico" ClassIcon="toolbar.ico" />
+			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
+			llBloqueEncontrado	= .T.
+			WITH THIS
+				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_METADATA_I, C_METADATA_F )
+
+				toClase._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues )
+				toClase._TimeStamp			= INT( .RowTimeStamp(  .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
+				toClase._Scale				= .get_ValueByName_FromListNamesWithValues( 'Scale', 'C', @laPropsAndValues )
+				toClase._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
+				toClase._ProjectClassIcon	= .get_ValueByName_FromListNamesWithValues( 'ProjectClassIcon', 'C', @laPropsAndValues )
+				toClase._ClassIcon			= .get_ValueByName_FromListNamesWithValues( 'ClassIcon', 'C', @laPropsAndValues )
+				toClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
+			ENDWITH && THIS
+
+			IF NOT EMPTY( toClase._Ole2 )	&& Le agrego "OLEObject = " delante
+				toClase._Ole2	= 'OLEObject = ' + toClase._Ole2 + CR_LF
 			ENDIF
 		ENDIF
 
@@ -3074,6 +2953,142 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		RETURN llBloqueEncontrado
 	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_PROCEDURE
+		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
+			, tc_Comentario, taBloquesExclusion, tnBloquesExclusion
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		DO CASE
+		CASE LEFT( tcLine, 20 ) == 'PROTECTED PROCEDURE '
+			*-- Estructura a reconocer: PROTECTED PROCEDURE nombre_del_procedimiento
+			llBloqueEncontrado	= .T.
+			tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 21 ) )
+			THIS.evaluarDefinicionDeProcedure( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'protected', @toObjeto )
+
+
+		CASE LEFT( tcLine, 17 ) == 'HIDDEN PROCEDURE '
+			*-- Estructura a reconocer: HIDDEN PROCEDURE nombre_del_procedimiento
+			llBloqueEncontrado	= .T.
+			tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 18 ) )
+			THIS.evaluarDefinicionDeProcedure( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'hidden', @toObjeto )
+
+		CASE LEFT( tcLine, 10 ) == 'PROCEDURE '
+			*-- Estructura a reconocer: PROCEDURE [objeto.]nombre_del_procedimiento
+			llBloqueEncontrado	= .T.
+			tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 11 ) )
+			THIS.evaluarDefinicionDeProcedure( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'normal', @toObjeto )
+
+		ENDCASE
+
+		IF llBloqueEncontrado
+			*-- Evalúo todo el contenido del PROCEDURE
+			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, tcProcedureAbierto ;
+				, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_PROTECTED
+		LPARAMETERS toClase, tcLine
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		IF LEFT(tcLine, 10) == 'PROTECTED '
+			llBloqueEncontrado	= .T.
+			toClase._ProtectedProps		= ALLTRIM( SUBSTR( tcLine, 11 ) )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE evaluarDefinicionDeProcedure
+		LPARAMETERS toClase, tnX, tc_Comentario, tcProcName, tcProcType, toObjeto
+		*--------------------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
+				, toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL I, lcNombreObjeto, lnObjProc ;
+				, loProcedure AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
+
+			IF EMPTY(toClase._Fin_Cab)
+				toClase._Fin_Cab	= tnX-1
+				toClase._Ini_Cuerpo	= tnX
+			ENDIF
+
+			loProcedure		= CREATEOBJECT("CL_PROCEDURE")
+			loProcedure._Nombre			= tcProcName
+			loProcedure._ProcType		= tcProcType
+			loProcedure._Comentario		= tc_Comentario
+
+			*-- Anoto en HiddenMethods y ProtectedMethods según corresponda
+			DO CASE
+			CASE loProcedure._ProcType == 'hidden'
+				toClase._HiddenMethods	= toClase._HiddenMethods + ',' + tcProcName
+
+			CASE loProcedure._ProcType == 'protected'
+				toClase._ProtectedMethods	= toClase._ProtectedMethods + ',' + tcProcName
+
+			ENDCASE
+
+			*-- Agrego el objeto Procedimiento a la clase, o a un objeto de la clase.
+			IF '.' $ tcProcName
+				*-- Procedimiento de objeto
+				lcNombreObjeto	= LOWER( JUSTSTEM( tcProcName ) )
+
+				*-- Busco el objeto al que corresponde el método
+				lnObjProc	= THIS.buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase )
+
+				IF lnObjProc = 0
+					*-- Procedimiento de clase
+					toClase.add_Procedure( loProcedure )
+				ELSE
+					*-- Procedimiento de objeto
+					toObjeto	= toClase._AddObjects( lnObjProc )
+					toObjeto.add_Procedure( loProcedure )
+				ENDIF
+			ELSE
+				*-- Procedimiento de clase
+				toClase.add_Procedure( loProcedure )
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loProcedure
+			RELEASE loProcedure
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
@@ -4769,32 +4784,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_ALL_OBJECT_METHODS
-		LPARAMETERS tcMethods
-
-		*-- Finalmente, todos los métodos los ordeno y escribo juntos
-		LOCAL laMethods(1), laCode(1), lnMethodCount, I
-
-		IF NOT EMPTY(tcMethods)
-			DIMENSION laMethods(1,3)
-			THIS.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount )
-
-			FOR I = 1 TO lnMethodCount
-				*-- Genero los métodos indentados
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>><<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
-					<<THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
-					<<C_TAB>>ENDPROC
-
-				ENDTEXT
-			ENDFOR
-		ENDIF
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE get_ADD_OBJECT_METHODS
 		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount
 
@@ -4841,6 +4830,456 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		RETURN
 	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_NombresObjetosOLEPublic
+		LPARAMETERS ta_NombresObjsOle
+		*-- Obtengo los objetos "OLEPublic"
+		SELECT PADR(OBJNAME,100) OBJNAME ;
+			FROM TABLABIN ;
+			WHERE TABLABIN.PLATFORM = "COMMENT" AND TABLABIN.RESERVED2 == "OLEPublic" ;
+			ORDER BY 1 ;
+			INTO ARRAY ta_NombresObjsOle
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_PropsAndCommentsFrom_RESERVED3
+		*-- Sirve para el memo RESERVED3
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcMemo					(v! IN    ) Contenido de un campo MEMO
+		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
+		* taPropsAndComments		(@!    OUT) Array con las propiedades y comentarios
+		* tnPropsAndComments_Count	(@!    OUT) Cantidad de propiedades
+		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo
+		EXTERNAL ARRAY taPropsAndComments
+
+		TRY
+			LOCAL laLines(1), I, lnPos, loEx AS EXCEPTION
+			tcSortedMemo	= ''
+			tnPropsAndComments_Count	= ALINES(laLines, tcMemo, 1+4)
+
+			IF tnPropsAndComments_Count <= 1 AND EMPTY(laLines)
+				tnPropsAndComments_Count	= 0
+				EXIT
+			ENDIF
+
+			DIMENSION taPropsAndComments(tnPropsAndComments_Count,2)
+
+			FOR I = 1 TO tnPropsAndComments_Count
+				lnPos			= AT(' ', laLines(I))	&& Un espacio separa la propiedad de su comentario (si tiene)
+
+				IF lnPos = 0
+					taPropsAndComments(I,1)	= laLines(I)
+					taPropsAndComments(I,2)	= ''
+				ELSE
+					taPropsAndComments(I,1)	= LEFT( laLines(I), lnPos - 1 )
+					taPropsAndComments(I,2)	= SUBSTR( laLines(I), lnPos + 1 )
+				ENDIF
+			ENDFOR
+
+			IF tlSort AND THIS.l_PropSort_Enabled
+				ASORT( taPropsAndComments, 1, -1, 0, 1 )
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_PropsAndValuesFrom_PROPERTIES
+		*-- Sirve para el memo PROPERTIES
+		*---------------------------------------------------------------------------------------------------
+		* KNOWLEDGE BASE:
+		* 29/11/2013	FDBOZZO		En un pageframe, si las props.nativas del mismo no están antes que las de
+		*							los objetos contenidos, causa un error. Se deben ordenar primero las
+		*							props.nativas (sin punto) y luego las de los objetos (con punto)
+		*
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcMemo					(v! IN    ) Contenido de un campo MEMO
+		* tnSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los objetos y props (1), o no (0)
+		* taPropsAndValues			(@!    OUT) Array con las propiedades y comentarios
+		* tnPropsAndValues_Count	(@!    OUT) Cantidad de propiedades
+		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
+		EXTERNAL ARRAY taPropsAndValues
+		TRY
+			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
+			tcSortedMemo			= ''
+			tnPropsAndValues_Count	= 0
+
+			IF NOT EMPTY(m.tcMemo)
+				lnItemCount = ALINES(laItems, m.tcMemo, 0, CR_LF)	&& Específicamente CR+LF para que no reconozca los CR o LF por separado
+				X	= 0
+
+				IF lnItemCount <= 1 AND EMPTY(laItems)
+					lnItemCount	= 0
+					EXIT
+				ENDIF
+
+
+				*-- 1) OBTENCIÓN Y SEPARACIÓN DE PROPIEDADES Y VALORES
+				*-- Crear un array con los valores especiales que pueden estar repartidos entre varias lineas
+				FOR I = 1 TO m.lnItemCount
+					IF EMPTY( laItems(I) )
+						LOOP
+					ENDIF
+
+					X	= X + 1
+					DIMENSION taPropsAndValues(X,2)
+
+					IF C_MPROPHEADER $ laItems(I)
+						*-- Solo entrará por aquí cuando se evalúe una propiedad de PROPERTIES con un valor especial (largo)
+						lnLenAcum	= 0
+						lnPosEQ		= AT( '=', laItems(I) )
+						lcPropName	= LEFT( laItems(I), lnPosEQ - 2 )
+						lnLenVal	= INT( VAL( SUBSTR( laItems(I), lnPosEQ + 2 + 517, 8) ) )
+						lcValue		= SUBSTR( laItems(I), lnPosEQ + 2 + 517 + 8 )
+
+						IF LEN( lcValue ) < lnLenVal
+							*-- Como el valor es multi-línea, debo agregarle los CR_LF que le quitó el ALINES()
+							FOR I = I + 1 TO m.lnItemCount
+								lcValue	= lcValue + CR_LF + laItems(I)
+
+								IF LEN( lcValue ) >= lnLenVal
+									EXIT
+								ENDIF
+							ENDFOR
+
+							lcValue	= C_FB2P_VALUE_I + CR_LF + lcValue + CR_LF + C_FB2P_VALUE_F
+						ELSE
+							lcValue	= C_FB2P_VALUE_I + lcValue + C_FB2P_VALUE_F
+						ENDIF
+
+						*-- Es un valor especial, por lo que se encapsula en un marcador especial
+						taPropsAndValues(X,1)	= lcPropName
+						taPropsAndValues(X,2)	= THIS.normalizarValorPropiedad( lcPropName, lcValue, '' )
+
+					ELSE
+						*-- Propiedad normal
+						*-- SI HACE FALTA QUE LOS MÉTODOS ESTÉN AL FINAL, DESCOMENTAR ESTO (Y EL DE MÁS ABAJO)
+						*IF LEFT(laItems(I), 1) == '*'	&& Only Reserved3 have this
+						*	LOOP
+						*ENDIF
+
+						lnPosEQ					= AT( '=', laItems(I) )
+						taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
+						taPropsAndValues(X,2)	=  THIS.normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
+					ENDIF
+				ENDFOR
+
+
+				tnPropsAndValues_Count	= X
+				lcMethods	= ''
+
+
+				*-- 2) SORT
+				THIS.sortPropsAndValues( @taPropsAndValues, tnPropsAndValues_Count, tnSort )
+
+
+				*-- Agregar propiedades primero
+				FOR I = 1 TO m.tnPropsAndValues_Count
+					*-- SI HACE FALTA QUE LOS MÉTODOS ESTÉN AL FINAL, DESCOMENTAR ESTO (Y EL DE MÁS ARRIBA)
+					*IF LEFT(taPropsAndValues(I), 1) == '*'	&& Only Reserved3 have this
+					*	lcMethods	= m.lcMethods + m.taPropsAndValues(I,1) + ' = ' + m.taPropsAndValues(I,2) + CR_LF
+					*	LOOP
+					*ENDIF
+
+					tcSortedMemo	= m.tcSortedMemo + m.taPropsAndValues(I,1) + ' = ' + m.taPropsAndValues(I,2) + CR_LF
+				ENDFOR
+
+				*-- Agregar métodos al final
+				tcSortedMemo	= m.tcSortedMemo + m.lcMethods
+
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_PropsFrom_PROTECTED
+		*-- Sirve para el memo PROTECTED
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcMemo					(v! IN    ) Contenido de un campo MEMO
+		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
+		* taProtected				(@!    OUT) Array con las propiedades y comentarios
+		* tnProtected_Count			(@!    OUT) Cantidad de propiedades
+		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo
+		EXTERNAL ARRAY taProtected
+
+		tcSortedMemo		= ''
+		tnProtected_Count	= ALINES(taProtected, tcMemo, 1+4)
+
+		IF tnProtected_Count <= 1 AND EMPTY(taProtected)
+			tnProtected_Count	= 0
+		ELSE
+			IF tlSort AND THIS.l_PropSort_Enabled
+				ASORT( taProtected, 1, -1, 0, 1 )
+			ENDIF
+
+			FOR I = 1 TO tnProtected_Count
+				tcSortedMemo	= tcSortedMemo + taProtected(I) + CR_LF
+			ENDFOR
+		ENDIF
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE IndentarMemo
+		LPARAMETERS tcMethod, tcIndentation
+		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
+		TRY
+			LOCAL I, lcMethod, llProcedure, lnInicio, lnFin
+			lcMethod		= ''
+			llProcedure		= ( LEFT(tcMethod,10) == 'PROCEDURE ' ;
+				OR LEFT(tcMethod,17) == 'HIDDEN PROCEDURE ' ;
+				OR LEFT(tcMethod,20) == 'PROTECTED PROCEDURE ' )
+			lnInicio		= 1
+			lnFin			= ALINES(laLineas, tcMethod)
+			IF VARTYPE(tcIndentation) # 'C'
+				tcIndentation	= ''
+			ENDIF
+
+			*-- Si encuentra la cabecera de un PROCEDURE, la saltea
+			IF llProcedure
+				lnInicio	= 2
+				lnFin		= lnFin - 1
+			ENDIF
+
+			FOR I = lnInicio TO lnFin
+				*-- TEXT/ENDTEXT aquí da error 2044 de recursividad. No usar.
+				lcMethod	= lcMethod + CR_LF + tcIndentation + laLineas(I)
+			ENDFOR
+
+			lcMethod	= SUBSTR(lcMethod,3)	&& Quito el primer ENTER (CR+LF)
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN lcMethod
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE MemoInOneLine( tcMethod )
+		TRY
+			LOCAL lcLine, I
+			lcLine	= ''
+
+			IF NOT EMPTY(tcMethod)
+				FOR I = 1 TO ALINES(laLines, m.tcMethod, 0)
+					lcLine	= lcLine + ', ' + laLines(I)
+				ENDFOR
+
+				lcLine	= SUBSTR(lcLine, 3)
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN lcLine
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE set_MultilineMemoWithAddObjectProperties
+		LPARAMETERS taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine
+		EXTERNAL ARRAY taPropsAndValues
+
+		TRY
+			LOCAL lcLine, I, lcComentarios, laLines(1), lcFinDeLinea_Coma_PuntoComa_CR
+			lcLine			= ''
+			lcFinDeLinea	= ', ;' + CR_LF
+
+			IF tnPropCount > 0
+				IF VARTYPE(tcLeftIndentation) # 'C'
+					tcLeftIndentation	= ''
+				ENDIF
+
+				FOR I = 1 TO tnPropCount
+					lcLine			= lcLine + tcLeftIndentation + taPropsAndValues(I,1) + ' = ' + taPropsAndValues(I,2) + lcFinDeLinea
+				ENDFOR
+
+				*-- Quito el ", ;<CRLF>" final
+				lcLine	= tcLeftIndentation + SUBSTR(lcLine, 1 + LEN(tcLeftIndentation), LEN(lcLine) - LEN(tcLeftIndentation) - LEN(lcFinDeLinea))
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN lcLine
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE SortMethod
+		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount
+		*-- 29/10/2013	Fernando D. Bozzo
+		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
+		*-- cuando es usado en un generador de código o similar.
+		EXTERNAL ARRAY taMethods, taCode
+
+		*-- ESTRUCTURA DE LOS ARRAYS CREADOS:
+		*-- taMethods[1,3]
+		*--		Nombre Método
+		*--		Posición Original
+		*--		Tipo (HIDDEN/PROTECTED/NORMAL)
+		*-- taCode[1]
+		*--		Bloque de código del método en su posición original
+		TRY
+			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted
+			LOCAL loEx AS EXCEPTION
+			DIMENSION taMethods(1,3)
+			STORE '' TO taMethods, m.tcSorted, taCode
+			tnMethodCount	= 0
+
+			IF NOT EMPTY(m.tcMethod) AND LEFT(m.tcMethod,9) == "ENDPROC"+CHR(13)+CHR(10)
+				tcMethod	= SUBSTR(m.tcMethod,10)
+			ENDIF
+
+			IF NOT EMPTY(m.tcMethod)
+				DIMENSION laLine(1), taMethods(1,3)
+				STORE '' TO laLine, taMethods, taCode
+				STORE 0 TO tnMethodCount, lnTextNodes
+				lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
+
+				*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
+				FOR I = 1 TO lnLineCount
+					IF NOT EMPTY(laLine(I))
+						IF I > 1
+							FOR X = I-1 TO 1 STEP -1
+								ADEL(laLine, X)
+							ENDFOR
+							lnLineCount	= lnLineCount - I + 1
+							DIMENSION laLine(lnLineCount)
+						ENDIF
+						EXIT
+					ENDIF
+				ENDFOR
+
+				*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
+				FOR I = lnLineCount TO 1 STEP -1
+					IF EMPTY(laLine(I))
+						ADEL(laLine, I)
+					ELSE
+						IF I < lnLineCount
+							lnLineCount	= I
+							DIMENSION laLine(lnLineCount)
+						ENDIF
+						EXIT
+					ENDIF
+				ENDFOR
+
+				*-- Analyze and count line methods, get method names and consolidate block code
+				FOR I = 1 TO lnLineCount
+					DO CASE
+					CASE LEFT(laLine(I), 4) == C_TEXT
+						lnTextNodes	= lnTextNodes + 1
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+
+					CASE LEFT(laLine(I), 7) == C_ENDTEXT
+						lnTextNodes	= lnTextNodes - 1
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+
+					CASE lnTextNodes = 0 AND LEFT(laLine(I), 10) == 'PROCEDURE '
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 11) )
+						taMethods(tnMethodCount, 2)	= tnMethodCount
+						taMethods(tnMethodCount, 3)	= ''
+						taCode(tnMethodCount)		= laLine(I) + CR_LF
+
+					CASE lnTextNodes = 0 AND LEFT(laLine(I), 17) == 'HIDDEN PROCEDURE '
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 18) )
+						taMethods(tnMethodCount, 2)	= tnMethodCount
+						taMethods(tnMethodCount, 3)	= 'HIDDEN '
+						taCode(tnMethodCount)		= laLine(I) + CR_LF
+
+					CASE lnTextNodes = 0 AND LEFT(laLine(I), 20) == 'PROTECTED PROCEDURE '
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 21) )
+						taMethods(tnMethodCount, 2)	= tnMethodCount
+						taMethods(tnMethodCount, 3)	= 'PROTECTED '
+						taCode(tnMethodCount)		= laLine(I) + CR_LF
+
+					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+
+					CASE tnMethodCount = 0	&& Skip empty lines before methods begin
+
+					OTHERWISE && Method Code
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+
+					ENDCASE
+				ENDFOR
+
+				*-- Alphabetical ordering of methods
+				IF THIS.l_MethodSort_Enabled
+					ASORT(taMethods,1,-1,0,1)
+				ENDIF
+
+				FOR I = 1 TO tnMethodCount
+					m.tcSorted	= m.tcSorted + taCode(taMethods(I,2))
+				ENDFOR
+
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN
+	ENDPROC	&& SordMethod
 
 
 	*******************************************************************************************************************
@@ -4918,6 +5357,32 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE write_ALL_OBJECT_METHODS
+		LPARAMETERS tcMethods
+
+		*-- Finalmente, todos los métodos los ordeno y escribo juntos
+		LOCAL laMethods(1), laCode(1), lnMethodCount, I
+
+		IF NOT EMPTY(tcMethods)
+			DIMENSION laMethods(1,3)
+			THIS.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount )
+
+			FOR I = 1 TO lnMethodCount
+				*-- Genero los métodos indentados
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_TAB>><<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
+					<<THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
+					<<C_TAB>>ENDPROC
+
+				ENDTEXT
+			ENDFOR
+		ENDIF
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE write_CLASS_METHODS
 		LPARAMETERS tnMethodCount, taMethods, taCode, taProtected, taPropsAndComments
 		*-- DEFINIR MÉTODOS DE LA CLASE
@@ -4930,8 +5395,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			IF tnMethodCount > 0 THEN
 				FOR I = 1 TO tnMethodCount
-					lcMethod		= CHRTRAN( taMethods(I,1), '^', '' )
-					lnProtectedItem	= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 0)
+					lcMethod			= CHRTRAN( taMethods(I,1), '^', '' )
+					lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 0)
 					lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethod, 1, 0, 1, 8)
 
 					DO CASE
@@ -4954,22 +5419,27 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						<<C_TAB>><<lcProcDef>> <<taMethods(I,1)>>
 					ENDTEXT
 
+					*-- Comentarios del método (si tiene)
 					IF lnCommentRow > 0 AND NOT EMPTY(taPropsAndComments(lnCommentRow,2))
 						TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 							<<C_TAB>><<C_TAB>>&& <<taPropsAndComments(lnCommentRow,2)>>
 						ENDTEXT
 					ENDIF
 
-					TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<THIS.IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9) )>>
-						<<C_TAB>>ENDPROC
+					*-- Código del método
+					*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*	<<THIS.IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9) )>>
+					*	<<C_TAB>>ENDPROC
 
-					ENDTEXT
+					*ENDTEXT
+					lcMethods	= lcMethods + CR_LF + THIS.IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+					lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC' + CR_LF
 				ENDFOR
 
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<lcMethods>>
-				ENDTEXT
+				*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<lcMethods>>
+				*ENDTEXT
+				C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + lcMethods &&+ CR_LF
 
 			ENDIF
 
@@ -4982,99 +5452,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTRY
 
 		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_PROGRAM_HEADER
-		*-- Cabecera del PRG e inicio de DEF_CLASS
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
-			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
-			*
-		ENDTEXT
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DEFINED_PAM
-		*-- Escribo propiedades DEFINED (Reserved3) en este formato:
-
-		*<DefinedPropArrayMethod>
-		*m: *metodovacio_con_comentarios		&& Este método no tiene código, pero tiene comentarios. A ver que pasa!
-		*m: *mimetodo		&& Mi metodo
-		*p: prop1		&& Mi prop 1
-		*p: prop_especial_cr		&&
-		*a: ^array_1_d[1,0]		&& Array 1 dimensión (1)
-		*a: ^array_2_d[1,2]		&& Array una dimension (1,2)
-		*p: _memberdata		&& XML Metadata for customizable properties
-		*</DefinedPropArrayMethod>
-
-		LPARAMETERS taPropsAndComments, tnPropsAndComments_Count
-
-		IF tnPropsAndComments_Count > 0
-			LOCAL I, lcPropsMethodsDefd
-			lcPropsMethodsDefd	= ''
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_DEFINED_PAM_I>>
-			ENDTEXT
-
-			FOR I = 1 TO tnPropsAndComments_Count
-				IF EMPTY(taPropsAndComments(I,1))
-					LOOP
-				ENDIF
-
-				lcType	= LEFT( taPropsAndComments(I,1), 1 )
-				lcType	= ICASE( lcType == '*', 'm' ;
-					, lcType == '^', 'a' ;
-					, 'p' )
-
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_TAB>>*<<lcType>>: <<taPropsAndComments(I,1)>>
-				ENDTEXT
-
-				IF NOT EMPTY(taPropsAndComments(I,2))
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
-					ENDTEXT
-				ENDIF
-			ENDFOR
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>><<C_DEFINED_PAM_F>>
-			ENDTEXT
-
-		ENDIF
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_HIDDEN_Properties
-		*-- Escribo la definición HIDDEN de propiedades
-		LPARAMETERS tcHiddenProp
-
-		IF NOT EMPTY(tcHiddenProp)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>>HIDDEN <<SUBSTR(tcHiddenProp,2)>>
-			ENDTEXT
-		ENDIF
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_PROTECTED_Properties
-		*-- Escribo la definición PROTECTED de propiedades
-		LPARAMETERS tcProtectedProp
-
-		IF NOT EMPTY(tcProtectedProp)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>>PROTECTED <<SUBSTR(tcProtectedProp,2)>>
-			ENDTEXT
-		ENDIF
 	ENDPROC
 
 
@@ -5161,6 +5538,103 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE write_DEFINED_PAM
+		*-- Escribo propiedades DEFINED (Reserved3) en este formato:
+
+		*<DefinedPropArrayMethod>
+		*m: *metodovacio_con_comentarios		&& Este método no tiene código, pero tiene comentarios. A ver que pasa!
+		*m: *mimetodo		&& Mi metodo
+		*p: prop1		&& Mi prop 1
+		*p: prop_especial_cr		&&
+		*a: ^array_1_d[1,0]		&& Array 1 dimensión (1)
+		*a: ^array_2_d[1,2]		&& Array una dimension (1,2)
+		*p: _memberdata		&& XML Metadata for customizable properties
+		*</DefinedPropArrayMethod>
+
+		LPARAMETERS taPropsAndComments, tnPropsAndComments_Count
+
+		IF tnPropsAndComments_Count > 0
+			LOCAL I, lcPropsMethodsDefd
+			lcPropsMethodsDefd	= ''
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_DEFINED_PAM_I>>
+			ENDTEXT
+
+			FOR I = 1 TO tnPropsAndComments_Count
+				IF EMPTY(taPropsAndComments(I,1))
+					LOOP
+				ENDIF
+
+				lcType	= LEFT( taPropsAndComments(I,1), 1 )
+				lcType	= ICASE( lcType == '*', 'm' ;
+					, lcType == '^', 'a' ;
+					, 'p' )
+
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TAB>><<C_TAB>>*<<lcType>>: <<taPropsAndComments(I,1)>>
+				ENDTEXT
+
+				IF NOT EMPTY(taPropsAndComments(I,2))
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
+					ENDTEXT
+				ENDIF
+			ENDFOR
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<C_TAB>><<C_DEFINED_PAM_F>>
+			ENDTEXT
+
+		ENDIF
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DEFINE_CLASS
+		LPARAMETERS ta_NombresObjsOle, toRegClass
+
+		LOCAL lcOF_Classlib, llOleObject
+		lcOF_Classlib	= ''
+		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 8) > 0 )
+
+		IF NOT EMPTY(toRegClass.CLASSLOC)
+			lcOF_Classlib	= 'OF "' + ALLTRIM(toRegClass.CLASSLOC) + '" '
+		ENDIF
+
+		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<ALLTRIM(toRegClass.Class)>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+		ENDTEXT
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DEFINE_CLASS_COMMENTS
+		LPARAMETERS toRegClass
+		*-- Comentario de la clase
+		IF NOT EMPTY(toRegClass.RESERVED7) THEN
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				<<C_TAB>><<C_TAB>><<'&'+'&'>> <<toRegClass.Reserved7>>
+			ENDTEXT
+		ENDIF
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_ENDDEFINE_SiCorresponde
+		LPARAMETERS tnLastClass
+		IF tnLastClass = 1
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<'ENDDEFINE'>>
+
+			ENDTEXT
+		ENDIF
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE write_INCLUDE
 		LPARAMETERS toReg
 		*-- #INCLUDE
@@ -5214,44 +5688,40 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_Define_Class_COMMENTS
-		LPARAMETERS toRegClass
-		*-- Comentario de la clase
-		IF NOT EMPTY(toRegClass.RESERVED7) THEN
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<<C_TAB>><<C_TAB>><<'&'+'&'>> <<toRegClass.Reserved7>>
+	PROCEDURE write_HIDDEN_Properties
+		*-- Escribo la definición HIDDEN de propiedades
+		LPARAMETERS tcHiddenProp
+
+		IF NOT EMPTY(tcHiddenProp)
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<C_TAB>>HIDDEN <<SUBSTR(tcHiddenProp,2)>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_DEFINE_CLASS
-		LPARAMETERS ta_NombresObjsOle, toRegClass
-
-		LOCAL lcOF_Classlib, llOleObject
-		lcOF_Classlib	= ''
-		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 8) > 0 )
-
-		IF NOT EMPTY(toRegClass.CLASSLOC)
-			lcOF_Classlib	= 'OF "' + ALLTRIM(toRegClass.CLASSLOC) + '" '
-		ENDIF
-
-		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<ALLTRIM(toRegClass.Class)>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+	PROCEDURE write_PROGRAM_HEADER
+		*-- Cabecera del PRG e inicio de DEF_CLASS
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
+			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
+			*
 		ENDTEXT
-
 	ENDPROC
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_ENDDEFINE_SiCorresponde
-		LPARAMETERS tnLastClass
-		IF tnLastClass = 1
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<'ENDDEFINE'>>
+	PROCEDURE write_PROTECTED_Properties
+		*-- Escribo la definición PROTECTED de propiedades
+		LPARAMETERS tcProtectedProp
 
+		IF NOT EMPTY(tcProtectedProp)
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<C_TAB>>PROTECTED <<SUBSTR(tcProtectedProp,2)>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -5597,18 +6067,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE get_NombresObjetosOLEPublic
-		LPARAMETERS ta_NombresObjsOle
-		*-- Obtengo los objetos "OLEPublic"
-		SELECT PADR(OBJNAME,100) OBJNAME ;
-			FROM TABLABIN ;
-			WHERE TABLABIN.PLATFORM = "COMMENT" AND TABLABIN.RESERVED2 == "OLEPublic" ;
-			ORDER BY 1 ;
-			INTO ARRAY ta_NombresObjsOle
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE write_DefinicionObjetosOLE
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
@@ -5673,471 +6131,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE get_PropsAndCommentsFrom_RESERVED3
-		*-- Sirve para el memo RESERVED3
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* tcMemo					(v! IN    ) Contenido de un campo MEMO
-		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
-		* taPropsAndComments		(@!    OUT) Array con las propiedades y comentarios
-		* tnPropsAndComments_Count	(@!    OUT) Cantidad de propiedades
-		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo
-		EXTERNAL ARRAY taPropsAndComments
-
-		TRY
-			LOCAL laLines(1), I, lnPos, loEx AS EXCEPTION
-			tcSortedMemo	= ''
-			tnPropsAndComments_Count	= ALINES(laLines, tcMemo)
-			DIMENSION taPropsAndComments(tnPropsAndComments_Count,2)
-
-			IF tnPropsAndComments_Count = 1 AND EMPTY(taPropsAndComments)
-				tnPropsAndComments_Count	= 0
-				EXIT
-			ENDIF
-
-			FOR I = 1 TO tnPropsAndComments_Count
-				lnPos			= AT(' ', laLines(I))	&& Un espacio separa la propiedad de su comentario (si tiene)
-
-				IF lnPos = 0
-					taPropsAndComments(I,1)	= laLines(I)
-					taPropsAndComments(I,2)	= ''
-				ELSE
-					taPropsAndComments(I,1)	= LEFT( laLines(I), lnPos - 1 )
-					taPropsAndComments(I,2)	= SUBSTR( laLines(I), lnPos + 1 )
-				ENDIF
-			ENDFOR
-
-			IF tlSort
-				ASORT( taPropsAndComments, 1, -1, 0, 1 )
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE get_PropsAndValuesFrom_PROPERTIES
-		*-- Sirve para el memo PROPERTIES
-		*---------------------------------------------------------------------------------------------------
-		* KNOWLEDGE BASE:
-		* 29/11/2013	FDBOZZO		En un pageframe, si las props.nativas del mismo no están antes que las de
-		*							los objetos contenidos, causa un error. Se deben ordenar primero las
-		*							props.nativas (sin punto) y luego las de los objetos (con punto)
-		*
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* tcMemo					(v! IN    ) Contenido de un campo MEMO
-		* tnSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los objetos y props (1), o no (0)
-		* taPropsAndValues			(@!    OUT) Array con las propiedades y comentarios
-		* tnPropsAndValues_Count	(@!    OUT) Cantidad de propiedades
-		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
-		EXTERNAL ARRAY taPropsAndValues
-		TRY
-			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
-			tcSortedMemo			= ''
-			tnPropsAndValues_Count	= 0
-
-			IF NOT EMPTY(m.tcMemo)
-				lnItemCount = ALINES(laItems, m.tcMemo, 0, CR_LF)	&& Específicamente CR+LF para que no reconozca los CR o LF por separado
-				X	= 0
-
-				IF lnItemCount = 1 AND EMPTY(laItems)
-					lnItemCount	= 0
-					EXIT
-				ENDIF
-
-
-				*-- 1) OBTENCIÓN Y SEPARACIÓN DE PROPIEDADES Y VALORES
-				*-- Crear un array con los valores especiales que pueden estar repartidos entre varias lineas
-				FOR I = 1 TO m.lnItemCount
-					IF EMPTY( laItems(I) )
-						LOOP
-					ENDIF
-
-					X	= X + 1
-					DIMENSION taPropsAndValues(X,2)
-
-					IF C_MPROPHEADER $ laItems(I)
-						*-- Solo entrará por aquí cuando se evalúe una propiedad de PROPERTIES con un valor especial (largo)
-						lnLenAcum	= 0
-						lnPosEQ		= AT( '=', laItems(I) )
-						lcPropName	= LEFT( laItems(I), lnPosEQ - 2 )
-						lnLenVal	= INT( VAL( SUBSTR( laItems(I), lnPosEQ + 2 + 517, 8) ) )
-						lcValue		= SUBSTR( laItems(I), lnPosEQ + 2 + 517 + 8 )
-
-						IF LEN( lcValue ) < lnLenVal
-							*-- Como el valor es multi-línea, debo agregarle los CR_LF que le quitó el ALINES()
-							FOR I = I + 1 TO m.lnItemCount
-								lcValue	= lcValue + CR_LF + laItems(I)
-
-								IF LEN( lcValue ) >= lnLenVal
-									EXIT
-								ENDIF
-							ENDFOR
-
-							lcValue	= C_FB2P_VALUE_I + CR_LF + lcValue + CR_LF + C_FB2P_VALUE_F
-						ELSE
-							lcValue	= C_FB2P_VALUE_I + lcValue + C_FB2P_VALUE_F
-						ENDIF
-
-						*-- Es un valor especial, por lo que se encapsula en un marcador especial
-						taPropsAndValues(X,1)	= lcPropName
-						taPropsAndValues(X,2)	= THIS.normalizarValorPropiedad( lcPropName, lcValue, '' )
-
-					ELSE
-						*-- Propiedad normal
-						*-- SI HACE FALTA QUE LOS MÉTODOS ESTÉN AL FINAL, DESCOMENTAR ESTO (Y EL DE MÁS ABAJO)
-						*IF LEFT(laItems(I), 1) == '*'	&& Only Reserved3 have this
-						*	LOOP
-						*ENDIF
-
-						lnPosEQ					= AT( '=', laItems(I) )
-						taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
-						taPropsAndValues(X,2)	=  THIS.normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
-					ENDIF
-				ENDFOR
-
-
-				tnPropsAndValues_Count	= X
-				lcMethods	= ''
-
-
-				*-- 2) SORT
-				THIS.sortPropsAndValues( @taPropsAndValues, tnPropsAndValues_Count, tnSort )
-
-
-				*-- Agregar propiedades primero
-				FOR I = 1 TO m.tnPropsAndValues_Count
-					*-- SI HACE FALTA QUE LOS MÉTODOS ESTÉN AL FINAL, DESCOMENTAR ESTO (Y EL DE MÁS ARRIBA)
-					*IF LEFT(taPropsAndValues(I), 1) == '*'	&& Only Reserved3 have this
-					*	lcMethods	= m.lcMethods + m.taPropsAndValues(I,1) + ' = ' + m.taPropsAndValues(I,2) + CR_LF
-					*	LOOP
-					*ENDIF
-
-					tcSortedMemo	= m.tcSortedMemo + m.taPropsAndValues(I,1) + ' = ' + m.taPropsAndValues(I,2) + CR_LF
-				ENDFOR
-
-				*-- Agregar métodos al final
-				tcSortedMemo	= m.tcSortedMemo + m.lcMethods
-
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE get_PropsFrom_PROTECTED
-		*-- Sirve para el memo PROTECTED
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* tcMemo					(v! IN    ) Contenido de un campo MEMO
-		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
-		* taProtected				(@!    OUT) Array con las propiedades y comentarios
-		* tnProtected_Count			(@!    OUT) Cantidad de propiedades
-		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo
-		EXTERNAL ARRAY taProtected
-
-		tcSortedMemo		= ''
-		tnProtected_Count	= ALINES(taProtected, tcMemo)
-
-		IF tnProtected_Count = 1 AND EMPTY(taProtected)
-			tnProtected_Count	= 0
-		ELSE
-			IF tlSort
-				ASORT( taProtected, 1, -1, 0, 1 )
-			ENDIF
-
-			FOR I = 1 TO tnProtected_Count
-				tcSortedMemo	= tcSortedMemo + taProtected(I) + CR_LF
-			ENDFOR
-		ENDIF
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE MemoInOneLine( tcMethod )
-		TRY
-			LOCAL lcLine, I
-			lcLine	= ''
-
-			IF NOT EMPTY(tcMethod)
-				FOR I = 1 TO ALINES(laLines, m.tcMethod, 0)
-					lcLine	= lcLine + ', ' + laLines(I)
-				ENDFOR
-
-				lcLine	= SUBSTR(lcLine, 3)
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-		ENDTRY
-
-		RETURN lcLine
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	*PROCEDURE set_MultilineMemoWithAddObjectProperties( tcMethod, tcLeftIndentation, tlNormalizeLine )
-	PROCEDURE set_MultilineMemoWithAddObjectProperties
-		LPARAMETERS taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine
-		EXTERNAL ARRAY taPropsAndValues
-
-		TRY
-			LOCAL lcLine, I, lcComentarios, laLines(1), lcFinDeLinea_Coma_PuntoComa_CR
-			lcLine			= ''
-			lcFinDeLinea	= ', ;' + CR_LF
-
-			*IF NOT EMPTY(tcMethod)
-			IF tnPropCount > 0
-				IF VARTYPE(tcLeftIndentation) # 'C'
-					tcLeftIndentation	= ''
-				ENDIF
-
-				*FOR I = 1 TO ALINES(laLines, m.tcMethod, 0)
-				FOR I = 1 TO tnPropCount
-					*lcComentarios	= ''
-					*lcLine			= lcLine + tcLeftIndentation
-
-					*-- Ajustes de algunos casos especiales
-					*laLines(I)		= THIS.normalizarAsignacion( laLines(I), @lcComentarios )
-					*taPropsAndValues(I,2)	= THIS.normalizarValorPropiedad( taPropsAndValues(I,1), taPropsAndValues(I,2), @lcComentarios )
-					*lcLine			= lcLine + laLines(I) + ', ;'
-
-					*-- Estos comentarios solo con los metadatos autogenerados por los ajustes especiales
-					*IF NOT EMPTY( lcComentarios )
-					*	lcLine	= lcLine + C_TAB + C_TAB + lcComentarios
-					*ENDIF
-
-					*lcLine		= lcLine + CR_LF
-
-					lcLine			= lcLine + tcLeftIndentation + taPropsAndValues(I,1) + ' = ' + taPropsAndValues(I,2) + lcFinDeLinea
-				ENDFOR
-
-				*-- Si la última propiedad tiene comentarios, los quito temporalmente
-				*IF NOT EMPTY(lcComentarios)
-				*	lcLine	= STUFF( lcLine, LEN(lcLine) - LEN(lcComentarios) - 2 - 2 + 1, LEN(lcComentarios) + 2, '' )
-				*ENDIF
-
-				*-- Quito el ", ;<CRLF>" final
-				lcLine	= tcLeftIndentation + SUBSTR(lcLine, 1 + LEN(tcLeftIndentation), LEN(lcLine) - LEN(tcLeftIndentation) - LEN(lcFinDeLinea))
-
-				*-- Si la última línea tiene comentarios, los restablezco
-				*IF NOT EMPTY(lcComentarios)
-				*	lcLine	= lcLine + C_TAB + C_TAB + lcComentarios
-				*ENDIF
-			ENDIF
-
-		CATCH TO loEx
-			*loEx.UserValue	= 'ATENCION: EL ERROR PODRIA SER DEL PROGRAMA FUENTE' + CR_LF + CR_LF ;
-			+ JUSTEXT(THIS.c_inputFile) + ' MEMO Line ' + TRANSFORM(I) + ':' + laLines(I) + CR_LF + CR_LF ;
-			+ 'Analyzed memo content:' + CR_LF + tcMethod
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-		ENDTRY
-
-		RETURN lcLine
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE IndentarMemo
-		LPARAMETERS tcMethod, tcIndentation
-		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
-		TRY
-			LOCAL I, lcMethod, llProcedure, lnInicio, lnFin
-			lcMethod		= ''
-			llProcedure		= ( LEFT(tcMethod,10) == 'PROCEDURE ' ;
-				OR LEFT(tcMethod,17) == 'HIDDEN PROCEDURE ' ;
-				OR LEFT(tcMethod,20) == 'PROTECTED PROCEDURE ' )
-			lnInicio		= 1
-			lnFin			= ALINES(laLineas, tcMethod)
-			IF VARTYPE(tcIndentation) # 'C'
-				tcIndentation	= ''
-			ENDIF
-
-			*-- Si encuentra la cabecera de un PROCEDURE, la saltea
-			IF llProcedure
-				lnInicio	= 2
-				lnFin		= lnFin - 1
-			ENDIF
-
-			FOR I = lnInicio TO lnFin
-				*-- TEXT/ENDTEXT aquí da error 2044 de recursividad. No usar.
-				lcMethod	= lcMethod + CR_LF + tcIndentation + laLineas(I)
-			ENDFOR
-
-			lcMethod	= SUBSTR(lcMethod,3)	&& Quito el primer ENTER
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-		ENDTRY
-
-		RETURN lcMethod
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE SortMethod
-		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount
-		*-- 29/10/2013	Fernando D. Bozzo
-		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
-		*-- cuando es usado en un generador de código o similar.
-		EXTERNAL ARRAY taMethods, taCode
-
-		*-- ESTRUCTURA DE LOS ARRAYS CREADOS:
-		*-- taMethods[1,3]
-		*--		Nombre Método
-		*--		Posición Original
-		*--		Tipo (HIDDEN/PROTECTED/NORMAL)
-		*-- taCode[1]
-		*--		Bloque de código del método en su posición original
-		TRY
-			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted
-			LOCAL loEx AS EXCEPTION
-			DIMENSION taMethods(1,3)
-			STORE '' TO taMethods, m.tcSorted, taCode
-			tnMethodCount	= 0
-
-			IF NOT EMPTY(m.tcMethod) AND LEFT(m.tcMethod,9) == "ENDPROC"+CHR(13)+CHR(10)
-				tcMethod	= SUBSTR(m.tcMethod,10)
-			ENDIF
-
-			IF NOT EMPTY(m.tcMethod)
-				DIMENSION laLine(1), taMethods(1,3)
-				STORE '' TO laLine, taMethods, taCode
-				STORE 0 TO tnMethodCount, lnTextNodes
-				lnLineCount	= ALINES(laLine, m.tcMethod)
-
-				*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
-				FOR I = 1 TO lnLineCount
-					IF NOT EMPTY(laLine(I))
-						IF I > 1
-							FOR X = I-1 TO 1 STEP -1
-								ADEL(laLine, X)
-							ENDFOR
-							lnLineCount	= lnLineCount - I + 1
-							DIMENSION laLine(lnLineCount)
-						ENDIF
-						EXIT
-					ENDIF
-				ENDFOR
-
-				*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
-				FOR I = lnLineCount TO 1 STEP -1
-					IF EMPTY(laLine(I))
-						ADEL(laLine, I)
-					ELSE
-						IF I < lnLineCount
-							lnLineCount	= I
-							DIMENSION laLine(lnLineCount)
-						ENDIF
-						EXIT
-					ENDIF
-				ENDFOR
-
-				*-- Analyze and count line methods, get method names and consolidate block code
-				FOR I = 1 TO lnLineCount
-					DO CASE
-					CASE LEFT(laLine(I), 4) == C_TEXT
-						lnTextNodes	= lnTextNodes + 1
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					CASE LEFT(laLine(I), 7) == C_ENDTEXT
-						lnTextNodes	= lnTextNodes - 1
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 10) == 'PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 11) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= ''
-						taCode(tnMethodCount)		= laLine(I) + CR_LF
-
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 17) == 'HIDDEN PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 18) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'HIDDEN '
-						taCode(tnMethodCount)		= laLine(I) + CR_LF
-
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 20) == 'PROTECTED PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 21) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'PROTECTED '
-						taCode(tnMethodCount)		= laLine(I) + CR_LF
-
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					CASE tnMethodCount = 0	&& Skip empty lines before methos begin
-
-					OTHERWISE && Method Code
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					ENDCASE
-				ENDFOR
-
-				*-- Alphabetical ordering of methods
-				ASORT(taMethods,1,-1,0,1)
-
-				FOR I = 1 TO tnMethodCount
-					m.tcSorted	= m.tcSorted + taCode(taMethods(I,2))
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-		ENDTRY
-
-		RETURN
-	ENDPROC	&& SordMethod
-
-
 	PROCEDURE FixOle2Fields
 		*******************************************************************************************************************
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
@@ -6173,6 +6166,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
+	*******************************************************************************************************************
 	FUNCTION OcxOutsideProjDir
 		LPARAMETERS tcOcx, tcProjDir
 		*******************************************************************************************************************
