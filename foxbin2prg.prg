@@ -46,7 +46,8 @@
 * 01/12/2013	FDBOZZO		v1.6 Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
 * 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
 * 03/12/2013	FDBOZZO		v1.8 Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
-* 03/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
+* 06/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
+* 06/12/2013	FDBOZZO		v1.10 Arreglo del bug de mezcla de métodos de una clase con la siguiente
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -55,6 +56,7 @@
 * 02/12/2013	Fidel Charny	REPORTE BUG: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
 * 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa del arreglo anterior (arreglado en v.1.8)
 * 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa de una mejora anterior (arreglado en v.1.9)
+* 06/12/2013	Fidel Charny	REPORTE BUG: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -350,7 +352,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.9
+	n_FB2PRG_Version		= 1.10
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -2428,11 +2430,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL loProcedure AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
+			LOCAL llEsProcedureDeClase, loProcedure AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
 
 			IF '.' $ tcProcedureAbierto AND VARTYPE(toObjeto) = 'O' AND toObjeto._Procedure_Count > 0
 				loProcedure	= toObjeto._Procedures(toObjeto._Procedure_Count)
 			ELSE
+				llEsProcedureDeClase	= .T.
 				loProcedure	= toClase._Procedures(toClase._Procedure_Count)
 			ENDIF
 
@@ -2443,10 +2446,22 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					IF NOT .lineaExcluida( I, tnBloquesExclusion, @taBloquesExclusion ) ;
 							AND NOT .lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
 
-						IF LEFT( tcLine, 8 ) + ' ' == C_ENDPROC + ' ' && Fin del PROCEDURE
-							*tcProcedureAbierto	= ''
+						DO CASE
+						CASE LEFT( tcLine, 8 ) + ' ' == C_ENDPROC + ' ' && Fin del PROCEDURE
+							tcProcedureAbierto	= ''
 							EXIT
-						ENDIF
+
+						CASE LEFT( tcLine + ' ', 10 ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEFINE) encontrado
+							IF llEsProcedureDeClase
+								ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
+									+ toClase._Nombre + ' (' + loProcedure._Nombre + ')' ;
+									+ ', línea ' + TRANSFORM(I) + ' del archivo ' + THIS.c_InputFile
+							ELSE
+								ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
+									+ toClase._Nombre + ' (' + toObjeto._Nombre + '.' + loProcedure._Nombre + ')' ; 
+									+ ', línea ' + TRANSFORM(I) + ' del archivo ' + THIS.c_InputFile
+							ENDIF
+						ENDCASE
 					ENDIF
 
 					*-- Quito 2 TABS de la izquierda (si se puede y si el integrador/desarrollador no la lió quitándolos)
@@ -2650,14 +2665,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque_DEFINE_CLASS
-		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
+		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
 			, taBloquesExclusion, tnBloquesExclusion, tc_Comentario
 
 		EXTERNAL ARRAY taCodeLines, tnBloquesExclusion, taBloquesExclusion
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
-			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
@@ -2668,7 +2682,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				llBloqueEncontrado = .T.
 				LOCAL Z, lcProp, lcValue, loEx AS EXCEPTION ;
 					, llMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
-					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed
+					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed ;
+					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
@@ -2699,11 +2714,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						tc_Comentario	= ''
 						.set_Line( @tcLine, @taCodeLines, I )
 
-
-						.lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
-
 						DO CASE
-						CASE .analizarBloque_PROCEDURE( @toModulo, @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines ;
+						CASE .lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
+							LOOP
+
+						CASE .analizarBloque_PROCEDURE( @toModulo, @toClase, @loObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines ;
 								, @tcProcedureAbierto, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
 							*-- OJO: Esta se analiza primero a propósito, solo porque no puede estar detrás de PROTECTED y HIDDEN
 							llCLASS_PROPERTY_Completed = .T.
@@ -2722,7 +2737,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llHIDDEN_Completed	= .T.
 
 
-						CASE NOT llINCLUDE_Completed AND .c_Type <> "SCX" AND .analizarBloque_INCLUDE( @toModulo, @toClase, @toObjeto, @tcLine, @taCodeLines ;
+						CASE NOT llINCLUDE_Completed AND .c_Type <> "SCX" AND .analizarBloque_INCLUDE( @toModulo, @toClase, @tcLine, @taCodeLines ;
 								, @I, @tnCodeLines, @tcProcedureAbierto )
 							llINCLUDE_Completed	= .T.
 
@@ -2848,7 +2863,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque_INCLUDE
-		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
+		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		LOCAL llBloqueEncontrado
 
 		#IF .F.
@@ -2906,13 +2921,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque_OLE_DEF
-		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
+		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		LOCAL llBloqueEncontrado
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
-			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
-			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		IF LEFT( tcLine + ' ', C_LEN_OLE_I + 1 ) == C_OLE_I + ' '
@@ -2992,7 +3005,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		IF llBloqueEncontrado
 			*-- Evalúo todo el contenido del PROCEDURE
-			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, tcProcedureAbierto ;
+			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, @tcProcedureAbierto ;
 				, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
 		ENDIF
 
@@ -3063,6 +3076,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				IF lnObjProc = 0
 					*-- Procedimiento de clase
 					toClase.add_Procedure( loProcedure )
+					toObjeto	= NULL
 				ELSE
 					*-- Procedimiento de objeto
 					toObjeto	= toClase._AddObjects( lnObjProc )
@@ -3113,7 +3127,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			LOCAL I, loEx AS EXCEPTION ;
 				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed ;
 				, lc_Comentario, lcProcedureAbierto, lcLine ;
-				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG' ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 
 			STORE '' TO lcProcedureAbierto
@@ -3136,21 +3149,19 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						CASE THIS.lineaExcluida( I, tnBloquesExclusion, @taBloquesExclusion ) ;
 								OR .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
 
-							*.analizarLineasDeProcedure( @loClase, @loObjeto, @lcLine, @taCodeLines, @I, tnCodeLines, @lcProcedureAbierto )
-
 						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
 							llFoxBin2Prg_Completed	= .T.
 
-						CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @loClase, @loObjeto, @lcLine, @taCodeLines ;
+						CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @lcLine, @taCodeLines ;
 								, @I, tnCodeLines, @lcProcedureAbierto )
 							*-- Puede haber varios
 
-						CASE NOT llINCLUDE_SCX_Completed AND .c_Type = 'SCX' AND .analizarBloque_INCLUDE( @toModulo, @loClase, @loObjeto, @lcLine ;
+						CASE NOT llINCLUDE_SCX_Completed AND .c_Type = 'SCX' AND .analizarBloque_INCLUDE( @toModulo, @loClase, @lcLine ;
 								, @taCodeLines, @I, tnCodeLines, @lcProcedureAbierto )
 							* Específico para SCX que lo tiene al inicio
 							llINCLUDE_SCX_Completed	= .T.
 
-						CASE .analizarBloque_DEFINE_CLASS( @toModulo, @loClase, @loObjeto, @lcLine, @taCodeLines, @I, tnCodeLines ;
+						CASE .analizarBloque_DEFINE_CLASS( @toModulo, @loClase, @lcLine, @taCodeLines, @I, tnCodeLines ;
 								, @lcProcedureAbierto, @taBloquesExclusion, @tnBloquesExclusion, @lc_Comentario )
 							*-- Puede haber varias
 
@@ -3168,8 +3179,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			THROW
 
 		FINALLY
-			STORE NULL TO loObjeto, loClase
-			RELEASE loObjeto, loClase
+			STORE NULL TO loClase
+			RELEASE loClase
 		ENDTRY
 
 		RETURN
@@ -4812,11 +4823,16 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 
 					*-- Genero el método SIN indentar, ya que se hace luego
-					TEXT TO tcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<'PROCEDURE'>> <<tcMethodName>>
-						<<THIS.IndentarMemo( taCode(taMethods(I,2)) )>>
-						<<'ENDPROC'>>
-					ENDTEXT
+					*tcMethods2	= tcMethods
+					*TEXT TO tcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*	<<'PROCEDURE'>> <<tcMethodName>>
+					*	<<THIS.IndentarMemo( taCode(taMethods(I,2)) )>>
+					*	<<'ENDPROC'>>
+					*ENDTEXT
+					*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
+					tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + tcMethodName
+					tcMethods	= tcMethods + CR_LF + THIS.IndentarMemo( taCode(taMethods(I,2)) )
+					tcMethods	= tcMethods + CR_LF + 'ENDPROC'
 				ENDFOR
 			ENDIF
 
@@ -5057,7 +5073,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethod, tcIndentation
 		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
 		TRY
-			LOCAL I, lcMethod, llProcedure, lnInicio, lnFin
+			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1)
 			lcMethod		= ''
 			llProcedure		= ( LEFT(tcMethod,10) == 'PROCEDURE ' ;
 				OR LEFT(tcMethod,17) == 'HIDDEN PROCEDURE ' ;
@@ -5067,6 +5083,24 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			IF VARTYPE(tcIndentation) # 'C'
 				tcIndentation	= ''
 			ENDIF
+			
+			*-- Quito las líneas en blanco luego del final del ENDPROC
+			X	= 0
+			FOR I = lnFin TO 1 STEP -1
+				IF NOT EMPTY(laLineas(I))	&& Última línea de código
+					IF LEFT( laLineas(I), 10 ) <> C_ENDPROC
+						ERROR 'Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [' + laLineas(1) + ']'
+					ENDIF
+					EXIT
+				ENDIF
+				X	= X + 1
+			ENDFOR
+			
+			IF X > 0
+				lnFin	= lnFin - X
+				DIMENSION laLineas(lnFin)
+			ENDIF
+
 
 			*-- Si encuentra la cabecera de un PROCEDURE, la saltea
 			IF llProcedure
@@ -5361,21 +5395,29 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethods
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
-		LOCAL laMethods(1), laCode(1), lnMethodCount, I
+		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods, lcMethods2
 
 		IF NOT EMPTY(tcMethods)
+			STORE '' TO lcMethods, lcMethods2
 			DIMENSION laMethods(1,3)
 			THIS.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount )
 
 			FOR I = 1 TO lnMethodCount
 				*-- Genero los métodos indentados
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>><<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
-					<<THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
-					<<C_TAB>>ENDPROC
+				*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<C_TAB>><<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
+				*	<<THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
+				*	<<C_TAB>>ENDPROC
 
-				ENDTEXT
+				*ENDTEXT
+				*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
+				lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + 'PROCEDURE ' + laMethods(I,1)
+				lcMethods	= lcMethods + CR_LF + THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
+				lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
+				lcMethods	= lcMethods + CR_LF
 			ENDFOR
+			
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcMethods
 		ENDIF
 
 		RETURN
@@ -5390,8 +5432,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		EXTERNAL ARRAY taMethods, taCode, taProtected, taPropsAndComments
 
 		TRY
-			LOCAL lcMethod, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods
-			STORE '' TO lcMethod, lcProcDef, lcMethods
+			LOCAL lcMethod, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods, lcMethods2
+			STORE '' TO lcMethod, lcProcDef, lcMethods, lcMethods2
 
 			IF tnMethodCount > 0 THEN
 				FOR I = 1 TO tnMethodCount
@@ -5427,13 +5469,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 
 					*-- Código del método
-					*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					*	<<THIS.IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9) )>>
 					*	<<C_TAB>>ENDPROC
 
 					*ENDTEXT
+					*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
 					lcMethods	= lcMethods + CR_LF + THIS.IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
-					lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC' + CR_LF
+					lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
+					lcMethods	= lcMethods + CR_LF
 				ENDFOR
 
 				*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
