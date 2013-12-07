@@ -4823,7 +4823,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 
 					*-- Genero el método SIN indentar, ya que se hace luego
-					*TEXT TO tcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*tcMethods2	= tcMethods
+					*TEXT TO tcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					*	<<'PROCEDURE'>> <<tcMethodName>>
 					*	<<THIS.IndentarMemo( taCode(taMethods(I,2)) )>>
 					*	<<'ENDPROC'>>
@@ -4832,7 +4833,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + tcMethodName
 					tcMethods	= tcMethods + CR_LF + THIS.IndentarMemo( taCode(taMethods(I,2)) )
 					tcMethods	= tcMethods + CR_LF + 'ENDPROC'
-					tcMethods	= tcMethods + CR_LF
 				ENDFOR
 			ENDIF
 
@@ -5073,7 +5073,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethod, tcIndentation
 		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
 		TRY
-			LOCAL I, lcMethod, llProcedure, lnInicio, lnFin
+			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1)
 			lcMethod		= ''
 			llProcedure		= ( LEFT(tcMethod,10) == 'PROCEDURE ' ;
 				OR LEFT(tcMethod,17) == 'HIDDEN PROCEDURE ' ;
@@ -5083,6 +5083,24 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			IF VARTYPE(tcIndentation) # 'C'
 				tcIndentation	= ''
 			ENDIF
+			
+			*-- Quito las líneas en blanco luego del final del ENDPROC
+			X	= 0
+			FOR I = lnFin TO 1 STEP -1
+				IF NOT EMPTY(laLineas(I))	&& Última línea de código
+					IF LEFT( laLineas(I), 10 ) <> C_ENDPROC
+						ERROR 'Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [' + laLineas(1) + ']'
+					ENDIF
+					EXIT
+				ENDIF
+				X	= X + 1
+			ENDFOR
+			
+			IF X > 0
+				lnFin	= lnFin - X
+				DIMENSION laLineas(lnFin)
+			ENDIF
+
 
 			*-- Si encuentra la cabecera de un PROCEDURE, la saltea
 			IF llProcedure
@@ -5377,26 +5395,29 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethods
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
-		LOCAL laMethods(1), laCode(1), lnMethodCount, I
+		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods, lcMethods2
 
 		IF NOT EMPTY(tcMethods)
+			STORE '' TO lcMethods, lcMethods2
 			DIMENSION laMethods(1,3)
 			THIS.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount )
 
 			FOR I = 1 TO lnMethodCount
 				*-- Genero los métodos indentados
-				*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				*	<<C_TAB>><<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
 				*	<<THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
 				*	<<C_TAB>>ENDPROC
 
 				*ENDTEXT
 				*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + C_TAB + laMethods(I,3) + 'PROCEDURE ' + laMethods(I,1)
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + C_TAB + 'ENDPROC'
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+				lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + 'PROCEDURE ' + laMethods(I,1)
+				lcMethods	= lcMethods + CR_LF + THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
+				lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
+				lcMethods	= lcMethods + CR_LF
 			ENDFOR
+			
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcMethods
 		ENDIF
 
 		RETURN
@@ -5411,8 +5432,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		EXTERNAL ARRAY taMethods, taCode, taProtected, taPropsAndComments
 
 		TRY
-			LOCAL lcMethod, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods
-			STORE '' TO lcMethod, lcProcDef, lcMethods
+			LOCAL lcMethod, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods, lcMethods2
+			STORE '' TO lcMethod, lcProcDef, lcMethods, lcMethods2
 
 			IF tnMethodCount > 0 THEN
 				FOR I = 1 TO tnMethodCount
@@ -5448,7 +5469,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 
 					*-- Código del método
-					*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					*	<<THIS.IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9) )>>
 					*	<<C_TAB>>ENDPROC
 
