@@ -71,39 +71,41 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 
 		*-- TEST
-		TRY
-			lcTipoBinario		= UPPER( JUSTEXT( tc_OutputFile ) )
+		IF ISNULL(toEx)	&& Respetar errores previos
+			TRY
+				lcTipoBinario		= UPPER( JUSTEXT( tc_OutputFile ) )
 
-			IF FILE(tc_OutputFile)
-				SELECT 0
-				USE (tc_OutputFile) SHARED NOUPDATE ALIAS TABLABIN
-			ELSE
-				ERROR 'No se encontró el archivo "' + tc_OutputFile + '"'
-			ENDIF
-
-			IF EMPTY(tcParent) AND EMPTY(tcClass) AND EMPTY(tcObjName)
-				DO CASE
-				CASE lcTipoBinario = 'SCX'
-					LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Screen    "
-				CASE lcTipoBinario = 'VCX'
-					LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Class     "
-				ENDCASE
-				IF NOT FOUND()
-					ERROR 'No se encontró el registro de cabecera "' + UniqueID + '"'
+				IF FILE(tc_OutputFile)
+					SELECT 0
+					USE (tc_OutputFile) SHARED NOUPDATE ALIAS TABLABIN
+				ELSE
+					ERROR 'No se encontró el archivo "' + tc_OutputFile + '"'
 				ENDIF
-			ELSE
-				LOCATE FOR CLASS==tcClass AND PARENT==tcParent AND objName==tcObjName
-				IF NOT FOUND()
-					ERROR 'No se encontró el registro para CLASS=="' + tcClass + '" AND PARENT=="' + tcParent + '" AND objName=="' + tcObjName + '"'
+
+				IF EMPTY(tcParent) AND EMPTY(tcClass) AND EMPTY(tcObjName)
+					DO CASE
+					CASE lcTipoBinario = 'SCX'
+						LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Screen    "
+					CASE lcTipoBinario = 'VCX'
+						LOCATE FOR PLATFORM=="COMMENT " AND UniqueID=="Class     "
+					ENDCASE
+					IF NOT FOUND()
+						ERROR 'No se encontró el registro de cabecera "' + UniqueID + '"'
+					ENDIF
+				ELSE
+					LOCATE FOR CLASS==tcClass AND PARENT==tcParent AND objName==tcObjName
+					IF NOT FOUND()
+						ERROR 'No se encontró el registro para CLASS=="' + tcClass + '" AND PARENT=="' + tcParent + '" AND objName=="' + tcObjName + '"'
+					ENDIF
 				ENDIF
-			ENDIF
 
-			SCATTER MEMO NAME toReg
+				SCATTER MEMO NAME toReg
 
-		CATCH TO toEx
-		FINALLY
-			USE IN (SELECT("TABLABIN"))
-		ENDTRY
+			CATCH TO toEx
+			FINALLY
+				USE IN (SELECT("TABLABIN"))
+			ENDTRY
+		ENDIF
 
 
 		IF ISNULL(toEx)
@@ -225,8 +227,18 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ENDFOR
 
 			*-- METHODS
+			lcMensaje	= "Tamaño de METHODS para " + lcExtraData
+			* COMPROBAR "BUG DEL MÉTODO MOVIDO"
+			IF LEN( STRTRAN( toReg_Esperado.METHODS, CHR(13)+CHR(10), CHR(13) ) ) <> LEN( STRTRAN( toReg.METHODS, CHR(13)+CHR(10), CHR(13) ) )
+				IF "BUG DEL MÉTODO MOVIDO" $ toReg.METHODS AND NOT "BUG DEL MÉTODO MOVIDO" $ toReg_Esperado.METHODS
+					lcMensaje	= lcMensaje +  '   >>> ATENCIÓN!! - COMPROBAR "BUG DEL MÉTODO MOVIDO"'
+				ENDIF
+			ENDIF
+			*-- Fin comprobación
+			
 			THIS.assertequals( LEN( STRTRAN( toReg_Esperado.METHODS, CHR(13)+CHR(10), CHR(13) ) ) ;
-				, LEN( STRTRAN( toReg.METHODS, CHR(13)+CHR(10), CHR(13) ) ), "Tamaño de METHODS para " + lcExtraData )
+				, LEN( STRTRAN( toReg.METHODS, CHR(13)+CHR(10), CHR(13) ) ), lcMensaje )
+			
 			THIS.assertequals( lnMethods_Count_Esperado, lnMethods_Count, "Cantidad de METHODS para " + lcExtraData )
 			FOR I = 1 TO lnMethods_Count_Esperado
 				THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 0+2+4) > 0 ;
@@ -320,13 +332,125 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*loCnv.l_Debug				= .F.
 			loCnv.l_ShowErrors			= .F.
 			*loCnv.l_Test				= .T.
-			loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
-			loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
+			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
+			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
 
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_test.vcx' && 'THCALC.VCX' && 
+			lc_File				= 'fb2p_test.vcx'
+			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
+			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+
+			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
+			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+
+			SELECT 0
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+
+			SCAN ALL FOR NOT DELETED() AND ( UniqueID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
+				*-- DATOS ESPERADOS
+				STORE 0 TO lnCodError_Esperado
+				SCATTER MEMO NAME loReg_Esperado
+				lcClass				= loReg_Esperado.CLASS
+				lcParent			= loReg_Esperado.PARENT
+				lcObjName			= loReg_Esperado.objName
+
+				THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+			ENDSCAN
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			USE IN (SELECT("ARCHIBOBIN_IN"))
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarEl_BUG_DelMetodoMovidoEntreClases
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug				= .F.
+			loCnv.l_ShowErrors			= .F.
+			*loCnv.l_Test				= .T.
+			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
+			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lc_File				= 'fb2p_test_bug_metodo_movido.vcx'
+			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
+			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+
+			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
+			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+
+			SELECT 0
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+
+			SCAN ALL FOR NOT DELETED() AND ( UniqueID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
+				*-- DATOS ESPERADOS
+				STORE 0 TO lnCodError_Esperado
+				SCATTER MEMO NAME loReg_Esperado
+				lcClass				= loReg_Esperado.CLASS
+				lcParent			= loReg_Esperado.PARENT
+				lcObjName			= loReg_Esperado.objName
+
+				THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+			ENDSCAN
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			USE IN (SELECT("ARCHIBOBIN_IN"))
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarEl_BUG_Del_PROCEDURE_SIN_ENDPROC
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug				= .F.
+			loCnv.l_ShowErrors			= .F.
+			*loCnv.l_Test				= .T.
+			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
+			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lc_File				= 'fb2p_test_bug_estructural.vcx'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 
