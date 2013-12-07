@@ -46,7 +46,8 @@
 * 01/12/2013	FDBOZZO		v1.6 Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
 * 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
 * 03/12/2013	FDBOZZO		v1.8 Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
-* 03/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
+* 06/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
+* 06/12/2013	FDBOZZO		v1.10 Agregado soporte preliminar de conversión de reportes (FRX/FR2)
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -350,7 +351,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.9
+	n_FB2PRG_Version		= 1.10
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -4441,7 +4442,8 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		DODEFAULT()
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
@@ -4489,10 +4491,62 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL loReg, lnCodError, loEx AS EXCEPTION
+			LOCAL loReg, I, lcFieldType, lnFieldLen, lnFieldDec, lnNumCampo, laFieldTypes(1,18) ;
+				, luValor, lnCodError, loEx AS EXCEPTION
+			SELECT TABLABIN
+			AFIELDS( laFieldTypes )
 
-			*-- Agrego los ARCHIVOS
+			*-- Agrego los registros
 			FOR EACH loReg IN toReport FOXOBJECT
+
+				*-- Ajuste de los tipos de dato
+				FOR I = 1 TO AMEMBERS(laProps, loReg, 0)
+					lnNumCampo	= ASCAN( laFieldTypes, laProps(I), 1, -1, 1, 1+2+4+8 )
+
+					IF lnNumCampo = 0
+						ERROR 'No se encontró el campo [' + laProps(I) + '] en la estructura del archivo ' + DBF("TABLABIN")
+					ENDIF
+
+					lcFieldType	= laFieldTypes(lnNumCampo,2)
+					lnFieldLen	= laFieldTypes(lnNumCampo,3)
+					lnFieldDec	= laFieldTypes(lnNumCampo,4)
+					luValor		= EVALUATE('loReg.' + laProps(I))
+					
+					DO CASE
+					CASE INLIST(lcFieldType, 'B')	&& Double
+						STORE CAST( luValor AS &lcFieldType. (lnFieldPrec) ) TO ('loReg.' + laProps(I))
+
+					CASE INLIST(lcFieldType, 'F', 'N', 'Y')	&& Float, Numeric, Currency
+						STORE CAST( luValor AS &lcFieldType. (lnFieldLen, lnFieldDec) ) TO ('loReg.' + laProps(I))
+
+					CASE INLIST(lcFieldType, 'W', 'G', 'M', 'Q', 'V')	&& Blob, General, Memo, Varbinary, Barchar
+						STORE CAST( luValor AS &lcFieldType. ) TO ('loReg.' + laProps(I))
+
+					OTHERWISE	&& Demás tipos
+						STORE CAST( luValor AS &lcFieldType. (lnFieldLen) ) TO ('loReg.' + laProps(I))
+
+					ENDCASE
+					
+					*-- ARREGLO ALGUNOS VALORES
+					DO CASE
+					CASE TRANSFORM(loReg.ObjType) = "1"		&& Header
+						loReg.tag	= THIS.decode_SpecialCodes_1_31( loReg.tag )
+						loReg.tag2	= STRCONV( loReg.tag2,14 )
+
+					CASE TRANSFORM(loReg.ObjType) = "25"	&& Dataenvironment (footer)
+						IF NOT EMPTY(loReg.tag)
+							loReg.tag	= SUBSTR( loReg.tag, 3 )	&& Le quito el CR+LF que le agregué al TEXTualizar
+						ENDIF
+						loReg.tag2	= STRCONV( loReg.tag2,14 )
+
+					OTHERWISE	&& Resto
+						loReg.tag	= THIS.decode_SpecialCodes_1_31( loReg.tag )
+						loReg.tag2	= STRCONV( loReg.tag2,14 )
+
+					ENDCASE
+					
+				ENDFOR
+				
 				INSERT INTO TABLABIN FROM NAME loReg
 			ENDFOR
 
@@ -4579,66 +4633,50 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 
 	*******************************************************************************************************************
-	PROCEDURE analizarBloque_Reportes
+	PROCEDURE analizarBloque_CDATA_inline
 		*------------------------------------------------------
-		*-- Analiza el bloque <reportes>
+		*-- Analiza el bloque <picture>
 		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines
+		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
 
 		#IF .F.
 			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, lcComment, lcMetadatos, luValor ;
-				, laPropsAndValues(1,2), lnPropsAndValues_Count ;
-				, loReg
+			LOCAL llBloqueEncontrado, lcValue, loEx as Exception
 
-			IF LEFT( tcLine, LEN(C_TAG_REPORTE) + 1 ) == '<' + C_TAG_REPORTE + ''
+			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
 				llBloqueEncontrado	= .T.
-				loReg	= THIS.emptyRecord()
 
-				WITH THIS
-					FOR I = I + 1 TO tnCodeLines
-						lcComment	= ''
-						.set_Line( @tcLine, @taCodeLines, I )
+				IF C_DATA_F $ tcLine
+					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
+					ADDPROPERTY( toReg, tcPropName, lcValue )
+					EXIT
+				ENDIF
+				
+				lcValue	= STREXTRACT( tcLine, C_DATA_I ) + CR_LF
+				
+				FOR I = I + 1 TO tnCodeLines
+					.set_Line( @tcLine, @taCodeLines, I )
+					
+					IF C_DATA_F $ tcLine
+						lcValue	= lcValue + STREXTRACT( tcLine, '', C_DATA_F ) + CR_LF
+						ADDPROPERTY( toReg, tcPropName, lcValue )
+						EXIT
 
-						DO CASE
-						CASE LEFT( tcLine, LEN(C_TAG_REPORTE_F) ) == C_TAG_REPORTE_F
-							I = I + 1
-							EXIT
-
-						CASE .lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
-							LOOP	&& Saltear comentarios
-
-						*CASE UPPER( LEFT( tcLine, 14 ) ) == 'BUILD PROJECT '
-						*	LOOP
-
-						CASE .analizarBloque_platform( toReport, @tcLine, @taCodeLines, @I, @tnCodeLines, @loReg )
-							
-						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'picture' )
-
-						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag' )
-
-						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag2' )
-
-						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'penred' )
-
-						*CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'style' )
-
-						*CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'expr' )
-
-						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'user' )
-
-						ENDCASE
-					ENDFOR
-				ENDWITH && THIS
-
-				I = I - 1
-				toReport.Add( loReg )
+					ELSE 
+						lcValue	= lcValue + tcLine + CR_LF
+					ENDIF
+				ENDFOR
+					
 			ENDIF
 
 		CATCH TO loEx
+			IF loEx.ErrorNo = 1470	&& Incorrect property name.
+				loEx.UserValue	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -4698,31 +4736,63 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 
 	*******************************************************************************************************************
-	PROCEDURE analizarBloque_CDATA_inline
+	PROCEDURE analizarBloque_Reportes
 		*------------------------------------------------------
-		*-- Analiza el bloque <picture>
+		*-- Analiza el bloque <reportes>
 		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
+		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines
 
 		#IF .F.
 			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx as Exception
+			LOCAL llBloqueEncontrado, lcComment, lcMetadatos, luValor ;
+				, laPropsAndValues(1,2), lnPropsAndValues_Count ;
+				, loReg
 
-			IF LEFT(tcLine, 9) == '<' + tcPropName + '>'
+			IF LEFT( tcLine, LEN(C_TAG_REPORTE) + 1 ) == '<' + C_TAG_REPORTE + ''
 				llBloqueEncontrado	= .T.
+				loReg	= THIS.emptyRecord()
 
-				lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-				ADDPROPERTY( toReg, tcPropName, lcValue )
+				WITH THIS
+					FOR I = I + 1 TO tnCodeLines
+						lcComment	= ''
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE LEFT( tcLine, LEN(C_TAG_REPORTE_F) ) == C_TAG_REPORTE_F
+							I = I + 1
+							EXIT
+
+						CASE .lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+							LOOP	&& Saltear comentarios
+
+						CASE .analizarBloque_platform( toReport, @tcLine, @taCodeLines, @I, @tnCodeLines, @loReg )
+							
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'picture' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag2' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'penred' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'style' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'expr' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'user' )
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+
+				I = I - 1
+				toReport.Add( loReg )
 			ENDIF
 
 		CATCH TO loEx
-			IF loEx.ErrorNo = 1470	&& Incorrect property name.
-				loEx.UserValue	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
