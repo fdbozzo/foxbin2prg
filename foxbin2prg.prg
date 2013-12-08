@@ -144,6 +144,22 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_TAG_REPORTE		'Reportes'
 #DEFINE C_TAG_REPORTE_I		'<' + C_TAG_REPORTE + '>'
 #DEFINE C_TAG_REPORTE_F		'</' + C_TAG_REPORTE + '>'
+#DEFINE C_DBF_HEAD_I		'<DBF'
+#DEFINE C_DBF_HEAD_F		'/>'
+#DEFINE C_LEN_DBF_HEAD_I	LEN(C_DBF_HEAD_I)
+#DEFINE C_LEN_DBF_HEAD_F	LEN(C_DBF_HEAD_F)
+#DEFINE C_FIELD_I			'<Field'
+#DEFINE C_FIELD_F			'/>'
+#DEFINE C_LEN_FIELD_I		LEN(C_FIELD_I)
+#DEFINE C_LEN_FIELD_F		LEN(C_FIELD_F)
+#DEFINE C_INDEX_I			'<Index'
+#DEFINE C_INDEX_F			'/>'
+#DEFINE C_CDX_I				'<IndexFile>'
+#DEFINE C_CDX_F				'</IndexFile>'
+#DEFINE C_LEN_CDX_I			LEN(C_CDX_I)
+#DEFINE C_LEN_CDX_F			LEN(C_CDX_F)
+#DEFINE C_LEN_INDEX_I		LEN(C_INDEX_I)
+#DEFINE C_LEN_INDEX_F		LEN(C_INDEX_F)
 #DEFINE C_TAB				CHR(9)
 #DEFINE C_CR				CHR(13)
 #DEFINE C_LF				CHR(10)
@@ -628,7 +644,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="dobackup" type="method" display="doBackup"/>] ;
 		+ [<memberdata name="encode_specialcodes_1_31" type="method" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
+		+ [<memberdata name="filetypedescription" type="method" display="fileTypeDescription"/>] ;
 		+ [<memberdata name="filetypecode" type="method" display="fileTypeCode"/>] ;
+		+ [<memberdata name="getdbfmetadata" type="method" display="getDBFmetadata"/>] ;
 		+ [<memberdata name="getnext_bak" type="method" display="getNext_BAK"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" type="method" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="get_separatedpropandvalue" type="method" display="get_SeparatedPropAndValue"/>] ;
@@ -1020,6 +1038,48 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
+	PROCEDURE fileTypeDescription
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tn_HexFileType			(@? IN    ) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tn_HexFileType
+		LOCAL lcFileType
+
+		DO CASE
+		CASE tn_HexFileType = 0x02
+			lcFileType	= 'FoxBASE / dBase II'
+		CASE tn_HexFileType = 0x03
+			lcFileType	= 'FoxBASE+ / FoxPro /dBase III PLUS / dBase IV, no memo'
+		CASE tn_HexFileType = 0x30
+			lcFileType	= 'Visual FoxPro'
+		CASE tn_HexFileType = 0x31
+			lcFileType	= 'Visual FoxPro, autoincrement enabled'
+		CASE tn_HexFileType = 0x32
+			lcFileType	= 'Visual FoxPro, Varchar, Varbinary, or Blob-enabled'
+		CASE tn_HexFileType = 0x43
+			lcFileType	= 'dBASE IV SQL table files, no memo'
+		CASE tn_HexFileType = 0x63
+			lcFileType	= 'dBASE IV SQL system files, no memo'
+		CASE tn_HexFileType = 0x83
+			lcFileType	= 'FoxBASE+/dBASE III PLUS, with memo'
+		CASE tn_HexFileType = 0x8B
+			lcFileType	= 'dBASE IV with memo'
+		CASE tn_HexFileType = 0xCB
+			lcFileType	= 'dBASE IV SQL table files, with memo'
+		CASE tn_HexFileType = 0xF5
+			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
+		CASE tn_HexFileType = 0xFB
+			lcFileType	= 'FoxBASE (?)'
+		OTHERWISE
+			lcFileType	= 'Unknown'
+		ENDCASE
+
+		RETURN lcFileType
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE fileTypeCode
 		LPARAMETERS tcExtension
 		tcExtension	= UPPER(tcExtension)
@@ -1065,6 +1125,64 @@ DEFINE CLASS c_conversor_base AS SESSION
 		lcNext_Bak	= EVL( lcNext_Bak, '.100.BAK' )	&& Para que no quede nunca vacío
 
 		RETURN lcNext_Bak
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE getDBFmetadata
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
+		* tn_HexFileType			(@?    OUT) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
+		* tl_FileHasCDX				(@?    OUT) Indica si el archivo tiene CDX asociado
+		* tl_FileHasMemo			(@?    OUT) Indica si el archivo tiene archivo MEMO asociado
+		* tl_FileIsDBC				(@?    OUT) Indica si el archivo es un DBC (base de datos)
+		* tcDBC_Name				(@?    OUT) Si tiene DBC, contiene el nombre del DBC asociado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_FileName, tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tcDBC_Name
+
+		TRY
+			LOCAL lnHandle, lcStr, lnDataPos, lnFieldCount, loEx AS EXCEPTION
+			tn_HexFileType	= 0
+			tcDBC_Name		= ''
+			lnHandle		= FOPEN(tc_FileName,0)
+
+			IF lnHandle = -1
+				EXIT
+			ENDIF
+
+			lcStr			= FREAD(lnHandle,1)		&& File type
+			tn_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+			lcStr			= FREAD(lnHandle,3)		&& Last update (YYMMDD)
+			lcStr			= FREAD(lnHandle,4)		&& Number of records in file
+			lcStr			= FREAD(lnHandle,2)		&& Position of first data record
+			lnDataPos		= CTOBIN(lcStr,"2RS")
+			lnFieldCount	= (lnDataPos - 296) / 32
+			lcStr			= FREAD(lnHandle,2)		&& Length of one data record, including delete flag
+			lcStr			= FREAD(lnHandle,16)	&& Reserved
+			lcStr			= FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
+			tl_FileHasCDX	= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x01 ) > 0 )
+			tl_FileHasMemo	= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x02 ) > 0 )
+			tl_FileIsDBC	= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x04 ) > 0 )
+			lcStr			= FREAD(lnHandle,1)		&& Code page mark
+			lcStr			= FREAD(lnHandle,2)		&& Reserved, contains 0x00
+			lcStr			= FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
+			lcStr			= FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
+			lcStr			= FREAD(lnHandle,263)	&& Backlink (relative path of an associated database (.dbc) file)
+			tcDBC_Name		= RTRIM(lcStr,0,CHR(0))	&& DBC Name (si tiene)
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			FCLOSE(lnHandle)
+		ENDTRY
+
+		RETURN lnHandle
 	ENDPROC
 
 
@@ -6251,6 +6369,144 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE write_DBF_HEADER
+		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name
+		TRY
+			LOCAL laFields(1,18)
+
+			*FOR I = 1 TO AFIELDS(laFields)
+			*	IF INLIST( laFields(I,2), 'M', 'Q', 'V', 'W' )
+			*		ll_FileHasMemo	= .T.
+			*		EXIT
+			*	ENDIF
+			*ENDFOR
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+				*-- TABLE INFO
+
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
+				<<C_DBF_HEAD_I>>
+				memofile="<<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>>"
+				codepage="<<CPDBF('TABLABIN')>>"
+				database="<<tc_DBC_Name>>"
+				filetype="<<TRANSFORM(tn_HexFileType, '@0')>>"
+				filetype_descrip="<<THIS.fileTypeDescription(tn_HexFileType)>>"
+				<<C_DBF_HEAD_F>>
+			ENDTEXT
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBF_FIELDS
+		TRY
+			LOCAL I, laFields(1,18)
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+				*-- FIELDS
+				<<>>
+			ENDTEXT
+
+			FOR I = 1 TO AFIELDS(laFields)
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
+					<<C_FIELD_I>>
+					name="<<laFields(I,1)>>"
+					type="<<laFields(I,2)>>"
+					width="<<laFields(I,3)>>"
+					decimals="<<laFields(I,4)>>"
+					null="<<laFields(I,5)>>"
+					cptran="<<laFields(I,6)>>"
+					field_valid_exp="<<laFields(I,7)>>"
+					field_valid_text="<<laFields(I,8)>>"
+					field_default_value="<<laFields(I,9)>>"
+					table_valid_exp="<<laFields(I,10)>>"
+					table_valid_text="<<laFields(I,11)>>"
+					longtablename="<<laFields(I,12)>>"
+					ins_trig_exp="<<laFields(I,13)>>"
+					upd_trig_exp="<<laFields(I,14)>>"
+					del_trig_exp="<<laFields(I,15)>>"
+					tablecomment="<<laFields(I,16)>>"
+					autoinc_nextval="<<laFields(I,17)>>"
+					autoinc_step="<<laFields(I,18)>>"
+					<<C_FIELD_F>>
+				ENDTEXT
+
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+				ENDTEXT
+			ENDFOR
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBF_INDEXES
+		TRY
+			LOCAL I
+
+			IF TAGCOUNT() > 0
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+					*-- INDEXES
+					<<C_CDX_I>><<CDX(1)>><<C_CDX_F>>
+					<<>>
+				ENDTEXT
+
+				FOR I = 1 TO TAGCOUNT()
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
+						<<C_INDEX_I>>
+						tagname="<<TAG(I)>>"
+						collate="<<IDXCOLLATE(I)>>"
+						key="<<KEY(I)>>"
+						descending="<<DESCENDING(I)>>"
+						for_exp="<<SYS(2021,I)>>"
+						<<C_INDEX_F>>
+					ENDTEXT
+
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>
+					ENDTEXT
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE write_DefinicionObjetosOLE
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
@@ -7053,7 +7309,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			IF VARTYPE(loRegDataEnv) = "O"
 				THIS.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
 			ENDIF
-			
+
 			IF VARTYPE(loRegCur) = "O"
 				THIS.write_DETALLE_REPORTE( @loRegCur )
 			ENDIF
@@ -7102,26 +7358,34 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
-				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-			STORE 0 TO lnCodError, lnLastClass
-			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
-			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			STORE 0 TO lnCodError
 
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN_0
+			lnDatabases_Count	= ADATABASES(laDatabases)
+			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+
+			THIS.write_PROGRAM_HEADER()
 
 			*-- Header
-			THIS.write_DBF_HEADER()
-			
+			THIS.write_DBF_HEADER( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
+
 			*-- Fields
-			THIS.write_DBF_FIELDS( @loRegObj )
+			THIS.write_DBF_FIELDS()
 
 			*-- Indexes
-			THIS.write_DBF_INDEXES( @loRegCur )
-			
-			
-			loRegObj	= NULL
-			USE IN (SELECT("TABLABIN_0"))
+			THIS.write_DBF_INDEXES()
+
+			USE IN (SELECT("TABLABIN"))
+
+			FOR I = 1 TO ADATABASES(laDatabases2)
+				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
+					SET DATABASE TO (laDatabases2(I))
+					CLOSE DATABASES
+					EXIT
+				ENDIF
+			ENDFOR
 
 			*-- Genero el DB2
 			IF THIS.l_Test
@@ -7142,7 +7406,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			USE IN (SELECT("TABLABIN_0"))
+			*USE IN (SELECT("TABLABIN_0"))
 
 		ENDTRY
 
