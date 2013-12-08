@@ -50,6 +50,7 @@
 * 06/12/2013	FDBOZZO		v1.10 Arreglo del bug de mezcla de métodos de una clase con la siguiente
 * 07/12/2013	FDBOZZO		v1.11 Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
 * 07/12/2013    FDBOZZO     v1.12 Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
+* 08/12/2013	FDBOZZO		v1.13 Arreglo bug "Error 1924, TOREG is not an object"
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -60,6 +61,7 @@
 * 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa de una mejora anterior (arreglado en v.1.9)
 * 06/12/2013	Fidel Charny	REPORTE BUG: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden (arreglado en v.1.10)
 * 07/12/2013	Edgar Kummers	REPORTE BUG: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
+* 08/12/2013	Fidel Charny	REPORTE BUG: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -362,7 +364,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.12
+	n_FB2PRG_Version		= 1.13
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -7008,17 +7010,25 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			THIS.write_PROGRAM_HEADER()
 
 			*-- Recorro los registros y genero el texto
+			IF VARTYPE(loRegCab) = "O"
+				THIS.write_CABECERA_REPORTE( @loRegCab )
+			ENDIF
+
 			SELECT TABLABIN
 			GOTO TOP
-			THIS.write_CABECERA_REPORTE( @loRegCab )
 
 			SCAN ALL
 				SCATTER MEMO NAME loRegObj
 				THIS.write_DETALLE_REPORTE( @loRegObj )
 			ENDSCAN
 
-			THIS.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
-			THIS.write_DETALLE_REPORTE( @loRegCur )
+			IF VARTYPE(loRegDataEnv) = "O"
+				THIS.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
+			ENDIF
+			
+			IF VARTYPE(loRegCur) = "O"
+				THIS.write_DETALLE_REPORTE( @loRegCur )
+			ENDIF
 
 			*-- Genero el FR2
 			IF THIS.l_Test
