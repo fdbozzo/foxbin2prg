@@ -154,7 +154,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 
 		*-- TEST
 		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
-			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F, @lcMemo )
+			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
@@ -221,7 +221,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 
 		*-- TEST
 		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
-			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F, @lcMemo )
+			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
@@ -288,7 +288,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 
 		*-- TEST
 		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
-			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F, @lcMemo )
+			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;

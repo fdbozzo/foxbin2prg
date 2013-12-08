@@ -47,8 +47,9 @@
 * 02/12/2013	FDBOZZO		v1.7 Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
 * 03/12/2013	FDBOZZO		v1.8 Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
 * 06/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
-* 06/12/2013    FDBOZZO     v1.10 Arreglo del bug de mezcla de métodos de una clase con la siguiente y agregado soporte preliminar de conversión de reportes (FRX/FR2)
-* 07/12/2013	FDBOZZO		v1.11 
+* 06/12/2013	FDBOZZO		v1.10 Arreglo del bug de mezcla de métodos de una clase con la siguiente
+* 07/12/2013	FDBOZZO		v1.11 Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
+* 06/12/2013    FDBOZZO     v1.12 Agregado soporte preliminar de conversión de reportes (FRX/FR2)
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -58,6 +59,7 @@
 * 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa del arreglo anterior (arreglado en v.1.8)
 * 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa de una mejora anterior (arreglado en v.1.9)
 * 06/12/2013	Fidel Charny	REPORTE BUG: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden (arreglado en v.1.10)
+* 07/12/2013	Edgar Kummers	REPORTE BUG: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -188,7 +190,12 @@ TRY
 		SET ESCAPE OFF
 	ENDIF
 
-	IF EMPTY(tc_InputFile)
+	DO CASE
+	CASE VERSION(5) < 900
+		lnResp	= 1
+		MESSAGEBOX( 'FOXBIN2PRG es solo para Visual FoxPro 9.0!', 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
+	
+	CASE EMPTY(tc_InputFile)
 		lnResp	= 1
 		MESSAGEBOX( 'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
 			+ 'Ejemplo para generar los TXT de todos los VCX de c:\desa\clases, sin mostrar ventana de error y generando LOG: ' + CR_LF ;
@@ -196,7 +203,7 @@ TRY
 			+ 'Ejemplo para generar los VCX de todos los TXT de c:\desa\clases, sin mostrar ventana de error y sin LOG: ' + CR_LF ;
 			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"' ;
 			, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
-	ELSE
+	OTHERWISE
 		lcSys16	= SYS(16)
 		lcPath	= SET("Path")
 		*SET PATH TO (JUSTPATH(lcSys16))
@@ -286,7 +293,7 @@ TRY
 			ENDIF
 		ENDCASE
 
-	ENDIF
+	ENDCASE
 
 CATCH TO loEx
 	IF llExisteConfig
@@ -353,7 +360,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.10
+	n_FB2PRG_Version		= 1.11
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -587,6 +594,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LOCAL THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarasignacion_tag_indicado" type="method" display="analizarAsignacion_TAG_Indicado"/>] ;
 		+ [<memberdata name="buscarobjetodelmetodopornombre" type="method" display="buscarObjetoDelMetodoPorNombre"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" type="method" display="comprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
@@ -656,6 +664,90 @@ DEFINE CLASS c_conversor_base AS SESSION
 		USE IN (SELECT("TABLABIN"))
 
 		THIS.writeLog( 'Descarga del conversor' )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarAsignacion_TAG_Indicado
+		*-- DETALLES: Este método está pensado para leer los tags FB2P_VALUE y MEMBERDATA, que tienen esta sintaxis:
+		*
+		*	_memberdata = <VFPData>
+		*		<memberdata name="mimetodo" display="miMetodo"/>
+		*		</VFPData>		&& XML Metadata for customizable properties
+		*
+		*	<fb2p_value>Este es un&#13;valor especial</fb2p_value>
+		*
+		*--------------------------------------------------------------------------------------------------------------
+		* tcPropName				(!v IN    ) Nombre de la propiedad
+		* tcValue					(!v IN    ) Valor (o inicio del valor) de la propiedad
+		* taProps					(!@ IN    ) El array con las líneas del código donde buscar
+		* tnProp_Count				(!@ IN    ) Cantidad de líneas de código
+		* I							(!@ IN    ) Línea actualmente evaluada
+		* tcTAG_I					(!v IN    ) TAG de inicio	<tag>
+		* tcTAG_F					(!v IN    ) TAG de fin		</tag>
+		* tnLEN_TAG_I				(!v IN    ) Longitud del tag de inicio
+		* tnLEN_TAG_F				(!v IN    ) Longitud del tag de fin
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F
+		EXTERNAL ARRAY taProps
+		LOCAL llBloqueEncontrado, loEx AS EXCEPTION
+
+		TRY
+			IF LEFT( tcValue, tnLEN_TAG_I) == tcTAG_I
+				llBloqueEncontrado	= .T.
+				LOCAL lcLine, lnArrayCols
+
+				*-- Propiedad especial
+				IF tcTAG_F $ tcValue		&& El fin de tag está "inline"
+					THIS.desnormalizarValorPropiedad( @tcPropName, @tcValue, '' )
+					EXIT
+				ENDIF
+
+				tcValue			= ''
+				lnArrayCols		= ALEN(taProps,2)
+
+				FOR I = I + 1 TO tnProp_Count
+					IF lnArrayCols = 0
+						lcLine = LTRIM( taProps(I), 0, ' ', CHR(9) )	&& Quito espacios y TABS de la izquierda
+					ELSE
+						lcLine = LTRIM( taProps(I,1), 0, ' ', CHR(9) )	&& Quito espacios y TABS de la izquierda
+					ENDIF
+
+					DO CASE
+					CASE LEFT( lcLine, tnLEN_TAG_F ) == tcTAG_F
+						*-- <EndTag>
+						tcValue	= tcTAG_I + SUBSTR( tcValue, 3 ) + tcTAG_F
+						THIS.desnormalizarValorPropiedad( @tcPropName, @tcValue, '' )
+						I = I + 1
+						EXIT
+
+					CASE tcTAG_F $ lcLine
+						*-- Data-Data-Data-<EndTag>
+						tcValue	= tcTAG_I + SUBSTR( tcValue, 3 ) + LEFT( lcLine, AT( tcTAG_F, lcLine )-1 ) + tcTAG_F
+						THIS.desnormalizarValorPropiedad( @tcPropName, @tcValue, '' )
+						I = I + 1
+						EXIT
+
+					OTHERWISE
+						*-- Data
+						tcValue	= tcValue + CR_LF + lcLine
+					ENDCASE
+				ENDFOR
+
+				I = I - 1
+
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
 	ENDPROC
 
 
@@ -1059,14 +1151,42 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE get_SeparatedPropAndValue
-		LPARAMETERS tcAsignacion, tcProp, tcValue
+		*-- Devuelve el valor separado de la propiedad.
+		*-- Si se indican más de 3 parámetros, evalúa el valor completo a través de las líneas de código
+		*--------------------------------------------------------------------------------------------------------------
+		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
+		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
+		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
+		* toModulo					(?@    OUT) Objeto con toda la información del módulo analizado
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tcAsignacion, tcPropName, tcValue, toClase, taCodeLines, tnCodeLines, I
 		LOCAL ln_AT_Cmt
-		STORE '' TO tcProp, tcValue
+		STORE '' TO tcPropName, tcValue
 
+		*-- EVALUAR UNA ASIGNACIÓN ESPECÍFICA INLINE
 		IF '=' $ tcAsignacion
 			ln_AT_Cmt	= AT( '=', tcAsignacion)
-			tcProp		= ALLTRIM( LEFT( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcPropName	= ALLTRIM( LEFT( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
 			tcValue		= ALLTRIM( SUBSTR( tcAsignacion, ln_AT_Cmt + 2 ) )
+
+			IF PCOUNT() > 3
+				*-- EVALUAR UNA ASIGNACIÓN QUE PUEDE SER MULTILÍNEA (memberdata, fb2p_value, etc)
+				DO CASE
+				CASE THIS.analizarAsignacion_TAG_Indicado( @tcPropName, @tcValue, @taCodeLines, tnCodeLines, @I ;
+						, C_FB2P_VALUE_I, C_FB2P_VALUE_F, C_LEN_FB2P_VALUE_I, C_LEN_FB2P_VALUE_F )
+					*-- FB2P_VALUE
+
+				CASE THIS.analizarAsignacion_TAG_Indicado( @tcPropName, @tcValue, @taCodeLines, tnCodeLines, @I ;
+						, C_MEMBERDATA_I, C_MEMBERDATA_F, C_LEN_MEMBERDATA_I, C_LEN_MEMBERDATA_F )
+					*-- MEMBERDATA
+
+				OTHERWISE
+					*-- Propiedad normal
+					THIS.desnormalizarValorPropiedad( @tcPropName, @tcValue, '' )
+
+				ENDCASE
+			ENDIF
 		ENDIF
 
 		RETURN
@@ -1222,8 +1342,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
-			LOCAL I, X, laPropsAndValues(1,2)
-			DIMENSION laPropsAndValues( tnPropsAndValues_Count, 2 )
+			LOCAL I, X, lnArrayCols, laPropsAndValues(1,2)
+			lnArrayCols	= ALEN( taPropsAndValues, 2 )
+			DIMENSION laPropsAndValues( tnPropsAndValues_Count, lnArrayCols )
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
 			IF m.tnSortType >= 1
@@ -1249,11 +1370,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 					ASORT( laPropsAndValues, 1, -1, 0, 1)
 				ENDIF
 
-				*-- Quitar el agregado
 
 				FOR I = 1 TO m.tnPropsAndValues_Count
-					taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
+					taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )	&& Quitar el carácter agregado
 					taPropsAndValues(I,2)	= laPropsAndValues(I,2)
+					IF lnArrayCols >= 3
+						taPropsAndValues(I,3)	= laPropsAndValues(I,3)
+					ENDIF
 
 					DO CASE
 					CASE m.tnSortType <> 2
@@ -1280,6 +1403,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 						X	= X + 1
 						taPropsAndValues(X,1)	= laPropsAndValues(I,1)
 						taPropsAndValues(X,2)	= laPropsAndValues(I,2)
+						IF lnArrayCols >= 3
+							taPropsAndValues(X,3)	= laPropsAndValues(I,3)
+						ENDIF
 					ENDIF
 				ENDFOR
 
@@ -1293,6 +1419,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 						X	= X + 1
 						taPropsAndValues(X,1)	= laPropsAndValues(I,1)
 						taPropsAndValues(X,2)	= laPropsAndValues(I,2)
+						IF lnArrayCols >= 3
+							taPropsAndValues(X,3)	= laPropsAndValues(I,3)
+						ENDIF
 					ENDIF
 				ENDFOR
 			ENDIF
@@ -1348,7 +1477,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarasignacion_tag_indicado" type="method" display="analizarAsignacion_TAG_Indicado"/>] ;
 		+ [<memberdata name="analizarbloque_add_object" type="method" display="analizarBloque_ADD_OBJECT"/>] ;
 		+ [<memberdata name="analizarbloque_defined_pam" type="method" display="analizarBloque_DEFINED_PAM"/>] ;
 		+ [<memberdata name="analizarbloque_define_class" type="method" display="analizarBloque_DEFINE_CLASS"/>] ;
@@ -1913,55 +2041,19 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
-				DIMENSION laProps( toClase._Prop_Count, 3 )
-				ACOPY( toClase._Props, laProps )
-				lnPropsAndValues_Count	= 0
+				DIMENSION laPropsAndValues( toClase._Prop_Count, 3 )
+				ACOPY( toClase._Props, laPropsAndValues )
+				lnPropsAndValues_Count	= toClase._Prop_Count
 
-				WITH THIS
-					*-- OBTENGO LAS PROPIEDADES Y SUS VALORES
-					FOR I = 1 TO toClase._Prop_Count
-						*.get_SeparatedPropAndValue( toClase._Props(I,1), @lcPropName, @lcValue )
-						lcPropName	= toClase._Props(I,1)
-						lcValue		= toClase._Props(I,2)
-
-						DO CASE
-						CASE EMPTY(lcPropName)
-							LOOP
-
-						CASE THIS.analizarAsignacion_TAG_Indicado( @lcPropName, @lcValue, @laProps, toClase._Prop_Count, @I ;
-								, C_FB2P_VALUE_I, C_FB2P_VALUE_F, C_LEN_FB2P_VALUE_I, C_LEN_FB2P_VALUE_F, @lcAsignacion )
-							*-- FB2P_VALUE
-							lnPropsAndValues_Count	= lnPropsAndValues_Count + 1
-
-						CASE THIS.analizarAsignacion_TAG_Indicado( @lcPropName, @lcValue, @laProps, toClase._Prop_Count, @I ;
-								, C_MEMBERDATA_I, C_MEMBERDATA_F, C_LEN_MEMBERDATA_I, C_LEN_MEMBERDATA_F, @lcAsignacion )
-							*-- MEMBERDATA
-							lnPropsAndValues_Count	= lnPropsAndValues_Count + 1
-
-						OTHERWISE
-							*-- Propiedad normal
-							THIS.desnormalizarValorPropiedad( @lcPropName, @lcValue, '' )
-							lnPropsAndValues_Count	= lnPropsAndValues_Count + 1
-
-						ENDCASE
-
-						DIMENSION laPropsAndValues(lnPropsAndValues_Count,2)
-						laPropsAndValues(lnPropsAndValues_Count,1)	= lcPropName
-						laPropsAndValues(lnPropsAndValues_Count,2)	= lcValue
-
-					ENDFOR
+				*-- REORDENO LAS PROPIEDADES
+				THIS.sortPropsAndValues( @laPropsAndValues, lnPropsAndValues_Count, 2 )
 
 
-					*-- REORDENO LAS PROPIEDADES
-					THIS.sortPropsAndValues( @laPropsAndValues, lnPropsAndValues_Count, 2 )
+				*-- ARMO EL MEMO A DEVOLVER
+				FOR I = 1 TO lnPropsAndValues_Count
+					lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
+				ENDFOR
 
-
-					*-- ARMO EL MEMO A DEVOLVER
-					FOR I = 1 TO lnPropsAndValues_Count
-						lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
-					ENDFOR
-
-				ENDWITH && THIS
 			ENDIF && laProps > 0
 
 		CATCH TO loEx
@@ -1993,14 +2085,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		IF toObjeto._Prop_Count > 0
 			DIMENSION laPropsAndValues( toObjeto._Prop_Count, 2 )
 			ACOPY( toObjeto._Props, laPropsAndValues )
-
-			*WITH THIS
-			*	FOR I = 1 TO toObjeto._Prop_Count
-			*		.get_SeparatedPropAndValue( toObjeto._Props(I,1), @lcPropName, @lcValue )
-			*		laPropsAndValues(I,1)	= lcPropName
-			*		laPropsAndValues(I,2)	= lcValue
-			*	ENDFOR
-			*ENDWITH && THIS
 
 
 			*-- REORDENO LAS PROPIEDADES
@@ -2358,68 +2442,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE analizarAsignacion_TAG_Indicado
-		*-- DETALLES: Este método está pensado para leer los tags FB2P_VALUE y MEMBERDATA, que tienen esta sintaxis:
-		*
-		*	_memberdata = <VFPData>
-		*		<memberdata name="mimetodo" display="miMetodo"/>
-		*		</VFPData>		&& XML Metadata for customizable properties
-		*
-		*	<fb2p_value>Este es un&#13;valor especial</fb2p_value>
-		*
-		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F, tcMemo
-		EXTERNAL ARRAY taProps
-		LOCAL llBloqueEncontrado, loEx AS EXCEPTION
-
-		TRY
-			IF LEFT( tcValue, tnLEN_TAG_I) == tcTAG_I
-				llBloqueEncontrado	= .T.
-				LOCAL lcLine
-
-				*-- Propiedad especial
-				IF tcTAG_F $ tcValue		&& El fin de tag está "inline"
-					THIS.desnormalizarValorPropiedad( @tcPropName, @tcValue, '' )
-					EXIT
-				ENDIF
-
-				tcValue			= ''
-
-				FOR I = I + 1 TO tnProp_Count
-					lcLine = LTRIM( taProps(I,1), 0, ' ', CHR(9) )	&& Quito espacios y TABS de la izquierda
-
-					DO CASE
-					CASE LEFT( lcLine, tnLEN_TAG_F ) == tcTAG_F
-						tcValue	= tcTAG_I + SUBSTR( tcValue, 3 ) + tcTAG_F
-						THIS.desnormalizarValorPropiedad( @tcPropName, @tcValue, '' )
-						I = I + 1
-						EXIT
-
-						*CASE .lineIsOnlyCommentAndNoMetadata( @tcLine )
-						*	LOOP	&& Saltear comentarios
-
-					OTHERWISE
-						tcValue	= tcValue + CR_LF + lcLine
-					ENDCASE
-				ENDFOR
-
-				I = I - 1
-
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 			, taBloquesExclusion, tnBloquesExclusion
@@ -2563,11 +2585,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							EXIT
 						ENDIF
 
-						IF RIGHT(tcLine, 3) == ', ;'
+						IF RIGHT(tcLine, 3) == ', ;'	&& VALOR INTERMEDIO CON ", ;"
 							*toObjeto.add_Property( .desnormalizarAsignacion( LEFT(tcLine, LEN(tcLine) - 3) ) )
 							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue )
 							toObjeto.add_Property( @lcProp, @lcValue )
-						ELSE
+						ELSE	&& VALOR FINAL SIN ", ;" (JUSTO ANTES DEL <END OBJECT>)
 							*toObjeto.add_Property( .desnormalizarAsignacion( RTRIM(tcLine) ) )
 							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue )
 							toObjeto.add_Property( @lcProp, @lcValue )
@@ -2764,9 +2786,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							EXIT
 
 
-						CASE NOT llCLASS_PROPERTY_Completed AND EMPTY( toClase._Fin_Cab ) && Propiedades del DEFINE CLASS
+						CASE NOT llCLASS_PROPERTY_Completed AND EMPTY( toClase._Fin_Cab )
+							*-- Propiedades de la CLASE
+							*--
+							*-- NOTA: Las propiedades se agregan tal cual, incluso aunque estén separadas en
+							*--       varias líneas (memberdata y fb2p_value), ya que luego se ensamblan en classProps2Memo().
+							*
 							*toClase.add_Property( THIS.desnormalizarAsignacion( RTRIM(tcLine) ), RTRIM(tc_Comentario) )
-							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue )
+							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue, @toClase, @taCodeLines, tnCodeLines, @I )
 							toClase.add_Property( @lcProp, @lcValue, RTRIM(tc_Comentario) )
 
 
