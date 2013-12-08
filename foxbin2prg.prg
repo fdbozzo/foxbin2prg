@@ -49,7 +49,7 @@
 * 06/12/2013	FDBOZZO		v1.9 Arreglo bug pérdida de propiedades causado por una mejora anterior
 * 06/12/2013	FDBOZZO		v1.10 Arreglo del bug de mezcla de métodos de una clase con la siguiente
 * 07/12/2013	FDBOZZO		v1.11 Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
-* 06/12/2013    FDBOZZO     v1.12 Agregado soporte preliminar de conversión de reportes (FRX/FR2)
+* 07/12/2013    FDBOZZO     v1.12 Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -332,6 +332,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_showerrors" type="property" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" type="property" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_propsort_enabled" type="property" display="l_PropSort_Enabled"/>] ;
+		+ [<memberdata name="l_reportsort_enabled" type="property" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_outputfile" type="property" display="c_OutputFile"/>] ;
@@ -358,9 +359,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors			= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.11
+	n_FB2PRG_Version		= 1.12
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -437,6 +439,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_FR2 )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 
+			CASE JUSTEXT(THIS.c_InputFile) = 'LBX'
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_LB2 )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_VC2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'VCX' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
@@ -453,6 +459,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'FRX' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 
+			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_LB2
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'LBX' )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+
 			OTHERWISE
 				ERROR 'El archivo [' + THIS.c_InputFile + '] no está soportado'
 
@@ -464,9 +474,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			THIS.o_Conversor.l_Debug				= THIS.l_Debug
 			THIS.o_Conversor.l_Test					= THIS.l_Test
 			THIS.o_Conversor.n_FB2PRG_Version		= THIS.n_FB2PRG_Version
-			THIS.o_Conversor.Convertir( @toModulo )
 			THIS.o_Conversor.l_MethodSort_Enabled	= THIS.l_MethodSort_Enabled
 			THIS.o_Conversor.l_PropSort_Enabled		= THIS.l_PropSort_Enabled
+			THIS.o_Conversor.l_ReportSort_Enabled	= THIS.l_ReportSort_Enabled
+			*--
+			THIS.o_Conversor.Convertir( @toModulo )
 			THIS.o_Conversor	= NULL
 
 		CATCH TO toEx
@@ -625,6 +637,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="l_test" type="property" display="l_Test"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" type="property" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_propsort_enabled" type="property" display="l_PropSort_Enabled"/>] ;
+		+ [<memberdata name="l_reportsort_enabled" type="property" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
 
@@ -641,6 +654,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	c_LogFile				= ''
 	l_MethodSort_Enabled	= .T.
 	l_PropSort_Enabled		= .T.
+	l_ReportSort_Enabled	= .T.
 
 
 	*******************************************************************************************************************
@@ -929,51 +943,23 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE doBackup
-		LOCAL lcNext_Bak
+		LOCAL lcNext_Bak, lcExt_X, lcExt_T
 		lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
+		lcExt_X		= JUSTEXT( THIS.c_OutputFile )
+		lcExt_T		= LEFT(lcExt_X,2) + 'T'
 
 		DO CASE
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'VCX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'VCX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'VCX') + '/VCT' )
+		CASE JUSTEXT( THIS.c_OutputFile ) = lcExt_X
+			IF FILE( FORCEEXT(THIS.c_OutputFile,lcExt_X) )
+				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_X) + '/' + lcExt_T )
 
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'VCX')) TO (FORCEEXT(THIS.c_OutputFile, 'VCX' + lcNext_Bak))
+				COPY FILE (FORCEEXT(THIS.c_OutputFile,lcExt_X)) TO (FORCEEXT(THIS.c_OutputFile, lcExt_X + lcNext_Bak))
 
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'VCT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'VCT')) TO (FORCEEXT(THIS.c_OutputFile,'VCT' + lcNext_Bak))
+				IF FILE( FORCEEXT(THIS.c_OutputFile,lcExt_T) )
+					COPY FILE (FORCEEXT(THIS.c_OutputFile,lcExt_T)) TO (FORCEEXT(THIS.c_OutputFile,lcExt_T + lcNext_Bak))
 				ENDIF
 			ENDIF
-
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'SCX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'SCX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'SCX') + '/SCT' )
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'SCX')) TO (FORCEEXT(THIS.c_OutputFile,'SCX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'SCT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'SCT')) TO (FORCEEXT(THIS.c_OutputFile,'SCT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'PJX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'PJX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'PJX') + '/PJT' )
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'PJX')) TO (FORCEEXT(THIS.c_OutputFile,'PJX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'PJT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'PJT')) TO (FORCEEXT(THIS.c_OutputFile,'PJT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'FRX'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,'FRX') )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,'FRX') + '/FRT' )
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRX')) TO (FORCEEXT(THIS.c_OutputFile,'FRX' + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'FRT') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'FRT')) TO (FORCEEXT(THIS.c_OutputFile,'FRT' + lcNext_Bak))
-				ENDIF
-			ENDIF
-
+		
 		OTHERWISE
 			ERROR 'Tipo de archivo [' + JUSTFNAME(THIS.c_OutputFile) + '] no soportado para backup!'
 
@@ -1978,7 +1964,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, 'BOTMARGIN'	N(3) ;
 			, 'TOTALTYPE'	N(2) ;
 			, 'RESETTOTAL'	N(2) ;
-			, 'RESOID'		N(2) ;
+			, 'RESOID'		N(3) ;
 			, 'CURPOS'		L ;
 			, 'SUPALWAYS'	L ;
 			, 'SUPOVFLOW'	L ;
@@ -2245,6 +2231,28 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDFOR
 
 		RETURN lcComentario
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE getTextFrom_BIN_FileStructure
+		TRY
+			LOCAL lcStructure, lnSelect
+			lnSelect	= SELECT()
+			SELECT 0
+			USE (THIS.c_InputFile) AGAIN SHARED ALIAS _TABLABIN
+			COPY STRUCTURE EXTENDED TO ( FORCEPATH( '_FRX_STRUC.DBF', ADDBS( SYS(2023) ) ) )
+			**** CONTINUAR SI ES NECESARIO - SIN USO POR AHORA
+			
+		CATCH TO loEx
+			THROW
+			
+		FINALLY
+			USE IN (SELECT("_TABLABIN"))
+			SELECT (lnSelect)
+		ENDTRY
+
+		RETURN lcStructure
 	ENDPROC
 
 
@@ -4565,30 +4573,18 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 					ENDCASE
 					
-					*-- ARREGLO ALGUNOS VALORES
-					DO CASE
-					CASE TRANSFORM(loReg.ObjType) = "1"		&& Header
-						loReg.tag	= THIS.decode_SpecialCodes_1_31( loReg.tag )
-						loReg.tag2	= STRCONV( loReg.tag2,14 )
-
-					CASE TRANSFORM(loReg.ObjType) = "25"	&& Dataenvironment (footer)
-						IF NOT EMPTY(loReg.tag)
-							loReg.tag	= SUBSTR( loReg.tag, 3 )	&& Le quito el CR+LF que le agregué al TEXTualizar
-						ENDIF
-						loReg.tag2	= STRCONV( loReg.tag2,14 )
-
-					OTHERWISE	&& Resto
-						loReg.tag	= THIS.decode_SpecialCodes_1_31( loReg.tag )
-						loReg.tag2	= STRCONV( loReg.tag2,14 )
-
-					ENDCASE
-					
 				ENDFOR
 				
 				INSERT INTO TABLABIN FROM NAME loReg
 			ENDFOR
 
 			USE IN (SELECT("TABLABIN"))
+
+			IF THIS.c_Type = 'FRX'
+				COMPILE REPORT (THIS.c_OutputFile)
+			ELSE
+				COMPILE LABEL (THIS.c_OutputFile)
+			ENDIF
 
 
 		CATCH TO loEx
@@ -4693,21 +4689,23 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 				
-				lcValue	= STREXTRACT( tcLine, C_DATA_I ) + CR_LF
+				*-- Tomo la primera parte del valor
+				lcValue	= STREXTRACT( tcLine, C_DATA_I )
 				
+				*-- Recorro las fracciones del valor
 				FOR I = I + 1 TO tnCodeLines
 					.set_Line( @tcLine, @taCodeLines, I )
 					
-					IF C_DATA_F $ tcLine
-						lcValue	= lcValue + STREXTRACT( tcLine, '', C_DATA_F ) + CR_LF
+					IF C_DATA_F $ tcLine	&& Fin del valor
+						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
 						ADDPROPERTY( toReg, tcPropName, lcValue )
 						EXIT
 
-					ELSE 
-						lcValue	= lcValue + tcLine + CR_LF
+					ELSE	&& Otra fracción del valor
+						lcValue	= lcValue + CR_LF + tcLine
 					ENDIF
 				ENDFOR
-					
+				
 			ENDIF
 
 		CATCH TO loEx
@@ -4745,15 +4743,18 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			IF LOWER( LEFT(tcLine, 10) ) == 'platform="'
 				llBloqueEncontrado	= .T.
-				lnLastPos	= 1
+				lnLastPos			= 1
+				tcLine				= ' ' + tcLine
 
 				FOR X = 1 TO AMEMBERS( laProps, toReg, 0 )
-					lnPos	= AT( LOWER(laProps(X)) + '="', tcLine )
+					laProps(X)	= ' ' + laProps(X)
+					lnPos		= AT( LOWER(laProps(X)) + '="', tcLine )
 
 					IF lnPos > 0
 						lnLenPropName	= LEN(laProps(X))
 						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
 						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
+
 						ADDPROPERTY( toReg, laProps(X), lcValue )
 					ENDIF
 				ENDFOR
@@ -4811,8 +4812,19 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'picture' )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag' )
+							*-- ARREGLO ALGUNOS VALORES CAMBIADOS AL TEXTUALIZAR
+							DO CASE
+							CASE loReg.ObjType == "1"
+								loReg.TAG	= THIS.decode_SpecialCodes_1_31( loReg.tag )
+							CASE loReg.ObjType == "25"
+								loReg.TAG	= SUBSTR(loReg.TAG,3)
+							OTHERWISE
+								loReg.TAG	= THIS.decode_SpecialCodes_1_31( loReg.tag )
+							ENDCASE
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag2' )
+							*-- ARREGLO ALGUNOS VALORES CAMBIADOS AL TEXTUALIZAR
+							loReg.TAG2	= STRCONV( loReg.TAG2,14 )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'penred' )
 
@@ -4823,6 +4835,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'user' )
 
 						ENDCASE
+
 					ENDFOR
 				ENDWITH && THIS
 
@@ -6949,23 +6962,44 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loRegCab, loRegDataEnv, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
+			LOCAL lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1) ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
 			STORE 0 TO lnCodError, lnLastClass
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
-			STORE NULL TO loRegObj, loRegCab, loRegDataEnv
+			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
 
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN_0
 
-			GO TOP			&& Tiene que ser objType = 1
-			SCATTER MEMO NAME loRegCab
-			GOTO BOTTOM		&& Tiene que ser objType = 25
-			SCATTER MEMO NAME loRegDataEnv
+			*-- Header
+			LOCATE FOR objType = 1
+			IF FOUND()
+				SCATTER MEMO NAME loRegCab
+			ENDIF
 
-			SELECT * FROM TABLABIN_0 ;
-				WHERE objType NOT IN (1,25) ;
-				ORDER BY vpos,hpos ;
-				INTO CURSOR TABLABIN READWRITE
+			*-- Dataenvironment
+			LOCATE FOR objType = 25
+			IF FOUND()
+				SCATTER MEMO NAME loRegDataEnv
+			ENDIF
+
+			*-- Cursor1 (¿puede haber más de 1 cursor?)
+			LOCATE FOR objType = 26
+			IF FOUND()
+				SCATTER MEMO NAME loRegCur
+			ENDIF
+
+			IF THIS.l_ReportSort_Enabled
+				*-- ORDENADO
+				SELECT * FROM TABLABIN_0 ;
+					WHERE objType NOT IN (1,25,26) ;
+					ORDER BY vpos,hpos ;
+					INTO CURSOR TABLABIN READWRITE
+			ELSE
+				*-- SIN ORDENAR (Sólo para poder comparar con el original)
+				SELECT * FROM TABLABIN_0 ;
+					WHERE objType NOT IN (1,25,26) ;
+					INTO CURSOR TABLABIN
+			ENDIF
 
 			loRegObj	= NULL
 			USE IN (SELECT("TABLABIN_0"))
@@ -6973,7 +7007,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 			THIS.write_PROGRAM_HEADER()
 
-			*----------------------------------------------
+			*-- Recorro los registros y genero el texto
 			SELECT TABLABIN
 			GOTO TOP
 			THIS.write_CABECERA_REPORTE( @loRegCab )
@@ -6984,8 +7018,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			ENDSCAN
 
 			THIS.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
+			THIS.write_DETALLE_REPORTE( @loRegCur )
 
-			*-- Genero el SC2
+			*-- Genero el FR2
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE

@@ -55,7 +55,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	*******************************************************************************************************************************************
 	FUNCTION Evaluate_results
 		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado, tc_OutputFile, tcParent, tcClass, tcObjName, toReg_Esperado ;
-			, toReg, tcTipoBinario
+			, toReg, tcTipoBinario, tnRecno
 
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
@@ -69,10 +69,47 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		IF ISNULL(toEx)
 			DO CASE
-			CASE INLIST(tcTipoBinario, 'FRX')
+			CASE INLIST(tcTipoBinario, 'FRX', 'LBX')
+				*--------------------------------------------
+				*-- REPORTES
+				*--------------------------------------------
+				LOCAL I, laProps(1)
+
+				*-- Visualización de valores
+				THIS.messageout( LOWER(PROGRAM(PROGRAM(-1)-1)) )
+
+				THIS.messageout( 'Recno#' + TRANSFORM(tnRecno) + ' UniqueID="' + toReg_Esperado.UniqueID + '" ObjType=' + TRANSFORM(toReg_Esperado.ObjType) ;
+					+ ' ObjCode=' + TRANSFORM(toReg_Esperado.ObjCode) + ' Expr=[' + LEFT(toReg_Esperado.Expr,20) ;
+					+ IIF(LEN(toReg_Esperado.Expr)>20,'...]',']') ;
+					+ ' vpos=' + TRANSFORM(toReg_Esperado.VPOS) + ' hpos=' + TRANSFORM(toReg_Esperado.HPOS) ;
+					+ ' height=' + TRANSFORM(toReg_Esperado.HEIGHT) + ' width=' + TRANSFORM(toReg_Esperado.WIDTH) )
+
+				*-- Evaluación de valores
+				FOR I = 1 TO AMEMBERS( laProps, toReg_Esperado, 0 )
+					*-- Formateo
+					ADDPROPERTY( toReg_Esperado, laProps(I) ;
+						, '[' + oFXU_LIB.mejorarPresentacionCaracteresEspeciales( TRANSFORM( EVALUATE('toReg_Esperado.'+laProps(I)) ) ) + ']' )
+
+					ADDPROPERTY( toReg, laProps(I) ;
+						, '[' + oFXU_LIB.mejorarPresentacionCaracteresEspeciales( TRANSFORM( EVALUATE('toReg.'+laProps(I)) ) ) + ']' )
+
+					*-- COMPARO
+					THIS.assertequals( LEN(EVALUATE('toReg_Esperado.'+laProps(I))) ;
+						, LEN(EVALUATE('toReg.'+laProps(I))) ;
+						, 'Longitud de ' + laProps(I) + ' para el reg#' + TRANSFORM(tnRecno) ;
+						+ ' UniqueID="' + toReg.UniqueID + '" ObjType=' + TRANSFORM(toReg.ObjType) )
+
+					THIS.assertequals( (EVALUATE('toReg_Esperado.'+laProps(I))) ;
+						, (EVALUATE('toReg.'+laProps(I))) ;
+						, 'Valor de ' + laProps(I) + ' para el reg#' + TRANSFORM(tnRecno) ;
+						+ ' UniqueID="' + toReg.UniqueID + '" ObjType=' + TRANSFORM(toReg.ObjType) )
+				ENDFOR
 
 
 			CASE INLIST(tcTipoBinario, 'VCX', 'SCX')
+				*--------------------------------------------
+				*-- FORMS / CLASES
+				*--------------------------------------------
 				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado ;
 					, lnPropsAndComments_Count, lnPropsAndComments_Count_Esperado, laPropsAndComments(1,2), laPropsAndComments_Esperado(1,2) ;
 					, laProtected(1), lnProtected_Count, laProtected_Esperado(1), lnProtected_Count_Esperado ;
@@ -229,9 +266,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElReporte_FB2P_FRX_YValidarLosCamposDelRegistro
-		*-- REPORTE (FRX)
+		*-- REPORTES (FRX)
 		LOCAL lnCodError, lnCodError_Esperado  ;
-			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario, lnRecno ;
 			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
 			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
 			, loEx AS EXCEPTION
@@ -245,6 +282,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*loCnv.l_Debug		= .F.
 			loCnv.l_ShowErrors	= .F.
 			*loCnv.l_Test		= .T.
+			*loCnv.l_ReportSort_Enabled	= .F.
 
 
 			*-- DATOS DE ENTRADA
@@ -265,8 +303,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SCAN ALL FOR NOT DELETED()
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
+				lnRecno		= RECNO()
 				SCATTER MEMO NAME loReg_Esperado
-				lcUniqueID			= loReg_Esperado.UNIQUEID
+				lcUniqueID	= loReg_Esperado.UNIQUEID
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -279,14 +318,88 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				LOCATE FOR UNIQUEID==lcUniqueID
 
 				IF NOT FOUND()
-					ERROR 'No se encontró el registro con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
+					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIBOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
 				ENDIF
 
 				SCATTER MEMO NAME loReg
 				USE IN (SELECT("TABLABIN"))
 
 				THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName ;
-					, loReg_Esperado, loReg, lcTipoBinario )
+					, loReg_Esperado, loReg, lcTipoBinario, lnRecno )
+			ENDSCAN
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			USE IN (SELECT("ARCHIBOBIN_IN"))
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElReporte_FB2P_LBX_YValidarLosCamposDelRegistro
+		*-- ETIQUETAS (LBX)
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario, lnRecno ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+			*loCnv.l_ReportSort_Enabled	= .F.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lc_File				= 'fb2p_foxuser.lbx'
+			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
+			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+
+			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
+			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+
+			SELECT 0
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+
+			SCAN ALL FOR NOT DELETED()
+				*-- DATOS ESPERADOS
+				STORE 0 TO lnCodError_Esperado
+				lnRecno		= RECNO()
+				SCATTER MEMO NAME loReg_Esperado
+				lcUniqueID	= loReg_Esperado.UNIQUEID
+
+				*-- TEST
+				IF FILE(lc_OutputFile)
+					SELECT 0
+					USE (lc_OutputFile) SHARED NOUPDATE ALIAS TABLABIN
+				ELSE
+					ERROR 'No se encontró el archivo "' + lc_OutputFile + '"'
+				ENDIF
+
+				LOCATE FOR UNIQUEID==lcUniqueID
+
+				IF NOT FOUND()
+					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIBOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
+				ENDIF
+
+				SCATTER MEMO NAME loReg
+				USE IN (SELECT("TABLABIN"))
+
+				THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName ;
+					, loReg_Esperado, loReg, lcTipoBinario, lnRecno )
 			ENDSCAN
 
 		CATCH TO loEx
