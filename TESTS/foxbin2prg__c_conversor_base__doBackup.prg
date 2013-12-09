@@ -54,7 +54,7 @@ DEFINE CLASS foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTestCas
 
 	*******************************************************************************************************************************************
 	FUNCTION Evaluate_results
-		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado, tcMemo, tcMemo_Salida, tcMemo_Esperado
+		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado, tcBackFile_1, tcBackFile_2, tcBackFile_3
 
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
@@ -68,23 +68,18 @@ DEFINE CLASS foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTestCas
 		ENDIF
 
 		IF ISNULL(toEx)
-			*-- Algunos ajustes para mejor visualización de caracteres especiales
-			tcMemo			= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcMemo )
-			tcMemo_Esperado	= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcMemo_Esperado )
-			tcMemo_Salida	= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcMemo_Salida )
-			
 			*-- Visualización de valores
-			THIS.messageout( ' Memo de entrada:' )
-			THIS.messageout( '[' + tcMemo + ']' )
-
-			THIS.messageout( REPLICATE('-',80) )
-
-			THIS.messageout( ' Memo esperado:' )
-			THIS.messageout( '[' + tcMemo_Esperado + ']' )
+			THIS.messageout( 'BackFile_1: ' + TRANSFORM(tcBackFile_1) )
+			THIS.messageout( 'BackFile_2: ' + TRANSFORM(tcBackFile_2) )
+			THIS.messageout( 'BackFile_3: ' + TRANSFORM(tcBackFile_3) )
 
 			
 			*-- Evaluación de valores
-			THIS.assertequals( '[' + tcMemo_Esperado + ']', '[' + tcMemo_Salida + ']', "Contenido del Memo de PROCEDURE" )
+			THIS.assertequals( .T., FILE(tcBackFile_1), "Existencia del archivo " + tcBackFile_1 )
+			THIS.assertequals( .T., FILE(tcBackFile_2), "Existencia del archivo " + tcBackFile_2 )
+			IF NOT EMPTY(tcBackFile_3)
+				THIS.assertequals( .T., FILE(tcBackFile_3), "Existencia del archivo " + tcBackFile_3 )
+			ENDIF
 
 		ELSE
 			*-- Evaluación de errores
@@ -99,21 +94,27 @@ DEFINE CLASS foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTestCas
 
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_HacerElBackupDelArchivoIndicado
+
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
-			, lcMemo, lcMemo_Salida, lcMemo_Esperado ;
+			, lcMemo, lcMemo_Salida, lcMemo_Esperado, lcBackFile_1, lcBackFile_2, lcBackFile_3 ;
 			, loEx AS EXCEPTION
 		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
 		loEx		= NULL
+		loObj.c_OutputFile	= FORCEPATH( 'fb2p_dbc.dbc', oFXU_LIB.cPathDatosTest )
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
-		*loObj
+		COPY FILE ( FORCEPATH( 'FB2P_DBC.D??', oFXU_LIB.cPathDatosReadOnly ) ) TO ( FORCEPATH( 'FB2P_DBC.D??', oFXU_LIB.cPathDatosTest ) )
 
 		*-- TEST
-		loObj.doBackup()
+		loObj.doBackup( @loEx, .F., @lcBackFile_1, @lcBackFile_2, @lcBackFile_3 )
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, @lcMemo, @lcMemo_Salida, @lcMemo_Esperado )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, lcBackFile_1, lcBackFile_2, lcBackFile_3 )
 
 	ENDFUNC
 

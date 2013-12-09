@@ -1041,8 +1041,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 				THROW
 			ENDIF
 
-		FINALLY
-			FCLOSE(lnHandle)
 		ENDTRY
 
 		RETURN
@@ -3433,7 +3431,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup()
+			THIS.doBackup( .F., .T. )
 
 			*-- Creo la librería
 			THIS.createClasslib()
@@ -3697,7 +3695,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup()
+			THIS.doBackup( .F., .T. )
 
 			*-- Creo el form
 			THIS.createForm()
@@ -3978,7 +3976,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup()
+			THIS.doBackup( .F., .T. )
 
 			*-- Creo solo la cabecera del proyecto
 			THIS.createProject()
@@ -4684,7 +4682,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup()
+			THIS.doBackup( .F., .T. )
 
 			*-- Creo el reporte
 			THIS.createReport()
