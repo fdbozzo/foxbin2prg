@@ -7437,7 +7437,78 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			*USE IN (SELECT("TABLABIN_0"))
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	*_MEMBERDATA	= [<VFPData>] ;
+	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		LPARAMETERS toModulo, toEx AS EXCEPTION
+		DODEFAULT( @toModulo, @toEx )
+
+		TRY
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			STORE 0 TO lnCodError
+
+			lnDatabases_Count	= ADATABASES(laDatabases)
+			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+
+			THIS.write_PROGRAM_HEADER()
+
+			*-- Header
+			THIS.write_DBF_HEADER( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
+
+			*-- Fields
+			THIS.write_DBF_FIELDS()
+
+			*-- Indexes
+			THIS.write_DBF_INDEXES()
+
+			USE IN (SELECT("TABLABIN"))
+
+			FOR I = 1 TO ADATABASES(laDatabases2)
+				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
+					SET DATABASE TO (laDatabases2(I))
+					CLOSE DATABASES
+					EXIT
+				ENDIF
+			ENDFOR
+
+			*-- Genero el DB2
+			IF THIS.l_Test
+				toModulo	= C_FB2PRG_CODE
+			ELSE
+				IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+					ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+				ENDIF
+			ENDIF
+
+
+		CATCH TO toEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
 
 		ENDTRY
 
