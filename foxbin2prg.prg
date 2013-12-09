@@ -466,6 +466,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_DB2 )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
 
+			CASE JUSTEXT(THIS.c_InputFile) = 'DBC'
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_DC2 )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
+
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_VC2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'VCX' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
@@ -489,6 +493,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DB2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBF' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dfb' )
+
+			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DC2
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBC' )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dfc' )
 
 			OTHERWISE
 				ERROR 'El archivo [' + THIS.c_InputFile + '] no está soportado'
@@ -972,46 +980,72 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE doBackup
-		LOCAL lcNext_Bak, lcExt_X, lcExt_T
-		lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
-		lcExt_X		= JUSTEXT( THIS.c_OutputFile )
-		lcExt_T		= LEFT(lcExt_X,2) + 'T'
+		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3
+		
+		TRY
+			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
+			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
+			lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
+			lcExt_1		= JUSTEXT( THIS.c_OutputFile )
+			tcBakFile_1	= FORCEEXT(THIS.c_OutputFile, lcExt_1 + lcNext_Bak)
 
-		DO CASE
-		CASE JUSTEXT( THIS.c_OutputFile ) = lcExt_X
-			*-- VCX, SCX, FRX, LBX, MNX
-			IF FILE( FORCEEXT(THIS.c_OutputFile,lcExt_X) )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_X) + '/' + lcExt_T )
+			DO CASE
+			CASE lcExt_1 = 'DBF'
+				*-- DBF
+				lcExt_2		= 'FPT'
+				lcExt_3		= 'CDX'
+				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
+				tcBakFile_3	= FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak)
 
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,lcExt_X)) TO (FORCEEXT(THIS.c_OutputFile, lcExt_X + lcNext_Bak))
+			CASE lcExt_1 = 'DBC'
+				*-- DBC
+				lcExt_2		= 'DCT'
+				lcExt_3		= 'DCX'
+				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
+				tcBakFile_3	= FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak)
 
-				IF FILE( FORCEEXT(THIS.c_OutputFile,lcExt_T) )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,lcExt_T)) TO (FORCEEXT(THIS.c_OutputFile,lcExt_T + lcNext_Bak))
+			OTHERWISE
+				*-- PJX, VCX, SCX, FRX, LBX, MNX
+				lcExt_2		= LEFT(lcExt_1,2) + 'T'
+				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
+
+			ENDCASE
+
+			IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_1) )
+				IF EMPTY(lcExt_3)
+					THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
+				ELSE
+					THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
+				ENDIF
+
+				*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_1 + lcNext_Bak) )
+				RENAME ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
+
+				IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_2) )
+					*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_2) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak) )
+					RENAME ( FORCEEXT(THIS.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
+				ENDIF
+
+				IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_3) )
+					*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_3) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak) )
+					RENAME ( FORCEEXT(THIS.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
 				ENDIF
 			ENDIF
 
-		CASE JUSTEXT( THIS.c_OutputFile ) = 'DBF'
-			*-- DBF
-			lcExt_X		= 'DBF'
-			lcExt_T		= 'FPT'
-			IF FILE( FORCEEXT(THIS.c_OutputFile,lcExt_X) )
-				THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_X) + '/' + lcExt_T )
-
-				COPY FILE (FORCEEXT(THIS.c_OutputFile,lcExt_X)) TO (FORCEEXT(THIS.c_OutputFile, lcExt_X + lcNext_Bak))
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,lcExt_T) )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,lcExt_T)) TO (FORCEEXT(THIS.c_OutputFile,lcExt_T + lcNext_Bak))
-				ENDIF
-
-				IF FILE( FORCEEXT(THIS.c_OutputFile,'CDX') )
-					COPY FILE (FORCEEXT(THIS.c_OutputFile,'CDX')) TO (FORCEEXT(THIS.c_OutputFile,'CDX' + lcNext_Bak))
-				ENDIF
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
 			ENDIF
 
-		OTHERWISE
-			ERROR 'Tipo de archivo [' + JUSTFNAME(THIS.c_OutputFile) + '] no soportado para backup!'
+			IF tlRelanzarError
+				THROW
+			ENDIF
 
-		ENDCASE
+		FINALLY
+			FCLOSE(lnHandle)
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -4708,22 +4742,23 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 					DO CASE
 					CASE INLIST(lcFieldType, 'B')	&& Double
-						STORE CAST( luValor AS &lcFieldType. (lnFieldPrec) ) TO ('loReg.' + laProps(I))
+						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldPrec) ) )
 
 					CASE INLIST(lcFieldType, 'F', 'N', 'Y')	&& Float, Numeric, Currency
-						STORE CAST( luValor AS &lcFieldType. (lnFieldLen, lnFieldDec) ) TO ('loReg.' + laProps(I))
+						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldLen, lnFieldDec) ) )
 
-					CASE INLIST(lcFieldType, 'W', 'G', 'M', 'Q', 'V')	&& Blob, General, Memo, Varbinary, Barchar
-						STORE CAST( luValor AS &lcFieldType. ) TO ('loReg.' + laProps(I))
+					CASE INLIST(lcFieldType, 'W', 'G', 'M', 'Q', 'V', 'C')	&& Blob, General, Memo, Varbinary, Varchar, Character
+						ADDPROPERTY( loReg, laProps(I), luValor )
 
 					OTHERWISE	&& Demás tipos
-						STORE CAST( luValor AS &lcFieldType. (lnFieldLen) ) TO ('loReg.' + laProps(I))
+						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldLen) ) )
 
 					ENDCASE
 
 				ENDFOR
 
 				INSERT INTO TABLABIN FROM NAME loReg
+				loReg	= NULL
 			ENDFOR
 
 			USE IN (SELECT("TABLABIN"))
@@ -4842,7 +4877,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 				*-- Recorro las fracciones del valor
 				FOR I = I + 1 TO tnCodeLines
-					.set_Line( @tcLine, @taCodeLines, I )
+					tcLine	= taCodeLines(I)
 
 					IF C_DATA_F $ tcLine	&& Fin del valor
 						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
@@ -4965,7 +5000,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 							CASE loReg.ObjType == "1"
 								loReg.TAG	= THIS.decode_SpecialCodes_1_31( loReg.TAG )
 							CASE loReg.ObjType == "25"
-								loReg.TAG	= SUBSTR(loReg.TAG,3)
+								loReg.TAG	= SUBSTR(loReg.TAG,3)	&& Quito el ENTER agregado antes
 							OTHERWISE
 								loReg.TAG	= THIS.decode_SpecialCodes_1_31( loReg.TAG )
 							ENDCASE
@@ -5669,9 +5704,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				*ENDTEXT
 				*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
-				lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + 'PROCEDURE ' + laMethods(I,1)
+				lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + C_PROCEDURE + ' ' + laMethods(I,1)
 				lcMethods	= lcMethods + CR_LF + THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
-				lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
+				lcMethods	= lcMethods + CR_LF + C_TAB + C_ENDPROC
 				lcMethods	= lcMethods + CR_LF
 			ENDFOR
 
@@ -6114,7 +6149,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" >
 			ENDTEXT
 
-			*	<<C_TAB>>tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>"
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
 				<<C_TAB>><tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
@@ -6227,7 +6261,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
 			ENDTEXT
 
-			*	<<C_TAB>>tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>"
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
 				<<C_TAB>><tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
@@ -6340,11 +6373,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
 			ENDTEXT
 
-			*	<<C_TAB>>tag="<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>"
+			* NOTA: En el DataEnvironment el TAG2 es el TAG compilado, que se recompila con COMPILE REPORT <nombre>
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
 				<<C_TAB>><tag><![CDATA[<<CR_LF>><<toReg.tag>>]]>
-				<<C_TAB>><tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
+				<<C_TAB>><tag2><![CDATA[]]>
 				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
 				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
 				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
@@ -7903,11 +7936,13 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		+ [<memberdata name="_autoincrement" type="property" display="_AutoIncrement"/>] ;
 		+ [<memberdata name="getformatteddeviceinfotext" type="method" display="getFormattedDeviceInfoText"/>] ;
 		+ [<memberdata name="parsedeviceinfo" type="method" display="parseDeviceInfo"/>] ;
+		+ [<memberdata name="parsenullterminatedvalue" type="method" display="parseNullTerminatedValue"/>] ;
 		+ [<memberdata name="setparsedinfoline" type="method" display="setParsedInfoLine"/>] ;
 		+ [<memberdata name="setparsedprojinfoline" type="method" display="setParsedProjInfoLine"/>] ;
 		+ [<memberdata name="getrowdeviceinfo" type="method" display="getRowDeviceInfo"/>] ;
 		+ [<memberdata name="l_debug" type="method" display="l_Debug"/>] ;
 		+ [</VFPData>]
+
 
 	*-- Proj.Info
 	_CmntStyle			= 1
@@ -7984,6 +8019,21 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		ENDIF
 		&lcAsignacion.
 	ENDPROC
+	
+	
+	************************************************************************************************
+	PROCEDURE parseNullTerminatedValue
+		LPARAMETERS tcDevInfo, tnPos, tnLen
+		LOCAL lcValue, lnNullPos
+		lcStr		= SUBSTR( tcDevInfo, tnPos, tnLen )
+		lnNullPos	= AT(CHR(0), lcStr )
+		IF lnNullPos = 0
+			lcValue		= CHRTRAN( LEFT( lcStr, tnLen ), ['], ["] )
+		ELSE
+			lcValue		= CHRTRAN( LEFT( lcStr, MIN(tnLen, lnNullPos - 1 ) ), ['], ["] )
+		ENDIF
+		RETURN lcValue
+	ENDPROC
 
 
 	************************************************************************************************
@@ -7992,24 +8042,24 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 
 		TRY
 			WITH THIS
-				._Autor				= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 1, 45 ), 0, ' ', CHR(0) ), ['], ["] )
-				._Company			= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 47, 45 ), 0, ' ', CHR(0) ), ['], ["] )
-				._Address			= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 93, 45 ), 0, ' ', CHR(0) ), ['], ["] )
-				._City				= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 139, 20 ), 0, ' ', CHR(0) ), ['], ["] )
-				._State				= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 160, 5 ), 0, ' ', CHR(0) ), ['], ["] )
-				._PostalCode		= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 166, 10 ), 0, ' ', CHR(0) ), ['], ["] )
-				._Country			= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 177, 45 ), 0, ' ', CHR(0) ), ['], ["] )
+				._Autor				= .parseNullTerminatedValue( @tcDevInfo, 1, 45 )
+				._Company			= .parseNullTerminatedValue( @tcDevInfo, 47, 45 )
+				._Address			= .parseNullTerminatedValue( @tcDevInfo, 93, 45 )
+				._City				= .parseNullTerminatedValue( @tcDevInfo, 139, 20 )
+				._State				= .parseNullTerminatedValue( @tcDevInfo, 160, 5 )
+				._PostalCode		= .parseNullTerminatedValue( @tcDevInfo, 166, 10 )
+				._Country			= .parseNullTerminatedValue( @tcDevInfo, 177, 45 )
 				*--
-				._Comments			= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 223, 254 ), 0, ' ', CHR(0) ), ['], ["] )
-				._CompanyName		= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 478, 254 ), 0, ' ', CHR(0) ), ['], ["] )
-				._FileDescription	= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 733, 254 ), 0, ' ', CHR(0) ), ['], ["] )
-				._LegalCopyright	= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 988, 254 ), 0, ' ', CHR(0) ), ['], ["] )
-				._LegalTrademark	= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 1243, 254 ), 0, ' ', CHR(0) ), ['], ["] )
-				._ProductName		= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 1498, 254 ), 0, ' ', CHR(0) ), ['], ["] )
-				._MajorVer			= RTRIM( SUBSTR( tcDevInfo, 1753, 4 ), 0, ' ', CHR(0) )
-				._MinorVer			= RTRIM( SUBSTR( tcDevInfo, 1758, 4 ), 0, ' ', CHR(0) )
-				._Revision			= RTRIM( SUBSTR( tcDevInfo, 1763, 4 ), 0, ' ', CHR(0) )
-				._LanguageID		= CHRTRAN( RTRIM( SUBSTR( tcDevInfo, 1768, 19 ), 0, ' ', CHR(0) ), ['], ["] )
+				._Comments			= .parseNullTerminatedValue( @tcDevInfo, 223, 254 )
+				._CompanyName		= .parseNullTerminatedValue( @tcDevInfo, 478, 254 )
+				._FileDescription	= .parseNullTerminatedValue( @tcDevInfo, 733, 254 )
+				._LegalCopyright	= .parseNullTerminatedValue( @tcDevInfo, 988, 254 )
+				._LegalTrademark	= .parseNullTerminatedValue( @tcDevInfo, 1243, 254 )
+				._ProductName		= .parseNullTerminatedValue( @tcDevInfo, 1498, 254 )
+				._MajorVer			= .parseNullTerminatedValue( @tcDevInfo, 1753, 4 )
+				._MinorVer			= .parseNullTerminatedValue( @tcDevInfo, 1758, 4 )
+				._Revision			= .parseNullTerminatedValue( @tcDevInfo, 1763, 4 )
+				._LanguageID		= .parseNullTerminatedValue( @tcDevInfo, 1768, 19 )
 				._AutoIncrement		= IIF( SUBSTR( tcDevInfo, 1788, 1 ) = CHR(1), '1', '0' )
 			ENDWITH && THIS
 
