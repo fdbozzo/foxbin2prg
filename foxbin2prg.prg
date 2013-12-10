@@ -6421,19 +6421,21 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			*ENDFOR
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
-				*-- TABLE INFO
-
+				<<>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
-				<<C_DBF_HEAD_I>>
-				memofile="<<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>>"
-				codepage="<<CPDBF('TABLABIN')>>"
-				database="<<tc_DBC_Name>>"
-				filetype="<<TRANSFORM(tn_HexFileType, '@0')>>"
-				filetype_descrip="<<THIS.fileTypeDescription(tn_HexFileType)>>"
-				<<C_DBF_HEAD_F>>
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<TABLE>
+				<<>>	<memofile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></memofile>
+				<<>>	<codepage><<<CPDBF('TABLABIN')>></codepage>
+				<<>>	<database><<tc_DBC_Name>></database>
+				<<>>	<filetype><<TRANSFORM(tn_HexFileType, '@0')>></filetype>
+				<<>>	<filetype_descrip><<THIS.fileTypeDescription(tn_HexFileType)>></filetype_descrip>
+				</TABLE>
+			ENDTEXT
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
 			ENDTEXT
 
 		CATCH TO loEx
@@ -6455,39 +6457,39 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL I, laFields(1,18), loEx AS EXCEPTION
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
-				*-- FIELDS
 				<<>>
+				<FIELDS>
 			ENDTEXT
 
 			FOR I = 1 TO AFIELDS(laFields)
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
-					<<C_FIELD_I>>
-					name="<<laFields(I,1)>>"
-					type="<<laFields(I,2)>>"
-					width="<<laFields(I,3)>>"
-					decimals="<<laFields(I,4)>>"
-					null="<<laFields(I,5)>>"
-					cptran="<<laFields(I,6)>>"
-					field_valid_exp="<<laFields(I,7)>>"
-					field_valid_text="<<laFields(I,8)>>"
-					field_default_value="<<laFields(I,9)>>"
-					table_valid_exp="<<laFields(I,10)>>"
-					table_valid_text="<<laFields(I,11)>>"
-					longtablename="<<laFields(I,12)>>"
-					ins_trig_exp="<<laFields(I,13)>>"
-					upd_trig_exp="<<laFields(I,14)>>"
-					del_trig_exp="<<laFields(I,15)>>"
-					tablecomment="<<laFields(I,16)>>"
-					autoinc_nextval="<<laFields(I,17)>>"
-					autoinc_step="<<laFields(I,18)>>"
-					<<C_FIELD_F>>
-				ENDTEXT
-
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
+					<<>>	<FIELD>
+					<<>>		<name><<laFields(I,1)>></name>
+					<<>>		<type><<laFields(I,2)>></type>
+					<<>>		<width><<laFields(I,3)>></width>
+					<<>>		<decimals><<laFields(I,4)>></decimals>
+					<<>>		<null><<laFields(I,5)>></null>
+					<<>>		<cptran><<laFields(I,6)>></cptran>
+					<<>>		<field_valid_exp><<laFields(I,7)>><field_valid_exp>
+					<<>>		<field_valid_text><<laFields(I,8)>><field_valid_text>
+					<<>>		<field_default_value><<laFields(I,9)>><field_default_value>
+					<<>>		<table_valid_exp><<laFields(I,10)>><table_valid_exp>
+					<<>>		<table_valid_text><<laFields(I,11)>></table_valid_text>
+					<<>>		<longtablename><<laFields(I,12)>><longtablename>
+					<<>>		<ins_trig_exp><<laFields(I,13)>><ins_trig_exp>
+					<<>>		<upd_trig_exp><<laFields(I,14)>><upd_trig_exp>
+					<<>>		<del_trig_exp><<laFields(I,15)>></del_trig_exp>
+					<<>>		<tablecomment><<laFields(I,16)>></tablecomment>
+					<<>>		<autoinc_nextval><<laFields(I,17)>></autoinc_nextval>
+					<<>>		<autoinc_step><<laFields(I,18)>></autoinc_step>
+					<<>>	</FIELD>
 				ENDTEXT
 			ENDFOR
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				</FIELDS>
+				<<>>
+			ENDTEXT
 
 		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -6509,27 +6511,28 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			IF TAGCOUNT() > 0
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
-					*-- INDEXES
-					<<C_CDX_I>><<CDX(1)>><<C_CDX_F>>
 					<<>>
+					<IndexFile><<CDX(1)>></IndexFile>
+					<<>>
+					<INDEXES>
 				ENDTEXT
 
 				FOR I = 1 TO TAGCOUNT()
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
-						<<C_INDEX_I>>
-						tagname="<<TAG(I)>>"
-						collate="<<IDXCOLLATE(I)>>"
-						key="<<KEY(I)>>"
-						descending="<<DESCENDING(I)>>"
-						for_exp="<<SYS(2021,I)>>"
-						<<C_INDEX_F>>
-					ENDTEXT
-
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
+						<<>>	<INDEX>
+						<<>>		<tagname><<TAG(I)>><tagname>
+						<<>>		<collate><<IDXCOLLATE(I)>><collate>
+						<<>>		<key><<KEY(I)>><key>
+						<<>>		<descending><<DESCENDING(I)>><descending>
+						<<>>		<for_exp><<SYS(2021,I)>><for_exp>
+						<<>>	</INDEX>
 					ENDTEXT
 				ENDFOR
+
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<INDEXES>
+					<<>>
+				ENDTEXT
 			ENDIF
 
 		CATCH TO loEx
