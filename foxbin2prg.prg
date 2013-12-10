@@ -6431,6 +6431,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				<<>>	<database><<tc_DBC_Name>></database>
 				<<>>	<filetype><<TRANSFORM(tn_HexFileType, '@0')>></filetype>
 				<<>>	<filetype_descrip><<THIS.fileTypeDescription(tn_HexFileType)>></filetype_descrip>
+			ENDTEXT
+
+			*-- Fields
+			THIS.write_DBF_FIELDS()
+
+			*-- Indexes
+			THIS.write_DBF_INDEXES()
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				</TABLE>
 			ENDTEXT
 
@@ -6555,7 +6564,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			lcText	= ''
 			lcDBC	= JUSTSTEM(DBC())
 
-			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
 				<DATABASE>
 				<<>>	<Name><<lcDBC>></Name>
@@ -6563,6 +6572,21 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				<<>>	<Version><<DBGETPROP(lcDBC,"DATABASE","Version")>></Version>
 				<<>>	<DBCEvents><<DBGETPROP(lcDBC,"DATABASE","DBCEvents")>></DBCEvents>
 				<<>>	<DBCEventFilename><<DBGETPROP(lcDBC,"DATABASE","DBCEventFilename")>></DBCEventFilename>
+			ENDTEXT
+
+			*-- Connections
+			THIS.write_DBC_CONNECTIONS()
+
+			*-- Tables
+			THIS.write_DBC_TABLES()
+
+			*-- Views
+			THIS.write_DBC_VIEWS()
+
+			*-- Relations
+			THIS.write_DBC_RELATIONS()
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				</DATABASE>
 				<<>>
 			ENDTEXT
@@ -6601,37 +6625,37 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<CONNECTIONS>
+					<<>>	<CONNECTIONS>
 				ENDTEXT
 
 				FOR I = 1 TO tnConnection_Count
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>	<CONNECTION>
-						<<>>		<Name><<taConnections(I)>></Name>
-						<<>>		<Comment><<DBGETPROP(taConnections(I),"CONNECTION","Comment")>></Comment>
-						<<>>		<DataSource><<DBGETPROP(taConnections(I),"CONNECTION","DataSource")>></DataSource>
-						<<>>		<Database><<DBGETPROP(taConnections(I),"CONNECTION","Database")>></Database>
-						<<>>		<ConnectString><<DBGETPROP(taConnections(I),"CONNECTION","ConnectString")>></ConnectString>
-						<<>>		<Asynchronous><<DBGETPROP(taConnections(I),"CONNECTION","Asynchronous")>></Asynchronous>
-						<<>>		<BatchMode><<DBGETPROP(taConnections(I),"CONNECTION","BatchMode")>></BatchMode>
-						<<>>		<ConnectTimeout><<DBGETPROP(taConnections(I),"CONNECTION","ConnectTimeout")>></ConnectTimeout>
-						<<>>		<DisconnectRollback><<DBGETPROP(taConnections(I),"CONNECTION","DisconnectRollback")>></DisconnectRollback>
-						<<>>		<DispLogin><<DBGETPROP(taConnections(I),"CONNECTION","DispLogin")>></DispLogin>
-						<<>>		<DispWarnings><<DBGETPROP(taConnections(I),"CONNECTION","DispWarnings")>></DispWarnings>
-						<<>>		<IdleTimeout><<DBGETPROP(taConnections(I),"CONNECTION","IdleTimeout")>></IdleTimeout>
-						<<>>		<PacketSize><<DBGETPROP(taConnections(I),"CONNECTION","PacketSize")>></PacketSize>
-						<<>>		<PassWord><<DBGETPROP(taConnections(I),"CONNECTION","PassWord")>></PassWord>
-						<<>>		<QueryTimeout><<DBGETPROP(taConnections(I),"CONNECTION","QueryTimeout")>></QueryTimeout>
-						<<>>		<Transactions><<DBGETPROP(taConnections(I),"CONNECTION","Transactions")>></Transactions>
-						<<>>		<UserId><<DBGETPROP(taConnections(I),"CONNECTION","UserId")>></UserId>
-						<<>>		<WaitTime><<DBGETPROP(taConnections(I),"CONNECTION","WaitTime")>></WaitTime>
-						<<>>	</CONNECTION>
+						<<>>		<CONNECTION>
+						<<>>			<Name><<taConnections(I)>></Name>
+						<<>>			<Comment><<DBGETPROP(taConnections(I),"CONNECTION","Comment")>></Comment>
+						<<>>			<DataSource><<DBGETPROP(taConnections(I),"CONNECTION","DataSource")>></DataSource>
+						<<>>			<Database><<DBGETPROP(taConnections(I),"CONNECTION","Database")>></Database>
+						<<>>			<ConnectString><<DBGETPROP(taConnections(I),"CONNECTION","ConnectString")>></ConnectString>
+						<<>>			<Asynchronous><<DBGETPROP(taConnections(I),"CONNECTION","Asynchronous")>></Asynchronous>
+						<<>>			<BatchMode><<DBGETPROP(taConnections(I),"CONNECTION","BatchMode")>></BatchMode>
+						<<>>			<ConnectTimeout><<DBGETPROP(taConnections(I),"CONNECTION","ConnectTimeout")>></ConnectTimeout>
+						<<>>			<DisconnectRollback><<DBGETPROP(taConnections(I),"CONNECTION","DisconnectRollback")>></DisconnectRollback>
+						<<>>			<DispLogin><<DBGETPROP(taConnections(I),"CONNECTION","DispLogin")>></DispLogin>
+						<<>>			<DispWarnings><<DBGETPROP(taConnections(I),"CONNECTION","DispWarnings")>></DispWarnings>
+						<<>>			<IdleTimeout><<DBGETPROP(taConnections(I),"CONNECTION","IdleTimeout")>></IdleTimeout>
+						<<>>			<PacketSize><<DBGETPROP(taConnections(I),"CONNECTION","PacketSize")>></PacketSize>
+						<<>>			<PassWord><<DBGETPROP(taConnections(I),"CONNECTION","PassWord")>></PassWord>
+						<<>>			<QueryTimeout><<DBGETPROP(taConnections(I),"CONNECTION","QueryTimeout")>></QueryTimeout>
+						<<>>			<Transactions><<DBGETPROP(taConnections(I),"CONNECTION","Transactions")>></Transactions>
+						<<>>			<UserId><<DBGETPROP(taConnections(I),"CONNECTION","UserId")>></UserId>
+						<<>>			<WaitTime><<DBGETPROP(taConnections(I),"CONNECTION","WaitTime")>></WaitTime>
+						<<>>		</CONNECTION>
 					ENDTEXT
 				ENDFOR
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					</CONNECTIONS>
+					<<>>	</CONNECTIONS>
 					<<>>
 				ENDTEXT
 
@@ -6671,22 +6695,22 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<TABLES>
+					<<>>	<TABLES>
 				ENDTEXT
 
 				FOR I = 1 TO tnTable_Count
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>	<TABLE>
-						<<>>		<Name><<taTables(I)>></Name>
-						<<>>		<Comment><<DBGETPROP(taTables(I),"TABLE","Comment")>></Comment>
-						<<>>		<Path><<DBGETPROP(taTables(I),"TABLE","Path")>></Path>
-						<<>>		<DeleteTrigger><<DBGETPROP(taTables(I),"TABLE","DeleteTrigger")>></DeleteTrigger>
-						<<>>		<InsertTrigger><<DBGETPROP(taTables(I),"TABLE","InsertTrigger")>></InsertTrigger>
-						<<>>		<UpdateTrigger><<DBGETPROP(taTables(I),"TABLE","UpdateTrigger")>></UpdateTrigger>
-						<<>>		<PrimaryKey><<DBGETPROP(taTables(I),"TABLE","PrimaryKey")>></PrimaryKey>
-						<<>>		<RuleExpression><<DBGETPROP(taTables(I),"TABLE","RuleExpression")>></RuleExpression>
-						<<>>		<RuleText><<DBGETPROP(taTables(I),"TABLE","RuleText")>></RuleText>
+						<<>>		<TABLE>
+						<<>>			<Name><<taTables(I)>></Name>
+						<<>>			<Comment><<DBGETPROP(taTables(I),"TABLE","Comment")>></Comment>
+						<<>>			<Path><<DBGETPROP(taTables(I),"TABLE","Path")>></Path>
+						<<>>			<DeleteTrigger><<DBGETPROP(taTables(I),"TABLE","DeleteTrigger")>></DeleteTrigger>
+						<<>>			<InsertTrigger><<DBGETPROP(taTables(I),"TABLE","InsertTrigger")>></InsertTrigger>
+						<<>>			<UpdateTrigger><<DBGETPROP(taTables(I),"TABLE","UpdateTrigger")>></UpdateTrigger>
+						<<>>			<PrimaryKey><<DBGETPROP(taTables(I),"TABLE","PrimaryKey")>></PrimaryKey>
+						<<>>			<RuleExpression><<DBGETPROP(taTables(I),"TABLE","RuleExpression")>></RuleExpression>
+						<<>>			<RuleText><<DBGETPROP(taTables(I),"TABLE","RuleText")>></RuleText>
 					ENDTEXT
 
 					_TALLY	= 0
@@ -6699,38 +6723,38 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					IF lnField_Count > 0
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>
-							<<>>		<FIELDS>
+							<<>>			<FIELDS>
 						ENDTEXT
 
 						FOR X = 1 TO lnField_Count
 							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-								<<>>			<FIELD>
-								<<>>				<Name><<RTRIM(laFields(X))>></Name>
-								<<>>				<Caption><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Caption")>></Caption>
-								<<>>				<Comment><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Comment")>></Comment>
-								<<>>				<DefaultValue><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DefaultValue")>></DefaultValue>
-								<<>>				<DisplayClass><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DisplayClass")>></DisplayClass>
-								<<>>				<DisplayClassLibrary><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DisplayClassLibrary")>></DisplayClassLibrary>
-								<<>>				<Format><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Format")>></Format>
-								<<>>				<InputMask><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","InputMask")>></InputMask>
-								<<>>				<RuleExpression><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleExpression")>></RuleExpression>
-								<<>>				<RuleText><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleText")>></RuleText>
-								<<>>			</FIELD>
+								<<>>				<FIELD>
+								<<>>					<Name><<RTRIM(laFields(X))>></Name>
+								<<>>					<Caption><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Caption")>></Caption>
+								<<>>					<Comment><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Comment")>></Comment>
+								<<>>					<DefaultValue><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DefaultValue")>></DefaultValue>
+								<<>>					<DisplayClass><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DisplayClass")>></DisplayClass>
+								<<>>					<DisplayClassLibrary><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DisplayClassLibrary")>></DisplayClassLibrary>
+								<<>>					<Format><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Format")>></Format>
+								<<>>					<InputMask><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","InputMask")>></InputMask>
+								<<>>					<RuleExpression><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleExpression")>></RuleExpression>
+								<<>>					<RuleText><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleText")>></RuleText>
+								<<>>				</FIELD>
 							ENDTEXT
 						ENDFOR
 
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>		</FIELDS>
+							<<>>			</FIELDS>
 						ENDTEXT
 					ENDIF
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>	</TABLE>
+						<<>>		</TABLE>
 					ENDTEXT
 				ENDFOR
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					</TABLES>
+					<<>>	</TABLES>
 					<<>>
 				ENDTEXT
 
@@ -6780,36 +6804,36 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<VIEWS>
+					<<>>	<VIEWS>
 				ENDTEXT
 
 				FOR I = 1 TO tnView_Count
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>	<VIEW>
-						<<>>		<Name><<taViews(I)>></Name>
-						<<>>		<Comment><<DBGETPROP(taViews(I),"VIEW","Comment")>></Comment>
-						<<>>		<Tables><<DBGETPROP(taViews(I),"VIEW","Tables")>></Tables>
-						<<>>		<SQL><<DBGETPROP(taViews(I),"VIEW","SQL")>></SQL>
-						<<>>		<AllowSimultaneousFetch><<DBGETPROP(taViews(I),"VIEW","AllowSimultaneousFetch")>></AllowSimultaneousFetch>
-						<<>>		<BatchUpdateCount><<DBGETPROP(taViews(I),"VIEW","BatchUpdateCount")>></BatchUpdateCount>
-						<<>>		<CompareMemo><<DBGETPROP(taViews(I),"VIEW","CompareMemo")>></CompareMemo>
-						<<>>		<ConnectName><<DBGETPROP(taViews(I),"VIEW","ConnectName")>></ConnectName>
-						<<>>		<FetchAsNeeded><<DBGETPROP(taViews(I),"VIEW","FetchAsNeeded")>></FetchAsNeeded>
-						<<>>		<FetchMemo><<DBGETPROP(taViews(I),"VIEW","FetchMemo")>></FetchMemo>
-						<<>>		<FetchSize><<DBGETPROP(taViews(I),"VIEW","FetchSize")>></FetchSize>
-						<<>>		<MaxRecords><<DBGETPROP(taViews(I),"VIEW","MaxRecords")>></MaxRecords>
-						<<>>		<Offline><<DBGETPROP(taViews(I),"VIEW","Offline")>></Offline>
-						<<>>		<ParameterList><<DBGETPROP(taViews(I),"VIEW","ParameterList")>></ParameterList>
-						<<>>		<Prepared><<DBGETPROP(taViews(I),"VIEW","Prepared")>></Prepared>
-						<<>>		<RuleExpression><<DBGETPROP(taViews(I),"VIEW","RuleExpression")>></RuleExpression>
-						<<>>		<RuleText><<DBGETPROP(taViews(I),"VIEW","RuleText")>></RuleText>
-						<<>>		<SendUpdates><<DBGETPROP(taViews(I),"VIEW","SendUpdates")>></SendUpdates>
-						<<>>		<ShareConnection><<DBGETPROP(taViews(I),"VIEW","ShareConnection")>></ShareConnection>
-						<<>>		<SourceType><<DBGETPROP(taViews(I),"VIEW","SourceType")>></SourceType>
-						<<>>		<UpdateType><<DBGETPROP(taViews(I),"VIEW","UpdateType")>></UpdateType>
-						<<>>		<UseMemoSize><<DBGETPROP(taViews(I),"VIEW","UseMemoSize")>></UseMemoSize>
-						<<>>		<WhereType><<DBGETPROP(taViews(I),"VIEW","WhereType")>></WhereType>
+						<<>>		<VIEW>
+						<<>>			<Name><<taViews(I)>></Name>
+						<<>>			<Comment><<DBGETPROP(taViews(I),"VIEW","Comment")>></Comment>
+						<<>>			<Tables><<DBGETPROP(taViews(I),"VIEW","Tables")>></Tables>
+						<<>>			<SQL><<DBGETPROP(taViews(I),"VIEW","SQL")>></SQL>
+						<<>>			<AllowSimultaneousFetch><<DBGETPROP(taViews(I),"VIEW","AllowSimultaneousFetch")>></AllowSimultaneousFetch>
+						<<>>			<BatchUpdateCount><<DBGETPROP(taViews(I),"VIEW","BatchUpdateCount")>></BatchUpdateCount>
+						<<>>			<CompareMemo><<DBGETPROP(taViews(I),"VIEW","CompareMemo")>></CompareMemo>
+						<<>>			<ConnectName><<DBGETPROP(taViews(I),"VIEW","ConnectName")>></ConnectName>
+						<<>>			<FetchAsNeeded><<DBGETPROP(taViews(I),"VIEW","FetchAsNeeded")>></FetchAsNeeded>
+						<<>>			<FetchMemo><<DBGETPROP(taViews(I),"VIEW","FetchMemo")>></FetchMemo>
+						<<>>			<FetchSize><<DBGETPROP(taViews(I),"VIEW","FetchSize")>></FetchSize>
+						<<>>			<MaxRecords><<DBGETPROP(taViews(I),"VIEW","MaxRecords")>></MaxRecords>
+						<<>>			<Offline><<DBGETPROP(taViews(I),"VIEW","Offline")>></Offline>
+						<<>>			<ParameterList><<DBGETPROP(taViews(I),"VIEW","ParameterList")>></ParameterList>
+						<<>>			<Prepared><<DBGETPROP(taViews(I),"VIEW","Prepared")>></Prepared>
+						<<>>			<RuleExpression><<DBGETPROP(taViews(I),"VIEW","RuleExpression")>></RuleExpression>
+						<<>>			<RuleText><<DBGETPROP(taViews(I),"VIEW","RuleText")>></RuleText>
+						<<>>			<SendUpdates><<DBGETPROP(taViews(I),"VIEW","SendUpdates")>></SendUpdates>
+						<<>>			<ShareConnection><<DBGETPROP(taViews(I),"VIEW","ShareConnection")>></ShareConnection>
+						<<>>			<SourceType><<DBGETPROP(taViews(I),"VIEW","SourceType")>></SourceType>
+						<<>>			<UpdateType><<DBGETPROP(taViews(I),"VIEW","UpdateType")>></UpdateType>
+						<<>>			<UseMemoSize><<DBGETPROP(taViews(I),"VIEW","UseMemoSize")>></UseMemoSize>
+						<<>>			<WhereType><<DBGETPROP(taViews(I),"VIEW","WhereType")>></WhereType>
 					ENDTEXT
 
 					_TALLY	= 0
@@ -6823,40 +6847,40 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					IF lnField_Count > 0
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>
-							<<>>		<FIELDS>
+							<<>>			<FIELDS>
 						ENDTEXT
 
 						FOR X = 1 TO lnField_Count
 							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-								<<>>			<FIELD>
-								<<>>				<Name><<RTRIM(laFields(X))>></Name>
-								<<>>				<Caption><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Caption")>></Caption>
-								<<>>				<Comment><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Comment")>></Comment>
-								<<>>				<DataType><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","DataType")>></DataType>
-								<<>>				<DefaultValue><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","DefaultValue")>></DefaultValue>
-								<<>>				<Format><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Format")>></Format>
-								<<>>				<InputMask><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","InputMask")>></InputMask>
-								<<>>				<KeyField><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","KeyField")>></KeyField>
-								<<>>				<RuleExpression><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleExpression")>></RuleExpression>
-								<<>>				<RuleText><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleText")>></RuleText>
-								<<>>				<Updatable><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Updatable")>></Updatable>
-								<<>>				<UpdateName><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","UpdateName")>></UpdateName>
-								<<>>			</FIELD>
+								<<>>				<FIELD>
+								<<>>					<Name><<RTRIM(laFields(X))>></Name>
+								<<>>					<Caption><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Caption")>></Caption>
+								<<>>					<Comment><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Comment")>></Comment>
+								<<>>					<DataType><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","DataType")>></DataType>
+								<<>>					<DefaultValue><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","DefaultValue")>></DefaultValue>
+								<<>>					<Format><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Format")>></Format>
+								<<>>					<InputMask><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","InputMask")>></InputMask>
+								<<>>					<KeyField><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","KeyField")>></KeyField>
+								<<>>					<RuleExpression><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleExpression")>></RuleExpression>
+								<<>>					<RuleText><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleText")>></RuleText>
+								<<>>					<Updatable><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Updatable")>></Updatable>
+								<<>>					<UpdateName><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","UpdateName")>></UpdateName>
+								<<>>				</FIELD>
 							ENDTEXT
 						ENDFOR
 
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>		</FIELDS>
+							<<>>			</FIELDS>
 						ENDTEXT
 					ENDIF
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>	</VIEW>
+						<<>>		</VIEW>
 					ENDTEXT
 				ENDFOR
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					</VIEWS>
+					<<>>	</VIEWS>
 					<<>>
 				ENDTEXT
 
@@ -6903,23 +6927,23 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<RELATIONS>
+					<<>>	<RELATIONS>
 				ENDTEXT
 
 				FOR I = 1 TO tnRelation_Count
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>	<RELATION>
-						<<>>		<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
-						<<>>		<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
-						<<>>		<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
-						<<>>		<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
-						<<>>		<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
-						<<>>	</RELATION>
+						<<>>		<RELATION>
+						<<>>			<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
+						<<>>			<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
+						<<>>			<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
+						<<>>			<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
+						<<>>			<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
+						<<>>		</RELATION>
 					ENDTEXT
 				ENDFOR
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					</RELATIONS>
+					<<>>	</RELATIONS>
 					<<>>
 				ENDTEXT
 
@@ -7804,12 +7828,6 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			*-- Header
 			THIS.write_DBF_HEADER( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
 
-			*-- Fields
-			THIS.write_DBF_FIELDS()
-
-			*-- Indexes
-			THIS.write_DBF_INDEXES()
-
 
 			*-- Genero el DB2
 			IF THIS.l_Test
@@ -7876,18 +7894,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 			*-- Header
 			THIS.write_DBC_HEADER()
-
-			*-- Connections
-			THIS.write_DBC_CONNECTIONS()
-
-			*-- Tables
-			THIS.write_DBC_TABLES()
-
-			*-- Views
-			THIS.write_DBC_VIEWS()
-
-			*-- Relations
-			THIS.write_DBC_RELATIONS()
 
 
 			*-- Genero el DC2
