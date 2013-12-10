@@ -981,7 +981,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	*******************************************************************************************************************
 	PROCEDURE doBackup
 		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3
-		
+
 		TRY
 			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
 			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
@@ -5064,6 +5064,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_class_methods" type="method" display="write_CLASS_METHODS"/>] ;
 		+ [<memberdata name="write_class_properties" type="method" display="write_CLASS_PROPERTIES"/>] ;
 		+ [<memberdata name="write_dataenvironment_reporte" type="method" display="write_DATAENVIRONMENT_REPORTE"/>] ;
+		+ [<memberdata name="write_dbc_header" type="method" display="write_DBC_HEADER"/>] ;
+		+ [<memberdata name="write_dbc_connections" type="method" display="write_DBC_CONNECTIONS"/>] ;
+		+ [<memberdata name="write_dbc_tables" type="method" display="write_DBC_TABLES"/>] ;
+		+ [<memberdata name="write_dbc_views" type="method" display="write_DBC_VIEWS"/>] ;
+		+ [<memberdata name="write_dbc_relations" type="method" display="write_DBC_RELATIONS"/>] ;
+		+ [<memberdata name="write_dbf_header" type="method" display="write_DBF_HEADER"/>] ;
+		+ [<memberdata name="write_dbf_fields" type="method" display="write_DBF_FIELDS"/>] ;
+		+ [<memberdata name="write_dbf_indexes" type="method" display="write_DBF_INDEXES"/>] ;
 		+ [<memberdata name="write_detalle_reporte" type="method" display="write_DETALLE_REPORTE"/>] ;
 		+ [<memberdata name="write_defined_pam" type="method" display="write_DEFINED_PAM"/>] ;
 		+ [<memberdata name="write_define_class" type="method" display="write_DEFINE_CLASS"/>] ;
@@ -6067,7 +6075,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS toReg
 
 		TRY
-			LOCAL lc_TAG_REPORTE
+			LOCAL lc_TAG_REPORTE, loEx as Exception
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
 			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
 
@@ -6179,7 +6187,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS toReg
 
 		TRY
-			LOCAL lc_TAG_REPORTE
+			LOCAL lc_TAG_REPORTE, loEx as Exception
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
 			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
 
@@ -6291,7 +6299,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS toReg
 
 		TRY
-			LOCAL lc_TAG_REPORTE
+			LOCAL lc_TAG_REPORTE, loEx as Exception
 			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
 			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
 
@@ -6403,7 +6411,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE write_DBF_HEADER
 		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name
 		TRY
-			LOCAL laFields(1,18)
+			LOCAL laFields(1,18), loEx as Exception
 
 			*FOR I = 1 TO AFIELDS(laFields)
 			*	IF INLIST( laFields(I,2), 'M', 'Q', 'V', 'W' )
@@ -6444,7 +6452,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_DBF_FIELDS
 		TRY
-			LOCAL I, laFields(1,18)
+			LOCAL I, laFields(1,18), loEx as Exception
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 
@@ -6497,7 +6505,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_DBF_INDEXES
 		TRY
-			LOCAL I
+			LOCAL I, loEx as Exception
 
 			IF TAGCOUNT() > 0
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -6523,6 +6531,380 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDTEXT
 				ENDFOR
 			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBC_HEADER
+		TRY
+			LOCAL I, lcText, lcDBC, loEx as Exception
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+
+				*-----------------------------------------------------------------------------------
+				*-- DATABASE INFO
+				*-----------------------------------------------------------------------------------
+			ENDTEXT
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<DATABASE>
+				<<>>	<Name><<lcDBC>></Name>
+				<<>>	<Comment><<DBGETPROP(lcDBC,"DATABASE","Comment")>></Comment>
+				<<>>	<Version><<DBGETPROP(lcDBC,"DATABASE","Version")>></Version>
+				<<>>	<DBCEvents><<DBGETPROP(lcDBC,"DATABASE","DBCEvents")>></DBCEvents>
+				<<>>	<DBCEventFilename><<DBGETPROP(lcDBC,"DATABASE","DBCEventFilename")>></DBCEventFilename>
+				</DATABASE>
+			ENDTEXT
+
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBC_CONNECTIONS
+		LPARAMETERS taConnections, tnConnection_Count
+
+		EXTERNAL ARRAY taConnections
+
+		TRY
+			LOCAL I, lcText, lcDBC, loEx as Exception
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			DIMENSION taConnections(1)
+			tnConnection_Count	= ADBOBJECTS( taConnections,"CONNECTION" )
+			ASORT( taConnections, 1, -1, 0, 1 )
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+
+				*-----------------------------------------------------------------------------------
+				*-- CONNECTIONS INFO
+				*-----------------------------------------------------------------------------------
+			ENDTEXT
+
+			FOR I = 1 TO tnConnection_Count
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<CONNECTION>
+					<<>>	<Name><<taConnections(I)>></Name>
+					<<>>	<Comment><<DBGETPROP(taConnections(I),"CONNECTION","Comment")>></Comment>
+					<<>>	<DataSource><<DBGETPROP(taConnections(I),"CONNECTION","DataSource")>></DataSource>
+					<<>>	<Database><<DBGETPROP(taConnections(I),"CONNECTION","Database")>></Database>
+					<<>>	<ConnectString><<DBGETPROP(taConnections(I),"CONNECTION","ConnectString")>></ConnectString>
+					<<>>	<Asynchronous><<DBGETPROP(taConnections(I),"CONNECTION","Asynchronous")>></Asynchronous>
+					<<>>	<BatchMode><<DBGETPROP(taConnections(I),"CONNECTION","BatchMode")>></BatchMode>
+					<<>>	<ConnectTimeout><<DBGETPROP(taConnections(I),"CONNECTION","ConnectTimeout")>></ConnectTimeout>
+					<<>>	<DisconnectRollback><<DBGETPROP(taConnections(I),"CONNECTION","DisconnectRollback")>></DisconnectRollback>
+					<<>>	<DispLogin><<DBGETPROP(taConnections(I),"CONNECTION","DispLogin")>></DispLogin>
+					<<>>	<DispWarnings><<DBGETPROP(taConnections(I),"CONNECTION","DispWarnings")>></DispWarnings>
+					<<>>	<IdleTimeout><<DBGETPROP(taConnections(I),"CONNECTION","IdleTimeout")>></IdleTimeout>
+					<<>>	<PacketSize><<DBGETPROP(taConnections(I),"CONNECTION","PacketSize")>></PacketSize>
+					<<>>	<PassWord><<DBGETPROP(taConnections(I),"CONNECTION","PassWord")>></PassWord>
+					<<>>	<QueryTimeout><<DBGETPROP(taConnections(I),"CONNECTION","QueryTimeout")>></QueryTimeout>
+					<<>>	<Transactions><<DBGETPROP(taConnections(I),"CONNECTION","Transactions")>></Transactions>
+					<<>>	<UserId><<DBGETPROP(taConnections(I),"CONNECTION","UserId")>></UserId>
+					<<>>	<WaitTime><<DBGETPROP(taConnections(I),"CONNECTION","WaitTime")>></WaitTime>
+					</CONNECTION>
+				ENDTEXT
+			ENDFOR
+
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBC_TABLES
+		LPARAMETERS taTables, tnTable_Count
+
+		EXTERNAL ARRAY taTables
+
+		TRY
+			LOCAL I, X, lcText, lcDBC, lnField_Count, laFields(1), loEx as Exception
+			STORE 0 TO I, X, tnTable_Count, lnField_Count
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			DIMENSION taTables(1)
+			tnTable_Count	= ADBOBJECTS( taTables,"TABLE" )
+			ASORT( taTables, 1, -1, 0, 1 )
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+
+				*-----------------------------------------------------------------------------------
+				*-- TABLES INFO
+				*-----------------------------------------------------------------------------------
+			ENDTEXT
+
+			FOR I = 1 TO tnTable_Count
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<TABLE>
+					<<>>	<Name><<taTables(I)>></Name>
+					<<>>	<Comment><<DBGETPROP(taTables(I),"TABLE","Comment")>></Comment>
+					<<>>	<Path><<DBGETPROP(taTables(I),"TABLE","Path")>></Path>
+					<<>>	<DeleteTrigger><<DBGETPROP(taTables(I),"TABLE","DeleteTrigger")>></DeleteTrigger>
+					<<>>	<InsertTrigger><<DBGETPROP(taTables(I),"TABLE","InsertTrigger")>></InsertTrigger>
+					<<>>	<UpdateTrigger><<DBGETPROP(taTables(I),"TABLE","UpdateTrigger")>></UpdateTrigger>
+					<<>>	<PrimaryKey><<DBGETPROP(taTables(I),"TABLE","PrimaryKey")>></PrimaryKey>
+					<<>>	<RuleExpression><<DBGETPROP(taTables(I),"TABLE","RuleExpression")>></RuleExpression>
+					<<>>	<RuleText><<DBGETPROP(taTables(I),"TABLE","RuleText")>></RuleText>
+				ENDTEXT
+
+				_TALLY	= 0
+				SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+PADR('Table',10) = STR(TB2.objectid)+TB2.objecttype ;
+					WHERE STR(TB2.parentid)+TB2.objecttype+TB2.objectname = STR(1)+PADR('Table',10)+PADR(LOWER(taTables(I)),128) ;
+					INTO ARRAY laFields
+				lnField_Count	= _TALLY
+
+				IF lnField_Count > 0
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>	*-- FIELDS
+						<<>>	<FIELD>
+					ENDTEXT
+
+					FOR X = 1 TO lnField_Count
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<>>		<Name><<RTRIM(laFields(I))>></Name>
+							<<>>		<Caption><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","Caption")>></Caption>
+							<<>>		<Comment><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","Comment")>></Comment>
+							<<>>		<DefaultValue><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","DefaultValue")>></DefaultValue>
+							<<>>		<DisplayClass><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","DisplayClass")>></DisplayClass>
+							<<>>		<DisplayClassLibrary><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","DisplayClassLibrary")>></DisplayClassLibrary>
+							<<>>		<Format><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","Format")>></Format>
+							<<>>		<InputMask><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","InputMask")>></InputMask>
+							<<>>		<RuleExpression><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","RuleExpression")>></RuleExpression>
+							<<>>		<RuleText><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(I)),"FIELD","RuleText")>></RuleText>
+						ENDTEXT
+					ENDFOR
+
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>	</FIELD>
+					ENDTEXT
+				ENDIF
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					</TABLE>
+				ENDTEXT
+			ENDFOR
+
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
+
+		CATCH TO loEx
+			IF BETWEEN(I, 1, tnTable_Count)
+				loEx.UserValue	= loEx.UserValue + CR_LF + "taTables(" + TRANSFORM(I) + ") = " + RTRIM(taTables(I))
+			ENDIF
+			IF BETWEEN(X, 1, lnField_Count)
+			 	loEx.UserValue	= loEx.UserValue + CR_LF + "laFields(" + TRANSFORM(X) + ") = " + RTRIM(laFields(I))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TB"))
+			USE IN (SELECT("TB2"))
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBC_VIEWS
+		LPARAMETERS taViews, tnView_Count
+
+		EXTERNAL ARRAY taViews
+
+		TRY
+			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx as Exception
+			STORE 0 TO I, X, tnView_Count, lnField_Count
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			DIMENSION taViews(1)
+			tnView_Count	= ADBOBJECTS( taViews,"VIEW" )
+			ASORT( taViews, 1, -1, 0, 1 )
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+
+				*-----------------------------------------------------------------------------------
+				*-- VIEWS INFO
+				*-----------------------------------------------------------------------------------
+			ENDTEXT
+
+			FOR I = 1 TO tnView_Count
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<VIEW>
+					<<>>	<Name><<taViews(I)>></Name>
+					<<>>	<Comment><<DBGETPROP(taViews(I),"VIEW","Comment")>></Comment>
+					<<>>	<Tables><<DBGETPROP(taViews(I),"VIEW","Tables")>></Tables>
+					<<>>	<SQL><<DBGETPROP(taViews(I),"VIEW","SQL")>></SQL>
+					<<>>	<AllowSimultaneousFetch><<DBGETPROP(taViews(I),"VIEW","AllowSimultaneousFetch")>></AllowSimultaneousFetch>
+					<<>>	<BatchUpdateCount><<DBGETPROP(taViews(I),"VIEW","BatchUpdateCount")>></BatchUpdateCount>
+					<<>>	<CompareMemo><<DBGETPROP(taViews(I),"VIEW","CompareMemo")>></CompareMemo>
+					<<>>	<ConnectName><<DBGETPROP(taViews(I),"VIEW","ConnectName")>></ConnectName>
+					<<>>	<FetchAsNeeded><<DBGETPROP(taViews(I),"VIEW","FetchAsNeeded")>></FetchAsNeeded>
+					<<>>	<FetchMemo><<DBGETPROP(taViews(I),"VIEW","FetchMemo")>></FetchMemo>
+					<<>>	<FetchSize><<DBGETPROP(taViews(I),"VIEW","FetchSize")>></FetchSize>
+					<<>>	<MaxRecords><<DBGETPROP(taViews(I),"VIEW","MaxRecords")>></MaxRecords>
+					<<>>	<Offline><<DBGETPROP(taViews(I),"VIEW","Offline")>></Offline>
+					<<>>	<ParameterList><<DBGETPROP(taViews(I),"VIEW","ParameterList")>></ParameterList>
+					<<>>	<Prepared><<DBGETPROP(taViews(I),"VIEW","Prepared")>></Prepared>
+					<<>>	<RuleExpression><<DBGETPROP(taViews(I),"VIEW","RuleExpression")>></RuleExpression>
+					<<>>	<RuleText><<DBGETPROP(taViews(I),"VIEW","RuleText")>></RuleText>
+					<<>>	<SendUpdates><<DBGETPROP(taViews(I),"VIEW","SendUpdates")>></SendUpdates>
+					<<>>	<ShareConnection><<DBGETPROP(taViews(I),"VIEW","ShareConnection")>></ShareConnection>
+					<<>>	<SourceType><<DBGETPROP(taViews(I),"VIEW","SourceType")>></SourceType>
+					<<>>	<UpdateType><<DBGETPROP(taViews(I),"VIEW","UpdateType")>></UpdateType>
+					<<>>	<UseMemoSize><<DBGETPROP(taViews(I),"VIEW","UseMemoSize")>></UseMemoSize>
+					<<>>	<WhereType><<DBGETPROP(taViews(I),"VIEW","WhereType")>></WhereType>
+				ENDTEXT
+
+				_TALLY	= 0
+				SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+PADR('View',10) = STR(TB2.objectid)+TB2.objecttype ;
+					WHERE STR(TB2.parentid)+TB2.objecttype+TB2.objectname = STR(1)+PADR('View',10)+PADR(LOWER(taViews(I)),128) ;
+					INTO ARRAY laFields
+				lnField_Count	= _TALLY
+
+				IF lnField_Count > 0
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>	*-- FIELDS
+						<<>>	<FIELD>
+					ENDTEXT
+
+					FOR X = 1 TO lnField_Count
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<>>		<Name><<RTRIM(laFields(I))>></Name>
+							<<>>		<Caption><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","Caption")>></Caption>
+							<<>>		<Comment><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","Comment")>></Comment>
+							<<>>		<DataType><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","DataType")>></DataType>
+							<<>>		<DefaultValue><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","DefaultValue")>></DefaultValue>
+							<<>>		<Format><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","Format")>></Format>
+							<<>>		<InputMask><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","InputMask")>></InputMask>
+							<<>>		<KeyField><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","KeyField")>></KeyField>
+							<<>>		<RuleExpression><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","RuleExpression")>></RuleExpression>
+							<<>>		<RuleText><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","RuleText")>></RuleText>
+							<<>>		<Updatable><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","Updatable")>></Updatable>
+							<<>>		<UpdateName><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(I)),"FIELD","UpdateName")>></UpdateName>
+						ENDTEXT
+					ENDFOR
+
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>	</FIELD>
+					ENDTEXT
+				ENDIF
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					</VIEW>
+				ENDTEXT
+			ENDFOR
+
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
+
+		CATCH TO loEx
+			IF BETWEEN(I, 1, tnTable_Count)
+				loEx.UserValue	= loEx.UserValue + CR_LF + "taViews(" + TRANSFORM(I) + ") = " + RTRIM(taViews(I))
+			ENDIF
+			IF BETWEEN(X, 1, lnField_Count)
+			 	loEx.UserValue	= loEx.UserValue + CR_LF + "laFields(" + TRANSFORM(X) + ") = " + RTRIM(laFields(I))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBC_RELATIONS
+		LPARAMETERS taRelations, tnRelation_Count
+
+		EXTERNAL ARRAY taRelations
+
+		TRY
+			LOCAL I, lcText, lcDBC, loEx as Exception
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			DIMENSION taRelations(1,5)
+			tnRelation_Count	= ADBOBJECTS( taRelations,"RELATION" )
+			ASORT( taRelations, 2, -1, 0, 1 )
+			ASORT( taRelations, 1, -1, 0, 1 )
+
+			FOR I = 1 TO tnRelation_Count
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+
+					*-----------------------------------------------------------------------------------
+					*-- RELATIONS INFO		(REF.INTEGRITY: "C"=cascade, "R"=restrict, "I"=ignore)
+					*-----------------------------------------------------------------------------------
+					<<>>
+				ENDTEXT
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
+					<RELATION>
+					<<>>	<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
+					<<>>	<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
+					<<>>	<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
+					<<>>	<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
+					<<>>	<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
+					</RELATION>
+				ENDTEXT
+			ENDFOR
+
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
 
 		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -7408,15 +7790,6 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			*-- Indexes
 			THIS.write_DBF_INDEXES()
 
-			USE IN (SELECT("TABLABIN"))
-
-			FOR I = 1 TO ADATABASES(laDatabases2)
-				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
-					SET DATABASE TO (laDatabases2(I))
-					CLOSE DATABASES
-					EXIT
-				ENDIF
-			ENDFOR
 
 			*-- Genero el DB2
 			IF THIS.l_Test
@@ -7437,6 +7810,15 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+
+			*-- Cierro DBC
+			FOR I = 1 TO ADATABASES(laDatabases2)
+				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
+					SET DATABASE TO (laDatabases2(I))
+					CLOSE DATABASES
+					EXIT
+				ENDIF
+			ENDFOR
 
 		ENDTRY
 
@@ -7468,29 +7850,27 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			lnDatabases_Count	= ADATABASES(laDatabases)
 			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
 
 			THIS.write_PROGRAM_HEADER()
 
 			*-- Header
-			THIS.write_DBF_HEADER( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
+			THIS.write_DBC_HEADER()
 
-			*-- Fields
-			THIS.write_DBF_FIELDS()
+			*-- Connections
+			THIS.write_DBC_CONNECTIONS()
 
-			*-- Indexes
-			THIS.write_DBF_INDEXES()
+			*-- Tables
+			THIS.write_DBC_TABLES()
 
-			USE IN (SELECT("TABLABIN"))
+			*-- Views
+			THIS.write_DBC_VIEWS()
 
-			FOR I = 1 TO ADATABASES(laDatabases2)
-				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
-					SET DATABASE TO (laDatabases2(I))
-					CLOSE DATABASES
-					EXIT
-				ENDIF
-			ENDFOR
+			*-- Relations
+			THIS.write_DBC_RELATIONS()
 
-			*-- Genero el DB2
+
+			*-- Genero el DC2
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
@@ -7509,6 +7889,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			CLOSE DATABASES
 
 		ENDTRY
 
@@ -8088,8 +8469,8 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 		ENDIF
 		&lcAsignacion.
 	ENDPROC
-	
-	
+
+
 	************************************************************************************************
 	PROCEDURE parseNullTerminatedValue
 		LPARAMETERS tcDevInfo, tnPos, tnLen
