@@ -148,18 +148,37 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_DBF_HEAD_F		'/>'
 #DEFINE C_LEN_DBF_HEAD_I	LEN(C_DBF_HEAD_I)
 #DEFINE C_LEN_DBF_HEAD_F	LEN(C_DBF_HEAD_F)
-#DEFINE C_FIELD_I			'<Field'
-#DEFINE C_FIELD_F			'/>'
-#DEFINE C_LEN_FIELD_I		LEN(C_FIELD_I)
-#DEFINE C_LEN_FIELD_F		LEN(C_FIELD_F)
-#DEFINE C_INDEX_I			'<Index'
-#DEFINE C_INDEX_F			'/>'
-#DEFINE C_CDX_I				'<IndexFile>'
-#DEFINE C_CDX_F				'</IndexFile>'
+#DEFINE C_CDX_I				'<indexFile>'
+#DEFINE C_CDX_F				'</indexFile>'
 #DEFINE C_LEN_CDX_I			LEN(C_CDX_I)
 #DEFINE C_LEN_CDX_F			LEN(C_CDX_F)
 #DEFINE C_LEN_INDEX_I		LEN(C_INDEX_I)
 #DEFINE C_LEN_INDEX_F		LEN(C_INDEX_F)
+#DEFINE C_TABLE_I			'<TABLE>'
+#DEFINE C_TABLE_F			'</TABLE>'
+#DEFINE C_TABLES_I			'<TABLES>'
+#DEFINE C_TABLES_F			'</TABLES>'
+#DEFINE C_VIEW_I			'<VIEW>'
+#DEFINE C_VIEW_F			'</VIEW>'
+#DEFINE C_VIEWS_I			'<VIEWS>'
+#DEFINE C_VIEWS_F			'</VIEWS>'
+#DEFINE C_FIELD_I			'<FIELD>'
+#DEFINE C_FIELD_F			'</FIELD>'
+#DEFINE C_FIELDS_I			'<FIELDS>'
+#DEFINE C_FIELDS_F			'</FIELDS>'
+#DEFINE C_CONNECTION_I		'<CONNECTION>'
+#DEFINE C_CONNECTION_F		'</CONNECTION>'
+#DEFINE C_CONNECTIONS_I		'<CONNECTIONS>'
+#DEFINE C_CONNECTIONS_F		'</CONNECTIONS>'
+#DEFINE C_RELATION_I		'<RELATION>'
+#DEFINE C_RELATION_F		'</RELATION>'
+#DEFINE C_RELATIONS_I		'<RELATIONS>'
+#DEFINE C_RELATIONS_F		'</RELATIONS>'
+#DEFINE C_INDEX_I			'<INDEX>'
+#DEFINE C_INDEX_F			'</INDEX>'
+#DEFINE C_INDEXES_I			'<INDEXES>'
+#DEFINE C_INDEXES_F			'</INDEXES>'
+*--
 #DEFINE C_TAB				CHR(9)
 #DEFINE C_CR				CHR(13)
 #DEFINE C_LF				CHR(10)
@@ -343,30 +362,30 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
-		+ [<memberdata name="writelog" type="method" display="writeLog"/>] ;
-		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
-		+ [<memberdata name="l_test" type="property" display="l_Test"/>] ;
-		+ [<memberdata name="l_showerrors" type="property" display="l_ShowErrors"/>] ;
-		+ [<memberdata name="l_methodsort_enabled" type="property" display="l_MethodSort_Enabled"/>] ;
-		+ [<memberdata name="l_propsort_enabled" type="property" display="l_PropSort_Enabled"/>] ;
-		+ [<memberdata name="l_reportsort_enabled" type="property" display="l_ReportSort_Enabled"/>] ;
-		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
-		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
-		+ [<memberdata name="c_outputfile" type="property" display="c_OutputFile"/>] ;
-		+ [<memberdata name="c_logfile" type="property" display="c_LogFile"/>] ;
-		+ [<memberdata name="c_vc2" type="property" display="c_VC2"/>] ;
-		+ [<memberdata name="c_sc2" type="property" display="c_SC2"/>] ;
-		+ [<memberdata name="c_pj2" type="property" display="c_PJ2"/>] ;
-		+ [<memberdata name="c_mn2" type="property" display="c_MN2"/>] ;
-		+ [<memberdata name="c_fr2" type="property" display="c_FR2"/>] ;
-		+ [<memberdata name="c_lb2" type="property" display="c_LB2"/>] ;
-		+ [<memberdata name="c_db2" type="property" display="c_DB2"/>] ;
-		+ [<memberdata name="c_cd2" type="property" display="c_CD2"/>] ;
-		+ [<memberdata name="c_dc2" type="property" display="c_DC2"/>] ;
-		+ [<memberdata name="o_conversor" type="property" display="o_Conversor"/>] ;
-		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_test" display="l_Test"/>] ;
+		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
+		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
+		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
+		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
+		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
+		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
+		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
+		+ [<memberdata name="c_mn2" display="c_MN2"/>] ;
+		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
+		+ [<memberdata name="c_lb2" display="c_LB2"/>] ;
+		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
+		+ [<memberdata name="c_cd2" display="c_CD2"/>] ;
+		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
+		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
+		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
 
 	c_CurDir				= ''
@@ -492,11 +511,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DB2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBF' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dfb' )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
 
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DC2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBC' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dfc' )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
 
 			OTHERWISE
 				ERROR 'El archivo [' + THIS.c_InputFile + '] no está soportado'
@@ -641,41 +660,41 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LOCAL THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarasignacion_tag_indicado" type="method" display="analizarAsignacion_TAG_Indicado"/>] ;
-		+ [<memberdata name="buscarobjetodelmetodopornombre" type="method" display="buscarObjetoDelMetodoPorNombre"/>] ;
-		+ [<memberdata name="comprobarexpresionvalida" type="method" display="comprobarExpresionValida"/>] ;
-		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-		+ [<memberdata name="decode_specialcodes_1_31" type="method" display="decode_SpecialCodes_1_31"/>] ;
-		+ [<memberdata name="desnormalizarasignacion" type="method" display="desnormalizarAsignacion"/>] ;
-		+ [<memberdata name="desnormalizarvalorpropiedad" type="method" display="desnormalizarValorPropiedad"/>] ;
-		+ [<memberdata name="desnormalizarvalorxml" type="method" display="desnormalizarValorXML"/>] ;
-		+ [<memberdata name="dobackup" type="method" display="doBackup"/>] ;
-		+ [<memberdata name="encode_specialcodes_1_31" type="method" display="encode_SpecialCodes_1_31"/>] ;
-		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
-		+ [<memberdata name="filetypedescription" type="method" display="fileTypeDescription"/>] ;
-		+ [<memberdata name="filetypecode" type="method" display="fileTypeCode"/>] ;
-		+ [<memberdata name="getdbfmetadata" type="method" display="getDBFmetadata"/>] ;
-		+ [<memberdata name="getnext_bak" type="method" display="getNext_BAK"/>] ;
-		+ [<memberdata name="get_separatedlineandcomment" type="method" display="get_SeparatedLineAndComment"/>] ;
-		+ [<memberdata name="get_separatedpropandvalue" type="method" display="get_SeparatedPropAndValue"/>] ;
-		+ [<memberdata name="identificarbloquesdeexclusion" type="method" display="identificarBloquesDeExclusion"/>] ;
-		+ [<memberdata name="lineisonlycommentandnometadata" type="method" display="lineIsOnlyCommentAndNoMetadata"/>] ;
-		+ [<memberdata name="normalizarasignacion" type="method" display="normalizarAsignacion"/>] ;
-		+ [<memberdata name="normalizarvalorpropiedad" type="method" display="normalizarValorPropiedad"/>] ;
-		+ [<memberdata name="normalizarvalorxml" type="method" display="normalizarValorXML"/>] ;
-		+ [<memberdata name="sortpropsandvalues" type="method" display="sortPropsAndValues"/>] ;
-		+ [<memberdata name="writelog" type="method" display="writeLog"/>] ;
-		+ [<memberdata name="c_curdir" type="property" display="c_CurDir"/>] ;
-		+ [<memberdata name="c_inputfile" type="property" display="c_InputFile"/>] ;
-		+ [<memberdata name="c_logfile" type="property" display="c_LogFile"/>] ;
-		+ [<memberdata name="c_outputfile" type="property" display="c_OutputFile"/>] ;
-		+ [<memberdata name="c_type" type="property" display="c_Type"/>] ;
-		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
-		+ [<memberdata name="l_test" type="property" display="l_Test"/>] ;
-		+ [<memberdata name="l_methodsort_enabled" type="property" display="l_MethodSort_Enabled"/>] ;
-		+ [<memberdata name="l_propsort_enabled" type="property" display="l_PropSort_Enabled"/>] ;
-		+ [<memberdata name="l_reportsort_enabled" type="property" display="l_ReportSort_Enabled"/>] ;
-		+ [<memberdata name="n_fb2prg_version" type="property" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="analizarasignacion_tag_indicado" display="analizarAsignacion_TAG_Indicado"/>] ;
+		+ [<memberdata name="buscarobjetodelmetodopornombre" display="buscarObjetoDelMetodoPorNombre"/>] ;
+		+ [<memberdata name="comprobarexpresionvalida" display="comprobarExpresionValida"/>] ;
+		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="desnormalizarasignacion" display="desnormalizarAsignacion"/>] ;
+		+ [<memberdata name="desnormalizarvalorpropiedad" display="desnormalizarValorPropiedad"/>] ;
+		+ [<memberdata name="desnormalizarvalorxml" display="desnormalizarValorXML"/>] ;
+		+ [<memberdata name="dobackup" display="doBackup"/>] ;
+		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
+		+ [<memberdata name="filetypecode" display="fileTypeCode"/>] ;
+		+ [<memberdata name="getdbfmetadata" display="getDBFmetadata"/>] ;
+		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
+		+ [<memberdata name="get_separatedpropandvalue" display="get_SeparatedPropAndValue"/>] ;
+		+ [<memberdata name="identificarbloquesdeexclusion" display="identificarBloquesDeExclusion"/>] ;
+		+ [<memberdata name="lineisonlycommentandnometadata" display="lineIsOnlyCommentAndNoMetadata"/>] ;
+		+ [<memberdata name="normalizarasignacion" display="normalizarAsignacion"/>] ;
+		+ [<memberdata name="normalizarvalorpropiedad" display="normalizarValorPropiedad"/>] ;
+		+ [<memberdata name="normalizarvalorxml" display="normalizarValorXML"/>] ;
+		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
+		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
+		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
+		+ [<memberdata name="c_type" display="c_Type"/>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_test" display="l_Test"/>] ;
+		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
+		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
+		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [</VFPData>]
 
 
@@ -1643,43 +1662,43 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarbloque_add_object" type="method" display="analizarBloque_ADD_OBJECT"/>] ;
-		+ [<memberdata name="analizarbloque_defined_pam" type="method" display="analizarBloque_DEFINED_PAM"/>] ;
-		+ [<memberdata name="analizarbloque_define_class" type="method" display="analizarBloque_DEFINE_CLASS"/>] ;
-		+ [<memberdata name="analizarbloque_enddefine" type="method" display="analizarBloque_ENDDEFINE"/>] ;
-		+ [<memberdata name="analizarbloque_foxbin2prg" type="method" display="analizarBloque_FoxBin2Prg"/>] ;
-		+ [<memberdata name="analizarbloque_hidden" type="method" display="analizarBloque_HIDDEN"/>] ;
-		+ [<memberdata name="analizarbloque_include" type="method" display="analizarBloque_INCLUDE"/>] ;
-		+ [<memberdata name="analizarbloque_metadata" type="method" display="analizarBloque_METADATA"/>] ;
-		+ [<memberdata name="analizarbloque_ole_def" type="method" display="analizarBloque_OLE_DEF"/>] ;
-		+ [<memberdata name="analizarbloque_procedure" type="method" display="analizarBloque_PROCEDURE"/>] ;
-		+ [<memberdata name="analizarbloque_protected" type="method" display="analizarBloque_PROTECTED"/>] ;
-		+ [<memberdata name="analizarlineasdeprocedure" type="method" display="analizarLineasDeProcedure"/>] ;
-		+ [<memberdata name="classmethods2memo" type="method" display="classMethods2Memo"/>] ;
-		+ [<memberdata name="classprops2memo" type="method" display="classProps2Memo"/>] ;
-		+ [<memberdata name="createclasslib" type="method" display="createClasslib"/>] ;
-		+ [<memberdata name="createclasslib_recordheader" type="method" display="createClasslib_RecordHeader"/>] ;
-		+ [<memberdata name="createform" type="method" display="createForm"/>] ;
-		+ [<memberdata name="createform_recordheader" type="method" display="createForm_RecordHeader"/>] ;
-		+ [<memberdata name="createproject" type="method" display="createProject"/>] ;
-		+ [<memberdata name="createproject_recordheader" type="method" display="createProject_RecordHeader"/>] ;
-		+ [<memberdata name="createreport" type="method" display="createReport"/>] ;
-		+ [<memberdata name="defined_pam2memo" type="method" display="defined_PAM2Memo"/>] ;
-		+ [<memberdata name="emptyrecord" type="method" display="emptyRecord"/>] ;
-		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
-		+ [<memberdata name="evaluate_pam" type="method" display="Evaluate_PAM"/>] ;
-		+ [<memberdata name="evaluardefiniciondeprocedure" type="method" display="evaluarDefinicionDeProcedure"/>] ;
-		+ [<memberdata name="getclassmethodcomment" type="method" display="getClassMethodComment"/>] ;
-		+ [<memberdata name="getclasspropertycomment" type="method" display="getClassPropertyComment"/>] ;
-		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" type="method" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
-		+ [<memberdata name="get_valuebyname_fromlistnameswithvalues" type="method" display="get_ValueByName_FromListNamesWithValues"/>] ;
-		+ [<memberdata name="hiddenandprotected_pam" type="method" display="hiddenAndProtected_PAM"/>] ;
-		+ [<memberdata name="identificarbloquesdeexclusion" type="method" display="identificarBloquesDeExclusion"/>] ;
-		+ [<memberdata name="insert_allobjects" type="method" display="insert_AllObjects"/>] ;
-		+ [<memberdata name="insert_object" type="method" display="insert_Object"/>] ;
-		+ [<memberdata name="objectmethods2memo" type="method" display="objectMethods2Memo"/>] ;
-		+ [<memberdata name="set_line" type="method" display="set_Line"/>] ;
-		+ [<memberdata name="strip_dimensions" type="method" display="strip_Dimensions"/>] ;
+		+ [<memberdata name="analizarbloque_add_object" display="analizarBloque_ADD_OBJECT"/>] ;
+		+ [<memberdata name="analizarbloque_defined_pam" display="analizarBloque_DEFINED_PAM"/>] ;
+		+ [<memberdata name="analizarbloque_define_class" display="analizarBloque_DEFINE_CLASS"/>] ;
+		+ [<memberdata name="analizarbloque_enddefine" display="analizarBloque_ENDDEFINE"/>] ;
+		+ [<memberdata name="analizarbloque_foxbin2prg" display="analizarBloque_FoxBin2Prg"/>] ;
+		+ [<memberdata name="analizarbloque_hidden" display="analizarBloque_HIDDEN"/>] ;
+		+ [<memberdata name="analizarbloque_include" display="analizarBloque_INCLUDE"/>] ;
+		+ [<memberdata name="analizarbloque_metadata" display="analizarBloque_METADATA"/>] ;
+		+ [<memberdata name="analizarbloque_ole_def" display="analizarBloque_OLE_DEF"/>] ;
+		+ [<memberdata name="analizarbloque_procedure" display="analizarBloque_PROCEDURE"/>] ;
+		+ [<memberdata name="analizarbloque_protected" display="analizarBloque_PROTECTED"/>] ;
+		+ [<memberdata name="analizarlineasdeprocedure" display="analizarLineasDeProcedure"/>] ;
+		+ [<memberdata name="classmethods2memo" display="classMethods2Memo"/>] ;
+		+ [<memberdata name="classprops2memo" display="classProps2Memo"/>] ;
+		+ [<memberdata name="createclasslib" display="createClasslib"/>] ;
+		+ [<memberdata name="createclasslib_recordheader" display="createClasslib_RecordHeader"/>] ;
+		+ [<memberdata name="createform" display="createForm"/>] ;
+		+ [<memberdata name="createform_recordheader" display="createForm_RecordHeader"/>] ;
+		+ [<memberdata name="createproject" display="createProject"/>] ;
+		+ [<memberdata name="createproject_recordheader" display="createProject_RecordHeader"/>] ;
+		+ [<memberdata name="createreport" display="createReport"/>] ;
+		+ [<memberdata name="defined_pam2memo" display="defined_PAM2Memo"/>] ;
+		+ [<memberdata name="emptyrecord" display="emptyRecord"/>] ;
+		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
+		+ [<memberdata name="evaluate_pam" display="Evaluate_PAM"/>] ;
+		+ [<memberdata name="evaluardefiniciondeprocedure" display="evaluarDefinicionDeProcedure"/>] ;
+		+ [<memberdata name="getclassmethodcomment" display="getClassMethodComment"/>] ;
+		+ [<memberdata name="getclasspropertycomment" display="getClassPropertyComment"/>] ;
+		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
+		+ [<memberdata name="get_valuebyname_fromlistnameswithvalues" display="get_ValueByName_FromListNamesWithValues"/>] ;
+		+ [<memberdata name="hiddenandprotected_pam" display="hiddenAndProtected_PAM"/>] ;
+		+ [<memberdata name="identificarbloquesdeexclusion" display="identificarBloquesDeExclusion"/>] ;
+		+ [<memberdata name="insert_allobjects" display="insert_AllObjects"/>] ;
+		+ [<memberdata name="insert_object" display="insert_Object"/>] ;
+		+ [<memberdata name="objectmethods2memo" display="objectMethods2Memo"/>] ;
+		+ [<memberdata name="set_line" display="set_Line"/>] ;
+		+ [<memberdata name="strip_dimensions" display="strip_Dimensions"/>] ;
 		+ [</VFPData>]
 
 
@@ -3412,7 +3431,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
+		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
 		+ [</VFPData>]
 
 
@@ -3676,7 +3695,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
+		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
 		+ [</VFPData>]
 
 
@@ -3945,22 +3964,22 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
-		+ [<memberdata name="analizarbloque_buildproj" type="method" display="analizarBloque_BuildProj"/>] ;
-		+ [<memberdata name="analizarbloque_devinfo" type="method" display="analizarBloque_DevInfo"/>] ;
-		+ [<memberdata name="analizarbloque_excludedfiles" type="method" display="analizarBloque_ExcludedFiles"/>] ;
-		+ [<memberdata name="analizarbloque_filecomments" type="method" display="analizarBloque_FileComments"/>] ;
-		+ [<memberdata name="analizarbloque_serverhead" type="method" display="analizarBloque_ServerHead"/>] ;
-		+ [<memberdata name="analizarbloque_serverdata" type="method" display="analizarBloque_ServerData"/>] ;
-		+ [<memberdata name="analizarbloque_textfiles" type="method" display="analizarBloque_TextFiles"/>] ;
-		+ [<memberdata name="analizarbloque_projectproperties" type="method" display="analizarBloque_ProjectProperties"/>] ;
+		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
+		+ [<memberdata name="analizarbloque_buildproj" display="analizarBloque_BuildProj"/>] ;
+		+ [<memberdata name="analizarbloque_devinfo" display="analizarBloque_DevInfo"/>] ;
+		+ [<memberdata name="analizarbloque_excludedfiles" display="analizarBloque_ExcludedFiles"/>] ;
+		+ [<memberdata name="analizarbloque_filecomments" display="analizarBloque_FileComments"/>] ;
+		+ [<memberdata name="analizarbloque_serverhead" display="analizarBloque_ServerHead"/>] ;
+		+ [<memberdata name="analizarbloque_serverdata" display="analizarBloque_ServerData"/>] ;
+		+ [<memberdata name="analizarbloque_textfiles" display="analizarBloque_TextFiles"/>] ;
+		+ [<memberdata name="analizarbloque_projectproperties" display="analizarBloque_ProjectProperties"/>] ;
 		+ [</VFPData>]
 
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS toModulo, toEx AS EXCEPTION
-		DODEFAULT( @toModulo, @toEx )
+		LPARAMETERS toProject, toEx AS EXCEPTION
+		DODEFAULT( @toProject, @toEx )
 
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
@@ -4659,22 +4678,25 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="escribirarchivobin" type="method" display="escribirArchivoBin"/>] ;
-		+ [<memberdata name="analizarbloque_cdata_inline" type="method" display="analizarBloque_CDATA_inline"/>] ;
-		+ [<memberdata name="analizarbloque_platform" type="method" display="analizarBloque_platform"/>] ;
-		+ [<memberdata name="analizarbloque_reportes" type="method" display="analizarBloque_Reportes"/>] ;
+		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
+		+ [<memberdata name="analizarbloque_cdata_inline" display="analizarBloque_CDATA_inline"/>] ;
+		+ [<memberdata name="analizarbloque_platform" display="analizarBloque_platform"/>] ;
+		+ [<memberdata name="analizarbloque_reportes" display="analizarBloque_Reportes"/>] ;
 		+ [</VFPData>]
 
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS toModulo, toEx AS EXCEPTION
-		DODEFAULT( @toModulo, @toEx )
+		LPARAMETERS toReport, toEx AS EXCEPTION
+		DODEFAULT( @toReport, @toEx )
+
+		#IF .F.
+			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I ;
-				, loReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
 			STORE '' TO lcLine, lcSourceFile
 			STORE NULL TO loReg, toModulo
@@ -4688,9 +4710,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			THIS.createReport()
 
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @loReport )
+			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toReport )
 
-			THIS.escribirArchivoBin( @loReport )
+			THIS.escribirArchivoBin( @toReport )
 
 
 		CATCH TO loEx
@@ -5046,21 +5068,24 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarbloque_table" type="method" display="analizarBloque_TABLE"/>] ;
-		+ [<memberdata name="analizarbloque_fields" type="method" display="analizarBloque_FIELDS"/>] ;
-		+ [<memberdata name="analizarbloque_indexes" type="method" display="analizarBloque_INDEXES"/>] ;
+		+ [<memberdata name="analizarbloque_table" display="analizarBloque_TABLE"/>] ;
+		+ [<memberdata name="analizarbloque_fields" display="analizarBloque_FIELDS"/>] ;
+		+ [<memberdata name="analizarbloque_indexes" display="analizarBloque_INDEXES"/>] ;
 		+ [</VFPData>]
 
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS toModulo, toEx AS EXCEPTION
-		DODEFAULT( @toModulo, @toEx )
+		LPARAMETERS toTable, toEx AS EXCEPTION
+		DODEFAULT( @toTable, @toEx )
+
+		#IF .F.
+			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I ;
-				, loReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
 			STORE '' TO lcLine, lcSourceFile
 			STORE NULL TO loReg, toModulo
@@ -5074,9 +5099,9 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			*THIS.createTable()
 
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @loReport )
+			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toTable )
 
-			THIS.escribirArchivoBin( @loReport )
+			THIS.escribirArchivoBin( @toTable )
 
 
 		CATCH TO loEx
@@ -5096,62 +5121,68 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toReport
+		LPARAMETERS toTable
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL loReg, I, lcFieldType, lnFieldLen, lnFieldDec, lnNumCampo, laFieldTypes(1,18) ;
-				, luValor, lnCodError, loEx AS EXCEPTION
-			SELECT TABLABIN
-			AFIELDS( laFieldTypes )
+			LOCAL I, lnCodError, loEx AS EXCEPTION
+			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			LOCAL lcCreateTable, lcLongDec, lcFieldDef
 
-			*-- Agrego los registros
-			FOR EACH loReg IN toReport FOXOBJECT
+			lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
+			lcFieldDef		= ''
 
-				*-- Ajuste de los tipos de dato
-				FOR I = 1 TO AMEMBERS(laProps, loReg, 0)
-					lnNumCampo	= ASCAN( laFieldTypes, laProps(I), 1, -1, 1, 1+2+4+8 )
+			*-- Conformo los campos
+			FOR EACH loField IN toTable._Fields FOXOBJECT
+				lcLongDec		= ''
 
-					IF lnNumCampo = 0
-						ERROR 'No se encontró el campo [' + laProps(I) + '] en la estructura del archivo ' + DBF("TABLABIN")
+				*-- Nombre, Tipo
+				lcFieldDef	= lcFieldDef + ', ' + loField._Name + ' ' + loField._Type
+
+				*-- Longitud
+				IF INLIST( loField._Type, 'C', 'N', 'F', 'Q', 'V' )
+					lcLongDec	= lcLongDec + '(' + loField._Width
+				ENDIF
+
+				*-- Decimales
+				IF INLIST( loField._Type, 'B', 'N', 'F' ) AND loField._Decimals > '0'
+					IF EMPTY(lcLongDec)
+						lcLongDec	= lcLongDec + '('
+					ELSE
+						lcLongDec	= lcLongDec + ','
 					ENDIF
+					lcLongDec	= lcLongDec + loField._Decimals
+				ENDIF
+				
+				IF NOT EMPTY(lcLongDec)
+					lcLongDec	= lcLongDec + ')'
+				ENDIF
 
-					lcFieldType	= laFieldTypes(lnNumCampo,2)
-					lnFieldLen	= laFieldTypes(lnNumCampo,3)
-					lnFieldDec	= laFieldTypes(lnNumCampo,4)
-					luValor		= EVALUATE('loReg.' + laProps(I))
+				lcFieldDef	= lcFieldDef + lcLongDec
 
-					DO CASE
-					CASE INLIST(lcFieldType, 'B')	&& Double
-						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldPrec) ) )
+				*-- Null
+				lcFieldDef	= lcFieldDef + IIF( loField._Null = '.T.', ' NULL', ' NOT NULL' )
 
-					CASE INLIST(lcFieldType, 'F', 'N', 'Y')	&& Float, Numeric, Currency
-						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldLen, lnFieldDec) ) )
+				*-- NoCPTran
+				IF loField._NoCPTran = '.T.'
+					lcFieldDef	= lcFieldDef + ' NOCPTRAN'
+				ENDIF
 
-					CASE INLIST(lcFieldType, 'W', 'G', 'M', 'Q', 'V', 'C')	&& Blob, General, Memo, Varbinary, Varchar, Character
-						ADDPROPERTY( loReg, laProps(I), luValor )
+				*-- AutoInc
+				IF loField._AutoInc_NextVal <> '0'
+					lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+				ENDIF
 
-					OTHERWISE	&& Demás tipos
-						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldLen) ) )
-
-					ENDCASE
-
-				ENDFOR
-
-				INSERT INTO TABLABIN FROM NAME loReg
-				loReg	= NULL
+				loField			= NULL
 			ENDFOR
 
-			USE IN (SELECT("TABLABIN"))
-
-			IF THIS.c_Type = 'FRX'
-				COMPILE REPORT (THIS.c_OutputFile)
-			ELSE
-				COMPILE LABEL (THIS.c_OutputFile)
-			ENDIF
+			lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
+			*STRTOFILE(lcCreateTable,'CreateTable.txt')
+			&lcCreateTable.
 
 
 		CATCH TO loEx
@@ -5164,7 +5195,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			THROW
 
 		FINALLY
-			USE IN (SELECT("TABLABIN"))
 
 		ENDTRY
 
@@ -5174,32 +5204,29 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toReport
+		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toTable
 		*--------------------------------------------------------------------------------------------------------------
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
 		* taBloquesExclusion		(?@ IN    ) Sin uso
 		* tnBloquesExclusion		(?@ IN    ) Sin uso
-		* toReport					(?@    OUT) Objeto con toda la información del reporte analizado
-		*
-		* NOTA:
-		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
+		* toTable					(?@    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
 		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
 
 		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL I, lc_Comentario, lcLine, llFoxBin2Prg_Completed
+			LOCAL I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueTable_Completed
 			STORE 0 TO I
 
 			THIS.c_Type	= UPPER(JUSTEXT(THIS.c_OutputFile))
 
 			IF tnCodeLines > 1
-				toReport			= NULL
-				toReport			= CREATEOBJECT('CL_REPORT')
+				toTable		= NULL
+				toTable		= CREATEOBJECT('CL_DBF_TABLE')
 
 				WITH THIS
 					FOR I = 1 TO tnCodeLines
@@ -5210,10 +5237,11 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 						ENDIF
 
 						DO CASE
-						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toReport, @lcLine, @taCodeLines, @I, tnCodeLines )
+						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toTable, @lcLine, @taCodeLines, @I, tnCodeLines )
 							llFoxBin2Prg_Completed	= .T.
 
-						CASE .analizarBloque_TABLE( toReport, @lcLine, @taCodeLines, @I, tnCodeLines )
+						CASE NOT llBloqueTable_Completed AND toTable.analizarBloque( @lcLine, @taCodeLines, @I, tnCodeLines )
+							llBloqueTable_Completed	= .T.
 
 						ENDCASE
 					ENDFOR
@@ -5233,183 +5261,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_TABLE
-		*------------------------------------------------------
-		*-- Analiza el bloque <TABLE>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_FIELDS
-		*------------------------------------------------------
-		*-- Analiza el bloque <FIELDS>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_INDEXES
-		*------------------------------------------------------
-		*-- Analiza el bloque <INDEXES>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
 ENDDEFINE	&& CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
@@ -5419,13 +5270,13 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarbloque_tables" type="method" display="analizarBloque_TABLES"/>] ;
-		+ [<memberdata name="analizarbloque_views" type="method" display="analizarBloque_VIEWS"/>] ;
-		+ [<memberdata name="analizarbloque_tablefields" type="method" display="analizarBloque_TABLEFIELDS"/>] ;
-		+ [<memberdata name="analizarbloque_viewfields" type="method" display="analizarBloque_VIEWFIELDS"/>] ;
-		+ [<memberdata name="analizarbloque_relations" type="method" display="analizarBloque_RELATIONS"/>] ;
-		+ [<memberdata name="analizarbloque_connections" type="method" display="analizarBloque_CONNECTIONS"/>] ;
-		+ [<memberdata name="analizarbloque_database" type="method" display="analizarBloque_DATABASE"/>] ;
+		+ [<memberdata name="analizarbloque_tables" display="analizarBloque_TABLES"/>] ;
+		+ [<memberdata name="analizarbloque_views" display="analizarBloque_VIEWS"/>] ;
+		+ [<memberdata name="analizarbloque_tablefields" display="analizarBloque_TABLEFIELDS"/>] ;
+		+ [<memberdata name="analizarbloque_viewfields" display="analizarBloque_VIEWFIELDS"/>] ;
+		+ [<memberdata name="analizarbloque_relations" display="analizarBloque_RELATIONS"/>] ;
+		+ [<memberdata name="analizarbloque_connections" display="analizarBloque_CONNECTIONS"/>] ;
+		+ [<memberdata name="analizarbloque_database" display="analizarBloque_DATABASE"/>] ;
 		+ [</VFPData>]
 
 
@@ -5607,6 +5458,15 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		ENDTRY
 
 		RETURN
+	ENDPROC
+
+
+	************************************************************************************************
+	PROCEDURE add_Table
+		LPARAMETERS tcName
+		tcName	= RTRIM(tcName)
+		THIS._Tables.ADD( CREATEOBJECT("CL_TABLE"), tcName )
+		RETURN THIS._Tables( tcName )
 	ENDPROC
 
 
@@ -5973,43 +5833,43 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
-		+ [<memberdata name="exception2str" type="method" display="Exception2Str"/>] ;
-		+ [<memberdata name="get_add_object_methods" type="method" display="get_ADD_OBJECT_METHODS"/>] ;
-		+ [<memberdata name="get_nombresobjetosolepublic" type="method" display="get_NombresObjetosOLEPublic"/>] ;
-		+ [<memberdata name="get_propsfrom_protected" type="method" display="get_PropsFrom_PROTECTED"/>] ;
-		+ [<memberdata name="get_propsandcommentsfrom_reserved3" type="method" display="get_PropsAndCommentsFrom_RESERVED3"/>] ;
-		+ [<memberdata name="get_propsandvaluesfrom_properties" type="method" display="get_PropsAndValuesFrom_PROPERTIES"/>] ;
-		+ [<memberdata name="indentarmemo" type="method" display="IndentarMemo"/>] ;
-		+ [<memberdata name="memoinoneline" type="method" display="MemoInOneLine"/>] ;
-		+ [<memberdata name="normalizarasignacion" type="method" display="normalizarAsignacion"/>] ;
-		+ [<memberdata name="set_multilinememowithaddobjectproperties" type="method" display="set_MultilineMemoWithAddObjectProperties"/>] ;
-		+ [<memberdata name="sortmethod" type="method" display="SortMethod"/>] ;
-		+ [<memberdata name="write_add_objects_withproperties" type="method" display="write_ADD_OBJECTS_WithProperties"/>] ;
-		+ [<memberdata name="write_all_object_methods" type="method" display="write_ALL_OBJECT_METHODS"/>] ;
-		+ [<memberdata name="write_cabecera_reporte" type="method" display="write_CABECERA_REPORTE"/>] ;
-		+ [<memberdata name="write_class_methods" type="method" display="write_CLASS_METHODS"/>] ;
-		+ [<memberdata name="write_class_properties" type="method" display="write_CLASS_PROPERTIES"/>] ;
-		+ [<memberdata name="write_dataenvironment_reporte" type="method" display="write_DATAENVIRONMENT_REPORTE"/>] ;
-		+ [<memberdata name="write_dbc_header" type="method" display="write_DBC_HEADER"/>] ;
-		+ [<memberdata name="write_dbc_connections" type="method" display="write_DBC_CONNECTIONS"/>] ;
-		+ [<memberdata name="write_dbc_tables" type="method" display="write_DBC_TABLES"/>] ;
-		+ [<memberdata name="write_dbc_views" type="method" display="write_DBC_VIEWS"/>] ;
-		+ [<memberdata name="write_dbc_relations" type="method" display="write_DBC_RELATIONS"/>] ;
-		+ [<memberdata name="write_dbf_header" type="method" display="write_DBF_HEADER"/>] ;
-		+ [<memberdata name="write_dbf_fields" type="method" display="write_DBF_FIELDS"/>] ;
-		+ [<memberdata name="write_dbf_indexes" type="method" display="write_DBF_INDEXES"/>] ;
-		+ [<memberdata name="write_detalle_reporte" type="method" display="write_DETALLE_REPORTE"/>] ;
-		+ [<memberdata name="write_defined_pam" type="method" display="write_DEFINED_PAM"/>] ;
-		+ [<memberdata name="write_define_class" type="method" display="write_DEFINE_CLASS"/>] ;
-		+ [<memberdata name="write_define_class_comments" type="method" display="write_Define_Class_COMMENTS"/>] ;
-		+ [<memberdata name="write_definicionobjetosole" type="method" display="write_DefinicionObjetosOLE"/>] ;
-		+ [<memberdata name="write_enddefine_sicorresponde" type="method" display="write_ENDDEFINE_SiCorresponde"/>] ;
-		+ [<memberdata name="write_hidden_properties" type="method" display="write_HIDDEN_Properties"/>] ;
-		+ [<memberdata name="write_include" type="method" display="write_INCLUDE"/>] ;
-		+ [<memberdata name="write_metadata" type="method" display="write_METADATA"/>] ;
-		+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
-		+ [<memberdata name="write_protected_properties" type="method" display="write_PROTECTED_Properties"/>] ;
+		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="get_add_object_methods" display="get_ADD_OBJECT_METHODS"/>] ;
+		+ [<memberdata name="get_nombresobjetosolepublic" display="get_NombresObjetosOLEPublic"/>] ;
+		+ [<memberdata name="get_propsfrom_protected" display="get_PropsFrom_PROTECTED"/>] ;
+		+ [<memberdata name="get_propsandcommentsfrom_reserved3" display="get_PropsAndCommentsFrom_RESERVED3"/>] ;
+		+ [<memberdata name="get_propsandvaluesfrom_properties" display="get_PropsAndValuesFrom_PROPERTIES"/>] ;
+		+ [<memberdata name="indentarmemo" display="IndentarMemo"/>] ;
+		+ [<memberdata name="memoinoneline" display="MemoInOneLine"/>] ;
+		+ [<memberdata name="normalizarasignacion" display="normalizarAsignacion"/>] ;
+		+ [<memberdata name="set_multilinememowithaddobjectproperties" display="set_MultilineMemoWithAddObjectProperties"/>] ;
+		+ [<memberdata name="sortmethod" display="SortMethod"/>] ;
+		+ [<memberdata name="write_add_objects_withproperties" display="write_ADD_OBJECTS_WithProperties"/>] ;
+		+ [<memberdata name="write_all_object_methods" display="write_ALL_OBJECT_METHODS"/>] ;
+		+ [<memberdata name="write_cabecera_reporte" display="write_CABECERA_REPORTE"/>] ;
+		+ [<memberdata name="write_class_methods" display="write_CLASS_METHODS"/>] ;
+		+ [<memberdata name="write_class_properties" display="write_CLASS_PROPERTIES"/>] ;
+		+ [<memberdata name="write_dataenvironment_reporte" display="write_DATAENVIRONMENT_REPORTE"/>] ;
+		+ [<memberdata name="write_dbc_header" display="write_DBC_HEADER"/>] ;
+		+ [<memberdata name="write_dbc_connections" display="write_DBC_CONNECTIONS"/>] ;
+		+ [<memberdata name="write_dbc_tables" display="write_DBC_TABLES"/>] ;
+		+ [<memberdata name="write_dbc_views" display="write_DBC_VIEWS"/>] ;
+		+ [<memberdata name="write_dbc_relations" display="write_DBC_RELATIONS"/>] ;
+		+ [<memberdata name="write_dbf_header" display="write_DBF_HEADER"/>] ;
+		+ [<memberdata name="write_dbf_fields" display="write_DBF_FIELDS"/>] ;
+		+ [<memberdata name="write_dbf_indexes" display="write_DBF_INDEXES"/>] ;
+		+ [<memberdata name="write_detalle_reporte" display="write_DETALLE_REPORTE"/>] ;
+		+ [<memberdata name="write_defined_pam" display="write_DEFINED_PAM"/>] ;
+		+ [<memberdata name="write_define_class" display="write_DEFINE_CLASS"/>] ;
+		+ [<memberdata name="write_define_class_comments" display="write_Define_Class_COMMENTS"/>] ;
+		+ [<memberdata name="write_definicionobjetosole" display="write_DefinicionObjetosOLE"/>] ;
+		+ [<memberdata name="write_enddefine_sicorresponde" display="write_ENDDEFINE_SiCorresponde"/>] ;
+		+ [<memberdata name="write_hidden_properties" display="write_HIDDEN_Properties"/>] ;
+		+ [<memberdata name="write_include" display="write_INCLUDE"/>] ;
+		+ [<memberdata name="write_metadata" display="write_METADATA"/>] ;
+		+ [<memberdata name="write_program_header" display="write_PROGRAM_HEADER"/>] ;
+		+ [<memberdata name="write_protected_properties" display="write_PROTECTED_Properties"/>] ;
 		+ [</VFPData>]
 
 
@@ -7354,7 +7214,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<TABLE>
 				<<>>	<memofile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></memofile>
-				<<>>	<codepage><<<CPDBF('TABLABIN')>></codepage>
+				<<>>	<codepage><<CPDBF('TABLABIN')>></codepage>
 				<<>>	<database><<tc_DBC_Name>></database>
 				<<>>	<filetype><<TRANSFORM(tn_HexFileType, '@0')>></filetype>
 				<<>>	<filetype_descrip><<THIS.fileTypeDescription(tn_HexFileType)>></filetype_descrip>
@@ -7405,7 +7265,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					<<>>			<width><<laFields(I,3)>></width>
 					<<>>			<decimals><<laFields(I,4)>></decimals>
 					<<>>			<null><<laFields(I,5)>></null>
-					<<>>			<cptran><<laFields(I,6)>></cptran>
+					<<>>			<nocptran><<laFields(I,6)>></nocptran>
 					<<>>			<field_valid_exp><<laFields(I,7)>><field_valid_exp>
 					<<>>			<field_valid_text><<laFields(I,8)>><field_valid_text>
 					<<>>			<field_default_value><<laFields(I,9)>><field_default_value>
@@ -8029,7 +7889,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [<memberdata name="convertir" display="Convertir"/>] ;
 	+ [</VFPData>]
 
 	*******************************************************************************************************************
@@ -8158,7 +8018,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [<memberdata name="convertir" display="Convertir"/>] ;
 	+ [</VFPData>]
 
 
@@ -8316,7 +8176,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="write_program_header" type="method" display="write_PROGRAM_HEADER"/>] ;
+	*	+ [<memberdata name="write_program_header" display="write_PROGRAM_HEADER"/>] ;
 	*	+ [</VFPData>]
 
 
@@ -8622,7 +8482,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_frx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [<memberdata name="convertir" display="Convertir"/>] ;
 	+ [</VFPData>]
 
 
@@ -8732,7 +8592,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [<memberdata name="convertir" display="Convertir"/>] ;
 	+ [</VFPData>]
 
 
@@ -8798,7 +8658,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		LOCAL THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" type="method" display="Convertir"/>] ;
+	+ [<memberdata name="convertir" display="Convertir"/>] ;
 	+ [</VFPData>]
 
 
@@ -8852,23 +8712,25 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_BASE AS CUSTOM
-	*-- Propiedades. CLASS,
-	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CONTROLS, CLASSLIBRARY, COMMENT ;
+DEFINE CLASS CL_CUS_BASE AS CUSTOM
+	*-- Propiedades.
+	HIDDEN BASECLASS, CLASS, TOP, WIDTH, CLASSLIB, CONTROLS, CLASSLIBRARY, COMMENT ;
 		, CONTROLCOUNT, HEIGHT, HELPCONTEXTID, LEFT, NAME, OBJECTS, PARENT ;
 		, PARENTCLASS, PICTURE, TAG, WHATSTHISHELPID
 
-	*-- Métodos (Se preservan: init, destroy, error)
-	HIDDEN ADDOBJECT, ADDPROPERTY, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
+	*-- Métodos (Se preservan: INIT, DESTROY, ERROR, ADDPROPERTY)
+	HIDDEN ADDOBJECT, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
 		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [</VFPData>]
 
 	l_Debug				= .F.
 
 
+	*******************************************************************************************************************
 	PROCEDURE INIT
 		SET DELETED ON
 		SET DATE YMD
@@ -8881,27 +8743,81 @@ DEFINE CLASS CL_BASE AS CUSTOM
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE set_Line
+		LPARAMETERS tcLine, taCodeLines, I
+		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
+	ENDPROC
+
+
 ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_MODULO AS CL_BASE
+DEFINE CLASS CL_COL_BASE AS COLLECTION
+	#IF .F.
+		LOCAL THIS AS CL_COL_BASE OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*-- Propiedades (Se preservan: COUNT, KEYSORT, NAME)
+	**HIDDEN BASECLASS, CLASS, CLASSLIBRARY, COUNT, COMMENT ;
+		, PARENT, PARENTCLASS, TAG
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+	l_Debug				= .F.
+
+
+	************************************************************************************************
+	PROCEDURE INIT
+		SET DELETED ON
+		SET DATE YMD
+		SET HOURS TO 24
+		SET CENTURY ON
+		SET SAFETY OFF
+		SET TABLEPROMPT OFF
+
+		THIS.l_Debug	= (_VFP.STARTMODE=0)
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE set_Line
+		LPARAMETERS tcLine, taCodeLines, I
+		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="add_ole" type="method" display="add_OLE"/>] ;
-		+ [<memberdata name="add_class" type="method" display="add_Class"/>] ;
-		+ [<memberdata name="existeobjetoole" type="method" display="existeObjetoOLE"/>] ;
-		+ [<memberdata name="_clases" type="property" display="_Clases"/>] ;
-		+ [<memberdata name="_clases_count" type="property" display="_Clases_Count"/>] ;
-		+ [<memberdata name="_includefile" type="property" display="_IncludeFile"/>] ;
-		+ [<memberdata name="_ole_objs" type="property" display="_Ole_Objs"/>] ;
-		+ [<memberdata name="_ole_obj_count" type="property" display="_Ole_Obj_Count"/>] ;
-		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
-		+ [<memberdata name="_version" type="property" display="_Version"/>] ;
+		+ [<memberdata name="add_ole" display="add_OLE"/>] ;
+		+ [<memberdata name="add_class" display="add_Class"/>] ;
+		+ [<memberdata name="existeobjetoole" display="existeObjetoOLE"/>] ;
+		+ [<memberdata name="_clases" display="_Clases"/>] ;
+		+ [<memberdata name="_clases_count" display="_Clases_Count"/>] ;
+		+ [<memberdata name="_includefile" display="_IncludeFile"/>] ;
+		+ [<memberdata name="_ole_objs" display="_Ole_Objs"/>] ;
+		+ [<memberdata name="_ole_obj_count" display="_Ole_Obj_Count"/>] ;
+		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [</VFPData>]
+
 
 	DIMENSION _Ole_Objs[1], _Clases[1]
 	_Version			= 0
@@ -8955,21 +8871,22 @@ DEFINE CLASS CL_MODULO AS CL_BASE
 		RETURN llExiste
 	ENDPROC
 
+
 ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_OLE AS CL_BASE
+DEFINE CLASS CL_OLE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_OLE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_checksum" type="property" display="_CheckSum"/>] ;
-		+ [<memberdata name="_nombre" type="property" display="_Nombre"/>] ;
-		+ [<memberdata name="_objname" type="property" display="_ObjName"/>] ;
-		+ [<memberdata name="_parent" type="property" display="_Parent"/>] ;
-		+ [<memberdata name="_value" type="property" display="_Value"/>] ;
+		+ [<memberdata name="_checksum" display="_CheckSum"/>] ;
+		+ [<memberdata name="_nombre" display="_Nombre"/>] ;
+		+ [<memberdata name="_objname" display="_ObjName"/>] ;
+		+ [<memberdata name="_parent" display="_Parent"/>] ;
+		+ [<memberdata name="_value" display="_Value"/>] ;
 		+ [</VFPData>]
 
 	_Nombre		= ''
@@ -8981,62 +8898,62 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_CLASE AS CL_BASE
+DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="add_procedure" type="method" display="add_Procedure"/>] ;
-		+ [<memberdata name="add_property" type="method" display="add_Property"/>] ;
-		+ [<memberdata name="add_object" type="method" display="add_Object"/>] ;
-		+ [<memberdata name="_addobject_count" type="property" display="_AddObject_Count"/>] ;
-		+ [<memberdata name="_addobjects" type="property" display="_AddObjects"/>] ;
-		+ [<memberdata name="_baseclass" type="property" display="_BaseClass"/>] ;
-		+ [<memberdata name="_class" type="property" display="_Class"/>] ;
-		+ [<memberdata name="_classicon" type="property" display="_ClassIcon"/>] ;
-		+ [<memberdata name="_classloc" type="property" display="_ClassLoc"/>] ;
-		+ [<memberdata name="_comentario" type="property" display="_Comentario"/>] ;
-		+ [<memberdata name="_defined_pam" type="property" display="_Defined_PAM"/>] ;
-		+ [<memberdata name="_definicion" type="property" display="_Definicion"/>] ;
-		+ [<memberdata name="_fin" type="property" display="_Fin"/>] ;
-		+ [<memberdata name="_fin_cab" type="property" display="_Fin_Cab"/>] ;
-		+ [<memberdata name="_fin_cuerpo" type="property" display="_Fin_Cuerpo"/>] ;
-		+ [<memberdata name="_hiddenmethods" type="property" display="_HiddenMethods"/>] ;
-		+ [<memberdata name="_hiddenprops" type="property" display="_HiddenProps"/>] ;
-		+ [<memberdata name="_includefile" type="property" display="_IncludeFile"/>] ;
-		+ [<memberdata name="_inicio" type="property" display="_Inicio"/>] ;
-		+ [<memberdata name="_ini_cab" type="property" display="_Ini_Cab"/>] ;
-		+ [<memberdata name="_ini_cuerpo" type="property" display="_Ini_Cuerpo"/>] ;
-		+ [<memberdata name="_metadata" type="property" display="_MetaData"/>] ;
-		+ [<memberdata name="_nombre" type="property" display="_Nombre"/>] ;
-		+ [<memberdata name="_objname" type="property" display="_ObjName"/>] ;
-		+ [<memberdata name="_ole" type="property" display="_Ole"/>] ;
-		+ [<memberdata name="_ole2" type="property" display="_Ole2"/>] ;
-		+ [<memberdata name="_olepublic" type="property" display="_OlePublic"/>] ;
-		+ [<memberdata name="_parent" type="property" display="_Parent"/>] ;
-		+ [<memberdata name="_procedures" type="property" display="_Procedures"/>] ;
-		+ [<memberdata name="_procedure_count" type="property" display="_Procedure_Count"/>] ;
-		+ [<memberdata name="_projectclassicon" type="property" display="_ProjectClassIcon"/>] ;
-		+ [<memberdata name="_protectedmethods" type="property" display="_ProtectedMethods"/>] ;
-		+ [<memberdata name="_protectedprops" type="property" display="_ProtectedProps"/>] ;
-		+ [<memberdata name="_props" type="property" display="_Props"/>] ;
-		+ [<memberdata name="_prop_count" type="property" display="_Prop_Count"/>] ;
-		+ [<memberdata name="_scale" type="property" display="_Scale"/>] ;
-		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
-		+ [<memberdata name="_uniqueid" type="property" display="_UniqueID"/>] ;
-		+ [<memberdata name="_properties" type="property" display="_PROPERTIES"/>] ;
-		+ [<memberdata name="_protected" type="property" display="_PROTECTED"/>] ;
-		+ [<memberdata name="_methods" type="property" display="_METHODS"/>] ;
-		+ [<memberdata name="_reserved1" type="property" display="_RESERVED1"/>] ;
-		+ [<memberdata name="_reserved2" type="property" display="_RESERVED2"/>] ;
-		+ [<memberdata name="_reserved3" type="property" display="_RESERVED3"/>] ;
-		+ [<memberdata name="_reserved4" type="property" display="_RESERVED4"/>] ;
-		+ [<memberdata name="_reserved5" type="property" display="_RESERVED5"/>] ;
-		+ [<memberdata name="_reserved6" type="property" display="_RESERVED6"/>] ;
-		+ [<memberdata name="_reserved7" type="property" display="_RESERVED7"/>] ;
-		+ [<memberdata name="_reserved8" type="property" display="_RESERVED8"/>] ;
-		+ [<memberdata name="_user" type="property" display="_USER"/>] ;
+		+ [<memberdata name="add_procedure" display="add_Procedure"/>] ;
+		+ [<memberdata name="add_property" display="add_Property"/>] ;
+		+ [<memberdata name="add_object" display="add_Object"/>] ;
+		+ [<memberdata name="_addobject_count" display="_AddObject_Count"/>] ;
+		+ [<memberdata name="_addobjects" display="_AddObjects"/>] ;
+		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
+		+ [<memberdata name="_class" display="_Class"/>] ;
+		+ [<memberdata name="_classicon" display="_ClassIcon"/>] ;
+		+ [<memberdata name="_classloc" display="_ClassLoc"/>] ;
+		+ [<memberdata name="_comentario" display="_Comentario"/>] ;
+		+ [<memberdata name="_defined_pam" display="_Defined_PAM"/>] ;
+		+ [<memberdata name="_definicion" display="_Definicion"/>] ;
+		+ [<memberdata name="_fin" display="_Fin"/>] ;
+		+ [<memberdata name="_fin_cab" display="_Fin_Cab"/>] ;
+		+ [<memberdata name="_fin_cuerpo" display="_Fin_Cuerpo"/>] ;
+		+ [<memberdata name="_hiddenmethods" display="_HiddenMethods"/>] ;
+		+ [<memberdata name="_hiddenprops" display="_HiddenProps"/>] ;
+		+ [<memberdata name="_includefile" display="_IncludeFile"/>] ;
+		+ [<memberdata name="_inicio" display="_Inicio"/>] ;
+		+ [<memberdata name="_ini_cab" display="_Ini_Cab"/>] ;
+		+ [<memberdata name="_ini_cuerpo" display="_Ini_Cuerpo"/>] ;
+		+ [<memberdata name="_metadata" display="_MetaData"/>] ;
+		+ [<memberdata name="_nombre" display="_Nombre"/>] ;
+		+ [<memberdata name="_objname" display="_ObjName"/>] ;
+		+ [<memberdata name="_ole" display="_Ole"/>] ;
+		+ [<memberdata name="_ole2" display="_Ole2"/>] ;
+		+ [<memberdata name="_olepublic" display="_OlePublic"/>] ;
+		+ [<memberdata name="_parent" display="_Parent"/>] ;
+		+ [<memberdata name="_procedures" display="_Procedures"/>] ;
+		+ [<memberdata name="_procedure_count" display="_Procedure_Count"/>] ;
+		+ [<memberdata name="_projectclassicon" display="_ProjectClassIcon"/>] ;
+		+ [<memberdata name="_protectedmethods" display="_ProtectedMethods"/>] ;
+		+ [<memberdata name="_protectedprops" display="_ProtectedProps"/>] ;
+		+ [<memberdata name="_props" display="_Props"/>] ;
+		+ [<memberdata name="_prop_count" display="_Prop_Count"/>] ;
+		+ [<memberdata name="_scale" display="_Scale"/>] ;
+		+ [<memberdata name="_timestamp" display="_TimeStamp"/>] ;
+		+ [<memberdata name="_uniqueid" display="_UniqueID"/>] ;
+		+ [<memberdata name="_properties" display="_PROPERTIES"/>] ;
+		+ [<memberdata name="_protected" display="_PROTECTED"/>] ;
+		+ [<memberdata name="_methods" display="_METHODS"/>] ;
+		+ [<memberdata name="_reserved1" display="_RESERVED1"/>] ;
+		+ [<memberdata name="_reserved2" display="_RESERVED2"/>] ;
+		+ [<memberdata name="_reserved3" display="_RESERVED3"/>] ;
+		+ [<memberdata name="_reserved4" display="_RESERVED4"/>] ;
+		+ [<memberdata name="_reserved5" display="_RESERVED5"/>] ;
+		+ [<memberdata name="_reserved6" display="_RESERVED6"/>] ;
+		+ [<memberdata name="_reserved7" display="_RESERVED7"/>] ;
+		+ [<memberdata name="_reserved8" display="_RESERVED8"/>] ;
+		+ [<memberdata name="_user" display="_USER"/>] ;
 		+ [</VFPData>]
 
 
@@ -9130,18 +9047,18 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_PROCEDURE AS CL_BASE
+DEFINE CLASS CL_PROCEDURE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="add_line" type="method" display="add_Line"/>] ;
-		+ [<memberdata name="_comentario" type="property" display="_Comentario"/>] ;
-		+ [<memberdata name="_nombre" type="property" display="_Nombre"/>] ;
-		+ [<memberdata name="_procline_count" type="property" display="_ProcLine_Count"/>] ;
-		+ [<memberdata name="_proclines" type="property" display="_ProcLines"/>] ;
-		+ [<memberdata name="_proctype" type="property" display="_ProcType"/>] ;
+		+ [<memberdata name="add_line" display="add_Line"/>] ;
+		+ [<memberdata name="_comentario" display="_Comentario"/>] ;
+		+ [<memberdata name="_nombre" display="_Nombre"/>] ;
+		+ [<memberdata name="_procline_count" display="_ProcLine_Count"/>] ;
+		+ [<memberdata name="_proclines" display="_ProcLines"/>] ;
+		+ [<memberdata name="_proctype" display="_ProcType"/>] ;
 		+ [</VFPData>]
 
 	DIMENSION _ProcLines[1]
@@ -9164,31 +9081,31 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_OBJETO AS CL_BASE
+DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="add_procedure" type="method" display="add_Procedure"/>] ;
-		+ [<memberdata name="add_property" type="method" display="add_Property"/>] ;
-		+ [<memberdata name="_baseclass" type="property" display="_BaseClass"/>] ;
-		+ [<memberdata name="_class" type="property" display="_Class"/>] ;
-		+ [<memberdata name="_classlib" type="property" display="_ClassLib"/>] ;
-		+ [<memberdata name="_nombre" type="property" display="_Nombre"/>] ;
-		+ [<memberdata name="_objname" type="property" display="_ObjName"/>] ;
-		+ [<memberdata name="_ole" type="property" display="_Ole"/>] ;
-		+ [<memberdata name="_ole2" type="property" display="_Ole2"/>] ;
-		+ [<memberdata name="_parent" type="property" display="_Parent"/>] ;
-		+ [<memberdata name="_writeorder" type="property" display="_WriteOrder"/>] ;
-		+ [<memberdata name="_procedures" type="property" display="_Procedures"/>] ;
-		+ [<memberdata name="_procedure_count" type="property" display="_Procedure_Count"/>] ;
-		+ [<memberdata name="_props" type="property" display="_Props"/>] ;
-		+ [<memberdata name="_prop_count" type="property" display="_Prop_Count"/>] ;
-		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
-		+ [<memberdata name="_uniqueid" type="property" display="_UniqueID"/>] ;
-		+ [<memberdata name="_user" type="property" display="_User"/>] ;
-		+ [<memberdata name="_zorder" type="property" display="_ZOrder"/>] ;
+		+ [<memberdata name="add_procedure" display="add_Procedure"/>] ;
+		+ [<memberdata name="add_property" display="add_Property"/>] ;
+		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
+		+ [<memberdata name="_class" display="_Class"/>] ;
+		+ [<memberdata name="_classlib" display="_ClassLib"/>] ;
+		+ [<memberdata name="_nombre" display="_Nombre"/>] ;
+		+ [<memberdata name="_objname" display="_ObjName"/>] ;
+		+ [<memberdata name="_ole" display="_Ole"/>] ;
+		+ [<memberdata name="_ole2" display="_Ole2"/>] ;
+		+ [<memberdata name="_parent" display="_Parent"/>] ;
+		+ [<memberdata name="_writeorder" display="_WriteOrder"/>] ;
+		+ [<memberdata name="_procedures" display="_Procedures"/>] ;
+		+ [<memberdata name="_procedure_count" display="_Procedure_Count"/>] ;
+		+ [<memberdata name="_props" display="_Props"/>] ;
+		+ [<memberdata name="_prop_count" display="_Prop_Count"/>] ;
+		+ [<memberdata name="_timestamp" display="_TimeStamp"/>] ;
+		+ [<memberdata name="_uniqueid" display="_UniqueID"/>] ;
+		+ [<memberdata name="_user" display="_User"/>] ;
+		+ [<memberdata name="_zorder" display="_ZOrder"/>] ;
 		+ [</VFPData>]
 
 	DIMENSION _Props[1,1], _Procedures[1]
@@ -9241,109 +9158,73 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_REPORT AS COLLECTION
+DEFINE CLASS CL_REPORT AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_REPORT OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*-- Propiedades. CLASS,
-	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CONTROLS, CLASSLIBRARY, COMMENT ;
-		, CONTROLCOUNT, HEIGHT, HELPCONTEXTID, LEFT, NAME, OBJECTS, PARENT ;
-		, PARENTCLASS, PICTURE, TAG, WHATSTHISHELPID
-
-	*-- Métodos (Se preservan: init, destroy, error)
-	HIDDEN ADDOBJECT, ADDPROPERTY, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
-		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
-
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="l_debug" type="property" display="l_Debug"/>] ;
-		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
-		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
-		+ [<memberdata name="_version" type="property" display="_Version"/>] ;
-		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
-		+ [<memberdata name="l_debug" type="method" display="l_Debug"/>] ;
+		+ [<memberdata name="_timestamp" display="_TimeStamp"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [</VFPData>]
 
-	*-- Proj.Info
-	l_Debug				= .F.
+	*-- Report.Info
 	_TimeStamp			= 0
 	_Version			= ''
 	_SourceFile			= ''
-
-
-	************************************************************************************************
-	PROCEDURE INIT
-		SET DELETED ON
-		SET DATE YMD
-		SET HOURS TO 24
-		SET CENTURY ON
-		SET SAFETY OFF
-		SET TABLEPROMPT OFF
-
-		THIS.l_Debug	= (_VFP.STARTMODE=0)
-	ENDPROC
 
 
 ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_PROJECT AS COLLECTION
+DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*-- Propiedades. CLASS,
-	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CONTROLS, CLASSLIBRARY, COMMENT ;
-		, CONTROLCOUNT, HEIGHT, HELPCONTEXTID, LEFT, NAME, OBJECTS, PARENT ;
-		, PARENTCLASS, PICTURE, TAG, WHATSTHISHELPID
-
-	*-- Métodos (Se preservan: init, destroy, error)
-	HIDDEN ADDOBJECT, ADDPROPERTY, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
-		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
-
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_cmntstyle" type="property" display="_CmntStyle"/>] ;
-		+ [<memberdata name="_debug" type="property" display="_Debug"/>] ;
-		+ [<memberdata name="_encrypted" type="property" display="_Encrypted"/>] ;
-		+ [<memberdata name="_homedir" type="property" display="_HomeDir"/>] ;
-		+ [<memberdata name="_icon" type="property" display="_Icon"/>] ;
-		+ [<memberdata name="_mainprog" type="property" display="_MainProg"/>] ;
-		+ [<memberdata name="_nologo" type="property" display="_NoLogo"/>] ;
-		+ [<memberdata name="_objrev" type="property" display="_ObjRev"/>] ;
-		+ [<memberdata name="_projecthookclass" type="property" display="_ProjectHookClass"/>] ;
-		+ [<memberdata name="_projecthooklibrary" type="property" display="_ProjectHookLibrary"/>] ;
-		+ [<memberdata name="_savecode" type="property" display="_SaveCode"/>] ;
-		+ [<memberdata name="_serverinfo" type="property" display="_ServerInfo"/>] ;
-		+ [<memberdata name="_serverhead" type="property" display="_ServerHead"/>] ;
-		+ [<memberdata name="_sourcefile" type="property" display="_SourceFile"/>] ;
-		+ [<memberdata name="_timestamp" type="property" display="_TimeStamp"/>] ;
-		+ [<memberdata name="_version" type="property" display="_Version"/>] ;
-		+ [<memberdata name="_address" type="property" display="_Address"/>] ;
-		+ [<memberdata name="_autor" type="property" display="_Autor"/>] ;
-		+ [<memberdata name="_company" type="property" display="_Company"/>] ;
-		+ [<memberdata name="_city" type="property" display="_City"/>] ;
-		+ [<memberdata name="_state" type="property" display="_State"/>] ;
-		+ [<memberdata name="_postalcode" type="property" display="_PostalCode"/>] ;
-		+ [<memberdata name="_country" type="property" display="_Country"/>] ;
-		+ [<memberdata name="_comments" type="property" display="_Comments"/>] ;
-		+ [<memberdata name="_companyname" type="property" display="_CompanyName"/>] ;
-		+ [<memberdata name="_filedescription" type="property" display="_FileDescription"/>] ;
-		+ [<memberdata name="_legalcopyright" type="property" display="_LegalCopyright"/>] ;
-		+ [<memberdata name="_legaltrademark" type="property" display="_LegalTrademark"/>] ;
-		+ [<memberdata name="_productname" type="property" display="_ProductName"/>] ;
-		+ [<memberdata name="_majorver" type="property" display="_MajorVer"/>] ;
-		+ [<memberdata name="_minorver" type="property" display="_MinorVer"/>] ;
-		+ [<memberdata name="_revision" type="property" display="_Revision"/>] ;
-		+ [<memberdata name="_languageid" type="property" display="_LanguageID"/>] ;
-		+ [<memberdata name="_autoincrement" type="property" display="_AutoIncrement"/>] ;
-		+ [<memberdata name="getformatteddeviceinfotext" type="method" display="getFormattedDeviceInfoText"/>] ;
-		+ [<memberdata name="parsedeviceinfo" type="method" display="parseDeviceInfo"/>] ;
-		+ [<memberdata name="parsenullterminatedvalue" type="method" display="parseNullTerminatedValue"/>] ;
-		+ [<memberdata name="setparsedinfoline" type="method" display="setParsedInfoLine"/>] ;
-		+ [<memberdata name="setparsedprojinfoline" type="method" display="setParsedProjInfoLine"/>] ;
-		+ [<memberdata name="getrowdeviceinfo" type="method" display="getRowDeviceInfo"/>] ;
-		+ [<memberdata name="l_debug" type="method" display="l_Debug"/>] ;
+		+ [<memberdata name="_cmntstyle" display="_CmntStyle"/>] ;
+		+ [<memberdata name="_debug" display="_Debug"/>] ;
+		+ [<memberdata name="_encrypted" display="_Encrypted"/>] ;
+		+ [<memberdata name="_homedir" display="_HomeDir"/>] ;
+		+ [<memberdata name="_icon" display="_Icon"/>] ;
+		+ [<memberdata name="_mainprog" display="_MainProg"/>] ;
+		+ [<memberdata name="_nologo" display="_NoLogo"/>] ;
+		+ [<memberdata name="_objrev" display="_ObjRev"/>] ;
+		+ [<memberdata name="_projecthookclass" display="_ProjectHookClass"/>] ;
+		+ [<memberdata name="_projecthooklibrary" display="_ProjectHookLibrary"/>] ;
+		+ [<memberdata name="_savecode" display="_SaveCode"/>] ;
+		+ [<memberdata name="_serverinfo" display="_ServerInfo"/>] ;
+		+ [<memberdata name="_serverhead" display="_ServerHead"/>] ;
+		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
+		+ [<memberdata name="_timestamp" display="_TimeStamp"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_address" display="_Address"/>] ;
+		+ [<memberdata name="_autor" display="_Autor"/>] ;
+		+ [<memberdata name="_company" display="_Company"/>] ;
+		+ [<memberdata name="_city" display="_City"/>] ;
+		+ [<memberdata name="_state" display="_State"/>] ;
+		+ [<memberdata name="_postalcode" display="_PostalCode"/>] ;
+		+ [<memberdata name="_country" display="_Country"/>] ;
+		+ [<memberdata name="_comments" display="_Comments"/>] ;
+		+ [<memberdata name="_companyname" display="_CompanyName"/>] ;
+		+ [<memberdata name="_filedescription" display="_FileDescription"/>] ;
+		+ [<memberdata name="_legalcopyright" display="_LegalCopyright"/>] ;
+		+ [<memberdata name="_legaltrademark" display="_LegalTrademark"/>] ;
+		+ [<memberdata name="_productname" display="_ProductName"/>] ;
+		+ [<memberdata name="_majorver" display="_MajorVer"/>] ;
+		+ [<memberdata name="_minorver" display="_MinorVer"/>] ;
+		+ [<memberdata name="_revision" display="_Revision"/>] ;
+		+ [<memberdata name="_languageid" display="_LanguageID"/>] ;
+		+ [<memberdata name="_autoincrement" display="_AutoIncrement"/>] ;
+		+ [<memberdata name="getformatteddeviceinfotext" display="getFormattedDeviceInfoText"/>] ;
+		+ [<memberdata name="parsedeviceinfo" display="parseDeviceInfo"/>] ;
+		+ [<memberdata name="parsenullterminatedvalue" display="parseNullTerminatedValue"/>] ;
+		+ [<memberdata name="setparsedinfoline" display="setParsedInfoLine"/>] ;
+		+ [<memberdata name="setparsedprojinfoline" display="setParsedProjInfoLine"/>] ;
+		+ [<memberdata name="getrowdeviceinfo" display="getRowDeviceInfo"/>] ;
 		+ [</VFPData>]
 
 
@@ -9386,19 +9267,11 @@ DEFINE CLASS CL_PROJECT AS COLLECTION
 	_Revision			= ''
 	_LanguageID			= ''
 	_AutoIncrement		= ''
-	l_Debug				= .F.
 
 
 	************************************************************************************************
 	PROCEDURE INIT
-		SET DELETED ON
-		SET DATE YMD
-		SET HOURS TO 24
-		SET CENTURY ON
-		SET SAFETY OFF
-		SET TABLEPROMPT OFF
-
-		THIS.l_Debug	= (_VFP.STARTMODE=0)
+		DODEFAULT()
 		THIS._ServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
 	ENDPROC
 
@@ -9574,28 +9447,440 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_BASE
+DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="_codepage" display="_CodePage"/>] ;
+		+ [<memberdata name="_database" display="_Database"/>] ;
+		+ [<memberdata name="_filetype" display="_FileType"/>] ;
+		+ [<memberdata name="_filetype_descrip" display="_FileType_Descrip"/>] ;
+		+ [<memberdata name="_indexfile" display="_IndexFile"/>] ;
+		+ [<memberdata name="_memofile" display="_MemoFile"/>] ;
+		+ [<memberdata name="_fields" display="_Fields"/>] ;
+		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
+		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Modulo
+	_Version			= 0
+	_SourceFile			= ''
+	
+	*-- Table Info
+	_CodePage			= 0
+	_Database			= ''
+	_FileType			= ''
+	_FileType_Descrip	= ''
+	_IndexFile			= ''
+	_MemoFile			= ''
+
+	*-- Fields and Indexes
+	_Fields				= NULL
+	_Indexes			= NULL
+
+
+	************************************************************************************************
+	PROCEDURE INIT
+		DODEFAULT()
+		*--
+		THIS._Fields	= CREATEOBJECT("CL_DBF_FIELDS")
+		THIS._Indexes	= CREATEOBJECT("CL_DBF_INDEXES")
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_TABLE_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_INDEXES_I $ tcLine
+						loIndexes	= THIS._Fields
+						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_FIELDS_I $ tcLine
+						loFields	= THIS._Fields
+						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					OTHERWISE	&& Otro valor
+						*-- Estructura a reconocer:
+						* 	<tagname>ID<tagname>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELDS_I)) == C_FIELDS_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_FIELDS_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_FIELD_I $ tcLine
+						loField = CREATEOBJECT("CL_DBF_FIELD")
+						loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loField, loField._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_type" display="_Type"/>] ;
+		+ [<memberdata name="_width" display="_Width"/>] ;
+		+ [<memberdata name="_decimals" display="_Decimals"/>] ;
+		+ [<memberdata name="_null" display="_Null"/>] ;
+		+ [<memberdata name="_nocptran" display="_NoCPTran"/>] ;
+		+ [<memberdata name="_field_valid_exp" display="_Field_Valid_Exp"/>] ;
+		+ [<memberdata name="_field_valid_text" display="_Field_Valid_Text"/>] ;
+		+ [<memberdata name="_field_default_value" display="_Field_Default_Value"/>] ;
+		+ [<memberdata name="_table_valid_exp" display="_Table_Valid_Exp"/>] ;
+		+ [<memberdata name="_table_valid_text" display="_Table_Valid_Text"/>] ;
+		+ [<memberdata name="_longtablename" display="_LongTableName"/>] ;
+		+ [<memberdata name="_ins_trig_exp" display="_Ins_Trig_Exp"/>] ;
+		+ [<memberdata name="_upd_trig_exp" display="_Upd_Trig_Exp"/>] ;
+		+ [<memberdata name="_del_trig_exp" display="_Del_Trig_Exp"/>] ;
+		+ [<memberdata name="_tablecomment" display="_TableComment"/>] ;
+		+ [<memberdata name="_autoinc_nextval" display="_AutoInc_NextVal"/>] ;
+		+ [<memberdata name="_autoinc_step" display="_AutoInc_Step"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Field Info
+	_Name					= ''	&&  1
+	_Type					= ''	&&  2
+	_Width					= 0		&&  3
+	_Decimals				= 0		&&  4
+	_Null					= .F.	&&  5
+	_NoCPTran				= .F.	&&  6
+	_Field_Valid_Exp		= ''	&&  7	- DBC
+	_Field_Valid_Text		= ''	&&  8	- DBC
+	_Field_Default_Value	= ''	&&  9	- DBC
+	_Table_Valid_Exp		= ''	&& 10	- DBC
+	_Table_Valid_Text		= ''	&& 11	- DBC
+	_LongTableName			= ''	&& 12	- DBC
+	_Ins_Trig_Exp			= ''	&& 13	- DBC
+	_Upd_Trig_Exp			= ''	&& 14	- DBC
+	_Del_Trig_Exp			= ''	&& 15	- DBC
+	_TableComment			= ''	&& 16	- DBC
+	_AutoInc_NextVal		= 0		&& 17
+	_AutoInc_Step			= 0		&& 18
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELD_I)) == C_FIELD_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_FIELD_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de FIELD
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_INDEXES_I)) == C_INDEXES_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_INDEXES_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_INDEX_I $ tcLine
+						loIndex = CREATEOBJECT("CL_DBF_INDEX")
+						loIndex.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loIndex, loIndex._TagName )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_tagname" display="_TagName"/>] ;
+		+ [<memberdata name="_database" display="_Collate"/>] ;
+		+ [<memberdata name="_key" display="_Key"/>] ;
+		+ [<memberdata name="_descending" display="_Descending"/>] ;
+		+ [<memberdata name="_for_exp" display="_For_Exp"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Index Info
+	_TagName		= ''
+	_Collate		= ''
+	_Key			= ''
+	_Descending		= .F.
+	_For_Exp		= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_INDEX_I)) == C_INDEX_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_INDEX_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de INDEX
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_internalname" type="property" display="_InternalName"/>] ;
-		+ [<memberdata name="_libraryname" type="property" display="_LibraryName"/>] ;
-		+ [<memberdata name="_projectname" type="property" display="_ProjectName"/>] ;
-		+ [<memberdata name="_servercount" type="property" display="_ServerCount"/>] ;
-		+ [<memberdata name="_servers" type="property" display="_Servers"/>] ;
-		+ [<memberdata name="_servertype" type="property" display="_ServerType"/>] ;
-		+ [<memberdata name="_typelib" type="property" display="_TypeLib"/>] ;
-		+ [<memberdata name="_typelibdesc" type="property" display="_TypeLibDesc"/>] ;
-		+ [<memberdata name="add_server" type="method" display="add_Server"/>] ;
-		+ [<memberdata name="getdatafrompair_lendata_structure" type="method" display="getDataFromPair_LenData_Structure"/>] ;
-		+ [<memberdata name="getformattedservertext" type="method" display="getFormattedServerText"/>] ;
-		+ [<memberdata name="getrowserverinfo" type="method" display="getRowServerInfo"/>] ;
-		+ [<memberdata name="getserverdataobject" type="method" display="getServerDataObject"/>] ;
-		+ [<memberdata name="parseserverinfo" type="property" display="parseServerInfo"/>] ;
-		+ [<memberdata name="setparsedheadinfoline" type="property" display="setParsedHeadInfoLine"/>] ;
-		+ [<memberdata name="setparsedinfoline" type="property" display="setParsedInfoLine"/>] ;
+		+ [<memberdata name="_internalname" display="_InternalName"/>] ;
+		+ [<memberdata name="_libraryname" display="_LibraryName"/>] ;
+		+ [<memberdata name="_projectname" display="_ProjectName"/>] ;
+		+ [<memberdata name="_servercount" display="_ServerCount"/>] ;
+		+ [<memberdata name="_servers" display="_Servers"/>] ;
+		+ [<memberdata name="_servertype" display="_ServerType"/>] ;
+		+ [<memberdata name="_typelib" display="_TypeLib"/>] ;
+		+ [<memberdata name="_typelibdesc" display="_TypeLibDesc"/>] ;
+		+ [<memberdata name="add_server" display="add_Server"/>] ;
+		+ [<memberdata name="getdatafrompair_lendata_structure" display="getDataFromPair_LenData_Structure"/>] ;
+		+ [<memberdata name="getformattedservertext" display="getFormattedServerText"/>] ;
+		+ [<memberdata name="getrowserverinfo" display="getRowServerInfo"/>] ;
+		+ [<memberdata name="getserverdataobject" display="getServerDataObject"/>] ;
+		+ [<memberdata name="parseserverinfo" display="parseServerInfo"/>] ;
+		+ [<memberdata name="setparsedheadinfoline" display="setParsedHeadInfoLine"/>] ;
+		+ [<memberdata name="setparsedinfoline" display="setParsedInfoLine"/>] ;
 		+ [</VFPData>]
 
 	*-- Información interesante sobre Servidores OLE y corrupción de IDs: http://www.west-wind.com/wconnect/weblog/ShowEntry.blog?id=880
@@ -9800,23 +10085,23 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_PROJ_SRV_DATA AS CL_BASE
+DEFINE CLASS CL_PROJ_SRV_DATA AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_classlibrary" type="property" display="_ClassLibrary"/>] ;
-		+ [<memberdata name="_clsid" type="property" display="_CLSID"/>] ;
-		+ [<memberdata name="_description" type="property" display="_Description"/>] ;
-		+ [<memberdata name="_helpcontextid" type="property" display="_HelpContextID"/>] ;
-		+ [<memberdata name="_helpfile" type="property" display="_HelpFile"/>] ;
-		+ [<memberdata name="_interface" type="property" display="_Interface"/>] ;
-		+ [<memberdata name="_instancing" type="property" display="_Instancing"/>] ;
-		+ [<memberdata name="_serverclass" type="property" display="_ServerClass"/>] ;
-		+ [<memberdata name="_servername" type="property" display="_ServerName"/>] ;
-		+ [<memberdata name="getformattedservertext" type="method" display="getFormattedServerText"/>] ;
-		+ [<memberdata name="getrowserverinfo" type="method" display="getRowServerInfo"/>] ;
+		+ [<memberdata name="_classlibrary" display="_ClassLibrary"/>] ;
+		+ [<memberdata name="_clsid" display="_CLSID"/>] ;
+		+ [<memberdata name="_description" display="_Description"/>] ;
+		+ [<memberdata name="_helpcontextid" display="_HelpContextID"/>] ;
+		+ [<memberdata name="_helpfile" display="_HelpFile"/>] ;
+		+ [<memberdata name="_interface" display="_Interface"/>] ;
+		+ [<memberdata name="_instancing" display="_Instancing"/>] ;
+		+ [<memberdata name="_serverclass" display="_ServerClass"/>] ;
+		+ [<memberdata name="_servername" display="_ServerName"/>] ;
+		+ [<memberdata name="getformattedservertext" display="getFormattedServerText"/>] ;
+		+ [<memberdata name="getrowserverinfo" display="getRowServerInfo"/>] ;
 		+ [</VFPData>]
 
 	_HelpContextID	= 0
@@ -9906,20 +10191,20 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_PROJ_FILE AS CL_BASE
+DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJ_FILE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_comments" type="property" display="_Comments"/>] ;
-		+ [<memberdata name="_cpid" type="property" display="_CPID"/>] ;
-		+ [<memberdata name="_exclude" type="property" display="_Exclude"/>] ;
-		+ [<memberdata name="_id" type="property" display="_ID"/>] ;
-		+ [<memberdata name="_name" type="property" display="_Name"/>] ;
-		+ [<memberdata name="_objrev" type="property" display="_ObjRev"/>] ;
-		+ [<memberdata name="_timestamp" type="property" display="_Timestamp"/>] ;
-		+ [<memberdata name="_type" type="property" display="_Type"/>] ;
+		+ [<memberdata name="_comments" display="_Comments"/>] ;
+		+ [<memberdata name="_cpid" display="_CPID"/>] ;
+		+ [<memberdata name="_exclude" display="_Exclude"/>] ;
+		+ [<memberdata name="_id" display="_ID"/>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_objrev" display="_ObjRev"/>] ;
+		+ [<memberdata name="_timestamp" display="_Timestamp"/>] ;
+		+ [<memberdata name="_type" display="_Type"/>] ;
 		+ [</VFPData>]
 
 	_Name				= ''
