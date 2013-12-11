@@ -9553,6 +9553,1079 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
+DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_dbcevents" display="_DBCEvents"/>] ;
+		+ [<memberdata name="_dbceventfilename" display="_DBCEventFilename"/>] ;
+		+ [<memberdata name="_connections" display="_Connections"/>] ;
+		+ [<memberdata name="_tables" display="_Tables"/>] ;
+		+ [<memberdata name="_views" display="_Views"/>] ;
+		+ [<memberdata name="_relations" display="_Relations"/>] ;
+		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Modulo
+	_Version			= 0
+	_SourceFile			= ''
+
+	*-- Database Info
+	_Name				= ''
+	_Comment			= ''
+	_Version			= 0
+	_DBCEvents			= .F.
+	_DBCEventFilename	= ''
+
+	*-- Fields and Indexes
+	_Connections		= NULL
+	_Tables				= NULL
+	_Views				= NULL
+	_Relations			= NULL
+
+
+	************************************************************************************************
+	PROCEDURE INIT
+		DODEFAULT()
+		*--
+		THIS._Fields	= CREATEOBJECT("CL_DBF_FIELDS")
+		THIS._Indexes	= CREATEOBJECT("CL_DBF_INDEXES")
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_TABLE_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_FIELDS_I $ tcLine
+						loFields	= THIS._Fields
+						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_INDEXES_I $ tcLine
+						loIndexes	= THIS._Indexes
+						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					OTHERWISE	&& Otro valor
+						*-- Estructura a reconocer:
+						* 	<tagname>ID<tagname>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_CONNECTIONS AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loConnection AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_CONNECTIONS_I)) == C_CONNECTIONS_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_CONNECTIONS_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_CONNECTION_I $ tcLine
+						loConnection = CREATEOBJECT("CL_DBC_CONNECTION")
+						loConnection.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loConnection, loConnection._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_CONNECTION AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_datasource" display="_DataSource"/>] ;
+		+ [<memberdata name="_database" display="_Database"/>] ;
+		+ [<memberdata name="_connectstring" display="_ConnectString"/>] ;
+		+ [<memberdata name="_asynchronous" display="_Asynchronous"/>] ;
+		+ [<memberdata name="_batchmode" display="_BatchMode"/>] ;
+		+ [<memberdata name="_connecttimeout" display="_ConnectTimeout"/>] ;
+		+ [<memberdata name="_disconnectrollback" display="_DisconnectRollback"/>] ;
+		+ [<memberdata name="_displogin" display="_DispLogin"/>] ;
+		+ [<memberdata name="_dispwarnings" display="_DispWarnings"/>] ;
+		+ [<memberdata name="_idletimeout" display="_IdleTimeout"/>] ;
+		+ [<memberdata name="_packetsize" display="_PacketSize"/>] ;
+		+ [<memberdata name="_password" display="_PassWord"/>] ;
+		+ [<memberdata name="_querytimeout" display="_QueryTimeout"/>] ;
+		+ [<memberdata name="_transactions" display="_Transactions"/>] ;
+		+ [<memberdata name="_userid" display="_UserId"/>] ;
+		+ [<memberdata name="_waittime" display="_WaitTime"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_Comment				= ''
+	_DataSource				= ''
+	_Database				= ''
+	_ConnectString			= ''
+	_Asynchronous			= ''
+	_BatchMode				= ''
+	_ConnectTimeout			= ''
+	_DisconnectRollback		= ''
+	_DispLogin				= ''
+	_DispWarnings			= ''
+	_IdleTimeout			= ''
+	_PacketSize				= ''
+	_PassWord				= ''
+	_QueryTimeout			= ''
+	_Transactions			= ''
+	_UserId					= ''
+	_WaitTime				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_CONNECTION_I)) == C_CONNECTION_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_CONNECTION_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de CONNECTION
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_TABLES_I)) == C_TABLES_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_TABLES_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_TABLE_I $ tcLine
+						loTable = CREATEOBJECT("CL_DBC_TABLE")
+						loTable.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loConnection, loConnection._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_path" display="_Path"/>] ;
+		+ [<memberdata name="_deletetrigger" display="_DeleteTrigger"/>] ;
+		+ [<memberdata name="_inserttrigger" display="_InsertTrigger"/>] ;
+		+ [<memberdata name="_updatetrigger" display="_UpdateTrigger"/>] ;
+		+ [<memberdata name="_primarykey" display="_PrimaryKey"/>] ;
+		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
+		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_Comment				= ''
+	_Path					= ''
+	_DeleteTrigger			= ''
+	_InsertTrigger			= ''
+	_UpdateTrigger			= ''
+	_PrimaryKey				= ''
+	_RuleExpression			= ''
+	_RuleText				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			LOCAL loFields AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_TABLE_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_FIELDS_I $ tcLine
+						loFields	= THIS._Fields
+						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					OTHERWISE	&& Propiedad de TABLE
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loField AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
+			*LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELDS_I)) == C_FIELDS_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_FIELDS_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_FIELD_I $ tcLine
+						loField = CREATEOBJECT("CL_DBC_FIELD_DB")
+						loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loField, loField._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_FIELD_DB AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_caption" display="_Caption"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_defaultvalue" display="_DefaultValue"/>] ;
+		+ [<memberdata name="_displayclass" display="_DisplayClass"/>] ;
+		+ [<memberdata name="_displayclasslibrary" display="_DisplayClassLibrary"/>] ;
+		+ [<memberdata name="_format" display="_Format"/>] ;
+		+ [<memberdata name="_inputmask" display="_InputMask"/>] ;
+		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
+		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_Caption				= ''
+	_Comment				= ''
+	_DefaultValue			= ''
+	_DisplayClass			= ''
+	_DisplayClassLibrary	= ''
+	_Format					= ''
+	_InputMask				= ''
+	_RuleExpression			= ''
+	_RuleText				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELD_I)) == C_FIELD_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_FIELD_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de FIELD
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loView AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_VIEW_I)) == C_VIEW_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_VIEW_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_VIEW_I $ tcLine
+						loView = CREATEOBJECT("CL_DBC_VIEW")
+						loView.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loConnection, loConnection._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_tables" display="_Tables"/>] ;
+		+ [<memberdata name="_sql" display="_SQL"/>] ;
+		+ [<memberdata name="_allowsimultaneousfetch" display="_AllowSimultaneousFetch"/>] ;
+		+ [<memberdata name="batchupdatecount" display="BatchUpdateCount"/>] ;
+		+ [<memberdata name="_comparememo" display="_CompareMemo"/>] ;
+		+ [<memberdata name="_connectname" display="_ConnectName"/>] ;
+		+ [<memberdata name="_fetchasneeded" display="_FetchAsNeeded"/>] ;
+		+ [<memberdata name="_fetchmemo" display="_FetchMemo"/>] ;
+		+ [<memberdata name="_fetchsize" display="_FetchSize"/>] ;
+		+ [<memberdata name="_maxrecords" display="_MaxRecords"/>] ;
+		+ [<memberdata name="_offline" display="_Offline"/>] ;
+		+ [<memberdata name="_parameterlist" display="_ParameterList"/>] ;
+		+ [<memberdata name="prepared" display="Prepared"/>] ;
+		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
+		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
+		+ [<memberdata name="_sendupdates" display="_SendUpdates"/>] ;
+		+ [<memberdata name="_shareconnection" display="_ShareConnection"/>] ;
+		+ [<memberdata name="_sourcetype" display="_SourceType"/>] ;
+		+ [<memberdata name="_updatetype" display="_UpdateType"/>] ;
+		+ [<memberdata name="_usememosize" display="_UseMemoSize"/>] ;
+		+ [<memberdata name="_wheretype" display="_WhereType"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_Comment				= ''
+	_Tables					= ''
+	_SQL					= ''
+	_AllowSimultaneousFetch	= ''
+	_BatchUpdateCount		= ''
+	_CompareMemo			= ''
+	_ConnectName			= ''
+	_FetchAsNeeded			= ''
+	_FetchMemo				= ''
+	_FetchSize				= ''
+	_MaxRecords				= ''
+	_Offline				= ''
+	_ParameterList			= ''
+	_Prepared				= ''
+	_RuleExpression			= ''
+	_RuleText				= ''
+	_SendUpdates			= ''
+	_ShareConnection		= ''
+	_SourceType				= ''
+	_UpdateType				= ''
+	_UseMemoSize			= ''
+	_WhereType				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			LOCAL loFields AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_VIEW_I)) == C_VIEW_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_VIEW_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_FIELDS_I $ tcLine
+						loFields	= THIS._Fields
+						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					OTHERWISE	&& Propiedad de VIEW
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_FIELDS_VW AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loField AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
+			*LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELDS_I)) == C_FIELDS_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_FIELDS_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_FIELD_I $ tcLine
+						loField = CREATEOBJECT("CL_DBC_FIELD_VW")
+						loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loField, loField._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_FIELD_VW AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_caption" display="_Caption"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_datatype" display="_DataType"/>] ;
+		+ [<memberdata name="_defaultvalue" display="_DefaultValue"/>] ;
+		+ [<memberdata name="_displayclass" display="_DisplayClass"/>] ;
+		+ [<memberdata name="_displayclasslibrary" display="_DisplayClassLibrary"/>] ;
+		+ [<memberdata name="_format" display="_Format"/>] ;
+		+ [<memberdata name="_inputmask" display="_InputMask"/>] ;
+		+ [<memberdata name="_keyfield" display="_KeyField"/>] ;
+		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
+		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
+		+ [<memberdata name="_updatable" display="_Updatable"/>] ;
+		+ [<memberdata name="_updatename" display="_UpdateName"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_Caption				= ''
+	_Comment				= ''
+	_DataType				= ''
+	_DefaultValue			= ''
+	_DisplayClass			= ''
+	_DisplayClassLibrary	= ''
+	_Format					= ''
+	_InputMask				= ''
+	_KeyField				= ''
+	_RuleExpression			= ''
+	_RuleText				= ''
+	_Updatable				= ''
+	_UpdateName				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELD_I)) == C_FIELD_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_FIELD_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de FIELD
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_RELATIONS AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	*_MEMBERDATA	= [<VFPData>] ;
+	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+	*	+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
+			*LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_RELATIONS_I)) == C_RELATIONS_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_RELATIONS_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_RELATION_I $ tcLine
+						loRelation = CREATEOBJECT("CL_DBC_RELATION")
+						loRelation.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loField, loField._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_caption" display="_Caption"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [<memberdata name="_datatype" display="_DataType"/>] ;
+		+ [<memberdata name="_defaultvalue" display="_DefaultValue"/>] ;
+		+ [<memberdata name="_displayclass" display="_DisplayClass"/>] ;
+		+ [<memberdata name="_displayclasslibrary" display="_DisplayClassLibrary"/>] ;
+		+ [<memberdata name="_format" display="_Format"/>] ;
+		+ [<memberdata name="_inputmask" display="_InputMask"/>] ;
+		+ [<memberdata name="_keyfield" display="_KeyField"/>] ;
+		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
+		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
+		+ [<memberdata name="_updatable" display="_Updatable"/>] ;
+		+ [<memberdata name="_updatename" display="_UpdateName"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_Caption				= ''
+	_Comment				= ''
+	_DataType				= ''
+	_DefaultValue			= ''
+	_DisplayClass			= ''
+	_DisplayClassLibrary	= ''
+	_Format					= ''
+	_InputMask				= ''
+	_KeyField				= ''
+	_RuleExpression			= ''
+	_RuleText				= ''
+	_Updatable				= ''
+	_UpdateName				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_RELATION_I)) == C_RELATION_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_RELATION_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de RELATION
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
 DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
