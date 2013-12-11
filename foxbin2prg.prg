@@ -111,6 +111,8 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_ENDTEXT			'ENDTEXT'
 #DEFINE C_PROCEDURE			'PROCEDURE'
 #DEFINE C_ENDPROC			'ENDPROC'
+#DEFINE C_WITH				'WITH'
+#DEFINE C_WNDWITH			'ENDWITH'
 #DEFINE C_SRV_HEAD_I		'*<ServerHead>'
 #DEFINE C_SRV_HEAD_F		'*</ServerHead>'
 #DEFINE C_SRV_DATA_I		'*<ServerData>'
@@ -684,6 +686,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="normalizarvalorxml" display="normalizarValorXML"/>] ;
 		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="write_dbf_metadata" display="write_DBF_Metadata"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
@@ -1447,14 +1450,14 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
 				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>><<C_TAB>><<STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 )>>
+					<<>>		<<STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 )>>
 				ENDTEXT
 			ENDFOR
 
 			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<VFPData>
 				<<SUBSTR( lcValue, 3)>>
-				<<C_TAB>><<C_TAB>></VFPData>
+				<<>>		</VFPData>
 			ENDTEXT
 
 		CASE LEFT( tcValue, C_LEN_FB2P_VALUE_I ) == C_FB2P_VALUE_I
@@ -1506,6 +1509,72 @@ DEFINE CLASS c_conversor_base AS SESSION
 			+ SEC(m.ltDateTime)
 		RETURN INT(tnTimeStamp)
 	ENDFUNC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_DBF_Metadata
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
+		* tcDBC_Name				(v! IN    ) Nombre del DBC a asociar
+		* tdLastUpdate				(v? IN    ) Fecha de última actualización
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_FileName, tcDBC_Name, tdLastUpdate
+
+		TRY
+			LOCAL lnHandle, lcStr, lnDataPos, lnFieldCount, loEx AS EXCEPTION
+
+			IF NOT EMPTY(tcDBC_Name)
+				tn_HexFileType	= 0
+				lnHandle		= FOPEN(tc_FileName,2)
+
+				IF lnHandle = -1
+					EXIT
+				ENDIF
+
+				lcStr			= FREAD(lnHandle,1)		&& File type
+				tn_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+
+				IF EMPTY(tdLastUpdate)
+					lcStr	= FREAD(lnHandle,3)		&& Last update (YYMMDD)
+				ELSE
+					lcStr	= CHR( VAL( RIGHT( PADL( YEAR( tdLastUpdate ),4,'0'), 2 ) ) ) ;
+						+ CHR( VAL( PADL( MONTH( tdLastUpdate ),2,'0' ) ) ) ;
+						+ CHR( VAL( PADL( DAY( tdLastUpdate ),2,'0' ) ) )		&&	Last update (YYMMDD)
+					=FWRITE( lnHandle, PADR(lcStr,3,CHR(0)) )
+				ENDIF
+
+				lcStr			= FREAD(lnHandle,4)		&& Number of records in file
+				lcStr			= FREAD(lnHandle,2)		&& Position of first data record
+				lnDataPos		= CTOBIN(lcStr,"2RS")
+				lnFieldCount	= (lnDataPos - 296) / 32
+				lcStr			= FREAD(lnHandle,2)		&& Length of one data record, including delete flag
+				lcStr			= FREAD(lnHandle,16)	&& Reserved
+				lcStr			= FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
+				lcStr			= FREAD(lnHandle,1)		&& Code page mark
+				lcStr			= FREAD(lnHandle,2)		&& Reserved, contains 0x00
+				lcStr			= FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
+				lcStr			= FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
+
+				IF FWRITE( lnHandle, PADR(tcDBC_Name,263,CHR(0)) ) = 0
+					ERROR 'No se pudo actualizar el backlink [' + tcDBC_Name + '] de la tabla [' + tc_FileName + ']'
+				ENDIF
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			FCLOSE(lnHandle)
+		ENDTRY
+
+		RETURN lnHandle
+	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -2333,7 +2402,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_ENDPROC>>
-
+				<<>>
 			ENDTEXT
 		ENDFOR
 
@@ -2374,7 +2443,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_ENDPROC>>
-
+				<<>>
 			ENDTEXT
 		ENDFOR
 
@@ -2511,7 +2580,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				TEXT TO tcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 					<<lcPAM>>
-
+					<<>>
 				ENDTEXT
 			ENDIF
 		ENDFOR
@@ -5131,10 +5200,11 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			LOCAL I, lnCodError, loEx AS EXCEPTION
 			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
-			LOCAL lcCreateTable, lcLongDec, lcFieldDef
+			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
+			
+			STORE '' TO lcIndex, lcFieldDef
 
 			lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
-			lcFieldDef		= ''
 
 			*-- Conformo los campos
 			FOR EACH loField IN toTable._Fields FOXOBJECT
@@ -5157,7 +5227,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					ENDIF
 					lcLongDec	= lcLongDec + loField._Decimals
 				ENDIF
-				
+
 				IF NOT EMPTY(lcLongDec)
 					lcLongDec	= lcLongDec + ')'
 				ENDIF
@@ -5184,9 +5254,43 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			*STRTOFILE(lcCreateTable,'CreateTable.txt')
 			&lcCreateTable.
 
+			*-- Regenero los índices
+			FOR EACH loIndex IN toTable._Indexes FOXOBJECT
+				lcIndex	= 'INDEX ON ' + loIndex._Key + ' TAG ' + loIndex._TagName
+
+				IF loIndex._TagType = 'BINARY'
+					lcIndex	= lcIndex + ' BINARY'
+				ELSE
+					lcIndex	= lcIndex + ' COLLATE "' + loIndex._Collate + '"'
+
+					IF NOT EMPTY(loIndex._Filter)
+						lcIndex	= lcIndex + ' FOR ' + loIndex._Filter
+					ENDIF
+
+					lcIndex	= lcIndex + ' ' + loIndex._Order
+
+					IF loIndex._TagType <> 'REGULAR'
+						*-- Si es PRIMARY lo cambio a CANDIDATE y luego lo recodifico
+						lcIndex	= lcIndex + ' ' + STRTRAN( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
+					ENDIF
+				ENDIF
+
+				*STRTOFILE( lcIndex, 'index_' + loIndex._TagName + '.txt' )
+				&lcIndex.
+			ENDFOR
+
+
+			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
+			
+			ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
+			THIS.write_DBF_Metadata( THIS.c_OutputFile, toTable._Database, ldLastUpdate )
+
 
 		CATCH TO loEx
-			lnCodError	= loEx.ERRORNO
+			lnCodError		= loEx.ErrorNo
+			loEx.UserValue	= 'lcIndex="' + TRANSFORM(lcIndex) + '"' + CR_LF ;
+				+ 'lcFieldDef="' + TRANSFORM(lcFieldDef) + '"' + CR_LF ;
+				+ 'lcCreateTable="' + TRANSFORM(lcCreateTable) + '"'
 
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -6421,18 +6525,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			IF '.' $ toRegObj.PARENT
 				*-- Este caso: clase.objeto.objeto ==> se quita clase
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
+					<<>>	ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
 				ENDTEXT
 			ELSE
 				*-- Este caso: objeto
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>ADD OBJECT '<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
+					<<>>	ADD OBJECT '<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
 				ENDTEXT
 			ENDIF
 
 			IF NOT EMPTY(lcMemo)
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-					WITH ;
+					<<C_WITH>> ;
 					<<lcMemo>>
 				ENDTEXT
 			ENDIF
@@ -6461,7 +6565,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<<C_END_OBJECT_F>>
-
+				<<>>
 			ENDTEXT
 
 		CATCH TO loEx
@@ -6491,9 +6595,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			FOR I = 1 TO lnMethodCount
 				*-- Genero los métodos indentados
 				*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				*	<<C_TAB>><<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
+				*	<<>>	<<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
 				*	<<THIS.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
-				*	<<C_TAB>>ENDPROC
+				*	<<>>	ENDPROC
 
 				*ENDTEXT
 				*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
@@ -6544,20 +6648,20 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					*-- Nombre del método
 					TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_TAB>><<lcProcDef>> <<taMethods(I,1)>>
+						<<>>	<<lcProcDef>> <<taMethods(I,1)>>
 					ENDTEXT
 
 					*-- Comentarios del método (si tiene)
 					IF lnCommentRow > 0 AND NOT EMPTY(taPropsAndComments(lnCommentRow,2))
 						TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-							<<C_TAB>><<C_TAB>>&& <<taPropsAndComments(lnCommentRow,2)>>
+							<<>>		&& <<taPropsAndComments(lnCommentRow,2)>>
 						ENDTEXT
 					ENDIF
 
 					*-- Código del método
 					*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					*	<<THIS.IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9) )>>
-					*	<<C_TAB>>ENDPROC
+					*	<<>>	ENDPROC
 
 					*ENDTEXT
 					*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
@@ -6637,20 +6741,20 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					*-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
 					FOR I = 1 TO ALEN(taPropsAndValues, 1)
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_TAB>><<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
+							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
 						ENDTEXT
 
 						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-							<<C_TAB>><<C_TAB>>&& <<taPropsAndComments(lnComment,2)>>
+								<<>>		&& <<taPropsAndComments(lnComment,2)>>
 							ENDTEXT
 						ENDIF
 					ENDFOR
 
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
+						<<>>
 					ENDTEXT
 				ENDIF
 			ENDWITH && THIS
@@ -6688,7 +6792,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			lcPropsMethodsDefd	= ''
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_DEFINED_PAM_I>>
+				<<>>	<<C_DEFINED_PAM_I>>
 			ENDTEXT
 
 			FOR I = 1 TO tnPropsAndComments_Count
@@ -6702,18 +6806,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					, 'p' )
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_TAB>>*<<lcType>>: <<taPropsAndComments(I,1)>>
+					<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
 				ENDTEXT
 
 				IF NOT EMPTY(taPropsAndComments(I,2))
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
+						<<>>		<<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
 					ENDTEXT
 				ENDIF
 			ENDFOR
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>><<C_DEFINED_PAM_F>>
+				<<>>	<<C_DEFINED_PAM_F>>
 			ENDTEXT
 
 		ENDIF
@@ -6746,7 +6850,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Comentario de la clase
 		IF NOT EMPTY(toRegClass.RESERVED7) THEN
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<<C_TAB>><<C_TAB>><<'&'+'&'>> <<toRegClass.Reserved7>>
+				<<>>		<<'&'+'&'>> <<toRegClass.Reserved7>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -6758,7 +6862,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		IF tnLastClass = 1
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<'ENDDEFINE'>>
-
+				<<>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -6770,7 +6874,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- #INCLUDE
 		IF NOT EMPTY(toReg.RESERVED8) THEN
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>#INCLUDE "<<toReg.Reserved8>>"
+				<<>>	#INCLUDE "<<toReg.Reserved8>>"
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -6782,11 +6886,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*-- Agrego Metadatos de la clase (Baseclass, Timestamp, Scale, Uniqueid)
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
+			<<>>
 		ENDTEXT
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+8
-			<<C_TAB>><<C_METADATA_I>>
+			<<>>	<<C_METADATA_I>>
 			Baseclass="<<toRegClass.Baseclass>>"
 			Timestamp="<<THIS.getTimeStamp(toRegClass.Timestamp)>>"
 			Scale="<<toRegClass.Reserved6>>"
@@ -6824,7 +6928,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		IF NOT EMPTY(tcHiddenProp)
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>>HIDDEN <<SUBSTR(tcHiddenProp,2)>>
+				<<>>	HIDDEN <<SUBSTR(tcHiddenProp,2)>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -6851,7 +6955,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		IF NOT EMPTY(tcProtectedProp)
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_TAB>>PROTECTED <<SUBSTR(tcProtectedProp,2)>>
+				<<>>	PROTECTED <<SUBSTR(tcProtectedProp,2)>>
 			ENDTEXT
 		ENDIF
 	ENDPROC
@@ -6871,7 +6975,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
+				<<>>	platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -6943,13 +7047,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
-				<<C_TAB>><tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
-				<<C_TAB>><tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
-				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
-				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
-				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
-				<<C_TAB>><user><![CDATA[<<toReg.user>>]]>
+				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
+				<<>>	<tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
+				<<>>	<tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
+				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
+				<<>>	<style><![CDATA[<<toReg.style>>]]>
+				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
+				<<>>	<user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -6983,7 +7087,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
+				<<>>	platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -7055,13 +7159,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
-				<<C_TAB>><tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
-				<<C_TAB>><tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
-				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
-				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
-				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
-				<<C_TAB>><user><![CDATA[<<toReg.user>>]]>
+				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
+				<<>>	<tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
+				<<>>	<tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
+				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
+				<<>>	<style><![CDATA[<<toReg.style>>]]>
+				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
+				<<>>	<user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -7095,7 +7199,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
+				<<>>	platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -7168,13 +7272,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			* NOTA: En el DataEnvironment el TAG2 es el TAG compilado, que se recompila con COMPILE REPORT <nombre>
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><picture><![CDATA[<<toReg.picture>>]]>
-				<<C_TAB>><tag><![CDATA[<<CR_LF>><<toReg.tag>>]]>
-				<<C_TAB>><tag2><![CDATA[]]>
-				<<C_TAB>><penred><![CDATA[<<toReg.penred>>]]>
-				<<C_TAB>><style><![CDATA[<<toReg.style>>]]>
-				<<C_TAB>><expr><![CDATA[<<toReg.expr>>]]>
-				<<C_TAB>><user><![CDATA[<<toReg.user>>]]>
+				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
+				<<>>	<tag><![CDATA[<<CR_LF>><<toReg.tag>>]]>
+				<<>>	<tag2><![CDATA[]]>
+				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
+				<<>>	<style><![CDATA[<<toReg.style>>]]>
+				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
+				<<>>	<user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -7212,12 +7316,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<TABLE>
-				<<>>	<memofile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></memofile>
-				<<>>	<codepage><<CPDBF('TABLABIN')>></codepage>
-				<<>>	<database><<tc_DBC_Name>></database>
-				<<>>	<filetype><<TRANSFORM(tn_HexFileType, '@0')>></filetype>
-				<<>>	<filetype_descrip><<THIS.fileTypeDescription(tn_HexFileType)>></filetype_descrip>
+				<<C_TABLE_I>>
+				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></MemoFile>
+				<<>>	<CodePage><<CPDBF('TABLABIN')>></CodePage>
+				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
+				<<>>	<Database><<tc_DBC_Name>></Database>
+				<<>>	<FileType><<TRANSFORM(tn_HexFileType, '@0')>></FileType>
+				<<>>	<FileType_Descrip><<THIS.fileTypeDescription(tn_HexFileType)>></FileType_Descrip>
 			ENDTEXT
 
 			*-- Fields
@@ -7227,7 +7332,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			THIS.write_DBF_INDEXES()
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				</TABLE>
+				<<C_TABLE_F>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -7254,36 +7359,36 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
-				<<>>	<FIELDS>
+				<<>>	<<C_FIELDS_I>>
 			ENDTEXT
 
 			FOR I = 1 TO AFIELDS(laFields)
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<FIELD>
-					<<>>			<name><<laFields(I,1)>></name>
-					<<>>			<type><<laFields(I,2)>></type>
-					<<>>			<width><<laFields(I,3)>></width>
-					<<>>			<decimals><<laFields(I,4)>></decimals>
-					<<>>			<null><<laFields(I,5)>></null>
-					<<>>			<nocptran><<laFields(I,6)>></nocptran>
-					<<>>			<field_valid_exp><<laFields(I,7)>><field_valid_exp>
-					<<>>			<field_valid_text><<laFields(I,8)>><field_valid_text>
-					<<>>			<field_default_value><<laFields(I,9)>><field_default_value>
-					<<>>			<table_valid_exp><<laFields(I,10)>><table_valid_exp>
-					<<>>			<table_valid_text><<laFields(I,11)>></table_valid_text>
-					<<>>			<longtablename><<laFields(I,12)>><longtablename>
-					<<>>			<ins_trig_exp><<laFields(I,13)>><ins_trig_exp>
-					<<>>			<upd_trig_exp><<laFields(I,14)>><upd_trig_exp>
-					<<>>			<del_trig_exp><<laFields(I,15)>></del_trig_exp>
-					<<>>			<tablecomment><<laFields(I,16)>></tablecomment>
-					<<>>			<autoinc_nextval><<laFields(I,17)>></autoinc_nextval>
-					<<>>			<autoinc_step><<laFields(I,18)>></autoinc_step>
-					<<>>		</FIELD>
+					<<>>		<<C_FIELD_I>>
+					<<>>			<Name><<laFields(I,1)>></Name>
+					<<>>			<Type><<laFields(I,2)>></Type>
+					<<>>			<Width><<laFields(I,3)>></Width>
+					<<>>			<Decimals><<laFields(I,4)>></Decimals>
+					<<>>			<Null><<laFields(I,5)>></Null>
+					<<>>			<NoCPTran><<laFields(I,6)>></NoCPTran>
+					<<>>			<Field_Valid_Exp><<laFields(I,7)>></Field_Valid_Exp>
+					<<>>			<Field_Valid_Text><<laFields(I,8)>></Field_Valid_Text>
+					<<>>			<Field_Default_Value><<laFields(I,9)>></Field_Default_Value>
+					<<>>			<Table_Valid_Exp><<laFields(I,10)>></Table_Valid_Exp>
+					<<>>			<Table_Valid_Text><<laFields(I,11)>></Table_Valid_Text>
+					<<>>			<LongTableName><<laFields(I,12)>></LongTableName>
+					<<>>			<Ins_Trig_Exp><<laFields(I,13)>></Ins_Trig_Exp>
+					<<>>			<Upd_Trig_Exp><<laFields(I,14)>></Upd_Trig_Exp>
+					<<>>			<Del_Trig_Exp><<laFields(I,15)>></Del_Trig_Exp>
+					<<>>			<TableComment><<laFields(I,16)>></TableComment>
+					<<>>			<Autoinc_Nextval><<laFields(I,17)>></Autoinc_Nextval>
+					<<>>			<Autoinc_Step><<laFields(I,18)>></Autoinc_Step>
+					<<>>		<<C_FIELD_F>>
 				ENDTEXT
 			ENDFOR
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	</FIELDS>
+				<<>>	<<C_FIELDS_F>>
 				<<>>
 			ENDTEXT
 
@@ -7303,30 +7408,31 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_DBF_INDEXES
 		TRY
-			LOCAL I, loEx AS EXCEPTION
+			LOCAL I, laTagInfo(1,6), loEx AS EXCEPTION
 
 			IF TAGCOUNT() > 0
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<<>>	<IndexFile><<CDX(1)>></IndexFile>
+					<<>>	<<C_CDX_I>><<CDX(1)>><<C_CDX_F>>
 					<<>>
-					<<>>	<INDEXES>
+					<<>>	<<C_INDEXES_I>>
 				ENDTEXT
 
-				FOR I = 1 TO TAGCOUNT()
+				FOR I = 1 TO ATAGINFO( laTagInfo )
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>		<INDEX>
-						<<>>			<tagname><<TAG(I)>><tagname>
-						<<>>			<collate><<IDXCOLLATE(I)>><collate>
-						<<>>			<key><<KEY(I)>><key>
-						<<>>			<descending><<DESCENDING(I)>><descending>
-						<<>>			<for_exp><<SYS(2021,I)>><for_exp>
+						<<>>			<TagName><<laTagInfo(I,1)>></TagName>
+						<<>>			<TagType><<laTagInfo(I,2)>></TagType>
+						<<>>			<Key><<laTagInfo(I,3)>></Key>
+						<<>>			<Filter><<laTagInfo(I,4)>></Filter>
+						<<>>			<Order><<laTagInfo(I,5)>></Order>
+						<<>>			<Collate><<laTagInfo(I,6)>></Collate>
 						<<>>		</INDEX>
 					ENDTEXT
 				ENDFOR
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	<INDEXES>
+					<<>>	<<C_INDEXES_F>>
 					<<>>
 				ENDTEXT
 			ENDIF
@@ -7774,7 +7880,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				laOLE( lnOLECount )	= lcOLEChecksum
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
+					<<>>
 				ENDTEXT
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
@@ -8068,7 +8174,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			IF NOT EMPTY(loRegClass.RESERVED8) THEN
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					#INCLUDE "<<loRegClass.Reserved8>>"
-
+					<<>>
 				ENDTEXT
 			ENDIF
 
@@ -8266,10 +8372,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*-- Directorio de inicio
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				LPARAMETERS tcDir
-
+				<<>>
 				lcCurdir = SYS(5)+CURDIR()
 				CD ( EVL( tcDir, JUSTPATH( SYS(16) ) ) )
-
+				<<>>
 			ENDTEXT
 
 
@@ -8290,9 +8396,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_BUILDPROJ_I>>
 				FOR EACH loProj IN _VFP.Projects FOXOBJECT
-				<<C_TAB>>loProj.Close()
+				<<>>	loProj.Close()
 				ENDFOR
-
+				<<>>
 				STRTOFILE( '', '__newproject.f2b' )
 				BUILD PROJECT <<JUSTFNAME( THIS.c_inputFile )>> FROM '__newproject.f2b'
 			ENDTEXT
@@ -8301,13 +8407,13 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*-- Abro el proyecto
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				FOR EACH loProj IN _VFP.Projects FOXOBJECT
-				<<C_TAB>>loProj.Close()
+				<<>>	loProj.Close()
 				ENDFOR
-
+				<<>>
 				MODIFY PROJECT '<<JUSTFNAME( THIS.c_inputFile )>>' NOWAIT NOSHOW NOPROJECTHOOK
-
+				<<>>
 				loProject = _VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>')
-
+				<<>>
 				WITH loProject.FILES
 			ENDTEXT
 
@@ -8317,10 +8423,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			FOR EACH loReg IN loProject &&FOXOBJECT
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ADD('<<loReg.NAME>>')
+					<<>>	.ADD('<<loReg.NAME>>')
 				ENDTEXT
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-					<<C_TAB>><<C_TAB>><<'&'>><<'&'>> <<C_FILE_META_I>>
+					<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
 					Type="<<loReg.TYPE>>"
 					Cpid="<<INT( loReg.CPID )>>"
 					Timestamp="<<INT( loReg.TIMESTAMP )>>"
@@ -8331,15 +8437,15 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			ENDFOR
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_BUILDPROJ_F>>
-
-				<<C_TAB>>.ITEM('__newproject.f2b').Remove()
-
+				<<>>	<<C_BUILDPROJ_F>>
+				<<>>
+				<<>>	.ITEM('__newproject.f2b').Remove()
+				<<>>
 			ENDTEXT
 
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_CMTS_I>>
+				<<>>	<<C_FILE_CMTS_I>>
 			ENDTEXT
 
 
@@ -8349,7 +8455,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			FOR EACH loReg IN loProject &&FOXOBJECT
 				IF NOT EMPTY(loReg.COMMENTS)
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
+						<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
 					ENDTEXT
 				ENDIF
 			ENDFOR
@@ -8357,9 +8463,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			*-- Exclusiones
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_CMTS_F>>
-
-				<<C_TAB>><<C_FILE_EXCL_I>>
+				<<>>	<<C_FILE_CMTS_F>>
+				<<>>
+				<<>>	<<C_FILE_EXCL_I>>
 			ENDTEXT
 
 			loProject.KEYSORT = 2
@@ -8367,7 +8473,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			FOR EACH loReg IN loProject &&FOXOBJECT
 				IF loReg.EXCLUDE
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
+						<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
 					ENDTEXT
 				ENDIF
 			ENDFOR
@@ -8375,9 +8481,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			*-- Tipos de archivos especiales
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_EXCL_F>>
-
-				<<C_TAB>><<C_FILE_TXT_I>>
+				<<>>	<<C_FILE_EXCL_F>>
+				<<>>
+				<<>>	<<C_FILE_TXT_I>>
 			ENDTEXT
 
 			loProject.KEYSORT = 2
@@ -8385,7 +8491,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			FOR EACH loReg IN loProject &&FOXOBJECT
 				IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
+						<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
 					ENDTEXT
 				ENDIF
 			ENDFOR
@@ -8393,43 +8499,43 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			*-- ProjectHook, Debug, Encrypt, Build y cierre
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>><<C_FILE_TXT_F>>
-				ENDWITH
-
-				WITH loProject
-				<<C_TAB>><<C_PROJPROPS_I>>
+				<<>>	<<C_FILE_TXT_F>>
+				<<C_ENDWITH>>
+				<<>>
+				<<C_WITH>> loProject
+				<<>>	<<C_PROJPROPS_I>>
 			ENDTEXT
 
 			IF NOT EMPTY(loProject._MainProg)
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.SetMain(lcCurdir + '<<loProject._MainProg>>')
+					<<>>	.SetMain(lcCurdir + '<<loProject._MainProg>>')
 				ENDTEXT
 			ENDIF
 
 			IF NOT EMPTY(loProject._Icon)
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_TAB>>.Icon = lcCurdir + '<<loProject._Icon>>'
+					<<>>	.Icon = lcCurdir + '<<loProject._Icon>>'
 				ENDTEXT
 			ENDIF
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TAB>>.Debug = <<loProject._Debug>>
-				<<C_TAB>>.Encrypted = <<loProject._Encrypted>>
-				<<C_TAB>>*<.CmntStyle = <<loProject._CmntStyle>> />
-				<<C_TAB>>*<.NoLogo = <<loProject._NoLogo>> />
-				<<C_TAB>>*<.SaveCode = <<loProject._SaveCode>> />
-				<<C_TAB>>.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
-				<<C_TAB>>.ProjectHookClass = '<<loProject._ProjectHookClass>>'
-				<<C_TAB>><<C_PROJPROPS_F>>
-				ENDWITH
-
+				<<>>	.Debug = <<loProject._Debug>>
+				<<>>	.Encrypted = <<loProject._Encrypted>>
+				<<>>	*<.CmntStyle = <<loProject._CmntStyle>> />
+				<<>>	*<.NoLogo = <<loProject._NoLogo>> />
+				<<>>	*<.SaveCode = <<loProject._SaveCode>> />
+				<<>>	.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
+				<<>>	.ProjectHookClass = '<<loProject._ProjectHookClass>>'
+				<<>>	<<C_PROJPROPS_F>>
+				<<C_ENDWITH>>
+				<<>>
 			ENDTEXT
 
 
 			*-- Build y cierre
 			*	_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').FILES('__newproject.f2b').Remove()
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-
+				<<>>
 				_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').Close()
 			ENDTEXT
 
@@ -8761,7 +8867,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 	*-- Propiedades (Se preservan: COUNT, KEYSORT, NAME)
 	**HIDDEN BASECLASS, CLASS, CLASSLIBRARY, COUNT, COMMENT ;
-		, PARENT, PARENTCLASS, TAG
+	, PARENT, PARENTCLASS, TAG
 
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
@@ -9405,28 +9511,28 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 
 			WITH THIS
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_DEVINFO_I>>
-				_Autor = "<<._Autor>>"
-				_Company = "<<._Company>>"
-				_Address = "<<._Address>>"
-				_City = "<<._City>>"
-				_State = "<<._State>>"
-				_PostalCode = "<<._PostalCode>>"
-				_Country = "<<._Country>>"
-				*--
-				_Comments = "<<._Comments>>"
-				_CompanyName = "<<._CompanyName>>"
-				_FileDescription = "<<._FileDescription>>"
-				_LegalCopyright = "<<._LegalCopyright>>"
-				_LegalTrademark = "<<._LegalTrademark>>"
-				_ProductName = "<<._ProductName>>"
-				_MajorVer = "<<._MajorVer>>"
-				_MinorVer = "<<._MinorVer>>"
-				_Revision = "<<._Revision>>"
-				_LanguageID = "<<._LanguageID>>"
-				_AutoIncrement = "<<._AutoIncrement>>"
-				<<C_DEVINFO_F>>
-
+					<<C_DEVINFO_I>>
+					_Autor = "<<._Autor>>"
+					_Company = "<<._Company>>"
+					_Address = "<<._Address>>"
+					_City = "<<._City>>"
+					_State = "<<._State>>"
+					_PostalCode = "<<._PostalCode>>"
+					_Country = "<<._Country>>"
+					*--
+					_Comments = "<<._Comments>>"
+					_CompanyName = "<<._CompanyName>>"
+					_FileDescription = "<<._FileDescription>>"
+					_LegalCopyright = "<<._LegalCopyright>>"
+					_LegalTrademark = "<<._LegalTrademark>>"
+					_ProductName = "<<._ProductName>>"
+					_MajorVer = "<<._MajorVer>>"
+					_MinorVer = "<<._MinorVer>>"
+					_Revision = "<<._Revision>>"
+					_LanguageID = "<<._LanguageID>>"
+					_AutoIncrement = "<<._AutoIncrement>>"
+					<<C_DEVINFO_F>>
+					<<>>
 				ENDTEXT
 			ENDWITH && THIS
 
@@ -9460,6 +9566,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		+ [<memberdata name="_filetype_descrip" display="_FileType_Descrip"/>] ;
 		+ [<memberdata name="_indexfile" display="_IndexFile"/>] ;
 		+ [<memberdata name="_memofile" display="_MemoFile"/>] ;
+		+ [<memberdata name="_lastupdate" display="_LastUpdate"/>] ;
 		+ [<memberdata name="_fields" display="_Fields"/>] ;
 		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
@@ -9470,7 +9577,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	*-- Modulo
 	_Version			= 0
 	_SourceFile			= ''
-	
+
 	*-- Table Info
 	_CodePage			= 0
 	_Database			= ''
@@ -9478,6 +9585,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	_FileType_Descrip	= ''
 	_IndexFile			= ''
 	_MemoFile			= ''
+	_LastUpdate			= {}
 
 	*-- Fields and Indexes
 	_Fields				= NULL
@@ -9516,13 +9624,13 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 					CASE C_TABLE_F $ tcLine	&& Fin
 						EXIT
 
-					CASE C_INDEXES_I $ tcLine
-						loIndexes	= THIS._Fields
-						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-
 					CASE C_FIELDS_I $ tcLine
 						loFields	= THIS._Fields
 						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_INDEXES_I $ tcLine
+						loIndexes	= THIS._Indexes
+						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Otro valor
 						*-- Estructura a reconocer:
@@ -9792,19 +9900,21 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="_tagname" display="_TagName"/>] ;
-		+ [<memberdata name="_database" display="_Collate"/>] ;
+		+ [<memberdata name="_tagtype" display="_TagType"/>] ;
 		+ [<memberdata name="_key" display="_Key"/>] ;
-		+ [<memberdata name="_descending" display="_Descending"/>] ;
-		+ [<memberdata name="_for_exp" display="_For_Exp"/>] ;
+		+ [<memberdata name="_filter" display="_Filter"/>] ;
+		+ [<memberdata name="_order" display="_Order"/>] ;
+		+ [<memberdata name="_collate" display="_Collate"/>] ;
 		+ [</VFPData>]
 
 
 	*-- Index Info
 	_TagName		= ''
-	_Collate		= ''
+	_TagType		= ''
 	_Key			= ''
-	_Descending		= .F.
-	_For_Exp		= ''
+	_Filter			= ''
+	_Order			= ''
+	_Collate		= ''
 
 
 	*******************************************************************************************************************
@@ -10053,14 +10163,14 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<C_SRV_HEAD_I>>
-			_LibraryName = '<<THIS._LibraryName>>'
-			_InternalName = '<<THIS._InternalName>>'
-			_ProjectName = '<<THIS._ProjectName>>'
-			_TypeLibDesc = '<<THIS._TypeLibDesc>>'
-			_ServerType = '<<THIS._ServerType>>'
-			_TypeLib = '<<THIS._TypeLib>>'
-			<<C_SRV_HEAD_F>>
+				<<C_SRV_HEAD_I>>
+				_LibraryName = '<<THIS._LibraryName>>'
+				_InternalName = '<<THIS._InternalName>>'
+				_ProjectName = '<<THIS._ProjectName>>'
+				_TypeLibDesc = '<<THIS._TypeLibDesc>>'
+				_ServerType = '<<THIS._ServerType>>'
+				_TypeLib = '<<THIS._TypeLib>>'
+				<<C_SRV_HEAD_F>>
 			ENDTEXT
 
 			*-- Recorro los servidores
@@ -10161,17 +10271,17 @@ DEFINE CLASS CL_PROJ_SRV_DATA AS CL_CUS_BASE
 
 			WITH THIS
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_SRV_DATA_I>>
-				_HelpContextID = '<<._HelpContextID>>'
-				_ServerName = '<<._ServerName>>'
-				_Description = '<<._Description>>'
-				_HelpFile = '<<._HelpFile>>'
-				_ServerClass = '<<._ServerClass>>'
-				_ClassLibrary = '<<._ClassLibrary>>'
-				_Instancing = '<<._Instancing>>'
-				_CLSID = '<<._CLSID>>'
-				_Interface = '<<._Interface>>'
-				<<C_SRV_DATA_F>>
+					<<C_SRV_DATA_I>>
+					_HelpContextID = '<<._HelpContextID>>'
+					_ServerName = '<<._ServerName>>'
+					_Description = '<<._Description>>'
+					_HelpFile = '<<._HelpFile>>'
+					_ServerClass = '<<._ServerClass>>'
+					_ClassLibrary = '<<._ClassLibrary>>'
+					_Instancing = '<<._Instancing>>'
+					_CLSID = '<<._CLSID>>'
+					_Interface = '<<._Interface>>'
+					<<C_SRV_DATA_F>>
 				ENDTEXT
 			ENDWITH
 
