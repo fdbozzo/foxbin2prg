@@ -156,6 +156,8 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_LEN_CDX_F			LEN(C_CDX_F)
 #DEFINE C_LEN_INDEX_I		LEN(C_INDEX_I)
 #DEFINE C_LEN_INDEX_F		LEN(C_INDEX_F)
+#DEFINE C_DATABASE_I		'<DATABASE>'
+#DEFINE C_DATABASE_F		'</DATABASE>'
 #DEFINE C_TABLE_I			'<TABLE>'
 #DEFINE C_TABLE_F			'</TABLE>'
 #DEFINE C_TABLES_I			'<TABLES>'
@@ -5308,7 +5310,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toTable
 		*--------------------------------------------------------------------------------------------------------------
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
@@ -5316,6 +5317,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		* tnBloquesExclusion		(?@ IN    ) Sin uso
 		* toTable					(?@    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toTable
 		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
 
 		#IF .F.
@@ -5386,13 +5388,16 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS toModulo, toEx AS EXCEPTION
-		DODEFAULT( @toModulo, @toEx )
+		LPARAMETERS toDatabase, toEx AS EXCEPTION
+		DODEFAULT( @toDatabase, @toEx )
+
+		#IF .F.
+			LOCAL toDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I ;
-				, loReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
 			STORE '' TO lcLine, lcSourceFile
 			STORE NULL TO loReg, toModulo
@@ -5406,9 +5411,9 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			*THIS.createTable()
 
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @loReport )
+			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toDatabase )
 
-			THIS.escribirArchivoBin( @loReport )
+			THIS.escribirArchivoBin( @toDatabase )
 
 
 		CATCH TO loEx
@@ -5428,62 +5433,102 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toReport
+		LPARAMETERS toDatabase
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+			LOCAL toDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL loReg, I, lcFieldType, lnFieldLen, lnFieldDec, lnNumCampo, laFieldTypes(1,18) ;
-				, luValor, lnCodError, loEx AS EXCEPTION
-			SELECT TABLABIN
-			AFIELDS( laFieldTypes )
+			LOCAL loConnection AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
+			LOCAL loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
+			LOCAL loView AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
+			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
+			
+			STORE '' TO lcIndex, lcFieldDef
 
-			*-- Agrego los registros
-			FOR EACH loReg IN toReport FOXOBJECT
+			lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
 
-				*-- Ajuste de los tipos de dato
-				FOR I = 1 TO AMEMBERS(laProps, loReg, 0)
-					lnNumCampo	= ASCAN( laFieldTypes, laProps(I), 1, -1, 1, 1+2+4+8 )
+			*-- Conformo los campos
+			EXIT
+			
+			toDatabase.DBWriteObjects( THIS.c_OutputFile )
+			
+			FOR EACH loConnection IN toDatabase._Connections FOXOBJECT
+				lcLongDec		= ''
 
-					IF lnNumCampo = 0
-						ERROR 'No se encontró el campo [' + laProps(I) + '] en la estructura del archivo ' + DBF("TABLABIN")
+				*-- Nombre, Tipo
+				lcFieldDef	= lcFieldDef + ', ' + loField._Name + ' ' + loField._Type
+
+				*-- Longitud
+				IF INLIST( loField._Type, 'C', 'N', 'F', 'Q', 'V' )
+					lcLongDec	= lcLongDec + '(' + loField._Width
+				ENDIF
+
+				*-- Decimales
+				IF INLIST( loField._Type, 'B', 'N', 'F' ) AND loField._Decimals > '0'
+					IF EMPTY(lcLongDec)
+						lcLongDec	= lcLongDec + '('
+					ELSE
+						lcLongDec	= lcLongDec + ','
 					ENDIF
+					lcLongDec	= lcLongDec + loField._Decimals
+				ENDIF
 
-					lcFieldType	= laFieldTypes(lnNumCampo,2)
-					lnFieldLen	= laFieldTypes(lnNumCampo,3)
-					lnFieldDec	= laFieldTypes(lnNumCampo,4)
-					luValor		= EVALUATE('loReg.' + laProps(I))
+				IF NOT EMPTY(lcLongDec)
+					lcLongDec	= lcLongDec + ')'
+				ENDIF
 
-					DO CASE
-					CASE INLIST(lcFieldType, 'B')	&& Double
-						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldPrec) ) )
+				lcFieldDef	= lcFieldDef + lcLongDec
 
-					CASE INLIST(lcFieldType, 'F', 'N', 'Y')	&& Float, Numeric, Currency
-						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldLen, lnFieldDec) ) )
+				*-- Null
+				lcFieldDef	= lcFieldDef + IIF( loField._Null = '.T.', ' NULL', ' NOT NULL' )
 
-					CASE INLIST(lcFieldType, 'W', 'G', 'M', 'Q', 'V', 'C')	&& Blob, General, Memo, Varbinary, Varchar, Character
-						ADDPROPERTY( loReg, laProps(I), luValor )
+				*-- NoCPTran
+				IF loField._NoCPTran = '.T.'
+					lcFieldDef	= lcFieldDef + ' NOCPTRAN'
+				ENDIF
 
-					OTHERWISE	&& Demás tipos
-						ADDPROPERTY( loReg, laProps(I), CAST( luValor AS &lcFieldType. (lnFieldLen) ) )
+				*-- AutoInc
+				IF loField._AutoInc_NextVal <> '0'
+					lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+				ENDIF
 
-					ENDCASE
-
-				ENDFOR
-
-				INSERT INTO TABLABIN FROM NAME loReg
-				loReg	= NULL
+				loField			= NULL
 			ENDFOR
 
-			USE IN (SELECT("TABLABIN"))
+			lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
+			*STRTOFILE(lcCreateTable,'CreateTable.txt')
+			&lcCreateTable.
 
-			IF THIS.c_Type = 'FRX'
-				COMPILE REPORT (THIS.c_OutputFile)
-			ELSE
-				COMPILE LABEL (THIS.c_OutputFile)
-			ENDIF
+			*-- Regenero los índices
+			FOR EACH loIndex IN toTable._Indexes FOXOBJECT
+				lcIndex	= 'INDEX ON ' + loIndex._Key + ' TAG ' + loIndex._TagName
+
+				IF loIndex._TagType = 'BINARY'
+					lcIndex	= lcIndex + ' BINARY'
+				ELSE
+					lcIndex	= lcIndex + ' COLLATE "' + loIndex._Collate + '"'
+
+					IF NOT EMPTY(loIndex._Filter)
+						lcIndex	= lcIndex + ' FOR ' + loIndex._Filter
+					ENDIF
+
+					lcIndex	= lcIndex + ' ' + loIndex._Order
+
+					IF loIndex._TagType <> 'REGULAR'
+						*-- Si es PRIMARY lo cambio a CANDIDATE y luego lo recodifico
+						lcIndex	= lcIndex + ' ' + STRTRAN( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
+					ENDIF
+				ENDIF
+
+				*STRTOFILE( lcIndex, 'index_' + loIndex._TagName + '.txt' )
+				&lcIndex.
+			ENDFOR
+
+
+			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
 
 		CATCH TO loEx
@@ -5506,7 +5551,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toReport
 		*--------------------------------------------------------------------------------------------------------------
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
@@ -5517,21 +5561,22 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toDatabase
 		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
 
 		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
+			LOCAL toDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL I, lc_Comentario, lcLine, llFoxBin2Prg_Completed
+			LOCAL I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueDatabase_Completed
 			STORE 0 TO I
 
 			THIS.c_Type	= UPPER(JUSTEXT(THIS.c_OutputFile))
 
 			IF tnCodeLines > 1
-				toReport			= NULL
-				toReport			= CREATEOBJECT('CL_REPORT')
+				toDatabase		= NULL
+				toDatabase		= CREATEOBJECT('CL_DATABASE')
 
 				WITH THIS
 					FOR I = 1 TO tnCodeLines
@@ -5542,10 +5587,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 						ENDIF
 
 						DO CASE
-						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toReport, @lcLine, @taCodeLines, @I, tnCodeLines )
+						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toDatabase, @lcLine, @taCodeLines, @I, tnCodeLines )
 							llFoxBin2Prg_Completed	= .T.
 
-						CASE .analizarBloque_DATABASE( toReport, @lcLine, @taCodeLines, @I, tnCodeLines )
+						CASE NOT llBloqueDatabase_Completed AND toDatabase.analizarBloque( @lcLine, @taCodeLines, @I, tnCodeLines )
+							llBloqueDatabase_Completed	= .T.
 
 						ENDCASE
 					ENDFOR
@@ -5562,369 +5608,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		ENDTRY
 
 		RETURN
-	ENDPROC
-
-
-	************************************************************************************************
-	PROCEDURE add_Table
-		LPARAMETERS tcName
-		tcName	= RTRIM(tcName)
-		THIS._Tables.ADD( CREATEOBJECT("CL_TABLE"), tcName )
-		RETURN THIS._Tables( tcName )
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_DATABASE
-		*------------------------------------------------------
-		*-- Analiza el bloque <DATABASE>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_TABLES
-		*------------------------------------------------------
-		*-- Analiza el bloque <TABLES>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_TABLE_FIELDS
-		*------------------------------------------------------
-		*-- Analiza el bloque <FIELDS>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_VIEWS
-		*------------------------------------------------------
-		*-- Analiza el bloque <VIEWS>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_CONNECTIONS
-		*------------------------------------------------------
-		*-- Analiza el bloque <CONNECTIONS>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_RELATIONS
-		*------------------------------------------------------
-		*-- Analiza el bloque <RELATIONS>
-		*------------------------------------------------------
-		LPARAMETERS toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName
-
-		#IF .F.
-			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL llBloqueEncontrado, lcValue, loEx AS EXCEPTION
-
-			IF LEFT(tcLine, 1 + LEN(tcPropName) + 1 + 9) == '<' + tcPropName + '>' + C_DATA_I
-				llBloqueEncontrado	= .T.
-
-				IF C_DATA_F $ tcLine
-					lcValue	= STREXTRACT( tcLine, C_DATA_I, C_DATA_F )
-					ADDPROPERTY( toReg, tcPropName, lcValue )
-					EXIT
-				ENDIF
-
-				*-- Tomo la primera parte del valor
-				lcValue	= STREXTRACT( tcLine, C_DATA_I )
-
-				*-- Recorro las fracciones del valor
-				FOR I = I + 1 TO tnCodeLines
-					tcLine	= taCodeLines(I)
-
-					IF C_DATA_F $ tcLine	&& Fin del valor
-						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						ADDPROPERTY( toReg, tcPropName, lcValue )
-						EXIT
-
-					ELSE	&& Otra fracción del valor
-						lcValue	= lcValue + CR_LF + tcLine
-					ENDIF
-				ENDFOR
-
-			ENDIF
-
-		CATCH TO loEx
-			IF loEx.ERRORNO = 1470	&& Incorrect property name.
-				loEx.USERVALUE	= 'PropName=[' + TRANSFORM(tcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN llBloqueEncontrado
 	ENDPROC
 
 
@@ -9560,6 +9243,7 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="dbwriteobjects" display="DBWriteObjects"/>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="_comment" display="_Comment"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
@@ -9585,7 +9269,7 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 	_DBCEvents			= .F.
 	_DBCEventFilename	= ''
 
-	*-- Fields and Indexes
+	*-- Sub-objects
 	_Connections		= NULL
 	_Tables				= NULL
 	_Views				= NULL
@@ -9596,8 +9280,10 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS._Fields	= CREATEOBJECT("CL_DBF_FIELDS")
-		THIS._Indexes	= CREATEOBJECT("CL_DBF_INDEXES")
+		THIS._Connections	= CREATEOBJECT("CL_DBC_CONNECTIONS")
+		THIS._Tables		= CREATEOBJECT("CL_DBC_TABLES")
+		THIS._Views			= CREATEOBJECT("CL_DBC_VIEWS")
+		THIS._Relations		= CREATEOBJECT("CL_DBC_RELATIONS")
 	ENDPROC
 
 
@@ -9606,12 +9292,14 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
-			LOCAL loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
-			LOCAL loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+			LOCAL loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
+			LOCAL loTables AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
+			LOCAL loViews AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelations AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			STORE '' TO lcPropName, lcValue
 
-			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
+			IF LEFT(tcLine, LEN(C_DATABASE_I)) == C_DATABASE_I
 				llBloqueEncontrado	= .T.
 
 				FOR I = I + 1 TO tnCodeLines
@@ -9621,16 +9309,24 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE C_TABLE_F $ tcLine	&& Fin
+					CASE C_DATABASE_F $ tcLine	&& Fin
 						EXIT
 
-					CASE C_FIELDS_I $ tcLine
-						loFields	= THIS._Fields
-						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+					CASE C_CONNECTIONS_I $ tcLine
+						loConnections	= THIS._Connections
+						loConnections.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-					CASE C_INDEXES_I $ tcLine
-						loIndexes	= THIS._Indexes
-						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+					CASE C_TABLES_I $ tcLine
+						loTables	= THIS._Tables
+						loTables.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_VIEWS_I $ tcLine
+						loViews	= THIS._Views
+						loViews.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_RELATIONS_I $ tcLine
+						loRelations	= THIS._Relations
+						loRelations.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Otro valor
 						*-- Estructura a reconocer:
@@ -9656,6 +9352,20 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 		ENDTRY
 
 		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE DBSETPROP( cName, cType, cProperty, ePropertyValue )
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+		
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE DBWriteObjects
+		LPARAMETERS tc_OutputFile
+		
 	ENDPROC
 
 
@@ -9863,7 +9573,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
 					CASE C_TABLE_I $ tcLine
 						loTable = CREATEOBJECT("CL_DBC_TABLE")
 						loTable.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-						THIS.ADD( loConnection, loConnection._Name )
+						THIS.ADD( loTable, loTable._Name )
 
 					OTHERWISE	&& Otro valor
 						*-- No hay otros valores
@@ -9922,6 +9632,17 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 	_RuleExpression			= ''
 	_RuleText				= ''
 
+	*-- Sub-objects
+	_Fields					= NULL
+
+
+	************************************************************************************************
+	PROCEDURE INIT
+		DODEFAULT()
+		*--
+		THIS._Fields	= CREATEOBJECT("CL_DBC_FIELDS_DB")
+	ENDPROC
+
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
@@ -9946,7 +9667,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 						EXIT
 
 					CASE C_FIELDS_I $ tcLine
-						loFields	= THIS._Fields
+						loFields = THIS._Fields
 						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de TABLE
@@ -10149,7 +9870,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			STORE '' TO lcPropName, lcValue
 
-			IF LEFT(tcLine, LEN(C_VIEW_I)) == C_VIEW_I
+			IF LEFT(tcLine, LEN(C_VIEWS_I)) == C_VIEWS_I
 				llBloqueEncontrado	= .T.
 
 				FOR I = I + 1 TO tnCodeLines
@@ -10159,13 +9880,13 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE C_VIEW_F $ tcLine	&& Fin
+					CASE C_VIEWS_F $ tcLine	&& Fin
 						EXIT
 
 					CASE C_VIEW_I $ tcLine
 						loView = CREATEOBJECT("CL_DBC_VIEW")
 						loView.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-						THIS.ADD( loConnection, loConnection._Name )
+						THIS.ADD( loView, loView._Name )
 
 					OTHERWISE	&& Otro valor
 						*-- No hay otros valores
@@ -10251,6 +9972,17 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 	_UpdateType				= ''
 	_UseMemoSize			= ''
 	_WhereType				= ''
+
+	*-- Sub-objects
+	_Fields					= NULL
+
+
+	************************************************************************************************
+	PROCEDURE INIT
+		DODEFAULT()
+		*--
+		THIS._Fields	= CREATEOBJECT("CL_DBC_FIELDS_VW")
+	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -10504,7 +10236,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_COL_BASE
 					CASE C_RELATION_I $ tcLine
 						loRelation = CREATEOBJECT("CL_DBC_RELATION")
 						loRelation.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-						THIS.ADD( loField, loField._Name )
+						THIS.ADD( loRelation, loRelation._ChildTable + loRelation._ParentTable )
 
 					OTHERWISE	&& Otro valor
 						*-- No hay otros valores
@@ -10539,39 +10271,21 @@ DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="_name" display="_Name"/>] ;
-		+ [<memberdata name="_caption" display="_Caption"/>] ;
-		+ [<memberdata name="_comment" display="_Comment"/>] ;
-		+ [<memberdata name="_datatype" display="_DataType"/>] ;
-		+ [<memberdata name="_defaultvalue" display="_DefaultValue"/>] ;
-		+ [<memberdata name="_displayclass" display="_DisplayClass"/>] ;
-		+ [<memberdata name="_displayclasslibrary" display="_DisplayClassLibrary"/>] ;
-		+ [<memberdata name="_format" display="_Format"/>] ;
-		+ [<memberdata name="_inputmask" display="_InputMask"/>] ;
-		+ [<memberdata name="_keyfield" display="_KeyField"/>] ;
-		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
-		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
-		+ [<memberdata name="_updatable" display="_Updatable"/>] ;
-		+ [<memberdata name="_updatename" display="_UpdateName"/>] ;
+		+ [<memberdata name="_childtable" display="_ChildTable"/>] ;
+		+ [<memberdata name="_parenttable" display="_ParentTable"/>] ;
+		+ [<memberdata name="_childindex" display="_ChildIndex"/>] ;
+		+ [<memberdata name="_parentindex" display="_ParentIndex"/>] ;
+		+ [<memberdata name="_refintegrity" display="_RefIntegrity"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
 	*-- Info
-	_Name					= ''
-	_Caption				= ''
-	_Comment				= ''
-	_DataType				= ''
-	_DefaultValue			= ''
-	_DisplayClass			= ''
-	_DisplayClassLibrary	= ''
-	_Format					= ''
-	_InputMask				= ''
-	_KeyField				= ''
-	_RuleExpression			= ''
-	_RuleText				= ''
-	_Updatable				= ''
-	_UpdateName				= ''
+	_ChildTable		= ''
+	_ParentTable	= ''
+	_ChildIndex		= ''
+	_ParentIndex	= ''
+	_RefIntegrity	= ''
 
 
 	*******************************************************************************************************************
