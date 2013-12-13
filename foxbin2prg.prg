@@ -675,7 +675,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
-		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
 		+ [<memberdata name="filetypecode" display="fileTypeCode"/>] ;
 		+ [<memberdata name="getdbfmetadata" display="getDBFmetadata"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
@@ -1090,48 +1089,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CHR(13) + CHR(13) ;
 			+ toEx.LINECONTENTS
 		RETURN lcError
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE fileTypeDescription
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* tn_HexFileType			(@? IN    ) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tn_HexFileType
-		LOCAL lcFileType
-
-		DO CASE
-		CASE tn_HexFileType = 0x02
-			lcFileType	= 'FoxBASE / dBase II'
-		CASE tn_HexFileType = 0x03
-			lcFileType	= 'FoxBASE+ / FoxPro /dBase III PLUS / dBase IV, no memo'
-		CASE tn_HexFileType = 0x30
-			lcFileType	= 'Visual FoxPro'
-		CASE tn_HexFileType = 0x31
-			lcFileType	= 'Visual FoxPro, autoincrement enabled'
-		CASE tn_HexFileType = 0x32
-			lcFileType	= 'Visual FoxPro, Varchar, Varbinary, or Blob-enabled'
-		CASE tn_HexFileType = 0x43
-			lcFileType	= 'dBASE IV SQL table files, no memo'
-		CASE tn_HexFileType = 0x63
-			lcFileType	= 'dBASE IV SQL system files, no memo'
-		CASE tn_HexFileType = 0x83
-			lcFileType	= 'FoxBASE+/dBASE III PLUS, with memo'
-		CASE tn_HexFileType = 0x8B
-			lcFileType	= 'dBASE IV with memo'
-		CASE tn_HexFileType = 0xCB
-			lcFileType	= 'dBASE IV SQL table files, with memo'
-		CASE tn_HexFileType = 0xF5
-			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
-		CASE tn_HexFileType = 0xFB
-			lcFileType	= 'FoxBASE (?)'
-		OTHERWISE
-			lcFileType	= 'Unknown'
-		ENDCASE
-
-		RETURN lcFileType
 	ENDPROC
 
 
@@ -5166,9 +5123,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 			THIS.doBackup( .F., .T. )
 
-			*-- Creo la tabla
-			*THIS.createTable()
-
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toTable )
 
@@ -5392,7 +5346,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		DODEFAULT( @toDatabase, @toEx )
 
 		#IF .F.
-			LOCAL toDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -5436,7 +5390,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		LPARAMETERS toDatabase
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
-			LOCAL toDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -5448,87 +5402,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			
 			STORE '' TO lcIndex, lcFieldDef
 
-			lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
-
 			*-- Conformo los campos
 			EXIT
 			
-			toDatabase.DBWriteObjects( THIS.c_OutputFile )
+			toDatabase.updateDBC( THIS.c_OutputFile )
 			
-			FOR EACH loConnection IN toDatabase._Connections FOXOBJECT
-				lcLongDec		= ''
-
-				*-- Nombre, Tipo
-				lcFieldDef	= lcFieldDef + ', ' + loField._Name + ' ' + loField._Type
-
-				*-- Longitud
-				IF INLIST( loField._Type, 'C', 'N', 'F', 'Q', 'V' )
-					lcLongDec	= lcLongDec + '(' + loField._Width
-				ENDIF
-
-				*-- Decimales
-				IF INLIST( loField._Type, 'B', 'N', 'F' ) AND loField._Decimals > '0'
-					IF EMPTY(lcLongDec)
-						lcLongDec	= lcLongDec + '('
-					ELSE
-						lcLongDec	= lcLongDec + ','
-					ENDIF
-					lcLongDec	= lcLongDec + loField._Decimals
-				ENDIF
-
-				IF NOT EMPTY(lcLongDec)
-					lcLongDec	= lcLongDec + ')'
-				ENDIF
-
-				lcFieldDef	= lcFieldDef + lcLongDec
-
-				*-- Null
-				lcFieldDef	= lcFieldDef + IIF( loField._Null = '.T.', ' NULL', ' NOT NULL' )
-
-				*-- NoCPTran
-				IF loField._NoCPTran = '.T.'
-					lcFieldDef	= lcFieldDef + ' NOCPTRAN'
-				ENDIF
-
-				*-- AutoInc
-				IF loField._AutoInc_NextVal <> '0'
-					lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
-				ENDIF
-
-				loField			= NULL
-			ENDFOR
-
-			lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
-			*STRTOFILE(lcCreateTable,'CreateTable.txt')
-			&lcCreateTable.
-
-			*-- Regenero los índices
-			FOR EACH loIndex IN toTable._Indexes FOXOBJECT
-				lcIndex	= 'INDEX ON ' + loIndex._Key + ' TAG ' + loIndex._TagName
-
-				IF loIndex._TagType = 'BINARY'
-					lcIndex	= lcIndex + ' BINARY'
-				ELSE
-					lcIndex	= lcIndex + ' COLLATE "' + loIndex._Collate + '"'
-
-					IF NOT EMPTY(loIndex._Filter)
-						lcIndex	= lcIndex + ' FOR ' + loIndex._Filter
-					ENDIF
-
-					lcIndex	= lcIndex + ' ' + loIndex._Order
-
-					IF loIndex._TagType <> 'REGULAR'
-						*-- Si es PRIMARY lo cambio a CANDIDATE y luego lo recodifico
-						lcIndex	= lcIndex + ' ' + STRTRAN( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
-					ENDIF
-				ENDIF
-
-				*STRTOFILE( lcIndex, 'index_' + loIndex._TagName + '.txt' )
-				&lcIndex.
-			ENDFOR
-
-
-			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
+			*USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
 
 		CATCH TO loEx
@@ -5556,7 +5435,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
 		* taBloquesExclusion		(?@ IN    ) Sin uso
 		* tnBloquesExclusion		(?@ IN    ) Sin uso
-		* toReport					(?@    OUT) Objeto con toda la información del reporte analizado
+		* toDatabase				(?@    OUT) Objeto con toda la información de la base de datos analizada
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -5565,7 +5444,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
 
 		#IF .F.
-			LOCAL toDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -5576,7 +5455,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 			IF tnCodeLines > 1
 				toDatabase		= NULL
-				toDatabase		= CREATEOBJECT('CL_DATABASE')
+				toDatabase		= CREATEOBJECT('CL_DBC')
 
 				WITH THIS
 					FOR I = 1 TO tnCodeLines
@@ -7826,13 +7705,14 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" display="Convertir"/>] ;
-	+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Contenido del texto generado
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 
@@ -7850,7 +7730,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			*-- Header
 			loTable			= CREATEOBJECT('CL_DBF_TABLE')
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, THIS.c_InputFile )
 
 
 			*-- Genero el DB2
@@ -7894,20 +7774,24 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" display="Convertir"/>] ;
-	+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
-		LPARAMETERS toModulo, toEx AS EXCEPTION
-		DODEFAULT( @toModulo, @toEx )
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toDatabase, toEx AS EXCEPTION
+		DODEFAULT( @toDatabase, @toEx )
+
+		#IF .F.
+			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
-			LOCAL loDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError
 
 			lnDatabases_Count	= ADATABASES(laDatabases)
@@ -7918,8 +7802,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			THIS.write_PROGRAM_HEADER()
 
 			*-- Header
-			loDatabase		= CREATEOBJECT('CL_DATABASE')
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + loDatabase.toText()
+			toDatabase		= CREATEOBJECT('CL_DBC')
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
 
 
 			*-- Genero el DC2
@@ -7952,19 +7836,20 @@ ENDDEFINE
 
 *******************************************************************************************************************
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
-	*-- Propiedades.
-	HIDDEN BASECLASS, CLASS, TOP, WIDTH, CLASSLIB, CONTROLS, CLASSLIBRARY, COMMENT ;
-		, CONTROLCOUNT, HEIGHT, HELPCONTEXTID, LEFT, NAME, OBJECTS, PARENT ;
+	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT)
+	HIDDEN BASECLASS, CLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
+		, HEIGHT, HELPCONTEXTID, LEFT, NAME ;
 		, PARENTCLASS, PICTURE, TAG, WHATSTHISHELPID
 
 	*-- Métodos (Se preservan: INIT, DESTROY, ERROR, ADDPROPERTY)
-	HIDDEN ADDOBJECT, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
+	*HIDDEN ADDOBJECT, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
 		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
 
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
 
@@ -7985,6 +7870,53 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 
 
 	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE fileTypeDescription
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tn_HexFileType			(@? IN    ) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tn_HexFileType
+		LOCAL lcFileType
+
+		DO CASE
+		CASE tn_HexFileType = 0x02
+			lcFileType	= 'FoxBASE / dBase II'
+		CASE tn_HexFileType = 0x03
+			lcFileType	= 'FoxBASE+ / FoxPro /dBase III PLUS / dBase IV, no memo'
+		CASE tn_HexFileType = 0x30
+			lcFileType	= 'Visual FoxPro'
+		CASE tn_HexFileType = 0x31
+			lcFileType	= 'Visual FoxPro, autoincrement enabled'
+		CASE tn_HexFileType = 0x32
+			lcFileType	= 'Visual FoxPro, Varchar, Varbinary, or Blob-enabled'
+		CASE tn_HexFileType = 0x43
+			lcFileType	= 'dBASE IV SQL table files, no memo'
+		CASE tn_HexFileType = 0x63
+			lcFileType	= 'dBASE IV SQL system files, no memo'
+		CASE tn_HexFileType = 0x83
+			lcFileType	= 'FoxBASE+/dBASE III PLUS, with memo'
+		CASE tn_HexFileType = 0x8B
+			lcFileType	= 'dBASE IV with memo'
+		CASE tn_HexFileType = 0xCB
+			lcFileType	= 'dBASE IV SQL table files, with memo'
+		CASE tn_HexFileType = 0xF5
+			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
+		CASE tn_HexFileType = 0xFB
+			lcFileType	= 'FoxBASE (?)'
+		OTHERWISE
+			lcFileType	= 'Unknown'
+		ENDCASE
+
+		RETURN lcFileType
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -7994,11 +7926,6 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque
 	ENDPROC
 
 
@@ -8710,15 +8637,206 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 ENDDEFINE
 
 
+
 *******************************************************************************************************************
-DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 	#IF .F.
-		LOCAL THIS AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
+		LOCAL THIS AS CL_DBC_COL_BASE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="dbwriteobjects" display="DBWriteObjects"/>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
+		+ [<memberdata name="getbinpropertydatarecord" display="getBinPropertyDataRecord"/>] ;
+		+ [<memberdata name="getcodememo" display="getCodeMemo"/>] ;
+		+ [<memberdata name="getid" display="getID"/>] ;
+		+ [<memberdata name="getobjecttype" display="getObjectType"/>] ;
+		+ [<memberdata name="getmemowithproperties" display="getMemoWithProperties"/>] ;
+		+ [<memberdata name="getreferentialintegrityinfo" display="getReferentialIntegrityInfo"/>] ;
+		+ [<memberdata name="getusermemo" display="getUserMemo"/>] ;
+		+ [<memberdata name="setnextid" display="setNextID"/>] ;
+		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
+		+ [</VFPData>]
+
+	*PROTECTED __ObjectID, __ObjectType
+	__ObjectID		= 0
+	_Name			= ''
+
+
+	PROCEDURE updateDBC
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
+		* tnLastID					(@! IN    ) Último número de ID usado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_OutputFile, tnLastID
+
+		FOR EACH loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG' IN loTables FOXOBJECT
+			loTable.updateDBC
+		ENDFOR
+
+		RETURN
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
+		+ [<memberdata name="getbinpropertydatarecord" display="getBinPropertyDataRecord"/>] ;
+		+ [<memberdata name="getcodememo" display="getCodeMemo"/>] ;
+		+ [<memberdata name="getid" display="getID"/>] ;
+		+ [<memberdata name="getobjecttype" display="getObjectType"/>] ;
+		+ [<memberdata name="getmemowithproperties" display="getMemoWithProperties"/>] ;
+		+ [<memberdata name="getreferentialintegrityinfo" display="getReferentialIntegrityInfo"/>] ;
+		+ [<memberdata name="getusermemo" display="getUserMemo"/>] ;
+		+ [<memberdata name="setnextid" display="setNextID"/>] ;
+		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
+		+ [</VFPData>]
+
+	*PROTECTED __ObjectID, __ObjectType
+	__ObjectID		= 0
+	_Name			= ''
+
+
+	PROCEDURE getBinPropertyDataRecord
+		LPARAMETERS tcData, tnDataType
+		LOCAL lcBinRecord, lnLen
+		lnLen				= 4 + 2 + 1 + LEN(tcData) + 1
+		lcBinRecord			= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataType) + tcData + CHR(0)
+		RETURN lcBinRecord
+	ENDPROC
+
+
+	PROCEDURE getID
+		RETURN THIS.__ObjectID
+	ENDPROC
+
+
+	PROCEDURE getCodeMemo
+		RETURN ''
+	ENDPROC
+
+
+	PROCEDURE getUserMemo
+		RETURN ''
+	ENDPROC
+
+
+	PROCEDURE getMemoWithProperties
+		RETURN ''
+	ENDPROC
+
+
+	PROCEDURE getReferentialIntegrityInfo
+		RETURN ''
+	ENDPROC
+
+
+	PROCEDURE getObjectType
+		LOCAL lcType
+		
+		DO CASE
+		CASE THIS.Class = 'Cl_dbc'
+			lcType	= 'Database'
+
+		CASE THIS.Class = 'Cl_dbc_connection'
+			lcType	= 'Connection'
+
+		CASE THIS.Class = 'Cl_dbc_table'
+			lcType	= 'Table'
+
+		CASE THIS.Class = 'Cl_dbc_view'
+			lcType	= 'View'
+
+		CASE THIS.Class = 'Cl_dbc_index'
+			lcType	= 'Index'
+
+		CASE THIS.Class = 'Cl_dbc_relation'
+			lcType	= 'Relation'
+
+		CASE THIS.Class = 'Cl_dbc_field'
+			lcType	= 'Field'
+
+		OTHERWISE
+			lcType	= 'Unknown'
+
+		ENDCASE
+		
+		RETURN lcType
+	ENDPROC
+
+
+	PROCEDURE setNextID
+		LPARAMETERS tnLastID
+		tnLastID	= tnLastID + 1
+		THIS.__ObjectID	= tcID
+	ENDPROC
+
+
+	PROCEDURE updateDBC
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
+		* tnLastID					(@! IN    ) Último número de ID usado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_OutputFile, tnLastID
+
+		TRY
+			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+				.setNextID( @tnLastID )
+
+				INSERT INTO TABLABIN ;
+					( ObjectID ;
+					, ParentID ;
+					, ObjectType ;
+					, ObjectName ;
+					, Property ;
+					, Code ;
+					, RIInfo ;
+					, User ) ;
+					VALUES ;
+					( .getID() ;
+					, .Parent.getID() ;
+					, .getObjectType() ;
+					, ._Name ;
+					, .getMemoWithProperties() ;
+					, .getCodeMemo ;
+					, .getReferentialIntegrityInfo() ;
+					, .getUserMemo() )
+			ENDWITH && THIS
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC AS CL_DBC_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="_comment" display="_Comment"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [<memberdata name="_dbcevents" display="_DBCEvents"/>] ;
@@ -8744,24 +8862,22 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 	_DBCEventFilename	= ''
 
 	*-- Sub-objects
-	_Connections		= NULL
-	_Tables				= NULL
-	_Views				= NULL
-	_Relations			= NULL
+	*_Connections		= NULL
+	*_Tables				= NULL
+	*_Views				= NULL
+	*_Relations			= NULL
 
 
-	************************************************************************************************
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS._Connections	= CREATEOBJECT("CL_DBC_CONNECTIONS")
-		THIS._Tables		= CREATEOBJECT("CL_DBC_TABLES")
-		THIS._Views			= CREATEOBJECT("CL_DBC_VIEWS")
-		THIS._Relations		= CREATEOBJECT("CL_DBC_RELATIONS")
+		THIS.ADDOBJECT("_Connections", "CL_DBC_CONNECTIONS")
+		THIS.ADDOBJECT("_Tables", "CL_DBC_TABLES")
+		THIS.ADDOBJECT("_Views", "CL_DBC_VIEWS")
+		THIS.ADDOBJECT("_Relations", "CL_DBC_RELATIONS")
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -8836,23 +8952,63 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
-	PROCEDURE DBSETPROP( cName, cType, cProperty, ePropertyValue )
-		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+	PROCEDURE DBSETPROP
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* cName						(v! IN    ) Nombre del objeto
+		* cType						(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
+		* cProperty					(v! IN    ) Nombre de la propiedad
+		* ePropertyValue			(v! IN    ) Valor de la propiedad
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS cName, cType, cProperty, ePropertyValue
 		
 	ENDPROC
 
 
-	*******************************************************************************************************************
-	PROCEDURE DBWriteObjects
-		LPARAMETERS tc_OutputFile
-		
-		LOCAL loTable AS CL_DBC_TABLE ;
-			, loConnection AS CL_DBC_CONNECTION ;
-			, loView AS CL_DBC_VIEW ;
-			, loRelation AS CL_DBC_RELATION
-		
-		
+	PROCEDURE updateDBC
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
+		* tnLastID					(@! IN    ) Último número de ID usado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_OutputFile, tnLastID
+
+			TRY
+			LOCAL loTables AS CL_DBC_TABLES ;
+				, loConnections AS CL_DBC_CONNECTIONS ;
+				, loViews AS CL_DBC_VIEWS ;
+				, loRelations AS CL_DBC_RELATIONS
+
+			loTables		= THIS._Tables
+			loConnections	= THIS._Connections
+			loViews			= THIS._Views
+			loRelations		= THIS._Relations
+
+			CREATE DATABASE (tc_OutputFile)
+			CLOSE DATABASES
+			OPEN DATABASE (tc_OutputFile) SHARED
+			USE (tc_OutputFile) SHARED AGAIN ALIAS ARCHIVOBIN
+			tnLastID	= 5
+			THIS.setNextID(0)
+			
+			*FOR EACH loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG' IN loTables FOXOBJECT
+			*	loTable.updateDBC
+			*ENDFOR
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			CLOSE DATABASES
+
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -9033,7 +9189,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_CONNECTION AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -9312,7 +9468,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -9327,6 +9483,8 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 		+ [<memberdata name="_primarykey" display="_PrimaryKey"/>] ;
 		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
 		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
+		+ [<memberdata name="_fields" display="_Fields"/>] ;
+		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
 		+ [</VFPData>]
 
 
@@ -9342,14 +9500,16 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 	_RuleText				= ''
 
 	*-- Sub-objects
-	_Fields					= NULL
+	*_Fields					= NULL
+	*_Indexes					= NULL
 
 
 	************************************************************************************************
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS._Fields	= CREATEOBJECT("CL_DBC_FIELDS_DB")
+		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_DB")
+		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_DB")
 	ENDPROC
 
 
@@ -9597,7 +9757,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_FIELD_DB AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -9812,7 +9972,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_INDEX_DB AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10006,7 +10166,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10066,16 +10226,16 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 	_WhereType				= ''
 
 	*-- Sub-objects
-	_Fields					= NULL
-	_Indexes				= NULL
+	*_Fields					= NULL
+	*_Indexes				= NULL
 
 
 	************************************************************************************************
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS._Fields	= CREATEOBJECT("CL_DBC_FIELDS_VW")
-		THIS._Indexes	= CREATEOBJECT("CL_DBC_INDEXES_VW")
+		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_VW")
+		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_VW")
 	ENDPROC
 
 
@@ -10341,7 +10501,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_FIELD_VW AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10603,7 +10763,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
+DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10694,6 +10854,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
 
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>		<RELATION>
+				<<>>			<Name><<'Relation ' + TRANSFORM(I)>></Name>
 				<<>>			<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
 				<<>>			<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
 				<<>>			<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
@@ -10737,6 +10898,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_fields" display="_Fields"/>] ;
+		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
 		+ [</VFPData>]
 
 
@@ -10754,15 +10917,15 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	_LastUpdate			= {}
 
 	*-- Fields and Indexes
-	_Fields				= NULL
-	_Indexes			= NULL
+	*_Fields				= NULL
+	*_Indexes			= NULL
 
 
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS._Fields	= CREATEOBJECT("CL_DBF_FIELDS")
-		THIS._Indexes	= CREATEOBJECT("CL_DBF_INDEXES")
+		THIS.ADDOBJECT("_Fields", "CL_DBF_FIELDS")
+		THIS.ADDOBJECT("_Indexes", "CL_DBF_INDEXES")
 	ENDPROC
 
 
@@ -10838,8 +11001,9 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		* tl_FileHasMemo			(v! IN    ) Indica si el archivo tiene MEMO (FPT) asociado
 		* tl_FileIsDBC				(v! IN    ) Indica si el archivo es un DBC
 		* tc_DBC_Name				(v! IN    ) Nombre del DBC (si tiene)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de salida
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name
+		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name, tc_InputFile
 		
 		EXTERNAL ARRAY taFields
 
@@ -10859,7 +11023,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
 				<<C_TABLE_I>>
-				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></MemoFile>
+				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(tc_InputFile, 'FPT'), '' )>></MemoFile>
 				<<>>	<CodePage><<CPDBF('TABLABIN')>></CodePage>
 				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
 				<<>>	<Database><<tc_DBC_Name>></Database>
@@ -10976,6 +11140,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 			LOCAL I, lcText, loEx AS EXCEPTION
 			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			lcText	= ''
+			DIMENSION taFields(1,18)
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
@@ -11246,6 +11411,7 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 			LOCAL I, lcText, loEx AS EXCEPTION
 			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
 			lcText	= ''
+			DIMENSION taTagInfo(1,6)
 
 			IF TAGCOUNT() > 0
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
