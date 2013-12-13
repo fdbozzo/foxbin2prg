@@ -5641,7 +5641,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_dbc_header" display="write_DBC_HEADER"/>] ;
 		+ [<memberdata name="write_dbc_connections" display="write_DBC_CONNECTIONS"/>] ;
 		+ [<memberdata name="write_dbc_tables" display="write_DBC_TABLES"/>] ;
+		+ [<memberdata name="write_dbc_table_fields" display="write_DBC_TABLE_FIELDS"/>] ;
+		+ [<memberdata name="write_dbc_table_indexes" display="write_DBC_TABLE_INDEXES"/>] ;
 		+ [<memberdata name="write_dbc_views" display="write_DBC_VIEWS"/>] ;
+		+ [<memberdata name="write_dbc_view_fields" display="write_DBC_VIEW_FIELDS"/>] ;
+		+ [<memberdata name="write_dbc_view_indexes" display="write_DBC_VIEW_INDEXES"/>] ;
 		+ [<memberdata name="write_dbc_relations" display="write_DBC_RELATIONS"/>] ;
 		+ [<memberdata name="write_dbf_header" display="write_DBF_HEADER"/>] ;
 		+ [<memberdata name="write_dbf_fields" display="write_DBF_FIELDS"/>] ;
@@ -6982,564 +6986,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_DBF_HEADER
-		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name
-		TRY
-			LOCAL laFields(1,18), loEx AS EXCEPTION
-
-			*FOR I = 1 TO AFIELDS(laFields)
-			*	IF INLIST( laFields(I,2), 'M', 'Q', 'V', 'W' )
-			*		ll_FileHasMemo	= .T.
-			*		EXIT
-			*	ENDIF
-			*ENDFOR
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TABLE_I>>
-				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></MemoFile>
-				<<>>	<CodePage><<CPDBF('TABLABIN')>></CodePage>
-				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
-				<<>>	<Database><<tc_DBC_Name>></Database>
-				<<>>	<FileType><<TRANSFORM(tn_HexFileType, '@0')>></FileType>
-				<<>>	<FileType_Descrip><<THIS.fileTypeDescription(tn_HexFileType)>></FileType_Descrip>
-			ENDTEXT
-
-			*-- Fields
-			THIS.write_DBF_FIELDS()
-
-			*-- Indexes
-			THIS.write_DBF_INDEXES()
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_TABLE_F>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>
-			ENDTEXT
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBF_FIELDS
-		TRY
-			LOCAL I, laFields(1,18), loEx AS EXCEPTION
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>
-				<<>>	<<C_FIELDS_I>>
-			ENDTEXT
-
-			FOR I = 1 TO AFIELDS(laFields)
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<<C_FIELD_I>>
-					<<>>			<Name><<laFields(I,1)>></Name>
-					<<>>			<Type><<laFields(I,2)>></Type>
-					<<>>			<Width><<laFields(I,3)>></Width>
-					<<>>			<Decimals><<laFields(I,4)>></Decimals>
-					<<>>			<Null><<laFields(I,5)>></Null>
-					<<>>			<NoCPTran><<laFields(I,6)>></NoCPTran>
-					<<>>			<Field_Valid_Exp><<laFields(I,7)>></Field_Valid_Exp>
-					<<>>			<Field_Valid_Text><<laFields(I,8)>></Field_Valid_Text>
-					<<>>			<Field_Default_Value><<laFields(I,9)>></Field_Default_Value>
-					<<>>			<Table_Valid_Exp><<laFields(I,10)>></Table_Valid_Exp>
-					<<>>			<Table_Valid_Text><<laFields(I,11)>></Table_Valid_Text>
-					<<>>			<LongTableName><<laFields(I,12)>></LongTableName>
-					<<>>			<Ins_Trig_Exp><<laFields(I,13)>></Ins_Trig_Exp>
-					<<>>			<Upd_Trig_Exp><<laFields(I,14)>></Upd_Trig_Exp>
-					<<>>			<Del_Trig_Exp><<laFields(I,15)>></Del_Trig_Exp>
-					<<>>			<TableComment><<laFields(I,16)>></TableComment>
-					<<>>			<Autoinc_Nextval><<laFields(I,17)>></Autoinc_Nextval>
-					<<>>			<Autoinc_Step><<laFields(I,18)>></Autoinc_Step>
-					<<>>		<<C_FIELD_F>>
-				ENDTEXT
-			ENDFOR
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<<C_FIELDS_F>>
-				<<>>
-			ENDTEXT
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBF_INDEXES
-		TRY
-			LOCAL I, laTagInfo(1,6), loEx AS EXCEPTION
-
-			IF TAGCOUNT() > 0
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-					<<>>	<<C_CDX_I>><<CDX(1)>><<C_CDX_F>>
-					<<>>
-					<<>>	<<C_INDEXES_I>>
-				ENDTEXT
-
-				FOR I = 1 TO ATAGINFO( laTagInfo )
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		<INDEX>
-						<<>>			<TagName><<laTagInfo(I,1)>></TagName>
-						<<>>			<TagType><<laTagInfo(I,2)>></TagType>
-						<<>>			<Key><<laTagInfo(I,3)>></Key>
-						<<>>			<Filter><<laTagInfo(I,4)>></Filter>
-						<<>>			<Order><<laTagInfo(I,5)>></Order>
-						<<>>			<Collate><<laTagInfo(I,6)>></Collate>
-						<<>>		</INDEX>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	<<C_INDEXES_F>>
-					<<>>
-				ENDTEXT
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBC_HEADER
-		TRY
-			LOCAL I, lcText, lcDBC, loEx AS EXCEPTION
-			lcText	= ''
-			lcDBC	= JUSTSTEM(DBC())
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>
-				<DATABASE>
-				<<>>	<Name><<lcDBC>></Name>
-				<<>>	<Comment><<DBGETPROP(lcDBC,"DATABASE","Comment")>></Comment>
-				<<>>	<Version><<DBGETPROP(lcDBC,"DATABASE","Version")>></Version>
-				<<>>	<DBCEvents><<DBGETPROP(lcDBC,"DATABASE","DBCEvents")>></DBCEvents>
-				<<>>	<DBCEventFilename><<DBGETPROP(lcDBC,"DATABASE","DBCEventFilename")>></DBCEventFilename>
-			ENDTEXT
-
-			*-- Connections
-			THIS.write_DBC_CONNECTIONS()
-
-			*-- Tables
-			THIS.write_DBC_TABLES()
-
-			*-- Views
-			THIS.write_DBC_VIEWS()
-
-			*-- Relations
-			THIS.write_DBC_RELATIONS()
-
-			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				</DATABASE>
-				<<>>
-			ENDTEXT
-
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBC_CONNECTIONS
-		LPARAMETERS taConnections, tnConnection_Count
-
-		EXTERNAL ARRAY taConnections
-
-		TRY
-			LOCAL I, lcText, lcDBC, loEx AS EXCEPTION
-			lcText	= ''
-			lcDBC	= JUSTSTEM(DBC())
-
-			DIMENSION taConnections(1)
-			tnConnection_Count	= ADBOBJECTS( taConnections,"CONNECTION" )
-
-			IF tnConnection_Count > 0
-				ASORT( taConnections, 1, -1, 0, 1 )
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-					<<>>	<CONNECTIONS>
-				ENDTEXT
-
-				FOR I = 1 TO tnConnection_Count
-
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		<CONNECTION>
-						<<>>			<Name><<taConnections(I)>></Name>
-						<<>>			<Comment><<DBGETPROP(taConnections(I),"CONNECTION","Comment")>></Comment>
-						<<>>			<DataSource><<DBGETPROP(taConnections(I),"CONNECTION","DataSource")>></DataSource>
-						<<>>			<Database><<DBGETPROP(taConnections(I),"CONNECTION","Database")>></Database>
-						<<>>			<ConnectString><<DBGETPROP(taConnections(I),"CONNECTION","ConnectString")>></ConnectString>
-						<<>>			<Asynchronous><<DBGETPROP(taConnections(I),"CONNECTION","Asynchronous")>></Asynchronous>
-						<<>>			<BatchMode><<DBGETPROP(taConnections(I),"CONNECTION","BatchMode")>></BatchMode>
-						<<>>			<ConnectTimeout><<DBGETPROP(taConnections(I),"CONNECTION","ConnectTimeout")>></ConnectTimeout>
-						<<>>			<DisconnectRollback><<DBGETPROP(taConnections(I),"CONNECTION","DisconnectRollback")>></DisconnectRollback>
-						<<>>			<DispLogin><<DBGETPROP(taConnections(I),"CONNECTION","DispLogin")>></DispLogin>
-						<<>>			<DispWarnings><<DBGETPROP(taConnections(I),"CONNECTION","DispWarnings")>></DispWarnings>
-						<<>>			<IdleTimeout><<DBGETPROP(taConnections(I),"CONNECTION","IdleTimeout")>></IdleTimeout>
-						<<>>			<PacketSize><<DBGETPROP(taConnections(I),"CONNECTION","PacketSize")>></PacketSize>
-						<<>>			<PassWord><<DBGETPROP(taConnections(I),"CONNECTION","PassWord")>></PassWord>
-						<<>>			<QueryTimeout><<DBGETPROP(taConnections(I),"CONNECTION","QueryTimeout")>></QueryTimeout>
-						<<>>			<Transactions><<DBGETPROP(taConnections(I),"CONNECTION","Transactions")>></Transactions>
-						<<>>			<UserId><<DBGETPROP(taConnections(I),"CONNECTION","UserId")>></UserId>
-						<<>>			<WaitTime><<DBGETPROP(taConnections(I),"CONNECTION","WaitTime")>></WaitTime>
-						<<>>		</CONNECTION>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	</CONNECTIONS>
-					<<>>
-				ENDTEXT
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBC_TABLES
-		LPARAMETERS taTables, tnTable_Count
-
-		EXTERNAL ARRAY taTables
-
-		TRY
-			LOCAL I, X, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION
-			STORE 0 TO I, X, tnTable_Count, lnField_Count
-			lcText	= ''
-			lcDBC	= JUSTSTEM(DBC())
-
-			DIMENSION taTables(1)
-			tnTable_Count	= ADBOBJECTS( taTables,"TABLE" )
-
-			IF tnTable_Count > 0
-				ASORT( taTables, 1, -1, 0, 1 )
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-					<<>>	<TABLES>
-				ENDTEXT
-
-				FOR I = 1 TO tnTable_Count
-
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		<TABLE>
-						<<>>			<Name><<taTables(I)>></Name>
-						<<>>			<Comment><<DBGETPROP(taTables(I),"TABLE","Comment")>></Comment>
-						<<>>			<Path><<DBGETPROP(taTables(I),"TABLE","Path")>></Path>
-						<<>>			<DeleteTrigger><<DBGETPROP(taTables(I),"TABLE","DeleteTrigger")>></DeleteTrigger>
-						<<>>			<InsertTrigger><<DBGETPROP(taTables(I),"TABLE","InsertTrigger")>></InsertTrigger>
-						<<>>			<UpdateTrigger><<DBGETPROP(taTables(I),"TABLE","UpdateTrigger")>></UpdateTrigger>
-						<<>>			<PrimaryKey><<DBGETPROP(taTables(I),"TABLE","PrimaryKey")>></PrimaryKey>
-						<<>>			<RuleExpression><<DBGETPROP(taTables(I),"TABLE","RuleExpression")>></RuleExpression>
-						<<>>			<RuleText><<DBGETPROP(taTables(I),"TABLE","RuleText")>></RuleText>
-					ENDTEXT
-
-					_TALLY	= 0
-					SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
-						INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Field',10) ;
-						AND TB2.objectname = PADR(LOWER(taTables(I)),128) ;
-						INTO ARRAY laFields
-					lnField_Count	= _TALLY
-
-					IF lnField_Count > 0
-						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>
-							<<>>			<FIELDS>
-						ENDTEXT
-
-						FOR X = 1 TO lnField_Count
-							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-								<<>>				<FIELD>
-								<<>>					<Name><<RTRIM(laFields(X))>></Name>
-								<<>>					<Caption><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Caption")>></Caption>
-								<<>>					<Comment><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Comment")>></Comment>
-								<<>>					<DefaultValue><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DefaultValue")>></DefaultValue>
-								<<>>					<DisplayClass><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DisplayClass")>></DisplayClass>
-								<<>>					<DisplayClassLibrary><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","DisplayClassLibrary")>></DisplayClassLibrary>
-								<<>>					<Format><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","Format")>></Format>
-								<<>>					<InputMask><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","InputMask")>></InputMask>
-								<<>>					<RuleExpression><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleExpression")>></RuleExpression>
-								<<>>					<RuleText><<DBGETPROP( RTRIM(taTables(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleText")>></RuleText>
-								<<>>				</FIELD>
-							ENDTEXT
-						ENDFOR
-
-						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>			</FIELDS>
-						ENDTEXT
-					ENDIF
-
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		</TABLE>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	</TABLES>
-					<<>>
-				ENDTEXT
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
-			ENDIF
-
-		CATCH TO loEx
-			IF BETWEEN(I, 1, tnTable_Count)
-				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "taTables(" + TRANSFORM(I) + ") = " + RTRIM(taTables(I))
-			ENDIF
-			IF BETWEEN(X, 1, lnField_Count)
-				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "laFields(" + TRANSFORM(X) + ") = " + RTRIM(laFields(X))
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			USE IN (SELECT("TB"))
-			USE IN (SELECT("TB2"))
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBC_VIEWS
-		LPARAMETERS taViews, tnView_Count
-
-		EXTERNAL ARRAY taViews
-
-		TRY
-			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION
-			STORE 0 TO I, X, tnView_Count, lnField_Count
-			lcText	= ''
-			lcDBC	= JUSTSTEM(DBC())
-
-			DIMENSION taViews(1)
-			tnView_Count	= ADBOBJECTS( taViews,"VIEW" )
-
-			IF tnView_Count > 0
-				ASORT( taViews, 1, -1, 0, 1 )
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-					<<>>	<VIEWS>
-				ENDTEXT
-
-				FOR I = 1 TO tnView_Count
-
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		<VIEW>
-						<<>>			<Name><<taViews(I)>></Name>
-						<<>>			<Comment><<DBGETPROP(taViews(I),"VIEW","Comment")>></Comment>
-						<<>>			<Tables><<DBGETPROP(taViews(I),"VIEW","Tables")>></Tables>
-						<<>>			<SQL><<DBGETPROP(taViews(I),"VIEW","SQL")>></SQL>
-						<<>>			<AllowSimultaneousFetch><<DBGETPROP(taViews(I),"VIEW","AllowSimultaneousFetch")>></AllowSimultaneousFetch>
-						<<>>			<BatchUpdateCount><<DBGETPROP(taViews(I),"VIEW","BatchUpdateCount")>></BatchUpdateCount>
-						<<>>			<CompareMemo><<DBGETPROP(taViews(I),"VIEW","CompareMemo")>></CompareMemo>
-						<<>>			<ConnectName><<DBGETPROP(taViews(I),"VIEW","ConnectName")>></ConnectName>
-						<<>>			<FetchAsNeeded><<DBGETPROP(taViews(I),"VIEW","FetchAsNeeded")>></FetchAsNeeded>
-						<<>>			<FetchMemo><<DBGETPROP(taViews(I),"VIEW","FetchMemo")>></FetchMemo>
-						<<>>			<FetchSize><<DBGETPROP(taViews(I),"VIEW","FetchSize")>></FetchSize>
-						<<>>			<MaxRecords><<DBGETPROP(taViews(I),"VIEW","MaxRecords")>></MaxRecords>
-						<<>>			<Offline><<DBGETPROP(taViews(I),"VIEW","Offline")>></Offline>
-						<<>>			<ParameterList><<DBGETPROP(taViews(I),"VIEW","ParameterList")>></ParameterList>
-						<<>>			<Prepared><<DBGETPROP(taViews(I),"VIEW","Prepared")>></Prepared>
-						<<>>			<RuleExpression><<DBGETPROP(taViews(I),"VIEW","RuleExpression")>></RuleExpression>
-						<<>>			<RuleText><<DBGETPROP(taViews(I),"VIEW","RuleText")>></RuleText>
-						<<>>			<SendUpdates><<DBGETPROP(taViews(I),"VIEW","SendUpdates")>></SendUpdates>
-						<<>>			<ShareConnection><<DBGETPROP(taViews(I),"VIEW","ShareConnection")>></ShareConnection>
-						<<>>			<SourceType><<DBGETPROP(taViews(I),"VIEW","SourceType")>></SourceType>
-						<<>>			<UpdateType><<DBGETPROP(taViews(I),"VIEW","UpdateType")>></UpdateType>
-						<<>>			<UseMemoSize><<DBGETPROP(taViews(I),"VIEW","UseMemoSize")>></UseMemoSize>
-						<<>>			<WhereType><<DBGETPROP(taViews(I),"VIEW","WhereType")>></WhereType>
-					ENDTEXT
-
-					_TALLY	= 0
-					_TALLY	= 0
-					SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
-						INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Field',10) ;
-						AND TB2.objectname = PADR(LOWER(taViews(I)),128) ;
-						INTO ARRAY laFields
-					lnField_Count	= _TALLY
-
-					IF lnField_Count > 0
-						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>
-							<<>>			<FIELDS>
-						ENDTEXT
-
-						FOR X = 1 TO lnField_Count
-							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-								<<>>				<FIELD>
-								<<>>					<Name><<RTRIM(laFields(X))>></Name>
-								<<>>					<Caption><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Caption")>></Caption>
-								<<>>					<Comment><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Comment")>></Comment>
-								<<>>					<DataType><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","DataType")>></DataType>
-								<<>>					<DefaultValue><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","DefaultValue")>></DefaultValue>
-								<<>>					<Format><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Format")>></Format>
-								<<>>					<InputMask><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","InputMask")>></InputMask>
-								<<>>					<KeyField><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","KeyField")>></KeyField>
-								<<>>					<RuleExpression><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleExpression")>></RuleExpression>
-								<<>>					<RuleText><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","RuleText")>></RuleText>
-								<<>>					<Updatable><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","Updatable")>></Updatable>
-								<<>>					<UpdateName><<DBGETPROP( RTRIM(taViews(I)) + '.' + RTRIM(laFields(X)),"FIELD","UpdateName")>></UpdateName>
-								<<>>				</FIELD>
-							ENDTEXT
-						ENDFOR
-
-						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>			</FIELDS>
-						ENDTEXT
-					ENDIF
-
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		</VIEW>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	</VIEWS>
-					<<>>
-				ENDTEXT
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
-			ENDIF
-
-		CATCH TO loEx
-			IF BETWEEN(I, 1, tnTable_Count)
-				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "taViews(" + TRANSFORM(I) + ") = " + RTRIM(taViews(I))
-			ENDIF
-			IF BETWEEN(X, 1, lnField_Count)
-				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "laFields(" + TRANSFORM(X) + ") = " + RTRIM(laFields(X))
-			ENDIF
-
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBC_RELATIONS
-		LPARAMETERS taRelations, tnRelation_Count
-
-		EXTERNAL ARRAY taRelations
-
-		TRY
-			LOCAL I, lcText, lcDBC, loEx AS EXCEPTION
-			lcText	= ''
-			lcDBC	= JUSTSTEM(DBC())
-
-			DIMENSION taRelations(1,5)
-			tnRelation_Count	= ADBOBJECTS( taRelations,"RELATION" )
-
-			IF tnRelation_Count > 0
-				ASORT( taRelations, 2, -1, 0, 1 )
-				ASORT( taRelations, 1, -1, 0, 1 )
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-					<<>>	<RELATIONS>
-				ENDTEXT
-
-				FOR I = 1 TO tnRelation_Count
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		<RELATION>
-						<<>>			<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
-						<<>>			<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
-						<<>>			<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
-						<<>>			<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
-						<<>>			<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
-						<<>>		</RELATION>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	</RELATIONS>
-					<<>>
-				ENDTEXT
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + lcText
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE write_DefinicionObjetosOLE
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
@@ -8393,6 +7839,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			LOCAL loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError
 
 			lnDatabases_Count	= ADATABASES(laDatabases)
@@ -8402,7 +7849,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			THIS.write_PROGRAM_HEADER()
 
 			*-- Header
-			THIS.write_DBF_HEADER( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
+			loTable			= CREATEOBJECT('CL_DBF_TABLE')
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name )
 
 
 			*-- Genero el DB2
@@ -8459,6 +7907,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			LOCAL loDatabase AS CL_DATABASE OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError
 
 			lnDatabases_Count	= ADATABASES(laDatabases)
@@ -8469,7 +7918,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			THIS.write_PROGRAM_HEADER()
 
 			*-- Header
-			THIS.write_DBC_HEADER()
+			loDatabase		= CREATEOBJECT('CL_DATABASE')
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + loDatabase.toText()
 
 
 			*-- Genero el DC2
@@ -8514,6 +7964,8 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
+		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
 
 	l_Debug				= .F.
@@ -8534,8 +7986,24 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE set_Line
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@!    OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(v! IN    ) Número de línea en análisis
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE toText
 	ENDPROC
 
 
@@ -8555,6 +8023,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
 
 	l_Debug				= .F.
@@ -8580,6 +8049,12 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 	*******************************************************************************************************************
 	PROCEDURE set_Line
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@!    OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(v! IN    ) Número de línea en análisis
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
 	ENDPROC
@@ -9242,7 +8717,6 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [<memberdata name="dbwriteobjects" display="DBWriteObjects"/>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="_comment" display="_Comment"/>] ;
@@ -9289,6 +8763,13 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9366,6 +8847,68 @@ DEFINE CLASS CL_DATABASE AS CL_CUS_BASE
 	PROCEDURE DBWriteObjects
 		LPARAMETERS tc_OutputFile
 		
+		LOCAL loTable AS CL_DBC_TABLE ;
+			, loConnection AS CL_DBC_CONNECTION ;
+			, loView AS CL_DBC_VIEW ;
+			, loRelation AS CL_DBC_RELATION
+		
+		
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE toText
+		TRY
+			LOCAL I, lcText, lcDBC, loEx AS EXCEPTION
+			LOCAL loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
+			LOCAL loTables AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
+			LOCAL loViews AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelations AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<DATABASE>
+				<<>>	<Name><<lcDBC>></Name>
+				<<>>	<Comment><<DBGETPROP(lcDBC,"DATABASE","Comment")>></Comment>
+				<<>>	<Version><<DBGETPROP(lcDBC,"DATABASE","Version")>></Version>
+				<<>>	<DBCEvents><<DBGETPROP(lcDBC,"DATABASE","DBCEvents")>></DBCEvents>
+				<<>>	<DBCEventFilename><<DBGETPROP(lcDBC,"DATABASE","DBCEventFilename")>></DBCEventFilename>
+			ENDTEXT
+
+			*-- Connections
+			loConnections	= THIS._Connections
+			lcText			= lcText + loConnections.toText()
+
+			*-- Tables
+			loTables		= THIS._Tables
+			lcText			= lcText + loTables.toText()
+
+			*-- Views
+			loViews			= THIS._Views
+			lcText			= lcText + loViews.toText()
+
+			*-- Relations
+			loRelations		= THIS._Relations
+			lcText			= lcText + loRelations.toText()
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				</DATABASE>
+				<<>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
 	ENDPROC
 
 
@@ -9378,13 +8921,16 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_COL_BASE
 		LOCAL THIS AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
-
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9433,6 +8979,56 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_COL_BASE
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taConnections				(@?    OUT) Array de conexiones
+		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taConnections, tnConnection_Count
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL loConnection AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			DIMENSION taConnections(1)
+			tnConnection_Count	= ADBOBJECTS( taConnections,"CONNECTION" )
+
+			IF tnConnection_Count > 0
+				ASORT( taConnections, 1, -1, 0, 1 )
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>	<CONNECTIONS>
+				ENDTEXT
+				
+				loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
+
+				FOR I = 1 TO tnConnection_Count
+					lcText	= lcText + loConnection.toText( taConnections(I) )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	</CONNECTIONS>
+					<<>>
+				ENDTEXT
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9461,7 +9057,6 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_CUS_BASE
 		+ [<memberdata name="_transactions" display="_Transactions"/>] ;
 		+ [<memberdata name="_userid" display="_UserId"/>] ;
 		+ [<memberdata name="_waittime" display="_WaitTime"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
@@ -9488,6 +9083,13 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_CUS_BASE
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9534,6 +9136,53 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_CUS_BASE
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcConnection				(v! IN    ) Nombre de la Conexión
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcConnection
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		<CONNECTION>
+				<<>>			<Name><<tcConnection>></Name>
+				<<>>			<Comment><<DBGETPROP(tcConnection,"CONNECTION","Comment")>></Comment>
+				<<>>			<DataSource><<DBGETPROP(tcConnection,"CONNECTION","DataSource")>></DataSource>
+				<<>>			<Database><<DBGETPROP(tcConnection,"CONNECTION","Database")>></Database>
+				<<>>			<ConnectString><<DBGETPROP(tcConnection,"CONNECTION","ConnectString")>></ConnectString>
+				<<>>			<Asynchronous><<DBGETPROP(tcConnection,"CONNECTION","Asynchronous")>></Asynchronous>
+				<<>>			<BatchMode><<DBGETPROP(tcConnection,"CONNECTION","BatchMode")>></BatchMode>
+				<<>>			<ConnectTimeout><<DBGETPROP(tcConnection,"CONNECTION","ConnectTimeout")>></ConnectTimeout>
+				<<>>			<DisconnectRollback><<DBGETPROP(tcConnection,"CONNECTION","DisconnectRollback")>></DisconnectRollback>
+				<<>>			<DispLogin><<DBGETPROP(tcConnection,"CONNECTION","DispLogin")>></DispLogin>
+				<<>>			<DispWarnings><<DBGETPROP(tcConnection,"CONNECTION","DispWarnings")>></DispWarnings>
+				<<>>			<IdleTimeout><<DBGETPROP(tcConnection,"CONNECTION","IdleTimeout")>></IdleTimeout>
+				<<>>			<PacketSize><<DBGETPROP(tcConnection,"CONNECTION","PacketSize")>></PacketSize>
+				<<>>			<PassWord><<DBGETPROP(tcConnection,"CONNECTION","PassWord")>></PassWord>
+				<<>>			<QueryTimeout><<DBGETPROP(tcConnection,"CONNECTION","QueryTimeout")>></QueryTimeout>
+				<<>>			<Transactions><<DBGETPROP(tcConnection,"CONNECTION","Transactions")>></Transactions>
+				<<>>			<UserId><<DBGETPROP(tcConnection,"CONNECTION","UserId")>></UserId>
+				<<>>			<WaitTime><<DBGETPROP(tcConnection,"CONNECTION","WaitTime")>></WaitTime>
+				<<>>		</CONNECTION>
+			ENDTEXT
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9543,13 +9192,16 @@ DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
 		LOCAL THIS AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
-
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9598,6 +9250,64 @@ DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taTables					(@?    OUT) Array de conexiones
+		* lnTable_Count				(@?    OUT) Cantidad de conexiones
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taTables, tnTable_Count
+		
+		EXTERNAL ARRAY taTables
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
+			STORE 0 TO I, tnTable_Count
+			lcText	= ''
+
+			DIMENSION taTables(1)
+			tnTable_Count	= ADBOBJECTS( taTables,"TABLE" )
+
+			IF tnTable_Count > 0
+				ASORT( taTables, 1, -1, 0, 1 )
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>	<TABLES>
+				ENDTEXT
+				
+				loTable	= CREATEOBJECT('CL_DBC_TABLE')
+
+				FOR I = 1 TO tnTable_Count
+					lcText	= lcText + loTable.toText( taTables(I) )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	</TABLES>
+					<<>>
+				ENDTEXT
+			ENDIF
+
+
+		CATCH TO loEx
+			IF BETWEEN(I, 1, tnTable_Count)
+				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "taTables(" + TRANSFORM(I) + ") = " + RTRIM(TRANSFORM(taTables(I)))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9617,7 +9327,6 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 		+ [<memberdata name="_primarykey" display="_PrimaryKey"/>] ;
 		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
 		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
@@ -9646,6 +9355,13 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9697,6 +9413,60 @@ DEFINE CLASS CL_DBC_TABLE AS CL_CUS_BASE
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcTable					(v! IN    ) Nombre de la Tabla
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcTable
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+			LOCAL loIndexes	AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL loFields	AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>		<TABLE>
+				<<>>			<Name><<tcTable>></Name>
+				<<>>			<Comment><<DBGETPROP(tcTable,"TABLE","Comment")>></Comment>
+				<<>>			<Path><<DBGETPROP(tcTable,"TABLE","Path")>></Path>
+				<<>>			<DeleteTrigger><<DBGETPROP(tcTable,"TABLE","DeleteTrigger")>></DeleteTrigger>
+				<<>>			<InsertTrigger><<DBGETPROP(tcTable,"TABLE","InsertTrigger")>></InsertTrigger>
+				<<>>			<UpdateTrigger><<DBGETPROP(tcTable,"TABLE","UpdateTrigger")>></UpdateTrigger>
+				<<>>			<PrimaryKey><<DBGETPROP(tcTable,"TABLE","PrimaryKey")>></PrimaryKey>
+				<<>>			<RuleExpression><<DBGETPROP(tcTable,"TABLE","RuleExpression")>></RuleExpression>
+				<<>>			<RuleText><<DBGETPROP(tcTable,"TABLE","RuleText")>></RuleText>
+			ENDTEXT
+
+			loFields	= CREATEOBJECT('CL_DBC_FIELDS_DB')
+			lcText		= lcText + loFields.toText( tcTable )
+
+			loIndexes	= CREATEOBJECT('CL_DBC_INDEXES_DB')
+			lcText		= lcText + loIndexes.toText( tcTable )
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		</TABLE>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "tcTable = " + RTRIM(TRANSFORM(tcTable))
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9706,13 +9476,16 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
 		LOCAL THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
-
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9762,6 +9535,64 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcTable					(v! IN    ) Nombre de la Tabla
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcTable
+
+		TRY
+			LOCAL X, lcText, lnField_Count, laFields(1), loEx AS EXCEPTION
+			LOCAL loField AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
+			STORE 0 TO X, lnField_Count
+			lcText	= ''
+
+			_TALLY	= 0
+			SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
+				INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Field',10) ;
+				AND TB2.objectname = PADR(LOWER(tcTable),128) ;
+				INTO ARRAY laFields
+			lnField_Count	= _TALLY
+
+			IF lnField_Count > 0
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>			<FIELDS>
+				ENDTEXT
+				
+				loField	= CREATEOBJECT('CL_DBC_FIELD_DB')
+
+				FOR X = 1 TO lnField_Count
+					lcText	= lcText + loField.toText( tcTable, laFields(X) )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>			</FIELDS>
+				ENDTEXT
+			ENDIF
+
+
+		CATCH TO loEx
+			IF BETWEEN(X, 1, lnField_Count)
+				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "tcTable = " + RTRIM(TRANSFORM(tcTable)) + ", laFields(" + TRANSFORM(X) + ") = " + RTRIM(TRANSFORM(laFields(X)))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TB"))
+			USE IN (SELECT("TB2"))
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9782,7 +9613,6 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_CUS_BASE
 		+ [<memberdata name="_inputmask" display="_InputMask"/>] ;
 		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
 		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
@@ -9801,6 +9631,13 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_CUS_BASE
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9847,6 +9684,200 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_CUS_BASE
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcTable					(v! IN    ) Nombre de la Tabla
+		* tcField					(v! IN    ) Nombre del campo
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcTable, tcField
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+			lcText	= ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>				<FIELD>
+				<<>>					<Name><<RTRIM(tcField)>></Name>
+				<<>>					<Caption><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","Caption")>></Caption>
+				<<>>					<Comment><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","Comment")>></Comment>
+				<<>>					<DefaultValue><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","DefaultValue")>></DefaultValue>
+				<<>>					<DisplayClass><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","DisplayClass")>></DisplayClass>
+				<<>>					<DisplayClassLibrary><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","DisplayClassLibrary")>></DisplayClassLibrary>
+				<<>>					<Format><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","Format")>></Format>
+				<<>>					<InputMask><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","InputMask")>></InputMask>
+				<<>>					<RuleExpression><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","RuleExpression")>></RuleExpression>
+				<<>>					<RuleText><<DBGETPROP( RTRIM(tcTable) + '.' + RTRIM(tcField),"FIELD","RuleText")>></RuleText>
+				<<>>				</FIELD>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "tcTable = " + RTRIM(TRANSFORM(tcTable)) + ", tcField = " + RTRIM(TRANSFORM(tcField))
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_INDEXES_DB AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*-- Info
+	_Name					= ''
+	_IsUnique				= ''
+	_Comment				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcTable					(v! IN    ) Nombre de la Tabla
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcTable
+
+		TRY
+			LOCAL X, lcText, lnIndex_Count, laIndexes(1), loEx AS EXCEPTION
+			LOCAL loIndex AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
+			STORE 0 TO X, lnIndex_Count
+			lcText	= ''
+
+			_TALLY	= 0
+			SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
+				INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Index',10) ;
+				AND TB2.objectname = PADR(LOWER(tcTable),128) ;
+				INTO ARRAY laIndexes
+			lnIndex_Count	= _TALLY
+
+			IF lnIndex_Count > 0
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>			<INDEXES>
+				ENDTEXT
+
+				loIndex	= CREATEOBJECT('CL_DBC_INDEX_DB')
+
+				FOR X = 1 TO lnIndex_Count
+					lcText	= lcText + loIndex.toText( laIndexes(X) )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>			</INDEXES>
+				ENDTEXT
+			ENDIF
+
+
+		CATCH TO loEx
+			IF BETWEEN(X, 1, lnField_Count)
+				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "laIndexes(" + TRANSFORM(X) + ") = " + RTRIM(laIndexes(X))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TB"))
+			USE IN (SELECT("TB2"))
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_INDEX_DB AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="_name" display="_Name"/>] ;
+		+ [<memberdata name="_isunique" display="_IsUnique"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Info
+	_Name					= ''
+	_IsUnique				= ''
+	_Comment				= ''
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcIndex					(v! IN    ) Nombre del índice
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcIndex
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+			lcText	= ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>				<INDEX>
+				<<>>					<Name><<RTRIM(tcIndex)>></Name>
+				<<>>				</INDEX>
+			ENDTEXT
+
+		CATCH TO loEx
+			loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "tcIndex = " + RTRIM(TRANSFORM(tcIndex))
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_INDEXES_VW AS CL_DBC_INDEXES_DB
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBC_INDEX_VW AS CL_DBC_INDEX_DB
 ENDDEFINE
 
 
@@ -9856,13 +9887,15 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
 		LOCAL THIS AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
 
-
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -9911,6 +9944,64 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taViews					(@?    OUT) Array de vistas
+		* tnView_Count				(@?    OUT) Cantidad de vistas
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taViews, tnView_Count
+
+		EXTERNAL ARRAY taViews
+
+		TRY
+			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION
+			LOCAL loView AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
+			STORE 0 TO I, X, tnView_Count, lnField_Count
+			lcText	= ''
+			lcDBC	= JUSTSTEM(DBC())
+
+			DIMENSION taViews(1)
+			tnView_Count	= ADBOBJECTS( taViews,"VIEW" )
+
+			IF tnView_Count > 0
+				ASORT( taViews, 1, -1, 0, 1 )
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>	<VIEWS>
+				ENDTEXT
+				
+				loView	= CREATEOBJECT('CL_DBC_VIEW')
+
+				FOR I = 1 TO tnView_Count
+					lcText	= lcText + loView.toText( taViews(I) )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	</VIEWS>
+					<<>>
+				ENDTEXT
+			ENDIF
+
+
+		CATCH TO loEx
+			IF BETWEEN(I, 1, tnTable_Count)
+				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "taViews(" + TRANSFORM(I) + ") = " + RTRIM(taViews(I))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9926,7 +10017,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 		+ [<memberdata name="_tables" display="_Tables"/>] ;
 		+ [<memberdata name="_sql" display="_SQL"/>] ;
 		+ [<memberdata name="_allowsimultaneousfetch" display="_AllowSimultaneousFetch"/>] ;
-		+ [<memberdata name="batchupdatecount" display="BatchUpdateCount"/>] ;
+		+ [<memberdata name="_batchupdatecount" display="_BatchUpdateCount"/>] ;
 		+ [<memberdata name="_comparememo" display="_CompareMemo"/>] ;
 		+ [<memberdata name="_connectname" display="_ConnectName"/>] ;
 		+ [<memberdata name="_fetchasneeded" display="_FetchAsNeeded"/>] ;
@@ -9935,7 +10026,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 		+ [<memberdata name="_maxrecords" display="_MaxRecords"/>] ;
 		+ [<memberdata name="_offline" display="_Offline"/>] ;
 		+ [<memberdata name="_parameterlist" display="_ParameterList"/>] ;
-		+ [<memberdata name="prepared" display="Prepared"/>] ;
+		+ [<memberdata name="_prepared" display="_Prepared"/>] ;
 		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
 		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
 		+ [<memberdata name="_sendupdates" display="_SendUpdates"/>] ;
@@ -9944,7 +10035,8 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 		+ [<memberdata name="_updatetype" display="_UpdateType"/>] ;
 		+ [<memberdata name="_usememosize" display="_UseMemoSize"/>] ;
 		+ [<memberdata name="_wheretype" display="_WhereType"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="_fields" display="_Fields"/>] ;
+		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
 		+ [</VFPData>]
 
 
@@ -9975,6 +10067,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 
 	*-- Sub-objects
 	_Fields					= NULL
+	_Indexes				= NULL
 
 
 	************************************************************************************************
@@ -9982,16 +10075,25 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 		DODEFAULT()
 		*--
 		THIS._Fields	= CREATEOBJECT("CL_DBC_FIELDS_VW")
+		THIS._Indexes	= CREATEOBJECT("CL_DBC_INDEXES_VW")
 	ENDPROC
 
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			LOCAL loFields AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBC_INDEXES_VW OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcPropName, lcValue
 
 			IF LEFT(tcLine, LEN(C_VIEW_I)) == C_VIEW_I
@@ -10010,6 +10112,10 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 					CASE C_FIELDS_I $ tcLine
 						loFields	= THIS._Fields
 						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					*CASE C_INDEXES_I $ tcLine
+					*	loIndexes	= THIS._Indexes
+					*	loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de VIEW
 						*-- Estructura a reconocer:
@@ -10038,6 +10144,73 @@ DEFINE CLASS CL_DBC_VIEW AS CL_CUS_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcView					(v! IN    ) Vista en evaluación
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcView
+
+		TRY
+			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION
+			LOCAL loFields AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBC_INDEXES_VW OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>		<VIEW>
+				<<>>			<Name><<tcView>></Name>
+				<<>>			<Comment><<DBGETPROP(tcView,"VIEW","Comment")>></Comment>
+				<<>>			<Tables><<DBGETPROP(tcView,"VIEW","Tables")>></Tables>
+				<<>>			<SQL><<DBGETPROP(tcView,"VIEW","SQL")>></SQL>
+				<<>>			<AllowSimultaneousFetch><<DBGETPROP(tcView,"VIEW","AllowSimultaneousFetch")>></AllowSimultaneousFetch>
+				<<>>			<BatchUpdateCount><<DBGETPROP(tcView,"VIEW","BatchUpdateCount")>></BatchUpdateCount>
+				<<>>			<CompareMemo><<DBGETPROP(tcView,"VIEW","CompareMemo")>></CompareMemo>
+				<<>>			<ConnectName><<DBGETPROP(tcView,"VIEW","ConnectName")>></ConnectName>
+				<<>>			<FetchAsNeeded><<DBGETPROP(tcView,"VIEW","FetchAsNeeded")>></FetchAsNeeded>
+				<<>>			<FetchMemo><<DBGETPROP(tcView,"VIEW","FetchMemo")>></FetchMemo>
+				<<>>			<FetchSize><<DBGETPROP(tcView,"VIEW","FetchSize")>></FetchSize>
+				<<>>			<MaxRecords><<DBGETPROP(tcView,"VIEW","MaxRecords")>></MaxRecords>
+				<<>>			<Offline><<DBGETPROP(tcView,"VIEW","Offline")>></Offline>
+				<<>>			<ParameterList><<DBGETPROP(tcView,"VIEW","ParameterList")>></ParameterList>
+				<<>>			<Prepared><<DBGETPROP(tcView,"VIEW","Prepared")>></Prepared>
+				<<>>			<RuleExpression><<DBGETPROP(tcView,"VIEW","RuleExpression")>></RuleExpression>
+				<<>>			<RuleText><<DBGETPROP(tcView,"VIEW","RuleText")>></RuleText>
+				<<>>			<SendUpdates><<DBGETPROP(tcView,"VIEW","SendUpdates")>></SendUpdates>
+				<<>>			<ShareConnection><<DBGETPROP(tcView,"VIEW","ShareConnection")>></ShareConnection>
+				<<>>			<SourceType><<DBGETPROP(tcView,"VIEW","SourceType")>></SourceType>
+				<<>>			<UpdateType><<DBGETPROP(tcView,"VIEW","UpdateType")>></UpdateType>
+				<<>>			<UseMemoSize><<DBGETPROP(tcView,"VIEW","UseMemoSize")>></UseMemoSize>
+				<<>>			<WhereType><<DBGETPROP(tcView,"VIEW","WhereType")>></WhereType>
+			ENDTEXT
+
+			loFields	= THIS._Fields
+			lcText		= lcText + loFields.toText( tcView )
+			
+			loIndexes	= THIS._Indexes
+			lcText		= lcText + loIndexes.toText( tcView )
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		</VIEW>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "tcView = " + RTRIM(TRANSFORM(tcView))
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10047,18 +10220,20 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_COL_BASE
 		LOCAL THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
-
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
 			LOCAL loField AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
-			*LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			STORE '' TO lcPropName, lcValue
 
@@ -10103,6 +10278,65 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_COL_BASE
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcView					(v! IN    ) Nombre de la Vista
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcView
+
+		TRY
+			LOCAL X, lcText, lnField_Count, laFields(1), loEx AS EXCEPTION
+			LOCAL loField AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
+			STORE 0 TO X, tnTable_Count, lnField_Count
+			lcText	= ''
+
+			_TALLY	= 0
+			SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
+				INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Field',10) ;
+				AND TB2.objectname = PADR(LOWER(tcView),128) ;
+				INTO ARRAY laFields
+			lnField_Count	= _TALLY
+
+			IF lnField_Count > 0
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>			<FIELDS>
+				ENDTEXT
+
+				loField = CREATEOBJECT("CL_DBC_FIELD_VW")
+
+				FOR X = 1 TO lnField_Count
+					lcText	= lcText + loField.toText( tcView, laFields(X) )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>			</FIELDS>
+				ENDTEXT
+			ENDIF
+
+
+		CATCH TO loEx
+			IF BETWEEN(X, 1, lnField_Count)
+				loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "laFields(" + TRANSFORM(X) + ") = " + RTRIM(laFields(X))
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TB"))
+			USE IN (SELECT("TB2"))
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10127,7 +10361,6 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_CUS_BASE
 		+ [<memberdata name="_ruletext" display="_RuleText"/>] ;
 		+ [<memberdata name="_updatable" display="_Updatable"/>] ;
 		+ [<memberdata name="_updatename" display="_UpdateName"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
@@ -10148,8 +10381,14 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_CUS_BASE
 	_UpdateName				= ''
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10179,6 +10418,7 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_CUS_BASE
 				ENDFOR
 			ENDIF
 
+
 		CATCH TO loEx
 			IF loEx.ERRORNO = 1470	&& Incorrect property name.
 				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
@@ -10196,6 +10436,51 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_CUS_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcView					(v! IN    ) Nombre de la Vista
+		* tcField					(v! IN    ) Nombre del campo
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcView, tcField
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+			lcText	= ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>				<FIELD>
+				<<>>					<Name><<RTRIM(tcField)>></Name>
+				<<>>					<Caption><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","Caption")>></Caption>
+				<<>>					<Comment><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","Comment")>></Comment>
+				<<>>					<DataType><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","DataType")>></DataType>
+				<<>>					<DefaultValue><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","DefaultValue")>></DefaultValue>
+				<<>>					<Format><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","Format")>></Format>
+				<<>>					<InputMask><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","InputMask")>></InputMask>
+				<<>>					<KeyField><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","KeyField")>></KeyField>
+				<<>>					<RuleExpression><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","RuleExpression")>></RuleExpression>
+				<<>>					<RuleText><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","RuleText")>></RuleText>
+				<<>>					<Updatable><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","Updatable")>></Updatable>
+				<<>>					<UpdateName><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","UpdateName")>></UpdateName>
+				<<>>				</FIELD>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			loEx.USERVALUE	= loEx.USERVALUE + CR_LF + "tcField = " + RTRIM(TRANSFORM(tcField))
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10205,18 +10490,19 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_COL_BASE
 		LOCAL THIS AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
 
-
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
 			LOCAL loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
-			*LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			STORE '' TO lcPropName, lcValue
 
@@ -10261,6 +10547,58 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_COL_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taRelations				(@?    OUT) Array de relaciones
+		* tnRelation_Count			(@?    OUT) Cantidad de relaciones
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taRelations, tnRelation_Count
+
+		EXTERNAL ARRAY taRelations
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			DIMENSION taRelations(1,5)
+			tnRelation_Count	= ADBOBJECTS( taRelations,"RELATION" )
+
+			IF tnRelation_Count > 0
+				ASORT( taRelations, 2, -1, 0, 1 )
+				ASORT( taRelations, 1, -1, 0, 1 )
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>	<RELATIONS>
+				ENDTEXT
+				
+				loRelation	= CREATEOBJECT('CL_DBC_RELATION')
+
+				FOR I = 1 TO tnRelation_Count
+					lcText	= lcText + loRelation.toText( @taRelations, I )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	</RELATIONS>
+					<<>>
+				ENDTEXT
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10276,7 +10614,6 @@ DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
 		+ [<memberdata name="_childindex" display="_ChildIndex"/>] ;
 		+ [<memberdata name="_parentindex" display="_ParentIndex"/>] ;
 		+ [<memberdata name="_refintegrity" display="_RefIntegrity"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
@@ -10290,6 +10627,13 @@ DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10336,6 +10680,42 @@ DEFINE CLASS CL_DBC_RELATION AS CL_CUS_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taRelations				(@! IN    ) Array de relaciones
+		* I							(@! IN    ) Número de relación evaluado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taRelations, I
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+			lcText	= ''
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		<RELATION>
+				<<>>			<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
+				<<>>			<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
+				<<>>			<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
+				<<>>			<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
+				<<>>			<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
+				<<>>		</RELATION>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10346,7 +10726,6 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [<memberdata name="_codepage" display="_CodePage"/>] ;
 		+ [<memberdata name="_database" display="_Database"/>] ;
 		+ [<memberdata name="_filetype" display="_FileType"/>] ;
@@ -10379,7 +10758,6 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	_Indexes			= NULL
 
 
-	************************************************************************************************
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
@@ -10388,8 +10766,14 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10446,6 +10830,70 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tn_HexFileType			(v! IN    ) Tipo de archivo (en Hex)
+		* tl_FileHasCDX				(v! IN    ) Indica si el archivo tiene CDX asociado
+		* tl_FileHasMemo			(v! IN    ) Indica si el archivo tiene MEMO (FPT) asociado
+		* tl_FileIsDBC				(v! IN    ) Indica si el archivo es un DBC
+		* tc_DBC_Name				(v! IN    ) Nombre del DBC (si tiene)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name
+		
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION
+			LOCAL loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			*FOR I = 1 TO AFIELDS(laFields)
+			*	IF INLIST( laFields(I,2), 'M', 'Q', 'V', 'W' )
+			*		ll_FileHasMemo	= .T.
+			*		EXIT
+			*	ENDIF
+			*ENDFOR
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<C_TABLE_I>>
+				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(THIS.c_InputFile, 'FPT'), '' )>></MemoFile>
+				<<>>	<CodePage><<CPDBF('TABLABIN')>></CodePage>
+				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
+				<<>>	<Database><<tc_DBC_Name>></Database>
+				<<>>	<FileType><<TRANSFORM(tn_HexFileType, '@0')>></FileType>
+				<<>>	<FileType_Descrip><<THIS.fileTypeDescription(tn_HexFileType)>></FileType_Descrip>
+			ENDTEXT
+
+			*-- Fields
+			loFields	= THIS._Fields
+			lcText		= lcText + loFields.toText()
+
+			*-- Indexes
+			loIndexes	= THIS._Indexes
+			lcText		= lcText + loIndexes.toText()
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_TABLE_F>>
+				<<>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10455,13 +10903,16 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 		LOCAL THIS AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
-
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10511,13 +10962,59 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taFields					(@?    OUT) Array de información de campos
+		* tnField_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taFields, tnField_Count
+		
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>	<<C_FIELDS_I>>
+			ENDTEXT
+			
+			tnField_Count	= AFIELDS(taFields)
+			loField			= CREATEOBJECT('CL_DBF_FIELD')
+
+			FOR I = 1 TO tnField_Count
+				lcText	= lcText + loField.toText( @taFields, I )
+			ENDFOR
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>	<<C_FIELDS_F>>
+				<<>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
 *******************************************************************************************************************
 DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 	#IF .F.
-		LOCAL THIS AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
+		LOCAL THIS AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
@@ -10539,7 +11036,6 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 		+ [<memberdata name="_tablecomment" display="_TableComment"/>] ;
 		+ [<memberdata name="_autoinc_nextval" display="_AutoInc_NextVal"/>] ;
 		+ [<memberdata name="_autoinc_step" display="_AutoInc_Step"/>] ;
-		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [</VFPData>]
 
 
@@ -10566,6 +11062,13 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10612,6 +11115,57 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taFields					(@! IN    ) Array de información de campos
+		* I							(@! IN    ) Campo en evaluación
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taFields, I
+		
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			lcText	= ''
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		<<C_FIELD_I>>
+				<<>>			<Name><<taFields(I,1)>></Name>
+				<<>>			<Type><<taFields(I,2)>></Type>
+				<<>>			<Width><<taFields(I,3)>></Width>
+				<<>>			<Decimals><<taFields(I,4)>></Decimals>
+				<<>>			<Null><<taFields(I,5)>></Null>
+				<<>>			<NoCPTran><<taFields(I,6)>></NoCPTran>
+				<<>>			<Field_Valid_Exp><<taFields(I,7)>></Field_Valid_Exp>
+				<<>>			<Field_Valid_Text><<taFields(I,8)>></Field_Valid_Text>
+				<<>>			<Field_Default_Value><<taFields(I,9)>></Field_Default_Value>
+				<<>>			<Table_Valid_Exp><<taFields(I,10)>></Table_Valid_Exp>
+				<<>>			<Table_Valid_Text><<taFields(I,11)>></Table_Valid_Text>
+				<<>>			<LongTableName><<taFields(I,12)>></LongTableName>
+				<<>>			<Ins_Trig_Exp><<taFields(I,13)>></Ins_Trig_Exp>
+				<<>>			<Upd_Trig_Exp><<taFields(I,14)>></Upd_Trig_Exp>
+				<<>>			<Del_Trig_Exp><<taFields(I,15)>></Del_Trig_Exp>
+				<<>>			<TableComment><<taFields(I,16)>></TableComment>
+				<<>>			<Autoinc_Nextval><<taFields(I,17)>></Autoinc_Nextval>
+				<<>>			<Autoinc_Step><<taFields(I,18)>></Autoinc_Step>
+				<<>>		<<C_FIELD_F>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10621,13 +11175,15 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 		LOCAL THIS AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
-	*	+ [</VFPData>]
 
-
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10676,6 +11232,56 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taTagInfo					(@?    OUT) Array de información de indices
+		* tnTagInfo_Count			(@?    OUT) Cantidad de índices
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taTagInfo, tnTagInfo_Count
+		
+		EXTERNAL ARRAY taTagInfo
+		
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+
+			IF TAGCOUNT() > 0
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>	<<C_CDX_I>><<CDX(1)>><<C_CDX_F>>
+					<<>>
+					<<>>	<<C_INDEXES_I>>
+				ENDTEXT
+
+				tnTagInfo_Count	= ATAGINFO( taTagInfo )
+				loIndex			= CREATEOBJECT("CL_DBF_INDEX")
+				
+				FOR I = 1 TO tnTagInfo_Count
+					lcText	= lcText + loIndex.toText( @taTagInfo, I )
+				ENDFOR
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	<<C_INDEXES_F>>
+					<<>>
+				ENDTEXT
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10704,8 +11310,14 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 	_Collate		= ''
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
@@ -10749,6 +11361,45 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 		ENDTRY
 
 		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taTagInfo					(@? IN    ) Array de información de indices
+		* I							(@? IN    ) Indice en evaluación
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taTagInfo, I
+		
+		EXTERNAL ARRAY taTagInfo
+		
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION
+			lcText	= ''
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		<INDEX>
+				<<>>			<TagName><<taTagInfo(I,1)>></TagName>
+				<<>>			<TagType><<taTagInfo(I,2)>></TagType>
+				<<>>			<Key><<taTagInfo(I,3)>></Key>
+				<<>>			<Filter><<taTagInfo(I,4)>></Filter>
+				<<>>			<Order><<taTagInfo(I,5)>></Order>
+				<<>>			<Collate><<taTagInfo(I,6)>></Collate>
+				<<>>		</INDEX>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
 	ENDPROC
 
 
