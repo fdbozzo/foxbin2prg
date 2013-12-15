@@ -407,7 +407,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.14
+	n_FB2PRG_Version		= 1.15
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -8997,10 +8997,20 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 
 	PROCEDURE getBinPropertyDataRecord
-		LPARAMETERS tcData, tnDataType
+		LPARAMETERS teData, tnDataType
 		LOCAL lcBinRecord, lnLen
-		lnLen				= 4 + 2 + 1 + LEN(tcData) + 1
-		lcBinRecord			= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataType) + tcData + CHR(0)
+		
+		lcBinRecord	= ''
+		
+		IF VARTYPE(teData) = 'N'
+			teData			= BINTOC( teData, "4RS" )
+			lnLen			= 4 + 2 + 1 + LEN(teData) + 1
+			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataType) + teData
+		ELSE
+			lnLen			= 4 + 2 + 1 + LEN(teData) + 1
+			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataType) + teData + CHR(0)
+		ENDIF
+
 		RETURN lcBinRecord
 	ENDPROC
 
@@ -9172,7 +9182,6 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		THIS.ADDOBJECT("_Connections", "CL_DBC_CONNECTIONS")
 		THIS.ADDOBJECT("_Tables", "CL_DBC_TABLES")
 		THIS.ADDOBJECT("_Views", "CL_DBC_VIEWS")
-		THIS.ADDOBJECT("_Relations", "CL_DBC_RELATIONS")
 	ENDPROC
 
 
@@ -9218,10 +9227,6 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 					CASE C_VIEWS_I $ tcLine
 						loViews	= THIS._Views
 						loViews.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-
-					CASE C_RELATIONS_I $ tcLine
-						loRelations	= THIS._Relations
-						loRelations.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Otro valor
 						*-- Estructura a reconocer:
@@ -9273,10 +9278,9 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
 
 		TRY
-			LOCAL loTables AS CL_DBC_TABLES ;
-				, loConnections AS CL_DBC_CONNECTIONS ;
-				, loViews AS CL_DBC_VIEWS ;
-				, loRelations AS CL_DBC_RELATIONS
+			LOCAL loTables AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
+			LOCAL loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
+			LOCAL loViews AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
 
 			loTables		= THIS._Tables
 			loConnections	= THIS._Connections
@@ -9294,7 +9298,6 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			loTables.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 			loViews.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 			loConnections.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
-			loRelations.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 
 
 		CATCH TO loEx
@@ -9346,10 +9349,6 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			*-- Views
 			loViews			= THIS._Views
 			lcText			= lcText + loViews.toText()
-
-			*-- Relations
-			loRelations		= THIS._Relations
-			lcText			= lcText + loRelations.toText()
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				</DATABASE>
@@ -9641,6 +9640,29 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	ENDPROC
 
 
+	PROCEDURE getMemoWithProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+*fdb*
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, 7 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DataSource, 29 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Asynchronous, 64 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._BatchMode, 65 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ConnectString, 66 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( INT( VAL(THIS._ConnectTimeout) ) , 67 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DispLogin, 68 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DispWarnings, 69 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._IdleTimeout, 70 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._QueryTimeout, 71 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._PassWord, 72 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Transactions, 73 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UserId, 74 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._WaitTime, 75 )
+
+		RETURN lcBinData
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -9806,16 +9828,15 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 	*_Indexes					= NULL
 
 
-	************************************************************************************************
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
 		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_DB")
 		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_DB")
+		THIS.ADDOBJECT("_Relations", "CL_DBC_RELATIONS")
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9830,6 +9851,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			LOCAL loFields AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndexes AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelations AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcPropName, lcValue
 
 			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
@@ -9852,6 +9874,10 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 					CASE C_INDEXES_I $ tcLine
 						loIndexes = THIS._Indexes
 						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_RELATIONS_I $ tcLine
+						loRelations	= THIS._Indexes
+						loRelations.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de TABLE
 						*-- Estructura a reconocer:
@@ -9880,7 +9906,6 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9890,8 +9915,9 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 
 		TRY
 			LOCAL lcText, loEx AS EXCEPTION
-			LOCAL loIndexes	AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
-			LOCAL loFields	AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL loFields AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelations AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -9913,6 +9939,9 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 
 			loIndexes	= CREATEOBJECT('CL_DBC_INDEXES_DB')
 			lcText		= lcText + loIndexes.toText( tcTable )
+
+			loRelations	= CREATEOBJECT('CL_DBC_RELATIONS')
+			lcText		= lcText + loRelations.toText( tcTable )
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>		</TABLE>
@@ -9947,6 +9976,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 		tnParentID	= THIS.__ObjectID
 		THIS._Fields.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 		THIS._Indexes.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+		loRelations.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 	ENDPROC
 
 
@@ -10647,16 +10677,15 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	*_Indexes				= NULL
 
 
-	************************************************************************************************
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_VW")
-		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_VW")
+		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_DB")
+		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_DB")
+		THIS.ADDOBJECT("_Relations", "CL_DBC_RELATIONS")
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -10671,6 +10700,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			LOCAL loFields AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndexes AS CL_DBC_INDEXES_VW OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelations AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcPropName, lcValue
 
 			IF LEFT(tcLine, LEN(C_VIEW_I)) == C_VIEW_I
@@ -10693,6 +10723,10 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 					CASE C_INDEXES_I $ tcLine
 						loIndexes	= THIS._Indexes
 						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_RELATIONS_I $ tcLine
+						loRelations	= THIS._Indexes
+						loRelations.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de VIEW
 						*-- Estructura a reconocer:
@@ -10732,6 +10766,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION
 			LOCAL loFields AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndexes AS CL_DBC_INDEXES_VW OF 'FOXBIN2PRG.PRG'
+			LOCAL loRelations AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 			lcText	= ''
 
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -10767,6 +10802,9 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( tcView )
+
+			loRelations	= CREATEOBJECT('CL_DBC_RELATIONS')
+			lcText		= lcText + loRelations.toText( tcView )
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>		</VIEW>
@@ -11143,17 +11181,19 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcTable					(v! IN    ) Tabla de la que obtener las relaciones
 		* taRelations				(@?    OUT) Array de relaciones
 		* tnRelation_Count			(@?    OUT) Cantidad de relaciones
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taRelations, tnRelation_Count
+		LPARAMETERS tcTable, taRelations, tnRelation_Count
 
 		EXTERNAL ARRAY taRelations
 
 		TRY
-			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL I, X, lcText, loEx AS EXCEPTION
 			LOCAL loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
 			lcText	= ''
+			X		= 0
 
 			DIMENSION taRelations(1,5)
 			tnRelation_Count	= ADBOBJECTS( taRelations,"RELATION" )
@@ -11164,17 +11204,19 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<<>>	<RELATIONS>
+					<<>>			<RELATIONS>
 				ENDTEXT
 
 				loRelation	= CREATEOBJECT('CL_DBC_RELATION')
 
 				FOR I = 1 TO tnRelation_Count
-					lcText	= lcText + loRelation.toText( @taRelations, I )
+					IF taRelations(I,1) == UPPER( RTRIM( tcTable ) )
+						lcText	= lcText + loRelation.toText( @taRelations, I )
+					ENDIF
 				ENDFOR
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	</RELATIONS>
+					<<>>			</RELATIONS>
 					<<>>
 				ENDTEXT
 			ENDIF
@@ -11286,14 +11328,14 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 			lcText	= ''
 
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>		<RELATION>
-				<<>>			<Name><<'Relation ' + TRANSFORM(I)>></Name>
-				<<>>			<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
-				<<>>			<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
-				<<>>			<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
-				<<>>			<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
-				<<>>			<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
-				<<>>		</RELATION>
+				<<>>				<RELATION>
+				<<>>					<Name><<'Relation ' + TRANSFORM(I)>></Name>
+				<<>>					<ChildTable><<ALLTRIM(taRelations(I,1))>></ChildTable>
+				<<>>					<ParentTable><<ALLTRIM(taRelations(I,2))>></ParentTable>
+				<<>>					<ChildIndex><<ALLTRIM(taRelations(I,3))>></ChildIndex>
+				<<>>					<ParentIndex><<ALLTRIM(taRelations(I,4))>></ParentIndex>
+				<<>>					<RefIntegrity><<ALLTRIM(taRelations(I,5))>></RefIntegrity>
+				<<>>				</RELATION>
 			ENDTEXT
 
 
