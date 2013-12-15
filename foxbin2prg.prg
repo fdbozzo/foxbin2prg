@@ -51,7 +51,8 @@
 * 07/12/2013	FDBOZZO		v1.11 Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
 * 07/12/2013    FDBOZZO     v1.12 Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
 * 08/12/2013	FDBOZZO		v1.13 Arreglo bug "Error 1924, TOREG is not an object"
-* 08/12/2013	FDBOZZO		v1.14 Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
+* 15/12/2013	FDBOZZO		v1.14 Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
+* 08/12/2013    FDBOZZO     v1.15 Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -63,6 +64,8 @@
 * 06/12/2013	Fidel Charny	REPORTE BUG: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden (arreglado en v.1.10)
 * 07/12/2013	Edgar Kummers	REPORTE BUG: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
 * 08/12/2013	Fidel Charny	REPORTE BUG: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
+* 14/12/2013	Arturo Ramos	REPORTE BUG: La regeneración de los forms (SCX) no respeta la propiedad AutoCenter, estando pero no funcionando. (arreglado en v.1.14)
+* 14/12/2013	Fidel Charny	REPORRE BUG: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -686,7 +689,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="normalizarvalorpropiedad" display="normalizarValorPropiedad"/>] ;
 		+ [<memberdata name="normalizarvalorxml" display="normalizarValorXML"/>] ;
 		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
-		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
+        + [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="write_dbf_metadata" display="write_DBF_Metadata"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
@@ -1471,6 +1475,274 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
+	PROCEDURE sortPropsAndValues_SetAndGetSCXPropNames
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcOperation				(!v IN    ) Operación a realizar ("SETNAME" o "GETNAME")
+		* tcPropName				(!v IN    ) Nombre de la propiedad
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tcOperation, tcPropName
+		LOCAL lcPropName, lnPropType
+		lcPropName	= tcPropName
+		tcOperation	= UPPER(EVL(tcOperation,''))
+		lnPropType	= 0		&& System property
+
+		DO CASE
+		CASE tcOperation == 'GETNAME'
+			lcPropName	= SUBSTR(tcPropName,5)
+		CASE NOT tcOperation == 'SETNAME'
+			ERROR 'Operación no reconocida. Solo re reconoce SETNAME y GETNAME.'
+		CASE lcPropName == 'ButtonCount'
+			lcPropName	= 'A005' + lcPropName
+		CASE lcPropName == 'ColumnCount'
+			lcPropName	= 'A010' + lcPropName
+		CASE lcPropName == 'Value'
+			lcPropName	= 'A015' + lcPropName
+		CASE lcPropName == 'Comment'
+			lcPropName	= 'A020' + lcPropName
+		CASE lcPropName == 'ControlSource'
+			lcPropName	= 'A025' + lcPropName
+		CASE lcPropName == 'DataSession'
+			lcPropName	= 'A030' + lcPropName
+		CASE lcPropName == 'DeleteMark'
+			lcPropName	= 'A035' + lcPropName
+		CASE lcPropName == 'ScaleMode'
+			lcPropName	= 'A040' + lcPropName
+		CASE lcPropName == 'Tag'
+			lcPropName	= 'A045' + lcPropName
+		CASE lcPropName == 'Top'
+			lcPropName	= 'A050' + lcPropName
+		CASE lcPropName == 'Left'
+			lcPropName	= 'A055' + lcPropName
+		CASE lcPropName == 'Height'
+			lcPropName	= 'A060' + lcPropName
+		CASE lcPropName == 'Width'
+			lcPropName	= 'A065' + lcPropName
+		CASE lcPropName == 'MaxLength'
+			lcPropName	= 'A070' + lcPropName
+		CASE lcPropName == 'Alias'
+			lcPropName	= 'A075' + lcPropName
+		CASE lcPropName == 'BufferModeOverride'
+			lcPropName	= 'A080' + lcPropName
+		CASE lcPropName == 'Order'
+			lcPropName	= 'A085' + lcPropName
+		CASE lcPropName == 'OrderDirection'
+			lcPropName	= 'A090' + lcPropName
+		CASE lcPropName == 'CursorSource'
+			lcPropName	= 'A095' + lcPropName
+		CASE lcPropName == 'Exclusive'
+			lcPropName	= 'A100' + lcPropName
+		CASE lcPropName == 'Filter'
+			lcPropName	= 'A105' + lcPropName
+		CASE lcPropName == 'Panel'
+			lcPropName	= 'A110' + lcPropName
+		CASE lcPropName == 'ReadOnly'
+			lcPropName	= 'A115' + lcPropName
+		CASE lcPropName == 'RecordSource'
+			lcPropName	= 'A120' + lcPropName
+		CASE lcPropName == 'RecordSourceType'
+			lcPropName	= 'A125' + lcPropName
+		CASE lcPropName == 'NoDataOnLoad'
+			lcPropName	= 'A130' + lcPropName
+		CASE lcPropName == 'OpenViews'
+			lcPropName	= 'A135' + lcPropName
+		CASE lcPropName == 'AutoOpenTables'
+			lcPropName	= 'A140' + lcPropName
+		CASE lcPropName == 'AutoCloseTables'
+			lcPropName	= 'A145' + lcPropName
+		CASE lcPropName == 'InitialSelectedAlias'
+			lcPropName	= 'A150' + lcPropName
+		CASE lcPropName == 'DataSource'
+			lcPropName	= 'A155' + lcPropName
+		CASE lcPropName == 'DataSourceType '
+			lcPropName	= 'A160' + lcPropName
+		CASE lcPropName == 'Desktop'
+			lcPropName	= 'A165' + lcPropName
+		CASE lcPropName == 'ShowWindow'
+			lcPropName	= 'A170' + lcPropName
+		CASE lcPropName == 'ScrollBars'
+			lcPropName	= 'A175' + lcPropName
+		CASE lcPropName == 'ShowInTaskBar'
+			lcPropName	= 'A180' + lcPropName
+		CASE lcPropName == 'DoCreate'
+			lcPropName	= 'A185' + lcPropName
+		CASE lcPropName == 'Tag'
+			lcPropName	= 'A190' + lcPropName
+		CASE lcPropName == 'OLEDragMode'
+			lcPropName	= 'A195' + lcPropName
+		CASE lcPropName == 'OLEDragPicture'
+			lcPropName	= 'A200' + lcPropName
+		CASE lcPropName == 'OLEDropMode'
+			lcPropName	= 'A205' + lcPropName
+		CASE lcPropName == 'OLEDropEffects'
+			lcPropName	= 'A210' + lcPropName
+		CASE lcPropName == 'ShowTips'
+			lcPropName	= 'A215' + lcPropName
+		CASE lcPropName == 'BufferMode'
+			lcPropName	= 'A220' + lcPropName
+		CASE lcPropName == 'AutoCenter'
+			lcPropName	= 'A225' + lcPropName
+		CASE lcPropName == 'AutoSize'
+			lcPropName	= 'A230' + lcPropName
+		CASE lcPropName == 'WordWrap'
+			lcPropName	= 'A235' + lcPropName
+		CASE lcPropName == 'Picture'
+			lcPropName	= 'A240' + lcPropName
+		CASE lcPropName == 'BackStyle'
+			lcPropName	= 'A245' + lcPropName
+		CASE lcPropName == 'BorderStyle'
+			lcPropName	= 'A250' + lcPropName
+		CASE lcPropName == 'BorderWidth'
+			lcPropName	= 'A255' + lcPropName
+		CASE lcPropName == 'Caption'
+			lcPropName	= 'A260' + lcPropName
+		CASE lcPropName == 'ControlBox'
+			lcPropName	= 'A265' + lcPropName
+		CASE lcPropName == 'Closable'
+			lcPropName	= 'A270' + lcPropName
+		CASE lcPropName == 'Curvature'
+			lcPropName	= 'A275' + lcPropName
+		CASE lcPropName == 'FontBold'
+			lcPropName	= 'A280' + lcPropName
+		CASE lcPropName == 'FontCondense'
+			lcPropName	= 'A285' + lcPropName
+		CASE lcPropName == 'FontExtend'
+			lcPropName	= 'A290' + lcPropName
+		CASE lcPropName == 'FontItalic'
+			lcPropName	= 'A295' + lcPropName
+		CASE lcPropName == 'FontName'
+			lcPropName	= 'A300' + lcPropName
+		CASE lcPropName == 'FontOutline'
+			lcPropName	= 'A305' + lcPropName
+		CASE lcPropName == 'FontShadow'
+			lcPropName	= 'A310' + lcPropName
+		CASE lcPropName == 'FontSize'
+			lcPropName	= 'A315' + lcPropName
+		CASE lcPropName == 'FontStrikethru'
+			lcPropName	= 'A320' + lcPropName
+		CASE lcPropName == 'FontUnderline'
+			lcPropName	= 'A325' + lcPropName
+		CASE lcPropName == 'HalfHeightCaption'
+			lcPropName	= 'A330' + lcPropName
+		CASE lcPropName == 'Margin'
+			lcPropName	= 'A335' + lcPropName
+		CASE lcPropName == 'MaxButton'
+			lcPropName	= 'A340' + lcPropName
+		CASE lcPropName == 'MinButton'
+			lcPropName	= 'A345' + lcPropName
+		CASE lcPropName == 'Movable'
+			lcPropName	= 'A350' + lcPropName
+		CASE lcPropName == 'MaxHeight'
+			lcPropName	= 'A355' + lcPropName
+		CASE lcPropName == 'MaxWidth'
+			lcPropName	= 'A360' + lcPropName
+		CASE lcPropName == 'MinHeight'
+			lcPropName	= 'A365' + lcPropName
+		CASE lcPropName == 'MinWidth'
+			lcPropName	= 'A370' + lcPropName
+		CASE lcPropName == 'MaxTop'
+			lcPropName	= 'A375' + lcPropName
+		CASE lcPropName == 'MaxLeft'
+			lcPropName	= 'A380' + lcPropName
+		CASE lcPropName == 'MDIForm'
+			lcPropName	= 'A385' + lcPropName
+		CASE lcPropName == 'MousePointer'
+			lcPropName	= 'A390' + lcPropName
+		CASE lcPropName == 'MouseIcon'
+			lcPropName	= 'A395' + lcPropName
+		CASE lcPropName == 'Visible'
+			lcPropName	= 'A400' + lcPropName
+		CASE lcPropName == 'ClipControls'
+			lcPropName	= 'A405' + lcPropName
+		CASE lcPropName == 'DrawMode'
+			lcPropName	= 'A410' + lcPropName
+		CASE lcPropName == 'DrawStyle'
+			lcPropName	= 'A415' + lcPropName
+		CASE lcPropName == 'DrawWidth'
+			lcPropName	= 'A420' + lcPropName
+		CASE lcPropName == 'FillStyle'
+			lcPropName	= 'A425' + lcPropName
+		CASE lcPropName == 'Enabled'
+			lcPropName	= 'A430' + lcPropName
+		CASE lcPropName == 'Icon'
+			lcPropName	= 'A435' + lcPropName
+		CASE lcPropName == 'KeyPreview'
+			lcPropName	= 'A440' + lcPropName
+		CASE lcPropName == 'TabIndex'
+			lcPropName	= 'A445' + lcPropName
+		CASE lcPropName == 'TabStop'
+			lcPropName	= 'A450' + lcPropName
+		CASE lcPropName == 'TitleBar'
+			lcPropName	= 'A455' + lcPropName
+		CASE lcPropName == 'WindowType'
+			lcPropName	= 'A460' + lcPropName
+		CASE lcPropName == 'WindowState'
+			lcPropName	= 'A465' + lcPropName
+		CASE lcPropName == 'LockScreen'
+			lcPropName	= 'A470' + lcPropName
+		CASE lcPropName == 'AlwaysOnTop'
+			lcPropName	= 'A475' + lcPropName
+		CASE lcPropName == 'AlwaysOnBottom'
+			lcPropName	= 'A480' + lcPropName
+		CASE lcPropName == 'SizeBox'
+			lcPropName	= 'A485' + lcPropName
+		CASE lcPropName == 'SpecialEffect'
+			lcPropName	= 'A490' + lcPropName
+		CASE lcPropName == 'ZoomBox'
+			lcPropName	= 'A495' + lcPropName
+		CASE lcPropName == 'ZOrderSet'
+			lcPropName	= 'A500' + lcPropName
+		CASE lcPropName == 'HelpContextID'
+			lcPropName	= 'A505' + lcPropName
+		CASE lcPropName == 'WhatsThisHelpID'
+			lcPropName	= 'A510' + lcPropName
+		CASE lcPropName == 'WhatsThisHelp'
+			lcPropName	= 'A515' + lcPropName
+		CASE lcPropName == 'WhatsThisButton'
+			lcPropName	= 'A520' + lcPropName
+		CASE lcPropName == 'RightToLeft'
+			lcPropName	= 'A525' + lcPropName
+		CASE lcPropName == 'DefOleLCID'
+			lcPropName	= 'A530' + lcPropName
+		CASE lcPropName == 'MacDesktop'
+			lcPropName	= 'A535' + lcPropName
+		CASE lcPropName == 'ColorSource'
+			lcPropName	= 'A540' + lcPropName
+		CASE lcPropName == 'ForeColor'
+			lcPropName	= 'A545' + lcPropName
+		CASE lcPropName == 'DisableForeColor'
+			lcPropName	= 'A550' + lcPropName
+		CASE lcPropName == 'BackColor'
+			lcPropName	= 'A555' + lcPropName
+		CASE lcPropName == 'FillColor'
+			lcPropName	= 'A560' + lcPropName
+		CASE lcPropName == 'HScrollSmallChange'
+			lcPropName	= 'A565' + lcPropName
+		CASE lcPropName == 'VScrollSmallChange'
+			lcPropName	= 'A570' + lcPropName
+		CASE lcPropName == 'ContinuousScroll'
+			lcPropName	= 'A575' + lcPropName
+		CASE lcPropName == 'Themes'
+			lcPropName	= 'A580' + lcPropName
+		CASE lcPropName == 'BindControls'
+			lcPropName	= 'A585' + lcPropName
+		CASE lcPropName == 'AllowOutput'
+			lcPropName	= 'A590' + lcPropName
+		CASE lcPropName == 'Dockable'
+			lcPropName	= 'A595' + lcPropName
+		CASE lcPropName == 'Name'
+			lnPropType	= 1		&& System "Name" property
+			lcPropName	= 'A999' + lcPropName
+		OTHERWISE
+			lnPropType	= 2		&& User property
+			lcPropName	= 'A998' + lcPropName
+		ENDCASE
+		
+		RETURN lcPropName
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE write_DBF_Metadata
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -1555,89 +1827,120 @@ DEFINE CLASS c_conversor_base AS SESSION
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
-			LOCAL I, X, lnArrayCols, laPropsAndValues(1,2)
+			LOCAL I, X, lnArrayCols, laPropsAndValues(1,2), lcPropName
 			lnArrayCols	= ALEN( taPropsAndValues, 2 )
 			DIMENSION laPropsAndValues( tnPropsAndValues_Count, lnArrayCols )
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
-			IF m.tnSortType >= 1
-				* CON SORT:
-				* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
-				FOR I = 1 TO m.tnPropsAndValues_Count
-					IF '.' $ laPropsAndValues(I,1)
-						IF m.tnSortType = 2 AND JUSTEXT( laPropsAndValues(I,1) ) == 'Name'
-							laPropsAndValues(I,1)	= JUSTSTEM( laPropsAndValues(I,1) ) + '.' + CHR(255) + 'Name'
-						ENDIF
+			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+				IF m.tnSortType >= 1
+					* CON SORT:
+					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
+					FOR I = 1 TO m.tnPropsAndValues_Count
+						IF '.' $ laPropsAndValues(I,1)
+							*IF m.tnSortType = 2 AND JUSTEXT( laPropsAndValues(I,1) ) == 'Name'
+							*	laPropsAndValues(I,1)	= JUSTSTEM( laPropsAndValues(I,1) ) + '.' + CHR(255) + 'Name'
+							*ENDIF
 
-						laPropsAndValues(I,1)	= 'B' + laPropsAndValues(I,1)
-					ELSE
-						IF m.tnSortType = 2 AND laPropsAndValues(I,1) == 'Name'
-							laPropsAndValues(I,1)	= CHR(255) + 'Name'
-						ENDIF
+							*laPropsAndValues(I,1)	= 'B' + laPropsAndValues(I,1)
+							IF m.tnSortType = 2
+								laPropsAndValues(I,1)	= 'B' + JUSTSTEM(laPropsAndValues(I,1)) + '.' ;
+									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', JUSTEXT(laPropsAndValues(I,1)) )
+							ELSE
+								laPropsAndValues(I,1)	= 'B' + laPropsAndValues(I,1)
+							ENDIF
+						ELSE
+							*IF m.tnSortType = 2 AND laPropsAndValues(I,1) == 'Name'
+							*	laPropsAndValues(I,1)	= CHR(255) + 'Name'
+							*ENDIF
 
-						laPropsAndValues(I,1)	= 'A' + laPropsAndValues(I,1)
+							*laPropsAndValues(I,1)	= 'A' + laPropsAndValues(I,1)
+							IF m.tnSortType = 2
+								laPropsAndValues(I,1)	= .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', laPropsAndValues(I,1) )
+							ELSE
+								laPropsAndValues(I,1)	= 'A' + laPropsAndValues(I,1)
+							ENDIF
+						ENDIF
+					ENDFOR
+
+					IF .l_PropSort_Enabled
+						ASORT( laPropsAndValues, 1, -1, 0, 1)
 					ENDIF
-				ENDFOR
 
-				IF THIS.l_PropSort_Enabled
-					ASORT( laPropsAndValues, 1, -1, 0, 1)
+
+					FOR I = 1 TO m.tnPropsAndValues_Count
+						*taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )	&& Quitar el carácter agregado
+						
+						*-- Quitar caracteres agregados antes del SORT
+						IF '.' $ laPropsAndValues(I,1)
+							IF m.tnSortType = 2
+								taPropsAndValues(I,1)	= JUSTSTEM( SUBSTR( laPropsAndValues(I,1), 2 ) ) + '.' ;
+									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', JUSTEXT(laPropsAndValues(I,1)) )
+							ELSE
+								taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
+							ENDIF
+						ELSE
+							IF m.tnSortType = 2
+								taPropsAndValues(I,1)	= .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', laPropsAndValues(I,1) )
+							ELSE
+								taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
+							ENDIF
+						ENDIF
+						
+						taPropsAndValues(I,2)	= laPropsAndValues(I,2)
+
+						IF lnArrayCols >= 3
+							taPropsAndValues(I,3)	= laPropsAndValues(I,3)
+						ENDIF
+
+						*DO CASE
+						*CASE m.tnSortType <> 2
+						*	*-- Saltear
+						*CASE taPropsAndValues(I,1) == CHR(255) + 'Name'
+						*	taPropsAndValues(I,1)	= 'Name'
+						*CASE JUSTEXT( taPropsAndValues(I,1) ) == CHR(255) + 'Name'
+						*	taPropsAndValues(I,1)	= JUSTSTEM( taPropsAndValues(I,1) ) + '.Name'
+						*ENDCASE
+					ENDFOR
+
+				ELSE	&& m.tnSortType = 0
+					*-- SIN SORT: Creo 2 arrays, el bueno y el temporal, y al terminar agrego el temporal al bueno.
+					*-- Debo separar las props.normales de las de los objetos (ocurre cuando es un ADD OBJECT)
+					X	= 0
+
+					*-- PRIMERO las que no tienen punto
+					FOR I = 1 TO m.tnPropsAndValues_Count
+						IF EMPTY( laPropsAndValues(I,1) )
+							LOOP
+						ENDIF
+
+						IF NOT '.' $ laPropsAndValues(I,1)
+							X	= X + 1
+							taPropsAndValues(X,1)	= laPropsAndValues(I,1)
+							taPropsAndValues(X,2)	= laPropsAndValues(I,2)
+							IF lnArrayCols >= 3
+								taPropsAndValues(X,3)	= laPropsAndValues(I,3)
+							ENDIF
+						ENDIF
+					ENDFOR
+
+					*-- LUEGO las demás props.
+					FOR I = 1 TO m.tnPropsAndValues_Count
+						IF EMPTY( laPropsAndValues(I,1) )
+							LOOP
+						ENDIF
+
+						IF '.' $ laPropsAndValues(I,1)
+							X	= X + 1
+							taPropsAndValues(X,1)	= laPropsAndValues(I,1)
+							taPropsAndValues(X,2)	= laPropsAndValues(I,2)
+							IF lnArrayCols >= 3
+								taPropsAndValues(X,3)	= laPropsAndValues(I,3)
+							ENDIF
+						ENDIF
+					ENDFOR
 				ENDIF
-
-
-				FOR I = 1 TO m.tnPropsAndValues_Count
-					taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )	&& Quitar el carácter agregado
-					taPropsAndValues(I,2)	= laPropsAndValues(I,2)
-					IF lnArrayCols >= 3
-						taPropsAndValues(I,3)	= laPropsAndValues(I,3)
-					ENDIF
-
-					DO CASE
-					CASE m.tnSortType <> 2
-						*-- Saltear
-					CASE taPropsAndValues(I,1) == CHR(255) + 'Name'
-						taPropsAndValues(I,1)	= 'Name'
-					CASE JUSTEXT( taPropsAndValues(I,1) ) == CHR(255) + 'Name'
-						taPropsAndValues(I,1)	= JUSTSTEM( taPropsAndValues(I,1) ) + '.Name'
-					ENDCASE
-				ENDFOR
-
-			ELSE	&& m.tnSortType = 0
-				*-- SIN SORT: Creo 2 arrays, el bueno y el temporal, y al terminar agrego el temporal al bueno.
-				*-- Debo separar las props.normales de las de los objetos (ocurre cuando es un ADD OBJECT)
-				X	= 0
-
-				*-- PRIMERO las que no tienen punto
-				FOR I = 1 TO m.tnPropsAndValues_Count
-					IF EMPTY( laPropsAndValues(I,1) )
-						LOOP
-					ENDIF
-
-					IF NOT '.' $ laPropsAndValues(I,1)
-						X	= X + 1
-						taPropsAndValues(X,1)	= laPropsAndValues(I,1)
-						taPropsAndValues(X,2)	= laPropsAndValues(I,2)
-						IF lnArrayCols >= 3
-							taPropsAndValues(X,3)	= laPropsAndValues(I,3)
-						ENDIF
-					ENDIF
-				ENDFOR
-
-				*-- LUEGO las demás props.
-				FOR I = 1 TO m.tnPropsAndValues_Count
-					IF EMPTY( laPropsAndValues(I,1) )
-						LOOP
-					ENDIF
-
-					IF '.' $ laPropsAndValues(I,1)
-						X	= X + 1
-						taPropsAndValues(X,1)	= laPropsAndValues(I,1)
-						taPropsAndValues(X,2)	= laPropsAndValues(I,2)
-						IF lnArrayCols >= 3
-							taPropsAndValues(X,3)	= laPropsAndValues(I,3)
-						ENDIF
-					ENDIF
-				ENDFOR
-			ENDIF
+			ENDWITH	&& THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
 
 			*-- VER ESTO SI HACE FALTA, SOBRE LO DE PONER LOS METODOS AL FINAL Y ADAPTAR
 			*-- Agregar propiedades primero
@@ -3911,58 +4214,55 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 				THIS.insert_AllObjects( @loClase )
 
-
-				IF .F. &&NOT loClase._BaseClass == 'dataenvironment'
-					*-- Inserto el COMMENT
-					INSERT INTO TABLABIN ;
-						( PLATFORM ;
-						, UNIQUEID ;
-						, TIMESTAMP ;
-						, CLASS ;
-						, CLASSLOC ;
-						, BASECLASS ;
-						, OBJNAME ;
-						, PARENT ;
-						, PROPERTIES ;
-						, PROTECTED ;
-						, METHODS ;
-						, OLE ;
-						, OLE2 ;
-						, RESERVED1 ;
-						, RESERVED2 ;
-						, RESERVED3 ;
-						, RESERVED4 ;
-						, RESERVED5 ;
-						, RESERVED6 ;
-						, RESERVED7 ;
-						, RESERVED8 ;
-						, USER) ;
-						VALUES ;
-						( 'COMMENT' ;
-						, 'RESERVED' ;
-						, loClase._TimeStamp ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, loClase._ObjName ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, IIF(loClase._OlePublic, 'OLEPublic', '') ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' )
-				ENDIF
-
 			ENDFOR	&& I = 1 TO toModulo._Clases_Count
+
+			*-- Inserto el COMMENT final
+			INSERT INTO TABLABIN ;
+				( PLATFORM ;
+				, UNIQUEID ;
+				, TIMESTAMP ;
+				, CLASS ;
+				, CLASSLOC ;
+				, BASECLASS ;
+				, OBJNAME ;
+				, PARENT ;
+				, PROPERTIES ;
+				, PROTECTED ;
+				, METHODS ;
+				, OLE ;
+				, OLE2 ;
+				, RESERVED1 ;
+				, RESERVED2 ;
+				, RESERVED3 ;
+				, RESERVED4 ;
+				, RESERVED5 ;
+				, RESERVED6 ;
+				, RESERVED7 ;
+				, RESERVED8 ;
+				, USER) ;
+				VALUES ;
+				( 'COMMENT' ;
+				, 'RESERVED' ;
+				, 0 ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' ;
+				, '' )
 
 			USE IN (SELECT("TABLABIN"))
 			COMPILE FORM (THIS.c_OutputFile)
