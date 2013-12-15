@@ -287,7 +287,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_foxuser.frx'
+			lc_File				= 'FB2P_FOXUSER.FRX'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
@@ -361,7 +361,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_foxuser.lbx'
+			lc_File				= 'FB2P_FOXUSER.LBX'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
@@ -433,7 +433,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_frm_1.scx'
+			lc_File				= 'FB2P_FRM_1.SCX'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
@@ -515,7 +515,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_test.vcx'
+			lc_File				= 'FB2P_TEST.VCX'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
@@ -597,7 +597,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_test_bug_metodo_movido.vcx'
+			lc_File				= 'FB2P_TEST_BUG_METODO_MOVIDO.VCX'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
@@ -679,7 +679,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lc_File				= 'fb2p_test_bug_estructural.vcx'
+			lc_File				= 'FB2P_TEST_BUG_ESTRUCTURAL.VCX'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
