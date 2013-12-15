@@ -5157,7 +5157,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
 			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
-			
+
 			STORE '' TO lcIndex, lcFieldDef
 
 			lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
@@ -5237,14 +5237,14 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
 			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
-			
+
 			ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
 			THIS.write_DBF_Metadata( THIS.c_OutputFile, toTable._Database, ldLastUpdate )
 
 
 		CATCH TO loEx
-			lnCodError		= loEx.ErrorNo
-			loEx.UserValue	= 'lcIndex="' + TRANSFORM(lcIndex) + '"' + CR_LF ;
+			lnCodError		= loEx.ERRORNO
+			loEx.USERVALUE	= 'lcIndex="' + TRANSFORM(lcIndex) + '"' + CR_LF ;
 				+ 'lcFieldDef="' + TRANSFORM(lcFieldDef) + '"' + CR_LF ;
 				+ 'lcCreateTable="' + TRANSFORM(lcCreateTable) + '"'
 
@@ -5394,19 +5394,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL loConnection AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
-			LOCAL loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
-			LOCAL loView AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
-			LOCAL loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
-			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
-			
+			LOCAL lnCodError, lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
+			lnCodError	= 0
 			STORE '' TO lcIndex, lcFieldDef
 
-			*-- Conformo los campos
-			EXIT
-			
 			toDatabase.updateDBC( THIS.c_OutputFile )
-			
+
 			*USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
 
@@ -5418,9 +5411,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			ENDIF
 
 			THROW
-
-		FINALLY
-			USE IN (SELECT("TABLABIN"))
 
 		ENDTRY
 
@@ -7836,14 +7826,14 @@ ENDDEFINE
 
 *******************************************************************************************************************
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
-	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT)
-	HIDDEN BASECLASS, CLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
+	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT, CLASS)
+	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
 		, HEIGHT, HELPCONTEXTID, LEFT, NAME ;
 		, PARENTCLASS, PICTURE, TAG, WHATSTHISHELPID
 
 	*-- Métodos (Se preservan: INIT, DESTROY, ERROR, ADDPROPERTY)
 	*HIDDEN ADDOBJECT, NEWOBJECT, READEXPRESSION, READMETHOD, REMOVEOBJECT ;
-		, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
+	, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
 
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
@@ -8647,14 +8637,6 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
-		+ [<memberdata name="getbinpropertydatarecord" display="getBinPropertyDataRecord"/>] ;
-		+ [<memberdata name="getcodememo" display="getCodeMemo"/>] ;
-		+ [<memberdata name="getid" display="getID"/>] ;
-		+ [<memberdata name="getobjecttype" display="getObjectType"/>] ;
-		+ [<memberdata name="getmemowithproperties" display="getMemoWithProperties"/>] ;
-		+ [<memberdata name="getreferentialintegrityinfo" display="getReferentialIntegrityInfo"/>] ;
-		+ [<memberdata name="getusermemo" display="getUserMemo"/>] ;
-		+ [<memberdata name="setnextid" display="setNextID"/>] ;
 		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
 		+ [</VFPData>]
 
@@ -8668,14 +8650,21 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
 		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_OutputFile, tnLastID
+		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
+		LOCAL loObject
 
-		FOR EACH loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG' IN loTables FOXOBJECT
-			loTable.updateDBC
+		FOR EACH loObject IN THIS FOXOBJECT
+			loObject.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 		ENDFOR
 
 		RETURN
+	ENDPROC
+
+
+	PROCEDURE __ObjectID_ACCESS
+		RETURN THIS.PARENT.__ObjectID
 	ENDPROC
 
 
@@ -8743,34 +8732,34 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE getObjectType
 		LOCAL lcType
-		
+
 		DO CASE
-		CASE THIS.Class = 'Cl_dbc'
+		CASE THIS.CLASS == 'Cl_dbc'
 			lcType	= 'Database'
 
-		CASE THIS.Class = 'Cl_dbc_connection'
+		CASE THIS.CLASS == 'Cl_dbc_connection'
 			lcType	= 'Connection'
 
-		CASE THIS.Class = 'Cl_dbc_table'
+		CASE THIS.CLASS == 'Cl_dbc_table'
 			lcType	= 'Table'
 
-		CASE THIS.Class = 'Cl_dbc_view'
+		CASE THIS.CLASS == 'Cl_dbc_view'
 			lcType	= 'View'
 
-		CASE THIS.Class = 'Cl_dbc_index'
+		CASE THIS.CLASS == 'Cl_dbc_index_db' OR THIS.CLASS == 'Cl_dbc_index_vw'
 			lcType	= 'Index'
 
-		CASE THIS.Class = 'Cl_dbc_relation'
+		CASE THIS.CLASS == 'Cl_dbc_relation'
 			lcType	= 'Relation'
 
-		CASE THIS.Class = 'Cl_dbc_field'
+		CASE THIS.CLASS == 'Cl_dbc_field_db' OR THIS.CLASS == 'Cl_dbc_field_vw'
 			lcType	= 'Field'
 
 		OTHERWISE
-			lcType	= 'Unknown'
+			ERROR 'Clase [' + THIS.Class + '] desconocida'
 
 		ENDCASE
-		
+
 		RETURN lcType
 	ENDPROC
 
@@ -8778,7 +8767,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	PROCEDURE setNextID
 		LPARAMETERS tnLastID
 		tnLastID	= tnLastID + 1
-		THIS.__ObjectID	= tcID
+		THIS.__ObjectID	= tnLastID
 	ENDPROC
 
 
@@ -8787,12 +8776,21 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
 		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_OutputFile, tnLastID
+		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
 
 		TRY
+			LOCAL lcMemoWithProperties, lcCodeMemo, lcObjectType, lcRI_Info, lcUserMemo, lcID
+
 			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
 				.setNextID( @tnLastID )
+				lcMemoWithProperties	= .getMemoWithProperties()
+				lcCodeMemo				= .getCodeMemo()
+				lcObjectType			= .getObjectType()
+				lcRI_Info				= .getReferentialIntegrityInfo()
+				lcUserMemo				= .getUserMemo()
+				lcID					= .getID()
 
 				INSERT INTO TABLABIN ;
 					( ObjectID ;
@@ -8800,18 +8798,18 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 					, ObjectType ;
 					, ObjectName ;
 					, Property ;
-					, Code ;
+					, CODE ;
 					, RIInfo ;
-					, User ) ;
+					, USER ) ;
 					VALUES ;
-					( .getID() ;
-					, .Parent.getID() ;
-					, .getObjectType() ;
+					( lcID ;
+					, tnParentID ;
+					, lcObjectType ;
 					, ._Name ;
-					, .getMemoWithProperties() ;
-					, .getCodeMemo ;
-					, .getReferentialIntegrityInfo() ;
-					, .getUserMemo() )
+					, lcMemoWithProperties ;
+					, lcCodeMemo ;
+					, lcRI_Info ;
+					, lcUserMemo )
 			ENDWITH && THIS
 
 		CATCH TO loEx
@@ -8961,7 +8959,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		* ePropertyValue			(v! IN    ) Valor de la propiedad
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS cName, cType, cProperty, ePropertyValue
-		
+
 	ENDPROC
 
 
@@ -8970,10 +8968,11 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
 		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_OutputFile, tnLastID
+		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
 
-			TRY
+		TRY
 			LOCAL loTables AS CL_DBC_TABLES ;
 				, loConnections AS CL_DBC_CONNECTIONS ;
 				, loViews AS CL_DBC_VIEWS ;
@@ -8987,13 +8986,15 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			CREATE DATABASE (tc_OutputFile)
 			CLOSE DATABASES
 			OPEN DATABASE (tc_OutputFile) SHARED
-			USE (tc_OutputFile) SHARED AGAIN ALIAS ARCHIVOBIN
+			USE (tc_OutputFile) SHARED AGAIN ALIAS TABLABIN
 			tnLastID	= 5
 			THIS.setNextID(0)
-			
-			*FOR EACH loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG' IN loTables FOXOBJECT
-			*	loTable.updateDBC
-			*ENDFOR
+			tnParentID	= THIS.__ObjectID
+
+			loTables.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+			loViews.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+			loConnections.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+			loRelations.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 
 
 		CATCH TO loEx
@@ -9005,6 +9006,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 		FINALLY
 			CLOSE DATABASES
+			USE IN (SELECT("TABLABIN"))
 
 		ENDTRY
 
@@ -9072,7 +9074,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_CONNECTIONS AS CL_COL_BASE
+DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -9159,7 +9161,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_COL_BASE
 					<<>>
 					<<>>	<CONNECTIONS>
 				ENDTEXT
-				
+
 				loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
 
 				FOR I = 1 TO tnConnection_Count
@@ -9343,7 +9345,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
+DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -9414,7 +9416,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
 		* lnTable_Count				(@?    OUT) Cantidad de conexiones
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTables, tnTable_Count
-		
+
 		EXTERNAL ARRAY taTables
 
 		TRY
@@ -9433,7 +9435,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_COL_BASE
 					<<>>
 					<<>>	<TABLES>
 				ENDTEXT
-				
+
 				loTable	= CREATEOBJECT('CL_DBC_TABLE')
 
 				FOR I = 1 TO tnTable_Count
@@ -9527,6 +9529,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 		TRY
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			LOCAL loFields AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL loIndexes AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcPropName, lcValue
 
 			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
@@ -9545,6 +9548,10 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 					CASE C_FIELDS_I $ tcLine
 						loFields = THIS._Fields
 						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					CASE C_INDEXES_I $ tcLine
+						loIndexes = THIS._Indexes
+						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de TABLE
 						*-- Estructura a reconocer:
@@ -9627,17 +9634,32 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 	ENDPROC
 
 
+	PROCEDURE updateDBC
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
+		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnParentID				(v! IN    ) ID del objeto Padre
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
+
+		DODEFAULT( tc_OutputFile, @tnLastID, tnParentID)
+		tnParentID	= THIS.__ObjectID
+		THIS._Fields.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+		THIS._Indexes.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+	ENDPROC
+
+
 ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
+DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9650,7 +9672,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
 
 		TRY
 			LOCAL loField AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
-			*LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
 			STORE '' TO lcPropName, lcValue
 
@@ -9709,9 +9730,9 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
 			lcText	= ''
 
 			_TALLY	= 0
-			SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
-				INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Field',10) ;
-				AND TB2.objectname = PADR(LOWER(tcTable),128) ;
+			SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
+				AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
 				INTO ARRAY laFields
 			lnField_Count	= _TALLY
 
@@ -9720,7 +9741,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_COL_BASE
 					<<>>
 					<<>>			<FIELDS>
 				ENDTEXT
-				
+
 				loField	= CREATEOBJECT('CL_DBC_FIELD_DB')
 
 				FOR X = 1 TO lnField_Count
@@ -9789,7 +9810,6 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 	_RuleText				= ''
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9844,7 +9864,6 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9892,7 +9911,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_INDEXES_DB AS CL_COL_BASE
+DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -9904,12 +9923,62 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_COL_BASE
 	_Comment				= ''
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loIndex AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_INDEXES_I)) == C_INDEXES_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_INDEXES_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_INDEX_I $ tcLine
+						loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
+						loIndex.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loIndex, loIndex._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- No hay otros valores
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9924,9 +9993,9 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_COL_BASE
 			lcText	= ''
 
 			_TALLY	= 0
-			SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
-				INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Index',10) ;
-				AND TB2.objectname = PADR(LOWER(tcTable),128) ;
+			SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
+				AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
 				INTO ARRAY laIndexes
 			lnIndex_Count	= _TALLY
 
@@ -9990,12 +10059,60 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 	_Comment				= ''
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_INDEX_I)) == C_INDEX_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_INDEX_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Propiedad de FIELD
+						*-- Estructura a reconocer:
+						*	<name>NOMBRE</name>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -10042,7 +10159,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
+DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10131,7 +10248,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_COL_BASE
 					<<>>
 					<<>>	<VIEWS>
 				ENDTEXT
-				
+
 				loView	= CREATEOBJECT('CL_DBC_VIEW')
 
 				FOR I = 1 TO tnView_Count
@@ -10273,9 +10390,9 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 						loFields	= THIS._Fields
 						loFields.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-					*CASE C_INDEXES_I $ tcLine
-					*	loIndexes	= THIS._Indexes
-					*	loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+					CASE C_INDEXES_I $ tcLine
+						loIndexes	= THIS._Indexes
+						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de VIEW
 						*-- Estructura a reconocer:
@@ -10347,7 +10464,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 			loFields	= THIS._Fields
 			lcText		= lcText + loFields.toText( tcView )
-			
+
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( tcView )
 
@@ -10371,11 +10488,27 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	ENDPROC
 
 
+	PROCEDURE updateDBC
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
+		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnParentID				(v! IN    ) ID del objeto Padre
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
+
+		DODEFAULT( tc_OutputFile, @tnLastID, tnParentID)
+		tnParentID	= THIS.__ObjectID
+		THIS._Fields.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+		THIS._Indexes.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+	ENDPROC
+
+
 ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_FIELDS_VW AS CL_COL_BASE
+DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10453,9 +10586,9 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_COL_BASE
 			lcText	= ''
 
 			_TALLY	= 0
-			SELECT LOWER(TB.objectname) FROM TABLABIN TB ;
-				INNER JOIN TABLABIN TB2 ON STR(TB.parentid)+TB.objecttype = STR(TB2.objectid)+PADR('Field',10) ;
-				AND TB2.objectname = PADR(LOWER(tcView),128) ;
+			SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
+				AND TB2.ObjectName = PADR(LOWER(tcView),128) ;
 				INTO ARRAY laFields
 			lnField_Count	= _TALLY
 
@@ -10645,7 +10778,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS CL_DBC_RELATIONS AS CL_COL_BASE
+DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -10733,7 +10866,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_COL_BASE
 					<<>>
 					<<>>	<RELATIONS>
 				ENDTEXT
-				
+
 				loRelation	= CREATEOBJECT('CL_DBC_RELATION')
 
 				FOR I = 1 TO tnRelation_Count
@@ -10877,6 +11010,24 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	ENDPROC
 
 
+	PROCEDURE getReferentialIntegrityInfo
+		RETURN THIS._RefIntegrity
+	ENDPROC
+
+
+	PROCEDURE getMemoWithProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ChildIndex, 13 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParentTable, 18 )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParentIndex, 19 )
+		*_ChildTable not used.
+
+		RETURN lcBinData
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -11004,7 +11155,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		* tc_InputFile				(v! IN    ) Nombre del archivo de salida
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name, tc_InputFile
-		
+
 		EXTERNAL ARRAY taFields
 
 		TRY
@@ -11133,7 +11284,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 		* tnField_Count				(@?    OUT) Cantidad de campos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, tnField_Count
-		
+
 		EXTERNAL ARRAY taFields
 
 		TRY
@@ -11146,7 +11297,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 				<<>>
 				<<>>	<<C_FIELDS_I>>
 			ENDTEXT
-			
+
 			tnField_Count	= AFIELDS(taFields)
 			loField			= CREATEOBJECT('CL_DBF_FIELD')
 
@@ -11287,7 +11438,7 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 		* I							(@! IN    ) Campo en evaluación
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, I
-		
+
 		EXTERNAL ARRAY taFields
 
 		TRY
@@ -11404,9 +11555,9 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 		* tnTagInfo_Count			(@?    OUT) Cantidad de índices
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTagInfo, tnTagInfo_Count
-		
+
 		EXTERNAL ARRAY taTagInfo
-		
+
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION
 			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
@@ -11423,7 +11574,7 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 
 				tnTagInfo_Count	= ATAGINFO( taTagInfo )
 				loIndex			= CREATEOBJECT("CL_DBF_INDEX")
-				
+
 				FOR I = 1 TO tnTagInfo_Count
 					lcText	= lcText + loIndex.toText( @taTagInfo, I )
 				ENDFOR
@@ -11537,9 +11688,9 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 		* I							(@? IN    ) Indice en evaluación
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTagInfo, I
-		
+
 		EXTERNAL ARRAY taTagInfo
-		
+
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION
 			lcText	= ''
