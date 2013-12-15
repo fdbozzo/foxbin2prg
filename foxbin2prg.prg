@@ -51,6 +51,7 @@
 * 07/12/2013	FDBOZZO		v1.11 Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
 * 07/12/2013    FDBOZZO     v1.12 Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
 * 08/12/2013	FDBOZZO		v1.13 Arreglo bug "Error 1924, TOREG is not an object"
+* 15/12/2013	FDBOZZO		v1.14 Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
 *
 *---------------------------------------------------------------------------------------------------
 * TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
@@ -62,6 +63,8 @@
 * 06/12/2013	Fidel Charny	REPORTE BUG: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden (arreglado en v.1.10)
 * 07/12/2013	Edgar Kummers	REPORTE BUG: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
 * 08/12/2013	Fidel Charny	REPORTE BUG: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
+* 14/12/2013	Arturo Ramos	REPORTE BUG: La regeneración de los forms (SCX) no respeta la propiedad AutoCenter, estando pero no funcionando. (arreglado en v.1.14)
+* 14/12/2013	Fidel Charny	REPORRE BUG: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -364,7 +367,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.13
+	n_FB2PRG_Version		= 1.14
 	o_Conversor				= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
@@ -1364,7 +1367,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOperation, tcPropName
 		LOCAL lcPropName, lnPropType
-		lcPropName	= ''
+		lcPropName	= tcPropName
 		tcOperation	= UPPER(EVL(tcOperation,''))
 		lnPropType	= 0		&& System property
 
@@ -1613,10 +1616,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcPropName	= 'A595' + lcPropName
 		CASE lcPropName == 'Name'
 			lnPropType	= 1		&& System "Name" property
-			lcPropName	= 'Z000' + lcPropName
+			lcPropName	= 'A999' + lcPropName
 		OTHERWISE
 			lnPropType	= 2		&& User property
-			lcPropName	= 'A999' + lcPropName
+			lcPropName	= 'A998' + lcPropName
 		ENDCASE
 		
 		RETURN lcPropName
@@ -1689,14 +1692,14 @@ DEFINE CLASS c_conversor_base AS SESSION
 						*-- Quitar caracteres agregados antes del SORT
 						IF '.' $ laPropsAndValues(I,1)
 							IF m.tnSortType = 2
-								laPropsAndValues(I,1)	= JUSTSTEM( SUBSTR( laPropsAndValues(I,1), 2 ) ) + '.' ;
+								taPropsAndValues(I,1)	= JUSTSTEM( SUBSTR( laPropsAndValues(I,1), 2 ) ) + '.' ;
 									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', JUSTEXT(laPropsAndValues(I,1)) )
 							ELSE
 								taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
 							ENDIF
 						ELSE
 							IF m.tnSortType = 2
-								laPropsAndValues(I,1)	= .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', laPropsAndValues(I,1) )
+								taPropsAndValues(I,1)	= .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', laPropsAndValues(I,1) )
 							ELSE
 								taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
 							ENDIF
@@ -4058,7 +4061,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				VALUES ;
 				( 'COMMENT' ;
 				, 'RESERVED' ;
-				, '' ;
+				, 0 ;
 				, '' ;
 				, '' ;
 				, '' ;
