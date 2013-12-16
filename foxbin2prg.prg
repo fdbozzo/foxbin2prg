@@ -690,7 +690,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="normalizarvalorxml" display="normalizarValorXML"/>] ;
 		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
 		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
-        + [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="write_dbf_metadata" display="write_DBF_Metadata"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
@@ -1737,7 +1737,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lnPropType	= 2		&& User property
 			lcPropName	= 'A998' + lcPropName
 		ENDCASE
-		
+
 		RETURN lcPropName
 	ENDPROC
 
@@ -1832,7 +1832,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			DIMENSION laPropsAndValues( tnPropsAndValues_Count, lnArrayCols )
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
-			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 				IF m.tnSortType >= 1
 					* CON SORT:
 					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
@@ -1870,7 +1870,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 					FOR I = 1 TO m.tnPropsAndValues_Count
 						*taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )	&& Quitar el carácter agregado
-						
+
 						*-- Quitar caracteres agregados antes del SORT
 						IF '.' $ laPropsAndValues(I,1)
 							IF m.tnSortType = 2
@@ -1886,7 +1886,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 								taPropsAndValues(I,1)	= SUBSTR( laPropsAndValues(I,1), 2 )
 							ENDIF
 						ENDIF
-						
+
 						taPropsAndValues(I,2)	= laPropsAndValues(I,2)
 
 						IF lnArrayCols >= 3
@@ -8980,11 +8980,15 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
+		+ [<memberdata name="dbgetprop" display="DBGETPROP"/>] ;
+		+ [<memberdata name="dbsetprop" display="DBSETPROP"/>] ;
 		+ [<memberdata name="getbinpropertydatarecord" display="getBinPropertyDataRecord"/>] ;
 		+ [<memberdata name="getcodememo" display="getCodeMemo"/>] ;
+		+ [<memberdata name="getdbcpropertyidbyname" display="getDBCPropertyIDByName"/>] ;
+		+ [<memberdata name="getdbcpropertyvaluetypebyid" display="getDBCPropertyValueTypeByID"/>] ;
 		+ [<memberdata name="getid" display="getID"/>] ;
 		+ [<memberdata name="getobjecttype" display="getObjectType"/>] ;
-		+ [<memberdata name="getmemowithproperties" display="getMemoWithProperties"/>] ;
+		+ [<memberdata name="getbinmemofromproperties" display="getBinMemoFromProperties"/>] ;
 		+ [<memberdata name="getreferentialintegrityinfo" display="getReferentialIntegrityInfo"/>] ;
 		+ [<memberdata name="getusermemo" display="getUserMemo"/>] ;
 		+ [<memberdata name="setnextid" display="setNextID"/>] ;
@@ -8996,20 +9000,304 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	_Name			= ''
 
 
+	PROCEDURE getDBCPropertyIDByName
+		LPARAMETERS tcPropertyName
+		LOCAL lnID
+		tcPropertyName	= LOWER(RTRIM(tcPropertyName))
+
+		DO CASE
+		CASE tcPropertyName == 'null'
+			lnID	= 0
+		CASE tcPropertyName == 'path'
+			lnID	= 1
+		CASE tcPropertyName == 'class'
+			lnID	= 2
+		CASE tcPropertyName == 'comment'
+			lnID	= 7
+		CASE tcPropertyName == 'ruleexpression'
+			lnID	= 9
+		CASE tcPropertyName == 'ruletext'
+			lnID	= 10
+		CASE tcPropertyName == 'defaultvalue'
+			lnID	= 11
+		CASE tcPropertyName == 'parameterlist'
+			lnID	= 12
+		CASE tcPropertyName == 'childtag'
+			lnID	= 13
+		CASE tcPropertyName == 'inserttrigger'
+			lnID	= 14
+		CASE tcPropertyName == 'updatetrigger'
+			lnID	= 15
+		CASE tcPropertyName == 'deletetrigger'
+			lnID	= 16
+		CASE tcPropertyName == 'isunique'
+			lnID	= 17
+		CASE tcPropertyName == 'relatedtable'
+			lnID	= 18
+		CASE tcPropertyName == 'relatedtag'
+			lnID	= 19
+		CASE tcPropertyName == 'primarykey'
+			lnID	= 20
+		CASE tcPropertyName == 'version'
+			lnID	= 24
+		CASE tcPropertyName == 'batchupdatecount'
+			lnID	= 28
+		CASE tcPropertyName == 'datasource'
+			lnID	= 29
+		CASE tcPropertyName == 'connectname'
+			lnID	= 32
+		CASE tcPropertyName == 'updatename'
+			lnID	= 35
+		CASE tcPropertyName == 'fetchmemo'
+			lnID	= 36
+		CASE tcPropertyName == 'fetchsize'
+			lnID	= 37
+		CASE tcPropertyName == 'keyfield'
+			lnID	= 38
+		CASE tcPropertyName == 'maxrecords'
+			lnID	= 39
+		CASE tcPropertyName == 'shareconnection'
+			lnID	= 40
+		CASE tcPropertyName == 'sourcetype'
+			lnID	= 41
+		CASE tcPropertyName == 'sql'
+			lnID	= 42
+		CASE tcPropertyName == 'tables'
+			lnID	= 43
+		CASE tcPropertyName == 'sendupdates'
+			lnID	= 44
+		CASE tcPropertyName == 'updatablefield' OR tcPropertyName == 'updatable'
+			lnID	= 45
+		CASE tcPropertyName == 'updatetype'
+			lnID	= 46
+		CASE tcPropertyName == 'usememosize'
+			lnID	= 47
+		CASE tcPropertyName == 'wheretype'
+			lnID	= 48
+		CASE tcPropertyName == 'displayclass'	&& Undocumented
+			lnID	= 50
+		CASE tcPropertyName == 'displayclasslibrary'	&& Undocumented
+			lnID	= 51
+		CASE tcPropertyName == 'inputmask'	&& Undocumented
+			lnID	= 54
+		CASE tcPropertyName == 'format'	&& Undocumented
+			lnID	= 55
+		CASE tcPropertyName == 'caption'
+			lnID	= 56
+		CASE tcPropertyName == 'asynchronous'
+			lnID	= 64
+		CASE tcPropertyName == 'batchmode'
+			lnID	= 65
+		CASE tcPropertyName == 'connectstring'
+			lnID	= 66
+		CASE tcPropertyName == 'connecttimeout'
+			lnID	= 67
+		CASE tcPropertyName == 'displogin'
+			lnID	= 68
+		CASE tcPropertyName == 'dispwarnings'
+			lnID	= 69
+		CASE tcPropertyName == 'idletimeout'
+			lnID	= 70
+		CASE tcPropertyName == 'querytimeout'
+			lnID	= 71
+		CASE tcPropertyName == 'password'
+			lnID	= 72
+		CASE tcPropertyName == 'transactions'
+			lnID	= 73
+		CASE tcPropertyName == 'userid'
+			lnID	= 74
+		CASE tcPropertyName == 'waittime'
+			lnID	= 75
+		CASE tcPropertyName == 'timestamp'
+			lnID	= 76
+		CASE tcPropertyName == 'datatype'
+			lnID	= 77
+		CASE tcPropertyName == 'packetsize'	&& Undocumented
+			lnID	= 78
+		CASE tcPropertyName == 'prepared'	&& Undocumented
+			lnID	= 80
+		CASE tcPropertyName == 'comparememo'	&& Undocumented
+			lnID	= 81
+		CASE tcPropertyName == 'fetchasneeded'	&& Undocumented
+			lnID	= 82
+		CASE tcPropertyName == 'offline'	&& Undocumented
+			lnID	= 83
+		CASE tcPropertyName == 'recordcount'	&& Undocumented
+			lnID	= 84
+		CASE tcPropertyName == 'undocumented_view_prop_85'	&& Undocumented
+			lnID	= 85
+		CASE tcPropertyName == 'allowsimultaneousfetch'	&& Undocumented
+			lnID	= 88
+		CASE tcPropertyName == 'disconnectrollback'	&& Undocumented
+			lnID	= 89
+		OTHERWISE
+			ERROR 1559, (tcPropertyName)
+		ENDCASE
+
+		RETURN lnID
+	ENDPROC
+
+
+	PROCEDURE getDBCPropertyValueTypeByID
+		LPARAMETERS tnID
+		LOCAL lcValueType
+		lcValueType	= ''
+
+		DO CASE
+		CASE INLIST(tnID,17,36,38,40,44,45,64,65,69,80,81,82,83,88,89)
+			lcValueType	= 'L'
+
+		CASE INLIST(tnID,24,28,37,39,41,46,47,48,67,68,70,71,73,75,76,78,84,85)
+			lcValueType	= 'N'
+
+		OTHERWISE
+			lcValueType	= 'C'
+		ENDCASE
+
+		RETURN lcValueType
+	ENDPROC
+
+
+	PROCEDURE DBGETPROP
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcName					(v! IN    ) Nombre del objeto
+		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
+		* tcProperty				(v! IN    ) Nombre de la propiedad
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcName, tcType, tcProperty
+
+		TRY
+			LOCAL lcValue, leValue, lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnDataConceptCode ;
+				, lnLastPos, lnLenCCode, lcDataType, lnSerchedDataCC, lcDBF, lnLenData, lnLenHeader
+			lnSelect	= SELECT()
+			leValue		= ''
+			tcName		= PROPER(RTRIM(tcName))
+			tcType		= PROPER(RTRIM(tcType))
+			tcProperty	= PROPER(RTRIM(tcProperty))
+			lcDBF		= DBF()
+
+			SELECT 0
+			USE (lcDBF) AGAIN SHARED NOUPDATE ALIAS C_TABLABIN2
+
+			IF INLIST( tcType, 'Index', 'Field' )
+				SELECT TB.Property FROM C_TABLABIN2 TB ;
+					INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
+					AND TB2.objectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
+					INTO ARRAY laProperty
+
+			ELSE
+				SELECT TB.Property FROM C_TABLABIN2 TB ;
+					INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
+					INTO ARRAY laProperty
+
+			ENDIF
+
+			IF _TALLY > 0
+				IF EMPTY(laProperty(1,1))
+					EXIT
+				ENDIF
+
+				lnLastPos		= 1
+				lnSerchedDataCC	= THIS.getDBCPropertyIDByName( tcProperty )
+
+				DO WHILE lnLastPos < LEN(laProperty(1,1))
+					lnRecordLen			= CTOBIN( SUBSTR(laProperty(1,1), lnLastPos, 4), "4RS" )
+					lcBinRecord			= SUBSTR(laProperty(1,1), lnLastPos, lnRecordLen)
+					lnLenCCode			= CTOBIN( SUBSTR(lcBinRecord, 4+1, 2), "2RS" )
+					lnDataConceptCode	= ASC( SUBSTR(lcBinRecord, 4+2+1, lnLenCCode) )
+
+					IF lnDataConceptCode = lnSerchedDataCC
+						lcDataType			= THIS.getDBCPropertyValueTypeByID( lnDataConceptCode )
+						lnLenHeader			= 4 + 2 + lnLenCCode
+						lcValue				= SUBSTR(lcBinRecord, lnLenHeader + 1)
+
+						DO CASE
+						CASE lcDataType = 'L'
+							IF lnLenHeader = lnRecordLen
+								leValue		= .F.
+							ELSE
+								leValue		= ( CTOBIN( lcValue, "1S" ) = 1 )
+							ENDIF
+
+						CASE lcDataType = 'N'
+							IF lnLenHeader = lnRecordLen
+								leValue		= 0
+							ELSE
+								leValue		= CTOBIN( lcValue, "4S" )
+							ENDIF
+
+						OTHERWISE && Asume 'C'
+							IF lnLenHeader = lnRecordLen
+								leValue		= ''
+							ELSE
+								leValue		= LEFT( lcValue, AT( CHR(0), lcValue ) - 1 )
+							ENDIF
+						ENDCASE
+
+						EXIT
+					ENDIF
+
+					lnLastPos	= lnLastPos + lnRecordLen
+				ENDDO
+			ELSE
+				ERROR 1562, (tcName)
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("C_TABLABIN2"))
+			SELECT (lnSelect)
+		ENDTRY
+
+		RETURN leValue
+	ENDPROC
+
+
+	PROCEDURE DBSETPROP
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcName					(v! IN    ) Nombre del objeto
+		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
+		* tcProperty				(v! IN    ) Nombre de la propiedad
+		* tePropertyValue			(v! IN    ) Valor de la propiedad
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcName, tcType, tcProperty, tePropertyValue
+
+	ENDPROC
+
+
 	PROCEDURE getBinPropertyDataRecord
-		LPARAMETERS teData, tnDataType
-		LOCAL lcBinRecord, lnLen
-		
+		LPARAMETERS teData, tnDataConceptCode
+		LOCAL lcBinRecord, lnLen, lcDataType
+
 		lcBinRecord	= ''
-		
-		IF VARTYPE(teData) = 'N'
-			teData			= BINTOC( teData, "4RS" )
+		lcDataType	= VARTYPE(tcDataType)
+
+		DO CASE
+		CASE VARTYPE(teData) = 'L'
+			teData			= BINTOC( tePropertyValue, "1S" )
+			lnLen			= 4 + 2 + 1 + 1
+			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataConceptCode) + teData
+
+		CASE VARTYPE(teData) = 'N'
+			teData			= BINTOC( tePropertyValue, "4S" )
+			lnLen			= 4 + 2 + 1 + 4
+			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataConceptCode) + teData
+
+		OTHERWISE	&& Asume 'C'
+			teData			= tePropertyValue
 			lnLen			= 4 + 2 + 1 + LEN(teData) + 1
-			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataType) + teData
-		ELSE
-			lnLen			= 4 + 2 + 1 + LEN(teData) + 1
-			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataType) + teData + CHR(0)
-		ENDIF
+			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataConceptCode) + teData + CHR(0)
+
+		ENDCASE
 
 		RETURN lcBinRecord
 	ENDPROC
@@ -9030,7 +9318,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	ENDPROC
 
 
-	PROCEDURE getMemoWithProperties
+	PROCEDURE getBinMemoFromProperties
 		RETURN ''
 	ENDPROC
 
@@ -9066,7 +9354,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 			lcType	= 'Field'
 
 		OTHERWISE
-			ERROR 'Clase [' + THIS.Class + '] desconocida'
+			ERROR 'Clase [' + THIS.CLASS + '] desconocida'
 
 		ENDCASE
 
@@ -9095,7 +9383,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
 				.setNextID( @tnLastID )
-				lcMemoWithProperties	= .getMemoWithProperties()
+				lcMemoWithProperties	= .getBinMemoFromProperties()
 				lcCodeMemo				= .getCodeMemo()
 				lcObjectType			= .getObjectType()
 				lcRI_Info				= .getReferentialIntegrityInfo()
@@ -9106,7 +9394,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 					( ObjectID ;
 					, ParentID ;
 					, ObjectType ;
-					, ObjectName ;
+					, objectName ;
 					, Property ;
 					, CODE ;
 					, RIInfo ;
@@ -9255,19 +9543,6 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE DBSETPROP
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* cName						(v! IN    ) Nombre del objeto
-		* cType						(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
-		* cProperty					(v! IN    ) Nombre de la propiedad
-		* ePropertyValue			(v! IN    ) Valor de la propiedad
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS cName, cType, cProperty, ePropertyValue
-
-	ENDPROC
-
-
 	PROCEDURE updateDBC
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9285,7 +9560,6 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			loTables		= THIS._Tables
 			loConnections	= THIS._Connections
 			loViews			= THIS._Views
-			loRelations		= THIS._Relations
 
 			CREATE DATABASE (tc_OutputFile)
 			CLOSE DATABASES
@@ -9640,24 +9914,25 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE getMemoWithProperties
+	PROCEDURE getBinMemoFromProperties
 		LOCAL lcBinData
 		lcBinData	= ''
-*fdb*
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, 7 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DataSource, 29 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Asynchronous, 64 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._BatchMode, 65 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ConnectString, 66 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( INT( VAL(THIS._ConnectTimeout) ) , 67 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DispLogin, 68 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DispWarnings, 69 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._IdleTimeout, 70 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._QueryTimeout, 71 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._PassWord, 72 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Transactions, 73 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UserId, 74 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._WaitTime, 75 )
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DataSource, THIS.getDBCPropertyIDByName('DataSource') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Asynchronous), THIS.getDBCPropertyIDByName('Asynchronous') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._BatchMode), THIS.getDBCPropertyIDByName('BatchMode') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ConnectString, THIS.getDBCPropertyIDByName('ConnectString') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._ConnectTimeout) , THIS.getDBCPropertyIDByName('ConnectTimeout') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._DispLogin), THIS.getDBCPropertyIDByName('DispLogin') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._DispWarnings), THIS.getDBCPropertyIDByName('DispWarnings') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._IdleTimeout), THIS.getDBCPropertyIDByName('IdleTimeout') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._QueryTimeout), THIS.getDBCPropertyIDByName('QueryTimeout') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._PassWord, THIS.getDBCPropertyIDByName('PassWord') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Transactions), THIS.getDBCPropertyIDByName('Transactions') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UserId, THIS.getDBCPropertyIDByName('UserId') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._WaitTime), THIS.getDBCPropertyIDByName('WaitTime') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._PacketSize), THIS.getDBCPropertyIDByName('PacketSize') )	&& Undocumented
 
 		RETURN lcBinData
 	ENDPROC
@@ -9876,7 +10151,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					CASE C_RELATIONS_I $ tcLine
-						loRelations	= THIS._Indexes
+						loRelations	= THIS._Relations
 						loRelations.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de TABLE
@@ -9976,7 +10251,25 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 		tnParentID	= THIS.__ObjectID
 		THIS._Fields.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 		THIS._Indexes.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
-		loRelations.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+		THIS._Relations.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+	ENDPROC
+
+
+	PROCEDURE getBinMemoFromProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( 1, THIS.getDBCPropertyIDByName('Class') )	&& Clase 1
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Path, THIS.getDBCPropertyIDByName('Path') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._InsertTrigger, THIS.getDBCPropertyIDByName('InsertTrigger') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UpdateTrigger, THIS.getDBCPropertyIDByName('UpdateTrigger') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DeleteTrigger, THIS.getDBCPropertyIDByName('DeleteTrigger') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._PrimaryKey, THIS.getDBCPropertyIDByName('PrimaryKey') )
+
+		RETURN lcBinData
 	ENDPROC
 
 
@@ -10060,9 +10353,9 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 			lcText	= ''
 
 			_TALLY	= 0
-			SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+			SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
 				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-				AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
+				AND TB2.objectName = PADR(LOWER(tcTable),128) ;
 				INTO ARRAY laFields
 			lnField_Count	= _TALLY
 
@@ -10237,6 +10530,24 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 	ENDPROC
 
 
+	PROCEDURE getBinMemoFromProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DefaultValue, THIS.getDBCPropertyIDByName('DefaultValue') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClass, THIS.getDBCPropertyIDByName('DisplayClass') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClassLibrary, THIS.getDBCPropertyIDByName('DisplayClassLibrary') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Caption, THIS.getDBCPropertyIDByName('Caption') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Format, THIS.getDBCPropertyIDByName('Format') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._InputMask, THIS.getDBCPropertyIDByName('InputMask') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
+
+		RETURN lcBinData
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10323,9 +10634,9 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 			lcText	= ''
 
 			_TALLY	= 0
-			SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+			SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
 				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
-				AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
+				AND TB2.objectName = PADR(LOWER(tcTable),128) ;
 				INTO ARRAY laIndexes
 			lnIndex_Count	= _TALLY
 
@@ -10338,7 +10649,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				loIndex	= CREATEOBJECT('CL_DBC_INDEX_DB')
 
 				FOR X = 1 TO lnIndex_Count
-					lcText	= lcText + loIndex.toText( laIndexes(X) )
+					lcText	= lcText + loIndex.toText( tcTable + '.' + laIndexes(X) )
 				ENDFOR
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -10446,7 +10757,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
-		* tcIndex					(v! IN    ) Nombre del índice
+		* tcIndex					(v! IN    ) Nombre del índice en la forma "tabla.indice"
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcIndex
 
@@ -10456,7 +10767,9 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>				<INDEX>
-				<<>>					<Name><<RTRIM(tcIndex)>></Name>
+				<<>>					<Name><<RTRIM(JUSTEXT(tcIndex))>></Name>
+				<<>>					<Comment><<RTRIM( THIS.DBGETPROP(tcIndex,'Index','Comment') )>></Comment>
+				<<>>					<IsUnique><<THIS.DBGETPROP(tcIndex,'Index','IsUnique')>></IsUnique>
 				<<>>				</INDEX>
 			ENDTEXT
 
@@ -10472,6 +10785,16 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 		ENDTRY
 
 		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE getBinMemoFromProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._IsUnique), THIS.getDBCPropertyIDByName('IsUnique') )
+
+		RETURN lcBinData
 	ENDPROC
 
 
@@ -10632,6 +10955,8 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 		+ [<memberdata name="_fetchsize" display="_FetchSize"/>] ;
 		+ [<memberdata name="_maxrecords" display="_MaxRecords"/>] ;
 		+ [<memberdata name="_offline" display="_Offline"/>] ;
+		+ [<memberdata name="_recordcount" display="_RecordCount"/>] ;
+		+ [<memberdata name="_path" display="_Path"/>] ;
 		+ [<memberdata name="_parameterlist" display="_ParameterList"/>] ;
 		+ [<memberdata name="_prepared" display="_Prepared"/>] ;
 		+ [<memberdata name="_ruleexpression" display="_RuleExpression"/>] ;
@@ -10661,6 +10986,8 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	_FetchSize				= ''
 	_MaxRecords				= ''
 	_Offline				= ''
+	_RecordCount			= ''
+	_Path					= ''
 	_ParameterList			= ''
 	_Prepared				= ''
 	_RuleExpression			= ''
@@ -10725,7 +11052,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 						loIndexes.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					CASE C_RELATIONS_I $ tcLine
-						loRelations	= THIS._Indexes
+						loRelations	= THIS._Relations
 						loRelations.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 					OTHERWISE	&& Propiedad de VIEW
@@ -10797,6 +11124,18 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 				<<>>			<WhereType><<DBGETPROP(tcView,"VIEW","WhereType")>></WhereType>
 			ENDTEXT
 
+			*-- ALGUNOS VALORES QUE EL DBGETPROP OFICIAL NO DEVUELVE
+			*fdb*
+			*-- Path
+			*-- OfflineRecordCount
+			IF NOT EMPTY(THIS._Offline) AND EVALUATE(THIS._Offline)
+				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>			<Path><<THIS.DBGETPROP(tcView,"VIEW","Path")>></Path>
+					<<>>			<RecordCount><<THIS.DBGETPROP(tcView,"VIEW","RecordCount")>></RecordCount>
+				ENDTEXT
+			ENDIF
+			*--
+
 			loFields	= THIS._Fields
 			lcText		= lcText + loFields.toText( tcView )
 
@@ -10839,6 +11178,41 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 		tnParentID	= THIS.__ObjectID
 		THIS._Fields.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 		THIS._Indexes.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+		THIS._Relations.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+	ENDPROC
+
+
+	PROCEDURE getBinMemoFromProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( 6, THIS.getDBCPropertyIDByName('Class') )	&& Clase 6
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParameterList, THIS.getDBCPropertyIDByName('ParameterList') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._BatchUpdateCount), THIS.getDBCPropertyIDByName('BatchUpdateCount') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ConnectName, THIS.getDBCPropertyIDByName('ConnectName') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._FetchMemo, THIS.getDBCPropertyIDByName('FetchMemo') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._FetchSize), THIS.getDBCPropertyIDByName('FetchSize') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._MaxRecords), THIS.getDBCPropertyIDByName('MaxRecords') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._ShareConnection), THIS.getDBCPropertyIDByName('ShareConnection') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._SourceType), THIS.getDBCPropertyIDByName('SourceType') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._SQL, THIS.getDBCPropertyIDByName('SQL') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Tables, THIS.getDBCPropertyIDByName('Tables') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._SendUpdates), THIS.getDBCPropertyIDByName('SendUpdates') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._UpdateType), THIS.getDBCPropertyIDByName('UpdateType') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._UseMemoSize), THIS.getDBCPropertyIDByName('UseMemoSize') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._WhereType), THIS.getDBCPropertyIDByName('WhereType') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Prepared), THIS.getDBCPropertyIDByName('Prepared') )	&& Undocumented
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._CompareMemo), THIS.getDBCPropertyIDByName('CompareMemo') )	&& Undocumented
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._FetchAsNeeded), THIS.getDBCPropertyIDByName('FetchAsNeeded') )	&& Undocumented
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Offline), THIS.getDBCPropertyIDByName('Offline') )	&& Undocumented
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._RecordCount), THIS.getDBCPropertyIDByName('RecordCount') )	&& Undocumented
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( 0, THIS.getDBCPropertyIDByName('undocumented_view_prop_85') )	&& Undocumented
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._AllowSimultaneousFetch), THIS.getDBCPropertyIDByName('AllowSimultaneousFetch') )	&& Undocumented
+
+		RETURN lcBinData
 	ENDPROC
 
 
@@ -10924,9 +11298,9 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 			lcText	= ''
 
 			_TALLY	= 0
-			SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+			SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
 				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-				AND TB2.ObjectName = PADR(LOWER(tcView),128) ;
+				AND TB2.objectName = PADR(LOWER(tcView),128) ;
 				INTO ARRAY laFields
 			lnField_Count	= _TALLY
 
@@ -11086,6 +11460,8 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 				<<>>					<Comment><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","Comment")>></Comment>
 				<<>>					<DataType><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","DataType")>></DataType>
 				<<>>					<DefaultValue><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","DefaultValue")>></DefaultValue>
+				<<>>					<DisplayClass><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","DefaultValue")>></DisplayClass>
+				<<>>					<DisplayClassLibrary><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","DefaultValue")>></DisplayClassLibrary>
 				<<>>					<Format><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","Format")>></Format>
 				<<>>					<InputMask><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","InputMask")>></InputMask>
 				<<>>					<KeyField><<DBGETPROP( RTRIM(tcView) + '.' + RTRIM(tcField),"FIELD","KeyField")>></KeyField>
@@ -11109,6 +11485,28 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 		ENDTRY
 
 		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE getBinMemoFromProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DataType, THIS.getDBCPropertyIDByName('DataType') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._KeyField), THIS.getDBCPropertyIDByName('KeyField') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Updatable), THIS.getDBCPropertyIDByName('UpdatableField') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UpdateName, THIS.getDBCPropertyIDByName('UpdateName') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DefaultValue, THIS.getDBCPropertyIDByName('DefaultValue') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClass, THIS.getDBCPropertyIDByName('DisplayClass') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClassLibrary, THIS.getDBCPropertyIDByName('DisplayClassLibrary') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Caption, THIS.getDBCPropertyIDByName('Caption') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Format, THIS.getDBCPropertyIDByName('Format') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._InputMask, THIS.getDBCPropertyIDByName('InputMask') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
+		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
+
+		RETURN lcBinData
 	ENDPROC
 
 
@@ -11357,14 +11755,14 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE getMemoWithProperties
+	PROCEDURE getBinMemoFromProperties
 		LOCAL lcBinData
 		lcBinData	= ''
 
 		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ChildIndex, 13 )
 		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParentTable, 18 )
 		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParentIndex, 19 )
-		*_ChildTable not used.
+		*_ChildTable is used to link the name of the related table.
 
 		RETURN lcBinData
 	ENDPROC
