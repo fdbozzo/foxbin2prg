@@ -163,6 +163,8 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_LEN_INDEX_F		LEN(C_INDEX_F)
 #DEFINE C_DATABASE_I		'<DATABASE>'
 #DEFINE C_DATABASE_F		'</DATABASE>'
+#DEFINE C_STORED_PROC_I		'<STOREDPROCEDURES><![CDATA['
+#DEFINE C_STORED_PROC_F		']]></STOREDPROCEDURES>'
 #DEFINE C_TABLE_I			'<TABLE>'
 #DEFINE C_TABLE_F			'</TABLE>'
 #DEFINE C_TABLES_I			'<TABLES>'
@@ -217,8 +219,10 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE SERVERINSTANCE_MULTIUSE      3  && Multi-use server
 *-- Fin / End
 
+*******************************************************************************************************************
 *-- INTERNACIONALIZACIÓN / INTERNATIONALIZATION
-#IF VERSION(3) == "34"	&& Español (Spanish)
+*******************************************************************************************************************
+#IF .T. &&VERSION(3) == "34"	&& Español (Spanish) [NO FUNCIONA MÁS ESTO :( ]
 	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC					'¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
 	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC				'FOXBIN2PRG: ¡ATENCIÓN!'
 	#DEFINE FOXBIN2PRG_INFO_SINTAX_LOC					'FOXBIN2PRG <cEspecArchivo.Ext>  [cType_ND  cTextName_ND  cGenText_ND  cNoMostrarErrores  cDebug]' + CR_LF + CR_LF ;
@@ -259,143 +263,12 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 	#DEFINE C_BACKLINK_OF_TABLE_LOC						'of table'
 
 #ENDIF 
-*--
+*******************************************************************************************************************
 
-TRY
-	LOCAL lcSys16, I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
-		, llExisteConfig, llShowProgress, lcConfData, lnFileCount ;
-		, loEx AS EXCEPTION
-
-	PUBLIC goFrm_Avance AS frm_avance OF 'FOXBIN2PRG.PRG' ;
-		, goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-	lnResp	= 0
-
-	SET DELETED ON
-	SET DATE YMD
-	SET HOURS TO 24
-	SET CENTURY ON
-	SET SAFETY OFF
-	SET TABLEPROMPT OFF
-
-	IF _VFP.STARTMODE > 0
-		SET ESCAPE OFF
-	ENDIF
-
-	DO CASE
-	CASE VERSION(5) < 900
-		lnResp	= 1
-		MESSAGEBOX( C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, C_FOXBIN2PRG_WARN_CAPTION_LOC, 60000 )
-
-	CASE EMPTY(tc_InputFile)
-		lnResp	= 1
-		MESSAGEBOX( FOXBIN2PRG_INFO_SINTAX_LOC, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
-
-	OTHERWISE
-		lcSys16	= SYS(16)
-		lcPath	= SET("Path")
-		*SET PATH TO (JUSTPATH(lcSys16))
-		SET PATH TO
-		llShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
-		goCnv	= CREATEOBJECT("c_foxbin2prg")
-		goCnv.l_Debug		= (TRANSFORM(tcDebug)=='1')
-		goCnv.l_ShowErrors	= NOT (TRANSFORM(tcDontShowErrors) == '1')
-
-		IF llShowProgress
-			goFrm_Avance	= CREATEOBJECT("frm_avance")
-		ENDIF
-
-		*-- Configuración
-		lcConfigFile	= FORCEEXT( lcSys16, 'CFG' )
-		llExisteConfig	= FILE( lcConfigFile )
-
-		IF llExisteConfig
-			FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-				IF LOWER( LEFT( laConfig(I), 10 ) ) == 'extension:'
-					lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
-					lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-					IF PEMSTATUS( goCnv, lcExt, 5 )
-						goCnv.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-					ENDIF
-				ENDIF
-			ENDFOR
-		ENDIF
-
-
-		*-- Evaluación de FileSpec de entrada
-		DO CASE
-		CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
-			MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
-
-		CASE '*' $ JUSTSTEM( tc_InputFile )
-			*-- Se quieren todos los archivos de una extensión
-			lcFileSpec	= FULLPATH( tc_InputFile )
-			CD (JUSTPATH(lcFileSpec))
-			goCnv.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-			IF goCnv.l_Debug
-				IF FILE( goCnv.c_LogFile )
-					ERASE ( goCnv.c_LogFile )
-				ENDIF
-				goCnv.writeLog( lcSys16 + ' - FileSpec: ' + EVL(tc_InputFile,'') )
-				IF llExisteConfig
-					goCnv.writeLog( 'ConfigFile: ' + lcConfigFile )
-				ENDIF
-			ENDIF
-
-			lnFileCount	= ADIR( laFiles, lcFileSpec )
-
-			IF llShowProgress
-				goFrm_Avance.nMAX_VALUE	= lnFileCount
-			ENDIF
-
-			FOR I = 1 TO lnFileCount
-				lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-				goFrm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + lcFile + '...'
-				goFrm_Avance.nVALUE = I
-
-				IF llShowProgress
-					goFrm_Avance.SHOW()
-				ENDIF
-
-				IF FILE( lcFile )
-					lnResp = goCnv.Convertir( lcFile )
-				ENDIF
-			ENDFOR
-
-		OTHERWISE
-			*-- Un archivo individual
-			IF FILE(tc_InputFile)
-				CD (JUSTPATH(tc_InputFile))
-				goCnv.c_LogFile	= tc_InputFile + '.LOG'
-
-				IF goCnv.l_Debug
-					IF FILE( goCnv.c_LogFile )
-						ERASE ( goCnv.c_LogFile )
-					ENDIF
-					goCnv.writeLog( lcSys16 + ' - FileSpec: ' + EVL(tc_InputFile,'') )
-				ENDIF
-
-				lnResp = goCnv.Convertir( tc_InputFile )
-			ENDIF
-		ENDCASE
-
-	ENDCASE
-
-CATCH TO loEx
-	IF llExisteConfig
-		goCnv.writeLog( 'ERROR: ' + TRANSFORM(loEx.ERRORNO) + ', ' + loEx.MESSAGE + CR_LF ;
-			+ loEx.PROCEDURE + ', line ' + TRANSFORM(loEx.LINENO) + CR_LF ;
-			+ loEx.DETAILS )
-	ENDIF
-
-FINALLY
-	goFrm_Avance.HIDE()
-	goFrm_Avance.RELEASE()
-	STORE NULL TO goCnv, goFrm_Avance
-	RELEASE goCnv, goFrm_Avance
-	CD (JUSTPATH(lcSys16))
-	SET PATH TO (lcPath)
-ENDTRY
+PUBLIC goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+LOCAL lnResp
+goCnv	= CREATEOBJECT("c_foxbin2prg")
+lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress )
 
 IF _VFP.STARTMODE > 0
 	QUIT
@@ -411,45 +284,55 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
-		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
-		+ [<memberdata name="writelog" display="writeLog"/>] ;
-		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
-		+ [<memberdata name="l_test" display="l_Test"/>] ;
-		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
-		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
-		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
-		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
+		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
-		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
-		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
-		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
-		+ [<memberdata name="c_mn2" display="c_MN2"/>] ;
+		+ [<memberdata name="c_cd2" display="c_CD2"/>] ;
+		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
+		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
 		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
 		+ [<memberdata name="c_lb2" display="c_LB2"/>] ;
-		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
-		+ [<memberdata name="c_cd2" display="c_CD2"/>] ;
-		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
-		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
+		+ [<memberdata name="c_mn2" display="c_MN2"/>] ;
+		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
+		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
+		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
+		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
+		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
+		+ [<memberdata name="l_test" display="l_Test"/>] ;
+		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
+		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
+		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
+		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [</VFPData>]
 
+	*--
+	n_FB2PRG_Version		= 1.15
+	*--
+	c_Foxbin2prg_FullPath	= ''
 	c_CurDir				= ''
 	c_InputFile				= ''
 	c_LogFile				= ''
 	c_OutputFile			= ''
+	lFileMode				= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
 	l_ShowErrors			= .F.
+	l_ShowProgress			= .T.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	lFileMode				= .F.
 	nClassTimeStamp			= ''
-	n_FB2PRG_Version		= 1.15
 	o_Conversor				= NULL
+	o_Frm_Avance			= NULL
 	c_VC2					= 'VC2'
 	c_SC2					= 'SC2'
 	c_PJ2					= 'PJ2'
@@ -461,7 +344,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_DC2					= 'DC2'
 
 
-	*******************************************************************************************************************
 	PROCEDURE INIT
 		SET DELETED ON
 		SET DATE YMD
@@ -469,10 +351,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET CENTURY ON
 		SET SAFETY OFF
 		SET TABLEPROMPT OFF
+		THIS.c_Foxbin2prg_FullPath	= SUBSTR( SYS(16), AT( 'C_FOXBIN2PRG.INIT', SYS(16) ) + LEN('C_FOXBIN2PRG.INIT') + 1 )
+		THIS.c_CurDir				= SYS(5) + CURDIR()
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE DESTROY
 		TRY
 			LOCAL lcFileCDX
@@ -486,7 +369,142 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+	PROCEDURE Ejecutar
+		LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress
+
+		TRY
+			LOCAL I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
+				, llExisteConfig, lcConfData, lnFileCount ;
+				, loEx AS EXCEPTION
+
+			lnResp	= 0
+
+			SET DELETED ON
+			SET DATE YMD
+			SET HOURS TO 24
+			SET CENTURY ON
+			SET SAFETY OFF
+			SET TABLEPROMPT OFF
+
+			IF _VFP.STARTMODE > 0
+				SET ESCAPE OFF
+			ENDIF
+
+			DO CASE
+			CASE VERSION(5) < 900
+				*-- '¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
+				MESSAGEBOX( C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, C_FOXBIN2PRG_WARN_CAPTION_LOC, 60000 )
+				lnResp	= 1
+
+			CASE EMPTY(tc_InputFile)
+				*-- (Ejemplo de sintaxis y uso)
+				MESSAGEBOX( FOXBIN2PRG_INFO_SINTAX_LOC, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
+				lnResp	= 1
+
+			OTHERWISE
+				*-- Ejecución normal
+				THIS.l_ShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
+				THIS.l_ShowErrors		= NOT (TRANSFORM(tcDontShowErrors) == '1')
+				THIS.l_Debug			= (TRANSFORM(tcDebug)=='1')
+
+				IF THIS.l_ShowProgress
+					THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance")
+				ENDIF
+
+				*-- Configuración
+				lcConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
+				llExisteConfig	= FILE( lcConfigFile )
+
+				IF llExisteConfig
+					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
+						IF LOWER( LEFT( laConfig(I), 10 ) ) == 'extension:'
+							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
+							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+							IF PEMSTATUS( THIS, lcExt, 5 )
+								THIS.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+							ENDIF
+						ENDIF
+					ENDFOR
+				ENDIF
+
+
+				*-- Evaluación de FileSpec de entrada
+				DO CASE
+				CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
+					MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+
+				CASE '*' $ JUSTSTEM( tc_InputFile )
+					*-- Se quieren todos los archivos de una extensión
+					lcFileSpec	= FULLPATH( tc_InputFile )
+					CD (JUSTPATH(lcFileSpec))
+					THIS.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+					IF THIS.l_Debug
+						IF FILE( THIS.c_LogFile )
+							ERASE ( THIS.c_LogFile )
+						ENDIF
+						THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
+						IF llExisteConfig
+							THIS.writeLog( 'ConfigFile: ' + lcConfigFile )
+						ENDIF
+					ENDIF
+
+					lnFileCount	= ADIR( laFiles, lcFileSpec )
+
+					IF THIS.l_ShowProgress
+						THIS.o_Frm_Avance.nMAX_VALUE	= lnFileCount
+					ENDIF
+
+					FOR I = 1 TO lnFileCount
+						lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
+						THIS.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + lcFile + '...'
+						THIS.o_Frm_Avance.nVALUE = I
+
+						IF THIS.l_ShowProgress
+							THIS.o_Frm_Avance.SHOW()
+						ENDIF
+
+						IF FILE( lcFile )
+							lnResp = THIS.Convertir( lcFile )
+						ENDIF
+					ENDFOR
+
+				OTHERWISE
+					*-- Un archivo individual
+					IF FILE(tc_InputFile)
+						CD (JUSTPATH(tc_InputFile))
+						THIS.c_LogFile	= tc_InputFile + '.LOG'
+
+						IF THIS.l_Debug
+							IF FILE( THIS.c_LogFile )
+								ERASE ( THIS.c_LogFile )
+							ENDIF
+							THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
+						ENDIF
+
+						lnResp = THIS.Convertir( tc_InputFile )
+					ENDIF
+				ENDCASE
+
+			ENDCASE
+
+		CATCH TO loEx
+			IF llExisteConfig
+				THIS.writeLog( 'ERROR: ' + TRANSFORM(loEx.ERRORNO) + ', ' + loEx.MESSAGE + CR_LF ;
+					+ loEx.PROCEDURE + ', line ' + TRANSFORM(loEx.LINENO) + CR_LF ;
+					+ loEx.DETAILS )
+			ENDIF
+
+		FINALLY
+			THIS.o_Frm_Avance.HIDE()
+			THIS.o_Frm_Avance.RELEASE()
+			STORE NULL TO THIS.o_Frm_Avance
+			CD (JUSTPATH(THIS.c_CurDir))
+			*SET PATH TO (lcPath)
+		ENDTRY
+	ENDPROC
+
+
 	PROCEDURE Convertir
 		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION, tlRelanzarError
 
@@ -494,7 +512,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			LOCAL lnCodError, lcErrorInfo
 			lnCodError			= 0
 			THIS.c_InputFile	= FULLPATH( tc_InputFile )
-			THIS.c_CurDir		= JUSTPATH( THIS.c_InputFile )
 			THIS.o_Conversor	= NULL
 
 			IF NOT FILE(THIS.c_InputFile)
@@ -9049,6 +9066,10 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		LOCAL lnPropertyID, tcDataType, leValue, llRetorno, lnDataLen
 		lnPropertyID	= THIS.getDBCPropertyIDByName( SUBSTR(tcPropertyName,2) )
 		
+		*IF LOWER(tcPropertyName) = '_displogin'
+		*	SET STEP ON
+		*ENDIF
+		
 		IF lnPropertyID = -1
 			IF PCOUNT()=1
 				llRetorno	= THIS.AddProperty( tcPropertyName )
@@ -9067,7 +9088,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 					leValue		= CAST( teValue AS (tcDataType) )
 				ENDIF
 
-			CASE tcDataType = 'N'
+			CASE INLIST(tcDataType, 'N', 'B')
 				IF lnDataLen = 0
 					leValue		= 0
 				ELSE
@@ -9214,6 +9235,8 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 			lnPropertyID	= 77
 		CASE tcPropertyName == 'packetsize'	&& Undocumented
 			lnPropertyID	= 78
+		CASE tcPropertyName == 'database'	&& Undocumented
+			lnPropertyID	= 79
 		CASE tcPropertyName == 'prepared'	&& Undocumented
 			lnPropertyID	= 80
 		CASE tcPropertyName == 'comparememo'	&& Undocumented
@@ -9228,8 +9251,8 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 			lnPropertyID	= 85
 		CASE tcPropertyName == 'dbcevents'	&& Undocumented
 			lnPropertyID	= 86
-		CASE tcPropertyName == 'dbceventfile'	&& Undocumented
-			lnPropertyID	= 88
+		CASE tcPropertyName == 'dbceventfilename'	&& Undocumented
+			lnPropertyID	= 87
 		CASE tcPropertyName == 'allowsimultaneousfetch'	&& Undocumented
 			lnPropertyID	= 88
 		CASE tcPropertyName == 'disconnectrollback'	&& Undocumented
@@ -9256,13 +9279,13 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		lcValueType	= ''
 
 		DO CASE
-		CASE INLIST(tnPropertyID,2)
+		CASE INLIST(tnPropertyID,2,41,46,48,68,73)
 			lcValueType	= 'B'	&& Byte
 
-		CASE INLIST(tnPropertyID,36,38,40,44,45,64,65,69,80,81,82,83,88,89)
+		CASE INLIST(tnPropertyID,17,36,38,40,44,45,64,65,69,80,81,82,83,86,88,89)
 			lcValueType	= 'L'
 
-		CASE INLIST(tnPropertyID,17,24,28,37,39,41,46,47,48,67,68,70,71,73,75,76,78,84,85)
+		CASE INLIST(tnPropertyID,24,28,37,39,47,67,70,71,75,76,78,84,85)
 			lcValueType	= 'N'
 
 		OTHERWISE
@@ -9408,7 +9431,8 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 			LOCAL lcBinRecord, lnLen, lcDataType
 
 			lcBinRecord	= ''
-			lcDataType	= IIF( tnPropertyID = 2, 'B', VARTYPE(teData) )
+			*lcDataType	= IIF( tnPropertyID = 2, 'B', VARTYPE(teData) )
+			lcDataType	= THIS.getDBCPropertyValueTypeByPropertyID( tnPropertyID )
 
 			DO CASE
 			CASE lcDataType = 'B'
@@ -9427,7 +9451,9 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 				lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnPropertyID) + teData
 
 			OTHERWISE	&& Asume 'C'
-				teData			= teData
+				IF EMPTY(teData)
+					EXIT
+				ENDIF
 				lnLen			= 4 + 2 + 1 + LEN(teData) + 1
 				lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnPropertyID) + teData + CHR(0)
 
@@ -9577,6 +9603,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarbloque_sp" display="analizarBloque_SP"/>] ;
 		+ [<memberdata name="_comment" display="_Comment"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [<memberdata name="_dbcevents" display="_DBCEvents"/>] ;
@@ -9586,6 +9613,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		+ [<memberdata name="_views" display="_Views"/>] ;
 		+ [<memberdata name="_relations" display="_Relations"/>] ;
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
+		+ [<memberdata name="_storedprocedures" display="_StoredProcedures"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [</VFPData>]
 
@@ -9600,12 +9628,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 	_Version			= 0
 	_DBCEvents			= .F.
 	_DBCEventFilename	= ''
-
-	*-- Sub-objects
-	*_Connections		= NULL
-	*_Tables				= NULL
-	*_Views				= NULL
-	*_Relations			= NULL
+	_StoredProcedures	= ''
 
 
 	PROCEDURE INIT
@@ -9660,6 +9683,9 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 						loViews	= THIS._Views
 						loViews.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
+					CASE C_STORED_PROC_I $ tcLine
+						THIS.analizarBloque_SP( @tcLine, @taCodeLines, @I, tnCodeLines )
+
 					OTHERWISE	&& Otro valor
 						*-- Estructura a reconocer:
 						* 	<tagname>ID<tagname>
@@ -9684,6 +9710,38 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		ENDTRY
 
 		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE analizarBloque_SP
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+			IF LEFT(tcLine, LEN(C_STORED_PROC_I)) == C_STORED_PROC_I
+				LOCAL lcValue
+				lcValue	= ''
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE C_STORED_PROC_F $ tcLine	&& Fin
+						EXIT
+
+					OTHERWISE	&& Línea de Stored Procedure
+						lcValue	= lcValue + CR_LF + taCodeLines(I)
+					ENDCASE
+				ENDFOR
+
+				THIS.AddProperty( '_StoredProcedures', SUBSTR(lcValue,3) )
+			ENDIF
 	ENDPROC
 
 
@@ -9713,6 +9771,17 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			THIS.setNextID(0)
 			tnParentID	= THIS.__ObjectID
 
+			lcMemoWithProperties	= THIS.getBinMemoFromProperties()
+			UPDATE TABLABIN ;
+				SET Property = lcMemoWithProperties ;
+				WHERE STR(ParentID) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
+
+			IF NOT EMPTY(THIS._StoredProcedures)
+				UPDATE TABLABIN ;
+					SET Code = THIS._StoredProcedures ;
+					WHERE STR(ParentID) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
+			ENDIF
+
 			loTables.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 			loViews.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 			loConnections.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
@@ -9738,7 +9807,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 	*******************************************************************************************************************
 	PROCEDURE toText
 		TRY
-			LOCAL I, lcText, lcDBC, loEx AS EXCEPTION
+			LOCAL I, lcText, lcDBC, laCode(1,1), loEx AS EXCEPTION
 			LOCAL loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
 			LOCAL loTables AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
 			LOCAL loViews AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
@@ -9767,10 +9836,19 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			*-- Views
 			loViews			= THIS._Views
 			lcText			= lcText + loViews.toText()
+			
+			SELECT Code ;
+				FROM TABLABIN ;
+				WHERE STR(ParentID) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128) ;
+				INTO ARRAY laCode
+			THIS._StoredProcedures	= laCode(1,1)
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				</DATABASE>
 				<<>>
+				<<>>	<<C_STORED_PROC_I>>
+				<<THIS._StoredProcedures>>
+				<<>>	<<C_STORED_PROC_F>>
+				</DATABASE>
 			ENDTEXT
 
 
@@ -9784,6 +9862,21 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		ENDTRY
 
 		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE getBinMemoFromProperties
+		LOCAL lcBinData
+		lcBinData	= ''
+
+		WITH THIS AS CL_DBC OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Version, .getDBCPropertyIDByName('Version', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DBCEvents, .getDBCPropertyIDByName('DBCEvents', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DBCEventFilename, .getDBCPropertyIDByName('DBCEventFilename', .T.) )
+		ENDWITH && THIS
+
+		RETURN lcBinData
 	ENDPROC
 
 
@@ -10061,21 +10154,23 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 		lcBinData	= ''
 
 		WITH THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DataSource, .getDBCPropertyIDByName('DataSource', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Asynchronous, .getDBCPropertyIDByName('Asynchronous', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._BatchMode, .getDBCPropertyIDByName('BatchMode', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectString, .getDBCPropertyIDByName('ConnectString', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectTimeout , .getDBCPropertyIDByName('ConnectTimeout', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DispLogin, .getDBCPropertyIDByName('DispLogin', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DispWarnings, .getDBCPropertyIDByName('DispWarnings') )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._IdleTimeout, .getDBCPropertyIDByName('IdleTimeout', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._QueryTimeout, .getDBCPropertyIDByName('QueryTimeout', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._PassWord, .getDBCPropertyIDByName('PassWord', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DispLogin, .getDBCPropertyIDByName('DispLogin', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Transactions, .getDBCPropertyIDByName('Transactions', .T.) )
-			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UserId, .getDBCPropertyIDByName('UserId', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DisconnectRollback, .getDBCPropertyIDByName('DisconnectRollback', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectTimeout , .getDBCPropertyIDByName('ConnectTimeout', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._QueryTimeout, .getDBCPropertyIDByName('QueryTimeout', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._IdleTimeout, .getDBCPropertyIDByName('IdleTimeout', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._WaitTime, .getDBCPropertyIDByName('WaitTime', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._PacketSize, .getDBCPropertyIDByName('PacketSize', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DataSource, .getDBCPropertyIDByName('DataSource', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UserId, .getDBCPropertyIDByName('UserId', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._PassWord, .getDBCPropertyIDByName('PassWord', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Database, .getDBCPropertyIDByName('Database', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectString, .getDBCPropertyIDByName('ConnectString', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
 		ENDWITH
 
 		RETURN lcBinData
@@ -10842,18 +10937,10 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 
 	*-- Info
 	_Name					= ''
-	_IsUnique				= 0
+	_IsUnique				= .F.
 	_Comment				= ''
 
 
-	*PROCEDURE _IsUnique_ASSIGN
-	*	LPARAMETERS teValue
-	*	IF VARTYPE(teValue)<>"N"
-	*		SET STEP ON
-	*	ENDIF
-	*	THIS._IsUnique = teValue
-	*ENDPROC
-	
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -10923,7 +11010,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 				<<>>				<INDEX>
 				<<>>					<Name><<RTRIM(JUSTEXT(tcIndex))>></Name>
 				<<>>					<Comment><<RTRIM( THIS.DBGETPROP(tcIndex,'Index','Comment') )>></Comment>
-				<<>>					<IsUnique><<IIF( THIS.DBGETPROP(tcIndex,'Index','IsUnique'), 1, 0)>></IsUnique>
+				<<>>					<IsUnique><<THIS.DBGETPROP(tcIndex,'Index','IsUnique')>></IsUnique>
 				<<>>				</INDEX>
 			ENDTEXT
 
