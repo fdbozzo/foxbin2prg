@@ -1,7 +1,7 @@
-DEFINE CLASS foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS ut__foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS foxbin2prg__c_conversor_base__doBackup OF foxbin2prg__c_conversor_base__doBackup.PRG
+		LOCAL THIS AS ut__foxbin2prg__c_conversor_base__doBackup OF ut__foxbin2prg__c_conversor_base__doBackup.PRG
 	#ENDIF
 
 	#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
@@ -105,7 +105,7 @@ DEFINE CLASS foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTestCas
 		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
 		loEx		= NULL
-		loObj.c_OutputFile	= FORCEPATH( 'fb2p_dbc.dbc', oFXU_LIB.cPathDatosTest )
+		loObj.c_OutputFile	= FORCEPATH( 'FB2P_DBC.DBC', oFXU_LIB.cPathDatosTest )
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
