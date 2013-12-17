@@ -226,10 +226,10 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC					'¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
 	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC				'FOXBIN2PRG: ¡ATENCIÓN!'
 	#DEFINE FOXBIN2PRG_INFO_SINTAX_LOC					'FOXBIN2PRG <cEspecArchivo.Ext>  [cType_ND  cTextName_ND  cGenText_ND  cNoMostrarErrores  cDebug]' + CR_LF + CR_LF ;
-			+ 'Ejemplo para generar los TXT de todos los VCX de "c:\desa\clases", sin mostrar ventana de error y generando archivo LOG: ' + CR_LF ;
-			+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
-			+ 'Ejemplo para generar los VCX de todos los TXT de "c:\desa\clases", sin mostrar ventana de error y sin LOG: ' + CR_LF ;
-			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
+		+ 'Ejemplo para generar los TXT de todos los VCX de "c:\desa\clases", sin mostrar ventana de error y generando archivo LOG: ' + CR_LF ;
+		+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
+		+ 'Ejemplo para generar los VCX de todos los TXT de "c:\desa\clases", sin mostrar ventana de error y sin LOG: ' + CR_LF ;
+		+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
 	#DEFINE ASTERISK_EXT_NOT_ALLOWED_LOC				'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).'
 	#DEFINE C_PROCESSING_LOC							'Procesando archivo '
 	#DEFINE C_FILE_DOESNT_EXIST_LOC						"El archivo no existe:"
@@ -241,15 +241,15 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC	'Operación no reconocida. Solo re reconoce SETNAME y GETNAME.'
 	#DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC				'No se pudo actualizar el backlink'
 	#DEFINE C_BACKLINK_OF_TABLE_LOC						'de la tabla'
-	
+
 #ELSE	&& English
 	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC					'FOXBIN2PRG is only for Visual FoxPro 9.0!'
 	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC				'FOXBIN2PRG: WARNING!'
 	#DEFINE FOXBIN2PRG_INFO_SINTAX_LOC					'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
-			+ 'Example to generate TXT of all VCX of "c:\desa\clases", without showing error window and generating LOG file: ' + CR_LF ;
-			+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
-			+ 'Example to generate TXT of all VCX of "c:\desa\clases", without showing error window and without LOG file: ' + CR_LF ;
-			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
+		+ 'Example to generate TXT of all VCX of "c:\desa\clases", without showing error window and generating LOG file: ' + CR_LF ;
+		+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
+		+ 'Example to generate TXT of all VCX of "c:\desa\clases", without showing error window and without LOG file: ' + CR_LF ;
+		+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
 	#DEFINE ASTERISK_EXT_NOT_ALLOWED_LOC				'* and ? extensions are not allowed because is dangerous (binaries can be overwriten with xx2 empty files)'
 	#DEFINE C_PROCESSING_LOC							'Processing file '
 	#DEFINE C_FILE_DOESNT_EXIST_LOC						"File doesn't exist:"
@@ -262,7 +262,7 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 	#DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC				'Could not update backlink'
 	#DEFINE C_BACKLINK_OF_TABLE_LOC						'of table'
 
-#ENDIF 
+#ENDIF
 *******************************************************************************************************************
 
 PUBLIC goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -370,7 +370,21 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE Ejecutar
-		LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
+		* tcType_na					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tcTextName_na				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tlGenText_na				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
+		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
+		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
+		* toModulo					(?@    OUT) Referencia de objeto del módulo generado (para Unit Testing)
+		* toEx						(?@    OUT) Objeto con información del error
+		* tlRelanzarError			(?v IN    ) Indica si el error debe relanzarse o no
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress ;
+			, toModulo, toEx AS EXCEPTION, tlRelanzarError
 
 		TRY
 			LOCAL I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
@@ -431,10 +445,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Evaluación de FileSpec de entrada
 				DO CASE
 				CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
-					MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+					IF THIS.l_ShowErrors
+						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+					ELSE
+						ERROR ASTERISK_EXT_NOT_ALLOWED_LOC
+					ENDIF
 
 				CASE '*' $ JUSTSTEM( tc_InputFile )
-					*-- Se quieren todos los archivos de una extensión
+					*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
 					lcFileSpec	= FULLPATH( tc_InputFile )
 					CD (JUSTPATH(lcFileSpec))
 					THIS.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
@@ -465,12 +483,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDIF
 
 						IF FILE( lcFile )
-							lnResp = THIS.Convertir( lcFile )
+							lnResp = THIS.Convertir( lcFile, toModulo, toEx, tlRelanzarError )
 						ENDIF
 					ENDFOR
 
 				OTHERWISE
-					*-- Un archivo individual
+					*-- UN ARCHIVO INDIVIDUAL
 					IF FILE(tc_InputFile)
 						CD (JUSTPATH(tc_InputFile))
 						THIS.c_LogFile	= tc_InputFile + '.LOG'
@@ -482,23 +500,28 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
 						ENDIF
 
-						lnResp = THIS.Convertir( tc_InputFile )
+						lnResp = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError )
 					ENDIF
 				ENDCASE
 
 			ENDCASE
 
-		CATCH TO loEx
+		CATCH TO toEx
 			IF llExisteConfig
-				THIS.writeLog( 'ERROR: ' + TRANSFORM(loEx.ERRORNO) + ', ' + loEx.MESSAGE + CR_LF ;
-					+ loEx.PROCEDURE + ', line ' + TRANSFORM(loEx.LINENO) + CR_LF ;
-					+ loEx.DETAILS )
+				THIS.writeLog( 'ERROR: ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
+					+ toEx.PROCEDURE + ', line ' + TRANSFORM(toEx.LINENO) + CR_LF ;
+					+ toEx.DETAILS )
+			ENDIF
+			IF tlRelanzarError
+				THROW
 			ENDIF
 
 		FINALLY
-			THIS.o_Frm_Avance.HIDE()
-			THIS.o_Frm_Avance.RELEASE()
-			STORE NULL TO THIS.o_Frm_Avance
+			IF VARTYPE(THIS.o_Frm_Avance) = "O"
+				THIS.o_Frm_Avance.HIDE()
+				THIS.o_Frm_Avance.RELEASE()
+				STORE NULL TO THIS.o_Frm_Avance
+			ENDIF
 			CD (JUSTPATH(THIS.c_CurDir))
 			*SET PATH TO (lcPath)
 		ENDTRY
@@ -506,6 +529,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE Convertir
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
+		* toModulo					(?@    OUT) Referencia de objeto del módulo generado (para Unit Testing)
+		* toEx						(?@    OUT) Objeto con información del error
+		* tlRelanzarError			(?v IN    ) Indica si el error debe relanzarse o no
+		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION, tlRelanzarError
 
 		TRY
@@ -814,6 +844,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*	<fb2p_value>Este es un&#13;valor especial</fb2p_value>
 		*
 		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
 		* tcPropName				(!v IN    ) Nombre de la propiedad
 		* tcValue					(!v IN    ) Valor (o inicio del valor) de la propiedad
 		* taProps					(!@ IN    ) El array con las líneas del código donde buscar
@@ -9042,9 +9073,11 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
 		+ [<memberdata name="dbgetprop" display="DBGETPROP"/>] ;
 		+ [<memberdata name="dbsetprop" display="DBSETPROP"/>] ;
+		+ [<memberdata name="getallpropertiesfromobjectname" display="getAllPropertiesFromObjectname"/>] ;
 		+ [<memberdata name="getbinpropertydatarecord" display="getBinPropertyDataRecord"/>] ;
 		+ [<memberdata name="getcodememo" display="getCodeMemo"/>] ;
 		+ [<memberdata name="getdbcpropertyidbyname" display="getDBCPropertyIDByName"/>] ;
+		+ [<memberdata name="getdbcpropertynamebyid" display="getDBCPropertyNameByID"/>] ;
 		+ [<memberdata name="getdbcpropertyvaluetypebypropertyid" display="getDBCPropertyValueTypeByPropertyID"/>] ;
 		+ [<memberdata name="getid" display="getID"/>] ;
 		+ [<memberdata name="getobjecttype" display="getObjectType"/>] ;
@@ -9055,31 +9088,32 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
 		+ [</VFPData>]
 
-	*PROTECTED __ObjectID, __ObjectType
+
 	__ObjectID		= 0
 	_Name			= ''
 
 
-	FUNCTION Add_Property
+	FUNCTION add_Property
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcPropertyName			(v! IN    ) Nombre de la propiedad a agregar o modificar
+		* teValue					(v! IN    ) Valor de la propiedad
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcPropertyName, teValue
-		
+
 		LOCAL lnPropertyID, tcDataType, leValue, llRetorno, lnDataLen
 		lnPropertyID	= THIS.getDBCPropertyIDByName( SUBSTR(tcPropertyName,2) )
-		
-		*IF LOWER(tcPropertyName) = '_displogin'
-		*	SET STEP ON
-		*ENDIF
-		
+
 		IF lnPropertyID = -1
 			IF PCOUNT()=1
-				llRetorno	= THIS.AddProperty( tcPropertyName )
+				llRetorno	= THIS.ADDPROPERTY( tcPropertyName )
 			ELSE
-				llRetorno	= THIS.AddProperty( tcPropertyName, teValue )
+				llRetorno	= THIS.ADDPROPERTY( tcPropertyName, teValue )
 			ENDIF
 		ELSE
 			tcDataType	= THIS.getDBCPropertyValueTypeByPropertyID( lnPropertyID )
 			lnDataLen	= LEN(teValue)
-			
+
 			DO CASE
 			CASE tcDataType = 'L'
 				IF lnDataLen = 0
@@ -9104,16 +9138,130 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 			ENDCASE
 
-			*IF LOWER(tcPropertyName) = '_isunique' AND VARTYPE(leValue)<>'N'
-			*	SET STEP ON
-			*ENDIF
-			
-			
-			llRetorno	= THIS.AddProperty( tcPropertyName, leValue )
+			llRetorno	= THIS.ADDPROPERTY( tcPropertyName, leValue )
 		ENDIF
-		
+
 		RETURN llRetorno
 	ENDFUNC
+
+
+	PROCEDURE getAllPropertiesFromObjectname
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcName					(v! IN    ) Nombre del objeto
+		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
+		* taProperties				(@!    OUT) Array con las propiedades encontradas y sus valores
+		* tnProperty_Count			(@!    OUT) Cantidad de propiedades encontradas
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcName, tcType, taProperties, tnProperty_Count
+		
+		EXTERNAL ARRAY taProperties	&& STRUCTURE: PropName,RecordLen,DataIDLen,DataID,DataType,Data
+
+		TRY
+			LOCAL lcValue, leValue, lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnPropertyID ;
+				, lnLastPos, lnLenCCode, lcDataType, lcPropName, lcDBF, lnLenData, lnLenHeader
+			tnProperty_Count	= 0
+			lnSelect	= SELECT()
+			leValue		= ''
+			tcName		= PROPER(RTRIM(tcName))
+			tcType		= PROPER(RTRIM(tcType))
+			tcProperty	= PROPER(RTRIM(tcProperty))
+			lcDBF		= DBF()
+
+			SELECT 0
+			USE (lcDBF) AGAIN SHARED NOUPDATE ALIAS C_TABLABIN2
+
+			IF INLIST( tcType, 'Index', 'Field' )
+				SELECT TB.Property FROM C_TABLABIN2 TB ;
+					INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
+					AND TB2.objectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
+					INTO ARRAY laProperty
+
+			ELSE
+				SELECT TB.Property FROM C_TABLABIN2 TB ;
+					INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
+					INTO ARRAY laProperty
+
+			ENDIF
+
+			IF _TALLY > 0
+				IF EMPTY(laProperty(1,1))
+					EXIT
+				ENDIF
+
+				lnLastPos		= 1
+
+				DO WHILE lnLastPos < LEN(laProperty(1,1))
+					tnProperty_Count	= tnProperty_Count + 1
+					DIMENSION taProperties( tnProperty_Count,6 )
+					
+					lnRecordLen		= CTOBIN( SUBSTR(laProperty(1,1), lnLastPos, 4), "4RS" )
+					lcBinRecord		= SUBSTR(laProperty(1,1), lnLastPos, lnRecordLen)
+					lnLenCCode		= CTOBIN( SUBSTR(lcBinRecord, 4+1, 2), "2RS" )
+					lnPropertyID	= ASC( SUBSTR(lcBinRecord, 4+2+1, lnLenCCode) )
+					lcPropName		= THIS.getDBCPropertyNameByID( lnPropertyID )
+					lcDataType		= THIS.getDBCPropertyValueTypeByPropertyID( lnPropertyID )
+					lnLenHeader		= 4 + 2 + lnLenCCode
+					lcValue			= SUBSTR(lcBinRecord, lnLenHeader + 1)
+
+					DO CASE
+					CASE lcDataType = 'B'
+						IF lnLenHeader = lnRecordLen
+							leValue		= 0
+						ELSE
+							leValue		= ASC( lcValue )
+						ENDIF
+
+					CASE lcDataType = 'L'
+						IF lnLenHeader = lnRecordLen
+							leValue		= .F.
+						ELSE
+							leValue		= ( CTOBIN( lcValue, "1S" ) = 1 )
+						ENDIF
+
+					CASE lcDataType = 'N'
+						IF lnLenHeader = lnRecordLen
+							leValue		= 0
+						ELSE
+							leValue		= CTOBIN( lcValue, "4S" )
+						ENDIF
+
+					OTHERWISE && Asume 'C'
+						IF lnLenHeader = lnRecordLen
+							leValue		= ''
+						ELSE
+							leValue		= LEFT( lcValue, AT( CHR(0), lcValue ) - 1 )
+						ENDIF
+					ENDCASE
+					
+					taProperties( tnProperty_Count,1 )	= lcPropName
+					taProperties( tnProperty_Count,2 )	= lnRecordLen
+					taProperties( tnProperty_Count,3 )	= lnLenCCode
+					taProperties( tnProperty_Count,4 )	= lnPropertyID
+					taProperties( tnProperty_Count,5 )	= lcDataType
+					taProperties( tnProperty_Count,6 )	= leValue
+
+					lnLastPos	= lnLastPos + lnRecordLen
+				ENDDO
+			ELSE
+				ERROR 1562, (tcName)
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("C_TABLABIN2"))
+			SELECT (lnSelect)
+		ENDTRY
+
+		RETURN leValue
+	ENDPROC
 
 
 	PROCEDURE getDBCPropertyIDByName
@@ -9269,6 +9417,158 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	ENDPROC
 
 
+	PROCEDURE getDBCPropertyNameByID
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcPropertyID				(v! IN    ) Nombre de la propiedad
+		* tlRethrowError			(v? IN    ) Indica si se debe relanzar el error o solo devolver -1
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tnPropertyID, tlRethrowError
+		LOCAL lcPropertyName
+
+		DO CASE
+		CASE tnPropertyID	= 0
+			lcPropertyName = 'null'
+		CASE tnPropertyID	= 1
+			lcPropertyName = 'path'
+		CASE tnPropertyID	= 2
+			lcPropertyName = 'class'
+		CASE tnPropertyID	= 7
+			lcPropertyName = 'comment'
+		CASE tnPropertyID	= 9
+			lcPropertyName = 'ruleexpression'
+		CASE tnPropertyID	= 10
+			lcPropertyName = 'ruletext'
+		CASE tnPropertyID	= 11
+			lcPropertyName = 'defaultvalue'
+		CASE tnPropertyID	= 12
+			lcPropertyName = 'parameterlist'
+		CASE tnPropertyID	= 13
+			lcPropertyName = 'childtag'
+		CASE tnPropertyID	= 14
+			lcPropertyName = 'inserttrigger'
+		CASE tnPropertyID	= 15
+			lcPropertyName = 'updatetrigger'
+		CASE tnPropertyID	= 16
+			lcPropertyName = 'deletetrigger'
+		CASE tnPropertyID	= 17
+			lcPropertyName = 'isunique'
+		CASE tnPropertyID	= 18
+			lcPropertyName = 'parenttable'
+		CASE tnPropertyID	= 19
+			lcPropertyName = 'parenttag'
+		CASE tnPropertyID	= 20
+			lcPropertyName = 'primarykey'
+		CASE tnPropertyID	= 24
+			lcPropertyName = 'version'
+		CASE tnPropertyID	= 28
+			lcPropertyName = 'batchupdatecount'
+		CASE tnPropertyID	= 29
+			lcPropertyName = 'datasource'
+		CASE tnPropertyID	= 32
+			lcPropertyName = 'connectname'
+		CASE tnPropertyID	= 35
+			lcPropertyName = 'updatename'
+		CASE tnPropertyID	= 36
+			lcPropertyName = 'fetchmemo'
+		CASE tnPropertyID	= 37
+			lcPropertyName = 'fetchsize'
+		CASE tnPropertyID	= 38
+			lcPropertyName = 'keyfield'
+		CASE tnPropertyID	= 39
+			lcPropertyName = 'maxrecords'
+		CASE tnPropertyID	= 40
+			lcPropertyName = 'shareconnection'
+		CASE tnPropertyID	= 41
+			lcPropertyName = 'sourcetype'
+		CASE tnPropertyID	= 42
+			lcPropertyName = 'sql'
+		CASE tnPropertyID	= 43
+			lcPropertyName = 'tables'
+		CASE tnPropertyID	= 44
+			lcPropertyName = 'sendupdates'
+		CASE tnPropertyID	= 45
+			lcPropertyName = 'updatablefield'
+		CASE tnPropertyID	= 46
+			lcPropertyName = 'updatetype'
+		CASE tnPropertyID	= 47
+			lcPropertyName = 'usememosize'
+		CASE tnPropertyID	= 48
+			lcPropertyName = 'wheretype'
+		CASE tnPropertyID	= 50
+			lcPropertyName = 'displayclass'	&& Undocumented
+		CASE tnPropertyID	= 51
+			lcPropertyName = 'displayclasslibrary'	&& Undocumented
+		CASE tnPropertyID	= 54
+			lcPropertyName = 'inputmask'	&& Undocumented
+		CASE tnPropertyID	= 55
+			lcPropertyName = 'format'	&& Undocumented
+		CASE tnPropertyID	= 56
+			lcPropertyName = 'caption'
+		CASE tnPropertyID	= 64
+			lcPropertyName = 'asynchronous'
+		CASE tnPropertyID	= 65
+			lcPropertyName = 'batchmode'
+		CASE tnPropertyID	= 66
+			lcPropertyName = 'connectstring'
+		CASE tnPropertyID	= 67
+			lcPropertyName = 'connecttimeout'
+		CASE tnPropertyID	= 68
+			lcPropertyName = 'displogin'
+		CASE tnPropertyID	= 69
+			lcPropertyName = 'dispwarnings'
+		CASE tnPropertyID	= 70
+			lcPropertyName = 'idletimeout'
+		CASE tnPropertyID	= 71
+			lcPropertyName = 'querytimeout'
+		CASE tnPropertyID	= 72
+			lcPropertyName = 'password'
+		CASE tnPropertyID	= 73
+			lcPropertyName = 'transactions'
+		CASE tnPropertyID	= 74
+			lcPropertyName = 'userid'
+		CASE tnPropertyID	= 75
+			lcPropertyName = 'waittime'
+		CASE tnPropertyID	= 76
+			lcPropertyName = 'timestamp'
+		CASE tnPropertyID	= 77
+			lcPropertyName = 'datatype'
+		CASE tnPropertyID	= 78
+			lcPropertyName = 'packetsize'	&& Undocumented
+		CASE tnPropertyID	= 79
+			lcPropertyName = 'database'	&& Undocumented
+		CASE tnPropertyID	= 80
+			lcPropertyName = 'prepared'	&& Undocumented
+		CASE tnPropertyID	= 81
+			lcPropertyName = 'comparememo'	&& Undocumented
+		CASE tnPropertyID	= 82
+			lcPropertyName = 'fetchasneeded'	&& Undocumented
+		CASE tnPropertyID	= 83
+			lcPropertyName = 'offline'	&& Undocumented
+		CASE tnPropertyID	= 84
+			lcPropertyName = 'recordcount'	&& Undocumented
+		CASE tnPropertyID	= 85
+			lcPropertyName = 'undocumented_view_prop_85'	&& Undocumented
+		CASE tnPropertyID	= 86
+			lcPropertyName = 'dbcevents'	&& Undocumented
+		CASE tnPropertyID	= 87
+			lcPropertyName = 'dbceventfilename'	&& Undocumented
+		CASE tnPropertyID	= 88
+			lcPropertyName = 'allowsimultaneousfetch'	&& Undocumented
+		CASE tnPropertyID	= 89
+			lcPropertyName = 'disconnectrollback'	&& Undocumented
+		OTHERWISE
+			IF tlRethrowError
+				ERROR 1559, (TRANSFORM(tnPropertyID))
+			ELSE
+				lcPropertyName	= ''
+			ENDIF
+		ENDCASE
+
+		RETURN lcPropertyName
+	ENDPROC
+
+
 	PROCEDURE getDBCPropertyValueTypeByPropertyID
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9288,8 +9588,12 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		CASE INLIST(tnPropertyID,24,28,37,39,47,67,70,71,75,76,78,84,85)
 			lcValueType	= 'N'
 
-		OTHERWISE
+		CASE INLIST(tnPropertyID,0,1,7,9,10,11,12,13,14,15,16,18,19,20,29,30,32,35) ;
+				OR INLIST(tnPropertyID,42,43,49,50,51,54,55,56,66,67,72,74,77,79,87)
 			lcValueType	= 'C'
+
+		OTHERWISE
+			ERROR 'Propiedad [' + TRANSFORM(tnPropertyID) + '] no reconocida.'
 		ENDCASE
 
 		RETURN lcValueType
@@ -9691,7 +9995,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 						* 	<tagname>ID<tagname>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -9723,25 +10027,25 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
-			IF LEFT(tcLine, LEN(C_STORED_PROC_I)) == C_STORED_PROC_I
-				LOCAL lcValue
-				lcValue	= ''
-				llBloqueEncontrado	= .T.
+		IF LEFT(tcLine, LEN(C_STORED_PROC_I)) == C_STORED_PROC_I
+			LOCAL lcValue
+			lcValue	= ''
+			llBloqueEncontrado	= .T.
 
-				FOR I = I + 1 TO tnCodeLines
-					THIS.set_Line( @tcLine, @taCodeLines, I )
+			FOR I = I + 1 TO tnCodeLines
+				THIS.set_Line( @tcLine, @taCodeLines, I )
 
-					DO CASE
-					CASE C_STORED_PROC_F $ tcLine	&& Fin
-						EXIT
+				DO CASE
+				CASE C_STORED_PROC_F $ tcLine	&& Fin
+					EXIT
 
-					OTHERWISE	&& Línea de Stored Procedure
-						lcValue	= lcValue + CR_LF + taCodeLines(I)
-					ENDCASE
-				ENDFOR
+				OTHERWISE	&& Línea de Stored Procedure
+					lcValue	= lcValue + CR_LF + taCodeLines(I)
+				ENDCASE
+			ENDFOR
 
-				THIS.AddProperty( '_StoredProcedures', SUBSTR(lcValue,3) )
-			ENDIF
+			THIS.ADDPROPERTY( '_StoredProcedures', SUBSTR(lcValue,3) )
+		ENDIF
 	ENDPROC
 
 
@@ -9774,12 +10078,12 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			lcMemoWithProperties	= THIS.getBinMemoFromProperties()
 			UPDATE TABLABIN ;
 				SET Property = lcMemoWithProperties ;
-				WHERE STR(ParentID) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
+				WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
 
 			IF NOT EMPTY(THIS._StoredProcedures)
 				UPDATE TABLABIN ;
-					SET Code = THIS._StoredProcedures ;
-					WHERE STR(ParentID) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
+					SET CODE = THIS._StoredProcedures ;
+					WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
 			ENDIF
 
 			loTables.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
@@ -9836,10 +10140,10 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			*-- Views
 			loViews			= THIS._Views
 			lcText			= lcText + loViews.toText()
-			
-			SELECT Code ;
+
+			SELECT CODE ;
 				FROM TABLABIN ;
-				WHERE STR(ParentID) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128) ;
+				WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128) ;
 				INTO ARRAY laCode
 			THIS._StoredProcedures	= laCode(1,1)
 
@@ -10081,7 +10385,7 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -10398,7 +10702,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -10706,7 +11010,7 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -10973,7 +11277,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -11303,7 +11607,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -11667,7 +11971,7 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -11942,7 +12246,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -12115,7 +12419,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 						* 	<tagname>ID<tagname>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -12402,7 +12706,7 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -12652,7 +12956,7 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.Add_Property( '_' + lcPropName, lcValue )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF

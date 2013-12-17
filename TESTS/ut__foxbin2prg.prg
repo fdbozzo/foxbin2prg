@@ -298,7 +298,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
 
 			SELECT 0
-			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
 			SCAN ALL FOR NOT DELETED()
 				*-- DATOS ESPERADOS
@@ -318,7 +318,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				LOCATE FOR UNIQUEID==lcUniqueID
 
 				IF NOT FOUND()
-					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIBOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
+					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIVOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
 				ENDIF
 
 				SCATTER MEMO NAME loReg
@@ -332,7 +332,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
 
 		FINALLY
-			USE IN (SELECT("ARCHIBOBIN_IN"))
+			USE IN (SELECT("ARCHIVOBIN_IN"))
 		ENDTRY
 
 	ENDFUNC
@@ -372,7 +372,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
 
 			SELECT 0
-			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
 			SCAN ALL FOR NOT DELETED()
 				*-- DATOS ESPERADOS
@@ -392,7 +392,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				LOCATE FOR UNIQUEID==lcUniqueID
 
 				IF NOT FOUND()
-					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIBOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
+					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIVOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
 				ENDIF
 
 				SCATTER MEMO NAME loReg
@@ -406,7 +406,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
 
 		FINALLY
-			USE IN (SELECT("ARCHIBOBIN_IN"))
+			USE IN (SELECT("ARCHIVOBIN_IN"))
 		ENDTRY
 
 	ENDFUNC
@@ -444,7 +444,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
 
 			SELECT 0
-			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
 			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Form',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
@@ -485,7 +485,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
 
 		FINALLY
-			USE IN (SELECT("ARCHIBOBIN_IN"))
+			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
 
@@ -526,7 +526,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
 
 			SELECT 0
-			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
 			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
@@ -567,7 +567,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
 
 		FINALLY
-			USE IN (SELECT("ARCHIBOBIN_IN"))
+			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
 
@@ -608,7 +608,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
 
 			SELECT 0
-			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
 			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
@@ -649,7 +649,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
 
 		FINALLY
-			USE IN (SELECT("ARCHIBOBIN_IN"))
+			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
 
@@ -690,7 +690,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
 
 			SELECT 0
-			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIBOBIN_IN
+			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
 			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
@@ -732,7 +732,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				, loReg_Esperado, loReg, lcTipoBinario )
 
 		FINALLY
-			USE IN (SELECT("ARCHIBOBIN_IN"))
+			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
 
