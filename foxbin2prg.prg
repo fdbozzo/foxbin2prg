@@ -36,7 +36,7 @@
 *		DO FOXBIN2PRG.PRG WITH "<path>\FILE.PJ2"	&& Genera "<path>\FILE.PJX" (PRG TO BIN CONVERSION)
 *
 *---------------------------------------------------------------------------------------------------
-* Historial de cambios y notas importantes
+* <HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 * 04/11/2013	FDBOZZO		v1.0 Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
 * 22/11/2013	FDBOZZO		v1.1 Corrección de bugs
 * 23/11/2013	FDBOZZO		v1.2 Corrección de bugs, limpieza de código y refactorización
@@ -53,9 +53,10 @@
 * 08/12/2013	FDBOZZO		v1.13 Arreglo bug "Error 1924, TOREG is not an object"
 * 15/12/2013	FDBOZZO		v1.14 Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
 * 08/12/2013    FDBOZZO     v1.15 Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
+* </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
-* TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)
+* <TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 * 23/11/2013	Luis Martínez	REPORTE BUG: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny	REPORTE BUG: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny	REPORTE BUG: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
@@ -66,6 +67,7 @@
 * 08/12/2013	Fidel Charny	REPORTE BUG: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
 * 14/12/2013	Arturo Ramos	REPORTE BUG: La regeneración de los forms (SCX) no respeta la propiedad AutoCenter, estando pero no funcionando. (arreglado en v.1.14)
 * 14/12/2013	Fidel Charny	REPORRE BUG: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
+* </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
 * TRAMIENTOS ESPECIALES DE ASIGNACIONES DE PROPIEDADES:
@@ -215,6 +217,50 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE SERVERINSTANCE_MULTIUSE      3  && Multi-use server
 *-- Fin / End
 
+*-- INTERNACIONALIZACIÓN / INTERNATIONALIZATION
+#IF VERSION(3) == "34"	&& Español (Spanish)
+	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC					'¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
+	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC				'FOXBIN2PRG: ¡ATENCIÓN!'
+	#DEFINE FOXBIN2PRG_INFO_SINTAX_LOC					'FOXBIN2PRG <cEspecArchivo.Ext>  [cType_ND  cTextName_ND  cGenText_ND  cNoMostrarErrores  cDebug]' + CR_LF + CR_LF ;
+			+ 'Ejemplo para generar los TXT de todos los VCX de "c:\desa\clases", sin mostrar ventana de error y generando archivo LOG: ' + CR_LF ;
+			+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
+			+ 'Ejemplo para generar los VCX de todos los TXT de "c:\desa\clases", sin mostrar ventana de error y sin LOG: ' + CR_LF ;
+			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
+	#DEFINE ASTERISK_EXT_NOT_ALLOWED_LOC				'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).'
+	#DEFINE C_PROCESSING_LOC							'Procesando archivo '
+	#DEFINE C_FILE_DOESNT_EXIST_LOC						"El archivo no existe:"
+	#DEFINE C_SOURCEFILE_LOC							"Archivo origen: "
+	#DEFINE C_PROCESS_PROGRESS_LOC						"Avance del proceso: "
+	#DEFINE C_CONVERTER_UNLOAD_LOC						"Descarga del conversor"
+	#DEFINE C_CONVERTING_FILE_LOC						"Convirtiendo archivo "
+	#DEFINE C_BACKUP_OF_LOC								"Backup de: "
+	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC	'Operación no reconocida. Solo re reconoce SETNAME y GETNAME.'
+	#DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC				'No se pudo actualizar el backlink'
+	#DEFINE C_BACKLINK_OF_TABLE_LOC						'de la tabla'
+	
+#ELSE	&& English
+	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC					'FOXBIN2PRG is only for Visual FoxPro 9.0!'
+	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC				'FOXBIN2PRG: WARNING!'
+	#DEFINE FOXBIN2PRG_INFO_SINTAX_LOC					'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
+			+ 'Example to generate TXT of all VCX of "c:\desa\clases", without showing error window and generating LOG file: ' + CR_LF ;
+			+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
+			+ 'Example to generate TXT of all VCX of "c:\desa\clases", without showing error window and without LOG file: ' + CR_LF ;
+			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
+	#DEFINE ASTERISK_EXT_NOT_ALLOWED_LOC				'* and ? extensions are not allowed because is dangerous (binaries can be overwriten with xx2 empty files)'
+	#DEFINE C_PROCESSING_LOC							'Processing file '
+	#DEFINE C_FILE_DOESNT_EXIST_LOC						"File doesn't exist:"
+	#DEFINE C_SOURCEFILE_LOC							"Source file: "
+	#DEFINE C_PROCESS_PROGRESS_LOC						"Process Progress: "
+	#DEFINE C_CONVERTER_UNLOAD_LOC						"Converter unload"
+	#DEFINE C_CONVERTING_FILE_LOC						"Converting file "
+	#DEFINE C_BACKUP_OF_LOC								"Backup of: "
+	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC	'Operation not recognized. Only SETNAME and GETNAME allowed.'
+	#DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC				'Could not update backlink'
+	#DEFINE C_BACKLINK_OF_TABLE_LOC						'of table'
+
+#ENDIF 
+*--
+
 TRY
 	LOCAL lcSys16, I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
 		, llExisteConfig, llShowProgress, lcConfData, lnFileCount ;
@@ -238,16 +284,12 @@ TRY
 	DO CASE
 	CASE VERSION(5) < 900
 		lnResp	= 1
-		MESSAGEBOX( 'FOXBIN2PRG es solo para Visual FoxPro 9.0!', 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
+		MESSAGEBOX( C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, C_FOXBIN2PRG_WARN_CAPTION_LOC, 60000 )
 
 	CASE EMPTY(tc_InputFile)
 		lnResp	= 1
-		MESSAGEBOX( 'FOXBIN2PRG <cFileSpec.Ext>  [cType_NA  cTextName_NA  cGenText_NA  cDontShowErrors  cDebug]' + CR_LF + CR_LF ;
-			+ 'Ejemplo para generar los TXT de todos los VCX de c:\desa\clases, sin mostrar ventana de error y generando LOG: ' + CR_LF ;
-			+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
-			+ 'Ejemplo para generar los VCX de todos los TXT de c:\desa\clases, sin mostrar ventana de error y sin LOG: ' + CR_LF ;
-			+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"' ;
-			, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
+		MESSAGEBOX( FOXBIN2PRG_INFO_SINTAX_LOC, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
+
 	OTHERWISE
 		lcSys16	= SYS(16)
 		lcPath	= SET("Path")
@@ -282,8 +324,7 @@ TRY
 		*-- Evaluación de FileSpec de entrada
 		DO CASE
 		CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
-			MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).' ;
-				, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+			MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
 
 		CASE '*' $ JUSTSTEM( tc_InputFile )
 			*-- Se quieren todos los archivos de una extensión
@@ -309,7 +350,7 @@ TRY
 
 			FOR I = 1 TO lnFileCount
 				lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-				goFrm_Avance.lbl_TAREA.CAPTION = 'Procesando archivo ' + lcFile + '...'
+				goFrm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + lcFile + '...'
 				goFrm_Avance.nVALUE = I
 
 				IF llShowProgress
@@ -457,7 +498,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			THIS.o_Conversor	= NULL
 
 			IF NOT FILE(THIS.c_InputFile)
-				ERROR 'El archivo [' + THIS.c_InputFile + '] no existe'
+				ERROR C_FILE_DOESNT_EXIST_LOC + ' [' + THIS.c_InputFile + ']'
 			ENDIF
 
 			IF FILE( THIS.c_InputFile + '.ERR' )
@@ -544,7 +585,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		CATCH TO toEx
 			lnCodError	= toEx.ERRORNO
-			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + 'Fuente: ' + THIS.c_InputFile
+			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 
 			TRY
 				STRTOFILE( lcErrorInfo, THIS.c_InputFile + '.ERR' )
@@ -605,7 +646,7 @@ DEFINE CLASS frm_avance AS FORM
 	DOCREATE = .T.
 	AUTOCENTER = .T.
 	BORDERSTYLE = 2
-	CAPTION = "Avance del proceso"
+	CAPTION = C_PROCESS_PROGRESS_LOC
 	CONTROLBOX = .F.
 	BACKCOLOR = RGB(255,255,255)
 	nMAX_VALUE = 100
@@ -741,7 +782,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		C_FB2PRG_CODE	= ''
 		USE IN (SELECT("TABLABIN"))
 
-		THIS.writeLog( 'Descarga del conversor' )
+		THIS.writeLog( C_CONVERTER_UNLOAD_LOC )
 	ENDPROC
 
 
@@ -903,7 +944,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	PROCEDURE Convertir
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		THIS.writeLog( '' )
-		THIS.writeLog( 'Convirtiendo archivo ' + THIS.c_OutputFile + '...' )
+		THIS.writeLog( C_CONVERTING_FILE_LOC + THIS.c_OutputFile + '...' )
 	ENDPROC
 
 
@@ -1040,9 +1081,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_1) )
 				IF EMPTY(lcExt_3)
-					THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
+					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
 				ELSE
-					THIS.writeLog( 'backup de: ' + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
+					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
 				ENDIF
 
 				*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_1 + lcNext_Bak) )
@@ -1491,7 +1532,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		CASE tcOperation == 'GETNAME'
 			lcPropName	= SUBSTR(tcPropName,5)
 		CASE NOT tcOperation == 'SETNAME'
-			ERROR 'Operación no reconocida. Solo re reconoce SETNAME y GETNAME.'
+			ERROR C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC
 		CASE lcPropName == 'ButtonCount'
 			lcPropName	= 'A005' + lcPropName
 		CASE lcPropName == 'ColumnCount'
@@ -1788,7 +1829,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 				lcStr			= FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
 
 				IF FWRITE( lnHandle, PADR(tcDBC_Name,263,CHR(0)) ) = 0
-					ERROR 'No se pudo actualizar el backlink [' + tcDBC_Name + '] de la tabla [' + tc_FileName + ']'
+					*-- No se pudo actualizar el backlink [] de la tabla []
+					ERROR C_BACKLINK_CANT_UPDATE_BL_LOC + ' [' + tcDBC_Name + '] ' + C_BACKLINK_OF_TABLE_LOC + ' [' + tc_FileName + ']'
 				ENDIF
 			ENDIF
 
@@ -8978,6 +9020,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="add_property" display="Add_Property"/>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
 		+ [<memberdata name="dbgetprop" display="DBGETPROP"/>] ;
@@ -8985,7 +9028,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		+ [<memberdata name="getbinpropertydatarecord" display="getBinPropertyDataRecord"/>] ;
 		+ [<memberdata name="getcodememo" display="getCodeMemo"/>] ;
 		+ [<memberdata name="getdbcpropertyidbyname" display="getDBCPropertyIDByName"/>] ;
-		+ [<memberdata name="getdbcpropertyvaluetypebyid" display="getDBCPropertyValueTypeByID"/>] ;
+		+ [<memberdata name="getdbcpropertyvaluetypebypropertyid" display="getDBCPropertyValueTypeByPropertyID"/>] ;
 		+ [<memberdata name="getid" display="getID"/>] ;
 		+ [<memberdata name="getobjecttype" display="getObjectType"/>] ;
 		+ [<memberdata name="getbinmemofromproperties" display="getBinMemoFromProperties"/>] ;
@@ -9000,154 +9043,226 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	_Name			= ''
 
 
+	FUNCTION Add_Property
+		LPARAMETERS tcPropertyName, teValue
+		
+		LOCAL lnPropertyID, tcDataType, leValue, llRetorno, lnDataLen
+		lnPropertyID	= THIS.getDBCPropertyIDByName( SUBSTR(tcPropertyName,2) )
+		
+		IF lnPropertyID = -1
+			IF PCOUNT()=1
+				llRetorno	= THIS.AddProperty( tcPropertyName )
+			ELSE
+				llRetorno	= THIS.AddProperty( tcPropertyName, teValue )
+			ENDIF
+		ELSE
+			tcDataType	= THIS.getDBCPropertyValueTypeByPropertyID( lnPropertyID )
+			lnDataLen	= LEN(teValue)
+			
+			DO CASE
+			CASE tcDataType = 'L'
+				IF lnDataLen = 0
+					leValue		= .F.
+				ELSE
+					leValue		= CAST( teValue AS (tcDataType) )
+				ENDIF
+
+			CASE tcDataType = 'N'
+				IF lnDataLen = 0
+					leValue		= 0
+				ELSE
+					leValue		= CAST( teValue AS (tcDataType) (lnDataLen) )
+				ENDIF
+
+			OTHERWISE	&& Asumo 'C'
+				IF lnDataLen = 0
+					leValue		= ''
+				ELSE
+					leValue		= teValue
+				ENDIF
+
+			ENDCASE
+
+			*IF LOWER(tcPropertyName) = '_isunique' AND VARTYPE(leValue)<>'N'
+			*	SET STEP ON
+			*ENDIF
+			
+			
+			llRetorno	= THIS.AddProperty( tcPropertyName, leValue )
+		ENDIF
+		
+		RETURN llRetorno
+	ENDFUNC
+
+
 	PROCEDURE getDBCPropertyIDByName
-		LPARAMETERS tcPropertyName
-		LOCAL lnID
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tcPropertyName			(v! IN    ) Nombre de la propiedad
+		* tlRethrowError			(v? IN    ) Indica si se debe relanzar el error o solo devolver -1
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcPropertyName, tlRethrowError
+		LOCAL lnPropertyID
 		tcPropertyName	= LOWER(RTRIM(tcPropertyName))
 
 		DO CASE
 		CASE tcPropertyName == 'null'
-			lnID	= 0
+			lnPropertyID	= 0
 		CASE tcPropertyName == 'path'
-			lnID	= 1
+			lnPropertyID	= 1
 		CASE tcPropertyName == 'class'
-			lnID	= 2
+			lnPropertyID	= 2
 		CASE tcPropertyName == 'comment'
-			lnID	= 7
+			lnPropertyID	= 7
 		CASE tcPropertyName == 'ruleexpression'
-			lnID	= 9
+			lnPropertyID	= 9
 		CASE tcPropertyName == 'ruletext'
-			lnID	= 10
+			lnPropertyID	= 10
 		CASE tcPropertyName == 'defaultvalue'
-			lnID	= 11
+			lnPropertyID	= 11
 		CASE tcPropertyName == 'parameterlist'
-			lnID	= 12
+			lnPropertyID	= 12
 		CASE tcPropertyName == 'childtag'
-			lnID	= 13
+			lnPropertyID	= 13
 		CASE tcPropertyName == 'inserttrigger'
-			lnID	= 14
+			lnPropertyID	= 14
 		CASE tcPropertyName == 'updatetrigger'
-			lnID	= 15
+			lnPropertyID	= 15
 		CASE tcPropertyName == 'deletetrigger'
-			lnID	= 16
+			lnPropertyID	= 16
 		CASE tcPropertyName == 'isunique'
-			lnID	= 17
-		CASE tcPropertyName == 'relatedtable'
-			lnID	= 18
-		CASE tcPropertyName == 'relatedtag'
-			lnID	= 19
+			lnPropertyID	= 17
+		CASE tcPropertyName == 'parenttable'
+			lnPropertyID	= 18
+		CASE tcPropertyName == 'parenttag'
+			lnPropertyID	= 19
 		CASE tcPropertyName == 'primarykey'
-			lnID	= 20
+			lnPropertyID	= 20
 		CASE tcPropertyName == 'version'
-			lnID	= 24
+			lnPropertyID	= 24
 		CASE tcPropertyName == 'batchupdatecount'
-			lnID	= 28
+			lnPropertyID	= 28
 		CASE tcPropertyName == 'datasource'
-			lnID	= 29
+			lnPropertyID	= 29
 		CASE tcPropertyName == 'connectname'
-			lnID	= 32
+			lnPropertyID	= 32
 		CASE tcPropertyName == 'updatename'
-			lnID	= 35
+			lnPropertyID	= 35
 		CASE tcPropertyName == 'fetchmemo'
-			lnID	= 36
+			lnPropertyID	= 36
 		CASE tcPropertyName == 'fetchsize'
-			lnID	= 37
+			lnPropertyID	= 37
 		CASE tcPropertyName == 'keyfield'
-			lnID	= 38
+			lnPropertyID	= 38
 		CASE tcPropertyName == 'maxrecords'
-			lnID	= 39
+			lnPropertyID	= 39
 		CASE tcPropertyName == 'shareconnection'
-			lnID	= 40
+			lnPropertyID	= 40
 		CASE tcPropertyName == 'sourcetype'
-			lnID	= 41
+			lnPropertyID	= 41
 		CASE tcPropertyName == 'sql'
-			lnID	= 42
+			lnPropertyID	= 42
 		CASE tcPropertyName == 'tables'
-			lnID	= 43
+			lnPropertyID	= 43
 		CASE tcPropertyName == 'sendupdates'
-			lnID	= 44
+			lnPropertyID	= 44
 		CASE tcPropertyName == 'updatablefield' OR tcPropertyName == 'updatable'
-			lnID	= 45
+			lnPropertyID	= 45
 		CASE tcPropertyName == 'updatetype'
-			lnID	= 46
+			lnPropertyID	= 46
 		CASE tcPropertyName == 'usememosize'
-			lnID	= 47
+			lnPropertyID	= 47
 		CASE tcPropertyName == 'wheretype'
-			lnID	= 48
+			lnPropertyID	= 48
 		CASE tcPropertyName == 'displayclass'	&& Undocumented
-			lnID	= 50
+			lnPropertyID	= 50
 		CASE tcPropertyName == 'displayclasslibrary'	&& Undocumented
-			lnID	= 51
+			lnPropertyID	= 51
 		CASE tcPropertyName == 'inputmask'	&& Undocumented
-			lnID	= 54
+			lnPropertyID	= 54
 		CASE tcPropertyName == 'format'	&& Undocumented
-			lnID	= 55
+			lnPropertyID	= 55
 		CASE tcPropertyName == 'caption'
-			lnID	= 56
+			lnPropertyID	= 56
 		CASE tcPropertyName == 'asynchronous'
-			lnID	= 64
+			lnPropertyID	= 64
 		CASE tcPropertyName == 'batchmode'
-			lnID	= 65
+			lnPropertyID	= 65
 		CASE tcPropertyName == 'connectstring'
-			lnID	= 66
+			lnPropertyID	= 66
 		CASE tcPropertyName == 'connecttimeout'
-			lnID	= 67
+			lnPropertyID	= 67
 		CASE tcPropertyName == 'displogin'
-			lnID	= 68
+			lnPropertyID	= 68
 		CASE tcPropertyName == 'dispwarnings'
-			lnID	= 69
+			lnPropertyID	= 69
 		CASE tcPropertyName == 'idletimeout'
-			lnID	= 70
+			lnPropertyID	= 70
 		CASE tcPropertyName == 'querytimeout'
-			lnID	= 71
+			lnPropertyID	= 71
 		CASE tcPropertyName == 'password'
-			lnID	= 72
+			lnPropertyID	= 72
 		CASE tcPropertyName == 'transactions'
-			lnID	= 73
+			lnPropertyID	= 73
 		CASE tcPropertyName == 'userid'
-			lnID	= 74
+			lnPropertyID	= 74
 		CASE tcPropertyName == 'waittime'
-			lnID	= 75
+			lnPropertyID	= 75
 		CASE tcPropertyName == 'timestamp'
-			lnID	= 76
+			lnPropertyID	= 76
 		CASE tcPropertyName == 'datatype'
-			lnID	= 77
+			lnPropertyID	= 77
 		CASE tcPropertyName == 'packetsize'	&& Undocumented
-			lnID	= 78
+			lnPropertyID	= 78
 		CASE tcPropertyName == 'prepared'	&& Undocumented
-			lnID	= 80
+			lnPropertyID	= 80
 		CASE tcPropertyName == 'comparememo'	&& Undocumented
-			lnID	= 81
+			lnPropertyID	= 81
 		CASE tcPropertyName == 'fetchasneeded'	&& Undocumented
-			lnID	= 82
+			lnPropertyID	= 82
 		CASE tcPropertyName == 'offline'	&& Undocumented
-			lnID	= 83
+			lnPropertyID	= 83
 		CASE tcPropertyName == 'recordcount'	&& Undocumented
-			lnID	= 84
+			lnPropertyID	= 84
 		CASE tcPropertyName == 'undocumented_view_prop_85'	&& Undocumented
-			lnID	= 85
+			lnPropertyID	= 85
+		CASE tcPropertyName == 'dbcevents'	&& Undocumented
+			lnPropertyID	= 86
+		CASE tcPropertyName == 'dbceventfile'	&& Undocumented
+			lnPropertyID	= 88
 		CASE tcPropertyName == 'allowsimultaneousfetch'	&& Undocumented
-			lnID	= 88
+			lnPropertyID	= 88
 		CASE tcPropertyName == 'disconnectrollback'	&& Undocumented
-			lnID	= 89
+			lnPropertyID	= 89
 		OTHERWISE
-			ERROR 1559, (tcPropertyName)
+			IF tlRethrowError
+				ERROR 1559, (tcPropertyName)
+			ELSE
+				lnPropertyID	= -1
+			ENDIF
 		ENDCASE
 
-		RETURN lnID
+		RETURN lnPropertyID
 	ENDPROC
 
 
-	PROCEDURE getDBCPropertyValueTypeByID
-		LPARAMETERS tnID
+	PROCEDURE getDBCPropertyValueTypeByPropertyID
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* tnPropertyID				(v! IN    ) ID de la Propiedad
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tnPropertyID
 		LOCAL lcValueType
 		lcValueType	= ''
 
 		DO CASE
-		CASE INLIST(tnID,17,36,38,40,44,45,64,65,69,80,81,82,83,88,89)
+		CASE INLIST(tnPropertyID,2)
+			lcValueType	= 'B'	&& Byte
+
+		CASE INLIST(tnPropertyID,36,38,40,44,45,64,65,69,80,81,82,83,88,89)
 			lcValueType	= 'L'
 
-		CASE INLIST(tnID,24,28,37,39,41,46,47,48,67,68,70,71,73,75,76,78,84,85)
+		CASE INLIST(tnPropertyID,17,24,28,37,39,41,46,47,48,67,68,70,71,73,75,76,78,84,85)
 			lcValueType	= 'N'
 
 		OTHERWISE
@@ -9168,7 +9283,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		LPARAMETERS tcName, tcType, tcProperty
 
 		TRY
-			LOCAL lcValue, leValue, lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnDataConceptCode ;
+			LOCAL lcValue, leValue, lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnPropertyID ;
 				, lnLastPos, lnLenCCode, lcDataType, lnSerchedDataCC, lcDBF, lnLenData, lnLenHeader
 			lnSelect	= SELECT()
 			leValue		= ''
@@ -9199,20 +9314,27 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 				ENDIF
 
 				lnLastPos		= 1
-				lnSerchedDataCC	= THIS.getDBCPropertyIDByName( tcProperty )
+				lnSerchedDataCC	= THIS.getDBCPropertyIDByName( tcProperty, .T. )
 
 				DO WHILE lnLastPos < LEN(laProperty(1,1))
-					lnRecordLen			= CTOBIN( SUBSTR(laProperty(1,1), lnLastPos, 4), "4RS" )
-					lcBinRecord			= SUBSTR(laProperty(1,1), lnLastPos, lnRecordLen)
-					lnLenCCode			= CTOBIN( SUBSTR(lcBinRecord, 4+1, 2), "2RS" )
-					lnDataConceptCode	= ASC( SUBSTR(lcBinRecord, 4+2+1, lnLenCCode) )
+					lnRecordLen		= CTOBIN( SUBSTR(laProperty(1,1), lnLastPos, 4), "4RS" )
+					lcBinRecord		= SUBSTR(laProperty(1,1), lnLastPos, lnRecordLen)
+					lnLenCCode		= CTOBIN( SUBSTR(lcBinRecord, 4+1, 2), "2RS" )
+					lnPropertyID	= ASC( SUBSTR(lcBinRecord, 4+2+1, lnLenCCode) )
 
-					IF lnDataConceptCode = lnSerchedDataCC
-						lcDataType			= THIS.getDBCPropertyValueTypeByID( lnDataConceptCode )
-						lnLenHeader			= 4 + 2 + lnLenCCode
-						lcValue				= SUBSTR(lcBinRecord, lnLenHeader + 1)
+					IF lnPropertyID = lnSerchedDataCC
+						lcDataType		= THIS.getDBCPropertyValueTypeByPropertyID( lnPropertyID )
+						lnLenHeader		= 4 + 2 + lnLenCCode
+						lcValue			= SUBSTR(lcBinRecord, lnLenHeader + 1)
 
 						DO CASE
+						CASE lcDataType = 'B'
+							IF lnLenHeader = lnRecordLen
+								leValue		= 0
+							ELSE
+								leValue		= ASC( lcValue )
+							ENDIF
+
 						CASE lcDataType = 'L'
 							IF lnLenHeader = lnRecordLen
 								leValue		= .F.
@@ -9275,29 +9397,51 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 
 	PROCEDURE getBinPropertyDataRecord
-		LPARAMETERS teData, tnDataConceptCode
-		LOCAL lcBinRecord, lnLen, lcDataType
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* teData					(v! IN    ) Dato a codificar
+		* tnPropertyID				(v! IN    ) ID de la propiedad a la que pertenece
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS teData, tnPropertyID
 
-		lcBinRecord	= ''
-		lcDataType	= VARTYPE(tcDataType)
+		TRY
+			LOCAL lcBinRecord, lnLen, lcDataType
 
-		DO CASE
-		CASE VARTYPE(teData) = 'L'
-			teData			= BINTOC( tePropertyValue, "1S" )
-			lnLen			= 4 + 2 + 1 + 1
-			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataConceptCode) + teData
+			lcBinRecord	= ''
+			lcDataType	= IIF( tnPropertyID = 2, 'B', VARTYPE(teData) )
 
-		CASE VARTYPE(teData) = 'N'
-			teData			= BINTOC( tePropertyValue, "4S" )
-			lnLen			= 4 + 2 + 1 + 4
-			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataConceptCode) + teData
+			DO CASE
+			CASE lcDataType = 'B'
+				teData			= CHR(teData)
+				lnLen			= 4 + 2 + 1 + 1
+				lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnPropertyID) + teData
 
-		OTHERWISE	&& Asume 'C'
-			teData			= tePropertyValue
-			lnLen			= 4 + 2 + 1 + LEN(teData) + 1
-			lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnDataConceptCode) + teData + CHR(0)
+			CASE lcDataType = 'L'
+				teData			= BINTOC( IIF(teData,1,0), "1S" )
+				lnLen			= 4 + 2 + 1 + 1
+				lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnPropertyID) + teData
 
-		ENDCASE
+			CASE lcDataType = 'N'
+				teData			= BINTOC( teData, "4S" )
+				lnLen			= 4 + 2 + 1 + 4
+				lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnPropertyID) + teData
+
+			OTHERWISE	&& Asume 'C'
+				teData			= teData
+				lnLen			= 4 + 2 + 1 + LEN(teData) + 1
+				lcBinRecord		= BINTOC( lnLen, "4RS" ) + BINTOC( 1, "2RS" ) + CHR(tnPropertyID) + teData + CHR(0)
+
+			ENDCASE
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
 
 		RETURN lcBinRecord
 	ENDPROC
@@ -9403,7 +9547,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 					( lcID ;
 					, tnParentID ;
 					, lcObjectType ;
-					, ._Name ;
+					, LOWER(._Name) ;
 					, lcMemoWithProperties ;
 					, lcCodeMemo ;
 					, lcRI_Info ;
@@ -9521,7 +9665,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 						* 	<tagname>ID<tagname>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -9797,22 +9941,21 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	_DataSource				= ''
 	_Database				= ''
 	_ConnectString			= ''
-	_Asynchronous			= ''
-	_BatchMode				= ''
-	_ConnectTimeout			= ''
-	_DisconnectRollback		= ''
-	_DispLogin				= ''
-	_DispWarnings			= ''
-	_IdleTimeout			= ''
-	_PacketSize				= ''
+	_Asynchronous			= .F.
+	_BatchMode				= .F.
+	_ConnectTimeout			= 0
+	_DisconnectRollback		= .F.
+	_DispLogin				= 0
+	_DispWarnings			= .F.
+	_IdleTimeout			= 0
+	_PacketSize				= 0
 	_PassWord				= ''
-	_QueryTimeout			= ''
+	_QueryTimeout			= 0
 	_Transactions			= ''
 	_UserId					= ''
-	_WaitTime				= ''
+	_WaitTime				= 0
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9845,7 +9988,7 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -9867,7 +10010,6 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -9918,21 +10060,23 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DataSource, THIS.getDBCPropertyIDByName('DataSource') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Asynchronous), THIS.getDBCPropertyIDByName('Asynchronous') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._BatchMode), THIS.getDBCPropertyIDByName('BatchMode') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ConnectString, THIS.getDBCPropertyIDByName('ConnectString') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._ConnectTimeout) , THIS.getDBCPropertyIDByName('ConnectTimeout') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._DispLogin), THIS.getDBCPropertyIDByName('DispLogin') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._DispWarnings), THIS.getDBCPropertyIDByName('DispWarnings') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._IdleTimeout), THIS.getDBCPropertyIDByName('IdleTimeout') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._QueryTimeout), THIS.getDBCPropertyIDByName('QueryTimeout') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._PassWord, THIS.getDBCPropertyIDByName('PassWord') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Transactions), THIS.getDBCPropertyIDByName('Transactions') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UserId, THIS.getDBCPropertyIDByName('UserId') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._WaitTime), THIS.getDBCPropertyIDByName('WaitTime') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._PacketSize), THIS.getDBCPropertyIDByName('PacketSize') )	&& Undocumented
+		WITH THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DataSource, .getDBCPropertyIDByName('DataSource', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Asynchronous, .getDBCPropertyIDByName('Asynchronous', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._BatchMode, .getDBCPropertyIDByName('BatchMode', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectString, .getDBCPropertyIDByName('ConnectString', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectTimeout , .getDBCPropertyIDByName('ConnectTimeout', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DispLogin, .getDBCPropertyIDByName('DispLogin', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DispWarnings, .getDBCPropertyIDByName('DispWarnings') )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._IdleTimeout, .getDBCPropertyIDByName('IdleTimeout', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._QueryTimeout, .getDBCPropertyIDByName('QueryTimeout', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._PassWord, .getDBCPropertyIDByName('PassWord', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Transactions, .getDBCPropertyIDByName('Transactions', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UserId, .getDBCPropertyIDByName('UserId', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._WaitTime, .getDBCPropertyIDByName('WaitTime', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._PacketSize, .getDBCPropertyIDByName('PacketSize', .T.) )	&& Undocumented
+		ENDWITH
 
 		RETURN lcBinData
 	ENDPROC
@@ -10159,7 +10303,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -10259,15 +10403,17 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( 1, THIS.getDBCPropertyIDByName('Class') )	&& Clase 1
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Path, THIS.getDBCPropertyIDByName('Path') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._InsertTrigger, THIS.getDBCPropertyIDByName('InsertTrigger') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UpdateTrigger, THIS.getDBCPropertyIDByName('UpdateTrigger') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DeleteTrigger, THIS.getDBCPropertyIDByName('DeleteTrigger') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._PrimaryKey, THIS.getDBCPropertyIDByName('PrimaryKey') )
+		WITH THIS AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( 1, .getDBCPropertyIDByName('Class', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Path, .getDBCPropertyIDByName('Path', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._PrimaryKey, .getDBCPropertyIDByName('PrimaryKey', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleExpression, .getDBCPropertyIDByName('RuleExpression', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleText, .getDBCPropertyIDByName('RuleText', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._InsertTrigger, .getDBCPropertyIDByName('InsertTrigger', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UpdateTrigger, .getDBCPropertyIDByName('UpdateTrigger', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DeleteTrigger, .getDBCPropertyIDByName('DeleteTrigger', .T.) )
+		ENDWITH && THIS
 
 		RETURN lcBinData
 	ENDPROC
@@ -10465,7 +10611,7 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -10534,15 +10680,17 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DefaultValue, THIS.getDBCPropertyIDByName('DefaultValue') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClass, THIS.getDBCPropertyIDByName('DisplayClass') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClassLibrary, THIS.getDBCPropertyIDByName('DisplayClassLibrary') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Caption, THIS.getDBCPropertyIDByName('Caption') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Format, THIS.getDBCPropertyIDByName('Format') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._InputMask, THIS.getDBCPropertyIDByName('InputMask') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
+		WITH THIS AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DefaultValue, .getDBCPropertyIDByName('DefaultValue', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DisplayClass, .getDBCPropertyIDByName('DisplayClass', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DisplayClassLibrary, .getDBCPropertyIDByName('DisplayClassLibrary', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Caption, .getDBCPropertyIDByName('Caption', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Format, .getDBCPropertyIDByName('Format', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._InputMask, .getDBCPropertyIDByName('InputMask', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleExpression, .getDBCPropertyIDByName('RuleExpression', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleText, .getDBCPropertyIDByName('RuleText', .T.) )
+		ENDWITH && THIS
 
 		RETURN lcBinData
 	ENDPROC
@@ -10560,8 +10708,6 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 
 	*-- Info
 	_Name					= ''
-	_IsUnique				= ''
-	_Comment				= ''
 
 
 	PROCEDURE analizarBloque
@@ -10696,10 +10842,18 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 
 	*-- Info
 	_Name					= ''
-	_IsUnique				= ''
+	_IsUnique				= 0
 	_Comment				= ''
 
 
+	*PROCEDURE _IsUnique_ASSIGN
+	*	LPARAMETERS teValue
+	*	IF VARTYPE(teValue)<>"N"
+	*		SET STEP ON
+	*	ENDIF
+	*	THIS._IsUnique = teValue
+	*ENDPROC
+	
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -10732,7 +10886,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -10769,7 +10923,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 				<<>>				<INDEX>
 				<<>>					<Name><<RTRIM(JUSTEXT(tcIndex))>></Name>
 				<<>>					<Comment><<RTRIM( THIS.DBGETPROP(tcIndex,'Index','Comment') )>></Comment>
-				<<>>					<IsUnique><<THIS.DBGETPROP(tcIndex,'Index','IsUnique')>></IsUnique>
+				<<>>					<IsUnique><<IIF( THIS.DBGETPROP(tcIndex,'Index','IsUnique'), 1, 0)>></IsUnique>
 				<<>>				</INDEX>
 			ENDTEXT
 
@@ -10792,7 +10946,9 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._IsUnique), THIS.getDBCPropertyIDByName('IsUnique') )
+		WITH THIS AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._IsUnique, .getDBCPropertyIDByName('IsUnique', .T.) )
+		ENDWITH && THIS
 
 		RETURN lcBinData
 	ENDPROC
@@ -10977,27 +11133,27 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	_Comment				= ''
 	_Tables					= ''
 	_SQL					= ''
-	_AllowSimultaneousFetch	= ''
-	_BatchUpdateCount		= ''
-	_CompareMemo			= ''
+	_AllowSimultaneousFetch	= .F.
+	_BatchUpdateCount		= 0
+	_CompareMemo			= .F.
 	_ConnectName			= ''
-	_FetchAsNeeded			= ''
-	_FetchMemo				= ''
-	_FetchSize				= ''
-	_MaxRecords				= ''
-	_Offline				= ''
-	_RecordCount			= ''
+	_FetchAsNeeded			= .F.
+	_FetchMemo				= .F.
+	_FetchSize				= 0
+	_MaxRecords				= 0
+	_Offline				= .F.
+	_RecordCount			= 0
 	_Path					= ''
 	_ParameterList			= ''
-	_Prepared				= ''
+	_Prepared				= .F.
 	_RuleExpression			= ''
 	_RuleText				= ''
-	_SendUpdates			= ''
-	_ShareConnection		= ''
-	_SourceType				= ''
-	_UpdateType				= ''
-	_UseMemoSize			= ''
-	_WhereType				= ''
+	_SendUpdates			= .F.
+	_ShareConnection		= .F.
+	_SourceType				= 0
+	_UpdateType				= 0
+	_UseMemoSize			= 0
+	_WhereType				= 0
 
 	*-- Sub-objects
 	*_Fields					= NULL
@@ -11060,7 +11216,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -11186,31 +11342,37 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( 6, THIS.getDBCPropertyIDByName('Class') )	&& Clase 6
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParameterList, THIS.getDBCPropertyIDByName('ParameterList') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._BatchUpdateCount), THIS.getDBCPropertyIDByName('BatchUpdateCount') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ConnectName, THIS.getDBCPropertyIDByName('ConnectName') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._FetchMemo, THIS.getDBCPropertyIDByName('FetchMemo') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._FetchSize), THIS.getDBCPropertyIDByName('FetchSize') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._MaxRecords), THIS.getDBCPropertyIDByName('MaxRecords') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._ShareConnection), THIS.getDBCPropertyIDByName('ShareConnection') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._SourceType), THIS.getDBCPropertyIDByName('SourceType') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._SQL, THIS.getDBCPropertyIDByName('SQL') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Tables, THIS.getDBCPropertyIDByName('Tables') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._SendUpdates), THIS.getDBCPropertyIDByName('SendUpdates') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._UpdateType), THIS.getDBCPropertyIDByName('UpdateType') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._UseMemoSize), THIS.getDBCPropertyIDByName('UseMemoSize') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._WhereType), THIS.getDBCPropertyIDByName('WhereType') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Prepared), THIS.getDBCPropertyIDByName('Prepared') )	&& Undocumented
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._CompareMemo), THIS.getDBCPropertyIDByName('CompareMemo') )	&& Undocumented
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._FetchAsNeeded), THIS.getDBCPropertyIDByName('FetchAsNeeded') )	&& Undocumented
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Offline), THIS.getDBCPropertyIDByName('Offline') )	&& Undocumented
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._RecordCount), THIS.getDBCPropertyIDByName('RecordCount') )	&& Undocumented
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( 0, THIS.getDBCPropertyIDByName('undocumented_view_prop_85') )	&& Undocumented
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._AllowSimultaneousFetch), THIS.getDBCPropertyIDByName('AllowSimultaneousFetch') )	&& Undocumented
+		WITH THIS AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
+			IF ._SourceType = 1
+				lcBinData	= lcBinData + .getBinPropertyDataRecord( 6, .getDBCPropertyIDByName('Class', .T.) )
+			ELSE
+				lcBinData	= lcBinData + .getBinPropertyDataRecord( 7, .getDBCPropertyIDByName('Class', .T.) )
+			ENDIF
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UpdateType, .getDBCPropertyIDByName('UpdateType', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._WhereType, .getDBCPropertyIDByName('WhereType', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._FetchMemo, .getDBCPropertyIDByName('FetchMemo', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ShareConnection, .getDBCPropertyIDByName('ShareConnection', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._AllowSimultaneousFetch, .getDBCPropertyIDByName('AllowSimultaneousFetch', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._SendUpdates, .getDBCPropertyIDByName('SendUpdates', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Prepared, .getDBCPropertyIDByName('Prepared', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._CompareMemo, .getDBCPropertyIDByName('CompareMemo', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._FetchAsNeeded, .getDBCPropertyIDByName('FetchAsNeeded', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._FetchSize, .getDBCPropertyIDByName('FetchSize', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._MaxRecords, .getDBCPropertyIDByName('MaxRecords', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Tables, .getDBCPropertyIDByName('Tables', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._SQL, .getDBCPropertyIDByName('SQL', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._SourceType, .getDBCPropertyIDByName('SourceType', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._BatchUpdateCount, .getDBCPropertyIDByName('BatchUpdateCount', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleExpression, .getDBCPropertyIDByName('RuleExpression', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleText, .getDBCPropertyIDByName('RuleText', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ParameterList, .getDBCPropertyIDByName('ParameterList', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ConnectName, .getDBCPropertyIDByName('ConnectName', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UseMemoSize, .getDBCPropertyIDByName('UseMemoSize', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Offline, .getDBCPropertyIDByName('Offline', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RecordCount, .getDBCPropertyIDByName('RecordCount', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( 0, .getDBCPropertyIDByName('undocumented_view_prop_85', .T.) )	&& Undocumented
+		ENDWITH && THIS
 
 		RETURN lcBinData
 	ENDPROC
@@ -11379,10 +11541,10 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 	_DisplayClassLibrary	= ''
 	_Format					= ''
 	_InputMask				= ''
-	_KeyField				= ''
+	_KeyField				= .F.
 	_RuleExpression			= ''
 	_RuleText				= ''
-	_Updatable				= ''
+	_Updatable				= .F.
 	_UpdateName				= ''
 
 
@@ -11418,7 +11580,7 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -11492,19 +11654,21 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Comment, THIS.getDBCPropertyIDByName('Comment') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DataType, THIS.getDBCPropertyIDByName('DataType') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._KeyField), THIS.getDBCPropertyIDByName('KeyField') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( EVALUATE(THIS._Updatable), THIS.getDBCPropertyIDByName('UpdatableField') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._UpdateName, THIS.getDBCPropertyIDByName('UpdateName') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DefaultValue, THIS.getDBCPropertyIDByName('DefaultValue') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClass, THIS.getDBCPropertyIDByName('DisplayClass') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._DisplayClassLibrary, THIS.getDBCPropertyIDByName('DisplayClassLibrary') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Caption, THIS.getDBCPropertyIDByName('Caption') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._Format, THIS.getDBCPropertyIDByName('Format') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._InputMask, THIS.getDBCPropertyIDByName('InputMask') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleExpression, THIS.getDBCPropertyIDByName('RuleExpression') )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._RuleText, THIS.getDBCPropertyIDByName('RuleText') )
+		WITH THIS AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Comment, .getDBCPropertyIDByName('Comment', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DataType, .getDBCPropertyIDByName('DataType', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._KeyField, .getDBCPropertyIDByName('KeyField', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Updatable, .getDBCPropertyIDByName('UpdatableField', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UpdateName, .getDBCPropertyIDByName('UpdateName', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DefaultValue, .getDBCPropertyIDByName('DefaultValue', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DisplayClass, .getDBCPropertyIDByName('DisplayClass', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._DisplayClassLibrary, .getDBCPropertyIDByName('DisplayClassLibrary', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Caption, .getDBCPropertyIDByName('Caption', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Format, .getDBCPropertyIDByName('Format', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._InputMask, .getDBCPropertyIDByName('InputMask', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleExpression, .getDBCPropertyIDByName('RuleExpression', .T.) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RuleText, .getDBCPropertyIDByName('RuleText', .T.) )
+		ENDWITH && THIS
 
 		RETURN lcBinData
 	ENDPROC
@@ -11691,7 +11855,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -11759,10 +11923,12 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 		LOCAL lcBinData
 		lcBinData	= ''
 
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ChildIndex, 13 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParentTable, 18 )
-		lcBinData	= lcBinData + THIS.getBinPropertyDataRecord( THIS._ParentIndex, 19 )
-		*_ChildTable is used to link the name of the related table.
+		WITH THIS AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ChildIndex, .getDBCPropertyIDByName( 'ChildTag', .T. ) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ParentTable, .getDBCPropertyIDByName( 'ParentTable', .T. ) )
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._ParentIndex, .getDBCPropertyIDByName( 'ParentTag', .T. ) )
+			*_ChildTable is used to link the name of the related table.
+		ENDWITH && THIS
 
 		RETURN lcBinData
 	ENDPROC
@@ -11862,7 +12028,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 						* 	<tagname>ID<tagname>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -12149,7 +12315,7 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
@@ -12399,7 +12565,7 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 						*	<name>NOMBRE</name>
 						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
 						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
-						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+						THIS.Add_Property( '_' + lcPropName, lcValue )
 					ENDCASE
 				ENDFOR
 			ENDIF
