@@ -117,7 +117,7 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_PROCEDURE			'PROCEDURE'
 #DEFINE C_ENDPROC			'ENDPROC'
 #DEFINE C_WITH				'WITH'
-#DEFINE C_WNDWITH			'ENDWITH'
+#DEFINE C_ENDWITH			'ENDWITH'
 #DEFINE C_SRV_HEAD_I		'*<ServerHead>'
 #DEFINE C_SRV_HEAD_F		'*</ServerHead>'
 #DEFINE C_SRV_DATA_I		'*<ServerData>'
