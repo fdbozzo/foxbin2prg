@@ -53,6 +53,7 @@
 * 08/12/2013	FDBOZZO		v1.13 Arreglo bug "Error 1924, TOREG is not an object"
 * 15/12/2013	FDBOZZO		v1.14 Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
 * 08/12/2013    FDBOZZO     v1.15 Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
+* 18/12/2013	FDBOZZO		v1.16 Agregado soporte para menús (MNX)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -117,7 +118,7 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_PROCEDURE			'PROCEDURE'
 #DEFINE C_ENDPROC			'ENDPROC'
 #DEFINE C_WITH				'WITH'
-#DEFINE C_WNDWITH			'ENDWITH'
+#DEFINE C_ENDWITH			'ENDWITH'
 #DEFINE C_SRV_HEAD_I		'*<ServerHead>'
 #DEFINE C_SRV_HEAD_F		'*</ServerHead>'
 #DEFINE C_SRV_DATA_I		'*<ServerData>'
@@ -270,11 +271,20 @@ LOCAL lnResp
 goCnv	= CREATEOBJECT("c_foxbin2prg")
 lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress )
 
-IF _VFP.STARTMODE > 0
-	QUIT
+IF _VFP.STARTMODE = 0
+	RETURN
 ENDIF
 
-RETURN lnResp
+*-- Muy útil para procesos batch que capturan el código de error
+DECLARE ExitProcess in Win32API INTEGER ExitCode
+IF EMPTY(lnResp)
+	ExitProcess(0)
+ELSE
+	ExitProcess(1)
+ENDIF
+
+QUIT
+
 
 
 *******************************************************************************************************************
@@ -289,7 +299,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
-		+ [<memberdata name="c_cd2" display="c_CD2"/>] ;
 		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
 		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
 		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
@@ -333,15 +342,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	nClassTimeStamp			= ''
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
-	c_VC2					= 'VC2'
-	c_SC2					= 'SC2'
-	c_PJ2					= 'PJ2'
-	c_MN2					= 'MN2'
-	c_FR2					= 'FR2'
-	c_LB2					= 'LB2'
-	c_DB2					= 'DB2'
-	c_CD2					= 'CD2'
-	c_DC2					= 'DC2'
+	c_VC2					= 'VC2'	&& VCX
+	c_SC2					= 'SC2'	&& SCX
+	c_PJ2					= 'PJ2'	&& PJX
+	c_FR2					= 'FR2'	&& FRX
+	c_LB2					= 'LB2'	&& LBX
+	c_DB2					= 'DB2'	&& DBF
+	c_DC2					= 'DC2'	&& DBC
+	c_MN2					= 'MN2'	&& MNX
 
 
 	PROCEDURE INIT
@@ -584,6 +592,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_DC2 )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
 
+			CASE JUSTEXT(THIS.c_InputFile) = 'MNX'
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_MN2 )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
+
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_VC2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'VCX' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
@@ -611,6 +623,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DC2
 				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBC' )
 				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
+
+			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_MN2
+				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'MNX' )
+				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
 
 			OTHERWISE
 				ERROR 'El archivo [' + THIS.c_InputFile + '] no está soportado'
@@ -988,8 +1004,12 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDFUNC
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		THIS.writeLog( '' )
 		THIS.writeLog( C_CONVERTING_FILE_LOC + THIS.c_OutputFile + '...' )
@@ -2125,6 +2145,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
@@ -3856,8 +3881,12 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 
@@ -4120,8 +4149,12 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 
@@ -4396,6 +4429,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toProject					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toProject, toEx AS EXCEPTION
 		DODEFAULT( @toProject, @toEx )
 
@@ -5103,8 +5141,12 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toReport					(@!    OUT) Objeto generado de clase CL_REPORT con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toReport, toEx AS EXCEPTION
 		DODEFAULT( @toReport, @toEx )
 
@@ -5492,8 +5534,12 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toTable					(@!    OUT) Objeto generado de clase CL_TABLE con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toTable, toEx AS EXCEPTION
 		DODEFAULT( @toTable, @toEx )
 
@@ -5730,8 +5776,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toDatabase, toEx AS EXCEPTION
 		DODEFAULT( @toDatabase, @toEx )
 
@@ -5874,6 +5924,170 @@ ENDDEFINE	&& CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 
 *******************************************************************************************************************
+DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
+	#IF .F.
+		LOCAL THIS AS c_conversor_prg_a_mnx OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarbloque_tables" display="analizarBloque_TABLES"/>] ;
+		+ [<memberdata name="analizarbloque_views" display="analizarBloque_VIEWS"/>] ;
+		+ [<memberdata name="analizarbloque_tablefields" display="analizarBloque_TABLEFIELDS"/>] ;
+		+ [<memberdata name="analizarbloque_viewfields" display="analizarBloque_VIEWFIELDS"/>] ;
+		+ [<memberdata name="analizarbloque_relations" display="analizarBloque_RELATIONS"/>] ;
+		+ [<memberdata name="analizarbloque_connections" display="analizarBloque_CONNECTIONS"/>] ;
+		+ [<memberdata name="analizarbloque_database" display="analizarBloque_DATABASE"/>] ;
+		+ [</VFPData>]
+
+
+	*******************************************************************************************************************
+	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toMenu					(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toMenu, toEx AS EXCEPTION
+		DODEFAULT( @toMenu, @toEx )
+
+		#IF .F.
+			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lnFB2P_Version, lcSourceFile ;
+				, laBloquesExclusion(1,2), lnBloquesExclusion, I
+			STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
+			STORE '' TO lcLine, lcSourceFile
+			STORE NULL TO loReg, toModulo
+
+			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
+			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+
+			THIS.doBackup( .F., .T. )
+
+			*-- Creo la tabla
+			*THIS.createTable()
+
+			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toMenu )
+
+			THIS.escribirArchivoBin( @toMenu )
+
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE escribirArchivoBin
+		LPARAMETERS toDatabase
+		*-- -----------------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL lnCodError, lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
+			lnCodError	= 0
+			STORE '' TO lcIndex, lcFieldDef
+
+			toMenu.updateDBC( THIS.c_OutputFile )
+
+			*USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
+
+
+		CATCH TO loEx
+			lnCodError	= loEx.ERRORNO
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE identificarBloquesDeCodigo
+		*--------------------------------------------------------------------------------------------------------------
+		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
+		* taBloquesExclusion		(?@ IN    ) Sin uso
+		* tnBloquesExclusion		(?@ IN    ) Sin uso
+		* toMenu					(?@    OUT) Objeto con toda la información del menú analizado
+		*
+		* NOTA:
+		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toMenu
+		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+
+		#IF .F.
+			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueDatabase_Completed
+			STORE 0 TO I
+
+			THIS.c_Type	= UPPER(JUSTEXT(THIS.c_OutputFile))
+
+			IF tnCodeLines > 1
+				toDatabase		= NULL
+				toDatabase		= CREATEOBJECT('CL_DBC')
+
+				WITH THIS
+					FOR I = 1 TO tnCodeLines
+						.set_Line( @lcLine, @taCodeLines, I )
+
+						IF .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Vacía o solo Comentarios
+							LOOP
+						ENDIF
+
+						DO CASE
+						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toDatabase, @lcLine, @taCodeLines, @I, tnCodeLines )
+							llFoxBin2Prg_Completed	= .T.
+
+						CASE NOT llBloqueDatabase_Completed AND toDatabase.analizarBloque( @lcLine, @taCodeLines, @I, tnCodeLines )
+							llBloqueDatabase_Completed	= .T.
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+ENDDEFINE	&& CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
+
+
+*******************************************************************************************************************
 DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
@@ -5925,6 +6139,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
@@ -6888,7 +7107,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
 			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para binarios Visual FoxPro 9.0 solamente)
 			*
 		ENDTEXT
 	ENDPROC
@@ -7382,12 +7601,14 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" display="Convertir"/>] ;
-	+ [</VFPData>]
 
-	*******************************************************************************************************************
+
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 
@@ -7511,13 +7732,14 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	+ [<memberdata name="convertir" display="Convertir"/>] ;
-	+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 
@@ -7669,12 +7891,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
-	*_MEMBERDATA	= [<VFPData>] ;
-	*	+ [<memberdata name="write_program_header" display="write_PROGRAM_HEADER"/>] ;
-	*	+ [</VFPData>]
 
 
-	*******************************************************************************************************************
 	PROCEDURE write_PROGRAM_HEADER
 		*-- Cabecera del PRG e inicio de DEF_CLASS
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -7682,14 +7900,18 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
 			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para uso con Visual FoxPro 9.0)
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para binarios Visual FoxPro 9.0 solamente)
 			*
 		ENDTEXT
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION
 		DODEFAULT( @toModulo, @toEx )
 
@@ -8215,6 +8437,71 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
+DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	PROCEDURE Convertir
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toDatabase, toEx AS EXCEPTION
+		DODEFAULT( @toDatabase, @toEx )
+
+		#IF .F.
+			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			STORE 0 TO lnCodError
+
+			lnDatabases_Count	= ADATABASES(laDatabases)
+			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
+
+			THIS.write_PROGRAM_HEADER()
+
+			*-- Header
+			toDatabase		= CREATEOBJECT('CL_DBC')
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
+
+
+			*-- Genero el DC2
+			IF THIS.l_Test
+				toModulo	= C_FB2PRG_CODE
+			ELSE
+				IF STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+					ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
+				ENDIF
+			ENDIF
+
+
+		CATCH TO toEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+			CLOSE DATABASES
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+ENDDEFINE
+
+
+*******************************************************************************************************************
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT, CLASS)
 	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
@@ -8236,7 +8523,6 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	l_Debug				= .F.
 
 
-	*******************************************************************************************************************
 	PROCEDURE INIT
 		SET DELETED ON
 		SET DATE YMD
@@ -8249,12 +8535,10 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE fileTypeDescription
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -8296,7 +8580,6 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -8309,8 +8592,12 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taConnections				(@?    OUT) Array de conexiones
+		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
+		*---------------------------------------------------------------------------------------------------
 	ENDPROC
 
 
@@ -8330,13 +8617,13 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
 
 	l_Debug				= .F.
 
 
-	************************************************************************************************
 	PROCEDURE INIT
 		SET DELETED ON
 		SET DATE YMD
@@ -8349,12 +8636,10 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -8367,6 +8652,13 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	ENDPROC
 
 
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
+		* taConnections				(@?    OUT) Array de conexiones
+		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
+		*---------------------------------------------------------------------------------------------------
+	ENDPROC
 ENDDEFINE
 
 
