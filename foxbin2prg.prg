@@ -277,9 +277,7 @@ ENDIF
 
 *-- Muy útil para procesos batch que capturan el código de error
 DECLARE ExitProcess in Win32API INTEGER ExitCode
-IF EMPTY(lnResp)
-	ExitProcess(0)
-ELSE
+IF NOT EMPTY(lnResp)
 	ExitProcess(1)
 ENDIF
 
@@ -454,7 +452,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				DO CASE
 				CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
 					IF THIS.l_ShowErrors
-						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 					ELSE
 						ERROR ASTERISK_EXT_NOT_ALLOWED_LOC
 					ENDIF
@@ -533,6 +531,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 			*SET PATH TO (lcPath)
 		ENDTRY
+		
+		RETURN lnResp
 	ENDPROC
 
 
@@ -662,7 +662,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.writeLog( lcErrorInfo )
 			ENDIF
 			IF THIS.l_Debug AND THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 			ENDIF
 			IF tlRelanzarError	&& Usado en Unit Testing
 				THROW
@@ -7967,6 +7967,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
 				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
 				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
+				
+				*-- TIP: Por algún motivo el NAME puede estar vacío. Asigno uno temporal que muestre el error.
+				loReg.NAME	= EVL(loReg.NAME, 'BadName_FixIt')
 
 				TRY
 					loProject.ADD( loReg, loReg.NAME )
