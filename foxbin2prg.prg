@@ -85,10 +85,12 @@
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
 * tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
+* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
+*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
-LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress
+LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName
 
 *-- Internacionalización / Internationalization
 *-- Fin / End
@@ -269,20 +271,14 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 PUBLIC goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp
 goCnv	= CREATEOBJECT("c_foxbin2prg")
-lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress )
+lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug ;
+	, '', NULL, NULL, .F., tcOriginalFileName )
 
-IF _VFP.STARTMODE = 0
-	RETURN
+IF _VFP.STARTMODE > 0
+	QUIT
 ENDIF
 
-*-- Muy útil para procesos batch que capturan el código de error
-DECLARE ExitProcess in Win32API INTEGER ExitCode
-IF NOT EMPTY(lnResp)
-	ExitProcess(1)
-ENDIF
-
-QUIT
-
+RETURN lnResp
 
 
 *******************************************************************************************************************
@@ -318,6 +314,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
+		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [</VFPData>]
 
@@ -340,6 +337,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	nClassTimeStamp			= ''
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
+	o_FSO					= NULL
 	c_VC2					= 'VC2'	&& VCX
 	c_SC2					= 'SC2'	&& SCX
 	c_PJ2					= 'PJ2'	&& PJX
@@ -359,6 +357,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET TABLEPROMPT OFF
 		THIS.c_Foxbin2prg_FullPath	= SUBSTR( SYS(16), AT( 'C_FOXBIN2PRG.INIT', SYS(16) ) + LEN('C_FOXBIN2PRG.INIT') + 1 )
 		THIS.c_CurDir				= SYS(5) + CURDIR()
+		THIS.o_FSO					= NEWOBJECT("Scripting.FileSystemObject")
 	ENDPROC
 
 
@@ -388,14 +387,17 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* toModulo					(?@    OUT) Referencia de objeto del módulo generado (para Unit Testing)
 		* toEx						(?@    OUT) Objeto con información del error
 		* tlRelanzarError			(?v IN    ) Indica si el error debe relanzarse o no
+		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
+		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress ;
-			, toModulo, toEx AS EXCEPTION, tlRelanzarError
+			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName
 
 		TRY
 			LOCAL I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
 				, llExisteConfig, lcConfData, lnFileCount ;
-				, loEx AS EXCEPTION
+				, loEx AS EXCEPTION ;
+				, loFSO as Scripting.FileSystemObject
 
 			lnResp	= 0
 
@@ -409,6 +411,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			IF _VFP.STARTMODE > 0
 				SET ESCAPE OFF
 			ENDIF
+
+			loFSO	= THIS.o_FSO
 
 			DO CASE
 			CASE VERSION(5) < 900
@@ -452,7 +456,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				DO CASE
 				CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
 					IF THIS.l_ShowErrors
-						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
+						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
 					ELSE
 						ERROR ASTERISK_EXT_NOT_ALLOWED_LOC
 					ENDIF
@@ -473,7 +477,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDIF
 					ENDIF
 
-					lnFileCount	= ADIR( laFiles, lcFileSpec )
+					lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
 
 					IF THIS.l_ShowProgress
 						THIS.o_Frm_Avance.nMAX_VALUE	= lnFileCount
@@ -489,7 +493,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDIF
 
 						IF FILE( lcFile )
-							lnResp = THIS.Convertir( lcFile, toModulo, toEx, tlRelanzarError )
+							lnResp = THIS.Convertir( lcFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
 						ENDIF
 					ENDFOR
 
@@ -506,7 +510,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
 						ENDIF
 
-						lnResp = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError )
+						lnResp = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
 					ENDIF
 				ENDCASE
 
@@ -531,8 +535,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 			*SET PATH TO (lcPath)
 		ENDTRY
-		
-		RETURN lnResp
 	ENDPROC
 
 
@@ -543,108 +545,126 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* toModulo					(?@    OUT) Referencia de objeto del módulo generado (para Unit Testing)
 		* toEx						(?@    OUT) Objeto con información del error
 		* tlRelanzarError			(?v IN    ) Indica si el error debe relanzarse o no
+		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
+		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION, tlRelanzarError
+		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName
 
 		TRY
-			LOCAL lnCodError, lcErrorInfo
+			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension ;
+				, loFSO as Scripting.FileSystemObject
 			lnCodError			= 0
-			THIS.c_InputFile	= FULLPATH( tc_InputFile )
-			THIS.o_Conversor	= NULL
+			
+			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				loFSO			= THIS.o_FSO
+				.c_InputFile	= FULLPATH( tc_InputFile )
+				IF ADIR( laDirFile, .c_InputFile, '', 1 ) = 0
+					ERROR 'No se encontró el archivo [' + .c_InputFile + ']'
+				ENDIF
+				.c_InputFile	= loFSO.GetAbsolutePathName( FORCEPATH( laDirFile(1,1), JUSTPATH(.c_InputFile) ) )
+				IF NOT EMPTY(tcOriginalFileName)
+					tcOriginalFileName	= loFSO.GetAbsolutePathName( tcOriginalFileName )
+				ENDIF
+				THIS.writeLog( 'c_InputFile=' + .c_InputFile )
+				.o_Conversor	= NULL
 
-			IF NOT FILE(THIS.c_InputFile)
-				ERROR C_FILE_DOESNT_EXIST_LOC + ' [' + THIS.c_InputFile + ']'
-			ENDIF
+				IF NOT FILE(.c_InputFile)
+					ERROR C_FILE_DOESNT_EXIST_LOC + ' [' + .c_InputFile + ']'
+				ENDIF
 
-			IF FILE( THIS.c_InputFile + '.ERR' )
-				TRY
-					ERASE ( THIS.c_InputFile + '.ERR' )
-				CATCH
-				ENDTRY
-			ENDIF
+				IF FILE( .c_InputFile + '.ERR' )
+					TRY
+						ERASE ( .c_InputFile + '.ERR' )
+					CATCH
+					ENDTRY
+				ENDIF
+				
+				lcExtension	= UPPER( JUSTEXT(.c_InputFile) )
 
-			DO CASE
-			CASE JUSTEXT(THIS.c_InputFile) = 'VCX'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_VC2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
+				DO CASE
+				CASE lcExtension = 'VCX'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_VC2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'SCX'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_SC2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_scx_a_prg' )
+				CASE lcExtension = 'SCX'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_SC2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_scx_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'PJX'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_PJ2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
+				CASE lcExtension = 'PJX'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'FRX'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_FR2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+				CASE lcExtension = 'FRX'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FR2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'LBX'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_LB2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+				CASE lcExtension = 'LBX'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_LB2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'DBF'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_DB2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
+				CASE lcExtension = 'DBF'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'DBC'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_DC2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
+				CASE lcExtension = 'DBC'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DC2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = 'MNX'
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, THIS.c_MN2 )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
+				CASE lcExtension = 'MNX'
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_MN2 )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_VC2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'VCX' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
+				CASE lcExtension = .c_VC2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_SC2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'SCX' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_scx' )
+				CASE lcExtension = .c_SC2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'SCX' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_scx' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_PJ2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'PJX' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
+				CASE lcExtension = .c_PJ2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'PJX' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_FR2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'FRX' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+				CASE lcExtension = .c_FR2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FRX' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_LB2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'LBX' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+				CASE lcExtension = .c_LB2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'LBX' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DB2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBF' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
+				CASE lcExtension = .c_DB2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_DC2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'DBC' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
+				CASE lcExtension = .c_DC2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
 
-			CASE JUSTEXT(THIS.c_InputFile) = THIS.c_MN2
-				THIS.c_OutputFile					= FORCEEXT( THIS.c_InputFile, 'MNX' )
-				THIS.o_Conversor					= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
+				CASE lcExtension = .c_MN2
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MNX' )
+					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
 
-			OTHERWISE
-				ERROR 'El archivo [' + THIS.c_InputFile + '] no está soportado'
+				OTHERWISE
+					ERROR 'El archivo [' + .c_InputFile + '] no está soportado'
 
-			ENDCASE
+				ENDCASE
 
-			THIS.o_Conversor.c_InputFile			= THIS.c_InputFile
-			THIS.o_Conversor.c_OutputFile			= THIS.c_OutputFile
-			THIS.o_Conversor.c_LogFile				= THIS.c_LogFile
-			THIS.o_Conversor.l_Debug				= THIS.l_Debug
-			THIS.o_Conversor.l_Test					= THIS.l_Test
-			THIS.o_Conversor.n_FB2PRG_Version		= THIS.n_FB2PRG_Version
-			THIS.o_Conversor.l_MethodSort_Enabled	= THIS.l_MethodSort_Enabled
-			THIS.o_Conversor.l_PropSort_Enabled		= THIS.l_PropSort_Enabled
-			THIS.o_Conversor.l_ReportSort_Enabled	= THIS.l_ReportSort_Enabled
-			*--
-			THIS.o_Conversor.Convertir( @toModulo )
-			THIS.o_Conversor	= NULL
+				.o_Conversor.c_InputFile			= .c_InputFile
+				.o_Conversor.c_OutputFile			= .c_OutputFile
+				.o_Conversor.c_LogFile				= .c_LogFile
+				.o_Conversor.l_Debug				= .l_Debug
+				.o_Conversor.l_Test					= .l_Test
+				.o_Conversor.n_FB2PRG_Version		= .n_FB2PRG_Version
+				.o_Conversor.l_MethodSort_Enabled	= .l_MethodSort_Enabled
+				.o_Conversor.l_PropSort_Enabled		= .l_PropSort_Enabled
+				.o_Conversor.l_ReportSort_Enabled	= .l_ReportSort_Enabled
+				.o_Conversor.c_OriginalFileName		= tcOriginalFileName
+				*--
+				.o_Conversor.Convertir( @toModulo )
+				.o_Conversor	= NULL
+			ENDWITH &&	THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 
 		CATCH TO toEx
 			lnCodError	= toEx.ERRORNO
@@ -662,11 +682,16 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.writeLog( lcErrorInfo )
 			ENDIF
 			IF THIS.l_Debug AND THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
+				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
 			ENDIF
 			IF tlRelanzarError	&& Usado en Unit Testing
 				THROW
 			ENDIF
+
+		FINALLY
+			loFSO		= NULL
+			THIS.o_FSO	= NULL
+
 		ENDTRY
 
 		RETURN lnCodError
@@ -799,6 +824,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
+		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
@@ -823,6 +849,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	l_MethodSort_Enabled	= .T.
 	l_PropSort_Enabled		= .T.
 	l_ReportSort_Enabled	= .T.
+	c_OriginalFileName		= ''
 
 
 	*******************************************************************************************************************
@@ -1154,16 +1181,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
 				ENDIF
 
-				*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_1 + lcNext_Bak) )
 				RENAME ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
 
 				IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_2) )
-					*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_2) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak) )
 					RENAME ( FORCEEXT(THIS.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
 				ENDIF
 
 				IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_3) )
-					*COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_3) ) TO ( FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak) )
 					RENAME ( FORCEEXT(THIS.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
 				ENDIF
 			ENDIF
@@ -7107,7 +7131,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
 			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para binarios Visual FoxPro 9.0 solamente)
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<EVL( THIS.c_OriginalFileName, THIS.c_InputFile )>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 			*
 		ENDTEXT
 	ENDPROC
@@ -7893,19 +7917,6 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 	#ENDIF
 
 
-	PROCEDURE write_PROGRAM_HEADER
-		*-- Cabecera del PRG e inicio de DEF_CLASS
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			* (ES) AUTOGENERADO - PARA MANTENER INFORMACIÓN DE SERVIDORES DLL USAR "FOXBIN2PRG", SI NO IMPORTAN, EJECUTAR DIRECTAMENTE PARA REGENERAR EL PROYECTO.
-			* (EN) AUTOGENERATED - TO KEEP DLL SERVER INFORMATION USE "FOXBIN2PRG", OTHERWISE YOU CAN EXECUTE DIRECTLY TO REGENERATE PROJECT.
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<THIS.c_InputFile>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Para binarios Visual FoxPro 9.0 solamente)
-			*
-		ENDTEXT
-	ENDPROC
-
-
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				!=Obligatorio, ?=Opcional, @=Pasar por referencia, v=Pasar por valor (IN/OUT)
@@ -7967,9 +7978,6 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
 				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
 				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
-				
-				*-- TIP: Por algún motivo el NAME puede estar vacío. Asigno uno temporal que muestre el error.
-				loReg.NAME	= EVL(loReg.NAME, 'BadName_FixIt')
 
 				TRY
 					loProject.ADD( loReg, loReg.NAME )
@@ -8013,7 +8021,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				ENDFOR
 				<<>>
 				STRTOFILE( '', '__newproject.f2b' )
-				BUILD PROJECT <<JUSTFNAME( THIS.c_inputFile )>> FROM '__newproject.f2b'
+				BUILD PROJECT <<JUSTFNAME( EVL( THIS.c_OriginalFileName, THIS.c_InputFile ) )>> FROM '__newproject.f2b'
 			ENDTEXT
 
 
@@ -8023,9 +8031,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				<<>>	loProj.Close()
 				ENDFOR
 				<<>>
-				MODIFY PROJECT '<<JUSTFNAME( THIS.c_inputFile )>>' NOWAIT NOSHOW NOPROJECTHOOK
+				MODIFY PROJECT '<<JUSTFNAME( EVL( THIS.c_OriginalFileName, THIS.c_InputFile ) )>>' NOWAIT NOSHOW NOPROJECTHOOK
 				<<>>
-				loProject = _VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>')
+				loProject = _VFP.Projects('<<JUSTFNAME( EVL( THIS.c_OriginalFileName, THIS.c_InputFile ) )>>')
 				<<>>
 				WITH loProject.FILES
 			ENDTEXT
@@ -8149,7 +8157,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*	_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').FILES('__newproject.f2b').Remove()
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
-				_VFP.Projects('<<JUSTFNAME( THIS.c_inputFile )>>').Close()
+				_VFP.Projects('<<JUSTFNAME( EVL( THIS.c_OriginalFileName, THIS.c_InputFile ) )>>').Close()
 			ENDTEXT
 
 			*-- Restauro Directorio de inicio
