@@ -274,11 +274,17 @@ goCnv	= CREATEOBJECT("c_foxbin2prg")
 lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug ;
 	, '', NULL, NULL, .F., tcOriginalFileName )
 
-IF _VFP.STARTMODE > 0
-	QUIT
+IF _VFP.STARTMODE = 0
+	RETURN
 ENDIF
 
-RETURN lnResp
+*-- Muy útil para procesos batch que capturan el código de error
+DECLARE ExitProcess in Win32API INTEGER ExitCode
+IF NOT EMPTY(lnResp)
+	ExitProcess(1)
+ENDIF
+
+QUIT
 
 
 *******************************************************************************************************************
@@ -319,7 +325,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [</VFPData>]
 
 	*--
-	n_FB2PRG_Version		= 1.15
+	n_FB2PRG_Version		= 1.16
 	*--
 	c_Foxbin2prg_FullPath	= ''
 	c_CurDir				= ''
