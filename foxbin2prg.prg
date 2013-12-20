@@ -275,7 +275,7 @@ lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, t
 	, '', NULL, NULL, .F., tcOriginalFileName )
 
 IF _VFP.STARTMODE = 0
-	RETURN
+	RETURN lnResp
 ENDIF
 
 *-- Muy útil para procesos batch que capturan el código de error
@@ -541,6 +541,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 			*SET PATH TO (lcPath)
 		ENDTRY
+		
+		RETURN lnResp
 	ENDPROC
 
 
@@ -7984,6 +7986,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
 				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
 				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
+				
+				*-- TIP: Si el "Name" del objeto está vacío, lo salteo
+				IF EMPTY(loReg.NAME)
+					LOOP
+				ENDIF
 
 				TRY
 					loProject.ADD( loReg, loReg.NAME )
