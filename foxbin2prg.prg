@@ -279,7 +279,7 @@ IF _VFP.STARTMODE = 0
 ENDIF
 
 *-- Muy útil para procesos batch que capturan el código de error
-DECLARE ExitProcess in Win32API INTEGER ExitCode
+DECLARE ExitProcess IN Win32API INTEGER ExitCode
 IF NOT EMPTY(lnResp)
 	ExitProcess(1)
 ENDIF
@@ -298,7 +298,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
+		+ [<memberdata name="c_type" display="c_Type"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
+		+ [<memberdata name="c_textlog" display="c_TextLog"/>] ;
 		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
 		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
 		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
@@ -317,12 +319,16 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
+		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
+		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
 		+ [</VFPData>]
+
 
 	*--
 	n_FB2PRG_Version		= 1.16
@@ -331,7 +337,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_CurDir				= ''
 	c_InputFile				= ''
 	c_LogFile				= ''
+	c_TextLog				= ''
 	c_OutputFile			= ''
+	c_Type					= ''
 	lFileMode				= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
@@ -370,10 +378,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE DESTROY
 		TRY
 			LOCAL lcFileCDX
-			lcFileCDX	= FORCEPATH( "TABLABIN.CDX", THIS.c_CurDir )
+			lcFileCDX	= FORCEPATH( "TABLABIN.CDX", JUSTPATH(THIS.c_InputFile) )
+
 			IF FILE( lcFileCDX )
 				ERASE ( lcFileCDX )
 			ENDIF
+
+			THIS.writeLog_Flush()
 		CATCH
 		ENDTRY
 
@@ -403,7 +414,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			LOCAL I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
 				, llExisteConfig, lcConfData, lnFileCount ;
 				, loEx AS EXCEPTION ;
-				, loFSO as Scripting.FileSystemObject
+				, loFSO AS Scripting.FileSystemObject
 
 			lnResp	= 0
 
@@ -462,7 +473,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				DO CASE
 				CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
 					IF THIS.l_ShowErrors
-						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+						MESSAGEBOX( ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 					ELSE
 						ERROR ASTERISK_EXT_NOT_ALLOWED_LOC
 					ENDIF
@@ -541,7 +552,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 			*SET PATH TO (lcPath)
 		ENDTRY
-		
+
 		RETURN lnResp
 	ENDPROC
 
@@ -560,9 +571,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension ;
-				, loFSO as Scripting.FileSystemObject
+				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
-			
+
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				loFSO			= THIS.o_FSO
 				.c_InputFile	= FULLPATH( tc_InputFile )
@@ -586,7 +597,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					CATCH
 					ENDTRY
 				ENDIF
-				
+
 				lcExtension	= UPPER( JUSTEXT(.c_InputFile) )
 
 				DO CASE
@@ -659,6 +670,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
+				.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
 				.o_Conversor.c_InputFile			= .c_InputFile
 				.o_Conversor.c_OutputFile			= .c_OutputFile
 				.o_Conversor.c_LogFile				= .c_LogFile
@@ -669,9 +681,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.o_Conversor.l_PropSort_Enabled		= .l_PropSort_Enabled
 				.o_Conversor.l_ReportSort_Enabled	= .l_ReportSort_Enabled
 				.o_Conversor.c_OriginalFileName		= tcOriginalFileName
+				.o_Conversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
 				*--
 				.o_Conversor.Convertir( @toModulo )
-				.o_Conversor	= NULL
+				.c_TextLog	= .c_TextLog + CR_LF + .o_Conversor.c_TextLog	&& Recojo el LOG que haya generado el conversor
+				.normalizarCapitalizacionArchivos()
 			ENDWITH &&	THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 
 		CATCH TO toEx
@@ -690,15 +704,17 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THIS.writeLog( lcErrorInfo )
 			ENDIF
 			IF THIS.l_Debug AND THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 10000 )
+				MESSAGEBOX( lcErrorInfo, 0+16+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 			ENDIF
 			IF tlRelanzarError	&& Usado en Unit Testing
 				THROW
 			ENDIF
 
 		FINALLY
-			loFSO		= NULL
-			THIS.o_FSO	= NULL
+			loFSO				= NULL
+			THIS.o_FSO			= NULL
+			THIS.o_Conversor	= NULL
+			THIS.writeLog_Flush()
 
 		ENDTRY
 
@@ -707,14 +723,91 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	*******************************************************************************************************************
+	PROCEDURE normalizarCapitalizacionArchivos
+		TRY
+			LOCAL lcPath, lcEXE_CAPS, lcOutputFile ;
+				, loFSO AS SCRIPTING.FileSystemObject
+			lcPath		= JUSTPATH(THIS.c_Foxbin2prg_FullPath)
+			lcEXE_CAPS	= FORCEPATH( 'filename_caps.exe', lcPath )
+			loFSO		= THIS.o_FSO
+
+			IF FILE(lcEXE_CAPS)
+				THIS.writeLog( '* Se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
+			ELSE
+				*-- No existe el programa de capitalización, así que no se capitalizan los nombres.
+				THIS.writeLog( '* No se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
+				EXIT
+			ENDIF
+
+			THIS.RenameFile( THIS.c_OutputFile, lcEXE_CAPS, loFSO )
+
+			DO CASE
+			CASE THIS.c_Type = 'PJX'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO )
+
+			CASE THIS.c_Type = 'VCX'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO )
+
+			CASE THIS.c_Type = 'SCX'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO )
+
+			CASE THIS.c_Type = 'FRX'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO )
+
+			CASE THIS.c_Type = 'LBX'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO )
+
+			CASE THIS.c_Type = 'DBF'
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'FPT') )
+					THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO )
+				ENDIF
+				IF FILE( FORCEEXT(THIS.c_OutputFile,'CDX') )
+					THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO )
+				ENDIF
+
+			CASE THIS.c_Type = 'DBC'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO )
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO )
+
+			CASE THIS.c_Type = 'MNX'
+				THIS.RenameFile( FORCEEXT(THIS.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO )
+
+			ENDCASE
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE RenameFile
+		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS SCRIPTING.FileSystemObject
+
+		LOCAL lcLog
+		THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
+		lcLog	= ''
+		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog
+		toFSO.MoveFile( tcFileName, tcFileName )
+		THIS.writeLog( '  => Se renombrará a [' + tcFileName + ']' )
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE writeLog
 		LPARAMETERS tcText
 
-		IF THIS.l_Debug
-			TRY
-				STRTOFILE( TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF, THIS.c_LogFile, 1 )
-			CATCH
-			ENDTRY
+		TRY
+			THIS.c_TextLog	= THIS.c_TextLog + TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF
+		CATCH
+		ENDTRY
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE writeLog_Flush
+		IF THIS.l_Debug AND NOT EMPTY(THIS.c_TextLog)
+			STRTOFILE( THIS.c_TextLog + CR_LF, THIS.c_LogFile, 1 )
+			THIS.c_TextLog	= ''
 		ENDIF
 	ENDPROC
 
@@ -830,10 +923,12 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="write_dbf_metadata" display="write_DBF_Metadata"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
+		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
 		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
+		+ [<memberdata name="c_textlog" display="c_TextLog"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
@@ -841,6 +936,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="ofso" display="oFSO"/>] ;
 		+ [</VFPData>]
 
 
@@ -851,13 +947,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 	lFileMode				= .T.
 	nClassTimeStamp			= ''
 	n_FB2PRG_Version		= 1.0
+	c_Foxbin2prg_FullPath	= ''
 	c_Type					= ''
 	c_CurDir				= ''
 	c_LogFile				= ''
+	c_TextLog				= ''
 	l_MethodSort_Enabled	= .T.
 	l_PropSort_Enabled		= .T.
 	l_ReportSort_Enabled	= .T.
 	c_OriginalFileName		= ''
+	oFSO					= NULL
 
 
 	*******************************************************************************************************************
@@ -872,6 +971,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		PUBLIC C_FB2PRG_CODE
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
 		THIS.c_CurDir	= SYS(5) + CURDIR()
+		THIS.oFSO		= CREATEOBJECT( "Scripting.FileSystemObject")
 	ENDPROC
 
 
@@ -1024,7 +1124,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	FUNCTION comprobarExpresionValida( tcAsignacion, tnCodError, tcExpNormalizada )
+	FUNCTION comprobarExpresionValida
+		LPARAMETERS tcAsignacion, tnCodError, tcExpNormalizada
 		LOCAL llError, loEx AS EXCEPTION
 
 		TRY
@@ -2116,12 +2217,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 	PROCEDURE writeLog
 		LPARAMETERS tcText
 
-		IF THIS.l_Debug
-			TRY
-				STRTOFILE( TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF, THIS.c_LogFile, 1 )
-			CATCH
-			ENDTRY
-		ENDIF
+		TRY
+			THIS.c_TextLog	= THIS.c_TextLog + TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF
+		CATCH
+		ENDTRY
 	ENDPROC
 
 
@@ -4034,7 +4133,10 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		TRY
 			LOCAL lcObjName, lnCodError, I, X, loEx AS EXCEPTION ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
-				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG' ;
+				, loFSO AS Scripting.FileSystemObject
+
+			loFSO	= THIS.oFSO
 
 			*-- Creo el registro de cabecera
 			THIS.createClasslib_RecordHeader()
@@ -4589,7 +4691,6 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					, loFile._ObjRev ;
 					, UPPER(JUSTSTEM(loFile._Name)) )
 			ENDFOR
-
 
 			USE IN (SELECT("TABLABIN"))
 
@@ -5871,7 +5972,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			STORE '' TO lcIndex, lcFieldDef
 
 			toDatabase.updateDBC( THIS.c_OutputFile )
-
 			*USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
 
@@ -6035,7 +6135,6 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			STORE '' TO lcIndex, lcFieldDef
 
 			toMenu.updateDBC( THIS.c_OutputFile )
-
 			*USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
 
@@ -7986,7 +8085,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
 				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
 				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
-				
+
 				*-- TIP: Si el "Name" del objeto está vacío, lo salteo
 				IF EMPTY(loReg.NAME)
 					LOOP
@@ -9470,7 +9569,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		* tnProperty_Count			(@!    OUT) Cantidad de propiedades encontradas
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcName, tcType, taProperties, tnProperty_Count
-		
+
 		EXTERNAL ARRAY taProperties	&& STRUCTURE: PropName,RecordLen,DataIDLen,DataID,DataType,Data
 
 		TRY
@@ -9510,7 +9609,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 				DO WHILE lnLastPos < LEN(laProperty(1,1))
 					tnProperty_Count	= tnProperty_Count + 1
 					DIMENSION taProperties( tnProperty_Count,6 )
-					
+
 					lnRecordLen		= CTOBIN( SUBSTR(laProperty(1,1), lnLastPos, 4), "4RS" )
 					lcBinRecord		= SUBSTR(laProperty(1,1), lnLastPos, lnRecordLen)
 					lnLenCCode		= CTOBIN( SUBSTR(lcBinRecord, 4+1, 2), "2RS" )
@@ -9549,7 +9648,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 							leValue		= LEFT( lcValue, AT( CHR(0), lcValue ) - 1 )
 						ENDIF
 					ENDCASE
-					
+
 					taProperties( tnProperty_Count,1 )	= lcPropName
 					taProperties( tnProperty_Count,2 )	= lnRecordLen
 					taProperties( tnProperty_Count,3 )	= lnLenCCode
