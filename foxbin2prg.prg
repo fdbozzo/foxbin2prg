@@ -913,6 +913,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="get_separatedpropandvalue" display="get_SeparatedPropAndValue"/>] ;
+		+ [<memberdata name="get_valuefromnullterminatedvalue" display="get_ValueFromNullTerminatedValue"/>] ;
 		+ [<memberdata name="identificarbloquesdeexclusion" display="identificarBloquesDeExclusion"/>] ;
 		+ [<memberdata name="lineisonlycommentandnometadata" display="lineIsOnlyCommentAndNoMetadata"/>] ;
 		+ [<memberdata name="normalizarasignacion" display="normalizarAsignacion"/>] ;
@@ -1583,6 +1584,20 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ENDIF
 
 		RETURN
+	ENDPROC
+
+
+	************************************************************************************************
+	PROCEDURE get_ValueFromNullTerminatedValue
+		LPARAMETERS tcNullTerminatedValue
+		LOCAL lcValue, lnNullPos
+		lnNullPos	= AT(CHR(0), tcNullTerminatedValue )
+		IF lnNullPos = 0
+			lcValue		= CHRTRAN( tcNullTerminatedValue, ['], ["] )
+		ELSE
+			lcValue		= CHRTRAN( LEFT( tcNullTerminatedValue, lnNullPos - 1 ), ['], ["] )
+		ENDIF
+		RETURN lcValue
 	ENDPROC
 
 
@@ -4625,13 +4640,15 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
 				, loFile AS CL_PROJ_FILE OF 'FOXBIN2PRG.PRG'
 
+			toProject._HomeDir	= CHRTRAN( toProject._HomeDir, ['], [] )
+
 			*-- Creo solo el registro de cabecera del proyecto
 			THIS.createProject_RecordHeader( toProject )
 
 			lcMainProg	= ''
 
 			IF NOT EMPTY(toProject._MainProg)
-				lcMainProg	= LOWER( SYS(2014, toProject._MainProg, ADDBS(JUSTPATH(toProject._HomeDir)) ) )
+				lcMainProg	= LOWER( SYS(2014, toProject._MainProg, ADDBS(toProject._HomeDir) ) )
 			ENDIF
 
 			*-- Si hay ProjectHook de proyecto, lo inserto
@@ -4742,7 +4759,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 			IF tnCodeLines > 1
 				toProject			= CREATEOBJECT('CL_PROJECT')
-				toProject._HomeDir	= ADDBS(JUSTPATH(THIS.c_OutputFile))
+				*toProject._HomeDir	= ADDBS(JUSTPATH(THIS.c_OutputFile))
 
 				WITH THIS
 					FOR I = 1 TO tnCodeLines
@@ -4853,6 +4870,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues )
 
 							toProject.ADD( loFile, loFile._Name )
+
+						CASE UPPER( LEFT( tcLine, 10 ) ) == UPPER( '*<.HomeDir' )
+							toProject._HomeDir	= STREXTRACT( tcLine, "'", "'" )
+							
 						ENDCASE
 					ENDFOR
 				ENDWITH && THIS
@@ -8048,7 +8069,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*-- Obtengo los archivos del proyecto
 			loProject		= CREATEOBJECT('CL_PROJECT')
 			SCATTER MEMO NAME loReg
-			loProject._HomeDir		= ALLTRIM( loReg.HOMEDIR )
+			loProject._HomeDir		= ['] + ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.HOMEDIR ) ) + [']
+			
 			loProject._ServerInfo	= loReg.RESERVED2
 			loProject._Debug		= loReg.DEBUG
 			loProject._Encrypted	= loReg.ENCRYPT
@@ -8059,7 +8081,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR MAINPROG
 
 			IF FOUND()
-				loProject._MainProg	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
+				loProject._MainProg	= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( NAME ) ) )
 			ENDIF
 
 
@@ -8067,8 +8089,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR TYPE == 'W'
 
 			IF FOUND()
-				loProject._ProjectHookLibrary	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
-				loProject._ProjectHookClass	= LOWER( ALLTRIM( RESERVED1, 0, ' ', CHR(0) ) )
+				loProject._ProjectHookLibrary	= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( NAME ) ) )
+				loProject._ProjectHookClass	= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( RESERVED1 ) ) )
 			ENDIF
 
 
@@ -8076,15 +8098,15 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR TYPE == 'i'
 
 			IF FOUND()
-				loProject._Icon	= LOWER( ALLTRIM( NAME, 0, ' ', CHR(0) ) )
+				loProject._Icon	= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( NAME ) ) )
 			ENDIF
 
 
 			*-- Escaneo el proyecto
 			SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
-				loReg.NAME		= LOWER( ALLTRIM( loReg.NAME, 0, ' ', CHR(0) ) )
-				loReg.COMMENTS	= CHRTRAN( ALLTRIM( loReg.COMMENTS, 0, ' ', CHR(0) ), ['], ["] )
+				loReg.NAME		= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.NAME ) ) )
+				loReg.COMMENTS	= ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.COMMENTS ) )
 
 				*-- TIP: Si el "Name" del objeto está vacío, lo salteo
 				IF EMPTY(loReg.NAME)
@@ -8128,8 +8150,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*-- Generación del proyecto
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_BUILDPROJ_I>>
-				FOR EACH loProj IN _VFP.Projects FOXOBJECT
-				<<>>	loProj.Close()
+				<<>>*<.HomeDir = <<loProject._HomeDir>> />
+				<<>>
+				FOR EACH loProject IN _VFP.Projects FOXOBJECT
+				<<>>	loProject.Close()
 				ENDFOR
 				<<>>
 				STRTOFILE( '', '__newproject.f2b' )
@@ -8139,8 +8163,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			*-- Abro el proyecto
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				FOR EACH loProj IN _VFP.Projects FOXOBJECT
-				<<>>	loProj.Close()
+				FOR EACH loProject IN _VFP.Projects FOXOBJECT
+				<<>>	loProject.Close()
 				ENDFOR
 				<<>>
 				MODIFY PROJECT '<<JUSTFNAME( EVL( THIS.c_OriginalFileName, THIS.c_InputFile ) )>>' NOWAIT NOSHOW NOPROJECTHOOK
@@ -9273,7 +9297,8 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	PROCEDURE setParsedInfoLine
 		LPARAMETERS toObject, tcInfoLine
 		LOCAL lcAsignacion, lcCurDir
-		lcCurDir	= ADDBS(JUSTPATH(THIS._SourceFile))
+		*lcCurDir	= ADDBS(JUSTPATH(THIS._SourceFile))
+		lcCurDir	= ADDBS(THIS._HomeDir)
 		IF LEFT(tcInfoLine,1) == '.'
 			lcAsignacion	= 'toObject' + tcInfoLine
 		ELSE
