@@ -192,6 +192,18 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_INDEX_F			'</INDEX>'
 #DEFINE C_INDEXES_I			'<INDEXES>'
 #DEFINE C_INDEXES_F			'</INDEXES>'
+#DEFINE C_MENU_I			'<MENU>'
+#DEFINE C_MENU_F			'</MENU>'
+#DEFINE C_OPTION_I			'<OPTION>'
+#DEFINE C_OPTION_F			'</OPTION>'
+#DEFINE C_BARPOP_I			'<BARPOP>'
+#DEFINE C_BARPOP_F			'</BARPOP>'
+#DEFINE C_SETUPCODE_I		'*<SetupCode>'
+#DEFINE C_SETUPCODE_F		'*</SetupCode>'
+#DEFINE C_CLEANUPCODE_I		'*<CleanupCode>'
+#DEFINE C_CLEANUPCODE_F		'*</CleanupCode>'
+#DEFINE C_MENUCODE_I		'*<MenuCode>'
+#DEFINE C_MENUCODE_F		'*</MenuCode>'
 *--
 #DEFINE C_TAB				CHR(9)
 #DEFINE C_CR				CHR(13)
@@ -391,7 +403,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	PROCEDURE Ejecutar
+	PROCEDURE ejecutar
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
@@ -726,7 +738,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE normalizarCapitalizacionArchivos
 		TRY
 			LOCAL lcPath, lcEXE_CAPS, lcOutputFile ;
-				, loFSO AS SCRIPTING.FileSystemObject
+				, loFSO AS Scripting.FileSystemObject
 			lcPath		= JUSTPATH(THIS.c_Foxbin2prg_FullPath)
 			lcEXE_CAPS	= FORCEPATH( 'filename_caps.exe', lcPath )
 			loFSO		= THIS.o_FSO
@@ -781,7 +793,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE RenameFile
-		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS SCRIPTING.FileSystemObject
+		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS Scripting.FileSystemObject
 
 		LOCAL lcLog
 		THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
@@ -4873,7 +4885,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 						CASE UPPER( LEFT( tcLine, 10 ) ) == UPPER( '*<.HomeDir' )
 							toProject._HomeDir	= STREXTRACT( tcLine, "'", "'" )
-							
+
 						ENDCASE
 					ENDFOR
 				ENDWITH && THIS
@@ -6144,7 +6156,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toDatabase
+		LPARAMETERS toMenu
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
@@ -6155,7 +6167,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			lnCodError	= 0
 			STORE '' TO lcIndex, lcFieldDef
 
-			toMenu.updateDBC( THIS.c_OutputFile )
+			toMenu.updateMENU( THIS.c_OutputFile )
 			*USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
 
@@ -6200,8 +6212,8 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			THIS.c_Type	= UPPER(JUSTEXT(THIS.c_OutputFile))
 
 			IF tnCodeLines > 1
-				toDatabase		= NULL
-				toDatabase		= CREATEOBJECT('CL_DBC')
+				toMenu		= NULL
+				toMenu		= CREATEOBJECT('CL_MENU')
 
 				WITH THIS
 					FOR I = 1 TO tnCodeLines
@@ -6215,7 +6227,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toDatabase, @lcLine, @taCodeLines, @I, tnCodeLines )
 							llFoxBin2Prg_Completed	= .T.
 
-						CASE NOT llBloqueDatabase_Completed AND toDatabase.analizarBloque( @lcLine, @taCodeLines, @I, tnCodeLines )
+						CASE NOT llBloqueDatabase_Completed AND toMenu.analizarBloque( @lcLine, @taCodeLines, @I, tnCodeLines )
 							llBloqueDatabase_Completed	= .T.
 
 						ENDCASE
@@ -8083,7 +8095,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			loProject		= CREATEOBJECT('CL_PROJECT')
 			SCATTER MEMO NAME loReg
 			loProject._HomeDir		= ['] + ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.HOMEDIR ) ) + [']
-			
+
 			loProject._ServerInfo	= loReg.RESERVED2
 			loProject._Debug		= loReg.DEBUG
 			loProject._Encrypted	= loReg.ENCRYPT
@@ -8622,36 +8634,33 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* totoMenu					(@!    OUT) Objeto generado de clase CL_MENU con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toDatabase, toEx AS EXCEPTION
-		DODEFAULT( @toDatabase, @toEx )
+		LPARAMETERS toMenu, toEx AS EXCEPTION
+		DODEFAULT( @toMenu, @toEx )
 
 		#IF .F.
-			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
+			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			LOCAL lnCodError, lnLen
 			STORE 0 TO lnCodError
 
-			lnDatabases_Count	= ADATABASES(laDatabases)
-			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
-			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
-
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
 
 			*-- Header
-			toDatabase		= CREATEOBJECT('CL_DBC')
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+
+			toMenu			= CREATEOBJECT('CL_MENU')
+			toMenu.get_Data()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toMenu.toText()
 
 
 			*-- Genero el DC2
 			IF THIS.l_Test
-				toModulo	= C_FB2PRG_CODE
+				toMenu	= C_FB2PRG_CODE
 			ELSE
 				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
 				DO CASE
@@ -8672,7 +8681,6 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			CLOSE DATABASES
 
 		ENDTRY
 
@@ -8775,8 +8783,8 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* taConnections				(@?    OUT) Array de conexiones
-		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
+		* taArray					(@?    OUT) Array de conexiones
+		* tnArray_Count				(@?    OUT) Cantidad de conexiones
 		*---------------------------------------------------------------------------------------------------
 	ENDPROC
 
@@ -8835,8 +8843,8 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* taConnections				(@?    OUT) Array de conexiones
-		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
+		* taArray					(@?    OUT) Array de conexiones
+		* tnArray_Count				(@?    OUT) Cantidad de conexiones
 		*---------------------------------------------------------------------------------------------------
 	ENDPROC
 ENDDEFINE
@@ -13852,3 +13860,551 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 	_TimeStamp			= 0
 
 ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="oreg" display="oReg"/>] ;
+		+ [<memberdata name="get_data" display="get_Data"/>] ;
+		+ [<memberdata name="updatemenu" display="updateMENU"/>] ;
+		+ [</VFPData>]
+
+
+	#IF .F.
+		LOCAL THIS AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	oReg			= NULL
+
+
+	PROCEDURE get_Data
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* toReg						(v! IN    ) Objeto de datos del registro
+		* toCol_LastLevelName		(v! IN    ) Objeto collection con la pila de niveles analizados
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toReg, toCol_LastLevelName AS COLLECTION
+
+		TRY
+			LOCAL I, lcLevelName, lnLastKey, llRetorno, llHayDatos, loReg ;
+				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
+				, loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
+
+			lnLastKey	= 0
+			THIS.oReg	= toReg
+			lcLevelName	= toReg.LevelName
+			lnLastKey	= IIF( toCol_LastLevelName.COUNT=0, 0, toCol_LastLevelName.GETKEY(toReg.LevelName ) )
+
+			IF lnLastKey = 0
+				toCol_LastLevelName.ADD( toReg.LevelName, toReg.LevelName )
+			ENDIF
+
+			DO WHILE NOT EOF()
+				loReg		= NULL
+				SKIP 1
+
+				IF EOF()
+					EXIT
+				ENDIF
+
+				SCATTER MEMO NAME loReg
+
+				IF EMPTY(loReg.NAME)
+					loReg.NAME	= SYS(2015)
+				ENDIF
+
+				lnLastKey	= toCol_LastLevelName.GETKEY(loReg.LevelName)
+
+				DO CASE
+				CASE EOF()
+					llRetorno	= .T.
+					EXIT
+
+				CASE lnLastKey > 0 AND lnLastKey < toCol_LastLevelName.COUNT
+					*-- El nombre del analizado actual ya existe y no es el último,
+					*-- así que corresponde a un nivel superior.
+					SKIP -1
+					llRetorno	= .F.
+					EXIT
+
+				CASE loReg.ObjType = 2	&& Bar or Popup
+					loBarPop	= CREATEOBJECT('CL_MENU_BARPOP')
+					llHayDatos	= loBarPop.get_Data( loReg, toCol_LastLevelName )
+					llRetorno	= .T.
+					llRetorno	= llHayDatos
+					THIS.ADD( loBarPop )
+					loBarPop	= NULL
+					IF NOT llHayDatos AND toReg.ObjType = 3
+						EXIT
+					ENDIF
+
+				CASE loReg.ObjType = 3	&& Option
+					loOption	= CREATEOBJECT('CL_MENU_OPTION')
+					llHayDatos	= loOption.get_Data( loReg, toCol_LastLevelName )
+					llRetorno	= llHayDatos
+					THIS.ADD( loOption )
+					loOption	= NULL
+					IF NOT llHayDatos AND toReg.ObjType = 3
+						EXIT
+					ENDIF
+
+				OTHERWISE
+					llRetorno	= .T.
+					EXIT
+
+				ENDCASE
+			ENDDO
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loBarPop, loOption
+			IF toReg.ObjType = 2
+				lnLastKey	= toCol_LastLevelName.GETKEY(toReg.LevelName)
+				IF lnLastKey > 0
+					toCol_LastLevelName.REMOVE(lnLastKey)
+				ENDIF
+			ENDIF
+		ENDTRY
+
+		RETURN llRetorno
+	ENDPROC
+
+
+	PROCEDURE updateMENU
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de salida
+		*---------------------------------------------------------------------------------------------------
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_MENU OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="updatemenu" display="updateMENU"/>] ;
+		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
+		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [</VFPData>]
+
+
+	*-- Modulo
+	_Version			= 0
+	_SourceFile			= ''
+
+
+	PROCEDURE INIT
+		DODEFAULT()
+		*--
+		*THIS.ADDOBJECT("_Options", "CL_MENU_OPTIONS")
+	ENDPROC
+
+
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loOptions AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_MENU_I)) == C_MENU_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_MENU_F $ tcLine	&& Fin
+						EXIT
+
+					CASE C_BARPOP_I $ tcLine
+						loOption = CREATEOBJECT("CL_MENU_OPTION")
+						loOption.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						THIS.ADD( loOption, loOption._Name )
+
+						*CASE C_BARPOP_I $ tcLine
+						*	loOptions	= THIS._Options
+						*	loOptions.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+
+					OTHERWISE	&& Otro valor
+						*-- Estructura a reconocer:
+						* 	<tagname>ID<tagname>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', PropName=[' + TRANSFORM(lcPropName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de salida
+		*---------------------------------------------------------------------------------------------------
+		*LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name, tc_InputFile
+
+		*EXTERNAL ARRAY taOptions
+
+		TRY
+			LOCAL lcText, lcLastLevelName ;
+				, loEx AS EXCEPTION ;
+				, loReg ;
+				, loCol_LastLevelName AS COLLECTION ;
+				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
+				, loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
+
+			STORE '' TO lcText, lcLastLevelName
+			loReg		= THIS.oReg
+			loBarPop	= THIS.Item(1)
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<C_SETUPCODE_I>>
+				<<loReg.Setup>>
+				<<C_SETUPCODE_F>>
+				<<>>
+				<<C_MENUCODE_I>>
+			ENDTEXT
+
+			*-- Bars and Popups
+			IF THIS.COUNT > 0
+				FOR EACH loBarPop IN THIS FOXOBJECT
+					lcText		= lcText + loBarPop.toText()
+				ENDFOR
+			ENDIF
+
+			IF NOT EMPTY(loReg.Procedure)
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					ON SELECTION MENU <<loBarPop.oReg.Name>> <<loReg.Procedure>>
+				ENDTEXT
+			ENDIF
+
+			IF NOT EMPTY(loBarPop.oReg.Procedure)
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					ON SELECTION POPUP ALL <<loBarPop.oReg.Procedure>>
+				ENDTEXT
+			ENDIF
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_MENUCODE_F>>
+				<<>>
+				<<C_CLEANUPCODE_I>>
+				<<THIS.oReg.Cleanup>>
+				<<C_CLEANUPCODE_F>>
+				<<>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE get_Data
+		LOCAL loReg, loCol_LastLevelName AS COLLECTION
+		GO TOP
+		SCATTER MEMO NAME loReg
+		loCol_LastLevelName	= CREATEOBJECT('COLLECTION')
+		CL_MENU_COL_BASE::get_Data( loReg, loCol_LastLevelName )
+		STORE NULL TO loReg, loCol_LastLevelName
+	ENDPROC
+
+
+	PROCEDURE updateMENU
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="updatemenu" display="updateMENU"/>] ;
+		+ [</VFPData>]
+
+	#IF .F.
+		LOCAL THIS AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL loOption AS CL_MENU_OPTIONS OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_BARPOP_I)) == C_BARPOP_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_BARPOP_F $ tcLine	&& Fin
+						EXIT
+
+						*CASE C_OPTION_I $ tcLine
+						*	loOption = CREATEOBJECT("CL_MENU_OPTION")
+						*	loOption.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						*	THIS.ADD( loOption, loOption._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- Estructura a reconocer:
+						* 	<tagname>ID<tagname>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taOptions					(@?    OUT) Array de información de campos
+		* tnOption_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		*LPARAMETERS taOptions, tnOption_Count
+
+		*EXTERNAL ARRAY taOptions
+
+		TRY
+			LOCAL loReg, I, lcText, loEx AS EXCEPTION ;
+				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
+				, loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+			loReg	= THIS.oReg
+
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>	BARS Y POPUPS
+			ENDTEXT
+
+			*-- Options
+			IF THIS.COUNT > 0
+				FOR EACH loOption IN THIS FOXOBJECT
+					lcText		= lcText + loOption.toText()
+				ENDFOR
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE updateMENU
+	ENDPROC
+
+
+ENDDEFINE
+
+
+DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="updatemenu" display="updateMENU"/>] ;
+		+ [</VFPData>]
+
+	#IF .F.
+		LOCAL THIS AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			*LOCAL loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_OPTION_I)) == C_OPTION_I
+				llBloqueEncontrado	= .T.
+
+				FOR I = I + 1 TO tnCodeLines
+					THIS.set_Line( @tcLine, @taCodeLines, I )
+
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
+
+					CASE C_OPTION_F $ tcLine	&& Fin
+						EXIT
+
+						*CASE C_OPTION_I $ tcLine
+						*	loOption = CREATEOBJECT("CL_MENU_OPTION")
+						*	loOption.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
+						*	THIS.ADD( loOption, loOption._Name )
+
+					OTHERWISE	&& Otro valor
+						*-- Estructura a reconocer:
+						* 	<tagname>ID<tagname>
+						lcPropName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+						lcValue		= STREXTRACT( tcLine, '<' + lcPropName + '>', '</' + lcPropName + '>', 1, 0 )
+						THIS.ADDPROPERTY( '_' + lcPropName, lcValue )
+					ENDCASE
+				ENDFOR
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taOptions					(@?    OUT) Array de información de campos
+		* tnOption_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		*LPARAMETERS taOptions, tnOption_Count
+
+		*EXTERNAL ARRAY taOptions
+
+		TRY
+			LOCAL loReg, I, lcText, loEx AS EXCEPTION ;
+				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
+				, loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
+			lcText	= ''
+			loReg	= THIS.oReg
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>	Options
+			ENDTEXT
+
+			*-- Bars and Popups
+			IF THIS.COUNT > 0
+				FOR EACH loBarPop IN THIS FOXOBJECT
+					lcText		= lcText + loBarPop.toText()
+				ENDFOR
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE updateMENU
+	ENDPROC
+
+
+ENDDEFINE
+
+
