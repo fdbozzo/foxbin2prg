@@ -14086,7 +14086,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 
 		TRY
-			LOCAL lcText, loReg, lnNivel, lcEndProcedures ;
+			LOCAL lcText, loReg, loHeader, lnNivel, lcEndProcedures ;
 				, loEx AS EXCEPTION ;
 				, loCol_LastLevelName AS COLLECTION ;
 				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
@@ -14094,6 +14094,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 			STORE '' TO lcText, lcEndProcedures
 			loReg		= THIS.oReg
+			loHeader	= loReg
 			loBarPop	= THIS.ITEM(1).oReg
 			lnNivel		= 0
 
@@ -14114,25 +14115,40 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			*-- Bars and Popups
 			IF THIS.COUNT > 0
 				FOR EACH loBarPop IN THIS FOXOBJECT
-					lcText		= lcText + loBarPop.toText(loReg, lnNivel+0, @lcEndProcedures)
+					lcText		= lcText + loBarPop.toText(loReg, lnNivel+0, @lcEndProcedures, loHeader)
 				ENDFOR
 			ENDIF
 
 			loBarPop	= THIS.ITEM(1).oReg
 
-			*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22)
-			IF NOT EMPTY(loReg.PROCEDURE)
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					ON SELECTION MENU <<loBarPop.Name>> <<loReg.Procedure>>
-				ENDTEXT
-			ENDIF
+			DO CASE
+			CASE loHeader.ObjType = 1
+				*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22)
+				IF NOT EMPTY(loReg.PROCEDURE)
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						ON SELECTION MENU <<loBarPop.Name>> <<loReg.Procedure>>
+					ENDTEXT
+				ENDIF
 
-			*-- Procedimiento del Menu Bar (ObjType:2, ObjCode:1)
-			IF NOT EMPTY(loBarPop.PROCEDURE)
+				*-- Procedimiento del Menu Bar (ObjType:2, ObjCode:1)
+				IF NOT EMPTY(loBarPop.PROCEDURE)
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						ON SELECTION POPUP ALL <<loBarPop.Procedure>>
+					ENDTEXT
+				ENDIF
+				
+			CASE loHeader.ObjType = 4
+				*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22)
+				IF NOT EMPTY(loReg.PROCEDURE)
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						ON SELECTION POPUP <<loBarPop.Name>> <<loReg.Procedure>>
+					ENDTEXT
+				ENDIF
+
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					ON SELECTION POPUP ALL <<loBarPop.Procedure>>
+					ACTIVATE POPUP <<THIS.Item(1).Item(1).Item(1).oReg.Name>>
 				ENDTEXT
-			ENDIF
+			ENDCASE
 			
 			*-- Procedimientos finales
 			IF NOT EMPTY(lcEndProcedures)
@@ -14257,11 +14273,12 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toParentReg				(v? IN    ) Objeto registro Padre
-		* tnNivel					(v? IN    ) Nivel para indentar
+		* toParentReg				(v! IN    ) Objeto registro Padre
+		* tnNivel					(v! IN    ) Nivel para indentar
 		* tcEndProcedures			(@!    OUT) Agregar aquí los procedimientos que irán al final
+		* toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toParentReg, tnNivel, tcEndProcedures
+		LPARAMETERS toParentReg, tnNivel, tcEndProcedures, toHeader
 
 		TRY
 			LOCAL loReg, I, lcText, lcTab, loEx AS EXCEPTION ;
@@ -14273,17 +14290,34 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 
 
 			*-- Menu Bar or Popup (ObjType:2, ObjCode:0 ó 1)
-			IF loReg.OBJCODE=0	&& (Menu Pad)
-				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<lcTab>>*----------------------------------
-					<<lcTab>>DEFINE POPUP <<loReg.Name>> MARGIN RELATIVE SHADOW COLOR SCHEME <<loReg.Scheme>>
-				ENDTEXT
+			IF loReg.OBJCODE = 0	&& (Menu Pad)
+				IF toHeader.ObjType = 4
+					*-- Shortcut
+					IF NOT PEMSTATUS(toHeader,'_MenuInicializado', 5)	&& Header
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<lcTab>>*----------------------------------
+							<<lcTab>>DEFINE POPUP <<loReg.Name>> SHORTCUT RELATIVE FROM MROW(),MCOL()
+						ENDTEXT
+						ADDPROPERTY(toHeader,'_MenuInicializado', .T.)
+					ELSE	&& Rest
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<lcTab>>*----------------------------------
+							<<lcTab>>DEFINE POPUP <<loReg.Name>> SHORTCUT RELATIVE
+						ENDTEXT
+					ENDIF
+				ELSE
+					*-- Menu
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<lcTab>>*----------------------------------
+						<<lcTab>>DEFINE POPUP <<loReg.Name>> MARGIN RELATIVE SHADOW COLOR SCHEME <<loReg.Scheme>>
+					ENDTEXT
+				ENDIF
 			ENDIF
 
 			*-- Options (ObjType:3)
 			IF THIS.COUNT > 0
 				FOR EACH loOption IN THIS FOXOBJECT
-					lcText		= lcText + loOption.toText(loReg, tnNivel+0, @tcEndProcedures)
+					lcText		= lcText + loOption.toText(loReg, tnNivel+0, @tcEndProcedures, toHeader)
 				ENDFOR
 			ENDIF
 
@@ -14312,6 +14346,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="get_definebartext" display="get_DefineBarText"/>] ;
 		+ [<memberdata name="get_definepadtext" display="get_DefinePadText"/>] ;
+		+ [<memberdata name="get_procnamefromsnippet" display="get_ProcNameFromSnippet"/>] ;
 		+ [</VFPData>]
 
 	#IF .F.
@@ -14385,11 +14420,12 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 		* toParentReg				(v? IN    ) Objeto registro Padre
 		* tnNivel					(v? IN    ) Nivel para indentar
 		* tcEndProcedures			(@!    OUT) Agregar aquí los procedimientos que irán al final
+		* toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toParentReg, tnNivel, tcEndProcedures
+		LPARAMETERS toParentReg, tnNivel, tcEndProcedures, toHeader
 
 		TRY
-			LOCAL loReg, I, lcText, lcTab, lcProcName, lcProcCode, laProcLines(1), lnProcLines, loEx AS EXCEPTION ;
+			LOCAL loReg, I, lcText, lcTab, lcProcName, loEx AS EXCEPTION ;
 				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
 				, loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
 
@@ -14400,43 +14436,23 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 			loBarPop	= toParentReg
 
 			*-- Actualización de procedimientos
-			IF loReg.OBJCODE = 80	&& Procedure
-				*-- Si existe el snippet #NAME, lo usa
-				IF NOT EMPTY(loReg.Procedure)
-					lnProcLines	= ALINES(laProcLines, loReg.Procedure)
-					FOR I = 1 TO lnProcLines
-						IF UPPER( LEFT( ALLTRIM(laProcLines(I)), 6 ) ) == '#NAME '
-							lcProcName	= ALLTRIM( SUBSTR( ALLTRIM(laProcLines(I)), 7 ) )
-							ADEL(laProcLines,I)
-							lnProcLines	= lnProcLines - 1
-							DIMENSION laProcLines(lnProcLines)
-							EXIT
-						ENDIF
-					ENDFOR
-					
-					IF NOT EMPTY(lcProcName)
-						*-- Rearmo el Procedure sin el snippet
-						WITH loReg
-							.Procedure	= ''
-							FOR I = 1 TO lnProcLines
-								.Procedure	= .Procedure + laProcLines(I) + CR_LF
-							ENDFOR
-						ENDWITH
-					ENDIF
-				ENDIF
-			ENDIF
+			lcProcName	= THIS.get_ProcNameFromSnippet(loReg)
 
 			*-- Options (ObjType:3)
-			IF toParentReg.ObjType=2 AND toParentReg.OBJCODE=0
+			DO CASE
+			CASE toParentReg.ObjType = 2 AND toParentReg.OBJCODE = 0
 				*-- Define Bar
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<THIS.get_DefineBarText(loReg, loBarPop, tnNivel)>>
+					<<THIS.get_DefineBarText(loReg, loBarPop, tnNivel, toHeader)>>
 				ENDTEXT
-			ELSE	&& Define Pad (toParentReg.ObjType=2 AND toParentReg.OBJCODE=1)
+
+			CASE toParentReg.ObjType = 2 AND toParentReg.OBJCODE = 1 AND toHeader.ObjType = 1
+				*-- Define Pad
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<THIS.get_DefinePadText(loReg, loBarPop, tnNivel)>>
+					<<THIS.get_DefinePadText(loReg, loBarPop, tnNivel, toHeader)>>
 				ENDTEXT
-			ENDIF
+
+			ENDCASE
 			
 			IF loReg.OBJCODE = 80	&& Procedure
 				*-- Reemplazo el nombre definitivo
@@ -14455,7 +14471,13 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 			*-- Menu Bar or Popup (ObjType:2, ObjCode:0 ó 1)
 			IF THIS.COUNT > 0
 				FOR EACH loBarPop IN THIS FOXOBJECT
-					lcText		= lcText + loBarPop.toText(loReg, tnNivel+1, @tcEndProcedures)
+					IF toParentReg.ObjType = 2 AND toParentReg.OBJCODE = 1 AND toHeader.ObjType = 4
+						*-- Shortcut
+						lcText		= lcText + loBarPop.toText(loReg, tnNivel + 0, @tcEndProcedures, toHeader)
+					ELSE
+						*-- Menu
+						lcText		= lcText + loBarPop.toText(loReg, tnNivel + 1, @tcEndProcedures, toHeader)
+					ENDIF
 				ENDFOR
 			ENDIF
 
@@ -14471,6 +14493,48 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 		RETURN lcText
 	ENDPROC
+	
+	
+	PROCEDURE get_ProcNameFromSnippet
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* toReg						(v? IN    ) Objeto registro
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toReg
+
+		LOCAL lcProcName, lcProcCode, laProcLines(1), lnProcLines
+		
+		*-- Actualización de procedimientos
+		IF toReg.OBJCODE = 80	&& Procedure
+			lcProcName	= ''
+
+			*-- Si existe el snippet #NAME, lo usa
+			IF NOT EMPTY(toReg.Procedure)
+				lnProcLines	= ALINES(laProcLines, toReg.Procedure)
+				FOR I = 1 TO lnProcLines
+					IF UPPER( LEFT( ALLTRIM(laProcLines(I)), 6 ) ) == '#NAME '
+						lcProcName	= ALLTRIM( SUBSTR( ALLTRIM(laProcLines(I)), 7 ) )
+						ADEL(laProcLines,I)
+						lnProcLines	= lnProcLines - 1
+						DIMENSION laProcLines(lnProcLines)
+						EXIT
+					ENDIF
+				ENDFOR
+				
+				IF NOT EMPTY(lcProcName)
+					*-- Rearmo el Procedure sin el snippet
+					WITH toReg
+						.Procedure	= ''
+						FOR I = 1 TO lnProcLines
+							.Procedure	= .Procedure + laProcLines(I) + CR_LF
+						ENDFOR
+					ENDWITH
+				ENDIF
+			ENDIF
+		ENDIF
+
+		RETURN lcProcName
+	ENDPROC
 
 
 	PROCEDURE get_DefineBarText
@@ -14479,8 +14543,9 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 		* toReg						(v? IN    ) Objeto registro
 		* toBarPop					(v? IN    ) Bar o Popup hijo
 		* tnNivel					(v? IN    ) Nivel para indentar
+		* toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toReg, toBarPop, tnNivel
+		LPARAMETERS toReg, toBarPop, tnNivel, toHeader
 
 		TRY
 			LOCAL lcText, lcTab, loEx as Exception ;
@@ -14518,13 +14583,13 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 			*-- ON BAR
 			IF toReg.OBJCODE <> 78	&& Bar#
+				lcText	= lcText + CR_LF
+
 				IF toReg.OBJCODE = 77	&& Submenu
 					loBarPop	= THIS.Item(1).oReg
-					lcText	= lcText + CR_LF
 					lcText	= lcText + lcTab + 'ON BAR ' + ALLTRIM(toReg.ItemNum) + ' OF ' + ALLTRIM(toReg.LevelName) ;
 						+ ' ACTIVATE POPUP ' + ALLTRIM(loBarPop.Name)
 				ELSE
-					lcText	= lcText + CR_LF
 					lcText	= lcText + lcTab + 'ON SELECTION BAR ' + ALLTRIM(toReg.ItemNum) + ' OF ' + ALLTRIM(toReg.LevelName)
 					
 					DO CASE
@@ -14557,8 +14622,9 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 		* toReg						(v? IN    ) Objeto registro
 		* toBarPop					(v? IN    ) Bar o Popup hijo
 		* tnNivel					(v? IN    ) Nivel para indentar
+		* toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toReg, toBarPop, tnNivel
+		LPARAMETERS toReg, toBarPop, tnNivel, toHeader
 
 		TRY
 			LOCAL lcText, lcTab, lnContainer, lnObject, loEx as Exception ;
@@ -14607,13 +14673,13 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 			*-- ON PAD
 			IF toReg.OBJCODE <> 78	&& Bar#
+				lcText	= lcText + CR_LF
+
 				IF toReg.OBJCODE = 77	&& Submenu
 					loBarPop	= THIS.Item(1).oReg
-					lcText	= lcText + CR_LF
 					lcText	= lcText + lcTab + 'ON PAD ' + ALLTRIM(toReg.Name) + ' OF ' + ALLTRIM(toReg.LevelName) ;
 						+ ' ACTIVATE POPUP ' + ALLTRIM(loBarPop.Name)
 				ELSE
-					lcText	= lcText + CR_LF
 					lcText	= lcText + lcTab + 'ON SELECTION PAD ' + ALLTRIM(toReg.Name) + ' OF ' + ALLTRIM(toReg.LevelName)
 					
 					DO CASE
