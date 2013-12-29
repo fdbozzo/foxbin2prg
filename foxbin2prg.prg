@@ -14122,7 +14122,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			loBarPop	= THIS.ITEM(1).oReg
 
 			DO CASE
-			CASE loHeader.ObjType = 1
+			CASE loHeader.ObjType = 1 OR loHeader.ObjType = 5
 				*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22)
 				IF NOT EMPTY(loReg.PROCEDURE)
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -14141,7 +14141,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 				*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22)
 				IF NOT EMPTY(loReg.PROCEDURE)
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						ON SELECTION POPUP <<loBarPop.Name>> <<loReg.Procedure>>
+						ON SELECTION POPUP <<THIS.Item(1).Item(1).Item(1).oReg.Name>> <<loReg.Procedure>>
 					ENDTEXT
 				ENDIF
 
@@ -14446,7 +14446,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					<<THIS.get_DefineBarText(loReg, loBarPop, tnNivel, toHeader)>>
 				ENDTEXT
 
-			CASE toParentReg.ObjType = 2 AND toParentReg.OBJCODE = 1 AND toHeader.ObjType = 1
+			CASE toParentReg.ObjType = 2 AND toParentReg.OBJCODE = 1 AND (toHeader.ObjType = 1 OR toHeader.ObjType = 5)
 				*-- Define Pad
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<THIS.get_DefinePadText(loReg, loBarPop, tnNivel, toHeader)>>
