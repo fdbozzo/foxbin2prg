@@ -1032,7 +1032,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="comprobarexpresionvalida" display="comprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
-		+ [<memberdata name="desindentarmemo" display="DesindentarMemo"/>] ;
 		+ [<memberdata name="desnormalizarasignacion" display="desnormalizarAsignacion"/>] ;
 		+ [<memberdata name="desnormalizarvalorpropiedad" display="desnormalizarValorPropiedad"/>] ;
 		+ [<memberdata name="desnormalizarvalorxml" display="desnormalizarValorXML"/>] ;
@@ -1297,26 +1296,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
 		ENDFOR
 		RETURN tcText
-	ENDPROC
-
-
-	PROCEDURE DesindentarMemo
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcMemo					(v! IN    ) Memo a desindentar
-		* tcIndentacion				(v! IN    ) Indentación utilizada
-		* RETURN:					Memo desindentado
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcMemo, tcIndentacion
-
-		LOCAL lcMemo, laLines(1), I
-		lcMemo	= ''
-
-		FOR I = 1 TO ALINES( laLines, tcMemo )
-			lcMemo	= lcMemo + SUBSTR( laLines(I), LEN(tcIndentacion) + 1 ) + CR_LF
-		ENDFOR
-
-		RETURN lcMemo
 	ENDPROC
 
 
