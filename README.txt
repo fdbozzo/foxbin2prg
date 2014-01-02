@@ -1,4 +1,4 @@
-﻿21/12/2013		FOXBIN2PRG VER.1.15 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
+﻿02/01/2014		FOXBIN2PRG VER.1.16 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
 
 ESPAÑOL --------------------------------------------------------------------------------------------
 
@@ -16,8 +16,8 @@ Ventajas:
 - Los métodos y propiedades de la versión TEXTO se ordenan alfabéticamente para facilitar su comparación
 - Tiene compatibilidad con SCCTEXT a nivel de parámetros para usarlo como sustituto en SourceSafe
 
-Actualmente soporta las conversiones de archivos PJX,SCX,VCX,FRX,LBX,DBC y DBF para los que genera las
-versiones TEXTO con extensión PJ2,SC2,VC2,FR2,LB2,DC2 y DB2, que pueden reconfigurarse para compatibilizar
+Actualmente soporta las conversiones de archivos PJX,SCX,VCX,FRX,LBX,DBC,DBF y MNX para los que genera las
+versiones TEXTO con extensión PJ2,SC2,VC2,FR2,LB2,DC2,DB2 y MN2, que pueden reconfigurarse para compatibilizar
 con SourceSafe.
 
 Estructura del archivo de configuración FOXBIN2PRG.CFG
@@ -60,8 +60,8 @@ Advantages:
 - Methods and properties of TEXT version are alphabetically sorted for easy comparison
 - It has compatibility with SCCTEXT at parameter level so can be used as sustitute with SourceSafe
 
-Actually supports conversions between PJX,SCX,VCX,FRX,LBX,DBC and DBF files, for which it generates
-TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2 and DB2 that can be reconfigured to compatibilize
+Actually supports conversions between PJX,SCX,VCX,FRX,LBX,DBC,DBF and MNX files, for which it generates
+TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2,DB2 and MN2 that can be reconfigured to compatibilize
 with SourceSafe.
 
 Structure of configuration file FOXBIN2PRG.CFG
