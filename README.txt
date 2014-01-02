@@ -1,41 +1,45 @@
-02/12/2013		FOXBIN2PRG VER.1.7 FOR VISUAL FOXPRO 9		Fernando D. Bozzo (fdbozzo@gmail.com)
+ï»¿21/12/2013		FOXBIN2PRG VER.1.15 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
 
-ESPAÑOL --------------------------------------------------------------------------------------------
+ESPAÃ‘OL --------------------------------------------------------------------------------------------
 
-¿Que es FOXBIN2PRG?
+Â¿Que es FOXBIN2PRG?
 Es un programa pensado para ser usado con herramientas SCM (Source Code Managers) que pretende
 sustituir a SCCTEXT y mejorarlo, generando versiones TEXTO bidireccionales que permiten volver
 a generar el archivo binario original.
 
 Ventajas:
-- Genera versiones tipo "PRG" (no compilables), para comparación visual
-- Permite modificar la versión TEXTO tan fácilmente como si se modificara un PRG
-- Todo el código del programa está en un solo PRG, para simplificar su copia y mantenimiento
+- Genera versiones tipo "PRG" (no compilables), para comparaciÃ³n visual
+- Permite modificar la versiÃ³n TEXTO tan fÃ¡cilmente como si se modificara un PRG
+- Todo el cÃ³digo del programa estÃ¡ en un solo PRG, para simplificar su copia y mantenimiento
 - Con las versiones TEXTO se pueden volver a generar los binarios, lo que sirve como backup
 - Las extensiones son configurables si se crea un archivo FOXBIN2PRG.CFG
-- Los métodos y propiedades de la versión TEXTO se ordenan alfabéticamente para facilitar su comparación
-- Tiene compatibilidad con SCCTEXT a nivel de parámetros para usarlo como sustituto en SourceSafe
+- Los mÃ©todos y propiedades de la versiÃ³n TEXTO se ordenan alfabÃ©ticamente para facilitar su comparaciÃ³n
+- Tiene compatibilidad con SCCTEXT a nivel de parÃ¡metros para usarlo como sustituto en SourceSafe
 
-Actualmente soporta las conversiones de archivos SCX, VCX y PJX, para los que genera las versiones TEXTO
-con extensión SC2,VC2 y PJ2, que pueden reconfigurarse para compatibilizar con SourceSafe.
+Actualmente soporta las conversiones de archivos PJX,SCX,VCX,FRX,LBX,DBC y DBF para los que genera las
+versiones TEXTO con extensiÃ³n PJ2,SC2,VC2,FR2,LB2,DC2 y DB2, que pueden reconfigurarse para compatibilizar
+con SourceSafe.
 
-Estructura del archivo de configuración FOXBIN2PRG.CFG
+Estructura del archivo de configuraciÃ³n FOXBIN2PRG.CFG
 extension: SC2=SCA
 extension: VC2=VCA
 extension: PJ2=PJA
 
 USO:
-DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Genera la versión TEXTO con extensión sc2
-DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenera la versión binaria con extensión scx
+DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Genera la versiÃ³n TEXTO con extensiÃ³n sc2
+DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenera la versiÃ³n binaria con extensiÃ³n scx
 
+TRUCO UTIL:
+Se puede crear un acceso directo en la carpeta "SendTo" del perfil del usuario, para poder "enviar"
+el archivo elegido (pjx,pj2,etc) a Foxbin2prg.exe, y asÃ­ se hacen conversiones al vuelo.
 
 NOTA FINAL:
-Este programa es Open Source y "libre", y como tal no ofrezco garantías de que cumpla con sus espectativas
-o de que esté libre de fallos, que intentaré solucionar si me reporta y mis obligaciones me lo permiten.
+Este programa es Open Source y "libre", y como tal no ofrezco garantÃ­as de que cumpla con sus espectativas
+o de que estÃ¡ libre de fallos, que intentarÃ© solucionar si me reporta y mis obligaciones me lo permiten.
 
 
 LICENCIA:
-Esta obra está sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons.
+Esta obra estÃ¡ sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons.
 Para ver una copia de esta licencia, visite http://creativecommons.org/licenses/by-sa/4.0/deed.es_ES.
 
 
@@ -56,8 +60,9 @@ Advantages:
 - Methods and properties of TEXT version are alphabetically sorted for easy comparison
 - It has compatibility with SCCTEXT at parameter level so can be used as sustitute with SourceSafe
 
-Actually supports conversions between SCX, VCX and PJX files, for which it generates TEXT versions
-with extension SC2,VC2 and PJ2, that can be reconfigured to compatibilize with SourceSafe.
+Actually supports conversions between PJX,SCX,VCX,FRX,LBX,DBC and DBF files, for which it generates
+TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2 and DB2 that can be reconfigured to compatibilize
+with SourceSafe.
 
 Structure of configuration file FOXBIN2PRG.CFG
 extension: SC2=SCA
@@ -67,6 +72,10 @@ extension: PJ2=PJA
 USE:
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Generates the TEXT version sc2 extension
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenerates the binary version with scx extension
+
+USEFUL TRICK:
+You can create a shortcut in the "SendTo" folder on your user Windows Profile, so you can "send"
+the selected file (pjx,pj2,etc) to Foxbin2prg.exe, and make on-the-fly conversions.
 
 
 FINAL NOTE:

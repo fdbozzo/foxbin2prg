@@ -24,12 +24,12 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTes
 	*******************************************************************************************************************************************
 	FUNCTION SETUP
 		PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
-		LOCAL loObj AS c_conversor_base OF "FOXBIN2PRG.PRG"
+		LOCAL loObj AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 		SET PROCEDURE TO 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		oFXU_LIB = CREATEOBJECT('CL_FXU_CONFIG')
 		oFXU_LIB.setup_comun()
 
-		THIS.icObj 	= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
+		THIS.icObj 	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 		loObj			= THIS.icObj
 		loObj.l_Test	= .T.
 
@@ -59,7 +59,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTes
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		#ENDIF
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
+		LOCAL loObj AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 		loObj	= THIS.icObj
 
 		IF PCOUNT() = 0
@@ -67,7 +67,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTes
 			RETURN .T.
 		ENDIF
 
-		IF ISNULL(toEx)
+		IF VARTYPE(toEx) <> 'O'
 			*-- Visualización de valores
 			THIS.messageout( 'BackFile_1: ' + TRANSFORM(tcBackFile_1) )
 			THIS.messageout( 'BackFile_2: ' + TRANSFORM(tcBackFile_2) )
@@ -76,7 +76,9 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTes
 			
 			*-- Evaluación de valores
 			THIS.assertequals( .T., FILE(tcBackFile_1), "Existencia del archivo " + tcBackFile_1 )
-			THIS.assertequals( .T., FILE(tcBackFile_2), "Existencia del archivo " + tcBackFile_2 )
+			IF NOT EMPTY(tcBackFile_2)
+				THIS.assertequals( .T., FILE(tcBackFile_2), "Existencia del archivo " + tcBackFile_2 )
+			ENDIF
 			IF NOT EMPTY(tcBackFile_3)
 				THIS.assertequals( .T., FILE(tcBackFile_3), "Existencia del archivo " + tcBackFile_3 )
 			ENDIF
@@ -102,7 +104,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__doBackup AS FxuTestCase OF FxuTes
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lcMemo, lcMemo_Salida, lcMemo_Esperado, lcBackFile_1, lcBackFile_2, lcBackFile_3 ;
 			, loEx AS EXCEPTION
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
+		LOCAL loObj AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
 		loEx		= NULL
 		loObj.c_OutputFile	= FORCEPATH( 'FB2P_DBC.DBC', oFXU_LIB.cPathDatosTest )
