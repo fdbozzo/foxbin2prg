@@ -284,7 +284,7 @@ goCnv	= CREATEOBJECT("c_foxbin2prg")
 lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug ;
 	, '', NULL, NULL, .F., tcOriginalFileName )
 
-IF _VFP.STARTMODE = 0
+IF _VFP.STARTMODE <= 1
 	RETURN lnResp
 ENDIF
 
@@ -319,8 +319,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
@@ -401,7 +403,93 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	PROCEDURE ejecutar
+	PROCEDURE doBackup
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* toEx						(@? IN    ) Objeto Exception con información del error
+		* tlRelanzarError			(v? IN    ) Indica si se debe relanzar el error
+		* tcBakFile_1				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,frx,lbx,dbf,dbc,mnx,vc2,sc2,pj2,etc)
+		* tcBakFile_2				(@?    OUT) Nombre del archivo backup 2 (vct,sct,pjt,frt,lbt,fpt,dct,mnt,etc)
+		* tcBakFile_3				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,cdx,dcx,etc)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3
+
+		#IF .F.
+			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
+			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
+			lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
+			lcExt_1		= JUSTEXT( THIS.c_OutputFile )
+			tcBakFile_1	= FORCEEXT(THIS.c_OutputFile, lcExt_1 + lcNext_Bak)
+
+			DO CASE
+			CASE INLIST( lcExt_1, THIS.c_PJ2, THIS.c_VC2, THIS.c_SC2, THIS.c_FR2 ;
+					, THIS.c_LB2, THIS.c_DB2, THIS.c_DC2, THIS.c_MN2 )
+				*-- Extensiones TEXTO
+
+			CASE lcExt_1 = 'DBF'
+				*-- DBF
+				lcExt_2		= 'FPT'
+				lcExt_3		= 'CDX'
+				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
+				tcBakFile_3	= FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak)
+
+			CASE lcExt_1 = 'DBC'
+				*-- DBC
+				lcExt_2		= 'DCT'
+				lcExt_3		= 'DCX'
+				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
+				tcBakFile_3	= FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak)
+
+			OTHERWISE
+				*-- PJX, VCX, SCX, FRX, LBX, MNX
+				lcExt_2		= LEFT(lcExt_1,2) + 'T'
+				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
+
+			ENDCASE
+
+			IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_1) )
+				*-- LOG
+				DO CASE
+				CASE EMPTY(lcExt_2)
+					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) )
+				CASE EMPTY(lcExt_3)
+					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
+				OTHERWISE
+					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
+				ENDCASE
+
+				*-- COPIA BACKUP
+				COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
+
+				IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_2) )
+					COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
+				ENDIF
+
+				IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_3) )
+					COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
+				ENDIF
+			ENDIF
+
+		CATCH TO toEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			IF tlRelanzarError
+				THROW
+			ENDIF
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE Ejecutar
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
@@ -722,13 +810,41 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			loFSO				= NULL
-			THIS.o_FSO			= NULL
 			THIS.o_Conversor	= NULL
 			THIS.writeLog_Flush()
 
 		ENDTRY
 
 		RETURN lnCodError
+	ENDPROC
+
+
+	PROCEDURE getNext_BAK
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tc_OutputFilename			(!v IN    ) Nombre del archivo de salida a crear el backup
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tcOutputFileName
+		LOCAL lcNext_Bak, I
+		lcNext_Bak = ''
+
+		FOR I = 0 TO 99
+			IF I = 0
+				IF NOT FILE( tcOutputFileName + '.BAK' )
+					lcNext_Bak	= '.BAK'
+					EXIT
+				ENDIF
+			ELSE
+				IF NOT FILE( tcOutputFileName + '.' + PADL(I,2,'0') + '.BAK' )
+					lcNext_Bak	= '.' + PADL(I,2,'0') + '.BAK'
+					EXIT
+				ENDIF
+			ENDIF
+		ENDFOR
+
+		lcNext_Bak	= EVL( lcNext_Bak, '.100.BAK' )	&& Para que no quede nunca vacío
+
+		RETURN lcNext_Bak
 	ENDPROC
 
 
@@ -920,12 +1036,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="desnormalizarasignacion" display="desnormalizarAsignacion"/>] ;
 		+ [<memberdata name="desnormalizarvalorpropiedad" display="desnormalizarValorPropiedad"/>] ;
 		+ [<memberdata name="desnormalizarvalorxml" display="desnormalizarValorXML"/>] ;
-		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filetypecode" display="fileTypeCode"/>] ;
 		+ [<memberdata name="getdbfmetadata" display="getDBFmetadata"/>] ;
-		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="get_separatedpropandvalue" display="get_SeparatedPropAndValue"/>] ;
 		+ [<memberdata name="get_valuefromnullterminatedvalue" display="get_ValueFromNullTerminatedValue"/>] ;
@@ -1294,94 +1408,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	*******************************************************************************************************************
-	PROCEDURE doBackup
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toEx						(@? IN    ) Objeto Exception con información del error
-		* tlRelanzarError			(v? IN    ) Indica si se debe relanzar el error
-		* tcBakFile_1				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,frx,lbx,dbf,dbc,mnx,vc2,sc2,pj2,etc)
-		* tcBakFile_2				(@?    OUT) Nombre del archivo backup 2 (vct,sct,pjt,frt,lbt,fpt,dct,mnt,etc)
-		* tcBakFile_3				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,cdx,dcx,etc)
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3, toFoxbin2prg
-
-		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-		#ENDIF
-
-		TRY
-			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
-			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
-			lcNext_Bak	= THIS.getNext_BAK( THIS.c_OutputFile )
-			lcExt_1		= JUSTEXT( THIS.c_OutputFile )
-			tcBakFile_1	= FORCEEXT(THIS.c_OutputFile, lcExt_1 + lcNext_Bak)
-
-			DO CASE
-			CASE INLIST( lcExt_1, toFoxbin2prg.c_PJ2, toFoxbin2prg.c_VC2, toFoxbin2prg.c_SC2, toFoxbin2prg.c_FR2 ;
-					, toFoxbin2prg.c_LB2, toFoxbin2prg.c_DB2, toFoxbin2prg.c_DC2, toFoxbin2prg.c_MN2 )
-				*-- Extensiones TEXTO
-
-			CASE lcExt_1 = 'DBF'
-				*-- DBF
-				lcExt_2		= 'FPT'
-				lcExt_3		= 'CDX'
-				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
-				tcBakFile_3	= FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak)
-
-			CASE lcExt_1 = 'DBC'
-				*-- DBC
-				lcExt_2		= 'DCT'
-				lcExt_3		= 'DCX'
-				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
-				tcBakFile_3	= FORCEEXT(THIS.c_OutputFile, lcExt_3 + lcNext_Bak)
-
-			OTHERWISE
-				*-- PJX, VCX, SCX, FRX, LBX, MNX
-				lcExt_2		= LEFT(lcExt_1,2) + 'T'
-				tcBakFile_2	= FORCEEXT(THIS.c_OutputFile, lcExt_2 + lcNext_Bak)
-
-			ENDCASE
-
-			IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_1) )
-				*-- LOG
-				DO CASE
-				CASE EMPTY(lcExt_2)
-					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) )
-				CASE EMPTY(lcExt_3)
-					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
-				OTHERWISE
-					THIS.writeLog( C_BACKUP_OF_LOC + FORCEEXT(THIS.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
-				ENDCASE
-
-				*-- COPIA BACKUP
-				COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
-
-				IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_2) )
-					COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
-				ENDIF
-
-				IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(THIS.c_OutputFile, lcExt_3) )
-					COPY FILE ( FORCEEXT(THIS.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
-				ENDIF
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			IF tlRelanzarError
-				THROW
-			ENDIF
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE encode_SpecialCodes_1_31
 		LPARAMETERS tcText
 		LOCAL I
@@ -1423,32 +1449,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
 			, 'x' )
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE getNext_BAK
-		LPARAMETERS tcOutputFileName
-		LOCAL lcNext_Bak, I
-		lcNext_Bak = ''
-
-		FOR I = 0 TO 99
-			IF I = 0
-				IF NOT FILE( tcOutputFileName + '.BAK' )
-					lcNext_Bak	= '.BAK'
-					EXIT
-				ENDIF
-			ELSE
-				IF NOT FILE( tcOutputFileName + '.' + PADL(I,2,'0') + '.BAK' )
-					lcNext_Bak	= '.' + PADL(I,2,'0') + '.BAK'
-					EXIT
-				ENDIF
-			ENDIF
-		ENDFOR
-
-		lcNext_Bak	= EVL( lcNext_Bak, '.100.BAK' )	&& Para que no quede nunca vacío
-
-		RETURN lcNext_Bak
 	ENDPROC
 
 
@@ -4163,7 +4163,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo la librería
 			THIS.createClasslib()
@@ -4440,7 +4440,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo el form
 			THIS.createForm()
@@ -4727,7 +4727,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo solo la cabecera del proyecto
 			THIS.createProject()
@@ -5450,7 +5450,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo el reporte
 			THIS.createReport()
@@ -5848,7 +5848,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toTable )
@@ -6095,7 +6095,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo la tabla
 			*THIS.createTable()
@@ -6258,7 +6258,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo la tabla
 			THIS.createMenu()
@@ -8014,7 +8014,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el VC2
 			IF THIS.l_Test
@@ -8179,7 +8179,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 			THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el SC2
 			IF THIS.l_Test
@@ -8484,7 +8484,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			ENDTEXT
 
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el PJ2
 			IF THIS.l_Test
@@ -8616,7 +8616,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				THIS.write_DETALLE_REPORTE( @loRegCur )
 			ENDIF
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el FR2
 			IF THIS.l_Test
@@ -8687,7 +8687,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, THIS.c_InputFile )
 
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el DB2
 			IF THIS.l_Test
@@ -8768,7 +8768,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
 
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el DC2
 			IF THIS.l_Test
@@ -8838,7 +8838,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + toMenu.toText()
 
 
-			THIS.doBackup( .F., .T., '', '', '', toFoxbin2prg )
+			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Genero el DC2
 			IF THIS.l_Test
@@ -14284,13 +14284,6 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 	*-- Modulo
 	_Version			= 0
 	_SourceFile			= ''
-
-
-	PROCEDURE INIT
-		DODEFAULT()
-		*--
-		*THIS.ADDOBJECT("_Options", "CL_MENU_OPTIONS")
-	ENDPROC
 
 
 	PROCEDURE analizarBloque
