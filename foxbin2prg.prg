@@ -54,6 +54,7 @@
 * 15/12/2013	FDBOZZO		v1.14 Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
 * 08/12/2013    FDBOZZO     v1.15 Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
 * 18/12/2013	FDBOZZO		v1.16 Agregado soporte para menús (MNX)
+* 03/01/2013	FDBOZZO		v1.17 Agregado Unit Testing de menús y arreglo de las incidencias del menu
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -67,7 +68,8 @@
 * 07/12/2013	Edgar Kummers	REPORTE BUG: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
 * 08/12/2013	Fidel Charny	REPORTE BUG: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
 * 14/12/2013	Arturo Ramos	REPORTE BUG: La regeneración de los forms (SCX) no respeta la propiedad AutoCenter, estando pero no funcionando. (arreglado en v.1.14)
-* 14/12/2013	Fidel Charny	REPORRE BUG: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
+* 14/12/2013	Fidel Charny	REPORTE BUG: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
+* 01/01/2014	Fidel Charny	REPORTE BUG v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -202,6 +204,8 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #DEFINE C_MENUCODE_F		'*</MenuCode>'
 #DEFINE C_MENUTYPE_I		'*<MenuType>'
 #DEFINE C_MENUTYPE_F		'</MenuType>'
+#DEFINE C_MENULOCATION_I	'*<MenuLocation>'
+#DEFINE C_MENULOCATION_F	'</MenuLocation>'
 *--
 #DEFINE C_TAB				CHR(9)
 #DEFINE C_CR				CHR(13)
@@ -284,6 +288,7 @@ goCnv	= CREATEOBJECT("c_foxbin2prg")
 lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug ;
 	, '', NULL, NULL, .F., tcOriginalFileName )
 
+ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 IF _VFP.STARTMODE <= 1
 	RETURN lnResp
 ENDIF
@@ -307,6 +312,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
@@ -322,6 +328,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
@@ -343,11 +350,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	*--
-	n_FB2PRG_Version		= 1.16
+	n_FB2PRG_Version		= 1.17
 	*--
 	c_Foxbin2prg_FullPath	= ''
 	c_CurDir				= ''
 	c_InputFile				= ''
+	c_OriginalFileName		= ''
 	c_LogFile				= ''
 	c_TextLog				= ''
 	c_OutputFile			= ''
@@ -381,6 +389,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET CENTURY ON
 		SET SAFETY OFF
 		SET TABLEPROMPT OFF
+		SET POINT TO '.'
+		SET SEPARATOR TO ','
 		THIS.c_Foxbin2prg_FullPath	= SUBSTR( SYS(16), AT( 'C_FOXBIN2PRG.INIT', SYS(16) ) + LEN('C_FOXBIN2PRG.INIT') + 1 )
 		THIS.c_CurDir				= SYS(5) + CURDIR()
 		THIS.o_FSO					= NEWOBJECT("Scripting.FileSystemObject")
@@ -489,7 +499,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	PROCEDURE Ejecutar
+	PROCEDURE ejecutar
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
@@ -682,6 +692,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				IF NOT EMPTY(tcOriginalFileName)
 					tcOriginalFileName	= loFSO.GetAbsolutePathName( tcOriginalFileName )
 				ENDIF
+				.c_OriginalFileName	= EVL( tcOriginalFileName, .c_InputFile )
 				THIS.writeLog( 'c_InputFile=' + .c_InputFile )
 				.o_Conversor	= NULL
 
@@ -816,6 +827,24 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		ENDTRY
 
 		RETURN lnCodError
+	ENDPROC
+
+
+	PROCEDURE get_PROGRAM_HEADER
+		LOCAL lcText
+		lcText	= ''
+
+		*-- Cabecera del PRG e inicio de DEF_CLASS
+		TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
+			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
+			*--------------------------------------------------------------------------------------------------------------------------------------------------------
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<EVL( THIS.c_OriginalFileName, THIS.c_InputFile )>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
+			*
+		ENDTEXT
+
+		RETURN lcText
 	ENDPROC
 
 
@@ -6205,11 +6234,13 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_mnx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_menulocation" display="c_MenuLocation"/>] ;
 		+ [<memberdata name="n_menutype" display="n_MenuType"/>] ;
 		+ [</VFPData>]
 
 
 	n_MenuType		= 0
+	c_MenuLocation	= ''
 
 	*******************************************************************************************************************
 	PROCEDURE Convertir
@@ -6412,7 +6443,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_hidden_properties" display="write_HIDDEN_Properties"/>] ;
 		+ [<memberdata name="write_include" display="write_INCLUDE"/>] ;
 		+ [<memberdata name="write_metadata" display="write_METADATA"/>] ;
-		+ [<memberdata name="write_program_header" display="write_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="write_protected_properties" display="write_PROTECTED_Properties"/>] ;
 		+ [</VFPData>]
 
@@ -7384,25 +7414,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_PROGRAM_HEADER
-		LOCAL lcText
-		lcText	= ''
-
-		*-- Cabecera del PRG e inicio de DEF_CLASS
-		TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
-			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
-			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<EVL( THIS.c_OriginalFileName, THIS.c_InputFile )>>" Generated="<<TTOC(DATETIME())>>" <<C_FB2PRG_META_F>> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
-			*
-		ENDTEXT
-
-		RETURN lcText
-	ENDPROC
-
-
-	*******************************************************************************************************************
 	PROCEDURE write_PROTECTED_Properties
 		*-- Escribo la definición PROTECTED de propiedades
 		LPARAMETERS tcProtectedProp
@@ -7917,7 +7928,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
@@ -7999,7 +8010,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8063,7 +8074,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			*toModulo	= NULL
 			*toModulo	= CREATEOBJECT('CL_MODULO')
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
@@ -8164,7 +8175,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8280,7 +8291,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			ENDSCAN
 
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 
 			*-- Directorio de inicio
@@ -8469,7 +8480,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8572,7 +8583,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			USE IN (SELECT("TABLABIN_0"))
 
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			*-- Recorro los registros y genero el texto
 			IF VARTYPE(loRegCab) = "O"
@@ -8601,7 +8612,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8659,7 +8670,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			*-- Header
 			loTable			= CREATEOBJECT('CL_DBF_TABLE')
@@ -8672,7 +8683,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8740,7 +8751,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			*-- Header
 			toDatabase		= CREATEOBJECT('CL_DBC')
@@ -8753,7 +8764,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8810,7 +8821,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 
 			*-- Header
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + THIS.write_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			toMenu			= CREATEOBJECT('CL_MENU')
 			toMenu.get_DataFromTablabin()
@@ -8823,7 +8834,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toMenu	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( THIS.write_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -14285,7 +14296,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			LOCAL loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG'
 			LOCAL llBloqueEncontrado, loReg, lcComment, lcExpr, lcProcName, lcProcCode, loEx AS EXCEPTION ;
 				, llBloque_SetupCode_Analizado, llBloque_CleanupCode_Analizado, llBloque_MenuCode_Analizado ;
-				, llBloque_MenuType_Analizado, llBloque_Procedure_Analizado
+				, llBloque_MenuType_Analizado, llBloque_Procedure_Analizado, llBloque_MenuLocation_Analizado
 			STORE '' TO lcComment
 
 			llBloqueEncontrado	= .T.
@@ -14308,6 +14319,23 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 					toConversor.n_MenuType		= INT( VAL( STREXTRACT( tcLine, C_MENUTYPE_I, C_MENUTYPE_F ) ) )
 					loReg.ObjType		= toConversor.n_MenuType
 					llBloque_MenuType_Analizado	= .T.
+
+				CASE NOT llBloque_MenuLocation_Analizado AND LEFT( tcLine, LEN(C_MENULOCATION_I) ) == C_MENULOCATION_I
+					toConversor.c_MenuLocation	= STREXTRACT( tcLine, C_MENULOCATION_I, C_MENULOCATION_F )
+					DO CASE
+					CASE toConversor.c_MenuLocation == 'REPLACE'
+						loReg.Location		= 0
+					CASE toConversor.c_MenuLocation == 'APPEND'
+						loReg.Location		= 1
+					OTHERWISE
+						IF LEFT(toConversor.c_MenuLocation,7) == 'BEFORE'
+							loReg.Location		= 2
+						ELSE
+							loReg.Location		= 3
+						ENDIF
+						loReg.NAME	= GETWORDNUM(toConversor.c_MenuLocation,2)
+					ENDCASE
+					llBloque_MenuLocation_Analizado	= .T.
 
 				CASE NOT llBloque_SetupCode_Analizado AND THIS.analizarBloque_SetupCode( @tcLine, @taCodeLines, @I, tnCodeLines, toConversor )
 					llBloque_SetupCode_Analizado	= .T.
@@ -14469,32 +14497,33 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			IF LEFT(tcLine, LEN(C_MENUCODE_I)) == C_MENUCODE_I
 				llBloqueEncontrado	= .T.
 
-				*-- HEADER
-				WITH loReg
-					.OBJCODE		= 22
-					.PROCTYPE		= 1
-					.MARK			= CHR(4)
-					.LOCATION		= 1
-					.SETUPTYPE		= 1
-					.CLEANTYPE		= 1
-					.ITEMNUM		= STR(0,3)
 
-					IF .ObjType = 4	&& Shortcut menu
-						lcExpr			= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ALL ', CR_LF ) )
+				FOR I = I + 0 TO tnCodeLines
+					STORE '' TO lcExpr, lcProcName, lcProcCode
+					THIS.set_Line( @tcLine, @taCodeLines, I )
 
-						IF NOT EMPTY(lcExpr)
-							THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1, .F. )
+					DO CASE
+					CASE EMPTY( tcLine )
+						LOOP
 
-							IF EMPTY(lcProcCode)
-								*-- Comando
-								.PROCEDURE	= lcExpr
-							ELSE
-								*-- Procedure
-								lcProcCode	= STRTRAN( lcProcCode, '<<ProcName>>', lcProcName )
-								.PROCEDURE	= lcProcCode
-							ENDIF
-						ENDIF
-					ELSE	&& .OBJTYPE = 1 ó 5
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+						LOOP	&& Saltear comentarios
+
+					CASE LEFT( tcLine, LEN(C_MENUCODE_F) ) == C_MENUCODE_F
+						EXIT
+
+					CASE LEFT( tcLine, LEN(C_MENUCODE_I) ) == C_MENUCODE_I
+
+					CASE LEFT( tcLine, 12 ) == 'DEFINE MENU '
+						loReg.OBJCODE		= 22
+						loReg.PROCTYPE		= 1
+						loReg.MARK			= CHR(4)
+						loReg.SETUPTYPE		= 1
+						loReg.CLEANTYPE		= 1
+						loReg.ITEMNUM		= STR(0,3)
+						lcMenuType			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
+						loReg.ObjType		= IIF( lcMenuType = '_MSYSMENU', 1, 5 )
+
 						lcExpr			= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION MENU _MSYSMENU ', CR_LF ) )
 
 						IF NOT EMPTY(lcExpr)
@@ -14502,52 +14531,86 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 							IF EMPTY(lcProcCode)
 								*-- Comando
-								.PROCEDURE	= lcExpr
+								loReg.PROCEDURE	= lcExpr
 							ELSE
 								*-- Procedure
 								lcProcCode	= STRTRAN( lcProcCode, '<<ProcName>>', lcProcName )
-								.PROCEDURE	= lcProcCode
+								loReg.PROCEDURE	= lcProcCode
 							ENDIF
 						ENDIF
-					ENDIF
-				ENDWITH
 
+						loBarPop	= CREATEOBJECT('CL_MENU_BARPOP')
+						loBarPop.c_ParentName	= ''
+						loBarPop.n_ParentCode	= THIS.oReg.OBJCODE
+						loBarPop.n_ParentType	= THIS.oReg.ObjType
+						loBarPop.analizarBloque( @tcLine, @taCodeLines, @I, @tnCodeLines, toConversor )
+						THIS.ADD( loBarPop )
+						EXIT
 
-				loBarPop	= CREATEOBJECT('CL_MENU_BARPOP')
-				loBarPop.c_ParentName	= ''
-				loBarPop.n_ParentCode	= THIS.oReg.OBJCODE
-				loBarPop.n_ParentType	= THIS.oReg.ObjType
-				loBarPop.analizarBloque( @tcLine, @taCodeLines, @I, @tnCodeLines, toConversor )
-				THIS.ADD( loBarPop )
+					CASE LEFT( tcLine, 13 ) == 'DEFINE POPUP '
+						loReg.OBJCODE		= 22
+						loReg.PROCTYPE		= 1
+						loReg.MARK			= CHR(4)
+						loReg.SETUPTYPE		= 1
+						loReg.CLEANTYPE		= 1
+						loReg.ITEMNUM		= STR(0,3)
+						*loReg.NAME			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
+						*IF RIGHT(loReg.NAME,5) == '_FB2P'	&& Originalmente era vacío y se la había puesto un nombre temporal.
+						*	loReg.NAME		= ''
+						*ENDIF
+						*loReg.LevelName		= loReg.NAME
+						loReg.SCHEME		= 0
+						lcExpr				= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ALL ', CR_LF ) )
+						THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1, .F. )
 
-				IF loReg.ObjType = 4	&& Shortcut menu
-					*-- Creo option
-					loOption		= CREATEOBJECT("CL_MENU_OPTION")
-					loOption.oReg	= toConversor.emptyRecord()
-					WITH loOption.oReg
-						.ObjType	= 3
-						.OBJCODE	= 77
-						.PROMPT		= '\<Shortcut'
-						.LevelName	= '_MSYSMENU'
-						loBarPop.ADD( loOption )
-						loBarPop.oReg.NUMITEMS	= loBarPop.COUNT
-						.ITEMNUM	= STR(loBarPop.COUNT,3)
-						.SCHEME	= 0
+						IF EMPTY(lcProcCode)
+							*-- Comando
+							loReg.PROCEDURE	= lcExpr
+						ELSE
+							*-- Procedure
+							lcProcCode	= STRTRAN( lcProcCode, '<<ProcName>>', lcProcName )
+							loReg.PROCEDURE	= lcProcCode
+						ENDIF
+
+						loBarPop	= CREATEOBJECT('CL_MENU_BARPOP')
+						loBarPop.c_ParentName	= ''
+						loBarPop.n_ParentCode	= THIS.oReg.OBJCODE
+						loBarPop.n_ParentType	= THIS.oReg.ObjType
+						loBarPop.analizarBloque( @tcLine, @taCodeLines, @I, @tnCodeLines, toConversor )
+						THIS.ADD( loBarPop )
+
+						*-- Creo option
+						loOption		= CREATEOBJECT("CL_MENU_OPTION")
+						loOption.oReg	= toConversor.emptyRecord()
+						WITH loOption.oReg
+							.ObjType	= 3
+							.OBJCODE	= 77
+							.MARK		= CHR(0)
+							.PROMPT		= '\<Shortcut'
+							.LevelName	= '_MSYSMENU'
+							loBarPop.ADD( loOption )
+							loBarPop.oReg.NUMITEMS	= loBarPop.COUNT
+							.ITEMNUM	= STR(loBarPop.COUNT,3)
+							.SCHEME	= 0
+							loBarPop		= NULL
+						ENDWITH
+
+						*-- Creo BarPop
+						loBarPop		= CREATEOBJECT('CL_MENU_BARPOP')
+						loBarPop.c_ParentName	= ''
+						loBarPop.n_ParentCode	= loOption.oReg.OBJCODE
+						loBarPop.n_ParentType	= loOption.oReg.ObjType
+						loBarPop.analizarBloque( @tcLine, @taCodeLines, @I, @tnCodeLines, toConversor )
+						loOption.ADD( loBarPop )
 						loBarPop		= NULL
-					ENDWITH
+						loOption		= NULL
+						EXIT
 
-					*-- Creo BarPop
-					loBarPop		= CREATEOBJECT('CL_MENU_BARPOP')
-					loBarPop.c_ParentName	= ''
-					loBarPop.n_ParentCode	= loOption.oReg.OBJCODE
-					loBarPop.n_ParentType	= loOption.oReg.ObjType
-					loBarPop.analizarBloque( @tcLine, @taCodeLines, @I, @tnCodeLines, toConversor )
-					loOption.ADD( loBarPop )
-					loBarPop		= NULL
-					loOption		= NULL
-
-				ENDIF
-
+					OTHERWISE	&& Otro valor
+						I	= I - 1
+						EXIT
+					ENDCASE
+				ENDFOR
 			ENDIF
 
 		CATCH TO loEx
@@ -14624,7 +14687,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 
 		TRY
-			LOCAL lcText, loReg, loHeader, lnNivel, lcEndProcedures, lcExpr, lcProcName, lcProcCode ;
+			LOCAL lcText, loReg, loHeader, lnNivel, lcEndProcedures, lcExpr, lcProcName, lcProcCode, lcLocation ;
 				, loEx AS EXCEPTION ;
 				, loCol_LastLevelName AS COLLECTION ;
 				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG' ;
@@ -14636,8 +14699,20 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			loBarPop	= THIS.ITEM(1).oReg
 			lnNivel		= 0
 
+			DO CASE
+			CASE loReg.Location = 0
+				lcLocation	= 'REPLACE'
+			CASE loReg.Location = 1
+				lcLocation	= 'APPEND'
+			CASE loReg.Location = 2
+				lcLocation	= 'BEFORE ' + loReg.NAME
+			CASE loReg.Location = 3
+				lcLocation	= 'AFTER ' + loReg.NAME
+			ENDCASE
+
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_MENUTYPE_I>><<loReg.ObjType>><<C_MENUTYPE_F>>
+				<<C_MENULOCATION_I>><<lcLocation>><<C_MENULOCATION_F>>
 			ENDTEXT
 
 			IF NOT EMPTY(loReg.SETUP)
@@ -14653,6 +14728,19 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 				<<>>
 				<<C_MENUCODE_I>>
 			ENDTEXT
+
+			DO CASE
+			CASE loHeader.ObjType = 1	&& Menu Bar (Sistema)
+				lcText	= lcText + CR_LF + 'DEFINE MENU _MSYSMENU BAR'
+
+			CASE loHeader.ObjType = 5	&& Menu Bar (On top)
+				lcText	= lcText + CR_LF + 'DEFINE MENU _ONTOP BAR'
+
+			CASE loHeader.ObjType = 4	&& Shortcut
+				lcText	= lcText + CR_LF + 'DEFINE POPUP ' + THIS.ITEM(1).ITEM(1).ITEM(1).oReg.NAME + ' SHORTCUT RELATIVE FROM MROW(),MCOL()'
+
+			ENDCASE
+
 
 			*-- Bars and Popups
 			IF THIS.COUNT > 0
@@ -14802,7 +14890,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						+ ', Name=' + TRANSFORM(loReg.NAME) ;
 						+ ', LevelName=' + TRANSFORM(loReg.LevelName) ;
 						+ ', ItemNum=' + TRANSFORM(loReg.ITEMNUM) ;
-						+ ', Location=' + TRANSFORM(loReg.LOCATION) ;
+						+ ', Location=' + TRANSFORM(loReg.Location) ;
 						+ ', Prompt=' + TRANSFORM(loReg.PROMPT) ;
 						+ ', Message=' + TRANSFORM(loReg.MESSAGE) ;
 						+ ', KeyName=' + TRANSFORM(loReg.KEYNAME) ;
@@ -14875,7 +14963,7 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 
 		TRY
 			LOCAL loOption AS CL_MENU_OPTION OF 'FOXBIN2PRG.PRG'
-			LOCAL llBloqueEncontrado, lcSubName, lcComment, lnLast_I, loReg, lcExpr, lcProcName, lcProcCode ;
+			LOCAL llBloqueEncontrado, lcSubName, lcComment, lnLast_I, loReg, lcExpr, lcProcName, lcProcCode, lcMenuType ;
 				, loEx AS EXCEPTION
 			STORE '' TO lcSubName, lcComment, lcExpr, lcProcName, lcProcCode
 
@@ -14883,6 +14971,7 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 			loReg				= THIS.oReg
 			loReg.ObjType		= 2
 			loReg.PROCTYPE		= 1
+			loReg.MARK			= CHR(0)
 			loReg.ITEMNUM		= STR(0,3)
 			llBloqueEncontrado	= .T.
 
@@ -14900,33 +14989,41 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 				CASE LEFT( tcLine, LEN(C_MENUCODE_F) ) == C_MENUCODE_F
 					EXIT
 
-				CASE LEFT( tcLine, LEN(C_MENUCODE_I) ) == C_MENUCODE_I
+				CASE LEFT( tcLine, LEN('ON SELECTION POPUP ' + loReg.NAME) ) == 'ON SELECTION POPUP ' + loReg.NAME
+					EXIT
+
+				CASE LEFT( tcLine, 12 ) == 'DEFINE MENU '
 					loReg.OBJCODE		= 1
 					loReg.NAME			= '_MSYSMENU'
 					loReg.LevelName		= loReg.NAME
 					loReg.SCHEME		= IIF( loReg.OBJCODE = 1, 3, 4 )
 
-					IF THIS.n_ParentType = 4
-						EXIT
-					ELSE
-						lcExpr			= STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ALL ', CR_LF )
-						THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1 )
-						loReg.PROCEDURE	= EVL(lcProcCode, lcExpr)
-					ENDIF
-
-				CASE LEFT( tcLine, LEN('ON SELECTION POPUP ' + loReg.NAME) ) == 'ON SELECTION POPUP ' + loReg.NAME
-					EXIT
+					lcExpr			= STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ALL ', CR_LF )
+					THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1 )
+					loReg.PROCEDURE	= EVL(lcProcCode, lcExpr)
 
 				CASE LEFT( tcLine, 13 ) == 'DEFINE POPUP '
-					loReg.OBJCODE		= 0
-					loReg.NAME			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
-					IF RIGHT(loReg.NAME,5) == '_FB2P'	&& Originalmente era vacío y se la había puesto un nombre temporal.
-						loReg.NAME		= ''
+					IF THIS.n_ParentCode = 22
+						loReg.OBJCODE		= 1
+						loReg.NAME			= '_MSYSMENU'
+						loReg.LevelName		= loReg.NAME
+						loReg.SCHEME		= 3
+
+						IF THIS.n_ParentType = 4
+							EXIT
+						ENDIF
+					ELSE
+						loReg.OBJCODE		= 0
+						loReg.SCHEME		= 4
+						loReg.NAME			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
+						IF RIGHT(loReg.NAME,5) == '_FB2P'	&& Originalmente era vacío y se la había puesto un nombre temporal.
+							loReg.NAME		= ''
+						ENDIF
+						loReg.LevelName		= loReg.NAME
+						lcExpr				= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ' + loReg.NAME + ' ', CR_LF ) )
+						THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1 )
+						loReg.PROCEDURE		= EVL(lcProcCode, lcExpr)
 					ENDIF
-					loReg.LevelName		= loReg.NAME
-					lcExpr				= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ' + loReg.NAME + ' ', CR_LF ) )
-					THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1 )
-					loReg.PROCEDURE		= EVL(lcProcCode, lcExpr)
 
 				CASE LEFT( tcLine, 11 ) == 'DEFINE PAD ' OR LEFT( tcLine, 11 ) == 'DEFINE BAR '
 					loOption	= CREATEOBJECT("CL_MENU_OPTION")
@@ -14993,10 +15090,6 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 				IF toHeader.ObjType = 4
 					*-- Shortcut
 					IF NOT PEMSTATUS(toHeader,'_MenuInicializado', 5)	&& Header
-						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<lcTab>>*----------------------------------
-							<<lcTab>>DEFINE POPUP <<loReg.Name>> SHORTCUT RELATIVE FROM MROW(),MCOL()
-						ENDTEXT
 						ADDPROPERTY(toHeader,'_MenuInicializado', .T.)
 					ELSE	&& Rest
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -15099,6 +15192,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 			THIS.oReg		= toConversor.emptyRecord()
 			loReg			= THIS.oReg
+			loReg.MARK		= CHR(0)
 			loReg.ITEMNUM	= STR(0,3)
 
 			llBloqueEncontrado	= .T.
@@ -15216,7 +15310,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 				loReg.NAME			= lcPadName
 				loReg.LevelName		= ALLTRIM( STREXTRACT( tcLine, ' OF ', ' PROMPT ' ) )
 
-				IF loReg.LevelName # THIS.c_ParentName
+				IF UPPER(loReg.LevelName) # UPPER(THIS.c_ParentName)
 					EXIT
 				ENDIF
 
@@ -15244,7 +15338,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
 							lnNegObject		= INT( AT( ',' + PADR( ALLTRIM(GETWORDNUM( lcExpr, 2, ',' )), 6, '_' ) ;
 								, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
-							loReg.LOCATION	= lnNegContainer + lnNegObject * 2^4
+							loReg.Location	= lnNegContainer + lnNegObject * 2^4
 
 						CASE LEFT( tcLine, 4 ) == 'KEY '
 							lcExpr	= ALLTRIM( STREXTRACT( tcLine, 'KEY ', ';', 1, 2 ) )
@@ -15399,7 +15493,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 				loReg.LevelName		= ALLTRIM( STREXTRACT( tcLine, ' OF ', ' PROMPT ' ) )
 
-				IF loReg.LevelName # THIS.c_ParentName
+				IF UPPER(loReg.LevelName) # UPPER(THIS.c_ParentName)
 					EXIT
 				ENDIF
 
@@ -15427,7 +15521,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
 							lnNegObject		= INT( AT( ',' + PADR( ALLTRIM(GETWORDNUM( lcExpr, 2, ',' )), 6, '_' ) ;
 								, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
-							loReg.LOCATION	= lnNegContainer + lnNegObject * 2^4
+							loReg.Location	= lnNegContainer + lnNegObject * 2^4
 
 						CASE LEFT( tcLine, 4 ) == 'KEY '
 							lcExpr	= ALLTRIM( STREXTRACT( tcLine, 'KEY ', ';', 1, 2 ) )
@@ -15719,9 +15813,9 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 				+ ' PROMPT "' + toReg.PROMPT + '"' ;
 				+ ' COLOR SCHEME ' + TRANSFORM(toBarPop.SCHEME)
 
-			IF NOT EMPTY(toReg.LOCATION)
-				lnContainer	= toReg.LOCATION % 2^4
-				lnObject	= INT( (toReg.LOCATION - lnContainer) / 2^4 )
+			IF NOT EMPTY(toReg.Location)
+				lnContainer	= toReg.Location % 2^4
+				lnObject	= INT( (toReg.Location - lnContainer) / 2^4 )
 				lcText		= lcText + ' ;' + CR_LF + lcTab + '	NEGOTIATE ' + GETWORDNUM('NONE,LEFT,MIDDLE,RIGHT',lnContainer+1,',') ;
 					+ ', ' + GETWORDNUM('NONE,LEFT,MIDDLE,RIGHT',lnObject+1,',')
 			ENDIF
