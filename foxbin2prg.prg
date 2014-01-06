@@ -54,22 +54,24 @@
 * 15/12/2013	FDBOZZO		v1.14 Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
 * 08/12/2013    FDBOZZO     v1.15 Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
 * 18/12/2013	FDBOZZO		v1.16 Agregado soporte para menús (MNX)
-* 03/01/2013	FDBOZZO		v1.17 Agregado Unit Testing de menús y arreglo de las incidencias del menu
+* 03/01/2014	FDBOZZO		v1.17 Agregado Unit Testing de menús y arreglo de las incidencias del menu
+* 05/01/2013	FDBOZZO		v1.18 Agregado soporte para generar estructuras TEXTO de DBFs anteriores a VFP 9, pero los binarios a VFP 9 // Arreglado bug de datos faltantes en campos de vistas // Arreglado bug mnx
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
-* 23/11/2013	Luis Martínez	REPORTE BUG: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
-* 27/11/2013	Fidel Charny	REPORTE BUG: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
-* 02/12/2013	Fidel Charny	REPORTE BUG: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
-* 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa del arreglo anterior (arreglado en v.1.8)
-* 03/12/2013	Fidel Charny	REPORTE BUG: Se siguen perdiendo algunas propiedades por implementación defectuosa de una mejora anterior (arreglado en v.1.9)
-* 06/12/2013	Fidel Charny	REPORTE BUG: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden (arreglado en v.1.10)
-* 07/12/2013	Edgar Kummers	REPORTE BUG: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
-* 08/12/2013	Fidel Charny	REPORTE BUG: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
-* 14/12/2013	Arturo Ramos	REPORTE BUG: La regeneración de los forms (SCX) no respeta la propiedad AutoCenter, estando pero no funcionando. (arreglado en v.1.14)
-* 14/12/2013	Fidel Charny	REPORTE BUG: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
-* 01/01/2014	Fidel Charny	REPORTE BUG v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
+* 23/11/2013	Luis Martínez	REPORTE BUG scx v1.4: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
+* 27/11/2013	Fidel Charny	REPORTE BUG vcx v1.5: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
+* 02/12/2013	Fidel Charny	REPORTE BUG scx v1.6: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
+* 03/12/2013	Fidel Charny	REPORTE BUG scx v1.7: Se siguen perdiendo algunas propiedades por implementación defectuosa del arreglo anterior (arreglado en v.1.8)
+* 03/12/2013	Fidel Charny	REPORTE BUG scx v1.8: Se siguen perdiendo algunas propiedades por implementación defectuosa de una mejora anterior (arreglado en v.1.9)
+* 06/12/2013	Fidel Charny	REPORTE BUG scx v1.9: Cuando hay métodos que tienen el mismo nombre, aparecen mezclados en objetos a los que no corresponden (arreglado en v.1.10)
+* 07/12/2013	Edgar Kummers	REPORTE BUG vcx v1.10: Cuando se parsea una clase con un _memberdata largo, se parsea mal y se corrompe el valor (arreglado en v.1.11)
+* 08/12/2013	Fidel Charny	REPORTE BUG frx v1.12: Cuando se convierten algunos reportes da "Error 1924, TOREG is not an object" (arreglado en v.1.13)
+* 14/12/2013	Arturo Ramos	REPORTE BUG scx v1.13: La regeneración de los forms (SCX) no respeta la propiedad AutoCenter, estando pero no funcionando. (arreglado en v.1.14)
+* 14/12/2013	Fidel Charny	REPORTE BUG scx v1.13: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
+* 01/01/2014	Fidel Charny	REPORTE BUG mnx v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
+* 05/01/2014	Fidel Charny	REPORTE BUG mnx v1.17: Se genera cláusula "DO" o llamada Command cuando no Procedure ni Command que llamar // Diferencia de Case en NAME (se arregla en v1.18)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -350,7 +352,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	*--
-	n_FB2PRG_Version		= 1.17
+	n_FB2PRG_Version		= 1.18
 	*--
 	c_Foxbin2prg_FullPath	= ''
 	c_CurDir				= ''
@@ -1067,7 +1069,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filetypecode" display="fileTypeCode"/>] ;
-		+ [<memberdata name="getdbfmetadata" display="getDBFmetadata"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="get_separatedpropandvalue" display="get_SeparatedPropAndValue"/>] ;
 		+ [<memberdata name="get_valuefromnullterminatedvalue" display="get_ValueFromNullTerminatedValue"/>] ;
@@ -1079,7 +1080,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
 		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
-		+ [<memberdata name="write_dbf_metadata" display="write_DBF_Metadata"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
@@ -1457,63 +1457,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
 			, 'x' )
-	ENDPROC
-
-
-	PROCEDURE getDBFmetadata
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
-		* tn_HexFileType			(@?    OUT) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
-		* tl_FileHasCDX				(@?    OUT) Indica si el archivo tiene CDX asociado
-		* tl_FileHasMemo			(@?    OUT) Indica si el archivo tiene archivo MEMO asociado
-		* tl_FileIsDBC				(@?    OUT) Indica si el archivo es un DBC (base de datos)
-		* tcDBC_Name				(@?    OUT) Si tiene DBC, contiene el nombre del DBC asociado
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_FileName, tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tcDBC_Name
-
-		TRY
-			LOCAL lnHandle, lcStr, lnDataPos, lnFieldCount, loEx AS EXCEPTION
-			tn_HexFileType	= 0
-			tcDBC_Name		= ''
-			lnHandle		= FOPEN(tc_FileName,0)
-
-			IF lnHandle = -1
-				EXIT
-			ENDIF
-
-			lcStr			= FREAD(lnHandle,1)		&& File type
-			tn_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
-			lcStr			= FREAD(lnHandle,3)		&& Last update (YYMMDD)
-			lcStr			= FREAD(lnHandle,4)		&& Number of records in file
-			lcStr			= FREAD(lnHandle,2)		&& Position of first data record
-			lnDataPos		= CTOBIN(lcStr,"2RS")
-			lnFieldCount	= (lnDataPos - 296) / 32
-			lcStr			= FREAD(lnHandle,2)		&& Length of one data record, including delete flag
-			lcStr			= FREAD(lnHandle,16)	&& Reserved
-			lcStr			= FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
-			tl_FileHasCDX	= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x01 ) > 0 )
-			tl_FileHasMemo	= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x02 ) > 0 )
-			tl_FileIsDBC	= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x04 ) > 0 )
-			lcStr			= FREAD(lnHandle,1)		&& Code page mark
-			lcStr			= FREAD(lnHandle,2)		&& Reserved, contains 0x00
-			lcStr			= FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
-			lcStr			= FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
-			lcStr			= FREAD(lnHandle,263)	&& Backlink (relative path of an associated database (.dbc) file)
-			tcDBC_Name		= RTRIM(lcStr,0,CHR(0))	&& DBC Name (si tiene)
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			FCLOSE(lnHandle)
-		ENDTRY
-
-		RETURN lnHandle
 	ENDPROC
 
 
@@ -2075,73 +2018,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ENDCASE
 
 		RETURN lcPropName
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DBF_Metadata
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
-		* tcDBC_Name				(v! IN    ) Nombre del DBC a asociar
-		* tdLastUpdate				(v? IN    ) Fecha de última actualización
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_FileName, tcDBC_Name, tdLastUpdate
-
-		TRY
-			LOCAL lnHandle, lcStr, lnDataPos, lnFieldCount, loEx AS EXCEPTION
-
-			IF NOT EMPTY(tcDBC_Name)
-				tn_HexFileType	= 0
-				lnHandle		= FOPEN(tc_FileName,2)
-
-				IF lnHandle = -1
-					EXIT
-				ENDIF
-
-				lcStr			= FREAD(lnHandle,1)		&& File type
-				tn_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
-
-				IF EMPTY(tdLastUpdate)
-					lcStr	= FREAD(lnHandle,3)		&& Last update (YYMMDD)
-				ELSE
-					lcStr	= CHR( VAL( RIGHT( PADL( YEAR( tdLastUpdate ),4,'0'), 2 ) ) ) ;
-						+ CHR( VAL( PADL( MONTH( tdLastUpdate ),2,'0' ) ) ) ;
-						+ CHR( VAL( PADL( DAY( tdLastUpdate ),2,'0' ) ) )		&&	Last update (YYMMDD)
-					=FWRITE( lnHandle, PADR(lcStr,3,CHR(0)) )
-				ENDIF
-
-				lcStr			= FREAD(lnHandle,4)		&& Number of records in file
-				lcStr			= FREAD(lnHandle,2)		&& Position of first data record
-				lnDataPos		= CTOBIN(lcStr,"2RS")
-				lnFieldCount	= (lnDataPos - 296) / 32
-				lcStr			= FREAD(lnHandle,2)		&& Length of one data record, including delete flag
-				lcStr			= FREAD(lnHandle,16)	&& Reserved
-				lcStr			= FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
-				lcStr			= FREAD(lnHandle,1)		&& Code page mark
-				lcStr			= FREAD(lnHandle,2)		&& Reserved, contains 0x00
-				lcStr			= FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
-				lcStr			= FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
-
-				IF FWRITE( lnHandle, PADR(tcDBC_Name,263,CHR(0)) ) = 0
-					*-- No se pudo actualizar el backlink [] de la tabla []
-					ERROR C_BACKLINK_CANT_UPDATE_BL_LOC + ' [' + tcDBC_Name + '] ' + C_BACKLINK_OF_TABLE_LOC + ' [' + tc_FileName + ']'
-				ENDIF
-			ENDIF
-
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			FCLOSE(lnHandle)
-		ENDTRY
-
-		RETURN lnHandle
 	ENDPROC
 
 
@@ -5893,11 +5769,25 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			LOCAL I, lnCodError, loEx AS EXCEPTION
 			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
-			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate
+			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate, lcTempDBC
+			LOCAL loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
 
+			loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
+
+			STORE 0 TO lnCodError
 			STORE '' TO lcIndex, lcFieldDef
+			
+			ERASE (FORCEEXT(THIS.c_OutputFile, 'DBF'))
+			ERASE (FORCEEXT(THIS.c_OutputFile, 'FPT'))
+			ERASE (FORCEEXT(THIS.c_OutputFile, 'CDX'))
 
-			lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
+			IF EMPTY(toTable._Database)
+				lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
+			ELSE
+				lcTempDBC	= FORCEPATH( '_FB2P', JUSTPATH(THIS.c_OutputFile) )
+				CREATE DATABASE ( lcTempDBC )
+				lcCreateTable	= 'CREATE TABLE "' + THIS.c_OutputFile + '" CodePage=' + toTable._CodePage + ' ('
+			ENDIF
 
 			*-- Conformo los campos
 			FOR EACH loField IN toTable._Fields FOXOBJECT
@@ -5932,7 +5822,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 				*-- NoCPTran
 				IF loField._NoCPTran = '.T.'
-					lcFieldDef	= lcFieldDef + ' NOCPTRAN'
+					lcFieldDef	= lcFieldDef + ' NOCPTRANS'
 				ENDIF
 
 				*-- AutoInc
@@ -5944,7 +5834,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			ENDFOR
 
 			lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
-			*STRTOFILE(lcCreateTable,'CreateTable.txt')
 			&lcCreateTable.
 
 			*-- Regenero los índices
@@ -5962,22 +5851,22 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 					lcIndex	= lcIndex + ' ' + loIndex._Order
 
-					IF loIndex._TagType <> 'REGULAR'
+					IF NOT INLIST(loIndex._TagType, 'NORMAL', 'REGULAR')
 						*-- Si es PRIMARY lo cambio a CANDIDATE y luego lo recodifico
 						lcIndex	= lcIndex + ' ' + STRTRAN( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
 					ENDIF
 				ENDIF
 
-				*STRTOFILE( lcIndex, 'index_' + loIndex._TagName + '.txt' )
 				&lcIndex.
 			ENDFOR
 
 
 			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
 
+			*-- La actualización de la fecha sirve para evitar diferencias al regenerar el DBF
 			ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
-			THIS.write_DBF_Metadata( THIS.c_OutputFile, toTable._Database, ldLastUpdate )
-
+			loDBFUtils.write_DBC_BackLink( THIS.c_OutputFile, toTable._Database, ldLastUpdate )
+			
 
 		CATCH TO loEx
 			lnCodError		= loEx.ERRORNO
@@ -5992,6 +5881,14 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			THROW
 
 		FINALLY
+			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
+
+			IF NOT EMPTY(lcTempDBC)
+				CLOSE DATABASES
+				ERASE (FORCEEXT(lcTempDBC,'DBC'))
+				ERASE (FORCEEXT(lcTempDBC,'DCT'))
+				ERASE (FORCEEXT(lcTempDBC,'DCX'))
+			ENDIF
 
 		ENDTRY
 
@@ -8661,20 +8558,24 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen ;
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
 			LOCAL loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
-			STORE 0 TO lnCodError
+			LOCAL loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
 
+			STORE 0 TO lnCodError
+			loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
+
+			loDBFUtils.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
+			lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
 			lnDatabases_Count	= ADATABASES(laDatabases)
-			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
 
 			*-- Header
 			loTable			= CREATEOBJECT('CL_DBF_TABLE')
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, THIS.c_InputFile )
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, THIS.c_InputFile, lc_FileTypeDesc )
 
 
 			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
@@ -8694,6 +8595,24 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			DO CASE
+			CASE toEx.ErrorNo = 13 && Alias not found
+				toEx.UserValue = 'WARNING!!' + CR_LF ;
+					+ 'MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on ' ;
+					+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.field tag keyname)' + CR_LF + CR_LF ;
+					+ '¡¡ATENCIÓN!!' + CR_LF ;
+					+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
+					+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
+
+*!*				CASE toEx.ErrorNo = 1976 && Cannot resolve backlink
+*!*					toEx.UserValue = 'WARNING!!' + CR_LF ;
+*!*						+ "MAY BE DATABASE FIELDS DOESN'T" ;
+*!*						+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.field tag keyname)' + CR_LF + CR_LF ;
+*!*						+ '¡¡ATENCIÓN!!' + CR_LF ;
+*!*						+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
+*!*						+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
+
+			ENDCASE
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -8742,12 +8661,11 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lnLen
+
 			STORE 0 TO lnCodError
 
 			lnDatabases_Count	= ADATABASES(laDatabases)
-			THIS.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
 
@@ -8899,47 +8817,6 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	ENDPROC
 
 
-	PROCEDURE fileTypeDescription
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tn_HexFileType			(@? IN    ) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tn_HexFileType
-		LOCAL lcFileType
-
-		DO CASE
-		CASE tn_HexFileType = 0x02
-			lcFileType	= 'FoxBASE / dBase II'
-		CASE tn_HexFileType = 0x03
-			lcFileType	= 'FoxBASE+ / FoxPro /dBase III PLUS / dBase IV, no memo'
-		CASE tn_HexFileType = 0x30
-			lcFileType	= 'Visual FoxPro'
-		CASE tn_HexFileType = 0x31
-			lcFileType	= 'Visual FoxPro, autoincrement enabled'
-		CASE tn_HexFileType = 0x32
-			lcFileType	= 'Visual FoxPro, Varchar, Varbinary, or Blob-enabled'
-		CASE tn_HexFileType = 0x43
-			lcFileType	= 'dBASE IV SQL table files, no memo'
-		CASE tn_HexFileType = 0x63
-			lcFileType	= 'dBASE IV SQL system files, no memo'
-		CASE tn_HexFileType = 0x83
-			lcFileType	= 'FoxBASE+/dBASE III PLUS, with memo'
-		CASE tn_HexFileType = 0x8B
-			lcFileType	= 'dBASE IV with memo'
-		CASE tn_HexFileType = 0xCB
-			lcFileType	= 'dBASE IV SQL table files, with memo'
-		CASE tn_HexFileType = 0xF5
-			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
-		CASE tn_HexFileType = 0xFB
-			lcFileType	= 'FoxBASE (?)'
-		OTHERWISE
-			lcFileType	= 'Unknown'
-		ENDCASE
-
-		RETURN lcFileType
-	ENDPROC
-
-
 	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
@@ -8949,15 +8826,6 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
-	ENDPROC
-
-
-	PROCEDURE toText
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* taArray					(@?    OUT) Array de conexiones
-		* tnArray_Count				(@?    OUT) Cantidad de conexiones
-		*---------------------------------------------------------------------------------------------------
 	ENDPROC
 
 
@@ -12207,8 +12075,8 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	PROCEDURE INIT
 		DODEFAULT()
 		*--
-		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_DB")
-		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_DB")
+		THIS.ADDOBJECT("_Fields", "CL_DBC_FIELDS_VW")
+		THIS.ADDOBJECT("_Indexes", "CL_DBC_INDEXES_VW")
 		THIS.ADDOBJECT("_Relations", "CL_DBC_RELATIONS")
 	ENDPROC
 
@@ -13096,29 +12964,21 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tn_HexFileType			(v! IN    ) Tipo de archivo (en Hex)
+		* tc_FileTypeDesc			(v! IN    ) Tipo de archivo (en Hex)
 		* tl_FileHasCDX				(v! IN    ) Indica si el archivo tiene CDX asociado
 		* tl_FileHasMemo			(v! IN    ) Indica si el archivo tiene MEMO (FPT) asociado
 		* tl_FileIsDBC				(v! IN    ) Indica si el archivo es un DBC
 		* tc_DBC_Name				(v! IN    ) Nombre del DBC (si tiene)
 		* tc_InputFile				(v! IN    ) Nombre del archivo de salida
+		* tc_FileTypeDesc			(v! IN    ) Descripción del Tipo de archivo
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name, tc_InputFile
-
-		EXTERNAL ARRAY taFields
+		LPARAMETERS tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tc_DBC_Name, tc_InputFile, tc_FileTypeDesc
 
 		TRY
 			LOCAL lcText, loEx AS EXCEPTION
 			LOCAL loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
 			lcText	= ''
-
-			*FOR I = 1 TO AFIELDS(laFields)
-			*	IF INLIST( laFields(I,2), 'M', 'Q', 'V', 'W' )
-			*		ll_FileHasMemo	= .T.
-			*		EXIT
-			*	ENDIF
-			*ENDFOR
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
@@ -13128,7 +12988,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
 				<<>>	<Database><<tc_DBC_Name>></Database>
 				<<>>	<FileType><<TRANSFORM(tn_HexFileType, '@0')>></FileType>
-				<<>>	<FileType_Descrip><<THIS.fileTypeDescription(tn_HexFileType)>></FileType_Descrip>
+				<<>>	<FileType_Descrip><<tc_FileTypeDesc>></FileType_Descrip>
 			ENDTEXT
 
 			*-- Fields
@@ -13647,10 +13507,10 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>		<INDEX>
 				<<>>			<TagName><<taTagInfo(I,1)>></TagName>
-				<<>>			<TagType><<taTagInfo(I,2)>></TagType>
+				<<>>			<TagType><<ICASE(LEFT(taTagInfo(I,2),3)='BIN','BINARY',PRIMARY(I),'PRIMARY',CANDIDATE(),'CANDIDATE',UNIQUE(I),'UNIQUE','REGULAR'))>></TagType>
 				<<>>			<Key><<taTagInfo(I,3)>></Key>
 				<<>>			<Filter><<taTagInfo(I,4)>></Filter>
-				<<>>			<Order><<taTagInfo(I,5)>></Order>
+				<<>>			<Order><<IIF(DESCENDING(I), 'DESCENDING', 'ASCENDING')>></Order>
 				<<>>			<Collate><<taTagInfo(I,6)>></Collate>
 				<<>>		</INDEX>
 			ENDTEXT
@@ -14522,7 +14382,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						loReg.CLEANTYPE		= 1
 						loReg.ITEMNUM		= STR(0,3)
 						lcMenuType			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
-						loReg.ObjType		= IIF( lcMenuType = '_MSYSMENU', 1, 5 )
+						*loReg.ObjType		= IIF( UPPER(lcMenuType) = '_MSYSMENU', 1, 5 )
 
 						lcExpr			= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION MENU _MSYSMENU ', CR_LF ) )
 
@@ -14554,11 +14414,6 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						loReg.SETUPTYPE		= 1
 						loReg.CLEANTYPE		= 1
 						loReg.ITEMNUM		= STR(0,3)
-						*loReg.NAME			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
-						*IF RIGHT(loReg.NAME,5) == '_FB2P'	&& Originalmente era vacío y se la había puesto un nombre temporal.
-						*	loReg.NAME		= ''
-						*ENDIF
-						*loReg.LevelName		= loReg.NAME
 						loReg.SCHEME		= 0
 						lcExpr				= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ALL ', CR_LF ) )
 						THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1, .F. )
@@ -14731,10 +14586,12 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 			DO CASE
 			CASE loHeader.ObjType = 1	&& Menu Bar (Sistema)
-				lcText	= lcText + CR_LF + 'DEFINE MENU _MSYSMENU BAR'
+				*lcText	= lcText + CR_LF + 'DEFINE MENU _MSYSMENU BAR'
+				lcText	= lcText + CR_LF + 'DEFINE MENU ' + loBarPop.NAME + ' BAR'
 
 			CASE loHeader.ObjType = 5	&& Menu Bar (On top)
-				lcText	= lcText + CR_LF + 'DEFINE MENU _ONTOP BAR'
+				*lcText	= lcText + CR_LF + 'DEFINE MENU _ONTOP BAR'
+				lcText	= lcText + CR_LF + 'DEFINE MENU ' + loBarPop.NAME + ' BAR'
 
 			CASE loHeader.ObjType = 4	&& Shortcut
 				lcText	= lcText + CR_LF + 'DEFINE POPUP ' + THIS.ITEM(1).ITEM(1).ITEM(1).oReg.NAME + ' SHORTCUT RELATIVE FROM MROW(),MCOL()'
@@ -14994,7 +14851,8 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 
 				CASE LEFT( tcLine, 12 ) == 'DEFINE MENU '
 					loReg.OBJCODE		= 1
-					loReg.NAME			= '_MSYSMENU'
+					loReg.NAME			= STREXTRACT( tcLine, 'DEFINE MENU ', ' BAR' )
+					*loReg.NAME			= '_MSYSMENU'
 					loReg.LevelName		= loReg.NAME
 					loReg.SCHEME		= IIF( loReg.OBJCODE = 1, 3, 4 )
 
@@ -15768,9 +15626,13 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 					DO CASE
 					CASE toReg.OBJCODE = 67	&& Command
-						lcText	= lcText + ' ' + ALLTRIM(toReg.COMMAND)
+						IF NOT EMPTY(toReg.COMMAND)
+							lcText	= lcText + ' ' + ALLTRIM(toReg.COMMAND)
+						ENDIF
 					CASE toReg.OBJCODE = 80	&& Procedure
-						lcText	= lcText + ' DO <<ProcName>>'
+						IF NOT EMPTY(toReg.PROCEDURE)
+							lcText	= lcText + ' DO <<ProcName>>'
+						ENDIF
 					ENDCASE
 				ENDIF
 			ENDIF
@@ -15859,9 +15721,13 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 					DO CASE
 					CASE toReg.OBJCODE = 67	&& Command
-						lcText	= lcText + ' ' + ALLTRIM(toReg.COMMAND)
+						IF NOT EMPTY(toReg.COMMAND)
+							lcText	= lcText + ' ' + ALLTRIM(toReg.COMMAND)
+						ENDIF
 					CASE toReg.OBJCODE = 80	&& Procedure
-						lcText	= lcText + ' DO <<ProcName>>'
+						IF NOT EMPTY(toReg.PROCEDURE)
+							lcText	= lcText + ' DO <<ProcName>>'
+						ENDIF
 					ENDCASE
 				ENDIF
 			ENDIF
@@ -15882,6 +15748,550 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 
 	PROCEDURE updateMENU
+	ENDPROC
+
+
+ENDDEFINE
+
+
+DEFINE CLASS CL_DBF_UTILS AS SESSION
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="fields" display="Fields"/>] ;
+		+ [<memberdata name="c_backlink_dbc_name" display="c_Backlink_DBC_Name"/>] ;
+		+ [<memberdata name="c_filename" display="c_FileName"/>] ;
+		+ [<memberdata name="n_headersize" display="n_HeaderSize"/>] ;
+		+ [<memberdata name="n_filesize" display="n_FileSize"/>] ;
+		+ [<memberdata name="c_lastupdate" display="c_LastUpdate"/>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_filehascdx" display="l_FileHasCDX"/>] ;
+		+ [<memberdata name="l_fileisdbc" display="l_FileIsDBC"/>] ;
+		+ [<memberdata name="l_filehasmemo" display="l_FileHasMemo"/>] ;
+		+ [<memberdata name="n_codepage" display="n_CodePage"/>] ;
+		+ [<memberdata name="c_codepagedesc" display="c_CodePageDesc"/>] ;
+		+ [<memberdata name="n_datarecordlength" display="n_DataRecordLength"/>] ;
+		+ [<memberdata name="n_fieldcount" display="n_FieldCount"/>] ;
+		+ [<memberdata name="n_hexfiletype" display="n_HexFileType"/>] ;
+		+ [<memberdata name="n_numberofrecords" display="n_NumberOfRecords"/>] ;
+		+ [<memberdata name="n_numberofrecordsreal" display="n_NumberOfRecordsReal"/>] ;
+		+ [<memberdata name="n_posoffirstdatarecord" display="n_PosOfFirstDataRecord"/>] ;
+		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
+		+ [<memberdata name="getcodepageinfo" display="getCodePageInfo"/>] ;
+		+ [<memberdata name="getdbfmetadata" display="getDBFmetadata"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [<memberdata name="write_dbc_backlink" display="write_DBC_BackLink"/>] ;
+		+ [</VFPData>]
+
+	#IF .F.
+		LOCAL THIS AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	l_Debug					= .F.
+	c_Backlink_DBC_Name		= ''
+	c_FileName				= ''
+	n_FileSize				= 0
+	n_HeaderSize			= 0
+	c_LastUpdate			= ''
+	l_FileHasCDX			= .F.
+	l_FileIsDBC				= .F.
+	l_FileHasMemo			= .F.
+	n_CodePage				= 0
+	c_CodePageDesc			= ''
+	n_DataRecordLength		= 0
+	n_HexFileType			= 0
+	n_FieldCount			= 0
+	n_NumberOfRecords		= 0
+	n_NumberOfRecordsReal	= 0
+	n_PosOfFirstDataRecord	= 0
+	Fields					= NULL
+
+
+	PROCEDURE INIT
+		THIS.Fields = CREATEOBJECT("COLLECTION")
+	ENDPROC
+
+
+	PROCEDURE getDBFmetadata
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
+		* tn_HexFileType			(@?    OUT) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
+		* tl_FileHasCDX				(@?    OUT) Indica si el archivo tiene CDX asociado
+		* tl_FileHasMemo			(@?    OUT) Indica si el archivo tiene archivo MEMO asociado
+		* tl_FileIsDBC				(@?    OUT) Indica si el archivo es un DBC (base de datos)
+		* tcDBC_Name				(@?    OUT) Si tiene DBC, contiene el nombre del DBC asociado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_FileName, tn_HexFileType, tl_FileHasCDX, tl_FileHasMemo, tl_FileIsDBC, tcDBC_Name
+
+		TRY
+			LOCAL lnHandle, lcStr, lnDataPos, lnFieldCount, lnVal, I, loEx AS EXCEPTION ;
+				, lnCodePage, lcCodePageDesc ;
+				, loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
+
+			tn_HexFileType	= 0
+			tcDBC_Name		= ''
+			lnHandle		= FOPEN(tc_FileName,0)
+
+			IF lnHandle = -1
+				EXIT
+			ENDIF
+
+			*										   				Bytes		Description
+			*------------------------------------------------------ -----------	------------------------------------------
+			WITH THIS AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
+				.c_FileName					= tc_FileName
+				lcStr						= FREAD(lnHandle,1)		&& 0		File type
+				tn_HexFileType				= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+				.n_HexFileType				= tn_HexFileType
+				lcStr						= FREAD(lnHandle,3)		&& 1-3		Last update (YYMMDD)
+				.c_LastUpdate				= PADL(ASC(LEFT(lcStr,1)),2,'0') + '/' + PADL(ASC(SUBSTR(lcStr,2,1)),2,'0') + '/' + PADL(ASC(RIGHT(lcStr,1)),2,'0')
+				lcStr						= FREAD(lnHandle,4)		&& 4-7		Number of records in file
+				.n_NumberOfRecords			= CTOBIN(lcStr,"4RS")
+				lcStr						= FREAD(lnHandle,2)		&& 8-9		Position of first data record
+				.n_PosOfFirstDataRecord		= CTOBIN(lcStr,"2RS")
+				.n_HeaderSize				= INT(.n_PosOfFirstDataRecord + 1)
+				IF INLIST(tn_HexFileType, 0x30, 0x31, 0x32) THEN
+					.n_FieldCount	= INT( (.n_PosOfFirstDataRecord - 296) / 32 )	&& Visual FoxPro
+				ELSE
+					.n_FieldCount	= INT( (.n_PosOfFirstDataRecord - 33) / 32 )
+				ENDIF
+				lcStr						= FREAD(lnHandle,2)		&& 10-11	Length of one data record, including delete flag
+				.n_DataRecordLength			= CTOBIN(lcStr,"2RS")
+				lcStr						= FREAD(lnHandle,16)	&& 16-27	Reserved
+				lcStr						= FREAD(lnHandle,1)		&& 28		Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
+				.l_FileHasCDX				= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x01 ) > 0 )
+				.l_FileHasMemo				= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x02 ) > 0 )
+				.l_FileIsDBC				= ( BITAND( EVALUATE(TRANSFORM(ASC(lcStr),'@0')), 0x04 ) > 0 )
+				lcStr						= FREAD(lnHandle,1)		&& 29		Code page mark (0=, 2=850,3=1252)
+				lnVal						= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+				.getCodePageInfo( lnVal, @lnCodePage, @lcCodePageDesc )
+				.n_CodePage					= lnCodePage
+				.c_CodePageDesc				= lcCodePageDesc
+				lcStr						= FREAD(lnHandle,2)		&& 30-31	Reserved, contains 0x00
+				*lcStr						= FREAD(lnHandle,32 * lnFieldCount)	&& 32-n			Field subrecords (los salteo)
+				*---
+				FOR I = 1 TO .n_FieldCount
+					loField	= CREATEOBJECT("CL_DBF_UTILS_FIELD")
+					
+					WITH loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
+						lcStr						= FREAD(lnHandle,11)
+						.FieldName					= RTRIM( lcStr, 0, CHR(0), ' ' )
+						lcStr						= FREAD(lnHandle,1)
+						.FieldType					= lcStr
+						lcStr						= FREAD(lnHandle,4)
+						.FieldDisplacementInRecord	= CTOBIN(lcStr,"4RS")
+						lcStr						= FREAD(lnHandle,1)
+						.FieldWidth					= ASC(lcStr)
+						lcStr						= FREAD(lnHandle,1)
+						.FieldDecimals				= ASC(lcStr)
+						lcStr						= FREAD(lnHandle,1)
+						.FieldFlags					= ASC(lcStr)
+						lcStr						= FREAD(lnHandle,4)
+						.NextValueForAutoInc		= CTOBIN(lcStr,"4RS")
+						lcStr						= FREAD(lnHandle,1)
+						.StepForAutoInc				= ASC(lcStr)
+						lcStr						= FREAD(lnHandle,8)
+					ENDWITH
+
+					.Fields.Add(loField)
+					loField	= NULL
+				ENDFOR
+				*---
+				lcStr						= FREAD(lnHandle,1)		&& n+1			Header Record Terminator (0x0D)
+
+				IF INLIST(tn_HexFileType, 0x30, 0x31, 0x32) THEN
+					lcStr					= FREAD(lnHandle,263)	&& n+2 to n+264	Backlink (relative path of an associated database (.dbc) file)
+					tcDBC_Name				= RTRIM(lcStr,0,CHR(0))	&& DBC Name (si tiene)
+					.c_Backlink_DBC_Name	= tcDBC_Name
+				ENDIF
+				
+				.n_FileSize				= FSEEK(lnHandle, 0, 2)
+				.n_NumberOfRecordsReal	= INT( (.n_FileSize - .n_HeaderSize) / .n_DataRecordLength )
+			ENDWITH
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			FCLOSE(lnHandle)
+		ENDTRY
+
+		RETURN lnHandle
+	ENDPROC
+
+
+	PROCEDURE fileTypeDescription
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tn_HexFileType			(@? IN    ) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tn_HexFileType
+		LOCAL lcFileType
+
+		DO CASE
+		CASE tn_HexFileType = 0x02
+			lcFileType	= 'FoxBASE / dBase II'
+		CASE tn_HexFileType = 0x03
+			lcFileType	= 'FoxBASE+ / FoxPro /dBase III PLUS / dBase IV, no memo'
+		CASE tn_HexFileType = 0x30
+			lcFileType	= 'Visual FoxPro'
+		CASE tn_HexFileType = 0x31
+			lcFileType	= 'Visual FoxPro, autoincrement enabled'
+		CASE tn_HexFileType = 0x32
+			lcFileType	= 'Visual FoxPro, Varchar, Varbinary, or Blob-enabled'
+		CASE tn_HexFileType = 0x43
+			lcFileType	= 'dBASE IV SQL table files, no memo'
+		CASE tn_HexFileType = 0x63
+			lcFileType	= 'dBASE IV SQL system files, no memo'
+		CASE tn_HexFileType = 0x83
+			lcFileType	= 'FoxBASE+/dBASE III PLUS, with memo'
+		CASE tn_HexFileType = 0x8B
+			lcFileType	= 'dBASE IV with memo'
+		CASE tn_HexFileType = 0xCB
+			lcFileType	= 'dBASE IV SQL table files, with memo'
+		CASE tn_HexFileType = 0xF5
+			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
+		CASE tn_HexFileType = 0xFB
+			lcFileType	= 'FoxBASE (?)'
+		OTHERWISE
+			lcFileType	= 'Unknown'
+		ENDCASE
+
+		RETURN lcFileType
+	ENDPROC
+
+
+	PROCEDURE getCodePageInfo
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tnHexCodePage				(v! IN    ) Código de página en hexadecimal (Está detallado en la ayuda de Fox)
+		* tnCodePage				(@?    OUT) Código de página normal
+		* tcDescrip					(@?    OUT) Descripción del código de página
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tnHexCodePage, tnCodePage, tcDescrip
+
+		LOCAL laCodePage(27,3), lnPos
+		*Code page  Platform  Code page identifier
+		laCodePage( 1,1)	= 437
+		laCodePage( 1,2)	= 'U.S. MS-DOS'
+		laCodePage( 1,3)	= 0x01
+
+		laCodePage( 2,1)	= 620
+		laCodePage( 2,2)	= 'Mazovia (Polish) MS-DOS'
+		laCodePage( 2,3)	= 0x69
+
+		laCodePage( 3,1)	= 737
+		laCodePage( 3,2)	= 'Greek MS-DOS (437G)'
+		laCodePage( 3,3)	= 0x6A
+
+		laCodePage( 4,1)	= 850
+		laCodePage( 4,2)	= 'International MS-DOS'
+		laCodePage( 4,3)	= 0x02
+
+		laCodePage( 5,1)	= 852
+		laCodePage( 5,2)	= 'Eastern European MS-DOS'
+		laCodePage( 5,3)	= 0x64
+
+		laCodePage( 6,1)	= 857
+		laCodePage( 6,2)	= 'Turkish MS-DOS'
+		laCodePage( 6,3)	= 0x6B
+
+		laCodePage( 7,1)	= 861
+		laCodePage( 7,2)	= 'Icelandic MS-DOS'
+		laCodePage( 7,3)	= 0x67
+
+		laCodePage( 8,1)	= 865
+		laCodePage( 8,2)	= 'Nordic MS-DOS'
+		laCodePage( 8,3)	= 0x66
+
+		laCodePage( 9,1)	= 866
+		laCodePage( 9,2)	= 'Russian MS-DOS'
+		laCodePage( 9,3)	= 0x65
+
+		laCodePage(10,1)	= 874
+		laCodePage(10,2)	= 'Thai Windows'
+		laCodePage(10,3)	= 0x7C
+
+		laCodePage(12,1)	= 895
+		laCodePage(12,2)	= 'Kamenicky (Czech) MS-DOS'
+		laCodePage(12,3)	= 0x68
+
+		laCodePage(13,1)	= 932
+		laCodePage(13,2)	= 'Japanese Windows'
+		laCodePage(13,3)	= 0x7B
+
+		laCodePage(14,1)	= 936
+		laCodePage(14,2)	= 'Chinese Simplified (PRC, Singapore) Windows'
+		laCodePage(14,3)	= 0x7A
+
+		laCodePage(15,1)	= 949
+		laCodePage(15,2)	= 'Korean Windows'
+		laCodePage(15,3)	= 0x79
+
+		laCodePage(16,1)	= 950
+		laCodePage(16,2)	= 'Traditional Chinese (Hong Kong SAR, Taiwan) Windows'
+		laCodePage(16,3)	= 0x78
+
+		laCodePage(17,1)	= 1250
+		laCodePage(17,2)	= 'Eastern European Windows'
+		laCodePage(17,3)	= 0xC8
+
+		laCodePage(18,1)	= 1251
+		laCodePage(18,2)	= 'Russian Windows'
+		laCodePage(18,3)	= 0xC9
+
+		laCodePage(19,1)	= 1252
+		laCodePage(19,2)	= 'Windows ANSI'
+		laCodePage(19,3)	= 0x03
+
+		laCodePage(20,1)	= 1253
+		laCodePage(20,2)	= 'Greek Windows'
+		laCodePage(20,3)	= 0xCB
+
+		laCodePage(21,1)	= 1254
+		laCodePage(21,2)	= 'Turkish Windows'
+		laCodePage(21,3)	= 0xCA
+
+		laCodePage(22,1)	= 1255
+		laCodePage(22,2)	= 'Hebrew Windows'
+		laCodePage(22,3)	= 0x7D
+
+		laCodePage(23,1)	= 1256
+		laCodePage(23,2)	= 'Arabic Windows'
+		laCodePage(23,3)	= 0x7E
+
+		laCodePage(24,1)	= 10000
+		laCodePage(24,2)	= 'Standard Macintosh'
+		laCodePage(24,3)	= 0x04
+
+		laCodePage(25,1)	= 10006
+		laCodePage(25,2)	= 'Greek Macintosh'
+		laCodePage(25,3)	= 0x98
+
+		laCodePage(26,1)	= 10007
+		laCodePage(26,2)	= 'Russian Macintosh'
+		laCodePage(26,3)	= 0x96
+
+		laCodePage(27,1)	= 10029
+		laCodePage(27,2)	= 'Macintosh EE'
+		laCodePage(27,3)	= 0x97
+
+		lnPos	= ASCAN( laCodePage, tnHexCodePage, 1, -1, 3, 8 )
+		
+		IF lnPos > 0
+			tnCodePage	= laCodePage(lnPos,1)
+			tcDescrip	= laCodePage(lnPos,2)
+		ELSE
+			tnCodePage	= 0
+			tcDescrip	= ''
+		ENDIF
+		
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				---------------------------------------------------
+				FileName                : <<JUSTFNAME(.c_FileName)>>
+				---------------------------------------------------
+				Backlink_DBC_Name       : <<.c_Backlink_DBC_Name>>
+				HexFileType             : <<TRANSFORM(.n_HexFileType, '@0')>> - <<.fileTypeDescription(.n_HexFileType)>>
+				FileSize                : <<.n_FileSize>> bytes
+				LastUpdate              : <<.c_LastUpdate>>
+				NumberOfRecords         : <<.n_NumberOfRecords>> - REAL: <<.n_NumberOfRecordsReal>>
+				PosOfFirstDataRecord    : <<.n_PosOfFirstDataRecord>>
+				FieldCount              : <<.n_FieldCount>>
+				DataRecordLength        : <<.n_DataRecordLength>>
+				FileHasCDX              : <<.l_FileHasCDX>>
+				FileHasMemo             : <<.l_FileHasMemo>>
+				FileIsDBC               : <<.l_FileIsDBC>>
+				CodePage                : <<.n_CodePage>> - <<.c_CodePageDesc>>
+
+				---------------------------------------------------
+			ENDTEXT
+
+			*-- Fields
+			loField	= THIS.Fields.Item(1)
+			lcText	= lcText + CR_LF + loField.toText(.T.)
+
+			FOR EACH loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG' IN THIS.Fields
+				lcText	= lcText + CR_LF + loField.toText()
+			ENDFOR
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+
+				---------------------------------------------------
+				Field flags Reference:
+				0x01   System Column (not visible to user)
+				0x02   Column can store null values
+				0x04   Binary column (for CHAR and MEMO only)
+				0x06   (0x02+0x04) When a field is NULL and binary (Integer, Currency, and Character/Memo fields)
+				0x0C   Column is autoincrementing
+
+			ENDTEXT
+			
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE write_DBC_BackLink
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
+		* tcDBC_Name				(v! IN    ) Nombre del DBC a asociar
+		* tdLastUpdate				(v! IN    ) Fecha de última actualización
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_FileName, tcDBC_Name, tdLastUpdate
+
+		TRY
+			LOCAL lnHandle, ln_HexFileType, lcStr, lnDataPos, lnFieldCount, loEx AS EXCEPTION
+
+			IF NOT EMPTY(tcDBC_Name)
+				ln_HexFileType	= 0
+				lnHandle		= FOPEN(tc_FileName,2)
+
+				IF lnHandle = -1
+					EXIT
+				ENDIF
+
+				lcStr			= FREAD(lnHandle,1)		&& File type
+				ln_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+
+				IF EMPTY(tdLastUpdate)
+					lcStr	= FREAD(lnHandle,3)		&& Last update (YYMMDD)
+				ELSE
+					lcStr	= CHR( VAL( RIGHT( PADL( YEAR( tdLastUpdate ),4,'0'), 2 ) ) ) ;
+						+ CHR( VAL( PADL( MONTH( tdLastUpdate ),2,'0' ) ) ) ;
+						+ CHR( VAL( PADL( DAY( tdLastUpdate ),2,'0' ) ) )		&&	Last update (YYMMDD)
+					=FWRITE( lnHandle, PADR(lcStr,3,CHR(0)) )
+				ENDIF
+
+				=FREAD(lnHandle,4)		&& Number of records in file
+				lcStr			= FREAD(lnHandle,2)		&& Position of first data record
+				lnDataPos		= CTOBIN(lcStr,"2RS")
+				IF INLIST(ln_HexFileType, 0x30, 0x31, 0x32) THEN
+					lnFieldCount	= (lnDataPos - 296) / 32
+				ELSE
+					EXIT	&& No DBC BackLink on older versions!
+				ENDIF
+				=FREAD(lnHandle,2)		&& Length of one data record, including delete flag
+				=FREAD(lnHandle,16)		&& Reserved
+				=FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
+				=FREAD(lnHandle,1)		&& Code page mark
+				=FREAD(lnHandle,2)		&& Reserved, contains 0x00
+				=FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
+				=FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
+
+				IF INLIST(ln_HexFileType, 0x30, 0x31, 0x32) THEN
+					IF FWRITE( lnHandle, PADR(tcDBC_Name,263,CHR(0)) ) = 0
+						*-- No se pudo actualizar el backlink [] de la tabla []
+						ERROR C_BACKLINK_CANT_UPDATE_BL_LOC + ' [' + tcDBC_Name + '] ' + C_BACKLINK_OF_TABLE_LOC + ' [' + tc_FileName + ']'
+					ENDIF
+				ENDIF
+			ENDIF
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			FCLOSE(lnHandle)
+		ENDTRY
+
+		RETURN lnHandle
+	ENDPROC
+
+
+ENDDEFINE
+
+
+DEFINE CLASS CL_DBF_UTILS_FIELD AS CUSTOM
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="fieldname" display="FieldName"/>] ;
+		+ [<memberdata name="fieldtype" display="FieldType"/>] ;
+		+ [<memberdata name="fieldwidth" display="FieldWidth"/>] ;
+		+ [<memberdata name="fielddecimals" display="FieldDecimals"/>] ;
+		+ [<memberdata name="fieldflags" display="FieldFlags"/>] ;
+		+ [<memberdata name="fielddisplacementinrecord" display="FieldDisplacementInRecord"/>] ;
+		+ [<memberdata name="allownulls" display="AllowNulls"/>] ;
+		+ [<memberdata name="nocodepagetranslation" display="NoCodePageTranslation"/>] ;
+		+ [<memberdata name="fieldvalidationexpression" display="FieldValidationExpression"/>] ;
+		+ [<memberdata name="fieldvalidationtext" display="FieldValidationText"/>] ;
+		+ [<memberdata name="fielddefaultvalue" display="FieldDefaultValue"/>] ;
+		+ [<memberdata name="tablevalidationexpression" display="TableValidationExpression"/>] ;
+		+ [<memberdata name="longtablename" display="LongTableName"/>] ;
+		+ [<memberdata name="tablevalidationtext" display="TableValidationText"/>] ;
+		+ [<memberdata name="inserttriggerexpression" display="InsertTriggerExpression"/>] ;
+		+ [<memberdata name="updatetriggerexpression" display="UpdateTriggerExpression"/>] ;
+		+ [<memberdata name="deletetriggerexpression" display="DeleteTriggerExpression"/>] ;
+		+ [<memberdata name="tablecomment" display="TableComment"/>] ;
+		+ [<memberdata name="nextvalueforautoinc" display="NextValueForAutoInc"/>] ;
+		+ [<memberdata name="stepforautoinc" display="StepForAutoInc"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [</VFPData>]
+
+	#IF .F.
+		LOCAL THIS AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	FieldName					= ''
+	FieldType					= ''
+	FieldWidth					= 0
+	FieldDecimals				= 0
+	FieldFlags					= 0
+	FieldDisplacementInRecord	= 0
+	AllowNulls					= .F.
+	NoCodePageTranslation		= .F.
+	FieldValidationExpression	= ''
+	FieldValidationText			= ''
+	FieldDefaultValue			= ''
+	TableValidationExpression	= ''
+	TableValidationText			= ''
+	LongTableName				= ''
+	InsertTriggerExpression		= ''
+	UpdateTriggerExpression		= ''
+	DeleteTriggerExpression		= ''
+	TableComment				= ''
+	NextValueForAutoInc			= 0
+	StepForAutoInc				= ''
+
+
+	PROCEDURE toText
+		LPARAMETERS tlHeader
+
+		LOCAL lcText
+		lcText	= ''
+
+		IF tlHeader
+			lcText	= lcText + PADR('FieldName',10) + '  ' + PADR('Type',4) + '  ' + PADR('Len',3) + '  ' ;
+				+ PADR('Dec',3) + '  ' + PADR('Flg',3) + '  ' + PADL('FDiR',4)
+			lcText	= lcText + CR_LF + REPLICATE('-',10) + '  ' + REPLICATE('-',4) + '  ' + REPLICATE('-',3) + '  ' ;
+				+ REPLICATE('-',3) + '  ' + REPLICATE('-',3) + '  ' + REPLICATE('-',4)
+		ELSE
+			WITH THIS AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
+				lcText	= lcText + PADR(.FieldName,10) + '  ' + PADC(.FieldType,4) + '  ' + PADL(.FieldWidth,3) + '  ' ;
+					+ PADL(.FieldDecimals,3) + '  ' + PADC(.FieldFlags,3) + '  ' + PADL(.FieldDisplacementInRecord,4)
+			ENDWITH
+		ENDIF
+
+		RETURN lcText
 	ENDPROC
 
 
