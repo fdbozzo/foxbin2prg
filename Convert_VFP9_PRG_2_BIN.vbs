@@ -124,10 +124,10 @@ Private Sub evaluateFile( tcFile )
 				cFlagGenerateLog	= "'1'"
 			End If
 			If GetBit(nDebug,2) Then
-				cFlagDontShowErrMsg	= "'1'"
+				cFlagJustShowCall	= "1"
 			End If
 			If GetBit(nDebug,3) Then
-				cFlagJustShowCall	= "1"
+				cFlagDontShowErrMsg	= "'1'"
 			End If
 			
 			If nDebug = 0 Or nDebug = 2 Then

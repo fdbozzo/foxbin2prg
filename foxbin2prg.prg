@@ -944,12 +944,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
 		lcLog	= ''
 		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, .T.
-		IF ADIR( laFile, tcFileName, '', 1 ) > 0 AND laFile(1,1) <> JUSTFNAME(tcFileName)
-			toFSO.MoveFile( FORCEPATH( laFile(1,1), JUSTPATH(tcFileName) ), tcFileName )
-			THIS.writeLog( '  => Se renombrará a [' + tcFileName + ']' )
-		ELSE
-			THIS.writeLog( '  => No se renombrará a [' + tcFileName + '] porque ya estaba correcto.' )
-		ENDIF
+		*IF ADIR( laFile, tcFileName, '', 1 ) > 0 AND laFile(1,1) <> JUSTFNAME(tcFileName)
+		*	toFSO.MoveFile( FORCEPATH( laFile(1,1), JUSTPATH(tcFileName) ), tcFileName )
+		*	THIS.writeLog( '  => Se renombrará a [' + tcFileName + ']' )
+		*ELSE
+		*	THIS.writeLog( '  => No se renombrará a [' + tcFileName + '] porque ya estaba correcto.' )
+		*ENDIF
+		THIS.writeLog( lcLog )
 	ENDPROC
 
 
