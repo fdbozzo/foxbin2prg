@@ -2,25 +2,27 @@
 '	Convert_VFP9_PRG_2_BIN.vbs - 03/01/2014 - Fernando D. Bozzo (fdbozzo@gmail.com)
 '---------------------------------------------------------------------------------------------------
 '	ENGLISH:
-'		USE: Copy this file in the same directory of FoxBin2prg and create a shortcut
-'			 on user's "SendTo" folder
+'		- Copy this file in the same directory of FoxBin2prg and create a shortcut
+'		on user's "SendTo" folder
+'		- Now you can select files or directories, right click and "SendTo" FoxBin2prg for batch conversion
 '
 '	ESPAÑOL:
-'		USO: Copie este archivo en el mismo directorio que FoxBin2prg y cree un acceso directo
-'			 en la carpeta "SendTo" del usuario
+'		- Copie este archivo en el mismo directorio que FoxBin2prg y cree un acceso directo
+'		en la carpeta "SendTo" del usuario
+'		- Ahora puede seleccionar archivos o directorios, pulsar click derecho y "Enviar a" FoxBin2prg para conversiones batch
 '---------------------------------------------------------------------------------------------------
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, cConvertType, aExtensions(8), foxbin2prg_cfg
-Dim i, x, str_cfg, aConf
+Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
-cConvertType	= "PRG2BIN"
 foxbin2prg_cfg	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.cfg")
 nExitCode = 0
+cConvertType	= "PRG2BIN"		'<<< This is the only difference between the 2 scripts
 '---------------------------------------------------------------------------------------------------
-nDebug = 1		'0=OFF, 1=Create FoxBin2prg LOG, 2=Only show calls, 3=Only show calls of the LOG call
+nDebug = 5		'Cumulative Flags: 0=OFF, 1=Create FoxBin2prg LOG, 2=Only show script calls, 4=Don't show FoxBin2prg error modal messages
 '---------------------------------------------------------------------------------------------------
 
 If cConvertType	= "BIN2PRG" Then
@@ -52,11 +54,9 @@ Else
 			arrFb2p_CFG = Split(strNextLine , ",") 
 			For i = 0 to Ubound(arrFb2p_CFG) 
 			    If Left( arrFb2p_CFG(i), 10 ) = "extension:" Then
-					'Wscript.Echo "CFG line: " & arrFb2p_CFG(i)
 					aConf = Split( arrFb2p_CFG(i), ":" )		'Obtengo la separación de "extensión:" y "ext:equiv"
 					str_cfg = UCase( Trim( aConf(1) ) )
 					aConf = Split( str_cfg, "=" )				'Obtengo la separación de extensión y equivalencia (vc2=vca)
-					'Wscript.Echo "[" & aConf(0) & "] [" & aConf(1) & "]"
 					
 					For x = 1 TO 8
 						If aExtensions(x) = aConf(0) Then
@@ -74,7 +74,17 @@ End if
 
 If WScript.Arguments.Count = 0 Then
 	nExitCode = 1
-	MsgBox "Sin parametros"
+	cErrMsg = "nDebug = " & nDebug
+	If GetBit(nDebug, 1) Then
+		cErrMsg	= cErrMsg & Chr(13) & "Bit 0 ON: (1) Create FoxBin2prg LOG"
+	End If
+	If GetBit(nDebug, 2) Then
+		cErrMsg	= cErrMsg & Chr(13) & "Bit 1 ON: (2) Only show script calls"
+	End If
+	If GetBit(nDebug, 3) Then
+		cErrMsg	= cErrMsg & Chr(13) & "Bit 2 ON: (4) Don't show FoxBin2prg error modal messages"
+	End If
+	MsgBox cErrMsg, 64, "No parameters - Debug Status"
 Else
 	cEXETool	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.exe")
 	
@@ -90,15 +100,11 @@ Private Sub scanDirs( tcArgument )
 	Dim omFolder, oFolder
 	If FileSystemObject.FolderExists( tcArgument ) Then
 		'-- Es un directorio
-		'WScript.Echo "Argument: " & "[" & tcArgument & "]"
 		Set omFolder = FileSystemObject.GetFolder( tcArgument )
-		'WScript.Echo "Dir: " & "[" & omFolder.Path & "]"
 		For Each oFile IN omFolder.Files
-			'WScript.Echo "File: " & "[" & oFile.Path & "]"
 			evaluateFile( oFile.Path )
 		Next
 		For Each oFolder IN omFolder.SubFolders
-			'WScript.Echo "SubDir: " & "[" & oFolder.Name & "] [" & oFolder.Path & "]"
 			scanDirs( oFolder.Path )
 		Next
 	Else
@@ -111,14 +117,27 @@ End Sub
 Private Sub evaluateFile( tcFile )
 	For x = 1 TO 8
 		If aExtensions(x) = UCase( FileSystemObject.GetExtensionName( tcFile ) ) Then
-			If nDebug = 1 OR nDebug = 3 Then
-				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH '" & tcFile & "','0','0','0','0','1'" 
-			Else
-				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH " & chr(34) & tcFile & chr(34)
+			cFlagGenerateLog	= "'0'"
+			cFlagDontShowErrMsg	= "'0'"
+			cFlagShowCall		= "'0'"
+			If GetBit(nDebug,1) Then
+				cFlagGenerateLog	= "'1'"
 			End If
-			If nDebug = 2 Or nDebug = 3 Then
+			If GetBit(nDebug,2) Then
+				cFlagDontShowErrMsg	= "'1'"
+			End If
+			If GetBit(nDebug,3) Then
+				cFlagJustShowCall	= "1"
+			End If
+			
+			If nDebug = 0 Or nDebug = 2 Then
+				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH " & chr(34) & tcFile & chr(34)
+			Else
+				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH '" & tcFile & "','0','0','0'," & cFlagDontShowErrMsg & "," & cFlagGenerateLog 
+			End If
+			If cFlagJustShowCall = "1" Then
 				MsgBox cCMD, 0, "PARAMETROS ENVIADOS"
-			Else	'nDebug = 0 Or nDebug = 2
+			Else
 				oVFP9.DoCmd( cCMD )
 				nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
 			End If
@@ -126,3 +145,10 @@ Private Sub evaluateFile( tcFile )
 		End If
 	Next
 End Sub
+
+
+Function GetBit(lngValue, BitNum)
+     Dim BitMask
+     If BitNum < 32 Then BitMask = 2 ^ (BitNum - 1) Else BitMask = "&H80000000"
+     GetBit = CBool(lngValue AND BitMask)
+End Function

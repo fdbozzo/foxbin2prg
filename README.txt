@@ -1,4 +1,4 @@
-﻿02/01/2014		FOXBIN2PRG VER.1.17 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
+﻿06/01/2014		FOXBIN2PRG VER.1.18 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
 
 ESPAÑOL --------------------------------------------------------------------------------------------
 
