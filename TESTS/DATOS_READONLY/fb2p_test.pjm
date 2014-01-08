@@ -1,0 +1,40 @@
+Version=  1.20
+Author=El autor
+Company=La companía
+Address=La dirección
+City=Ciudad
+State=State
+Zip=Cod.Post
+Country=País
+SaveCode=.T.
+Debug=.T.
+Encrypt=.T.
+NoLogo=.F.
+CommentStyle=1
+Comments=Comentarios
+CompanyName=Company Name
+FileDescription=File Description
+LegalCopyright=Legal Copyright
+LegalTrademarks=Legal Trademark
+ProductName=Product Name
+Major=1
+Minor=0
+Revision=5
+AutoIncrement=.T.
+[OLEServers]
+C:\DESA\test2\fb2p_test.exe,fb2p_test,fb2p_test,fb2p_test Type Library,0,{97DF3026-912D-4604-B06D-60EF52C19B70}
+cl_form,c:\desa\test2\fb2p_test.vcx,fb2p_test.cl_form,0,mi OLE server DLL,,1,{E888ECF1-F911-4F1B-A5DC-8739057087B1},{63194B79-0E07-44E6-9FC3-2EBCAA27787A}
+cl_imagen,c:\desa\test2\fb2p_test.vcx,fb2p_test.cl_imagen,0,otro ole,,1,{BA0AD3CE-E874-402F-A835-85AE1CDCE515},{6B05B62A-2C51-4C45-921F-E09FA0E66CF5}
+[OLEServersEnd]
+[ProjectFiles]
+         0,i,bmps\container.ico,.F.,.F.,0,,,
+1132700355,V,fb2p_test.vcx,.F.,.T.,1252,,,clase descrip
+1132700357,K,fb2p_frm_1.scx,.F.,.F.,1252,,,
+1132700358,K,fb2p_frm_2.scx,.F.,.F.,1252,,,
+1132700438,x,bmps\sobrepostal.bmp,.F.,.F.,0,,,
+1132700438,x,bmps\scccheckout.bmp,.F.,.F.,0,,,
+1132700438,x,bmps\carpetaabierta.bmp,.F.,.F.,0,,,
+1132700438,x,bmps\carpetacerrada.bmp,.F.,.F.,0,,,
+1132700438,x,bmps\treeview.bmp,.F.,.F.,0,,,
+1132700450,T,config\config.fpw,.T.,.F.,1252,,,
+[EOF]
