@@ -17,7 +17,7 @@ Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
 filename_caps_log	= Replace(WScript.ScriptFullName, WScript.ScriptName, "filename_caps.log")
 nExitCode = 0
 '---------------------------------------------------------------------------------------------------
-nDebug = 5		'Cumulative Flags: 0=OFF, 1=Create filename_caps LOG, 2=Only show script calls, 4=Don't show filename_caps error modal messages
+nDebug = 13		'Cumulative Flags: 0=OFF, 1=Create filename_caps LOG, 2=Only show script calls, 4=Don't show filename_caps error modal messages, 8=Show end of process message
 '---------------------------------------------------------------------------------------------------
 
 If WScript.Arguments.Count = 0 Then
@@ -32,6 +32,9 @@ If WScript.Arguments.Count = 0 Then
 	If GetBit(nDebug, 3) Then
 		cErrMsg	= cErrMsg & Chr(13) & "Bit 2 ON: (4) Don't show filename_caps error modal messages"
 	End If
+	If GetBit(nDebug, 4) Then
+		cErrMsg	= cErrMsg & Chr(13) & "Bit 3 ON: (8) Show End of Process message"
+	End If
 	MsgBox cErrMsg, 64, "No parameters - Debug Status"
 Else
 	cEXETool	= Replace(WScript.ScriptFullName, WScript.ScriptName, "filename_caps.exe")
@@ -42,6 +45,10 @@ Else
 	For i = 0 To WScript.Arguments.Count-1
 		scanDirs( WScript.Arguments(i) )
 	Next
+
+	If GetBit(nDebug, 4) Then
+		MsgBox "Fin del Proceso!", 64, WScript.ScriptName
+	End If
 End If
 
 WScript.Quit(nExitCode)
@@ -66,16 +73,17 @@ End Sub
 
 
 Private Sub evaluateFile( tcFile )
-	cFlagGenerateLog	= "'0'"
-	cFlagDontShowErrMsg	= "'0'"
-	cFlagShowCall		= "'0'"
-	If GetBit(nDebug,1) Then
+	cFlagGenerateLog			= "'0'"
+	cFlagDontShowErrMsg			= "'0'"
+	cFlagShowCall				= "'0'"
+
+	If GetBit(nDebug, 1) Then
 		cFlagGenerateLog	= "'1'"
 	End If
-	If GetBit(nDebug,2) Then
+	If GetBit(nDebug, 2) Then
 		cFlagJustShowCall	= "1"
 	End If
-	If GetBit(nDebug,3) Then
+	If GetBit(nDebug, 3) Then
 		cFlagDontShowErrMsg	= "'1'"
 	End If
 	

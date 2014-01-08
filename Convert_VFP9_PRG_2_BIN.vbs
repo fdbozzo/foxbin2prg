@@ -22,7 +22,7 @@ foxbin2prg_cfg	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg
 nExitCode = 0
 cConvertType	= "PRG2BIN"		'<<< This is the only difference between the 2 scripts
 '---------------------------------------------------------------------------------------------------
-nDebug = 5		'Cumulative Flags: 0=OFF, 1=Create FoxBin2prg LOG, 2=Only show script calls, 4=Don't show FoxBin2prg error modal messages
+nDebug = 13		'Cumulative Flags: 0=OFF, 1=Create FoxBin2prg LOG, 2=Only show script calls, 4=Don't show FoxBin2prg error modal messages, 8=Show end of process message
 '---------------------------------------------------------------------------------------------------
 
 If cConvertType	= "BIN2PRG" Then
@@ -84,6 +84,9 @@ If WScript.Arguments.Count = 0 Then
 	If GetBit(nDebug, 3) Then
 		cErrMsg	= cErrMsg & Chr(13) & "Bit 2 ON: (4) Don't show FoxBin2prg error modal messages"
 	End If
+	If GetBit(nDebug, 4) Then
+		cErrMsg	= cErrMsg & Chr(13) & "Bit 3 ON: (8) Show End of Process message"
+	End If
 	MsgBox cErrMsg, 64, "No parameters - Debug Status"
 Else
 	cEXETool	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.exe")
@@ -91,6 +94,10 @@ Else
 	For i = 0 To WScript.Arguments.Count-1
 		scanDirs( WScript.Arguments(i) )
 	Next
+
+	If GetBit(nDebug, 4) Then
+		MsgBox "Fin del Proceso!", 64, WScript.ScriptName
+	End If
 End If
 
 WScript.Quit(nExitCode)
@@ -117,16 +124,17 @@ End Sub
 Private Sub evaluateFile( tcFile )
 	For x = 1 TO 8
 		If aExtensions(x) = UCase( FileSystemObject.GetExtensionName( tcFile ) ) Then
-			cFlagGenerateLog	= "'0'"
-			cFlagDontShowErrMsg	= "'0'"
-			cFlagShowCall		= "'0'"
-			If GetBit(nDebug,1) Then
+			cFlagGenerateLog			= "'0'"
+			cFlagDontShowErrMsg			= "'0'"
+			cFlagShowCall				= "'0'"
+
+			If GetBit(nDebug, 1) Then
 				cFlagGenerateLog	= "'1'"
 			End If
-			If GetBit(nDebug,2) Then
+			If GetBit(nDebug, 2) Then
 				cFlagJustShowCall	= "1"
 			End If
-			If GetBit(nDebug,3) Then
+			If GetBit(nDebug, 3) Then
 				cFlagDontShowErrMsg	= "'1'"
 			End If
 			
@@ -136,7 +144,7 @@ Private Sub evaluateFile( tcFile )
 				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH '" & tcFile & "','0','0','0'," & cFlagDontShowErrMsg & "," & cFlagGenerateLog 
 			End If
 			If cFlagJustShowCall = "1" Then
-				MsgBox cCMD, 0, "PARAMETROS ENVIADOS"
+				MsgBox cCMD, 64, "PARAMETROS ENVIADOS"
 			Else
 				oVFP9.DoCmd( cCMD )
 				nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
