@@ -9820,7 +9820,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 			ENDIF
 
 			WITH THIS
-				tcDevInfo	= STUFF( tcDevInfo, 1, LEN(._Author), ._Autor)
+				tcDevInfo	= STUFF( tcDevInfo, 1, LEN(._Author), ._Author)
 				tcDevInfo	= STUFF( tcDevInfo, 47, LEN(._Company), ._Company)
 				tcDevInfo	= STUFF( tcDevInfo, 93, LEN(._Address), ._Address)
 				tcDevInfo	= STUFF( tcDevInfo, 139, LEN(._City), ._City)
