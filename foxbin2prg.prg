@@ -1117,7 +1117,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	l_Test					= .F.
 	c_InputFile				= ''
 	c_OutputFile			= ''
-	lFileMode				= .T.
+	lFileMode				= .F.
 	nClassTimeStamp			= ''
 	n_FB2PRG_Version		= 1.0
 	c_Foxbin2prg_FullPath	= ''
@@ -1754,16 +1754,24 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*-- CONVIERTE UN DATO TIPO DATETIME EN TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc.
 		LOCAL lcTimeValue, tnTimeStamp
 
-		IF VARTYPE(m.ltDateTime) <> 'T'
-			m.ltDateTime		= DATETIME()
-		ENDIF
+		TRY
+			IF EMPTY(ltDateTime)
+				tnTimeStamp = 0
+				EXIT
+			ENDIF
+			
+			IF VARTYPE(m.ltDateTime) <> 'T'
+				m.ltDateTime		= DATETIME()
+			ENDIF
 
-		tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
-			+ MONTH(m.ltDateTime) * 2^21 ;
-			+ DAY(m.ltDateTime) * 2^16 ;
-			+ HOUR(m.ltDateTime) * 2^11 ;
-			+ MINUTE(m.ltDateTime) * 2^5 ;
-			+ SEC(m.ltDateTime)
+			tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
+				+ MONTH(m.ltDateTime) * 2^21 ;
+				+ DAY(m.ltDateTime) * 2^16 ;
+				+ HOUR(m.ltDateTime) * 2^11 ;
+				+ MINUTE(m.ltDateTime) * 2^5 ;
+				+ SEC(m.ltDateTime)
+		ENDTRY
+		
 		RETURN INT(tnTimeStamp)
 	ENDFUNC
 
@@ -7827,7 +7835,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
 			STORE NULL TO loRegClass, loRegObj
 
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+			SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+			USE IN (SELECT("_TABLAORIG"))
 
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
@@ -7968,7 +7978,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
 			STORE NULL TO loRegClass, loRegObj
 
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+			SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+			USE IN (SELECT("_TABLAORIG"))
 
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
@@ -8132,7 +8144,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
 
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+			SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+			USE IN (SELECT("_TABLAORIG"))
+
 			loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
 
 
@@ -8812,7 +8828,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
 			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
 
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN_0
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+			SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
+			USE IN (SELECT("_TABLAORIG"))
 
 			*-- Header
 			LOCATE FOR ObjType = 1
@@ -8937,6 +8955,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			loDBFUtils.getDBFmetadata( THIS.c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 			lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
 			lnDatabases_Count	= ADATABASES(laDatabases)
+
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
@@ -9032,6 +9051,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			STORE 0 TO lnCodError
 
 			lnDatabases_Count	= ADATABASES(laDatabases)
+
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
 
@@ -9100,7 +9120,9 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, lnLen
 			STORE 0 TO lnCodError
 
-			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+			SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+			USE IN (SELECT("_TABLAORIG"))
 			
 			*-- Verificación de menú VFP 9
 			IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
