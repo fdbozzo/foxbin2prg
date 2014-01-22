@@ -106,6 +106,7 @@
 *										Este cambio es para ganar tiempo, velocidad y seguridad. Además la recompilación que hace FoxBin2Prg
 *										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 *										generar errores de compilación, típicamente los #include.
+*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
@@ -543,6 +544,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*										Este cambio es para ganar tiempo, velocidad y seguridad. Además la recompilación que hace FoxBin2Prg
 		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 		*										generar errores de compilación, típicamente los #include.
+		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile
@@ -583,7 +585,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Ejecución normal
 				THIS.l_ShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
 				THIS.l_ShowErrors		= NOT (TRANSFORM(tcDontShowErrors) == '1')
-				THIS.l_Recompile		= (TRANSFORM(tcRecompile) == '1')
+				THIS.l_Recompile		= (NOT EMPTY(tcRecompile) AND (TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile)))
 				THIS.l_Debug			= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
 
 				IF THIS.l_ShowProgress
@@ -619,7 +621,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				CASE '*' $ JUSTSTEM( tc_InputFile )
 					*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
 					lcFileSpec	= FULLPATH( tc_InputFile )
-					CD (JUSTPATH(lcFileSpec))
+
+					IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+						CD (tcRecompile)
+					ELSE
+						CD (JUSTPATH(lcFileSpec))
+					ENDIF
 					THIS.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
 					IF THIS.l_Debug
@@ -655,7 +662,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				OTHERWISE
 					*-- UN ARCHIVO INDIVIDUAL
 					IF FILE(tc_InputFile)
-						CD (JUSTPATH(tc_InputFile))
+
+						IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+							CD (tcRecompile)
+						ELSE
+							CD (JUSTPATH(tc_InputFile))
+						ENDIF
+
 						THIS.c_LogFile	= tc_InputFile + '.LOG'
 
 						IF THIS.l_Debug
