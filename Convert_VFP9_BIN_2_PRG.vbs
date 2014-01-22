@@ -13,8 +13,8 @@
 '---------------------------------------------------------------------------------------------------
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
-Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, cConvertType, aExtensions(8), foxbin2prg_cfg
-Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall
+Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, cConvertType, aExtensions(8), foxbin2prg_cfg, aFiles(), nFile_Count
+Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
@@ -22,7 +22,7 @@ foxbin2prg_cfg	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg
 nExitCode = 0
 cConvertType	= "BIN2PRG"		'<<< This is the only difference between the 2 scripts
 '---------------------------------------------------------------------------------------------------
-nDebug = 13		'Cumulative Flags: 0=OFF, 1=Create FoxBin2prg LOG, 2=Only show script calls, 4=Don't show FoxBin2prg error modal messages, 8=Show end of process message
+nDebug = 1+0+4+0	'Cumulative Flags: 0=OFF, 1=Create FoxBin2prg LOG, 2=Only show script calls, 4=Don't show FoxBin2prg error modal messages, 8=Show end of process message
 '---------------------------------------------------------------------------------------------------
 
 If cConvertType	= "BIN2PRG" Then
@@ -90,10 +90,58 @@ If WScript.Arguments.Count = 0 Then
 	MsgBox cErrMsg, 64, "No parameters - Debug Status"
 Else
 	cEXETool	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.exe")
+	nFile_Count = 0
+	oVFP9.DoCmd( "SET PROCEDURE TO '" & cEXETool & "'" )
+	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
+	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
+	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
 	
 	For i = 0 To WScript.Arguments.Count-1
 		scanDirs( WScript.Arguments(i) )
 	Next
+
+	cFlagGenerateLog		= "'0'"
+	cFlagDontShowErrMsg		= "'0'"
+	cFlagShowCall			= "'0'"
+	cFlagRecompile			= "'0'"
+
+	If GetBit(nDebug, 1) Then
+		cFlagGenerateLog	= "'1'"
+	End If
+	If GetBit(nDebug, 2) Then
+		cFlagJustShowCall	= "1"
+	End If
+	If GetBit(nDebug, 3) Then
+		cFlagDontShowErrMsg	= "'1'"
+	End If
+
+	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nMAX_VALUE = " & nFile_Count )
+	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & 0 )
+	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.AlwaysOnTop = .T." )
+	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.SHOW()" )
+
+	For i = 1 To nFile_Count
+		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = 'Procesando " & aFiles(i) & "...'" )
+		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & i )
+
+		If nDebug = 0 Or nDebug = 2 Then
+			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "' )"
+		Else
+			cCMD	= "oFoxBin2prg.ejecutar(  '" & aFiles(i) & "','0','0','0'," _
+				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," & cFlagRecompile & " )"
+		End If
+		If cFlagJustShowCall = "1" Then
+			MsgBox cCMD, 64, "PARAMETROS ENVIADOS"
+		Else
+			oVFP9.DoCmd( cCMD )
+			nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
+		End If
+
+	Next
+
+	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.HIDE()" )
+	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance = NULL" )
+	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
 
 	If GetBit(nDebug, 4) Then
 		MsgBox "Fin del Proceso!", 64, WScript.ScriptName
@@ -122,33 +170,11 @@ End Sub
 
 
 Private Sub evaluateFile( tcFile )
-	For x = 1 TO 8
+	For x = 1 TO UBound(aExtensions,1)
 		If aExtensions(x) = UCase( FileSystemObject.GetExtensionName( tcFile ) ) Then
-			cFlagGenerateLog			= "'0'"
-			cFlagDontShowErrMsg			= "'0'"
-			cFlagShowCall				= "'0'"
-
-			If GetBit(nDebug, 1) Then
-				cFlagGenerateLog	= "'1'"
-			End If
-			If GetBit(nDebug, 2) Then
-				cFlagJustShowCall	= "1"
-			End If
-			If GetBit(nDebug, 3) Then
-				cFlagDontShowErrMsg	= "'1'"
-			End If
-			
-			If nDebug = 0 Or nDebug = 2 Then
-				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH " & chr(34) & tcFile & chr(34)
-			Else
-				cCMD	= "DO " & chr(34) & cEXETool & chr(34) & " WITH '" & tcFile & "','0','0','0'," & cFlagDontShowErrMsg & "," & cFlagGenerateLog 
-			End If
-			If cFlagJustShowCall = "1" Then
-				MsgBox cCMD, 64, "PARAMETROS ENVIADOS"
-			Else
-				oVFP9.DoCmd( cCMD )
-				nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
-			End If
+			nFile_Count = nFile_Count + 1
+			ReDim Preserve aFiles(nFile_Count)
+			aFiles(nFile_Count) = tcFile
 			Exit For
 		End If
 	Next
