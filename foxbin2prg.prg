@@ -343,6 +343,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
@@ -431,6 +432,32 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		CATCH
 		ENDTRY
 
+	ENDPROC
+
+
+	PROCEDURE compileFoxProBinary
+		LPARAMETERS tcFilename
+		LOCAL lcType
+		tcFilename	= EVL(tcFilename, THIS.c_OutputFile)
+		lcType		= UPPER(JUSTEXT(tcFilename))
+
+		DO CASE
+		CASE lcType = 'VCX'
+			COMPILE CLASSLIB (tcFilename)
+
+		CASE lcType = 'SCX'
+			COMPILE FORM (tcFilename)
+
+		CASE lcType = 'FRX'
+			COMPILE REPORT (tcFilename)
+
+		CASE lcType = 'LBX'
+			COMPILE LABEL (tcFilename)
+
+		CASE lcType = 'DBC'
+			COMPILE DATABASE (tcFilename)
+
+		ENDCASE
 	ENDPROC
 
 
@@ -4328,7 +4355,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			USE IN (SELECT("TABLABIN"))
 
 			IF toFoxbin2prg.l_Recompile
-				COMPILE CLASSLIB (THIS.c_OutputFile)
+				toFoxbin2prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -4610,7 +4637,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			USE IN (SELECT("TABLABIN"))
 
 			IF toFoxbin2prg.l_Recompile
-				COMPILE FORM (THIS.c_OutputFile)
+				toFoxbin2prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -5482,11 +5509,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			USE IN (SELECT("TABLABIN"))
 
 			IF toFoxbin2prg.l_Recompile
-				IF THIS.c_Type = 'FRX'
-					COMPILE REPORT (THIS.c_OutputFile)
-				ELSE
-					COMPILE LABEL (THIS.c_OutputFile)
-				ENDIF
+				toFoxbin2prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -6113,7 +6136,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			toDatabase.updateDBC( THIS.c_OutputFile )
 
 			IF toFoxbin2prg.l_Recompile
-				COMPILE DATABASE (THIS.c_OutputFile)
+				toFoxbin2prg.compileFoxProBinary()
 			ENDIF
 
 
