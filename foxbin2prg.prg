@@ -577,12 +577,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile
 
 		TRY
-			LOCAL I, lcPath, lnResp, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
+			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
 				, llExisteConfig, lcConfData, lnFileCount ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject
 
-			lnResp	= 0
+			lnCodError	= 0
 
 			SET DELETED ON
 			SET DATE YMD
@@ -601,12 +601,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CASE VERSION(5) < 900
 				*-- '¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
 				MESSAGEBOX( C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, C_FOXBIN2PRG_WARN_CAPTION_LOC, 60000 )
-				lnResp	= 1
+				lnCodError	= 1
 
 			CASE EMPTY(tc_InputFile)
 				*-- (Ejemplo de sintaxis y uso)
 				MESSAGEBOX( FOXBIN2PRG_INFO_SINTAX_LOC, 0+64+4096, 'FOXBIN2PRG: SINTAXIS INFO', 60000 )
-				lnResp	= 1
+				lnCodError	= 1
 
 			OTHERWISE
 				*-- Ejecución normal
@@ -682,7 +682,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDIF
 
 						IF FILE( lcFile )
-							lnResp = THIS.Convertir( lcFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+							lnCodError = THIS.Convertir( lcFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
 						ENDIF
 					ENDFOR
 
@@ -705,13 +705,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
 						ENDIF
 
-						lnResp = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+						lnCodError = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
 					ENDIF
 				ENDCASE
 
 			ENDCASE
 
 		CATCH TO toEx
+			lnCodError	= toEx.ErrorNo
 			ADDPROPERTY(_SCREEN, 'ExitCode', toEx.ERRORNO)
 			IF llExisteConfig
 				THIS.writeLog( 'ERROR: ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
@@ -732,7 +733,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			*SET PATH TO (lcPath)
 		ENDTRY
 
-		RETURN lnResp
+		RETURN lnCodError
 	ENDPROC
 
 
