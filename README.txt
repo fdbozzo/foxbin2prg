@@ -1,4 +1,4 @@
-﻿06/01/2014		FOXBIN2PRG VER.1.18 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
+﻿26/01/2014		FOXBIN2PRG v1.19 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
 
 ESPAÑOL --------------------------------------------------------------------------------------------
 
@@ -32,6 +32,12 @@ DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenera la versión binaria co
 TRUCO UTIL:
 Se puede crear un acceso directo en la carpeta "SendTo" del perfil del usuario, para poder "enviar"
 el archivo elegido (pjx,pj2,etc) a Foxbin2prg.exe, y así se hacen conversiones al vuelo.
+
+LOCALIZACIÓN:
+Si se crea un archivo [foxbin2prg.h], se pueden trasladar los textos a otros idiomas. Se adjunta
+un archivo de ejemplo [foxbin2prg_en.h] con la traslación al inglés.
+Es necesario recompilar el programa para que se actualicen los textos con el archivo include.
+
 
 NOTA FINAL:
 Este programa es Open Source y "libre", y como tal no ofrezco garantías de que cumpla con sus espectativas
@@ -76,6 +82,11 @@ DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenerates the binary version 
 USEFUL TRICK:
 You can create a shortcut in the "SendTo" folder on your user Windows Profile, so you can "send"
 the selected file (pjx,pj2,etc) to Foxbin2prg.exe, and make on-the-fly conversions.
+
+LOCALIZATION:
+If file [foxbin2prg.h] is created, texts to other languages can be translated. En example
+file [foxbin2prg_en.h] is attached with english translation.
+Recompiling is necesary to update the strings from the include file.
 
 
 FINAL NOTE:
