@@ -66,6 +66,7 @@
 * 08/01/2014	FDBOZZO		v1.19.3	Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
 * 22/01/2014	FDBOZZO		v1.19.4	Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
 * 22/01/2014	FDBOZZO		v1.19.4	DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
+* 30/01/2014	FDBOZZO		v1.19.5	Agregada compatibilidad con SourceSafe para Diff y Merge
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -279,7 +280,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_FILE_DOESNT_EXIST_LOC								'El archivo no existe:'
 	#DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					'El archivo [<<.c_InputFile>>] no está soportado'
 	#DEFINE C_FILE_NOT_FOUND_LOC								'No se encontró el archivo'
-	#DEFINE C_FOXBIN2PRG_CFG_EXTENSION_LOC						'extension:'
+	#DEFINE C_EXTENSION_RECONFIGURATION_LOC						'Reconfiguración de extensión:'
 	#DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						'FOXBIN2PRG: ERROR!!'
 	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						'FOXBIN2PRG: INFORMACIÓN DE SINTAXIS'
 	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				'FOXBIN2PRG <cEspecArchivo.Ext>  [cType_ND  cTextName_ND  cGenText_ND  cNoMostrarErrores  cDebug]' + CR_LF + CR_LF ;
@@ -308,25 +309,36 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #ENDIF
 *******************************************************************************************************************
 
-
-PUBLIC goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp, loEx as Exception
-goCnv	= CREATEOBJECT("c_foxbin2prg")
+
+*SYS(2030,1)
+*SYS(2335,0)
+*IF PCOUNT() > 1
+*	SET STEP ON
+*ENDIF
+loCnv	= CREATEOBJECT("c_foxbin2prg")
 loEx	= NULL
-lnResp	= goCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
+lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
 	, '', NULL, @loEx, .F., tcOriginalFileName, tcRecompile )
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
-IF _VFP.STARTMODE <= 1
-	RETURN lnResp
-ENDIF
+*IF _VFP.STARTMODE <= 1
+*	RETURN lnResp
+*ENDIF
 
 *-- Muy útil para procesos batch que capturan el código de error
-IF NOT EMPTY(lnResp) AND VARTYPE(loEx) = "O"
+IF _VFP.STARTMODE > 1 AND NOT EMPTY(lnResp) AND VARTYPE(loEx) = "O"
 	DECLARE ExitProcess IN Win32API INTEGER ExitCode
 	ExitProcess(1)
 ENDIF
 
+loEx	= NULL
+loCnv	= NULL
+RELEASE loEx, loCnv
+
+SET COVERAGE TO
+RETURN lnResp
 QUIT
 
 
@@ -489,6 +501,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			IF '+D' $ tcAttrib
 				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)
 			ENDIF
+			IF '+N' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_NORMAL)
+			ENDIF
 			IF '+T' $ tcAttrib
 				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY)
 			ENDIF
@@ -510,6 +525,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 			IF '-D' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY) = FILE_ATTRIBUTE_DIRECTORY
 				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_DIRECTORY
+			ENDIF
+			IF '-N' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_NORMAL) = FILE_ATTRIBUTE_NORMAL
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_NORMAL
 			ENDIF
 			IF '-T' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY) = FILE_ATTRIBUTE_TEMPORARY
 				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_TEMPORARY
@@ -667,18 +685,18 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
-				, llExisteConfig, lcConfData, lnFileCount ;
+				, llExisteConfig, lcConfData, lnFileCount, lcErrorInfo ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject
 
 			lnCodError	= 0
 
-			SET DELETED ON
-			SET DATE YMD
-			SET HOURS TO 24
-			SET CENTURY ON
-			SET SAFETY OFF
-			SET TABLEPROMPT OFF
+			*SET DELETED ON
+			*SET DATE YMD
+			*SET HOURS TO 24
+			*SET CENTURY ON
+			*SET SAFETY OFF
+			*SET TABLEPROMPT OFF
 
 			IF _VFP.STARTMODE > 0
 				SET ESCAPE OFF
@@ -714,11 +732,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				IF llExisteConfig
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-						IF LOWER( LEFT( laConfig(I), 10 ) ) == C_FOXBIN2PRG_CFG_EXTENSION_LOC	&& 'extension:'
+						IF LOWER( LEFT( laConfig(I), 10 ) ) == 'extension:'
 							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
 							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
 							IF PEMSTATUS( THIS, lcExt, 5 )
 								THIS.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								*THIS.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								THIS.writeLog( C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 							ENDIF
 						ENDIF
 					ENDFOR
@@ -787,60 +807,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						CASE tc_InputFile $ 'KBMRV'	&& SCX, LBX, MNX, FRX, VCX
 							lnCodError	= 2
 						OTHERWISE
-							lnCodError	= 0
+							lnCodError	= -1
 						ENDCASE
 						
 					ELSE
-						IF NOT EMPTY(tcType) AND NOT EMPTY(tcTextName)
-							*-- Compatibilidad con SourceSafe
-							lcExt	= JUSTEXT(tc_InputFile)
-
-							IF tlGenText
-								*-- Create a textfile from binary
-								DO CASE
-								CASE lcExt_1 = 'PJX'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_PJ2))
-								CASE lcExt_1 = 'VCX'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_VC2))
-								CASE lcExt_1 = 'SCX'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_SC2))
-								CASE lcExt_1 = 'FRX'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_FR2))
-								CASE lcExt_1 = 'LBX'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_LB2))
-								CASE lcExt_1 = 'DBF'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_DB2))
-								CASE lcExt_1 = 'DBC'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_DC2))
-								CASE lcExt_1 = 'MNX'
-									tc_InputFile	= FORCEEXT(tc_InputFile, LOWER(THIS.c_MN2))
-								ENDCASE
-								
-							ELSE
-								*-- Create a binary from textfile
-								DO CASE
-								CASE lcExt_1 = THIS.c_PJ2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'pjx')
-								CASE lcExt_1 = THIS.c_VC2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'vcx')
-								CASE lcExt_1 = THIS.c_SC2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'scx')
-								CASE lcExt_1 = THIS.c_FR2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'frx')
-								CASE lcExt_1 = THIS.c_LB2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'lbx')
-								CASE lcExt_1 = THIS.c_DB2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'dbf')
-								CASE lcExt_1 = THIS.c_DC2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'dbc')
-								CASE lcExt_1 = THIS.c_MN2
-									tc_InputFile	= FORCEEXT(tc_InputFile, 'mnx')
-								ENDCASE
-								
-							ENDIF
-						ENDIF
 
 						IF FILE(tc_InputFile)
+							ERASE ( tc_InputFile + '.ERR' )
 
 							IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
 								CD (tcRecompile)
@@ -850,6 +823,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 							THIS.c_LogFile	= tc_InputFile + '.LOG'
 
+							IF EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
+								*-- Compatibilidad con SourceSafe
+
+								IF NOT tlGenText
+									*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
+									*-- Create BINARIO desde versión TEXTO
+									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
+									*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
+									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
+									tc_InputFile	= tcTextName
+								ENDIF
+							ENDIF
+
 							IF THIS.l_Debug
 								IF FILE( THIS.c_LogFile )
 									ERASE ( THIS.c_LogFile )
@@ -857,7 +843,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
 							ENDIF
 
-							lnCodError = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+							lnCodError = THIS.Convertir( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
 						ENDIF
 					ENDIF
 				ENDCASE
@@ -866,11 +852,22 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		CATCH TO toEx
 			lnCodError	= toEx.ErrorNo
+			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 			ADDPROPERTY(_SCREEN, 'ExitCode', toEx.ERRORNO)
-			IF llExisteConfig
-				THIS.writeLog( 'ERROR: ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
-					+ toEx.PROCEDURE + ', line ' + TRANSFORM(toEx.LINENO) + CR_LF ;
-					+ toEx.DETAILS )
+
+			TRY
+				STRTOFILE( lcErrorInfo, EVL(tc_InputFile,'foxbin2prg') + '.ERR' )
+			CATCH TO loEx2
+			ENDTRY
+
+			IF THIS.l_Debug
+				IF _VFP.STARTMODE = 0
+					SET STEP ON
+				ENDIF
+				THIS.writeLog( lcErrorInfo )
+			ENDIF
+			IF THIS.l_Debug AND THIS.l_ShowErrors
+				MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
 			ENDIF
 			IF tlRelanzarError
 				THROW
@@ -935,83 +932,103 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ERROR C_FILE_DOESNT_EXIST_LOC + ' [' + .c_InputFile + ']'
 				ENDIF
 
-				IF FILE( .c_InputFile + '.ERR' )
-					TRY
-						ERASE ( .c_InputFile + '.ERR' )
-					CATCH
-					ENDTRY
-				ENDIF
-
 				lcExtension	= UPPER( JUSTEXT(.c_InputFile) )
 
 				DO CASE
 				CASE lcExtension = 'VCX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_VC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_VC2 ), '+N' )
 
 				CASE lcExtension = 'SCX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_SC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_scx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_SC2 ), '+N' )
 
 				CASE lcExtension = 'PJX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
 
 				CASE lcExtension = 'PJM'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
 
 				CASE lcExtension = 'FRX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FR2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_FR2 ), '+N' )
 
 				CASE lcExtension = 'LBX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_LB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), '+N' )
 
 				CASE lcExtension = 'DBF'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DB2 ), '+N' )
 
 				CASE lcExtension = 'DBC'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DC2 ), '+N' )
 
 				CASE lcExtension = 'MNX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_MN2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), '+N' )
 
 				CASE lcExtension = .c_VC2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), '+N' )
 
 				CASE lcExtension = .c_SC2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'SCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_scx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCT' ), '+N' )
 
 				CASE lcExtension = .c_PJ2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'PJX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJT' ), '+N' )
 
 				CASE lcExtension = .c_FR2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FRX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRT' ), '+N' )
 
 				CASE lcExtension = .c_LB2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'LBX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), '+N' )
 
 				CASE lcExtension = .c_DB2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBF' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FPT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), '+N' )
 
 				CASE lcExtension = .c_DC2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBC' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCT' ), '+N' )
 
 				CASE lcExtension = .c_MN2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MNX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), '+N' )
 
 				OTHERWISE
 					*ERROR 'El archivo [' + .c_InputFile + '] no está soportado'
@@ -1041,20 +1058,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			lnCodError	= toEx.ERRORNO
 			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 
-			TRY
-				STRTOFILE( lcErrorInfo, THIS.c_InputFile + '.ERR' )
-			CATCH TO loEx2
-			ENDTRY
-
 			IF THIS.l_Debug
 				IF _VFP.STARTMODE = 0
 					SET STEP ON
 				ENDIF
-				THIS.writeLog( lcErrorInfo )
+				*THIS.writeLog( lcErrorInfo )
 			ENDIF
-			IF THIS.l_Debug AND THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
-			ENDIF
+			*IF THIS.l_Debug AND THIS.l_ShowErrors
+			*	MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
+			*ENDIF
 			IF tlRelanzarError	&& Usado en Unit Testing
 				THROW
 			ENDIF
@@ -1183,7 +1195,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL lcLog, laFile(1,5)
 		*THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
 		THIS.writeLog( TEXTMERGE(C_REQUESTING_CAPITALIZATION_OF_FILE_LOC) )
-		THIS.ChangeFileAttribute( tcFileName, '-R' )
+		THIS.ChangeFileAttribute( tcFileName, '+N' )
 		lcLog	= ''
 		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, .T.
 		THIS.writeLog( lcLog )
