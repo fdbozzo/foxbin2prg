@@ -816,6 +816,20 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						
 					ELSE
 
+						IF EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
+							*-- Compatibilidad con SourceSafe
+
+							IF NOT tlGenText
+								*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
+								*-- Create BINARIO desde versión TEXTO
+								*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
+								*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
+								*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
+								tc_InputFile		= tcTextName
+								THIS.l_Recompile	= .T.
+							ENDIF
+						ENDIF
+
 						IF FILE(tc_InputFile)
 							ERASE ( tc_InputFile + '.ERR' )
 
@@ -826,20 +840,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							ENDIF
 
 							THIS.c_LogFile	= tc_InputFile + '.LOG'
-
-							IF EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
-								*-- Compatibilidad con SourceSafe
-
-								IF NOT tlGenText
-									*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
-									*-- Create BINARIO desde versión TEXTO
-									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
-									*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
-									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
-									tc_InputFile		= tcTextName
-									THIS.l_Recompile	= .T.
-								ENDIF
-							ENDIF
 
 							IF THIS.l_Debug
 								IF FILE( THIS.c_LogFile )
