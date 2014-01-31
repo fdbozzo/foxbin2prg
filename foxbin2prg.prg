@@ -66,6 +66,7 @@
 * 08/01/2014	FDBOZZO		v1.19.3	Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
 * 22/01/2014	FDBOZZO		v1.19.4	Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
 * 22/01/2014	FDBOZZO		v1.19.4	DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
+* 30/01/2014	FDBOZZO		v1.19.5	Agregada compatibilidad con SourceSafe para Diff y Merge
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -94,9 +95,9 @@
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir
-* tcType_na					(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
-* tcTextName_na				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
-* tlGenText_na				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
+* tcType					(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
+* tcTextName				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
+* tlGenText				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
 * tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
@@ -110,7 +111,7 @@
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
-LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName, tcRecompile
+LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName, tcRecompile
 
 *-- Internacionalización / Internationalization
 *-- Fin / End
@@ -279,7 +280,7 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 	#DEFINE C_FILE_DOESNT_EXIST_LOC								'El archivo no existe:'
 	#DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					'El archivo [<<.c_InputFile>>] no está soportado'
 	#DEFINE C_FILE_NOT_FOUND_LOC								'No se encontró el archivo'
-	#DEFINE C_FOXBIN2PRG_CFG_EXTENSION_LOC						'extension:'
+	#DEFINE C_EXTENSION_RECONFIGURATION_LOC						'Reconfiguración de extensión:'
 	#DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						'FOXBIN2PRG: ERROR!!'
 	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						'FOXBIN2PRG: INFORMACIÓN DE SINTAXIS'
 	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				'FOXBIN2PRG <cEspecArchivo.Ext>  [cType_ND  cTextName_ND  cGenText_ND  cNoMostrarErrores  cDebug]' + CR_LF + CR_LF ;
@@ -308,24 +309,38 @@ LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErro
 #ENDIF
 *******************************************************************************************************************
 
+LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+LOCAL lnResp, loEx as Exception
 
-PUBLIC goCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-LOCAL lnResp
-goCnv	= CREATEOBJECT("c_foxbin2prg")
-lnResp	= goCnv.ejecutar( tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug ;
-	, '', NULL, NULL, .F., tcOriginalFileName, tcRecompile )
+*SYS(2030,1)
+*SYS(2335,0)
+*IF PCOUNT() > 1 && Saltear las querys de SourceSafe sobre soporte de archivos
+*	SET STEP ON
+*	MESSAGEBOX( SYS(5)+CURDIR(),64+4096,PROGRAM(),5000)
+*ENDIF
+
+loCnv	= CREATEOBJECT("c_foxbin2prg")
+loEx	= NULL
+lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
+	, '', NULL, @loEx, .F., tcOriginalFileName, tcRecompile )
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
-IF _VFP.STARTMODE <= 1
-	RETURN lnResp
-ENDIF
+*IF _VFP.STARTMODE <= 1
+*	RETURN lnResp
+*ENDIF
 
 *-- Muy útil para procesos batch que capturan el código de error
-DECLARE ExitProcess IN Win32API INTEGER ExitCode
-IF NOT EMPTY(lnResp)
+IF _VFP.STARTMODE > 1 AND NOT EMPTY(lnResp) AND VARTYPE(loEx) = "O"
+	DECLARE ExitProcess IN Win32API INTEGER ExitCode
 	ExitProcess(1)
 ENDIF
 
+loEx	= NULL
+loCnv	= NULL
+RELEASE loEx, loCnv
+
+SET COVERAGE TO
+RETURN lnResp
 QUIT
 
 
@@ -352,6 +367,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="changefileattribute" display="ChangeFileAttribute"/>] ;
 		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
@@ -441,6 +457,90 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		CATCH
 		ENDTRY
 
+	ENDPROC
+
+
+	PROCEDURE ChangeFileAttribute
+		* Using Win32 Functions in Visual FoxPro
+		* example=103
+		* Changing file attributes
+		LPARAMETERS  tcFilename, tcAttrib
+		tcAttrib	= UPPER(tcAttrib)
+
+		#DEFINE FILE_ATTRIBUTE_READONLY		1
+		#DEFINE FILE_ATTRIBUTE_HIDDEN		2
+		#DEFINE FILE_ATTRIBUTE_SYSTEM		4
+		#DEFINE FILE_ATTRIBUTE_DIRECTORY	16
+		#DEFINE FILE_ATTRIBUTE_ARCHIVE		32
+		#DEFINE FILE_ATTRIBUTE_NORMAL		128
+		#DEFINE FILE_ATTRIBUTE_TEMPORARY	512
+		#DEFINE FILE_ATTRIBUTE_COMPRESSED	2048
+
+		DECLARE SHORT SetFileAttributes IN kernel32 STRING tcFileName, INTEGER dwFileAttributes
+		DECLARE INTEGER GetFileAttributes IN kernel32 STRING tcFileName
+
+		* read current attributes for this file
+		dwFileAttributes = GetFileAttributes(tcFilename)
+
+		IF dwFileAttributes = -1
+			* the file does not exist
+			RETURN
+		ENDIF
+
+		IF dwFileAttributes > 0
+			IF '+R' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_READONLY)
+			ENDIF
+			IF '+A' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_ARCHIVE)
+			ENDIF
+			IF '+S' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_SYSTEM)
+			ENDIF
+			IF '+H' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_HIDDEN)
+			ENDIF
+			IF '+D' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)
+			ENDIF
+			IF '+N' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_NORMAL)
+			ENDIF
+			IF '+T' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY)
+			ENDIF
+			IF '+C' $ tcAttrib
+				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_COMPRESSED)
+			ENDIF
+
+			IF '-R' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_READONLY) = FILE_ATTRIBUTE_READONLY
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_READONLY
+			ENDIF
+			IF '-A' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_ARCHIVE) = FILE_ATTRIBUTE_ARCHIVE
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_ARCHIVE
+			ENDIF
+			IF '-S' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_SYSTEM) = FILE_ATTRIBUTE_SYSTEM
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_SYSTEM
+			ENDIF
+			IF '-H' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_HIDDEN) = FILE_ATTRIBUTE_HIDDEN
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_HIDDEN
+			ENDIF
+			IF '-D' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY) = FILE_ATTRIBUTE_DIRECTORY
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_DIRECTORY
+			ENDIF
+			IF '-N' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_NORMAL) = FILE_ATTRIBUTE_NORMAL
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_NORMAL
+			ENDIF
+			IF '-T' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY) = FILE_ATTRIBUTE_TEMPORARY
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_TEMPORARY
+			ENDIF
+			IF '-C' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_COMPRESSED) = FILE_ATTRIBUTE_COMPRESSED
+				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_COMPRESSED
+			ENDIF
+
+			* setting selected attributes
+			=SetFileAttributes(tcFilename, dwFileAttributes)
+		ENDIF
 	ENDPROC
 
 
@@ -565,9 +665,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
-		* tcType_na					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tcTextName_na				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tlGenText_na				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tcType					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tcTextName				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tlGenText				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
 		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
 		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
 		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
@@ -582,23 +682,24 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*										generar errores de compilación, típicamente los #include.
 		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_InputFile, tcType_na, tcTextName_na, tlGenText_na, tcDontShowErrors, tcDebug, tcDontShowProgress ;
+		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
-				, llExisteConfig, lcConfData, lnFileCount ;
+				, llExisteConfig, lcConfData, lnFileCount, lcErrorInfo ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject
 
 			lnCodError	= 0
+			tcRecompile	= EVL(tcRecompile,'')
 
-			SET DELETED ON
-			SET DATE YMD
-			SET HOURS TO 24
-			SET CENTURY ON
-			SET SAFETY OFF
-			SET TABLEPROMPT OFF
+			*SET DELETED ON
+			*SET DATE YMD
+			*SET HOURS TO 24
+			*SET CENTURY ON
+			*SET SAFETY OFF
+			*SET TABLEPROMPT OFF
 
 			IF _VFP.STARTMODE > 0
 				SET ESCAPE OFF
@@ -621,7 +722,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Ejecución normal
 				THIS.l_ShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
 				THIS.l_ShowErrors		= NOT (TRANSFORM(tcDontShowErrors) == '1')
-				THIS.l_Recompile		= (NOT EMPTY(tcRecompile) AND (TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile)))
+				*THIS.l_Recompile		= (NOT EMPTY(tcRecompile) AND (TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile)))
+				THIS.l_Recompile		= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
 				THIS.l_Debug			= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
 
 				IF THIS.l_ShowProgress
@@ -634,11 +736,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				IF llExisteConfig
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-						IF LOWER( LEFT( laConfig(I), 10 ) ) == C_FOXBIN2PRG_CFG_EXTENSION_LOC	&& 'extension:'
+						IF LOWER( LEFT( laConfig(I), 10 ) ) == 'extension:'
 							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
 							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
 							IF PEMSTATUS( THIS, lcExt, 5 )
 								THIS.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								*THIS.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								THIS.writeLog( C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 							ENDIF
 						ENDIF
 					ENDFOR
@@ -662,7 +766,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
 						CD (tcRecompile)
 					ELSE
-						CD (JUSTPATH(lcFileSpec))
+						*CD (JUSTPATH(lcFileSpec))
 					ENDIF
 					THIS.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
@@ -698,25 +802,54 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDFOR
 
 				OTHERWISE
-					*-- UN ARCHIVO INDIVIDUAL
-					IF FILE(tc_InputFile)
+					*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
+					IF LEN(NVL(tc_InputFile,'')) = 1
+						*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
+						DO CASE
+						CASE tc_InputFile $ 'dD'	&& DBC, DBF
+							lnCodError	= 1
+						CASE tc_InputFile $ 'KBMRV'	&& SCX, LBX, MNX, FRX, VCX
+							lnCodError	= 2
+						OTHERWISE
+							lnCodError	= -1
+						ENDCASE
+						
+					ELSE
 
-						IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-							CD (tcRecompile)
-						ELSE
-							CD (JUSTPATH(tc_InputFile))
-						ENDIF
+						IF FILE(tc_InputFile)
+							ERASE ( tc_InputFile + '.ERR' )
 
-						THIS.c_LogFile	= tc_InputFile + '.LOG'
-
-						IF THIS.l_Debug
-							IF FILE( THIS.c_LogFile )
-								ERASE ( THIS.c_LogFile )
+							IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							ELSE
+								*CD (JUSTPATH(tc_InputFile))
 							ENDIF
-							THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
-						ENDIF
 
-						lnCodError = THIS.Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+							THIS.c_LogFile	= tc_InputFile + '.LOG'
+
+							IF EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
+								*-- Compatibilidad con SourceSafe
+
+								IF NOT tlGenText
+									*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
+									*-- Create BINARIO desde versión TEXTO
+									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
+									*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
+									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
+									tc_InputFile		= tcTextName
+									THIS.l_Recompile	= .T.
+								ENDIF
+							ENDIF
+
+							IF THIS.l_Debug
+								IF FILE( THIS.c_LogFile )
+									ERASE ( THIS.c_LogFile )
+								ENDIF
+								THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
+							ENDIF
+
+							lnCodError = THIS.Convertir( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
+						ENDIF
 					ENDIF
 				ENDCASE
 
@@ -724,11 +857,22 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		CATCH TO toEx
 			lnCodError	= toEx.ErrorNo
+			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 			ADDPROPERTY(_SCREEN, 'ExitCode', toEx.ERRORNO)
-			IF llExisteConfig
-				THIS.writeLog( 'ERROR: ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
-					+ toEx.PROCEDURE + ', line ' + TRANSFORM(toEx.LINENO) + CR_LF ;
-					+ toEx.DETAILS )
+
+			TRY
+				STRTOFILE( lcErrorInfo, EVL(tc_InputFile,'foxbin2prg') + '.ERR' )
+			CATCH TO loEx2
+			ENDTRY
+
+			IF THIS.l_Debug
+				IF _VFP.STARTMODE = 0
+					SET STEP ON
+				ENDIF
+				THIS.writeLog( lcErrorInfo )
+			ENDIF
+			IF THIS.l_Debug AND THIS.l_ShowErrors
+				MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
 			ENDIF
 			IF tlRelanzarError
 				THROW
@@ -793,83 +937,103 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ERROR C_FILE_DOESNT_EXIST_LOC + ' [' + .c_InputFile + ']'
 				ENDIF
 
-				IF FILE( .c_InputFile + '.ERR' )
-					TRY
-						ERASE ( .c_InputFile + '.ERR' )
-					CATCH
-					ENDTRY
-				ENDIF
-
 				lcExtension	= UPPER( JUSTEXT(.c_InputFile) )
 
 				DO CASE
 				CASE lcExtension = 'VCX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_VC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_VC2 ), '+N' )
 
 				CASE lcExtension = 'SCX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_SC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_scx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_SC2 ), '+N' )
 
 				CASE lcExtension = 'PJX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
 
 				CASE lcExtension = 'PJM'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
 
 				CASE lcExtension = 'FRX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FR2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_FR2 ), '+N' )
 
 				CASE lcExtension = 'LBX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_LB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), '+N' )
 
 				CASE lcExtension = 'DBF'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DB2 ), '+N' )
 
 				CASE lcExtension = 'DBC'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DC2 ), '+N' )
 
 				CASE lcExtension = 'MNX'
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_MN2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), '+N' )
 
 				CASE lcExtension = .c_VC2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), '+N' )
 
 				CASE lcExtension = .c_SC2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'SCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_scx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCT' ), '+N' )
 
 				CASE lcExtension = .c_PJ2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'PJX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJT' ), '+N' )
 
 				CASE lcExtension = .c_FR2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FRX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRT' ), '+N' )
 
 				CASE lcExtension = .c_LB2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'LBX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), '+N' )
 
 				CASE lcExtension = .c_DB2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBF' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FPT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), '+N' )
 
 				CASE lcExtension = .c_DC2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBC' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCT' ), '+N' )
 
 				CASE lcExtension = .c_MN2
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MNX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), '+N' )
 
 				OTHERWISE
 					*ERROR 'El archivo [' + .c_InputFile + '] no está soportado'
@@ -899,20 +1063,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			lnCodError	= toEx.ERRORNO
 			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 
-			TRY
-				STRTOFILE( lcErrorInfo, THIS.c_InputFile + '.ERR' )
-			CATCH TO loEx2
-			ENDTRY
-
 			IF THIS.l_Debug
 				IF _VFP.STARTMODE = 0
 					SET STEP ON
 				ENDIF
-				THIS.writeLog( lcErrorInfo )
+				*THIS.writeLog( lcErrorInfo )
 			ENDIF
-			IF THIS.l_Debug AND THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
-			ENDIF
+			*IF THIS.l_Debug AND THIS.l_ShowErrors
+			*	MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
+			*ENDIF
 			IF tlRelanzarError	&& Usado en Unit Testing
 				THROW
 			ENDIF
@@ -1041,6 +1200,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL lcLog, laFile(1,5)
 		*THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
 		THIS.writeLog( TEXTMERGE(C_REQUESTING_CAPITALIZATION_OF_FILE_LOC) )
+		THIS.ChangeFileAttribute( tcFileName, '+N' )
 		lcLog	= ''
 		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, .T.
 		THIS.writeLog( lcLog )
@@ -4247,111 +4407,119 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 
 			*-- Recorro las CLASES
-			FOR I = 1 TO toModulo._Clases_Count
+			FOR X = 1 TO 2
+				FOR I = 1 TO toModulo._Clases_Count
 
-				loClase	= toModulo._Clases(I)
+					loClase	= toModulo._Clases(I)
 
-				*-- Inserto la clase
-				INSERT INTO TABLABIN ;
-					( PLATFORM ;
-					, UNIQUEID ;
-					, TIMESTAMP ;
-					, CLASS ;
-					, CLASSLOC ;
-					, BASECLASS ;
-					, OBJNAME ;
-					, PARENT ;
-					, PROPERTIES ;
-					, PROTECTED ;
-					, METHODS ;
-					, OLE ;
-					, OLE2 ;
-					, RESERVED1 ;
-					, RESERVED2 ;
-					, RESERVED3 ;
-					, RESERVED4 ;
-					, RESERVED5 ;
-					, RESERVED6 ;
-					, RESERVED7 ;
-					, RESERVED8 ;
-					, USER) ;
-					VALUES ;
-					( 'WINDOWS' ;
-					, loClase._UniqueID ;
-					, loClase._TimeStamp ;
-					, loClase._Class ;
-					, loClase._ClassLoc ;
-					, loClase._BaseClass ;
-					, loClase._ObjName ;
-					, loClase._Parent ;
-					, loClase._PROPERTIES ;
-					, loClase._PROTECTED ;
-					, loClase._METHODS ;
-					, loClase._Ole ;
-					, loClase._Ole2 ;
-					, loClase._RESERVED1 ;
-					, loClase._RESERVED2 ;
-					, loClase._RESERVED3 ;
-					, loClase._ClassIcon ;
-					, loClase._ProjectClassIcon ;
-					, loClase._Scale ;
-					, loClase._Comentario ;
-					, loClase._includeFile ;
-					, loClase._User )
+					*-- El dataenvironment debe estar primero, luego lo demás.
+					IF X = 1 AND NOT loClase._baseclass == 'dataenvironment' ;
+							OR X = 2 AND loClase._baseclass == 'dataenvironment'
+						LOOP
+					ENDIF
+
+					*-- Inserto la clase
+					INSERT INTO TABLABIN ;
+						( PLATFORM ;
+						, UNIQUEID ;
+						, TIMESTAMP ;
+						, CLASS ;
+						, CLASSLOC ;
+						, BASECLASS ;
+						, OBJNAME ;
+						, PARENT ;
+						, PROPERTIES ;
+						, PROTECTED ;
+						, METHODS ;
+						, OLE ;
+						, OLE2 ;
+						, RESERVED1 ;
+						, RESERVED2 ;
+						, RESERVED3 ;
+						, RESERVED4 ;
+						, RESERVED5 ;
+						, RESERVED6 ;
+						, RESERVED7 ;
+						, RESERVED8 ;
+						, USER) ;
+						VALUES ;
+						( 'WINDOWS' ;
+						, loClase._UniqueID ;
+						, loClase._TimeStamp ;
+						, loClase._Class ;
+						, loClase._ClassLoc ;
+						, loClase._BaseClass ;
+						, loClase._ObjName ;
+						, loClase._Parent ;
+						, loClase._PROPERTIES ;
+						, loClase._PROTECTED ;
+						, loClase._METHODS ;
+						, loClase._Ole ;
+						, loClase._Ole2 ;
+						, loClase._RESERVED1 ;
+						, loClase._RESERVED2 ;
+						, loClase._RESERVED3 ;
+						, loClase._ClassIcon ;
+						, loClase._ProjectClassIcon ;
+						, loClase._Scale ;
+						, loClase._Comentario ;
+						, loClase._includeFile ;
+						, loClase._User )
 
 
-				THIS.insert_AllObjects( @loClase )
+					THIS.insert_AllObjects( @loClase )
 
 
-				*-- Inserto el COMMENT
-				INSERT INTO TABLABIN ;
-					( PLATFORM ;
-					, UNIQUEID ;
-					, TIMESTAMP ;
-					, CLASS ;
-					, CLASSLOC ;
-					, BASECLASS ;
-					, OBJNAME ;
-					, PARENT ;
-					, PROPERTIES ;
-					, PROTECTED ;
-					, METHODS ;
-					, OLE ;
-					, OLE2 ;
-					, RESERVED1 ;
-					, RESERVED2 ;
-					, RESERVED3 ;
-					, RESERVED4 ;
-					, RESERVED5 ;
-					, RESERVED6 ;
-					, RESERVED7 ;
-					, RESERVED8 ;
-					, USER) ;
-					VALUES ;
-					( 'COMMENT' ;
-					, 'RESERVED' ;
-					, loClase._TimeStamp ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, loClase._ObjName ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, IIF(loClase._OlePublic, 'OLEPublic', '') ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' )
+					*-- Inserto el COMMENT
+					INSERT INTO TABLABIN ;
+						( PLATFORM ;
+						, UNIQUEID ;
+						, TIMESTAMP ;
+						, CLASS ;
+						, CLASSLOC ;
+						, BASECLASS ;
+						, OBJNAME ;
+						, PARENT ;
+						, PROPERTIES ;
+						, PROTECTED ;
+						, METHODS ;
+						, OLE ;
+						, OLE2 ;
+						, RESERVED1 ;
+						, RESERVED2 ;
+						, RESERVED3 ;
+						, RESERVED4 ;
+						, RESERVED5 ;
+						, RESERVED6 ;
+						, RESERVED7 ;
+						, RESERVED8 ;
+						, USER) ;
+						VALUES ;
+						( 'COMMENT' ;
+						, 'RESERVED' ;
+						, loClase._TimeStamp ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, loClase._ObjName ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, IIF(loClase._OlePublic, 'OLEPublic', '') ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' )
 
-			ENDFOR	&& I = 1 TO toModulo._Clases_Count
+				ENDFOR	&& I = 1 TO toModulo._Clases_Count
+			ENDFOR	&& X = 1 TO 2
 
 			USE IN (SELECT("TABLABIN"))
 
@@ -4516,7 +4684,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lcObjName, lnCodError, loEx AS EXCEPTION ;
+			LOCAL lcObjName, lnCodError, I, X, loEx AS EXCEPTION ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
@@ -4530,62 +4698,70 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 
 			*-- Recorro las CLASES
-			FOR I = 1 TO toModulo._Clases_Count
+			FOR X = 1 TO 2
+				FOR I = 1 TO toModulo._Clases_Count
 
-				loClase	= toModulo._Clases(I)
+					loClase	= toModulo._Clases(I)
+					
+					*-- El dataenvironment debe estar primero, luego lo demás.
+					IF X = 1 AND NOT loClase._baseclass == 'dataenvironment' ;
+							OR X = 2 AND loClase._baseclass == 'dataenvironment'
+						LOOP
+					ENDIF
 
-				*-- Inserto la clase
-				INSERT INTO TABLABIN ;
-					( PLATFORM ;
-					, UNIQUEID ;
-					, TIMESTAMP ;
-					, CLASS ;
-					, CLASSLOC ;
-					, BASECLASS ;
-					, OBJNAME ;
-					, PARENT ;
-					, PROPERTIES ;
-					, PROTECTED ;
-					, METHODS ;
-					, OLE ;
-					, OLE2 ;
-					, RESERVED1 ;
-					, RESERVED2 ;
-					, RESERVED3 ;
-					, RESERVED4 ;
-					, RESERVED5 ;
-					, RESERVED6 ;
-					, RESERVED7 ;
-					, RESERVED8 ;
-					, USER) ;
-					VALUES ;
-					( 'WINDOWS' ;
-					, loClase._UniqueID ;
-					, loClase._TimeStamp ;
-					, loClase._Class ;
-					, loClase._ClassLoc ;
-					, loClase._BaseClass ;
-					, loClase._ObjName ;
-					, loClase._Parent ;
-					, loClase._PROPERTIES ;
-					, loClase._PROTECTED ;
-					, loClase._METHODS ;
-					, loClase._Ole ;
-					, loClase._Ole2 ;
-					, loClase._RESERVED1 ;
-					, loClase._RESERVED2 ;
-					, loClase._RESERVED3 ;
-					, loClase._ClassIcon ;
-					, loClase._ProjectClassIcon ;
-					, loClase._Scale ;
-					, loClase._Comentario ;
-					, loClase._includeFile ;
-					, loClase._User )
+					*-- Inserto la clase
+					INSERT INTO TABLABIN ;
+						( PLATFORM ;
+						, UNIQUEID ;
+						, TIMESTAMP ;
+						, CLASS ;
+						, CLASSLOC ;
+						, BASECLASS ;
+						, OBJNAME ;
+						, PARENT ;
+						, PROPERTIES ;
+						, PROTECTED ;
+						, METHODS ;
+						, OLE ;
+						, OLE2 ;
+						, RESERVED1 ;
+						, RESERVED2 ;
+						, RESERVED3 ;
+						, RESERVED4 ;
+						, RESERVED5 ;
+						, RESERVED6 ;
+						, RESERVED7 ;
+						, RESERVED8 ;
+						, USER) ;
+						VALUES ;
+						( 'WINDOWS' ;
+						, loClase._UniqueID ;
+						, loClase._TimeStamp ;
+						, loClase._Class ;
+						, loClase._ClassLoc ;
+						, loClase._BaseClass ;
+						, loClase._ObjName ;
+						, loClase._Parent ;
+						, loClase._PROPERTIES ;
+						, loClase._PROTECTED ;
+						, loClase._METHODS ;
+						, loClase._Ole ;
+						, loClase._Ole2 ;
+						, loClase._RESERVED1 ;
+						, loClase._RESERVED2 ;
+						, loClase._RESERVED3 ;
+						, loClase._ClassIcon ;
+						, loClase._ProjectClassIcon ;
+						, loClase._Scale ;
+						, loClase._Comentario ;
+						, loClase._includeFile ;
+						, loClase._User )
 
 
-				THIS.insert_AllObjects( @loClase )
+					THIS.insert_AllObjects( @loClase )
 
-			ENDFOR	&& I = 1 TO toModulo._Clases_Count
+				ENDFOR	&& I = 1 TO toModulo._Clases_Count
+			ENDFOR	&& X = 1 TO 2
 
 			*-- Inserto el COMMENT final
 			INSERT INTO TABLABIN ;
@@ -8010,7 +8186,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -8177,7 +8355,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -8486,7 +8666,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -8856,7 +9038,9 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -8991,7 +9175,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -9067,7 +9253,9 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -9167,7 +9355,9 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
@@ -9245,7 +9435,9 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
+				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 				ENDCASE
