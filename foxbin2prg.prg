@@ -314,9 +314,11 @@ LOCAL lnResp, loEx as Exception
 
 *SYS(2030,1)
 *SYS(2335,0)
-*IF PCOUNT() > 1
+*IF PCOUNT() > 1 && Saltear las querys de SourceSafe sobre soporte de archivos
 *	SET STEP ON
+*	MESSAGEBOX( SYS(5)+CURDIR(),64+4096,PROGRAM(),5000)
 *ENDIF
+
 loCnv	= CREATEOBJECT("c_foxbin2prg")
 loEx	= NULL
 lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
@@ -690,6 +692,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, loFSO AS Scripting.FileSystemObject
 
 			lnCodError	= 0
+			tcRecompile	= EVL(tcRecompile,'')
 
 			*SET DELETED ON
 			*SET DATE YMD
@@ -719,7 +722,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Ejecución normal
 				THIS.l_ShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
 				THIS.l_ShowErrors		= NOT (TRANSFORM(tcDontShowErrors) == '1')
-				THIS.l_Recompile		= (NOT EMPTY(tcRecompile) AND (TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile)))
+				*THIS.l_Recompile		= (NOT EMPTY(tcRecompile) AND (TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile)))
+				THIS.l_Recompile		= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
 				THIS.l_Debug			= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
 
 				IF THIS.l_ShowProgress
@@ -762,7 +766,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
 						CD (tcRecompile)
 					ELSE
-						CD (JUSTPATH(lcFileSpec))
+						*CD (JUSTPATH(lcFileSpec))
 					ENDIF
 					THIS.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
@@ -818,7 +822,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
 								CD (tcRecompile)
 							ELSE
-								CD (JUSTPATH(tc_InputFile))
+								*CD (JUSTPATH(tc_InputFile))
 							ENDIF
 
 							THIS.c_LogFile	= tc_InputFile + '.LOG'
@@ -832,7 +836,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
 									*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
 									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
-									tc_InputFile	= tcTextName
+									tc_InputFile		= tcTextName
+									THIS.l_Recompile	= .T.
 								ENDIF
 							ENDIF
 
@@ -4402,111 +4407,119 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 
 			*-- Recorro las CLASES
-			FOR I = 1 TO toModulo._Clases_Count
+			FOR X = 1 TO 2
+				FOR I = 1 TO toModulo._Clases_Count
 
-				loClase	= toModulo._Clases(I)
+					loClase	= toModulo._Clases(I)
 
-				*-- Inserto la clase
-				INSERT INTO TABLABIN ;
-					( PLATFORM ;
-					, UNIQUEID ;
-					, TIMESTAMP ;
-					, CLASS ;
-					, CLASSLOC ;
-					, BASECLASS ;
-					, OBJNAME ;
-					, PARENT ;
-					, PROPERTIES ;
-					, PROTECTED ;
-					, METHODS ;
-					, OLE ;
-					, OLE2 ;
-					, RESERVED1 ;
-					, RESERVED2 ;
-					, RESERVED3 ;
-					, RESERVED4 ;
-					, RESERVED5 ;
-					, RESERVED6 ;
-					, RESERVED7 ;
-					, RESERVED8 ;
-					, USER) ;
-					VALUES ;
-					( 'WINDOWS' ;
-					, loClase._UniqueID ;
-					, loClase._TimeStamp ;
-					, loClase._Class ;
-					, loClase._ClassLoc ;
-					, loClase._BaseClass ;
-					, loClase._ObjName ;
-					, loClase._Parent ;
-					, loClase._PROPERTIES ;
-					, loClase._PROTECTED ;
-					, loClase._METHODS ;
-					, loClase._Ole ;
-					, loClase._Ole2 ;
-					, loClase._RESERVED1 ;
-					, loClase._RESERVED2 ;
-					, loClase._RESERVED3 ;
-					, loClase._ClassIcon ;
-					, loClase._ProjectClassIcon ;
-					, loClase._Scale ;
-					, loClase._Comentario ;
-					, loClase._includeFile ;
-					, loClase._User )
+					*-- El dataenvironment debe estar primero, luego lo demás.
+					IF X = 1 AND NOT loClase._baseclass == 'dataenvironment' ;
+							OR X = 2 AND loClase._baseclass == 'dataenvironment'
+						LOOP
+					ENDIF
+
+					*-- Inserto la clase
+					INSERT INTO TABLABIN ;
+						( PLATFORM ;
+						, UNIQUEID ;
+						, TIMESTAMP ;
+						, CLASS ;
+						, CLASSLOC ;
+						, BASECLASS ;
+						, OBJNAME ;
+						, PARENT ;
+						, PROPERTIES ;
+						, PROTECTED ;
+						, METHODS ;
+						, OLE ;
+						, OLE2 ;
+						, RESERVED1 ;
+						, RESERVED2 ;
+						, RESERVED3 ;
+						, RESERVED4 ;
+						, RESERVED5 ;
+						, RESERVED6 ;
+						, RESERVED7 ;
+						, RESERVED8 ;
+						, USER) ;
+						VALUES ;
+						( 'WINDOWS' ;
+						, loClase._UniqueID ;
+						, loClase._TimeStamp ;
+						, loClase._Class ;
+						, loClase._ClassLoc ;
+						, loClase._BaseClass ;
+						, loClase._ObjName ;
+						, loClase._Parent ;
+						, loClase._PROPERTIES ;
+						, loClase._PROTECTED ;
+						, loClase._METHODS ;
+						, loClase._Ole ;
+						, loClase._Ole2 ;
+						, loClase._RESERVED1 ;
+						, loClase._RESERVED2 ;
+						, loClase._RESERVED3 ;
+						, loClase._ClassIcon ;
+						, loClase._ProjectClassIcon ;
+						, loClase._Scale ;
+						, loClase._Comentario ;
+						, loClase._includeFile ;
+						, loClase._User )
 
 
-				THIS.insert_AllObjects( @loClase )
+					THIS.insert_AllObjects( @loClase )
 
 
-				*-- Inserto el COMMENT
-				INSERT INTO TABLABIN ;
-					( PLATFORM ;
-					, UNIQUEID ;
-					, TIMESTAMP ;
-					, CLASS ;
-					, CLASSLOC ;
-					, BASECLASS ;
-					, OBJNAME ;
-					, PARENT ;
-					, PROPERTIES ;
-					, PROTECTED ;
-					, METHODS ;
-					, OLE ;
-					, OLE2 ;
-					, RESERVED1 ;
-					, RESERVED2 ;
-					, RESERVED3 ;
-					, RESERVED4 ;
-					, RESERVED5 ;
-					, RESERVED6 ;
-					, RESERVED7 ;
-					, RESERVED8 ;
-					, USER) ;
-					VALUES ;
-					( 'COMMENT' ;
-					, 'RESERVED' ;
-					, loClase._TimeStamp ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, loClase._ObjName ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, IIF(loClase._OlePublic, 'OLEPublic', '') ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' ;
-					, '' )
+					*-- Inserto el COMMENT
+					INSERT INTO TABLABIN ;
+						( PLATFORM ;
+						, UNIQUEID ;
+						, TIMESTAMP ;
+						, CLASS ;
+						, CLASSLOC ;
+						, BASECLASS ;
+						, OBJNAME ;
+						, PARENT ;
+						, PROPERTIES ;
+						, PROTECTED ;
+						, METHODS ;
+						, OLE ;
+						, OLE2 ;
+						, RESERVED1 ;
+						, RESERVED2 ;
+						, RESERVED3 ;
+						, RESERVED4 ;
+						, RESERVED5 ;
+						, RESERVED6 ;
+						, RESERVED7 ;
+						, RESERVED8 ;
+						, USER) ;
+						VALUES ;
+						( 'COMMENT' ;
+						, 'RESERVED' ;
+						, loClase._TimeStamp ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, loClase._ObjName ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, IIF(loClase._OlePublic, 'OLEPublic', '') ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' ;
+						, '' )
 
-			ENDFOR	&& I = 1 TO toModulo._Clases_Count
+				ENDFOR	&& I = 1 TO toModulo._Clases_Count
+			ENDFOR	&& X = 1 TO 2
 
 			USE IN (SELECT("TABLABIN"))
 
@@ -4671,7 +4684,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lcObjName, lnCodError, loEx AS EXCEPTION ;
+			LOCAL lcObjName, lnCodError, I, X, loEx AS EXCEPTION ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
@@ -4685,62 +4698,70 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 
 			*-- Recorro las CLASES
-			FOR I = 1 TO toModulo._Clases_Count
+			FOR X = 1 TO 2
+				FOR I = 1 TO toModulo._Clases_Count
 
-				loClase	= toModulo._Clases(I)
+					loClase	= toModulo._Clases(I)
+					
+					*-- El dataenvironment debe estar primero, luego lo demás.
+					IF X = 1 AND NOT loClase._baseclass == 'dataenvironment' ;
+							OR X = 2 AND loClase._baseclass == 'dataenvironment'
+						LOOP
+					ENDIF
 
-				*-- Inserto la clase
-				INSERT INTO TABLABIN ;
-					( PLATFORM ;
-					, UNIQUEID ;
-					, TIMESTAMP ;
-					, CLASS ;
-					, CLASSLOC ;
-					, BASECLASS ;
-					, OBJNAME ;
-					, PARENT ;
-					, PROPERTIES ;
-					, PROTECTED ;
-					, METHODS ;
-					, OLE ;
-					, OLE2 ;
-					, RESERVED1 ;
-					, RESERVED2 ;
-					, RESERVED3 ;
-					, RESERVED4 ;
-					, RESERVED5 ;
-					, RESERVED6 ;
-					, RESERVED7 ;
-					, RESERVED8 ;
-					, USER) ;
-					VALUES ;
-					( 'WINDOWS' ;
-					, loClase._UniqueID ;
-					, loClase._TimeStamp ;
-					, loClase._Class ;
-					, loClase._ClassLoc ;
-					, loClase._BaseClass ;
-					, loClase._ObjName ;
-					, loClase._Parent ;
-					, loClase._PROPERTIES ;
-					, loClase._PROTECTED ;
-					, loClase._METHODS ;
-					, loClase._Ole ;
-					, loClase._Ole2 ;
-					, loClase._RESERVED1 ;
-					, loClase._RESERVED2 ;
-					, loClase._RESERVED3 ;
-					, loClase._ClassIcon ;
-					, loClase._ProjectClassIcon ;
-					, loClase._Scale ;
-					, loClase._Comentario ;
-					, loClase._includeFile ;
-					, loClase._User )
+					*-- Inserto la clase
+					INSERT INTO TABLABIN ;
+						( PLATFORM ;
+						, UNIQUEID ;
+						, TIMESTAMP ;
+						, CLASS ;
+						, CLASSLOC ;
+						, BASECLASS ;
+						, OBJNAME ;
+						, PARENT ;
+						, PROPERTIES ;
+						, PROTECTED ;
+						, METHODS ;
+						, OLE ;
+						, OLE2 ;
+						, RESERVED1 ;
+						, RESERVED2 ;
+						, RESERVED3 ;
+						, RESERVED4 ;
+						, RESERVED5 ;
+						, RESERVED6 ;
+						, RESERVED7 ;
+						, RESERVED8 ;
+						, USER) ;
+						VALUES ;
+						( 'WINDOWS' ;
+						, loClase._UniqueID ;
+						, loClase._TimeStamp ;
+						, loClase._Class ;
+						, loClase._ClassLoc ;
+						, loClase._BaseClass ;
+						, loClase._ObjName ;
+						, loClase._Parent ;
+						, loClase._PROPERTIES ;
+						, loClase._PROTECTED ;
+						, loClase._METHODS ;
+						, loClase._Ole ;
+						, loClase._Ole2 ;
+						, loClase._RESERVED1 ;
+						, loClase._RESERVED2 ;
+						, loClase._RESERVED3 ;
+						, loClase._ClassIcon ;
+						, loClase._ProjectClassIcon ;
+						, loClase._Scale ;
+						, loClase._Comentario ;
+						, loClase._includeFile ;
+						, loClase._User )
 
 
-				THIS.insert_AllObjects( @loClase )
+					THIS.insert_AllObjects( @loClase )
 
-			ENDFOR	&& I = 1 TO toModulo._Clases_Count
+				ENDFOR	&& I = 1 TO toModulo._Clases_Count
+			ENDFOR	&& X = 1 TO 2
 
 			*-- Inserto el COMMENT final
 			INSERT INTO TABLABIN ;
