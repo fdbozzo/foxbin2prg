@@ -66,7 +66,9 @@
 * 08/01/2014	FDBOZZO		v1.19.3	Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
 * 22/01/2014	FDBOZZO		v1.19.4	Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
 * 22/01/2014	FDBOZZO		v1.19.4	DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
-* 30/01/2014	FDBOZZO		v1.19.5	Agregada compatibilidad con SourceSafe para Diff y Merge
+* 26/01/2014	FDBOZZO		v1.19.5	Agregado soporte multiidioma y traducción al Inglés
+* 01/02/2014	FDBOZZO		v1.19.6	Agregada compatibilidad con SourceSafe para Diff y Merge
+* 02/02/2014	FDBOZZO		v1.19.7	Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -83,7 +85,6 @@
 * 14/12/2013	Fidel Charny	REPORTE BUG scx v1.13: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
 * 01/01/2014	Fidel Charny	REPORTE BUG mnx v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
 * 05/01/2014	Fidel Charny	REPORTE BUG mnx v1.17: Se genera cláusula "DO" o llamada Command cuando no Procedure ni Command que llamar // Diferencia de Case en NAME (se arregla en v1.18)
-* 07/01/2014	F.D.Bozzo		BUG vcx/scx v1.18: Los *métodos deben ir siempre al final en el Reserved3, si no los eventos ACCESS no se disparan
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -692,7 +693,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, loFSO AS Scripting.FileSystemObject
 
 			lnCodError	= 0
-			tcRecompile	= EVL(tcRecompile,'')
+			tcRecompile	= EVL(tcRecompile,'1')
 
 			*SET DELETED ON
 			*SET DATE YMD
@@ -1379,6 +1380,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		SET CENTURY ON
 		SET SAFETY OFF
 		SET TABLEPROMPT OFF
+		SET BLOCKSIZE TO 0
 
 		PUBLIC C_FB2PRG_CODE
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
@@ -3588,14 +3590,17 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							toObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
 							toObjeto._ZOrder			= .get_ValueByName_FromListNamesWithValues( 'ZOrder', 'I', @laPropsAndValues )
 							toObjeto._TimeStamp			= INT( .RowTimeStamp( .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
+							toObjeto._Ole				= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues ), 14 )
 
 							IF NOT EMPTY( toObjeto._Ole2 )	&& Le agrego "OLEObject = " delante
 								toObjeto._Ole2		= 'OLEObject = ' + toObjeto._Ole2 + CR_LF
 							ENDIF
 
 							*-- Ubico el objeto ole por su nombre (parent+objname), que no se repite.
-							IF toModulo.existeObjetoOLE( toObjeto._Nombre, @Z )
-								toObjeto._Ole	= toModulo._Ole_Objs(Z)._Value
+							IF EMPTY(toObjeto._Ole)	&& Si _Ole está vacío es porque el propio control no tiene la info y está en la cabecera (antiguo guardado)
+								IF toModulo.existeObjetoOLE( toObjeto._Nombre, @Z )
+									toObjeto._Ole	= toModulo._Ole_Objs(Z)._Value
+								ENDIF
 							ENDIF
 
 							EXIT
@@ -3975,6 +3980,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toClase._ProjectClassIcon	= .get_ValueByName_FromListNamesWithValues( 'ProjectClassIcon', 'C', @laPropsAndValues )
 				toClase._ClassIcon			= .get_ValueByName_FromListNamesWithValues( 'ClassIcon', 'C', @laPropsAndValues )
 				toClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
+				toClase._Ole				= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues ), 14 )
 			ENDWITH && THIS
 
 			IF NOT EMPTY( toClase._Ole2 )	&& Le agrego "OLEObject = " delante
@@ -4497,7 +4503,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						VALUES ;
 						( 'COMMENT' ;
 						, 'RESERVED' ;
-						, loClase._TimeStamp ;
+						, 0 ;
 						, '' ;
 						, '' ;
 						, '' ;
@@ -7208,8 +7214,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			*-- Agrego metainformación para objetos OLE
 			IF toRegObj.BASECLASS == 'olecontrol'
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-					OLEObject="<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" CheckSum="<<SYS(2007, toRegObj.ole, 0, 1)>>" <<>>
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+					<<>> Nombre="<<IIF(EMPTY(toRegObj.Parent),'',toRegObj.Parent+'.') + toRegObj.objName>>"
+					Parent="<<toRegObj.Parent>>"
+					ObjName="<<toRegObj.objname>>"
+					OLEObject="<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
+					Value="<<STRCONV(toRegObj.ole,13)>>" <<>>
 				ENDTEXT
 			ENDIF
 
@@ -7539,7 +7549,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			<<>>
 		ENDTEXT
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+8
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<>>	<<C_METADATA_I>>
 			Baseclass="<<toRegClass.Baseclass>>"
 			Timestamp="<<THIS.getTimeStamp(toRegClass.Timestamp)>>"
@@ -7548,8 +7558,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTEXT
 
 		IF NOT EMPTY(toRegClass.OLE2)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
-				OLEObject="<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>" CheckSum="<<SYS(2007, toRegClass.ole, 0, 1)>>" <<>>
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+				<<>> Nombre="<<IIF(EMPTY(toRegClass.Parent),'',toRegClass.Parent+'.') + toRegClass.objName>>"
+				Parent="<<toRegClass.Parent>>"
+				ObjName="<<toRegClass.objname>>"
+				OLEObject="<<STREXTRACT(toRegClass.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
+				Value="<<STRCONV(toRegClass.ole,13)>>"
 			ENDTEXT
 		ENDIF
 
@@ -7959,25 +7973,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-				ENDTEXT
-
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+8
-					<<C_OLE_I>>
-					Nombre="<<IIF(EMPTY(loReg.Parent),'',loReg.Parent+'.') + loReg.objName>>"
-					Parent="<<loReg.Parent>>"
-					ObjName="<<loReg.objname>>"
-					OLEObject="<<STREXTRACT(loReg.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
-					Checksum="<<lcOLEChecksum>>" <<>>
-				ENDTEXT
-
-				IF NOT llOleExistente
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						Value="<<STRCONV(loReg.ole,13)>>" <<>>
-					ENDTEXT
-				ENDIF
-
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-					<<C_OLE_F>>
 				ENDTEXT
 
 			ENDSCAN
