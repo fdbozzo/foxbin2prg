@@ -38,7 +38,7 @@
 			<Comment></Comment>
 			<DataSource></DataSource>
 			<Database></Database>
-			<ConnectString>DRIVER={Oracle en OraClient11g_home1};SERVER=CARTERA;UID=STROSNC;PWD=STROSNC;DBQ=CARTERA;DBA=W;APA=T;EXC=F;XSM=Default;FEN=T;QTO=T;FRC=10;FDL=10;LOB=T;RST=T;BTD=F;BNF=F;BAM=IfAllSuccessful;NUM=NLS;DPM=F;MTS=T;MDI=Me;CSR=F;FWC=F;FBS=60000;TLO=O;MLD=0;ODA=</ConnectString>
+			<ConnectString>DRIVER={Oracle en OraClient11g_home1};SERVER=BDDServer;UID=BDDUser;PWD=BDDPwd;DBQ=CARTERA;DBA=W;APA=T;EXC=F;XSM=Default;FEN=T;QTO=T;FRC=10;FDL=10;LOB=T;RST=T;BTD=F;BNF=F;BAM=IfAllSuccessful;NUM=NLS;DPM=F;MTS=T;MDI=Me;CSR=F;FWC=F;FBS=60000;TLO=O;MLD=0;ODA</ConnectString>
 			<Asynchronous>.F.</Asynchronous>
 			<BatchMode>.T.</BatchMode>
 			<ConnectTimeout>15</ConnectTimeout>
