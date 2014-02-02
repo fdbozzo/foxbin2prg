@@ -112,7 +112,7 @@
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
-LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName, tcRecompile
+LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName, tcRecompile, tcNoTimestamps
 
 *-- Internacionalización / Internationalization
 *-- Fin / End
@@ -311,7 +311,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *******************************************************************************************************************
 
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-LOCAL lnResp, loEx as Exception
+LOCAL lnResp, loEx AS EXCEPTION
 
 *SYS(2030,1)
 *SYS(2335,0)
@@ -323,7 +323,7 @@ LOCAL lnResp, loEx as Exception
 loCnv	= CREATEOBJECT("c_foxbin2prg")
 loEx	= NULL
 lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-	, '', NULL, @loEx, .F., tcOriginalFileName, tcRecompile )
+	, '', NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps )
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *IF _VFP.STARTMODE <= 1
@@ -384,6 +384,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
+		+ [<memberdata name="l_usetimestamps" display="l_UseTimestamps"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
@@ -412,6 +413,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors			= .F.
 	l_ShowProgress			= .F.
 	l_Recompile				= .F.
+	l_UseTimestamps			= .T.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -465,7 +467,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* Using Win32 Functions in Visual FoxPro
 		* example=103
 		* Changing file attributes
-		LPARAMETERS  tcFilename, tcAttrib
+		LPARAMETERS  tcFileName, tcAttrib
 		tcAttrib	= UPPER(tcAttrib)
 
 		#DEFINE FILE_ATTRIBUTE_READONLY		1
@@ -481,7 +483,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		DECLARE INTEGER GetFileAttributes IN kernel32 STRING tcFileName
 
 		* read current attributes for this file
-		dwFileAttributes = GetFileAttributes(tcFilename)
+		dwFileAttributes = GetFileAttributes(tcFileName)
 
 		IF dwFileAttributes = -1
 			* the file does not exist
@@ -540,32 +542,32 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 			* setting selected attributes
-			=SetFileAttributes(tcFilename, dwFileAttributes)
+			=SetFileAttributes(tcFileName, dwFileAttributes)
 		ENDIF
 	ENDPROC
 
 
 	PROCEDURE compileFoxProBinary
-		LPARAMETERS tcFilename
+		LPARAMETERS tcFileName
 		LOCAL lcType
-		tcFilename	= EVL(tcFilename, THIS.c_OutputFile)
-		lcType		= UPPER(JUSTEXT(tcFilename))
+		tcFileName	= EVL(tcFileName, THIS.c_OutputFile)
+		lcType		= UPPER(JUSTEXT(tcFileName))
 
 		DO CASE
 		CASE lcType = 'VCX'
-			COMPILE CLASSLIB (tcFilename)
+			COMPILE CLASSLIB (tcFileName)
 
 		CASE lcType = 'SCX'
-			COMPILE FORM (tcFilename)
+			COMPILE FORM (tcFileName)
 
 		CASE lcType = 'FRX'
-			COMPILE REPORT (tcFilename)
+			COMPILE REPORT (tcFileName)
 
 		CASE lcType = 'LBX'
-			COMPILE LABEL (tcFilename)
+			COMPILE LABEL (tcFileName)
 
 		CASE lcType = 'DBC'
-			COMPILE DATABASE (tcFilename)
+			COMPILE DATABASE (tcFileName)
 
 		ENDCASE
 	ENDPROC
@@ -583,7 +585,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3
 
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -682,9 +684,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 		*										generar errores de compilación, típicamente los #include.
 		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
+		* tcNoTimestamps			(v? IN    ) Indica si se deben vacar ('1') o no ['0'] los timestamps de registro
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
-			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile
+			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
@@ -692,8 +695,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject
 
-			lnCodError	= 0
-			tcRecompile	= EVL(tcRecompile,'1')
+			lnCodError		= 0
+			tcRecompile		= EVL(tcRecompile,'1')
+			tcNoTimestamps	= EVL(tcNoTimestamps,'0')
 
 			*SET DELETED ON
 			*SET DATE YMD
@@ -723,8 +727,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Ejecución normal
 				THIS.l_ShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
 				THIS.l_ShowErrors		= NOT (TRANSFORM(tcDontShowErrors) == '1')
-				*THIS.l_Recompile		= (NOT EMPTY(tcRecompile) AND (TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile)))
 				THIS.l_Recompile		= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
+				THIS.l_UseTimestamps	= (EMPTY(tcNoTimestamps) OR TRANSFORM(tcNoTimestamps) == '0')
 				THIS.l_Debug			= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
 
 				IF THIS.l_ShowProgress
@@ -814,7 +818,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						OTHERWISE
 							lnCodError	= -1
 						ENDCASE
-						
+
 					ELSE
 
 						IF EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
@@ -857,7 +861,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDCASE
 
 		CATCH TO toEx
-			lnCodError	= toEx.ErrorNo
+			lnCodError	= toEx.ERRORNO
 			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 			ADDPROPERTY(_SCREEN, 'ExitCode', toEx.ERRORNO)
 
@@ -1559,11 +1563,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		THIS.writeLog( '' )
 		THIS.writeLog( C_CONVERTING_FILE_LOC + ' ' + THIS.c_OutputFile + '...' )
@@ -2469,11 +2473,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
@@ -2640,8 +2644,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						*-- Validación
 						IF EMPTY(taBloquesExclusion(tnBloquesExclusion,2))
 							*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
-								+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
-								+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
+							+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
+							+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
 							ERROR (TEXTMERGE(C_END_MARKER_NOT_FOUND_LOC))
 						ENDIF
 					ENDIF
@@ -3329,7 +3333,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE insert_Object
-		LPARAMETERS toClase, toObjeto
+		LPARAMETERS toClase, toObjeto, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		IF NOT THIS.l_Test
 			*-- Inserto el objeto
@@ -3359,7 +3369,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				VALUES ;
 				( 'WINDOWS' ;
 				, toObjeto._UniqueID ;
-				, toObjeto._TimeStamp ;
+				, IIF( toFoxBin2Prg.l_UseTimestamps, toObjeto._TimeStamp, 0 ) ;
 				, toObjeto._Class ;
 				, toObjeto._ClassLib ;
 				, toObjeto._BaseClass ;
@@ -3388,10 +3398,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*-- Recorro primero los objetos con ZOrder definido, y luego los demás
 		*-- NOTA: Como consecuencia de una integración de código, puede que se hayan agregado objetos nuevos (desconocidos),
 		*--	      pero todo lo demás tiene un ZOrder definido, que es el número de registro original * 100.
-		LPARAMETERS toClase
+		LPARAMETERS toClase, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -3421,7 +3432,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						IF loObjeto._WriteOrder = 0 AND loObjeto._Nombre == lcObjName
 							N	= N + 1
 							loObjeto._WriteOrder	= N
-							THIS.insert_Object( toClase, loObjeto )
+							THIS.insert_Object( toClase, loObjeto, toFoxBin2Prg )
 							EXIT
 						ENDIF
 					ENDFOR
@@ -3431,7 +3442,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				*-- Recorro los objetos Desconocidos
 				FOR EACH loObjeto IN toClase._AddObjects FOXOBJECT
 					IF loObjeto._WriteOrder = 0
-						THIS.insert_Object( toClase, loObjeto )
+						THIS.insert_Object( toClase, loObjeto, toFoxBin2Prg )
 					ENDIF
 				ENDFOR
 
@@ -3493,13 +3504,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						CASE LEFT( tcLine + ' ', 10 ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEFINE) encontrado
 							IF llEsProcedureDeClase
 								*ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
-									+ toClase._Nombre + ' (' + loProcedure._Nombre + ')' ;
-									+ ', línea ' + TRANSFORM(I) + ' del archivo ' + THIS.c_InputFile
+								+ toClase._Nombre + ' (' + loProcedure._Nombre + ')' ;
+								+ ', línea ' + TRANSFORM(I) + ' del archivo ' + THIS.c_InputFile
 								ERROR (TEXTMERGE(C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC))
 							ELSE
 								*ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
-									+ toClase._Nombre + ' (' + toObjeto._Nombre + '.' + loProcedure._Nombre + ')' ;
-									+ ', línea ' + TRANSFORM(I) + ' del archivo ' + THIS.c_InputFile
+								+ toClase._Nombre + ' (' + toObjeto._Nombre + '.' + loProcedure._Nombre + ')' ;
+								+ ', línea ' + TRANSFORM(I) + ' del archivo ' + THIS.c_InputFile
 								ERROR (TEXTMERGE(C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC))
 							ENDIF
 						ENDCASE
@@ -3851,9 +3862,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				*-- Validación
 				IF EMPTY( toClase._Fin )
 					*ERROR 'No se ha encontrado el marcador de fin [ENDDEFINE] ' ;
-						+ 'que cierra al marcador de inicio [DEFINE CLASS] ' ;
-						+ 'de la línea ' + TRANSFORM( toClase._Inicio ) + ' ' ;
-						+ 'para el identificador [' + toClase._Nombre + ']'
+					+ 'que cierra al marcador de inicio [DEFINE CLASS] ' ;
+					+ 'de la línea ' + TRANSFORM( toClase._Inicio ) + ' ' ;
+					+ 'para el identificador [' + toClase._Nombre + ']'
 					ERROR (TEXTMERGE(C_ENDDEFINE_MARKER_NOT_FOUND_LOC))
 				ENDIF
 
@@ -4280,11 +4291,11 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -4298,7 +4309,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo la librería
 			THIS.createClasslib()
@@ -4309,7 +4320,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toModulo )
 
-			THIS.escribirArchivoBin( @toModulo, toFoxbin2prg )
+			THIS.escribirArchivoBin( @toModulo, toFoxBin2Prg )
 
 
 		CATCH TO toEx
@@ -4329,7 +4340,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toModulo, toFoxbin2prg
+		LPARAMETERS toModulo, toFoxBin2Prg
 		*-- Estructura del objeto toModulo generado:
 		*-- -----------------------------------------------------------------------------------------------------------
 		*-- Version					Versión usada para generar la versión PRG analizada
@@ -4397,7 +4408,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -4419,8 +4430,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					loClase	= toModulo._Clases(I)
 
 					*-- El dataenvironment debe estar primero, luego lo demás.
-					IF X = 1 AND NOT loClase._baseclass == 'dataenvironment' ;
-							OR X = 2 AND loClase._baseclass == 'dataenvironment'
+					IF X = 1 AND NOT loClase._BaseClass == 'dataenvironment' ;
+							OR X = 2 AND loClase._BaseClass == 'dataenvironment'
 						LOOP
 					ENDIF
 
@@ -4451,7 +4462,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						VALUES ;
 						( 'WINDOWS' ;
 						, loClase._UniqueID ;
-						, loClase._TimeStamp ;
+						, IIF( toFoxBin2Prg.l_UseTimestamps, loClase._TimeStamp, 0 ) ;
 						, loClase._Class ;
 						, loClase._ClassLoc ;
 						, loClase._BaseClass ;
@@ -4473,7 +4484,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						, loClase._User )
 
 
-					THIS.insert_AllObjects( @loClase )
+					THIS.insert_AllObjects( @loClase, toFoxBin2Prg )
 
 
 					*-- Inserto el COMMENT
@@ -4529,8 +4540,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 			USE IN (SELECT("TABLABIN"))
 
-			IF toFoxbin2prg.l_Recompile
-				toFoxbin2prg.compileFoxProBinary()
+			IF toFoxBin2Prg.l_Recompile
+				toFoxBin2Prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -4569,11 +4580,11 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -4587,7 +4598,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo el form
 			THIS.createForm()
@@ -4598,7 +4609,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toModulo )
 
-			THIS.escribirArchivoBin( @toModulo, toFoxbin2prg )
+			THIS.escribirArchivoBin( @toModulo, toFoxBin2Prg )
 
 
 		CATCH TO toEx
@@ -4618,7 +4629,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toModulo, toFoxbin2prg
+		LPARAMETERS toModulo, toFoxBin2Prg
 		*-- Estructura del objeto toModulo generado:
 		*-- -----------------------------------------------------------------------------------------------------------
 		*-- Version					Versión usada para generar la versión PRG analizada
@@ -4686,7 +4697,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -4708,10 +4719,10 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				FOR I = 1 TO toModulo._Clases_Count
 
 					loClase	= toModulo._Clases(I)
-					
+
 					*-- El dataenvironment debe estar primero, luego lo demás.
-					IF X = 1 AND NOT loClase._baseclass == 'dataenvironment' ;
-							OR X = 2 AND loClase._baseclass == 'dataenvironment'
+					IF X = 1 AND NOT loClase._BaseClass == 'dataenvironment' ;
+							OR X = 2 AND loClase._BaseClass == 'dataenvironment'
 						LOOP
 					ENDIF
 
@@ -4742,7 +4753,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						VALUES ;
 						( 'WINDOWS' ;
 						, loClase._UniqueID ;
-						, loClase._TimeStamp ;
+						, IIF( toFoxBin2Prg.l_UseTimestamps, loClase._TimeStamp, 0 ) ;
 						, loClase._Class ;
 						, loClase._ClassLoc ;
 						, loClase._BaseClass ;
@@ -4764,7 +4775,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						, loClase._User )
 
 
-					THIS.insert_AllObjects( @loClase )
+					THIS.insert_AllObjects( @loClase, toFoxBin2Prg )
 
 				ENDFOR	&& I = 1 TO toModulo._Clases_Count
 			ENDFOR	&& X = 1 TO 2
@@ -4819,8 +4830,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 			USE IN (SELECT("TABLABIN"))
 
-			IF toFoxbin2prg.l_Recompile
-				toFoxbin2prg.compileFoxProBinary()
+			IF toFoxBin2Prg.l_Recompile
+				toFoxBin2Prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -4866,14 +4877,14 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toProject					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toProject, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toProject, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toProject, @toEx )
 
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -4886,7 +4897,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo solo la cabecera del proyecto
 			THIS.createProject()
@@ -4897,7 +4908,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toProject )
 
-			THIS.escribirArchivoBin( @toProject )
+			THIS.escribirArchivoBin( @toProject, toFoxBin2Prg )
 
 
 		CATCH TO toEx
@@ -4917,10 +4928,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toProject
+		LPARAMETERS toProject, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -4992,7 +5004,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					, .T. ;
 					, loFile._CPID ;
 					, loFile._ID ;
-					, loFile._TimeStamp ;
+					, IIF( toFoxBin2Prg.l_UseTimestamps, loFile._TimeStamp, 0 ) ;
 					, loFile._ObjRev ;
 					, UPPER(JUSTSTEM(loFile._Name)) )
 			ENDFOR
@@ -5589,14 +5601,14 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toReport					(@!    OUT) Objeto generado de clase CL_REPORT con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toReport, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toReport, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toReport, @toEx )
 
 		#IF .F.
 			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -5609,7 +5621,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo el reporte
 			THIS.createReport()
@@ -5617,7 +5629,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toReport )
 
-			THIS.escribirArchivoBin( @toReport, toFoxbin2prg )
+			THIS.escribirArchivoBin( @toReport, toFoxBin2Prg )
 
 
 		CATCH TO loEx
@@ -5639,11 +5651,11 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toReport, toFoxbin2prg
+		LPARAMETERS toReport, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -5654,6 +5666,10 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			*-- Agrego los registros
 			FOR EACH loReg IN toReport FOXOBJECT
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loReg.TIMESTAMP	= 0
+				ENDIF
 
 				*-- Ajuste de los tipos de dato
 				FOR I = 1 TO AMEMBERS(laProps, loReg, 0)
@@ -5692,8 +5708,8 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			USE IN (SELECT("TABLABIN"))
 
-			IF toFoxbin2prg.l_Recompile
-				toFoxbin2prg.compileFoxProBinary()
+			IF toFoxBin2Prg.l_Recompile
+				toFoxBin2Prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -5987,14 +6003,14 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toTable					(@!    OUT) Objeto generado de clase CL_TABLE con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toTable, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toTable, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toTable, @toEx )
 
 		#IF .F.
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -6007,7 +6023,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toTable )
@@ -6255,14 +6271,14 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toDatabase, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toDatabase, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toDatabase, @toEx )
 
 		#IF .F.
 			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -6275,7 +6291,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo la tabla
 			*THIS.createTable()
@@ -6283,7 +6299,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 			THIS.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toDatabase )
 
-			THIS.escribirArchivoBin( @toDatabase, toFoxbin2prg )
+			THIS.escribirArchivoBin( @toDatabase, toFoxBin2Prg )
 
 
 		CATCH TO loEx
@@ -6305,11 +6321,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toDatabase, toFoxbin2prg
+		LPARAMETERS toDatabase, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -6319,8 +6335,8 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 			toDatabase.updateDBC( THIS.c_OutputFile )
 
-			IF toFoxbin2prg.l_Recompile
-				toFoxbin2prg.compileFoxProBinary()
+			IF toFoxBin2Prg.l_Recompile
+				toFoxBin2Prg.compileFoxProBinary()
 			ENDIF
 
 
@@ -6425,14 +6441,14 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toMenu					(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toMenu, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toMenu, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toMenu, @toEx )
 
 		#IF .F.
 			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -6445,7 +6461,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			C_FB2PRG_CODE		= FILETOSTR( THIS.c_InputFile )
 			lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-			toFoxbin2prg.doBackup( .F., .T., '', '', '' )
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 			*-- Creo la tabla
 			THIS.createMenu()
@@ -6630,11 +6646,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
@@ -7951,7 +7967,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_DefinicionObjetosOLE
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
+		LPARAMETERS toFoxBin2Prg
+
 		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			SELECT TABLABIN
@@ -7960,6 +7982,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
 				SCATTER MEMO NAME loReg
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loReg.TIMESTAMP	= 0
+				ENDIF
+
 				lcOLEChecksum	= SYS(2007, loReg.OLE, 0, 1)
 				llOleExistente	= .F.
 
@@ -8074,11 +8101,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -8096,11 +8123,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 			SET ORDER TO 0 IN TABLABIN
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
-			THIS.write_DefinicionObjetosOLE()
+			THIS.write_DefinicionObjetosOLE( toFoxBin2Prg )
 
 			*-- Escribo los métodos ordenados
 			lnLastClass		= 0
@@ -8113,6 +8140,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
 				SCATTER MEMO NAME loRegClass
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loRegClass.TIMESTAMP	= 0
+				ENDIF
+
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
 				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
@@ -8136,6 +8168,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 					SCATTER MEMO NAME loRegObj
+
+					IF NOT toFoxBin2Prg.l_UseTimestamps
+						loRegObj.TIMESTAMP	= 0
+					ENDIF
+
 					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
 					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
 				ENDSCAN
@@ -8162,6 +8199,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
+
+					IF NOT toFoxBin2Prg.l_UseTimestamps
+						loRegObj.TIMESTAMP	= 0
+					ENDIF
+
 					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
 				ENDSCAN
 
@@ -8176,13 +8218,13 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -8219,14 +8261,14 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toModulo, @toEx )
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -8246,11 +8288,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			*toModulo	= NULL
 			*toModulo	= CREATEOBJECT('CL_MODULO')
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 			THIS.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
-			THIS.write_DefinicionObjetosOLE()
+			THIS.write_DefinicionObjetosOLE( toFoxBin2Prg )
 
 			*-- Escribo los métodos ordenados
 			lnLastObj		= 0
@@ -8279,7 +8321,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				*loRegClass	= NULL
 				SCATTER MEMO NAME loRegClass
-				*toModulo.add_Class( loRegClass )
+
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
 				THIS.write_ENDDEFINE_SiCorresponde( lnLastClass )
@@ -8303,6 +8345,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 					SCATTER MEMO NAME loRegObj
+
+					IF NOT toFoxBin2Prg.l_UseTimestamps
+						loRegObj.TIMESTAMP	= 0
+					ENDIF
+
 					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
 					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
 				ENDSCAN
@@ -8331,6 +8378,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCATTER MEMO NAME loRegObj
+
+					IF NOT toFoxBin2Prg.l_UseTimestamps
+						loRegObj.TIMESTAMP	= 0
+					ENDIF
+
 					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
 				ENDSCAN
 
@@ -8345,13 +8397,13 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -8390,11 +8442,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -8417,6 +8469,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*-- Obtengo los archivos del proyecto
 			loProject		= CREATEOBJECT('CL_PROJECT')
 			SCATTER MEMO NAME loReg
+
+			IF NOT toFoxBin2Prg.l_UseTimestamps
+				loReg.TIMESTAMP	= 0
+			ENDIF
+
 			loProject._HomeDir		= ['] + ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.HOMEDIR ) ) + [']
 
 			loProject._ServerInfo	= loReg.RESERVED2
@@ -8453,6 +8510,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			*-- Escaneo el proyecto
 			SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 				SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loReg.TIMESTAMP	= 0
+				ENDIF
+
 				loReg.NAME		= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.NAME ) ) )
 				loReg.COMMENTS	= ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.COMMENTS ) )
 
@@ -8469,7 +8531,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			ENDSCAN
 
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 
 			*-- Directorio de inicio
@@ -8656,13 +8718,13 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -8706,11 +8768,11 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -8844,7 +8906,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			ENDFOR
 
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 
 			*-- Directorio de inicio
@@ -9028,13 +9090,13 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -9083,11 +9145,11 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -9106,18 +9168,30 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			LOCATE FOR ObjType = 1
 			IF FOUND()
 				SCATTER MEMO NAME loRegCab
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loRegCab.TIMESTAMP	= 0
+				ENDIF
 			ENDIF
 
 			*-- Dataenvironment
 			LOCATE FOR ObjType = 25
 			IF FOUND()
 				SCATTER MEMO NAME loRegDataEnv
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loRegDataEnv.TIMESTAMP	= 0
+				ENDIF
 			ENDIF
 
 			*-- Cursor1 (¿puede haber más de 1 cursor?)
 			LOCATE FOR ObjType = 26
 			IF FOUND()
 				SCATTER MEMO NAME loRegCur
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loRegCur.TIMESTAMP	= 0
+				ENDIF
 			ENDIF
 
 			IF THIS.l_ReportSort_Enabled
@@ -9137,7 +9211,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			USE IN (SELECT("TABLABIN_0"))
 
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 			*-- Recorro los registros y genero el texto
 			IF VARTYPE(loRegCab) = "O"
@@ -9149,6 +9223,11 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 			SCAN ALL
 				SCATTER MEMO NAME loRegObj
+
+				IF NOT toFoxBin2Prg.l_UseTimestamps
+					loRegObj.TIMESTAMP	= 0
+				ENDIF
+
 				THIS.write_DETALLE_REPORTE( @loRegObj )
 			ENDSCAN
 
@@ -9165,13 +9244,13 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -9209,11 +9288,11 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toModulo					(@!    OUT) Contenido del texto generado
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
@@ -9232,7 +9311,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 			*-- Header
 			loTable			= CREATEOBJECT('CL_DBF_TABLE')
@@ -9243,13 +9322,13 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -9261,11 +9340,11 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			DO CASE
 			CASE toEx.ERRORNO = 13 && Alias not found
 				*toEx.USERVALUE = 'WARNING!!' + CR_LF ;
-					+ 'MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on ' ;
-					+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.field tag keyname)' + CR_LF + CR_LF ;
-					+ '¡¡ATENCIÓN!!' + CR_LF ;
-					+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
-					+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
+				+ 'MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on ' ;
+				+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.field tag keyname)' + CR_LF + CR_LF ;
+				+ '¡¡ATENCIÓN!!' + CR_LF ;
+				+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
+				+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
 				toEx.USERVALUE = TEXTMERGE(C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC)
 
 				*!*	CASE toEx.ErrorNo = 1976 && Cannot resolve backlink
@@ -9314,14 +9393,14 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toDatabase, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toDatabase, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toDatabase, @toEx )
 
 		#IF .F.
 			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -9334,7 +9413,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			USE (THIS.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
 			OPEN DATABASE (THIS.c_InputFile) SHARED NOUPDATE
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 			*-- Header
 			toDatabase		= CREATEOBJECT('CL_DBC')
@@ -9345,13 +9424,13 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -9389,14 +9468,14 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* totoMenu					(@!    OUT) Objeto generado de clase CL_MENU con la información leida del texto
 		* toEx						(@!    OUT) Objeto con información del error
-		* toFoxbin2prg				(v! IN    ) Referencia al objeto principal
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toMenu, toEx AS EXCEPTION, toFoxbin2prg
+		LPARAMETERS toMenu, toEx AS EXCEPTION, toFoxBin2Prg
 		DODEFAULT( @toMenu, @toEx )
 
 		#IF .F.
 			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
-			LOCAL toFoxbin2prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -9414,7 +9493,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			ENDIF
 
 			*-- Header
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxbin2prg.get_PROGRAM_HEADER()
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 			toMenu			= CREATEOBJECT('CL_MENU')
 			toMenu.get_DataFromTablabin()
@@ -9425,13 +9504,13 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			IF THIS.l_Test
 				toMenu	= C_FB2PRG_CODE
 			ELSE
-				lnLen = LEN( toFoxbin2prg.get_PROGRAM_HEADER() )
+				lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 				DO CASE
 				CASE FILE(THIS.c_OutputFile) AND SUBSTR( FILETOSTR( THIS.c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 					*THIS.writeLog( 'El archivo de salida [' + THIS.c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 					THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-				CASE toFoxbin2prg.doBackup( .F., .T., '', '', '' ) ;
-						AND toFoxBin2prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
+				CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+						AND toFoxBin2Prg.ChangeFileAttribute( THIS.c_OutputFile, '-R' ) ;
 						AND STRTOFILE( C_FB2PRG_CODE, THIS.c_OutputFile ) = 0
 					*ERROR 'No se puede generar el archivo [' + THIS.c_OutputFile + '] porque es ReadOnly'
 					ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
@@ -9752,7 +9831,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	_ProtectedMethods	= ''
 	_MetaData			= ''
 	_BaseClass			= ''
-	_TimeStamp			= ''
+	_TimeStamp			= 0
 	_Scale				= ''
 	_Defined_PAM		= ''
 	_includeFile		= ''
@@ -15498,7 +15577,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			ELSE
 				IF THIS.l_Debug
 					*toConversor.writeLog( REPLICATE(C_TAB,tnNivel) ;
-						+ 'Objeto [' + toObj.CLASS + '] no contiene el objeto oReg (nivel ' + TRANSFORM(tnNivel) + ')' )
+					+ 'Objeto [' + toObj.CLASS + '] no contiene el objeto oReg (nivel ' + TRANSFORM(tnNivel) + ')' )
 					toConversor.writeLog( REPLICATE(C_TAB,tnNivel) + TEXTMERGE(C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC) )
 				ENDIF
 
