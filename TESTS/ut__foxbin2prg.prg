@@ -413,7 +413,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 	*******************************************************************************************************************************************
-	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_SCX_YValidarLosCamposDelRegistro
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_FRM_1_SCX_YValidarLosCamposDelRegistro
 		LOCAL lnCodError, lnCodError_Esperado  ;
 			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
 			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
@@ -486,6 +486,171 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
+			USE IN (SELECT("TABLABIN"))
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_FRM_2_SCX_YValidarElOrdenDeLasPropsDelObjeto_PageFrame1
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
+			, laProps(1), lcProp, I, laProps_Esperado(1) ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lc_File				= 'FB2P_FRM_2.SCX'
+			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
+			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+
+			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
+			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+
+			SELECT 0
+			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+
+			LOCATE FOR ObjName = 'Pageframe1' AND NOT DELETED() AND PLATFORM==PADR("WINDOWS",8)
+			
+			this.assertequals( .T., FOUND(), 'No se ha encontrado el objeto "Pageframe1" que se iba a testear' )
+
+			*-- DATOS ESPERADOS
+			STORE 0 TO lnCodError_Esperado
+			SCATTER FIELDS Properties MEMO NAME loReg
+			DIMENSION laProps_Esperado(8)
+			laProps_Esperado( 1)	= 'ErasePage'
+			laProps_Esperado( 2)	= 'PageCount'
+			laProps_Esperado( 3)	= 'ActivePage'
+			laProps_Esperado( 4)	= 'Top'
+			laProps_Esperado( 5)	= 'Left'
+			laProps_Esperado( 6)	= 'Height'
+			laProps_Esperado( 7)	= 'Width'
+			laProps_Esperado( 8)	= 'Name'
+			
+			*-- TEST
+			=ALINES(laProps, loReg.Properties)
+			
+			this.messageout( 'Línea : Valor esperado => Valor actual' )
+			this.messageout( REPLICATE('-',50) )
+
+			FOR I = 1 TO ALEN(laProps_Esperado)
+				lcProp	= GETWORDNUM(laProps(I),1)
+				this.messageout( 'Línea ' + TRANSFORM(I) + ': ' + laProps_Esperado(I) + ' => ' + lcProp )
+			ENDFOR
+
+			FOR I = 1 TO ALEN(laProps_Esperado)
+				lcProp	= GETWORDNUM(laProps(I),1)
+				this.assertequals( laProps_Esperado(I), lcProp, 'Elemento (' + TRANSFORM(I) + ') del Memo Properties' )
+			ENDFOR
+
+			*USE IN (SELECT("TABLABIN"))
+
+			*THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName ;
+				, loReg_Esperado, loReg, lcTipoBinario )
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_FRM_2_SCX_YValidarElOrdenDeLasPropsDelObjeto_Optiongroup1
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
+			, laProps(1), lcProp, I, laProps_Esperado(1) ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug		= .F.
+			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_Test		= .T.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lc_File				= 'FB2P_FRM_2.SCX'
+			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
+			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+
+			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
+			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+
+			SELECT 0
+			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+
+			LOCATE FOR ObjName = 'Optiongroup1' AND NOT DELETED() AND PLATFORM==PADR("WINDOWS",8)
+			
+			this.assertequals( .T., FOUND(), 'No se ha encontrado el objeto "Optiongroup1" que se iba a testear' )
+
+			*-- DATOS ESPERADOS
+			STORE 0 TO lnCodError_Esperado
+			SCATTER FIELDS Properties MEMO NAME loReg
+			DIMENSION laProps_Esperado(7)
+			laProps_Esperado( 1)	= 'ButtonCount'
+			laProps_Esperado( 2)	= 'Value'
+			laProps_Esperado( 3)	= 'Top'
+			laProps_Esperado( 4)	= 'Left'
+			laProps_Esperado( 5)	= 'Height'
+			laProps_Esperado( 6)	= 'Width'
+			laProps_Esperado( 7)	= 'Name'
+			
+			*-- TEST
+			=ALINES(laProps, loReg.Properties)
+			
+			this.messageout( 'Línea : Valor esperado => Valor actual' )
+			this.messageout( REPLICATE('-',50) )
+
+			FOR I = 1 TO ALEN(laProps_Esperado)
+				lcProp	= GETWORDNUM(laProps(I),1)
+				this.messageout( 'Línea ' + TRANSFORM(I) + ': ' + laProps_Esperado(I) + ' => ' + lcProp )
+			ENDFOR
+
+			FOR I = 1 TO ALEN(laProps_Esperado)
+				lcProp	= GETWORDNUM(laProps(I),1)
+				this.assertequals( laProps_Esperado(I), lcProp, 'Elemento (' + TRANSFORM(I) + ') del Memo Properties' )
+			ENDFOR
+
+			*USE IN (SELECT("TABLABIN"))
+
+			*THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName ;
+				, loReg_Esperado, loReg, lcTipoBinario )
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
 

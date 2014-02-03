@@ -14,7 +14,7 @@
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, cConvertType, aExtensions(8), foxbin2prg_cfg, aFiles(), nFile_Count
-Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile
+Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
@@ -22,7 +22,14 @@ foxbin2prg_cfg	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg
 nExitCode = 0
 cConvertType	= "PRG2BIN"		'<<< This is the only difference between the 2 scripts
 '---------------------------------------------------------------------------------------------------
-nDebug = 1+0+4+0	'Cumulative Flags: 0=OFF, 1=Create FoxBin2prg LOG, 2=Only show script calls, 4=Don't show FoxBin2prg error modal messages, 8=Show end of process message
+'Cumulative Flags:
+' 0=OFF
+' 1=Create FoxBin2prg LOG
+' 2=Only show script calls (for testing without executing)
+' 4=Don't show FoxBin2prg error modal messages
+' 8=Show end of process message
+' 16=Empty timestamps
+nDebug = 1+0+4+0+16
 '---------------------------------------------------------------------------------------------------
 
 If cConvertType	= "BIN2PRG" Then
@@ -87,6 +94,9 @@ If WScript.Arguments.Count = 0 Then
 	If GetBit(nDebug, 4) Then
 		cErrMsg	= cErrMsg & Chr(13) & "Bit 3 ON: (8) Show End of Process message"
 	End If
+	If GetBit(nDebug, 5) Then
+		cErrMsg	= cErrMsg & Chr(13) & "Bit 4 ON: (16) Empty timestamps"
+	End If
 	MsgBox cErrMsg, 64, "No parameters - Debug Status"
 Else
 	cEXETool	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.exe")
@@ -103,7 +113,7 @@ Else
 	cFlagGenerateLog		= "'0'"
 	cFlagDontShowErrMsg		= "'0'"
 	cFlagShowCall			= "'0'"
-	cFlagRecompile			= "'0'"
+	cFlagRecompile			= "'1'"
 
 	If GetBit(nDebug, 1) Then
 		cFlagGenerateLog	= "'1'"
@@ -114,21 +124,26 @@ Else
 	If GetBit(nDebug, 3) Then
 		cFlagDontShowErrMsg	= "'1'"
 	End If
+	If GetBit(nDebug, 5) Then
+		cNoTimestamps	= "'1'"
+	End If
 
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nMAX_VALUE = " & nFile_Count )
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & 0 )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.AlwaysOnTop = .T." )
+	'oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.AlwaysOnTop = .T." )
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.SHOW()" )
 
 	For i = 1 To nFile_Count
 		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = 'Procesando " & aFiles(i) & "...'" )
 		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & i )
+		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
 
 		If nDebug = 0 Or nDebug = 2 Then
 			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "' )"
 		Else
 			cCMD	= "oFoxBin2prg.ejecutar(  '" & aFiles(i) & "','0','0','0'," _
-				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," & cFlagRecompile & " )"
+				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
+				& cFlagRecompile & "," & cNoTimestamps & " )"
 		End If
 		If cFlagJustShowCall = "1" Then
 			MsgBox cCMD, 64, "PARAMETROS ENVIADOS"
