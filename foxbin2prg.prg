@@ -69,6 +69,7 @@
 * 26/01/2014	FDBOZZO		v1.19.5	Agregado soporte multiidioma y traducción al Inglés
 * 01/02/2014	FDBOZZO		v1.19.6	Agregada compatibilidad con SourceSafe para Diff y Merge
 * 02/02/2014	FDBOZZO		v1.19.7	Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
+* 03/02/2014	FDBOZZO		v1.19.8	Arreglo bug pageframe (error activePage)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -109,6 +110,7 @@
 *										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 *										generar errores de compilación, típicamente los #include.
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
+* tcNoTimestamps			(v? IN    ) '1' para mantener los timestamps vacíos. Útil para minimizar diferencias en Diff/Merge por este motivo.
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
@@ -768,11 +770,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
 					lcFileSpec	= FULLPATH( tc_InputFile )
 
-					IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+					DO CASE
+					CASE THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
 						CD (tcRecompile)
-					ELSE
-						*CD (JUSTPATH(lcFileSpec))
-					ENDIF
+					CASE tcRecompile == '1'
+						CD (JUSTPATH(lcFileSpec))
+					ENDCASE
+
 					THIS.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
 					IF THIS.l_Debug
@@ -838,11 +842,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						IF FILE(tc_InputFile)
 							ERASE ( tc_InputFile + '.ERR' )
 
-							IF THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+							DO CASE
+							CASE THIS.l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
 								CD (tcRecompile)
-							ELSE
-								*CD (JUSTPATH(tc_InputFile))
-							ENDIF
+							CASE tcRecompile == '1'
+								CD (JUSTPATH(tc_InputFile))
+							ENDCASE
 
 							THIS.c_LogFile	= tc_InputFile + '.LOG'
 
@@ -2026,6 +2031,12 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcPropName	= SUBSTR(tcPropName,5)
 		CASE NOT tcOperation == 'SETNAME'
 			ERROR C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC
+		CASE lcPropName == 'ErasePage'				&& PageFrame: Debe estar antes que PageCount
+			lcPropName	= 'A002' + lcPropName
+		CASE lcPropName == 'PageCount'				&& PageFrame: Debe estar antes que ActivePage
+			lcPropName	= 'A003' + lcPropName
+		CASE lcPropName == 'ActivePage'				&& PageFrame: Debe estar antes que Top/Left/With/Height
+			lcPropName	= 'A004' + lcPropName
 		CASE lcPropName == 'ButtonCount'
 			lcPropName	= 'A005' + lcPropName
 		CASE lcPropName == 'ColumnCount'
