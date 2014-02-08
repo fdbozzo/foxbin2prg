@@ -261,54 +261,54 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *******************************************************************************************************************
 *-- INTERNACIONALIZACIÓN / INTERNATIONALIZATION
 *******************************************************************************************************************
-#IF FILE('foxbin2prg.h')
-	#INCLUDE FOXBIN2PRG.H
+#IF FILE('foxbin2prg.h')		&& DO NOT CHANGE THIS! Just rename the .H file
+	#INCLUDE foxbin2prg.h		&& DO NOT CHANGE THIS! Just rename the .H file
 #ELSE
 	*---------------------------------------------------------------------------------------------------------
 	*-- TRANSLACIÓN AL ESPAÑOL
 	*---------------------------------------------------------------------------------------------------------
-	#DEFINE C_ASTERISK_EXT_NOT_ALLOWED_LOC						'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).'
-	#DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC						'No se pudo actualizar el backlink'
-	#DEFINE C_BACKLINK_OF_TABLE_LOC								'de la tabla'
-	#DEFINE C_BACKUP_OF_LOC										'Backup de: '
-	#DEFINE C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		'No se puede generar el archivo [<<THIS.c_OutputFile>>] porque es ReadOnly'
-	#DEFINE C_CONFIGFILE_LOC									'Archivo de configuración:'
-	#DEFINE C_CONVERTER_UNLOAD_LOC								'Descarga del conversor'
-	#DEFINE C_CONVERTING_FILE_LOC								'Convirtiendo archivo'
-	#DEFINE C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	'Error de datos: No se puede parsear porque las comillas no son pares en la línea <<lcMetadatos>>'
-	#DEFINE C_DUPLICATED_FILE_LOC								'Archivo duplicado'
-	#DEFINE C_ENDDEFINE_MARKER_NOT_FOUND_LOC					'No se ha encontrado el marcador de fin [ENDDEFINE] de la línea <<TRANSFORM( toClase._Inicio )>> para el identificador [<<toClase._Nombre>>]'
-	#DEFINE C_END_MARKER_NOT_FOUND_LOC							'No se ha encontrado el marcador de fin [<<ta_ID_Bloques(lnPrimerID,2)>>] que cierra al marcador de inicio [<<ta_ID_Bloques(lnPrimerID,1)>>] de la línea <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>'
-	#DEFINE C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				'No se encontró el campo [<<laProps(I)>>] en la estructura del archivo <<DBF("TABLABIN")>>'
-	#DEFINE C_FILE_DOESNT_EXIST_LOC								'El archivo no existe:'
-	#DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					'El archivo [<<.c_InputFile>>] no está soportado'
-	#DEFINE C_FILE_NOT_FOUND_LOC								'No se encontró el archivo'
-	#DEFINE C_EXTENSION_RECONFIGURATION_LOC						'Reconfiguración de extensión:'
-	#DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						'FOXBIN2PRG: ERROR!!'
-	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						'FOXBIN2PRG: INFORMACIÓN DE SINTAXIS'
-	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				'FOXBIN2PRG <cEspecArchivo.Ext>  [cType_ND  cTextName_ND  cGenText_ND  cNoMostrarErrores  cDebug]' + CR_LF + CR_LF ;
-		+ 'Ejemplo para generar los TXT de todos los VCX de "c:\desa\clases", sin mostrar ventana de error y generando archivo LOG: ' + CR_LF ;
-		+ '   FOXBIN2PRG "c:\desa\clases\*.vcx"  "0"  "0"  "0"  "1"  "1"' + CR_LF + CR_LF ;
-		+ 'Ejemplo para generar los VCX de todos los TXT de "c:\desa\clases", sin mostrar ventana de error y sin LOG: ' + CR_LF ;
-		+ '   FOXBIN2PRG "c:\desa\clases\*.vc2"  "0"  "0"  "0"  "1"  "0"'
-	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC							'¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
-	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC						'FOXBIN2PRG: ¡ATENCIÓN!'
-	#DEFINE C_MENU_NOT_IN_VFP9_FORMAT_LOC						'El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU <<JUSTFNAME((THIS.c_InputFile))>>'
-	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC			'* Se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]'
-	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC		'* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]'
-	#DEFINE C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC				'Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)'
-	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			'Operación no reconocida. Solo re reconoce SETNAME y GETNAME.'
-	#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					'Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se sobreescribe por ser igual al generado.'
-	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					'Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>]'
-	#DEFINE C_PROCESSING_LOC									'Procesando archivo'
-	#DEFINE C_PROCESS_PROGRESS_LOC								'Avance del proceso:'
-	#DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					'Propiedad [<<TRANSFORM(tnPropertyID)>>] no reconocida.'
-	#DEFINE C_REQUESTING_CAPITALIZATION_OF_FILE_LOC				'- Solicitado capitalizar el archivo [<<tcFileName>>]'
-	#DEFINE C_SOURCEFILE_LOC									'Archivo origen: '
-	#DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC		'Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>'
-	#DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC	'Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>'
-	#DEFINE C_UNKNOWN_CLASS_NAME_LOC							'Clase [<<THIS.CLASS>>] desconocida'
-	#DEFINE C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC			'¡¡ATENCIÓN!!' + CR_LF+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)'
+	#DEFINE C_ASTERISK_EXT_NOT_ALLOWED_LOC						"No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos)."
+	#DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC						"No se pudo actualizar el backlink"
+	#DEFINE C_BACKLINK_OF_TABLE_LOC								"de la tabla"
+	#DEFINE C_BACKUP_OF_LOC										"Haciendo Backup de: "
+	#DEFINE C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		"No se puede generar el archivo [<<THIS.c_OutputFile>>] porque es ReadOnly"
+	#DEFINE C_CONFIGFILE_LOC									"Usando archivo de configuración:"
+	#DEFINE C_CONVERTER_UNLOAD_LOC								"Descarga del conversor"
+	#DEFINE C_CONVERTING_FILE_LOC								"Convirtiendo archivo"
+	#DEFINE C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	"Error de datos: No se puede parsear porque las comillas no son pares en la línea <<lcMetadatos>>"
+	#DEFINE C_DUPLICATED_FILE_LOC								"Archivo duplicado"
+	#DEFINE C_ENDDEFINE_MARKER_NOT_FOUND_LOC					"No se ha encontrado el marcador de fin [ENDDEFINE] de la línea <<TRANSFORM( toClase._Inicio )>> para el identificador [<<toClase._Nombre>>]"
+	#DEFINE C_END_MARKER_NOT_FOUND_LOC							"No se ha encontrado el marcador de fin [<<ta_ID_Bloques(lnPrimerID,2)>>] que cierra al marcador de inicio [<<ta_ID_Bloques(lnPrimerID,1)>>] de la línea <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
+	#DEFINE C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				"No se encontró el campo [<<laProps(I)>>] en la estructura del archivo <<DBF('TABLABIN')>>"
+	#DEFINE C_FILE_DOESNT_EXIST_LOC								"El archivo no existe:"
+	#DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					"El archivo [<<.c_InputFile>>] no está soportado"
+	#DEFINE C_FILE_NOT_FOUND_LOC								"No se encontró el archivo"
+	#DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Reconfiguración de extensión:"
+	#DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						"FOXBIN2PRG: ERROR!!"
+	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						"FOXBIN2PRG: INFORMACIÓN DE SINTAXIS"
+	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				"FOXBIN2PRG <cEspecArchivo.Ext> [,cType ,cTextName ,cGenText ,cNoMostrarErrores ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
+		+ "Ejemplo para generar los TXT de todos los VCX de 'c:\desa\clases', sin mostrar ventana de error y generando archivo LOG: " + CR_LF ;
+		+ "   FOXBIN2PRG 'c:\desa\clases\*.vcx'  '0'  '0'  '0'  '1'  '1'" + CR_LF + CR_LF ;
+		+ "Ejemplo para generar los VCX de todos los TXT de 'c:\desa\clases', sin mostrar ventana de error y sin LOG: " + CR_LF ;
+		+ "   FOXBIN2PRG 'c:\desa\clases\*.vc2'  '0'  '0'  '0'  '1'  '0'"
+	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC							"¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
+	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC						"FOXBIN2PRG: ¡ATENCIÓN!"
+	#DEFINE C_MENU_NOT_IN_VFP9_FORMAT_LOC						"El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU <<JUSTFNAME((THIS.c_InputFile))>>"
+	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC			"* Se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
+	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC		"* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
+	#DEFINE C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC				"Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
+	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			"Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
+	#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se sobreescribe por ser igual al generado."
+	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>]"
+	#DEFINE C_PROCESSING_LOC									"Procesando archivo"
+	#DEFINE C_PROCESS_PROGRESS_LOC								"Avance del proceso:"
+	#DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					"Propiedad [<<TRANSFORM(tnPropertyID)>>] no reconocida."
+	#DEFINE C_REQUESTING_CAPITALIZATION_OF_FILE_LOC				"- Solicitado capitalizar el archivo [<<tcFileName>>]"
+	#DEFINE C_SOURCEFILE_LOC									"Archivo origen: "
+	#DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC		"Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
+	#DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC	"Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
+	#DEFINE C_UNKNOWN_CLASS_NAME_LOC							"Clase [<<THIS.CLASS>>] desconocida"
+	#DEFINE C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC			"¡¡ATENCIÓN!!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
 #ENDIF
 *******************************************************************************************************************
 
@@ -374,6 +374,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
+		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
@@ -388,6 +389,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
 		+ [<memberdata name="l_usetimestamps" display="l_UseTimestamps"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
+		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
@@ -415,10 +417,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors			= .F.
 	l_ShowProgress			= .F.
 	l_Recompile				= .F.
-	l_UseTimestamps			= .T.
+	l_UseTimestamps			= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	n_ExtraBackupLevels		= 0
 	nClassTimeStamp			= ''
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
@@ -664,6 +667,70 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE cargar_frm_avance
 		THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance")
 	ENDPROC
+	
+	
+	PROCEDURE EvaluarConfiguracion
+		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels
+		
+		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt
+		lcConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
+		llExisteConfig	= FILE( lcConfigFile )
+
+		IF llExisteConfig
+			THIS.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
+
+			FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
+				laConfig(I)	= LOWER( laConfig(I) )
+
+				DO CASE
+				CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
+					lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
+					lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+					IF PEMSTATUS( THIS, lcExt, 5 )
+						THIS.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+						*THIS.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+						THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > ' + C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+					ENDIF
+
+				CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
+					tcDontShowProgress	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:  ' + TRANSFORM(tcDontShowProgress) )
+
+				CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
+					tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:    ' + TRANSFORM(tcDontShowErrors) )
+
+				CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
+					tcNoTimestamps	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:      ' + TRANSFORM(tcNoTimestamps) )
+
+				CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
+					tcDebug	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:             ' + TRANSFORM(tcDebug) )
+
+				CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
+					tcExtraBackupLevels	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels: ' + TRANSFORM(tcExtraBackupLevels) )
+
+				ENDCASE
+			ENDFOR
+		ENDIF
+
+		THIS.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
+		THIS.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
+		THIS.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
+		THIS.l_UseTimestamps		= (TRANSFORM(tcNoTimestamps) == '1')
+		THIS.l_Debug				= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
+		THIS.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
+
+		THIS.writeLog( '---' )
+		THIS.writeLog( '> l_ShowProgress:      ' + TRANSFORM(THIS.l_ShowProgress) )
+		THIS.writeLog( '> l_ShowErrors:        ' + TRANSFORM(THIS.l_ShowErrors) )
+		THIS.writeLog( '> l_Recompile:         ' + TRANSFORM(THIS.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
+		THIS.writeLog( '> l_UseTimestamps:     ' + TRANSFORM(THIS.l_UseTimestamps) )
+		THIS.writeLog( '> l_Debug:             ' + TRANSFORM(THIS.l_Debug) )
+		THIS.writeLog( '> n_ExtraBackupLevels: ' + TRANSFORM(THIS.n_ExtraBackupLevels) )
+	ENDPROC
 
 
 	PROCEDURE ejecutar
@@ -687,26 +754,37 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*										generar errores de compilación, típicamente los #include.
 		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 		* tcNoTimestamps			(v? IN    ) Indica si se deben vacar ('1') o no ['0'] los timestamps de registro
+		* tcBackupLevels			(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
-			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps
+			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+			, tcBackupLevels
 
 		TRY
-			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laConfig(1), lcConfigFile, lcExt ;
-				, llExisteConfig, lcConfData, lnFileCount, lcErrorInfo ;
+			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5) ;
+				, lnFileCount, lcErrorInfo ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject
 
 			lnCodError		= 0
+
+			THIS.writeLog( THIS.c_Foxbin2prg_FullPath + CR_LF ;
+				+ C_TAB + 'tc_InputFile:       ' + TRANSFORM(tc_InputFile) + CR_LF ;
+				+ C_TAB + 'tcType:             ' + TRANSFORM(tcType) + CR_LF; 
+				+ C_TAB + 'tcTextName:         ' + TRANSFORM(tcTextName) + CR_LF ;
+				+ C_TAB + 'tlGenText:          ' + TRANSFORM(tlGenText) + CR_LF ;
+				+ C_TAB + 'tcDontShowErrors:   ' + TRANSFORM(tcDontShowErrors) + CR_LF ;
+				+ C_TAB + 'tcDebug:            ' + TRANSFORM(tcDebug) + CR_LF ;
+				+ C_TAB + 'tcDontShowProgress: ' + TRANSFORM(tcDontShowProgress) + CR_LF ;
+				+ C_TAB + 'toModulo:           ' + TRANSFORM(toModulo) + CR_LF ;
+				+ C_TAB + 'toEx:               ' + TRANSFORM(toEx) + CR_LF ;
+				+ C_TAB + 'tlRelanzarError:    ' + TRANSFORM(tlRelanzarError) + CR_LF ;
+				+ C_TAB + 'tcOriginalFileName: ' + TRANSFORM(tcOriginalFileName) + CR_LF ;
+				+ C_TAB + 'tcRecompile:        ' + TRANSFORM(tcRecompile) + CR_LF ;
+				+ C_TAB + 'tcNoTimestamps:     ' + TRANSFORM(tcNoTimestamps) )
+
 			tcRecompile		= EVL(tcRecompile,'1')
 			tcNoTimestamps	= EVL(tcNoTimestamps,'0')
-
-			*SET DELETED ON
-			*SET DATE YMD
-			*SET HOURS TO 24
-			*SET CENTURY ON
-			*SET SAFETY OFF
-			*SET TABLEPROMPT OFF
 
 			IF _VFP.STARTMODE > 0
 				SET ESCAPE OFF
@@ -727,34 +805,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			OTHERWISE
 				*-- Ejecución normal
-				THIS.l_ShowProgress		= NOT (TRANSFORM(tcDontShowProgress)=='1')
-				THIS.l_ShowErrors		= NOT (TRANSFORM(tcDontShowErrors) == '1')
-				THIS.l_Recompile		= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
-				THIS.l_UseTimestamps	= (EMPTY(tcNoTimestamps) OR TRANSFORM(tcNoTimestamps) == '0')
-				THIS.l_Debug			= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
+
+				*-- ARCHIVO DE CONFIGURACIÓN
+				THIS.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels )
 
 				IF THIS.l_ShowProgress
 					THIS.cargar_frm_avance()
 				ENDIF
-
-				*-- Configuración
-				lcConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
-				llExisteConfig	= FILE( lcConfigFile )
-
-				IF llExisteConfig
-					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-						IF LOWER( LEFT( laConfig(I), 10 ) ) == 'extension:'
-							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
-							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-							IF PEMSTATUS( THIS, lcExt, 5 )
-								THIS.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								*THIS.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								THIS.writeLog( C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-							ENDIF
-						ENDIF
-					ENDFOR
-				ENDIF
-
 
 				*-- Evaluación de FileSpec de entrada
 				DO CASE
@@ -782,11 +839,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					IF THIS.l_Debug
 						IF FILE( THIS.c_LogFile )
 							ERASE ( THIS.c_LogFile )
-						ENDIF
-						THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
-						IF llExisteConfig
-							*THIS.writeLog( 'ConfigFile:' + ' ' + lcConfigFile )
-							THIS.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 						ENDIF
 					ENDIF
 
@@ -850,13 +902,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							ENDCASE
 
 							THIS.c_LogFile	= tc_InputFile + '.LOG'
-
-							IF THIS.l_Debug
-								IF FILE( THIS.c_LogFile )
-									ERASE ( THIS.c_LogFile )
-								ENDIF
-								THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' - FileSpec: ' + EVL(tc_InputFile,'') )
-							ENDIF
+							ERASE ( THIS.c_LogFile )
 
 							lnCodError = THIS.Convertir( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
 						ENDIF
@@ -940,7 +986,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.c_OriginalFileName	= FORCEEXT(.c_OriginalFileName,'pjx')
 				ENDIF
 
-				THIS.writeLog( 'c_InputFile=' + .c_InputFile )
+				THIS.writeLog( '> c_OriginalFileName:  ' + .c_OriginalFileName )
 				.o_Conversor	= NULL
 
 				IF NOT FILE(.c_InputFile)
@@ -1122,9 +1168,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOutputFileName
 		LOCAL lcNext_Bak, I
-		lcNext_Bak = ''
+		lcNext_Bak	= '.BAK'
 
-		FOR I = 0 TO 9
+		FOR I = 0 TO THIS.n_ExtraBackupLevels
 			IF I = 0
 				IF NOT FILE( tcOutputFileName + '.BAK' )
 					lcNext_Bak	= '.BAK'
@@ -1137,8 +1183,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 			ENDIF
 		ENDFOR
-
-		lcNext_Bak	= EVL( lcNext_Bak, '.X.BAK' )	&& Para que no quede nunca vacío
 
 		RETURN lcNext_Bak
 	ENDPROC
