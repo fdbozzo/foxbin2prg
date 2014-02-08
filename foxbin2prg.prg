@@ -394,6 +394,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
+		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
+		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
+		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
+		+ [<memberdata name="frx_conversion_support" display="FRX_Conversion_Support"/>] ;
+		+ [<memberdata name="lbx_conversion_support" display="LBX_Conversion_Support"/>] ;
+		+ [<memberdata name="mnx_conversion_support" display="MNX_Conversion_Support"/>] ;
+		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
+		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
@@ -434,6 +442,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_DB2					= 'DB2'	&& DBF
 	c_DC2					= 'DC2'	&& DBC
 	c_MN2					= 'MN2'	&& MNX
+	PJX_Conversion_Support	= 2
+	VCX_Conversion_Support	= 2
+	SCX_Conversion_Support	= 2
+	FRX_Conversion_Support	= 2
+	LBX_Conversion_Support	= 2
+	MNX_Conversion_Support	= 2
+	DBF_Conversion_Support	= 1
+	DBC_Conversion_Support	= 2
 
 
 	PROCEDURE INIT
@@ -683,6 +699,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				laConfig(I)	= LOWER( laConfig(I) )
 
 				DO CASE
+				CASE LEFT( laConfig(I), 1 ) == '*'
+					LOOP
+
 				CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
 					lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
 					lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
@@ -711,6 +730,38 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
 					tcExtraBackupLevels	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
 					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels: ' + TRANSFORM(tcExtraBackupLevels) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
+					THIS.PJX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support: ' + TRANSFORM(THIS.PJX_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
+					THIS.VCX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support: ' + TRANSFORM(THIS.VCX_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
+					THIS.SCX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support: ' + TRANSFORM(THIS.SCX_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
+					THIS.FRX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support: ' + TRANSFORM(THIS.FRX_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
+					THIS.LBX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support: ' + TRANSFORM(THIS.LBX_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
+					THIS.MNX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support: ' + TRANSFORM(THIS.MNX_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
+					THIS.DBF_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support: ' + TRANSFORM(THIS.DBF_Conversion_Support) )
+
+				CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
+					THIS.DBC_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support: ' + TRANSFORM(THIS.DBC_Conversion_Support) )
 
 				ENDCASE
 			ENDFOR
@@ -866,11 +917,34 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
 					IF LEN(NVL(tc_InputFile,'')) = 1
 						*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
+						*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
+						*-- para saber si se puede hacer Diff y Merge.
+						*-- Para los códigos de tipo de archivo ver ayuda de "Type Property"
 						DO CASE
-						CASE tc_InputFile $ 'dD'	&& DBC, DBF
-							lnCodError	= 1
-						CASE tc_InputFile $ 'KBMRV'	&& SCX, LBX, MNX, FRX, VCX
-							lnCodError	= 2
+						CASE tc_InputFile == FILETYPE_DATABASE
+							lnCodError	= THIS.DBC_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_FREETABLE
+							lnCodError	= THIS.DBF_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_FORM
+							lnCodError	= THIS.SCX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_LABEL
+							lnCodError	= THIS.LBX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_MENU
+							lnCodError	= THIS.MNX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_REPORT
+							lnCodError	= THIS.FRX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_CLASSLIB
+							lnCodError	= THIS.VCX_Conversion_Support
+
+						CASE tc_InputFile $ 'J'	&& PJX (J no exite en FoxPro, es un valor inventado para evitar conflicto con los tipos existentes)
+							lnCodError	= THIS.PJX_Conversion_Support
+
 						OTHERWISE
 							lnCodError	= -1
 						ENDCASE
@@ -997,81 +1071,126 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				DO CASE
 				CASE lcExtension = 'VCX'
+					IF NOT INLIST(THIS.VCX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_VC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_VC2 ), '+N' )
 
 				CASE lcExtension = 'SCX'
+					IF NOT INLIST(THIS.SCX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_SC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_scx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_SC2 ), '+N' )
 
 				CASE lcExtension = 'PJX'
+					IF NOT INLIST(THIS.PJX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
 
 				CASE lcExtension = 'PJM'
+					IF NOT INLIST(THIS.PJX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
 
 				CASE lcExtension = 'FRX'
+					IF NOT INLIST(THIS.FRX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FR2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_FR2 ), '+N' )
 
 				CASE lcExtension = 'LBX'
+					IF NOT INLIST(THIS.LBX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_LB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), '+N' )
 
 				CASE lcExtension = 'DBF'
+					IF NOT INLIST(THIS.DBF_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DB2 ), '+N' )
 
 				CASE lcExtension = 'DBC'
+					IF NOT INLIST(THIS.DBC_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DC2 ), '+N' )
 
 				CASE lcExtension = 'MNX'
+					IF NOT INLIST(THIS.MNX_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_MN2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), '+N' )
 
 				CASE lcExtension = .c_VC2
+					IF THIS.VCX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), '+N' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), '+N' )
 
 				CASE lcExtension = .c_SC2
+					IF THIS.SCX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'SCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_scx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCX' ), '+N' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCT' ), '+N' )
 
 				CASE lcExtension = .c_PJ2
+					IF THIS.PJX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'PJX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJX' ), '+N' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJT' ), '+N' )
 
 				CASE lcExtension = .c_FR2
+					IF THIS.FRX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FRX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRX' ), '+N' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRT' ), '+N' )
 
 				CASE lcExtension = .c_LB2
+					IF THIS.LBX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'LBX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBX' ), '+N' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), '+N' )
 
 				CASE lcExtension = .c_DB2
+					IF THIS.DBF_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBF' ), '+N' )
@@ -1079,6 +1198,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), '+N' )
 
 				CASE lcExtension = .c_DC2
+					IF THIS.DCX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBC' ), '+N' )
@@ -1086,6 +1208,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCT' ), '+N' )
 
 				CASE lcExtension = .c_MN2
+					IF THIS.MNX_Conversion_Support <> 2
+						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MNX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), '+N' )

@@ -1,4 +1,6 @@
 ﻿26/01/2014		FOXBIN2PRG v1.19 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
+Blog: http://fdbozzo.blogspot.com.es/
+
 
 ESPAÑOL --------------------------------------------------------------------------------------------
 
@@ -42,6 +44,7 @@ Es necesario recompilar el programa para que se actualicen los textos con el arc
 NOTA FINAL:
 Este programa es Open Source y "libre", y como tal no ofrezco garantías de que cumpla con sus espectativas
 o de que está libre de fallos, que intentaré solucionar si me reporta y mis obligaciones me lo permiten.
+Project info and updated: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
 
 
 LICENCIA:
@@ -92,6 +95,7 @@ Recompiling is necesary to update the strings from the include file.
 FINAL NOTE:
 This program is Open Source and "libre", and I don't make any garanties that it fulfills your espectations
 or that it will be free of bugs, that I will try to fix if my obligations let me do it.
+Información del proyecto y actualizaciones: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg_es
 
 
 LICENCE:
