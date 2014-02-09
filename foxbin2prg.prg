@@ -770,7 +770,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
 		THIS.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
 		THIS.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
-		THIS.l_UseTimestamps		= (TRANSFORM(tcNoTimestamps) == '1')
+		THIS.l_UseTimestamps		= (TRANSFORM(tcNoTimestamps) == '0')
 		THIS.l_Debug				= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(THIS.c_Foxbin2prg_FullPath,'LOG')))
 		THIS.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
 
