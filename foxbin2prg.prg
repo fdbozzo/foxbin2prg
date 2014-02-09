@@ -1205,7 +1205,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), '+N' )
 
 				CASE lcExtension = .c_DC2
-					IF THIS.DCX_Conversion_Support <> 2
+					IF THIS.DBC_Conversion_Support <> 2
 						ERROR (TEXTMERGE(C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )

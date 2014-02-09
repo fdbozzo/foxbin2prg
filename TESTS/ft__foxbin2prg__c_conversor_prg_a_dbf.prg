@@ -107,6 +107,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+			loCnv.DBF_Conversion_Support	= 2
 
 			oFXU_LIB.copiarArchivosParaTest( lc_File )
 
@@ -176,6 +177,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+			loCnv.DBF_Conversion_Support	= 2
 
 			oFXU_LIB.copiarArchivosParaTest( lc_File )
 
@@ -246,6 +248,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+			loCnv.DBF_Conversion_Support	= 2
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
@@ -316,6 +319,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+			loCnv.DBF_Conversion_Support	= 2
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
