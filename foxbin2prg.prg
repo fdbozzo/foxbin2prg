@@ -379,6 +379,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
+		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
@@ -426,6 +427,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowProgress			= .F.
 	l_Recompile				= .F.
 	l_UseTimestamps			= .F.
+	l_ClearUniqueID			= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -713,23 +715,27 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
 					tcDontShowProgress	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
-					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:  ' + TRANSFORM(tcDontShowProgress) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:     ' + TRANSFORM(tcDontShowProgress) )
 
 				CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
 					tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
-					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:    ' + TRANSFORM(tcDontShowErrors) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
 
 				CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
 					tcNoTimestamps	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
-					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:      ' + TRANSFORM(tcNoTimestamps) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:         ' + TRANSFORM(tcNoTimestamps) )
 
 				CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
 					tcDebug	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
-					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:             ' + TRANSFORM(tcDebug) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                ' + TRANSFORM(tcDebug) )
 
 				CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
 					tcExtraBackupLevels	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
-					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels: ' + TRANSFORM(tcExtraBackupLevels) )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:    ' + TRANSFORM(tcExtraBackupLevels) )
+
+				CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
+					THIS.l_ClearUniqueID	= ( ALLTRIM( SUBSTR( laConfig(I), 15 ) ) == '1' )
+					THIS.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(THIS.l_ClearUniqueID) )
 
 				CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
 					THIS.PJX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
@@ -775,12 +781,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
 
 		THIS.writeLog( '---' )
-		THIS.writeLog( '> l_ShowProgress:      ' + TRANSFORM(THIS.l_ShowProgress) )
-		THIS.writeLog( '> l_ShowErrors:        ' + TRANSFORM(THIS.l_ShowErrors) )
-		THIS.writeLog( '> l_Recompile:         ' + TRANSFORM(THIS.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
-		THIS.writeLog( '> l_UseTimestamps:     ' + TRANSFORM(THIS.l_UseTimestamps) )
-		THIS.writeLog( '> l_Debug:             ' + TRANSFORM(THIS.l_Debug) )
-		THIS.writeLog( '> n_ExtraBackupLevels: ' + TRANSFORM(THIS.n_ExtraBackupLevels) )
+		THIS.writeLog( '> l_ShowProgress:         ' + TRANSFORM(THIS.l_ShowProgress) )
+		THIS.writeLog( '> l_ShowErrors:           ' + TRANSFORM(THIS.l_ShowErrors) )
+		THIS.writeLog( '> l_Recompile:            ' + TRANSFORM(THIS.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
+		THIS.writeLog( '> l_UseTimestamps:        ' + TRANSFORM(THIS.l_UseTimestamps) )
+		THIS.writeLog( '> ClearUniqueID:          ' + TRANSFORM(THIS.l_ClearUniqueID) )
+		THIS.writeLog( '> l_Debug:                ' + TRANSFORM(THIS.l_Debug) )
+		THIS.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(THIS.n_ExtraBackupLevels) )
 	ENDPROC
 
 
@@ -3548,7 +3555,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				, USER) ;
 				VALUES ;
 				( 'WINDOWS' ;
-				, toObjeto._UniqueID ;
+				, IIF( toFoxBin2Prg.l_ClearUniqueID, '', toObjeto._UniqueID ) ;
 				, IIF( toFoxBin2Prg.l_UseTimestamps, toObjeto._TimeStamp, 0 ) ;
 				, toObjeto._Class ;
 				, toObjeto._ClassLib ;
@@ -4641,7 +4648,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						, USER) ;
 						VALUES ;
 						( 'WINDOWS' ;
-						, loClase._UniqueID ;
+						, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
 						, IIF( toFoxBin2Prg.l_UseTimestamps, loClase._TimeStamp, 0 ) ;
 						, loClase._Class ;
 						, loClase._ClassLoc ;
@@ -4932,7 +4939,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						, USER) ;
 						VALUES ;
 						( 'WINDOWS' ;
-						, loClase._UniqueID ;
+						, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
 						, IIF( toFoxBin2Prg.l_UseTimestamps, loClase._TimeStamp, 0 ) ;
 						, loClase._Class ;
 						, loClase._ClassLoc ;
@@ -5183,7 +5190,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					, loFile._Comments ;
 					, .T. ;
 					, loFile._CPID ;
-					, loFile._ID ;
+					, IIF( toFoxBin2Prg.l_ClearUniqueID, 0, loFile._ID ) ;
 					, IIF( toFoxBin2Prg.l_UseTimestamps, loFile._TimeStamp, 0 ) ;
 					, loFile._ObjRev ;
 					, UPPER(JUSTSTEM(loFile._Name)) )
@@ -5849,6 +5856,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loReg.TIMESTAMP	= 0
+				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loReg.UNIQUEID	= ''
 				ENDIF
 
 				*-- Ajuste de los tipos de dato
@@ -7750,7 +7760,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			Baseclass="<<toRegClass.Baseclass>>"
 			Timestamp="<<THIS.getTimeStamp(toRegClass.Timestamp)>>"
 			Scale="<<toRegClass.Reserved6>>"
-			Uniqueid="<<EVL(toRegClass.Uniqueid,SYS(2015))>>"
+			Uniqueid="<<toRegClass.Uniqueid>>"
 		ENDTEXT
 
 		IF NOT EMPTY(toRegClass.OLE2)
@@ -7821,7 +7831,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
+				<<>>	platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -7933,7 +7943,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
+				<<>>	platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8045,7 +8055,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	platform="WINDOWS " uniqueid="<<EVL(toReg.UniqueID,SYS(2015))>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
+				<<>>	platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8165,6 +8175,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loReg.TIMESTAMP	= 0
+				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loReg.UNIQUEID	= ''
 				ENDIF
 
 				lcOLEChecksum	= SYS(2007, loReg.OLE, 0, 1)
@@ -8324,6 +8337,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loRegClass.TIMESTAMP	= 0
 				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loRegClass.UNIQUEID	= ''
+				ENDIF
 
 				lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
@@ -8351,6 +8367,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					IF NOT toFoxBin2Prg.l_UseTimestamps
 						loRegObj.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegObj.UNIQUEID	= ''
 					ENDIF
 
 					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
@@ -8382,6 +8401,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					IF NOT toFoxBin2Prg.l_UseTimestamps
 						loRegObj.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegObj.UNIQUEID	= ''
 					ENDIF
 
 					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
@@ -8529,6 +8551,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					IF NOT toFoxBin2Prg.l_UseTimestamps
 						loRegObj.TIMESTAMP	= 0
 					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegObj.UNIQUEID	= ''
+					ENDIF
 
 					ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
 					THIS.write_ADD_OBJECTS_WithProperties( @loRegObj )
@@ -8561,6 +8586,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					IF NOT toFoxBin2Prg.l_UseTimestamps
 						loRegObj.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegObj.UNIQUEID	= ''
 					ENDIF
 
 					THIS.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
@@ -8653,6 +8681,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			IF NOT toFoxBin2Prg.l_UseTimestamps
 				loReg.TIMESTAMP	= 0
 			ENDIF
+			IF toFoxBin2Prg.l_ClearUniqueID
+				loReg.ID	= 0
+			ENDIF
 
 			loProject._HomeDir		= ['] + ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.HOMEDIR ) ) + [']
 
@@ -8693,6 +8724,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loReg.TIMESTAMP	= 0
+				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loReg.ID	= 0
 				ENDIF
 
 				loReg.NAME		= LOWER( ALLTRIM( THIS.get_ValueFromNullTerminatedValue( loReg.NAME ) ) )
@@ -9352,6 +9386,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loRegCab.TIMESTAMP	= 0
 				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loRegCab.UNIQUEID	= ''
+				ENDIF
 			ENDIF
 
 			*-- Dataenvironment
@@ -9362,6 +9399,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loRegDataEnv.TIMESTAMP	= 0
 				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loRegDataEnv.UNIQUEID	= ''
+				ENDIF
 			ENDIF
 
 			*-- Cursor1 (¿puede haber más de 1 cursor?)
@@ -9371,6 +9411,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loRegCur.TIMESTAMP	= 0
+				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loRegCur.UNIQUEID	= ''
 				ENDIF
 			ENDIF
 
@@ -9406,6 +9449,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 				IF NOT toFoxBin2Prg.l_UseTimestamps
 					loRegObj.TIMESTAMP	= 0
+				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loRegObj.UNIQUEID	= ''
 				ENDIF
 
 				THIS.write_DETALLE_REPORTE( @loRegObj )
