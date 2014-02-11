@@ -2785,28 +2785,47 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		EXTERNAL ARRAY ta_ID_Bloques, taBloquesExclusion
 
 		TRY
-			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ
+			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord
 			DIMENSION taBloquesExclusion(1,2)
 			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
 
 			IF tnCodeLines > 1
 				IF EMPTY(ta_ID_Bloques)
 					DIMENSION ta_ID_Bloques(2,2)
-					ta_ID_Bloques(1,1)	= '#IF .F.'
+					ta_ID_Bloques(1,1)	= '#IF'
 					ta_ID_Bloques(1,2)	= '#ENDI'
-					ta_ID_Bloques(2,1)	= C_TEXT
-					ta_ID_Bloques(2,2)	= C_ENDTEXT
+					ta_ID_Bloques(2,1)	= 'TEXT'
+					ta_ID_Bloques(2,2)	= 'ENDT'
+					lnID_Bloques_Count	= ALEN( ta_ID_Bloques, 1 )
 				ENDIF
 
 				*-- Búsqueda del ID de inicio de bloque
 				FOR I = 1 TO tnCodeLines
-					lcLine = LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )	&& Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+					* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+					lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
 
 					IF THIS.lineIsOnlyCommentAndNoMetadata( @lcLine )
 						LOOP
 					ENDIF
 
-					lnPrimerID	= ASCAN( ta_ID_Bloques, lcLine, 1, 0, 1, 1+8 )
+					lnPrimerID	= 0
+
+					FOR X = 1 TO lnID_Bloques_Count
+						IF UPPER( LEFT( lcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
+							*-- Evaluar casos especiales
+							lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
+
+							DO CASE
+							CASE ta_ID_Bloques(X,1) == 'TEXT' AND NOT lcWord == 'TEXT'
+								LOOP
+							CASE ta_ID_Bloques(X,2) == 'ENDT' AND NOT lcWord == LEFT( 'ENDTEXT', LEN(lcWord) )
+								LOOP
+							ENDCASE
+
+							lnPrimerID	= X
+							EXIT
+						ENDIF
+					ENDFOR
 
 					IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
 						tnBloquesExclusion		= tnBloquesExclusion + 1
@@ -2816,13 +2835,20 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						* Búsqueda del ID de fin de bloque
 						FOR I = I + 1 TO tnCodeLines
-							lcLine = LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )	&& Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+							* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+							lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
 
 							IF THIS.lineIsOnlyCommentAndNoMetadata( @lcLine )
 								LOOP
 							ENDIF
 
-							IF LEFT( lcLine, lnLen_IDFinBQ ) == ta_ID_Bloques(lnPrimerID,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
+							lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
+
+							IF LEFT( UPPER(lcLine), lnLen_IDFinBQ ) == ta_ID_Bloques(lnPrimerID,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
+								*-- Evaluar casos especiales
+								IF ta_ID_Bloques(lnPrimerID,2) == 'ENDT' AND NOT lcWord == LEFT( 'ENDTEXT', LEN(lcWord) )
+									LOOP
+								ENDIF
 								taBloquesExclusion(tnBloquesExclusion,2)	= I
 								EXIT
 							ENDIF
@@ -3882,7 +3908,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 							IF lnPos2 > 0
 								*-- Con comentarios
-								lcPAM_Name		= RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) )
+								lcPAM_Name		= LOWER( RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) )
 								lcItem	= lcPAM_Name + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) + CR_LF
 
 								*-- Separo propiedades y métodos
@@ -3893,7 +3919,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 								ENDIF
 							ELSE
 								*-- Sin comentarios
-								lcPAM_Name		= RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) )
+								lcPAM_Name		= LOWER( RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) )
 								lcItem	= lcPAM_Name + IIF(ISALPHA(lcPAM_Name), '', ' ') + CR_LF
 
 								*-- Separo propiedades y métodos
@@ -3959,7 +3985,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ELSE
 					toClase._Class			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine + ' OF ', ' AS ', ' OF ', 1, 1 ), ["'], [] ) )
 				ENDIF
-				toClase._ClassLoc		= ALLTRIM( CHRTRAN( STREXTRACT( tcLine + ' OLEPUBLIC', ' OF ', ' OLEPUBLIC', 1, 1 ), ["'], [] ) )
+				toClase._ClassLoc		= LOWER( ALLTRIM( CHRTRAN( STREXTRACT( tcLine + ' OLEPUBLIC', ' OF ', ' OLEPUBLIC', 1, 1 ), ["'], [] ) ) )
 				toClase._OlePublic		= ' OLEPUBLIC' $ UPPER(tcLine)
 				toClase._Comentario		= tc_Comentario
 				toClase._Inicio			= I
@@ -4124,7 +4150,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		IF LEFT(tcLine, 7) == 'HIDDEN '
 			llBloqueEncontrado	= .T.
-			toClase._HiddenProps		= ALLTRIM( SUBSTR( tcLine, 8 ) )
+			toClase._HiddenProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 8 ) ) )
 		ENDIF
 
 		RETURN llBloqueEncontrado
@@ -4144,9 +4170,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		IF LEFT(tcLine, 9) == '#INCLUDE '
 			llBloqueEncontrado		= .T.
 			IF THIS.c_Type = 'SCX'
-				toModulo._includeFile	= ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) )
+				toModulo._includeFile	= LOWER( ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) ) )
 			ELSE
-				toClase._includeFile	= ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) )
+				toClase._includeFile	= LOWER( ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) ) )
 			ENDIF
 		ENDIF
 
@@ -4296,7 +4322,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		IF LEFT(tcLine, 10) == 'PROTECTED '
 			llBloqueEncontrado	= .T.
-			toClase._ProtectedProps		= ALLTRIM( SUBSTR( tcLine, 11 ) )
+			toClase._ProtectedProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 11 ) ) )
 		ENDIF
 
 		RETURN llBloqueEncontrado
@@ -7494,8 +7520,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			IF tnMethodCount > 0 THEN
 				FOR I = 1 TO tnMethodCount
 					lcMethod			= CHRTRAN( taMethods(I,1), '^', '' )
-					lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 0)
-					lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethod, 1, 0, 1, 8)
+					lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 1)
+					lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethod, 1, 0, 1, 1+8)
 
 					DO CASE
 					CASE lnProtectedItem = 0
@@ -7581,17 +7607,17 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							LOOP
 						ENDIF
 
-						lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 0)
+						lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 1)
 
 						DO CASE
 						CASE lnProtectedItem = 0
 							*-- Propiedad común
 
-						CASE taProtected(lnProtectedItem) == taPropsAndValues(I,1)
+						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) )
 							*-- Propiedad protegida
 							lcProtectedProp	= lcProtectedProp + ',' + taPropsAndValues(I,1)
 
-						CASE taProtected(lnProtectedItem) == taPropsAndValues(I,1) + '^'
+						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) + '^' )
 							*-- Propiedad oculta
 							lcHiddenProp	= lcHiddenProp + ',' + taPropsAndValues(I,1)
 
@@ -7610,7 +7636,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
 						ENDTEXT
 
-						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 8)
+						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -7696,7 +7722,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		LOCAL lcOF_Classlib, llOleObject
 		lcOF_Classlib	= ''
-		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 8) > 0 )
+		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+8) > 0 )
 
 		IF NOT EMPTY(toRegClass.CLASSLOC)
 			lcOF_Classlib	= 'OF "' + ALLTRIM(toRegClass.CLASSLOC) + '" '

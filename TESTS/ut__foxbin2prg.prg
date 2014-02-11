@@ -291,8 +291,6 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
-			loCnv.DBF_Conversion_Support	= 2
-			loCnv.l_UseTimestamps	= .T.
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
@@ -367,8 +365,6 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
-			loCnv.DBF_Conversion_Support	= 2
-			loCnv.l_UseTimestamps	= .T.
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
