@@ -70,6 +70,10 @@
 * 01/02/2014	FDBOZZO		v1.19.6	Agregada compatibilidad con SourceSafe para Diff y Merge
 * 02/02/2014	FDBOZZO		v1.19.7	Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
 * 03/02/2014	FDBOZZO		v1.19.8	Arreglo bug pageframe (error activePage)
+* 08/02/2014	FDBOZZO		v1.19.9 Nuevos items de config.en foxbin2prg.cfg / Bug en Localización  / Mejora log / Parametrización Nº backups / Timestamps desactivados por defecto
+* 09/02/2014	FDBOZZO		v1.19.10 Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
+* 13/02/2014	FDBOZZO		v1.19.11 Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
+* 21/02/2014	FDBOZZO		v1.19.12 Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -86,6 +90,7 @@
 * 14/12/2013	Fidel Charny	REPORTE BUG scx v1.13: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
 * 01/01/2014	Fidel Charny	REPORTE BUG mnx v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
 * 05/01/2014	Fidel Charny	REPORTE BUG mnx v1.17: Se genera cláusula "DO" o llamada Command cuando no Procedure ni Command que llamar // Diferencia de Case en NAME (se arregla en v1.18)
+* 20/02/2014	Ryan Harris		PROPUESTA DE MEJORA v1.19.11: Centralizar los ZOrder de los controles en metadata de cabecera de la clase para minimizar diferencias
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -122,9 +127,11 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *-- NO modificar! / Do NOT change!
 #DEFINE C_CMT_I				'*--'
 #DEFINE C_CMT_F				'--*'
-#DEFINE C_METADATA_I		'*< CLASSDATA:'
-#DEFINE C_METADATA_F		'/>'
-#DEFINE C_LEN_METADATA_I	LEN(C_METADATA_I)
+#DEFINE C_CLASSDATA_I		'*< CLASSDATA:'
+#DEFINE C_CLASSDATA_F		'/>'
+#DEFINE C_OBJECTDATA_I		'*< OBJECTDATA:'
+#DEFINE C_OBJECTDATA_F		'/>'
+#DEFINE C_LEN_CLASSDATA_I	LEN(C_CLASSDATA_I)
 #DEFINE C_OLE_I				'*< OLE:'
 #DEFINE C_OLE_F				'/>'
 #DEFINE C_LEN_OLE_I			LEN(C_OLE_I)
@@ -4250,12 +4257,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, C_LEN_METADATA_I) == C_METADATA_I	&& METADATA de la CLASE
+		IF LEFT(tcLine, C_LEN_CLASSDATA_I) == C_CLASSDATA_I	&& METADATA de la CLASE
 			*< CLASSDATA: Baseclass="custom" Timestamp="2013/11/19 11:51:04" Scale="Foxels" Uniqueid="_3WF0VSTN1" ProjectClassIcon="container.ico" ClassIcon="toolbar.ico" />
 			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
 			llBloqueEncontrado	= .T.
 			WITH THIS
-				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_METADATA_I, C_METADATA_F )
+				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_CLASSDATA_I, C_CLASSDATA_F )
 
 				toClase._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues )
 				toClase._TimeStamp			= INT( .RowTimeStamp(  .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
@@ -7892,7 +7899,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTEXT
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
-			<<>>	<<C_METADATA_I>>
+			<<>>	<<C_CLASSDATA_I>>
 			Baseclass="<<toRegClass.Baseclass>>"
 			Timestamp="<<THIS.getTimeStamp(toRegClass.Timestamp)>>"
 			Scale="<<toRegClass.Reserved6>>"
@@ -7922,7 +7929,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDIF
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
-			<<C_METADATA_F>>
+			<<C_CLASSDATA_F>>
 		ENDTEXT
 	ENDPROC
 
