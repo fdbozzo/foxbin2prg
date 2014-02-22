@@ -8568,6 +8568,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
 					*-------------------------------------------------------------------------------
+					lnObjCount	= 0
 					lnRecno	= RECNO()
 					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
@@ -8602,28 +8603,6 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
 
-
-					*-------------------------------------------------------------------------------
-					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
-					*-------------------------------------------------------------------------------
-					*lnRecno	= RECNO()
-					*LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-
-					*SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
-					*	SCATTER MEMO NAME loRegObj
-
-						*IF NOT toFoxBin2Prg.l_UseTimestamps
-						*	loRegObj.TIMESTAMP	= 0
-						*ENDIF
-						*IF toFoxBin2Prg.l_ClearUniqueID
-						*	loRegObj.UNIQUEID	= ''
-						*ENDIF
-
-						*ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
-					*	.write_ADD_OBJECTS_WithProperties( @loRegObj )
-					*ENDSCAN
-
-					*GOTO RECORD (lnRecno)
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
 
 					FOR I = 1 TO lnObjCount
@@ -8800,6 +8779,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
 					*-------------------------------------------------------------------------------
+					lnObjCount	= 0
 					lnRecno	= RECNO()
 					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
