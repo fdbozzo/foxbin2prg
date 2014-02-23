@@ -1,6 +1,6 @@
 *---------------------------------------------------------------------------------------------------
 * Módulo.........: FOXBIN2PRG.PRG - PARA VISUAL FOXPRO 9.0
-* Autor..........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com)
+* Autor..........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com) - http://fdbozzo.blogspot.com
 * Fecha creación.: 04/11/2013
 *
 * LICENCIA:
@@ -70,6 +70,10 @@
 * 01/02/2014	FDBOZZO		v1.19.6	Agregada compatibilidad con SourceSafe para Diff y Merge
 * 02/02/2014	FDBOZZO		v1.19.7	Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
 * 03/02/2014	FDBOZZO		v1.19.8	Arreglo bug pageframe (error activePage)
+* 08/02/2014	FDBOZZO		v1.19.9 Nuevos items de config.en foxbin2prg.cfg / Bug en Localización  / Mejora log / Parametrización Nº backups / Timestamps desactivados por defecto
+* 09/02/2014	FDBOZZO		v1.19.10 Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
+* 13/02/2014	FDBOZZO		v1.19.11 Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
+* 21/02/2014	FDBOZZO		v1.19.12 Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -86,6 +90,7 @@
 * 14/12/2013	Fidel Charny	REPORTE BUG scx v1.13: La regeneración de los forms (SCX) no regenera el último registro COMMENT (arreglado en v.1.14)
 * 01/01/2014	Fidel Charny	REPORTE BUG mnx v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
 * 05/01/2014	Fidel Charny	REPORTE BUG mnx v1.17: Se genera cláusula "DO" o llamada Command cuando no Procedure ni Command que llamar // Diferencia de Case en NAME (se arregla en v1.18)
+* 20/02/2014	Ryan Harris		PROPUESTA DE MEJORA v1.19.11: Centralizar los ZOrder de los controles en metadata de cabecera de la clase para minimizar diferencias
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -110,21 +115,21 @@
 *										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 *										generar errores de compilación, típicamente los #include.
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
-* tcNoTimestamps			(v? IN    ) '1' para mantener los timestamps vacíos. Útil para minimizar diferencias en Diff/Merge por este motivo.
+* tcNoTimestamps			(         ) Sin uso. Utilizar el archivo de configuración.
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
 LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName, tcRecompile, tcNoTimestamps
 
-*-- Internacionalización / Internationalization
-*-- Fin / End
-
 *-- NO modificar! / Do NOT change!
 #DEFINE C_CMT_I				'*--'
 #DEFINE C_CMT_F				'--*'
-#DEFINE C_METADATA_I		'*< CLASSDATA:'
-#DEFINE C_METADATA_F		'/>'
-#DEFINE C_LEN_METADATA_I	LEN(C_METADATA_I)
+#DEFINE C_CLASSDATA_I		'*< CLASSDATA:'
+#DEFINE C_CLASSDATA_F		'/>'
+#DEFINE C_LEN_CLASSDATA_I	LEN(C_CLASSDATA_I)
+#DEFINE C_OBJECTDATA_I		'*< OBJECTDATA:'
+#DEFINE C_OBJECTDATA_F		'/>'
+#DEFINE C_LEN_OBJECTDATA_I	LEN(C_OBJECTDATA_I)
 #DEFINE C_OLE_I				'*< OLE:'
 #DEFINE C_OLE_F				'/>'
 #DEFINE C_LEN_OLE_I			LEN(C_OLE_I)
@@ -780,7 +785,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
 			.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
 			.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
-			.l_UseTimestamps		= (TRANSFORM(tcNoTimestamps) == '0')
+			.l_UseTimestamps		= (TRANSFORM(tcNoTimestamps) == '1')
 			.l_Debug				= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(.c_Foxbin2prg_FullPath,'LOG')))
 			.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
 
@@ -818,7 +823,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 		*										generar errores de compilación, típicamente los #include.
 		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
-		* tcNoTimestamps			(v? IN    ) Indica si se deben vacar ('1') o no ['0'] los timestamps de registro
+		* tcNoTimestamps			(         ) Sin uso. Utilizar el archivo de configuración.
 		* tcBackupLevels			(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
@@ -850,7 +855,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					+ C_TAB + 'tcNoTimestamps:     ' + TRANSFORM(tcNoTimestamps) )
 
 				tcRecompile		= EVL(tcRecompile,'1')
-				tcNoTimestamps	= EVL(tcNoTimestamps,'0')
+				tcNoTimestamps	= '0' &&EVL(tcNoTimestamps,'0')
 
 				IF _VFP.STARTMODE > 0
 					SET ESCAPE OFF
@@ -2638,7 +2643,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="analizarbloque_foxbin2prg" display="analizarBloque_FoxBin2Prg"/>] ;
 		+ [<memberdata name="analizarbloque_hidden" display="analizarBloque_HIDDEN"/>] ;
 		+ [<memberdata name="analizarbloque_include" display="analizarBloque_INCLUDE"/>] ;
-		+ [<memberdata name="analizarbloque_metadata" display="analizarBloque_METADATA"/>] ;
+		+ [<memberdata name="analizarbloque_classmetadata" display="analizarBloque_CLASSMETADATA"/>] ;
+		+ [<memberdata name="analizarbloque_objectmetadata" display="analizarBloque_OBJECTMETADATA"/>] ;
 		+ [<memberdata name="analizarbloque_ole_def" display="analizarBloque_OLE_DEF"/>] ;
 		+ [<memberdata name="analizarbloque_procedure" display="analizarBloque_PROCEDURE"/>] ;
 		+ [<memberdata name="analizarbloque_protected" display="analizarBloque_PROTECTED"/>] ;
@@ -2747,9 +2753,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		LPARAMETERS tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag
 		EXTERNAL ARRAY taPropsAndValues
 
-		LOCAL lcMetadatos, I, X, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+		LOCAL lcMetadatos, I, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
 		STORE '' TO lcVirtualMeta
-		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I, X
+		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
 
 		lcMetadatos		= ALLTRIM( STREXTRACT( tcLineWithMetadata, tcLeftTag, tcRightTag, 1, 1) )
 		lnCantComillas	= OCCURS( '"', lcMetadatos )
@@ -2769,7 +2775,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		* TENER EN CUENTA AL GENERAR EL TEXTO O AL MODIFICARLO MANUALMENTE AL MERGEAR
 		*-------------------------------------------------------------------------------------
 		FOR I = 1 TO lnCantComillas STEP 2
-			X	= X + 1
+			tnPropsAndValues_Count	= tnPropsAndValues_Count + 1
 
 			*  Type="V" Cpid="1252"
 			*       ^ ^					=> Posiciones del par de comillas dobles
@@ -2778,8 +2784,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			*  Type="V" Cpid="1252"
 			*          ^     ^    ^			=> LastPos, lnPos1 y lnPos2
-			taPropsAndValues(X,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
-			taPropsAndValues(X,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
+			taPropsAndValues(tnPropsAndValues_Count,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
+			taPropsAndValues(tnPropsAndValues_Count,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
 
 			lnLastPos = lnPos2 + 1
 		ENDFOR
@@ -3832,7 +3838,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			IF LEFT( tcLine, 11 ) == 'ADD OBJECT '
 				*-- Estructura a reconocer: ADD OBJECT 'frm_a.Check1' AS check [WITH]
 				llBloqueEncontrado	= .T.
-				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue
+				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
 				tcLine		= CHRTRAN( tcLine, ['], ["] )
 
 				IF EMPTY(toClase._Fin_Cab)
@@ -3840,21 +3846,41 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toClase._Ini_Cuerpo	= I
 				ENDIF
 
-				toObjeto			= NULL
-				toObjeto			= CREATEOBJECT('CL_OBJETO')
-				toClase.add_Object( toObjeto )
-				toObjeto._Nombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
+				toObjeto	= NULL
+				lcNombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
+				lcObjName	= JUSTEXT( '.' + lcNombre )
+
+				IF toClase.l_ObjectMetadataInHeader
+					FOR Z = 1 TO toClase._AddObject_Count
+						IF LOWER(toClase._AddObjects(Z)._Nombre) == LOWER(lcNombre) THEN
+							toObjeto	= toClase._AddObjects(Z)
+							EXIT
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				IF ISNULL(toObjeto)
+					toObjeto	= CREATEOBJECT('CL_OBJETO')
+					*-- Luego se reasigna el ZOrder, pero si no lo hace, se pone último como si se acabara de agregar.
+					*-- Puede pasar si se agrega manualmente al TX2 y se olvida agregar la metadata OBJECTDATA.
+					toObjeto._ZOrder	= 9999
+					toObjeto._Nombre	= lcNombre
+				ENDIF
+
+				toObjeto._ObjName	= lcObjName
 
 				IF '.' $ toObjeto._Nombre
-					toObjeto._ObjName	= JUSTEXT( toObjeto._Nombre )
 					toObjeto._Parent	= toClase._ObjName + '.' + JUSTSTEM( toObjeto._Nombre )
 				ELSE
-					toObjeto._ObjName	= toObjeto._Nombre
 					toObjeto._Parent	= toClase._ObjName
 				ENDIF
 
 				toObjeto._Nombre	= toObjeto._Parent + '.' + toObjeto._ObjName
 				toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
+
+				IF NOT toClase.l_ObjectMetadataInHeader
+					toClase.add_Object( toObjeto )
+				ENDIF
 
 
 				*-- Propiedades del ADD OBJECT
@@ -3870,10 +3896,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 							toObjeto._ClassLib			= .get_ValueByName_FromListNamesWithValues( 'ClassLib', 'C', @laPropsAndValues )
 							toObjeto._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues )
-							toObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
+
+							IF NOT toClase.l_ObjectMetadataInHeader
+								toObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
+								toObjeto._TimeStamp			= INT( .RowTimeStamp( .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
+								toObjeto._ZOrder			= .get_ValueByName_FromListNamesWithValues( 'ZOrder', 'I', @laPropsAndValues )
+							ENDIF
+
 							toObjeto._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
-							toObjeto._ZOrder			= .get_ValueByName_FromListNamesWithValues( 'ZOrder', 'I', @laPropsAndValues )
-							toObjeto._TimeStamp			= INT( .RowTimeStamp( .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
 							toObjeto._Ole				= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues ), 14 )
 
 							IF NOT EMPTY( toObjeto._Ole2 )	&& Le agrego "OLEObject = " delante
@@ -3891,11 +3921,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						ENDIF
 
 						IF RIGHT(tcLine, 3) == ', ;'	&& VALOR INTERMEDIO CON ", ;"
-							*toObjeto.add_Property( .desnormalizarAsignacion( LEFT(tcLine, LEN(tcLine) - 3) ) )
 							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue )
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ELSE	&& VALOR FINAL SIN ", ;" (JUSTO ANTES DEL <END OBJECT>)
-							*toObjeto.add_Property( .desnormalizarAsignacion( RTRIM(tcLine) ) )
 							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue )
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ENDIF
@@ -4031,8 +4059,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			TRY
 				llBloqueEncontrado = .T.
 				LOCAL Z, lcProp, lcValue, loEx AS EXCEPTION ;
-					, llMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
-					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed ;
+					, llCLASSMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
+					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed, llOBJECTMETADATA_Completed ;
 					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
 				STORE '' TO tcProcedureAbierto
@@ -4075,7 +4103,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llPROTECTED_Completed	= .T.
 							llHIDDEN_Completed	= .T.
 							llINCLUDE_Completed	= .T.
-							llMETADATA_Completed	= .T.
+							llCLASSMETADATA_Completed	= .T.
+							llOBJECTMETADATA_Completed	= .T.
 							llDEFINED_PAM_Completed	= .T.
 
 
@@ -4092,8 +4121,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llINCLUDE_Completed	= .T.
 
 
-						CASE NOT llMETADATA_Completed AND .analizarBloque_METADATA( @toClase, @tcLine )
-							llMETADATA_Completed	= .T.
+						CASE NOT llCLASSMETADATA_Completed AND .analizarBloque_CLASSMETADATA( @toClase, @tcLine )
+							llCLASSMETADATA_Completed	= .T.
+
+
+						CASE NOT llOBJECTMETADATA_Completed AND .analizarBloque_OBJECTMETADATA( @toClase, @tcLine )
+							*llOBJECTMETADATA_Completed	= .T.
 
 
 						CASE NOT llDEFINED_PAM_Completed AND .analizarBloque_DEFINED_PAM( @toClase, @tcLine, @taCodeLines, tnCodeLines, @I )
@@ -4105,7 +4138,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llPROTECTED_Completed	= .T.
 							llHIDDEN_Completed	= .T.
 							llINCLUDE_Completed	= .T.
-							llMETADATA_Completed	= .T.
+							llCLASSMETADATA_Completed	= .T.
+							llOBJECTMETADATA_Completed	= .T.
 							llDEFINED_PAM_Completed	= .T.
 
 
@@ -4119,7 +4153,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							*-- NOTA: Las propiedades se agregan tal cual, incluso aunque estén separadas en
 							*--       varias líneas (memberdata y fb2p_value), ya que luego se ensamblan en classProps2Memo().
 							*
-							*toClase.add_Property( THIS.desnormalizarAsignacion( RTRIM(tcLine) ), RTRIM(tc_Comentario) )
 							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue, @toClase, @taCodeLines, tnCodeLines, @I )
 							toClase.add_Property( @lcProp, @lcValue, RTRIM(tc_Comentario) )
 
@@ -4241,7 +4274,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE analizarBloque_METADATA
+	PROCEDURE analizarBloque_CLASSMETADATA
 		LPARAMETERS toClase, tcLine
 
 		#IF .F.
@@ -4250,12 +4283,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, C_LEN_METADATA_I) == C_METADATA_I	&& METADATA de la CLASE
+		IF LEFT(tcLine, C_LEN_CLASSDATA_I) == C_CLASSDATA_I	&& METADATA de la CLASE
 			*< CLASSDATA: Baseclass="custom" Timestamp="2013/11/19 11:51:04" Scale="Foxels" Uniqueid="_3WF0VSTN1" ProjectClassIcon="container.ico" ClassIcon="toolbar.ico" />
 			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
 			llBloqueEncontrado	= .T.
 			WITH THIS
-				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_METADATA_I, C_METADATA_F )
+				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_CLASSDATA_I, C_CLASSDATA_F )
 
 				toClase._BaseClass			= .get_ValueByName_FromListNamesWithValues( 'BaseClass', 'C', @laPropsAndValues )
 				toClase._TimeStamp			= INT( .RowTimeStamp(  .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
@@ -4270,6 +4303,36 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			IF NOT EMPTY( toClase._Ole2 )	&& Le agrego "OLEObject = " delante
 				toClase._Ole2	= 'OLEObject = ' + toClase._Ole2 + CR_LF
 			ENDIF
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE analizarBloque_OBJECTMETADATA
+		LPARAMETERS toClase, tcLine
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		IF LEFT(tcLine, C_LEN_OBJECTDATA_I) == C_OBJECTDATA_I	&& METADATA del ADD OBJECT
+			*< OBJECTDATA: ObjName="txtValor" Timestamp="2013/11/19 11:51:04" Uniqueid="_3WF0VSTN1" />
+			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+			llBloqueEncontrado	= .T.
+			toClase.l_ObjectMetadataInHeader = .T.
+
+			loObjeto	= CREATEOBJECT('CL_OBJETO')
+			toClase.add_Object( loObjeto )
+
+			WITH THIS
+				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_OBJECTDATA_I, C_OBJECTDATA_F )
+				loObjeto._Nombre			= .get_ValueByName_FromListNamesWithValues( 'ObjPath', 'C', @laPropsAndValues )
+				loObjeto._TimeStamp			= INT( .RowTimeStamp(  .get_ValueByName_FromListNamesWithValues( 'TimeStamp', 'T', @laPropsAndValues ) ) )
+				loObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
+			ENDWITH && THIS
 		ENDIF
 
 		RETURN llBloqueEncontrado
@@ -6928,6 +6991,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_add_objects_withproperties" display="write_ADD_OBJECTS_WithProperties"/>] ;
 		+ [<memberdata name="write_all_object_methods" display="write_ALL_OBJECT_METHODS"/>] ;
 		+ [<memberdata name="write_cabecera_reporte" display="write_CABECERA_REPORTE"/>] ;
+		+ [<memberdata name="write_classmetadata" display="write_CLASSMETADATA"/>] ;
 		+ [<memberdata name="write_class_methods" display="write_CLASS_METHODS"/>] ;
 		+ [<memberdata name="write_class_properties" display="write_CLASS_PROPERTIES"/>] ;
 		+ [<memberdata name="write_dataenvironment_reporte" display="write_DATAENVIRONMENT_REPORTE"/>] ;
@@ -6951,7 +7015,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_enddefine_sicorresponde" display="write_ENDDEFINE_SiCorresponde"/>] ;
 		+ [<memberdata name="write_hidden_properties" display="write_HIDDEN_Properties"/>] ;
 		+ [<memberdata name="write_include" display="write_INCLUDE"/>] ;
-		+ [<memberdata name="write_metadata" display="write_METADATA"/>] ;
+		+ [<memberdata name="write_objectmetadata" display="write_OBJECTMETADATA"/>] ;
 		+ [<memberdata name="write_protected_properties" display="write_PROTECTED_Properties"/>] ;
 		+ [</VFPData>]
 
@@ -7002,12 +7066,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 
 						*-- Genero el método SIN indentar, ya que se hace luego
-						*tcMethods2	= tcMethods
-						*TEXT TO tcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						*	<<'PROCEDURE'>> <<tcMethodName>>
-						*	<<.IndentarMemo( taCode(taMethods(I,2)) )>>
-						*	<<'ENDPROC'>>
-						*ENDTEXT
 						*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
 						tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + tcMethodName
 						tcMethods	= tcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)) )
@@ -7511,7 +7569,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			*-- Defino los objetos a cargar
 			THIS.get_PropsAndValuesFrom_PROPERTIES( toRegObj.PROPERTIES, 1, @laPropsAndValues, @lnPropsAndValues_Count, @lcMemo )
-			*lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( lcMemo, C_TAB + C_TAB, .T. )
 			lcMemo	= THIS.set_MultilineMemoWithAddObjectProperties( @laPropsAndValues, @lnPropsAndValues_Count, C_TAB + C_TAB, .T. )
 
 			IF '.' $ toRegObj.PARENT
@@ -7544,8 +7601,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-				BaseClass="<<toRegObj.Baseclass>>" UniqueID="<<toRegObj.Uniqueid>>"
-				Timestamp="<<THIS.getTimeStamp(toRegObj.Timestamp)>>" ZOrder="<<TRANSFORM(toRegObj._ZOrder)>>" <<>>
+				BaseClass="<<toRegObj.Baseclass>>" <<>>
 			ENDTEXT
 
 			*-- Agrego metainformación para objetos OLE
@@ -7592,12 +7648,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				FOR I = 1 TO lnMethodCount
 					*-- Genero los métodos indentados
-					*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					*	<<>>	<<laMethods(I,3)>>PROCEDURE <<laMethods(I,1)>>
-					*	<<.IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )>>
-					*	<<>>	ENDPROC
-
-					*ENDTEXT
 					*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
 					lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + C_PROCEDURE + ' ' + laMethods(I,1)
 					lcMethods	= lcMethods + CR_LF + .IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
@@ -7659,20 +7709,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 
 						*-- Código del método
-						*TEXT TO lcMethods2 ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						*	<<.IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9) )>>
-						*	<<>>	ENDPROC
-
-						*ENDTEXT
 						*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
 						lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
 						lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
 						lcMethods	= lcMethods + CR_LF
 					ENDFOR
-
-					*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					*	<<lcMethods>>
-					*ENDTEXT
 
 				ENDWITH && THIS
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + lcMethods &&+ CR_LF
@@ -7822,6 +7863,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				<<>>	<<C_DEFINED_PAM_F>>
 			ENDTEXT
 
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+
 		ENDIF
 	ENDPROC
 
@@ -7883,7 +7926,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_METADATA
+	PROCEDURE write_CLASSMETADATA
 		LPARAMETERS toRegClass
 
 		*-- Agrego Metadatos de la clase (Baseclass, Timestamp, Scale, Uniqueid)
@@ -7892,9 +7935,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTEXT
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
-			<<>>	<<C_METADATA_I>>
+			<<>>	<<C_CLASSDATA_I>>
 			Baseclass="<<toRegClass.Baseclass>>"
-			Timestamp="<<THIS.getTimeStamp(toRegClass.Timestamp)>>"
+			Timestamp="<<ALLTRIM(THIS.getTimeStamp(toRegClass.Timestamp))>>"
 			Scale="<<toRegClass.Reserved6>>"
 			Uniqueid="<<toRegClass.Uniqueid>>"
 		ENDTEXT
@@ -7922,8 +7965,43 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDIF
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
-			<<C_METADATA_F>>
+			<<C_CLASSDATA_F>>
 		ENDTEXT
+
+		C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE write_OBJECTMETADATA
+		LPARAMETERS toRegObj
+		LOCAL lcNombre
+
+		*-- Agrego Metadatos de los objetos (Timestamp, UniqueID)
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<>>
+		ENDTEXT
+
+		IF '.' $ toRegObj.PARENT
+			*-- Este caso: clase.objeto.objeto ==> se quita clase
+			lcNombre	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT)+1) + '.' + toRegObj.OBJNAME
+		ELSE
+			*-- Este caso: objeto
+			lcNombre	= toRegObj.OBJNAME
+		ENDIF
+
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+			<<>>	<<C_OBJECTDATA_I>>
+			ObjPath="<<lcNombre>>"
+			UniqueID="<<toRegObj.Uniqueid>>"
+			Timestamp="<<ALLTRIM(THIS.getTimeStamp(toRegObj.Timestamp))>>"
+		ENDTEXT
+
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+			<<C_OBJECTDATA_F>>
+		ENDTEXT
+
 	ENDPROC
 
 
@@ -8439,10 +8517,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen ;
-				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-			STORE 0 TO lnCodError, lnLastClass
-			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
+			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
+				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
+				, laObjs(1,3), I
+			STORE 0 TO lnCodError, lnLastClass, lnObjCount
+			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1), laObjs(1)
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -8476,6 +8555,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
 						loRegClass.UNIQUEID	= ''
+					ELSE
+						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
 					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
@@ -8486,34 +8567,57 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					.write_DEFINE_CLASS_COMMENTS( @loRegClass )
 
-					.write_METADATA( @loRegClass )
-
-					.write_INCLUDE( @loRegClass )
-
-					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
-
+					.write_CLASSMETADATA( @loRegClass )
 
 					*-------------------------------------------------------------------------------
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
 					*-------------------------------------------------------------------------------
+					lnObjCount	= 0
 					lnRecno	= RECNO()
 					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+						lnObjCount	= lnObjCount + 1
+						DIMENSION laObjs(lnObjCount,3)
 						SCATTER MEMO NAME loRegObj
+						laObjs(lnObjCount,1)	= loRegObj
+						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
+						laObjs(lnObjCount,3)	= lnObjCount	&& Alphabetic order
 
 						IF NOT toFoxBin2Prg.l_UseTimestamps
 							loRegObj.TIMESTAMP	= 0
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
 							loRegObj.UNIQUEID	= ''
+						ELSE
+							loRegObj.UNIQUEID	= ALLTRIM(loRegObj.UNIQUEID)
 						ENDIF
 
-						ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
-						.write_ADD_OBJECTS_WithProperties( @loRegObj )
+						loRegObj	= NULL
 					ENDSCAN
 
 					GOTO RECORD (lnRecno)
+					ASORT(laObjs, 2, -1, 0, 0)	&& Orden por ZOrder
+
+					IF lnObjCount > 0
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
+
+						FOR I = 1 TO lnObjCount
+							.write_OBJECTMETADATA( laObjs(I,1) )
+						ENDFOR
+
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+					ENDIF
+
+					.write_INCLUDE( @loRegClass )
+
+					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
+
+					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
+
+					FOR I = 1 TO lnObjCount
+						.write_ADD_OBJECTS_WithProperties( laObjs(I,1) )
+					ENDFOR
 
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
@@ -8541,6 +8645,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
 							loRegObj.UNIQUEID	= ''
+						ELSE
+							loRegObj.UNIQUEID	= ALLTRIM(loRegObj.UNIQUEID)
 						ENDIF
 
 						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
@@ -8612,9 +8718,10 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen ;
-				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-			STORE 0 TO lnCodError, lnLastClass
+			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
+				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
+				, laObjs(1,3), I
+			STORE 0 TO lnCodError, lnLastClass, lnObjCount
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
 			STORE NULL TO loRegClass, loRegObj
 
@@ -8625,9 +8732,6 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 				SET ORDER TO 0 IN TABLABIN
-
-				*toModulo	= NULL
-				*toModulo	= CREATEOBJECT('CL_MODULO')
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -8660,8 +8764,17 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						AND (EMPTY(TABLABIN.PARENT) ;
 						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
 
-					*loRegClass	= NULL
+					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
+
+					IF NOT toFoxBin2Prg.l_UseTimestamps
+						loRegClass.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegClass.UNIQUEID	= ''
+					ELSE
+						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
+					ENDIF
 
 					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 
@@ -8671,34 +8784,58 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					.write_DEFINE_CLASS_COMMENTS( @loRegClass )
 
-					.write_METADATA( @loRegClass )
-
-					.write_INCLUDE( @loRegClass )
-
-					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
-
+					.write_CLASSMETADATA( @loRegClass )
 
 					*-------------------------------------------------------------------------------
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
 					*-------------------------------------------------------------------------------
+					lnObjCount	= 0
 					lnRecno	= RECNO()
 					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
 
 					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+						lnObjCount	= lnObjCount + 1
+						DIMENSION laObjs(lnObjCount,3)
 						SCATTER MEMO NAME loRegObj
+						laObjs(lnObjCount,1)	= loRegObj
+						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
+						laObjs(lnObjCount,3)	= lnObjCount	&& Orden alfabético
 
 						IF NOT toFoxBin2Prg.l_UseTimestamps
 							loRegObj.TIMESTAMP	= 0
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
 							loRegObj.UNIQUEID	= ''
+						ELSE
+							loRegObj.UNIQUEID	= ALLTRIM(loRegObj.UNIQUEID)
 						ENDIF
 
-						ADDPROPERTY( loRegObj, '_ZOrder', RECNO()*100 )		&& Para permitir insertar objetos manualmente entre medias al integrar cambios
-						.write_ADD_OBJECTS_WithProperties( @loRegObj )
+						loRegObj	= NULL
 					ENDSCAN
 
 					GOTO RECORD (lnRecno)
+					ASORT(laObjs, 2, -1, 0, 0)	&& Orden por ZOrder
+
+					IF lnObjCount > 0
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
+
+						FOR I = 1 TO lnObjCount
+							.write_OBJECTMETADATA( laObjs(I,1) )
+						ENDFOR
+
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+					ENDIF
+
+					.write_INCLUDE( @loRegClass )
+
+					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
+
+
+					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
+
+					FOR I = 1 TO lnObjCount
+						.write_ADD_OBJECTS_WithProperties( laObjs(I,1) )
+					ENDFOR
 
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
@@ -8728,6 +8865,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
 							loRegObj.UNIQUEID	= ''
+						ELSE
+							loRegObj.UNIQUEID	= ALLTRIM(loRegObj.UNIQUEID)
 						ENDIF
 
 						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
@@ -10138,6 +10277,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [<memberdata name="add_procedure" display="add_Procedure"/>] ;
 		+ [<memberdata name="add_property" display="add_Property"/>] ;
 		+ [<memberdata name="add_object" display="add_Object"/>] ;
+		+ [<memberdata name="l_objectmetadatainheader" display="l_ObjectMetadataInHeader"/>] ;
 		+ [<memberdata name="_addobject_count" display="_AddObject_Count"/>] ;
 		+ [<memberdata name="_addobjects" display="_AddObjects"/>] ;
 		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
@@ -10189,6 +10329,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 
 
 	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1]
+	l_ObjectMetadataInHeader	= .F.
 	_Nombre				= ''
 	_ObjName			= ''
 	_Parent				= ''
@@ -10706,7 +10847,6 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
 		+ [</VFPData>]
 
-	*PROTECTED __ObjectID, __ObjectType
 	__ObjectID		= 0
 	_Name			= ''
 
@@ -11459,7 +11599,6 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 			LOCAL lcBinRecord, lnLen, lcDataType
 
 			lcBinRecord	= ''
-			*lcDataType	= IIF( tnPropertyID = 2, 'B', VARTYPE(teData) )
 			lcDataType	= THIS.getDBCPropertyValueTypeByPropertyID( tnPropertyID )
 
 			DO CASE
@@ -15899,11 +16038,9 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 				DO CASE
 				CASE loHeader.ObjType = 1	&& Menu Bar (Sistema)
-					*lcText	= lcText + CR_LF + 'DEFINE MENU _MSYSMENU BAR'
 					lcText	= lcText + CR_LF + 'DEFINE MENU ' + loBarPop.NAME + ' BAR'
 
 				CASE loHeader.ObjType = 5	&& Menu Bar (On top)
-					*lcText	= lcText + CR_LF + 'DEFINE MENU _ONTOP BAR'
 					lcText	= lcText + CR_LF + 'DEFINE MENU ' + loBarPop.NAME + ' BAR'
 
 				CASE loHeader.ObjType = 4	&& Shortcut
