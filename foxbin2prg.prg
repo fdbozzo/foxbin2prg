@@ -7863,6 +7863,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				<<>>	<<C_DEFINED_PAM_F>>
 			ENDTEXT
 
+			C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+
 		ENDIF
 	ENDPROC
 
@@ -7965,7 +7967,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<C_CLASSDATA_F>>
 		ENDTEXT
-		
+
+		C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+
 	ENDPROC
 
 
@@ -7981,10 +7985,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		IF '.' $ toRegObj.PARENT
 			*-- Este caso: clase.objeto.objeto ==> se quita clase
-			lcNombre	= SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1) + '.' + toRegObj.objName
+			lcNombre	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT)+1) + '.' + toRegObj.OBJNAME
 		ELSE
 			*-- Este caso: objeto
-			lcNombre	= toRegObj.objName
+			lcNombre	= toRegObj.OBJNAME
 		ENDIF
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
@@ -7997,7 +8001,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<C_OBJECTDATA_F>>
 		ENDTEXT
-		
+
 	ENDPROC
 
 
@@ -8595,9 +8599,15 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					GOTO RECORD (lnRecno)
 					ASORT(laObjs, 2, -1, 0, 0)	&& Orden por ZOrder
 
-					FOR I = 1 TO lnObjCount
-						.write_OBJECTMETADATA( laObjs(I,1) )
-					ENDFOR
+					IF lnObjCount > 0
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
+
+						FOR I = 1 TO lnObjCount
+							.write_OBJECTMETADATA( laObjs(I,1) )
+						ENDFOR
+
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+					ENDIF
 
 					.write_INCLUDE( @loRegClass )
 
@@ -8806,9 +8816,15 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					GOTO RECORD (lnRecno)
 					ASORT(laObjs, 2, -1, 0, 0)	&& Orden por ZOrder
 
-					FOR I = 1 TO lnObjCount
-						.write_OBJECTMETADATA( laObjs(I,1) )
-					ENDFOR
+					IF lnObjCount > 0
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
+
+						FOR I = 1 TO lnObjCount
+							.write_OBJECTMETADATA( laObjs(I,1) )
+						ENDFOR
+
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+					ENDIF
 
 					.write_INCLUDE( @loRegClass )
 
