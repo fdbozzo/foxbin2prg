@@ -361,6 +361,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
+		+ [<memberdata name="c_foxbin2prg_configfile" display="c_Foxbin2prg_ConfigFile"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
@@ -393,7 +394,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
-		+ [<memberdata name="l_usetimestamps" display="l_UseTimestamps"/>] ;
+		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
 		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
@@ -418,6 +419,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_FB2PRG_Version		= 1.19
 	*--
 	c_Foxbin2prg_FullPath	= ''
+	c_Foxbin2prg_ConfigFile	= ''
 	c_CurDir				= ''
 	c_InputFile				= ''
 	c_OriginalFileName		= ''
@@ -431,12 +433,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors			= .F.
 	l_ShowProgress			= .F.
 	l_Recompile				= .F.
-	l_UseTimestamps			= .F.
+	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	n_ExtraBackupLevels		= 0
+	n_ExtraBackupLevels		= 1
 	nClassTimeStamp			= ''
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
@@ -468,9 +470,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET TABLEPROMPT OFF
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
-		THIS.c_Foxbin2prg_FullPath	= SUBSTR( SYS(16), AT( 'C_FOXBIN2PRG.INIT', SYS(16) ) + LEN('C_FOXBIN2PRG.INIT') + 1 )
-		THIS.c_CurDir				= SYS(5) + CURDIR()
-		THIS.o_FSO					= NEWOBJECT("Scripting.FileSystemObject")
+		THIS.c_Foxbin2prg_FullPath		= SUBSTR( SYS(16), AT( 'C_FOXBIN2PRG.INIT', SYS(16) ) + LEN('C_FOXBIN2PRG.INIT') + 1 )
+		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
+		THIS.c_CurDir					= SYS(5) + CURDIR()
+		THIS.o_FSO						= NEWOBJECT("Scripting.FileSystemObject")
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 	ENDPROC
 
@@ -621,55 +624,57 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				lcNext_Bak	= .getNext_BAK( .c_OutputFile )
-				lcExt_1		= JUSTEXT( .c_OutputFile )
-				tcBakFile_1	= FORCEEXT(.c_OutputFile, lcExt_1 + lcNext_Bak)
+				IF THIS.n_ExtraBackupLevels > 0 THEN
+					lcNext_Bak	= .getNext_BAK( .c_OutputFile )
+					lcExt_1		= JUSTEXT( .c_OutputFile )
+					tcBakFile_1	= FORCEEXT(.c_OutputFile, lcExt_1 + lcNext_Bak)
 
-				DO CASE
-				CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, 'PJM' )
-					*-- Extensiones TEXTO
-
-				CASE lcExt_1 = 'DBF'
-					*-- DBF
-					lcExt_2		= 'FPT'
-					lcExt_3		= 'CDX'
-					tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-					tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
-
-				CASE lcExt_1 = 'DBC'
-					*-- DBC
-					lcExt_2		= 'DCT'
-					lcExt_3		= 'DCX'
-					tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-					tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
-
-				OTHERWISE
-					*-- PJX, VCX, SCX, FRX, LBX, MNX
-					lcExt_2		= LEFT(lcExt_1,2) + 'T'
-					tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-
-				ENDCASE
-
-				IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(.c_OutputFile, lcExt_1) )
-					*-- LOG
 					DO CASE
-					CASE EMPTY(lcExt_2)
-						.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) )
-					CASE EMPTY(lcExt_3)
-						.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
+					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, 'PJM' )
+						*-- Extensiones TEXTO
+
+					CASE lcExt_1 = 'DBF'
+						*-- DBF
+						lcExt_2		= 'FPT'
+						lcExt_3		= 'CDX'
+						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
+
+					CASE lcExt_1 = 'DBC'
+						*-- DBC
+						lcExt_2		= 'DCT'
+						lcExt_3		= 'DCX'
+						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
+
 					OTHERWISE
-						.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
+						*-- PJX, VCX, SCX, FRX, LBX, MNX
+						lcExt_2		= LEFT(lcExt_1,2) + 'T'
+						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
+
 					ENDCASE
 
-					*-- COPIA BACKUP
-					COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
+					IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(.c_OutputFile, lcExt_1) )
+						*-- LOG
+						DO CASE
+						CASE EMPTY(lcExt_2)
+							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) )
+						CASE EMPTY(lcExt_3)
+							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
+						OTHERWISE
+							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
+						ENDCASE
 
-					IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(.c_OutputFile, lcExt_2) )
-						COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
-					ENDIF
+						*-- COPIA BACKUP
+						COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
 
-					IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(.c_OutputFile, lcExt_3) )
-						COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
+						IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(.c_OutputFile, lcExt_2) )
+							COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
+						ENDIF
+
+						IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(.c_OutputFile, lcExt_3) )
+							COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
+						ENDIF
 					ENDIF
 				ENDIF
 			ENDWITH && THIS
@@ -700,7 +705,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			lcConfigFile	= FORCEEXT( .c_Foxbin2prg_FullPath, 'CFG' )
+			lcConfigFile	= THIS.c_Foxbin2prg_ConfigFile
 			llExisteConfig	= FILE( lcConfigFile )
 
 			IF llExisteConfig
@@ -744,7 +749,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
 						.l_ClearUniqueID	= ( ALLTRIM( SUBSTR( laConfig(I), 15 ) ) == '1' )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(.l_ClearUniqueID) )
+						.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 15 )) ) )
 
 					CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
 						.PJX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
@@ -785,15 +790,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
 			.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
 			.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
-			.l_UseTimestamps		= (TRANSFORM(tcNoTimestamps) == '1')
-			.l_Debug				= (TRANSFORM(tcDebug)=='1' OR FILE(FORCEEXT(.c_Foxbin2prg_FullPath,'LOG')))
+			.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
+			.l_Debug				= (TRANSFORM(tcDebug)=='1')
 			.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
 
 			.writeLog( '---' )
 			.writeLog( '> l_ShowProgress:         ' + TRANSFORM(.l_ShowProgress) )
 			.writeLog( '> l_ShowErrors:           ' + TRANSFORM(.l_ShowErrors) )
 			.writeLog( '> l_Recompile:            ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
-			.writeLog( '> l_UseTimestamps:        ' + TRANSFORM(.l_UseTimestamps) )
+			.writeLog( '> l_NoTimestamps:         ' + TRANSFORM(.l_NoTimestamps) )
 			.writeLog( '> ClearUniqueID:          ' + TRANSFORM(.l_ClearUniqueID) )
 			.writeLog( '> l_Debug:                ' + TRANSFORM(.l_Debug) )
 			.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(.n_ExtraBackupLevels) )
@@ -1299,7 +1304,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			* (ES) AUTOGENERADO - ¡¡ATENCIÓN!! - ¡¡NO PENSADO PARA EJECUTAR!! USAR SOLAMENTE PARA INTEGRAR CAMBIOS Y ALMACENAR CON HERRAMIENTAS SCM!!
 			* (EN) AUTOGENERATED - ATTENTION!! - NOT INTENDED FOR EXECUTION!! USE ONLY FOR MERGING CHANGES AND STORING WITH SCM TOOLS!!
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
-			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<EVL( THIS.c_OriginalFileName, THIS.c_InputFile )>>" <<C_FB2PRG_META_F>> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
+			<<C_FB2PRG_META_I>> Version="<<TRANSFORM(THIS.n_FB2PRG_Version)>>" SourceFile="<<JUSTFNAME( EVL( THIS.c_OriginalFileName, THIS.c_InputFile ) )>>" <<C_FB2PRG_META_F>> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 			*
 		ENDTEXT
 
@@ -1316,15 +1321,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL lcNext_Bak, I
 		lcNext_Bak	= '.BAK'
 
-		FOR I = 0 TO THIS.n_ExtraBackupLevels
-			IF I = 0
+		FOR I = 1 TO THIS.n_ExtraBackupLevels
+			IF I = 1
 				IF NOT FILE( tcOutputFileName + '.BAK' )
 					lcNext_Bak	= '.BAK'
 					EXIT
 				ENDIF
 			ELSE
-				IF NOT FILE( tcOutputFileName + '.' + PADL(I,1,'0') + '.BAK' )
-					lcNext_Bak	= '.' + PADL(I,1,'0') + '.BAK'
+				IF NOT FILE( tcOutputFileName + '.' + PADL(I-1,1,'0') + '.BAK' )
+					lcNext_Bak	= '.' + PADL(I-1,1,'0') + '.BAK'
 					EXIT
 				ENDIF
 			ENDIF
@@ -3645,7 +3650,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					VALUES ;
 					( 'WINDOWS' ;
 					, IIF( toFoxBin2Prg.l_ClearUniqueID, '', toObjeto._UniqueID ) ;
-					, IIF( toFoxBin2Prg.l_UseTimestamps, toObjeto._TimeStamp, 0 ) ;
+					, IIF( toFoxBin2Prg.l_NoTimestamps, 0, toObjeto._TimeStamp ) ;
 					, toObjeto._Class ;
 					, toObjeto._ClassLib ;
 					, toObjeto._BaseClass ;
@@ -4802,7 +4807,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							VALUES ;
 							( 'WINDOWS' ;
 							, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
-							, IIF( toFoxBin2Prg.l_UseTimestamps, loClase._TimeStamp, 0 ) ;
+							, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loClase._TimeStamp ) ;
 							, loClase._Class ;
 							, loClase._ClassLoc ;
 							, loClase._BaseClass ;
@@ -5098,7 +5103,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							VALUES ;
 							( 'WINDOWS' ;
 							, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
-							, IIF( toFoxBin2Prg.l_UseTimestamps, loClase._TimeStamp, 0 ) ;
+							, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loClase._TimeStamp ) ;
 							, loClase._Class ;
 							, loClase._ClassLoc ;
 							, loClase._BaseClass ;
@@ -5354,7 +5359,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, .T. ;
 						, loFile._CPID ;
 						, IIF( toFoxBin2Prg.l_ClearUniqueID, 0, loFile._ID ) ;
-						, IIF( toFoxBin2Prg.l_UseTimestamps, loFile._TimeStamp, 0 ) ;
+						, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loFile._TimeStamp ) ;
 						, loFile._ObjRev ;
 						, UPPER(JUSTSTEM(loFile._Name)) )
 				ENDFOR
@@ -6035,7 +6040,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			*-- Agrego los registros
 			FOR EACH loReg IN toReport FOXOBJECT
 
-				IF NOT toFoxBin2Prg.l_UseTimestamps
+				IF toFoxBin2Prg.l_NoTimestamps
 					loReg.TIMESTAMP	= 0
 				ENDIF
 				IF toFoxBin2Prg.l_ClearUniqueID
@@ -8387,7 +8392,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
 				SCATTER MEMO NAME loReg
 
-				IF NOT toFoxBin2Prg.l_UseTimestamps
+				IF toFoxBin2Prg.l_NoTimestamps
 					loReg.TIMESTAMP	= 0
 				ENDIF
 				IF toFoxBin2Prg.l_ClearUniqueID
@@ -8550,7 +8555,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
 					SCATTER MEMO NAME loRegClass
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
@@ -8584,7 +8589,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Alphabetic order
 
-						IF NOT toFoxBin2Prg.l_UseTimestamps
+						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
@@ -8640,7 +8645,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 						SCATTER MEMO NAME loRegObj
 
-						IF NOT toFoxBin2Prg.l_UseTimestamps
+						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
@@ -8767,7 +8772,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
@@ -8801,7 +8806,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Orden alfabético
 
-						IF NOT toFoxBin2Prg.l_UseTimestamps
+						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
@@ -8860,7 +8865,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 						SCATTER MEMO NAME loRegObj
 
-						IF NOT toFoxBin2Prg.l_UseTimestamps
+						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
 						ENDIF
 						IF toFoxBin2Prg.l_ClearUniqueID
@@ -8958,7 +8963,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				loProject		= CREATEOBJECT('CL_PROJECT')
 				SCATTER MEMO NAME loReg
 
-				IF NOT toFoxBin2Prg.l_UseTimestamps
+				IF toFoxBin2Prg.l_NoTimestamps
 					loReg.TIMESTAMP	= 0
 				ENDIF
 				IF toFoxBin2Prg.l_ClearUniqueID
@@ -9002,7 +9007,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loReg.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
@@ -9667,7 +9672,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF FOUND()
 					SCATTER MEMO NAME loRegCab
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loRegCab.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
@@ -9680,7 +9685,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF FOUND()
 					SCATTER MEMO NAME loRegDataEnv
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loRegDataEnv.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
@@ -9693,7 +9698,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF FOUND()
 					SCATTER MEMO NAME loRegCur
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loRegCur.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
@@ -9731,7 +9736,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				SCAN ALL
 					SCATTER MEMO NAME loRegObj
 
-					IF NOT toFoxBin2Prg.l_UseTimestamps
+					IF toFoxBin2Prg.l_NoTimestamps
 						loRegObj.TIMESTAMP	= 0
 					ENDIF
 					IF toFoxBin2Prg.l_ClearUniqueID
