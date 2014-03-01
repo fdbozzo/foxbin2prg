@@ -74,6 +74,8 @@
 * 09/02/2014	FDBOZZO		v1.19.10 Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
 * 13/02/2014	FDBOZZO		v1.19.11 Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
 * 21/02/2014	FDBOZZO		v1.19.12 Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
+* 26/02/2014	FDBOZZO		v1.19.13 Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
+* 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -91,6 +93,7 @@
 * 01/01/2014	Fidel Charny	REPORTE BUG mnx v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
 * 05/01/2014	Fidel Charny	REPORTE BUG mnx v1.17: Se genera cláusula "DO" o llamada Command cuando no Procedure ni Command que llamar // Diferencia de Case en NAME (se arregla en v1.18)
 * 20/02/2014	Ryan Harris		PROPUESTA DE MEJORA v1.19.11: Centralizar los ZOrder de los controles en metadata de cabecera de la clase para minimizar diferencias
+* 27/02/2014					BUG REGRESION v1.19.13: Si no se define ExtraBackupLevels no se generan backups (solucionado en v1.19.14)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -411,6 +414,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
+		+ [<memberdata name="tienesoporte_bin2prg" display="TieneSoporte_Bin2Prg"/>] ;
+		+ [<memberdata name="tienesoporte_prg2bin" display="TieneSoporte_Prg2Bin"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
 		+ [</VFPData>]
@@ -795,7 +800,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
 				.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
 				.l_Debug				= (TRANSFORM(tcDebug)=='1')
-				.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
+				tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( .n_ExtraBackupLevels ) )
+				.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 
 				.writeLog( '---' )
 				.writeLog( '> l_ShowProgress:         ' + TRANSFORM(.l_ShowProgress) )
@@ -813,13 +819,49 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE TieneSoporte_Bin2Prg
+		LPARAMETERS tcExt
+		LOCAL llTieneSoporte
+		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			llTieneSoporte	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support >= 1 ;
+				, tcExt == 'VCX', .VCX_Conversion_Support >= 1 ;
+				, tcExt == 'SCX', .SCX_Conversion_Support >= 1 ;
+				, tcExt == 'FRX', .FRX_Conversion_Support >= 1 ;
+				, tcExt == 'LBX', .LBX_Conversion_Support >= 1 ;
+				, tcExt == 'MNX', .MNX_Conversion_Support >= 1 ;
+				, tcExt == 'DBF', .DBF_Conversion_Support >= 1 ;
+				, tcExt == 'DBC', .DBC_Conversion_Support >= 1 ;
+				, .F. )
+		ENDWITH && THIS
+		RETURN llTieneSoporte
+	ENDPROC
+
+
+	PROCEDURE TieneSoporte_Prg2Bin
+		LPARAMETERS tcExt
+		LOCAL llTieneSoporte
+		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			llTieneSoporte	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support >= 2 ;
+				, tcExt == .c_VC2, .VCX_Conversion_Support >= 2 ;
+				, tcExt == .c_SC2, .SCX_Conversion_Support >= 2 ;
+				, tcExt == .c_FR2, .FRX_Conversion_Support >= 2 ;
+				, tcExt == .c_LB2, .LBX_Conversion_Support >= 2 ;
+				, tcExt == .c_MN2, .MNX_Conversion_Support >= 2 ;
+				, tcExt == .c_DB2, .DBF_Conversion_Support >= 2 ;
+				, tcExt == .c_DC2, .DBC_Conversion_Support >= 2 ;
+				, .F. )
+		ENDWITH && THIS
+		RETURN llTieneSoporte
+	ENDPROC
+
+
 	PROCEDURE ejecutar
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
 		* tcType					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
 		* tcTextName				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tlGenText				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tlGenText					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
 		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
 		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
 		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
@@ -2230,11 +2272,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tcPropName				(!v IN    ) Nombre de la propiedad
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOperation, tcPropName
-		LOCAL lcPropName, lnPropType
+		LOCAL lcPropName
 		lcPropName	= tcPropName
 		tcOperation	= UPPER(EVL(tcOperation,''))
-		lnPropType	= 0		&& System property
 
+		*-- Por defecto son todas System Properties
 		DO CASE
 		CASE tcOperation == 'GETNAME'
 			lcPropName	= SUBSTR(tcPropName,5)
@@ -2486,11 +2528,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcPropName	= 'A595' + lcPropName
 		CASE lcPropName == '_memberdata'
 			lcPropName	= 'A995' + lcPropName
-		CASE lcPropName == 'Name'
-			lnPropType	= 1		&& System "Name" property
+		CASE lcPropName == 'Name'	&& System "Name" property
 			lcPropName	= 'A999' + lcPropName
-		OTHERWISE
-			lnPropType	= 2		&& User property
+		OTHERWISE					&& User Property
 			lcPropName	= 'A998' + lcPropName
 		ENDCASE
 
@@ -9375,7 +9415,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			FOR I = 1 TO ALINES( laLines, STREXTRACT( lcStrPJM, '[ProjectFiles]', '[EOF]' ), 4 )
 				ALINES( laProps, laLines(I) + ',', 1, ',' )
 				loReg	= CREATEOBJECT("EMPTY")
-				ADDPROPERTY( loReg, 'ID', VAL( laProps(1) ) )
+				ADDPROPERTY( loReg, 'ID', IIF( toFoxBin2Prg.l_ClearUniqueID, 0, VAL( laProps(1) ) ) )
 				ADDPROPERTY( loReg, 'TYPE', laProps(2) )
 				ADDPROPERTY( loReg, 'NAME', laProps(3) )
 				ADDPROPERTY( loReg, 'EXCLUDE', EVALUATE( laProps(4) ) )
