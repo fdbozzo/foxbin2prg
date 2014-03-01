@@ -386,6 +386,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
+		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
@@ -428,6 +429,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_OutputFile			= ''
 	c_Type					= ''
 	lFileMode				= .F.
+	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
 	l_ShowErrors			= .F.
@@ -705,103 +707,106 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			lcConfigFile	= THIS.c_Foxbin2prg_ConfigFile
-			llExisteConfig	= FILE( lcConfigFile )
+			IF NOT .l_ConfigEvaluated
+				lcConfigFile	= THIS.c_Foxbin2prg_ConfigFile
+				llExisteConfig	= FILE( lcConfigFile )
 
-			IF llExisteConfig
-				.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
+				IF llExisteConfig
+					.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
-				FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-					laConfig(I)	= LOWER( laConfig(I) )
+					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
+						laConfig(I)	= LOWER( laConfig(I) )
 
-					DO CASE
-					CASE LEFT( laConfig(I), 1 ) == '*'
-						LOOP
+						DO CASE
+						CASE LEFT( laConfig(I), 1 ) == '*'
+							LOOP
 
-					CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
-						lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
-						lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-						IF PEMSTATUS( THIS, lcExt, 5 )
-							.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-							*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-							.writeLog( JUSTFNAME(lcConfigFile) + ' > ' + C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-						ENDIF
+						CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
+							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
+							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+							IF PEMSTATUS( THIS, lcExt, 5 )
+								.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > ' + C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+							ENDIF
 
-					CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
-						tcDontShowProgress	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:     ' + TRANSFORM(tcDontShowProgress) )
+						CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
+							tcDontShowProgress	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:     ' + TRANSFORM(tcDontShowProgress) )
 
-					CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
-						tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
+						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
+							tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
 
-					CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
-						tcNoTimestamps	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:         ' + TRANSFORM(tcNoTimestamps) )
+						CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
+							tcNoTimestamps	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:         ' + TRANSFORM(tcNoTimestamps) )
 
-					CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
-						tcDebug	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                ' + TRANSFORM(tcDebug) )
+						CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
+							tcDebug	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                ' + TRANSFORM(tcDebug) )
 
-					CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
-						tcExtraBackupLevels	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:    ' + TRANSFORM(tcExtraBackupLevels) )
+						CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
+							tcExtraBackupLevels	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:    ' + TRANSFORM(tcExtraBackupLevels) )
 
-					CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
-						.l_ClearUniqueID	= ( ALLTRIM( SUBSTR( laConfig(I), 15 ) ) == '1' )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 15 )) ) )
+						CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
+							.l_ClearUniqueID	= ( ALLTRIM( SUBSTR( laConfig(I), 15 ) ) == '1' )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 15 )) ) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
-						.PJX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support: ' + TRANSFORM(.PJX_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
+							.PJX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support: ' + TRANSFORM(.PJX_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
-						.VCX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support: ' + TRANSFORM(.VCX_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
+							.VCX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support: ' + TRANSFORM(.VCX_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
-						.SCX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support: ' + TRANSFORM(.SCX_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
+							.SCX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support: ' + TRANSFORM(.SCX_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
-						.FRX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support: ' + TRANSFORM(.FRX_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
+							.FRX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support: ' + TRANSFORM(.FRX_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
-						.LBX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support: ' + TRANSFORM(.LBX_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
+							.LBX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support: ' + TRANSFORM(.LBX_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
-						.MNX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support: ' + TRANSFORM(.MNX_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
+							.MNX_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support: ' + TRANSFORM(.MNX_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
-						.DBF_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support: ' + TRANSFORM(.DBF_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
+							.DBF_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support: ' + TRANSFORM(.DBF_Conversion_Support) )
 
-					CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
-						.DBC_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
-						.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support: ' + TRANSFORM(.DBC_Conversion_Support) )
+						CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
+							.DBC_Conversion_Support	= INT( VAL( ALLTRIM( SUBSTR( laConfig(I), 24 ) ) ) )
+							.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support: ' + TRANSFORM(.DBC_Conversion_Support) )
 
-					ENDCASE
-				ENDFOR
-			ENDIF
+						ENDCASE
+					ENDFOR
+				ENDIF
 
-			.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
-			.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
-			.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
-			.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
-			.l_Debug				= (TRANSFORM(tcDebug)=='1')
-			.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
+				.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
+				.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
+				.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
+				.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
+				.l_Debug				= (TRANSFORM(tcDebug)=='1')
+				.n_ExtraBackupLevels	= INT(VAL(TRANSFORM(tcExtraBackupLevels)))
 
-			.writeLog( '---' )
-			.writeLog( '> l_ShowProgress:         ' + TRANSFORM(.l_ShowProgress) )
-			.writeLog( '> l_ShowErrors:           ' + TRANSFORM(.l_ShowErrors) )
-			.writeLog( '> l_Recompile:            ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
-			.writeLog( '> l_NoTimestamps:         ' + TRANSFORM(.l_NoTimestamps) )
-			.writeLog( '> ClearUniqueID:          ' + TRANSFORM(.l_ClearUniqueID) )
-			.writeLog( '> l_Debug:                ' + TRANSFORM(.l_Debug) )
-			.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(.n_ExtraBackupLevels) )
+				.writeLog( '---' )
+				.writeLog( '> l_ShowProgress:         ' + TRANSFORM(.l_ShowProgress) )
+				.writeLog( '> l_ShowErrors:           ' + TRANSFORM(.l_ShowErrors) )
+				.writeLog( '> l_Recompile:            ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
+				.writeLog( '> l_NoTimestamps:         ' + TRANSFORM(.l_NoTimestamps) )
+				.writeLog( '> ClearUniqueID:          ' + TRANSFORM(.l_ClearUniqueID) )
+				.writeLog( '> l_Debug:                ' + TRANSFORM(.l_Debug) )
+				.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(.n_ExtraBackupLevels) )
+				.l_ConfigEvaluated = .T.
+			ENDIF && .l_ConfigEvaluated
 		ENDWITH && THIS
 
 		RETURN
@@ -8668,7 +8673,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -8888,7 +8893,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -9217,7 +9222,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -9591,7 +9596,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -9759,7 +9764,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -9839,7 +9844,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -9943,7 +9948,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -10025,7 +10030,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toMenu	= C_FB2PRG_CODE
 				ELSE
-					lnLen = LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 					DO CASE
 					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
 						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
