@@ -11995,6 +11995,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 				loConnections	= ._Connections
 				loViews			= ._Views
 
+				ERASE (tc_OutputFile)
 				CREATE DATABASE (tc_OutputFile)
 				CLOSE DATABASES
 				OPEN DATABASE (tc_OutputFile) SHARED
