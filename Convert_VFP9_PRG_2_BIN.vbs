@@ -66,10 +66,17 @@ Else
 		scanDirs( WScript.Arguments(i) )
 	Next
 
+	If WScript.Arguments.Count = 1 AND FileSystemObject.FolderExists( WScript.Arguments(0) ) Then
+		'-- Es un solo directorio. Lo tomo como origen de compilación
+		cFlagRecompile			= "'" & WScript.Arguments(0) & "'"
+	Else
+		cFlagRecompile			= "'1'"
+	End If
+
 	cFlagGenerateLog		= "'0'"
 	cFlagDontShowErrMsg		= "'0'"
 	cFlagShowCall			= "'0'"
-	cFlagRecompile			= "'1'"
+	'cFlagRecompile			= "'1'"
 
 	If GetBit(nDebug, 1) Then
 		cFlagGenerateLog	= "'1'"

@@ -4347,7 +4347,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toClase._ProjectClassIcon	= .get_ValueByName_FromListNamesWithValues( 'ProjectClassIcon', 'C', @laPropsAndValues )
 				toClase._ClassIcon			= .get_ValueByName_FromListNamesWithValues( 'ClassIcon', 'C', @laPropsAndValues )
 				toClase._Ole2				= .get_ValueByName_FromListNamesWithValues( 'OLEObject', 'C', @laPropsAndValues )
-				toClase._Ole				= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues ), 14 )
+				IF EMPTY(toClase._Ole)
+					toClase._Ole				= STRCONV( .get_ValueByName_FromListNamesWithValues( 'Value', 'C', @laPropsAndValues ), 14 )
+				ENDIF
 			ENDWITH && THIS
 
 			IF NOT EMPTY( toClase._Ole2 )	&& Le agrego "OLEObject = " delante
