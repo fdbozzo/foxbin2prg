@@ -907,7 +907,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					+ C_TAB + 'tcNoTimestamps:     ' + TRANSFORM(tcNoTimestamps) )
 
 				tcRecompile		= EVL(tcRecompile,'1')
-				tcNoTimestamps	= '0' &&EVL(tcNoTimestamps,'0')
+				tcNoTimestamps	= '1' &&EVL(tcNoTimestamps,'1')
 
 				IF _VFP.STARTMODE > 0
 					SET ESCAPE OFF
