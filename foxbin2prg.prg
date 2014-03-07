@@ -76,6 +76,8 @@
 * 21/02/2014	FDBOZZO		v1.19.12 Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
 * 26/02/2014	FDBOZZO		v1.19.13 Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
 * 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
+* 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
+* 07/03/2014	FDBOZZO		v1.19.16 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -93,7 +95,9 @@
 * 01/01/2014	Fidel Charny	REPORTE BUG mnx v1.16: El menú no siempre respeta la posición original LOCATION y a veces se genera mal el MNX (se arregla en v1.17)
 * 05/01/2014	Fidel Charny	REPORTE BUG mnx v1.17: Se genera cláusula "DO" o llamada Command cuando no Procedure ni Command que llamar // Diferencia de Case en NAME (se arregla en v1.18)
 * 20/02/2014	Ryan Harris		PROPUESTA DE MEJORA v1.19.11: Centralizar los ZOrder de los controles en metadata de cabecera de la clase para minimizar diferencias
+* 23/02/2014	Ryan Harris		BUG cfg v1.19.12: Si se define NoTimestamp en FoxBin2Prg.cfg, se toma el valor opuesto (solucionado en v1.19.13)
 * 27/02/2014					BUG REGRESION v1.19.13: Si no se define ExtraBackupLevels no se generan backups (solucionado en v1.19.14)
+* 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1879,7 +1883,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 				</VFPData>
 			ENDTEXT
 
-			tcValue	= C_MPROPHEADER + STR( LEN(tcValue), 8 ) + tcValue
+			IF LEN(lcValue) > 255
+				tcValue	= C_MPROPHEADER + STR( LEN(tcValue), 8 ) + tcValue
+			ELSE
+				tcValue	= CHRTRAN( tcValue, CR_LF, '' )
+			ENDIF
 
 		CASE LEFT( tcValue, C_LEN_FB2P_VALUE_I ) == C_FB2P_VALUE_I
 			*-- Valor especial Fox con cabecera CHR(1): Debo agregarla y desnormalizar el valor
@@ -4058,7 +4066,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							ELSE
 								*-- Sin comentarios
 								lcPAM_Name		= LOWER( RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) )
-								lcItem	= lcPAM_Name + IIF(ISALPHA(lcPAM_Name), '', ' ') + CR_LF
+								lcItem	= lcPAM_Name + IIF( LEFT(lcPAM_Name,1) $ '^*' , ' ', '') + CR_LF
 
 								*-- Separo propiedades y métodos
 								IF LEFT(lcItem,1) == '*'
@@ -7792,7 +7800,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		TRY
 			LOCAL lnPropsAndValues_Count, lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, lnPropsAndComments_Count, I ;
-				, lcPropName, lnProtectedItem, lcComentarios
+				, lcPropName, lnProtectedItem, lcComentarios, lnProtected_Count
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- DEFINIR PROPIEDADES ( HIDDEN, PROTECTED, *DEFINED_PAM )
@@ -7800,7 +7808,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				STORE '' TO lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd
 				.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, 1, @taPropsAndValues, @lnPropsAndValues_Count, '' )
 				.get_PropsAndCommentsFrom_RESERVED3( toRegClass.RESERVED3, .T., @taPropsAndComments, @lnPropsAndComments_Count, '' )
-				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, 0, '' )
+				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @lnProtected_Count, '' )
 
 				IF lnPropsAndValues_Count > 0 THEN
 					*-- Recorro las propiedades (campo Properties) para ir conformando
@@ -7825,6 +7833,23 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							lcHiddenProp	= lcHiddenProp + ',' + taPropsAndValues(I,1)
 
 						ENDCASE
+					ENDFOR
+					
+					*-- Segunda barrida para las propiedades Hidden/Protected que no estén definidas en Properties
+					FOR I = 1 TO lnProtected_Count
+						IF EMPTY(taProtected(I,1)) OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0
+							LOOP
+						ENDIF
+
+						IF RIGHT( taProtected(I), 1 ) == '^'
+							*-- Propiedad oculta
+							lcHiddenProp	= lcHiddenProp + ',' + CHRTRAN( taProtected(I), '^', '' )
+
+						ELSE
+							*-- Propiedad protegida
+							lcProtectedProp	= lcProtectedProp + ',' + taProtected(I)
+
+						ENDIF
 					ENDFOR
 
 					.write_DEFINED_PAM( @taPropsAndComments, lnPropsAndComments_Count )

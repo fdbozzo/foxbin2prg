@@ -234,7 +234,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 	FUNCTION Deberia_analizarAsignacion_TAG__memberdata__EnUnaAsignacion_MultiLine
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lcPropName, lcPropValue, laProps(1,2), lnProp_Count, I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F, lcMemo ;
-			, lcValue_Esperado ;
+			, lcValue_Esperado, lcMemberdata ;
 			, loEx AS EXCEPTION
 		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
@@ -247,6 +247,12 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 		lnLen_lcTag_I	= LEN(lcTag_I)
 		lnLen_lcTag_F	= LEN(lcTag_F)
 		lnProp_Count	= 17
+		lcMemberdata	= '<memberdata name="mimetodo_1" display="miMetodo_1"/>' + CR_LF
+		lcMemberdata	= lcMemberdata + '<memberdata name="mimetodo_2" display="miMetodo_2"/>' + CR_LF
+		lcMemberdata	= lcMemberdata + '<memberdata name="mimetodo_3" display="miMetodo_3"/>' + CR_LF
+		lcMemberdata	= lcMemberdata + '<memberdata name="mimetodo_4" display="miMetodo_4"/>' + CR_LF
+		lcMemberdata	= lcMemberdata + '<memberdata name="mimetodo_5" display="miMetodo_5"/>' + CR_LF
+		lcMemberdata	= lcMemberdata + '<memberdata name="mimetodo_6" display="miMetodo_6"/>'
 		DIMENSION laProps(lnProp_Count,2)
 		laProps			= ''
 		laProps( 1,1)	= 'Height = 2.73'
@@ -275,7 +281,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 		laProps(12,2)	= ''
 		laProps(13,1)	= '_memberdata = <VFPData>'
 		laProps(13,2)	= ''
-		laProps(14,1)	= '<memberdata name="mimetodo" display="miMetodo"/>'
+		laProps(14,1)	= lcMemberdata
 		laProps(14,2)	= ''
 		laProps(15,1)	= '</VFPData>'
 		laProps(15,2)	= 'XML Metadata for customizable properties'
@@ -284,7 +290,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
-		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(71,8) + '<VFPData>' + CR_LF + '<memberdata name="mimetodo" display="miMetodo"/>' + CR_LF + '</VFPData>'
+		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(23 + LEN(lcMemberdata),8) + '<VFPData>' + CR_LF + lcMemberdata + CR_LF + '</VFPData>'
 
 		*-- TEST
 		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
