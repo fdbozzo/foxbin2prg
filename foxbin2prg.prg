@@ -77,7 +77,7 @@
 * 26/02/2014	FDBOZZO		v1.19.13 Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
 * 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
 * 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
-* 07/03/2014	FDBOZZO		v1.19.16 
+* 07/03/2014	FDBOZZO		v1.19.16
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@
 * 20/02/2014	Ryan Harris		PROPUESTA DE MEJORA v1.19.11: Centralizar los ZOrder de los controles en metadata de cabecera de la clase para minimizar diferencias
 * 23/02/2014	Ryan Harris		BUG cfg v1.19.12: Si se define NoTimestamp en FoxBin2Prg.cfg, se toma el valor opuesto (solucionado en v1.19.13)
 * 27/02/2014					BUG REGRESION v1.19.13: Si no se define ExtraBackupLevels no se generan backups (solucionado en v1.19.14)
-* 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected 
+* 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3440,37 +3440,39 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			loProcedure	= NULL
 			loProcedure	= toClase._Procedures(I)
 
-			IF '.' $ loProcedure._Nombre
-				*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
-				*-- cntDatos.txtEdad.Valid		==> Debe acortarse si cntDatos es un objeto existente
-				lcNombreObjeto	= LEFT( loProcedure._Nombre, AT('.', loProcedure._Nombre) - 1 )
+			IF loProcedure._ProcLine_Count > 0 THEN
+				IF '.' $ loProcedure._Nombre
+					*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
+					*-- cntDatos.txtEdad.Valid		==> Debe acortarse si cntDatos es un objeto existente
+					lcNombreObjeto	= LEFT( loProcedure._Nombre, AT('.', loProcedure._Nombre) - 1 )
 
-				IF THIS.buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase ) = 0
+					IF THIS.buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase ) = 0
+						TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							<<C_PROCEDURE>> <<loProcedure._Nombre>>
+						ENDTEXT
+					ELSE
+						TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							<<C_PROCEDURE>> <<SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )>>
+						ENDTEXT
+					ENDIF
+				ELSE
 					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<C_PROCEDURE>> <<loProcedure._Nombre>>
 					ENDTEXT
-				ELSE
-					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<C_PROCEDURE>> <<SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )>>
-					ENDTEXT
 				ENDIF
-			ELSE
-				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-					<<C_PROCEDURE>> <<loProcedure._Nombre>>
+
+				*-- Incluir las líneas del método
+				FOR X = 1 TO loProcedure._ProcLine_Count
+					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<loProcedure._ProcLines(X)>>
+					ENDTEXT
+				ENDFOR
+
+				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<C_ENDPROC>>
+					<<>>
 				ENDTEXT
 			ENDIF
-
-			*-- Incluir las líneas del método
-			FOR X = 1 TO loProcedure._ProcLine_Count
-				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<loProcedure._ProcLines(X)>>
-				ENDTEXT
-			ENDFOR
-
-			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<C_ENDPROC>>
-				<<>>
-			ENDTEXT
 		ENDFOR
 
 		loProcedure	= NULL
@@ -7490,11 +7492,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE SortMethod
-		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount
+		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+				, taProtected, tnProtected_Count
 		*-- 29/10/2013	Fernando D. Bozzo
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
-		EXTERNAL ARRAY taMethods, taCode
+		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
 
 		*-- ESTRUCTURA DE LOS ARRAYS CREADOS:
 		*-- taMethods[1,3]
@@ -7504,7 +7507,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- taCode[1]
 		*--		Bloque de código del método en su posición original
 		TRY
-			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted
+			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod
 			LOCAL loEx AS EXCEPTION
 			DIMENSION taMethods(1,3)
 			STORE '' TO taMethods, m.tcSorted, taCode
@@ -7592,6 +7595,31 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					ENDCASE
 				ENDFOR
+				
+				*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
+				FOR I = 1 TO tnPropsAndComments_Count
+					lcMethod	= CHRTRAN( taPropsAndComments(I,1), '*', '' )
+					IF LEFT( taPropsAndComments(I,1), 1 ) == '*' AND ASCAN( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= lcMethod
+						taMethods(tnMethodCount, 2)	= 0
+					
+						lnProtectedLine	= ASCAN( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
+						
+						IF lnProtectedLine = 0 THEN
+							lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+
+							IF lnProtectedLine = 0 THEN
+								taMethods(tnMethodCount, 3)	= ''
+							ELSE
+								taMethods(tnMethodCount, 3)	= 'HIDDEN '
+							ENDIF
+						ELSE
+							taMethods(tnMethodCount, 3)	= 'PROTECTED '
+						ENDIF
+					ENDIF
+				ENDFOR
 
 				*-- Alphabetical ordering of methods
 				IF THIS.l_MethodSort_Enabled
@@ -7599,7 +7627,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				ENDIF
 
 				FOR I = 1 TO tnMethodCount
-					m.tcSorted	= m.tcSorted + taCode(taMethods(I,2))
+					IF taMethods(I,2) > 0 THEN
+						m.tcSorted	= m.tcSorted + taCode(taMethods(I,2))
+					ENDIF
 				ENDFOR
 
 			ENDIF
@@ -7770,7 +7800,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 						*-- Código del método
 						*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
-						lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+						IF taMethods(I,2) > 0 THEN
+							lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+						ENDIF
+
 						lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
 						lcMethods	= lcMethods + CR_LF
 					ENDFOR
@@ -7794,26 +7827,28 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_CLASS_PROPERTIES
-		LPARAMETERS toRegClass, taPropsAndValues, taPropsAndComments, taProtected
+		LPARAMETERS toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
+			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count
 
 		EXTERNAL ARRAY taPropsAndValues, taPropsAndComments
 
 		TRY
-			LOCAL lnPropsAndValues_Count, lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, lnPropsAndComments_Count, I ;
-				, lcPropName, lnProtectedItem, lcComentarios, lnProtected_Count
+			LOCAL lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, I ;
+				, lcPropName, lnProtectedItem, lcComentarios
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- DEFINIR PROPIEDADES ( HIDDEN, PROTECTED, *DEFINED_PAM )
 				DIMENSION taProtected(1)
 				STORE '' TO lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd
-				.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, 1, @taPropsAndValues, @lnPropsAndValues_Count, '' )
-				.get_PropsAndCommentsFrom_RESERVED3( toRegClass.RESERVED3, .T., @taPropsAndComments, @lnPropsAndComments_Count, '' )
-				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @lnProtected_Count, '' )
+				STORE 0 TO tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count
+				.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, 1, @taPropsAndValues, @tnPropsAndValues_Count, '' )
+				.get_PropsAndCommentsFrom_RESERVED3( toRegClass.RESERVED3, .T., @taPropsAndComments, @tnPropsAndComments_Count, '' )
+				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @tnProtected_Count, '' )
 
-				IF lnPropsAndValues_Count > 0 THEN
+				IF tnPropsAndValues_Count > 0 THEN
 					*-- Recorro las propiedades (campo Properties) para ir conformando
 					*-- las definiciones HIDDEN y PROTECTED
-					FOR I = 1 TO lnPropsAndValues_Count
+					FOR I = 1 TO tnPropsAndValues_Count
 						IF EMPTY(taPropsAndValues(I,1))
 							LOOP
 						ENDIF
@@ -7834,9 +7869,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 						ENDCASE
 					ENDFOR
-					
+
 					*-- Segunda barrida para las propiedades Hidden/Protected que no estén definidas en Properties
-					FOR I = 1 TO lnProtected_Count
+					FOR I = 1 TO tnProtected_Count
 						*-- La propiedad evaluada no debe ser vacía, debe estar en la lista de PROPERTIES y no debe ser un *Método
 						IF EMPTY(taProtected(I,1)) ;
 								OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0 ;
@@ -7855,7 +7890,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 					ENDFOR
 
-					.write_DEFINED_PAM( @taPropsAndComments, lnPropsAndComments_Count )
+					.write_DEFINED_PAM( @taPropsAndComments, tnPropsAndComments_Count )
 
 					.write_HIDDEN_Properties( @lcHiddenProp )
 
@@ -8599,8 +8634,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
-				, laObjs(1,3), I
-			STORE 0 TO lnCodError, lnLastClass, lnObjCount
+				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
+			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1), laObjs(1)
 			STORE NULL TO loRegClass, loRegObj
 
@@ -8691,7 +8726,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					.write_INCLUDE( @loRegClass )
 
-					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
+					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
+						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count )
 
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
 
@@ -8702,8 +8738,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
 					DIMENSION laMethods(1,3)
-					lcMethods	= ''
-					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
+					laMethods	= ''
+					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
+						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 
 					.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
@@ -8800,8 +8837,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
-				, laObjs(1,3), I
-			STORE 0 TO lnCodError, lnLastClass, lnObjCount
+				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
+			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
 			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
 			STORE NULL TO loRegClass, loRegObj
 
@@ -8908,7 +8945,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					.write_INCLUDE( @loRegClass )
 
-					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected )
+					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
+						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count )
 
 
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
@@ -8920,8 +8958,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
 					DIMENSION laMethods(1,3)
-					lcMethods	= ''
-					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount )
+					laMethods	= ''
+					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
+						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 
 					.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
