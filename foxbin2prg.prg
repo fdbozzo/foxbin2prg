@@ -3979,10 +3979,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						ENDIF
 
 						IF RIGHT(tcLine, 3) == ', ;'	&& VALOR INTERMEDIO CON ", ;"
-							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue )
+							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ELSE	&& VALOR FINAL SIN ", ;" (JUSTO ANTES DEL <END OBJECT>)
-							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue )
+							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ENDIF
 
