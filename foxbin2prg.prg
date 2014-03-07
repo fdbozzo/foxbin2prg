@@ -7837,7 +7837,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					
 					*-- Segunda barrida para las propiedades Hidden/Protected que no estén definidas en Properties
 					FOR I = 1 TO lnProtected_Count
-						IF EMPTY(taProtected(I,1)) OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0
+						*-- La propiedad evaluada no debe ser vacía, debe estar en la lista de PROPERTIES y no debe ser un *Método
+						IF EMPTY(taProtected(I,1)) ;
+								OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0 ;
+								OR ASCAN(taPropsAndComments, '*' + CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0
 							LOOP
 						ENDIF
 
