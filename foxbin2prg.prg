@@ -1877,7 +1877,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
 				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 )>>
+					<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
 				ENDTEXT
 			ENDFOR
 
@@ -2207,7 +2207,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
 				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<<STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 )>>
+					<<>>		<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
 				ENDTEXT
 			ENDFOR
 
@@ -2294,6 +2294,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcPropName	= SUBSTR(tcPropName,5)
 		CASE NOT tcOperation == 'SETNAME'
 			ERROR C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC
+		CASE lcPropName == 'FRXDataSession'			&& En un VCX lo ví primero de todo y también luego de Height ¿?
+			lcPropName	= 'A001' + lcPropName
 		CASE lcPropName == 'ErasePage'				&& PageFrame: Debe estar antes que PageCount
 			lcPropName	= 'A002' + lcPropName
 		CASE lcPropName == 'PageCount'				&& PageFrame: Debe estar antes que ActivePage
@@ -2318,13 +2320,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcPropName	= 'A040' + lcPropName
 		CASE lcPropName == 'Tag'
 			lcPropName	= 'A045' + lcPropName
-		CASE lcPropName == 'DefTop'					&& Propied con evaluación: Debe estar antes que Top
+		CASE lcPropName == 'DefTop'					&& Propiedad con evaluación: Debe estar antes que Top
 			lcPropName	= 'A046' + lcPropName
-		CASE lcPropName == 'DefLeft'				&& Propied con evaluación: Debe estar antes que Left
+		CASE lcPropName == 'DefLeft'				&& Propiedad con evaluación: Debe estar antes que Left
 			lcPropName	= 'A047' + lcPropName
-		CASE lcPropName == 'DefHeight'				&& Propied con evaluación: Debe estar antes que Height
+		CASE lcPropName == 'DefHeight'				&& Propiedad con evaluación: Debe estar antes que Height
 			lcPropName	= 'A048' + lcPropName
-		CASE lcPropName == 'DefWidth'				&& Propied con evaluación: Debe estar antes que Width
+		CASE lcPropName == 'DefWidth'				&& Propiedad con evaluación: Debe estar antes que Width
 			lcPropName	= 'A049' + lcPropName
 		CASE lcPropName == 'Top'
 			lcPropName	= 'A050' + lcPropName
@@ -4387,7 +4389,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				I = I - 1
 				
 				IF NOT EMPTY(toClase._Comentario)
-					toClase._Comentario	= SUBSTR( toClase._Comentario, 3 )	&& Quito el primer CR+LF
+					toClase._Comentario	= SUBSTR( toClase._Comentario, 3 ) + CR_LF	&& Quito el primer CR+LF
 				ENDIF
 			ENDIF
 
