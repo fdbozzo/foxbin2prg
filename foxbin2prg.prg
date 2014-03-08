@@ -77,7 +77,7 @@
 * 26/02/2014	FDBOZZO		v1.19.13 Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
 * 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
 * 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
-* 07/03/2014	FDBOZZO		v1.19.16
+* 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -97,7 +97,7 @@
 * 20/02/2014	Ryan Harris		PROPUESTA DE MEJORA v1.19.11: Centralizar los ZOrder de los controles en metadata de cabecera de la clase para minimizar diferencias
 * 23/02/2014	Ryan Harris		BUG cfg v1.19.12: Si se define NoTimestamp en FoxBin2Prg.cfg, se toma el valor opuesto (solucionado en v1.19.13)
 * 27/02/2014					BUG REGRESION v1.19.13: Si no se define ExtraBackupLevels no se generan backups (solucionado en v1.19.14)
-* 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected
+* 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected // Orden de properties defTop,defLeft,etc
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -129,123 +129,127 @@
 LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName, tcRecompile, tcNoTimestamps
 
 *-- NO modificar! / Do NOT change!
-#DEFINE C_CMT_I				'*--'
-#DEFINE C_CMT_F				'--*'
-#DEFINE C_CLASSDATA_I		'*< CLASSDATA:'
-#DEFINE C_CLASSDATA_F		'/>'
-#DEFINE C_LEN_CLASSDATA_I	LEN(C_CLASSDATA_I)
-#DEFINE C_OBJECTDATA_I		'*< OBJECTDATA:'
-#DEFINE C_OBJECTDATA_F		'/>'
-#DEFINE C_LEN_OBJECTDATA_I	LEN(C_OBJECTDATA_I)
-#DEFINE C_OLE_I				'*< OLE:'
-#DEFINE C_OLE_F				'/>'
-#DEFINE C_LEN_OLE_I			LEN(C_OLE_I)
-#DEFINE C_DEFINED_PAM_I		'*<DefinedPropArrayMethod>'
-#DEFINE C_DEFINED_PAM_F		'*</DefinedPropArrayMethod>'
-#DEFINE C_LEN_DEFINED_PAM_I	LEN(C_DEFINED_PAM_I)
-#DEFINE C_LEN_DEFINED_PAM_F	LEN(C_DEFINED_PAM_F)
-#DEFINE C_END_OBJECT_I		'*< END OBJECT:'
-#DEFINE C_END_OBJECT_F		'/>'
-#DEFINE C_LEN_END_OBJECT_I	LEN(C_END_OBJECT_I)
-#DEFINE C_FB2PRG_META_I		'*< FOXBIN2PRG:'
-#DEFINE C_FB2PRG_META_F		'/>'
-#DEFINE C_DEFINE_CLASS		'DEFINE CLASS'
-#DEFINE C_ENDDEFINE			'ENDDEFINE'
-#DEFINE C_TEXT				'TEXT'
-#DEFINE C_ENDTEXT			'ENDTEXT'
-#DEFINE C_PROCEDURE			'PROCEDURE'
-#DEFINE C_ENDPROC			'ENDPROC'
-#DEFINE C_WITH				'WITH'
-#DEFINE C_ENDWITH			'ENDWITH'
-#DEFINE C_SRV_HEAD_I		'*<ServerHead>'
-#DEFINE C_SRV_HEAD_F		'*</ServerHead>'
-#DEFINE C_SRV_DATA_I		'*<ServerData>'
-#DEFINE C_SRV_DATA_F		'*</ServerData>'
-#DEFINE C_DEVINFO_I			'*<DevInfo>'
-#DEFINE C_DEVINFO_F			'*</DevInfo>'
-#DEFINE C_BUILDPROJ_I		'*<BuildProj>'
-#DEFINE C_BUILDPROJ_F		'*</BuildProj>'
-#DEFINE C_PROJPROPS_I		'*<ProjectProperties>'
-#DEFINE C_PROJPROPS_F		'*</ProjectProperties>'
-#DEFINE C_FILE_META_I		'*< FileMetadata:'
-#DEFINE C_FILE_META_F		'/>'
-#DEFINE C_FILE_CMTS_I		'*<FileComments>'
-#DEFINE C_FILE_CMTS_F		'*</FileComments>'
-#DEFINE C_FILE_EXCL_I		'*<ExcludedFiles>'
-#DEFINE C_FILE_EXCL_F		'*</ExcludedFiles>'
-#DEFINE C_FILE_TXT_I		'*<TextFiles>'
-#DEFINE C_FILE_TXT_F		'*</TextFiles>'
-#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
-#DEFINE C_FB2P_VALUE_F		'</fb2p_value>'
-#DEFINE C_LEN_FB2P_VALUE_I	LEN(C_FB2P_VALUE_I)
-#DEFINE C_LEN_FB2P_VALUE_F	LEN(C_FB2P_VALUE_F)
-#DEFINE C_VFPDATA_I			'<VFPData>'
-#DEFINE C_VFPDATA_F			'</VFPData>'
-#DEFINE C_MEMBERDATA_I		C_VFPDATA_I
-#DEFINE C_MEMBERDATA_F		C_VFPDATA_F
-#DEFINE C_LEN_MEMBERDATA_I	LEN(C_MEMBERDATA_I)
-#DEFINE C_LEN_MEMBERDATA_F	LEN(C_MEMBERDATA_F)
-#DEFINE C_DATA_I			'<![CDATA['
-#DEFINE C_DATA_F			']]>'
-#DEFINE C_TAG_REPORTE		'Reportes'
-#DEFINE C_TAG_REPORTE_I		'<' + C_TAG_REPORTE + '>'
-#DEFINE C_TAG_REPORTE_F		'</' + C_TAG_REPORTE + '>'
-#DEFINE C_DBF_HEAD_I		'<DBF'
-#DEFINE C_DBF_HEAD_F		'/>'
-#DEFINE C_LEN_DBF_HEAD_I	LEN(C_DBF_HEAD_I)
-#DEFINE C_LEN_DBF_HEAD_F	LEN(C_DBF_HEAD_F)
-#DEFINE C_CDX_I				'<indexFile>'
-#DEFINE C_CDX_F				'</indexFile>'
-#DEFINE C_LEN_CDX_I			LEN(C_CDX_I)
-#DEFINE C_LEN_CDX_F			LEN(C_CDX_F)
-#DEFINE C_LEN_INDEX_I		LEN(C_INDEX_I)
-#DEFINE C_LEN_INDEX_F		LEN(C_INDEX_F)
-#DEFINE C_DATABASE_I		'<DATABASE>'
-#DEFINE C_DATABASE_F		'</DATABASE>'
-#DEFINE C_STORED_PROC_I		'<STOREDPROCEDURES><![CDATA['
-#DEFINE C_STORED_PROC_F		']]></STOREDPROCEDURES>'
-#DEFINE C_TABLE_I			'<TABLE>'
-#DEFINE C_TABLE_F			'</TABLE>'
-#DEFINE C_TABLES_I			'<TABLES>'
-#DEFINE C_TABLES_F			'</TABLES>'
-#DEFINE C_VIEW_I			'<VIEW>'
-#DEFINE C_VIEW_F			'</VIEW>'
-#DEFINE C_VIEWS_I			'<VIEWS>'
-#DEFINE C_VIEWS_F			'</VIEWS>'
-#DEFINE C_FIELD_I			'<FIELD>'
-#DEFINE C_FIELD_F			'</FIELD>'
-#DEFINE C_FIELDS_I			'<FIELDS>'
-#DEFINE C_FIELDS_F			'</FIELDS>'
-#DEFINE C_CONNECTION_I		'<CONNECTION>'
-#DEFINE C_CONNECTION_F		'</CONNECTION>'
-#DEFINE C_CONNECTIONS_I		'<CONNECTIONS>'
-#DEFINE C_CONNECTIONS_F		'</CONNECTIONS>'
-#DEFINE C_RELATION_I		'<RELATION>'
-#DEFINE C_RELATION_F		'</RELATION>'
-#DEFINE C_RELATIONS_I		'<RELATIONS>'
-#DEFINE C_RELATIONS_F		'</RELATIONS>'
-#DEFINE C_INDEX_I			'<INDEX>'
-#DEFINE C_INDEX_F			'</INDEX>'
-#DEFINE C_INDEXES_I			'<INDEXES>'
-#DEFINE C_INDEXES_F			'</INDEXES>'
-#DEFINE C_PROC_CODE_I		'*<Procedures>'
-#DEFINE C_PROC_CODE_F		'*</Procedures>'
-#DEFINE C_SETUPCODE_I		'*<SetupCode>'
-#DEFINE C_SETUPCODE_F		'*</SetupCode>'
-#DEFINE C_CLEANUPCODE_I		'*<CleanupCode>'
-#DEFINE C_CLEANUPCODE_F		'*</CleanupCode>'
-#DEFINE C_MENUCODE_I		'*<MenuCode>'
-#DEFINE C_MENUCODE_F		'*</MenuCode>'
-#DEFINE C_MENUTYPE_I		'*<MenuType>'
-#DEFINE C_MENUTYPE_F		'</MenuType>'
-#DEFINE C_MENULOCATION_I	'*<MenuLocation>'
-#DEFINE C_MENULOCATION_F	'</MenuLocation>'
+#DEFINE C_CMT_I						'*--'
+#DEFINE C_CMT_F						'--*'
+#DEFINE C_CLASSCOMMENTS_I			'*<ClassComment>'
+#DEFINE C_CLASSCOMMENTS_F			'*</ClassComment>'
+#DEFINE C_LEN_CLASSCOMMENTS_I		LEN(C_CLASSCOMMENTS_I)
+#DEFINE C_LEN_CLASSCOMMENTS_F		LEN(C_CLASSCOMMENTS_F)
+#DEFINE C_CLASSDATA_I				'*< CLASSDATA:'
+#DEFINE C_CLASSDATA_F				'/>'
+#DEFINE C_LEN_CLASSDATA_I			LEN(C_CLASSDATA_I)
+#DEFINE C_OBJECTDATA_I				'*< OBJECTDATA:'
+#DEFINE C_OBJECTDATA_F				'/>'
+#DEFINE C_LEN_OBJECTDATA_I			LEN(C_OBJECTDATA_I)
+#DEFINE C_OLE_I						'*< OLE:'
+#DEFINE C_OLE_F						'/>'
+#DEFINE C_LEN_OLE_I					LEN(C_OLE_I)
+#DEFINE C_DEFINED_PAM_I				'*<DefinedPropArrayMethod>'
+#DEFINE C_DEFINED_PAM_F				'*</DefinedPropArrayMethod>'
+#DEFINE C_LEN_DEFINED_PAM_I			LEN(C_DEFINED_PAM_I)
+#DEFINE C_LEN_DEFINED_PAM_F			LEN(C_DEFINED_PAM_F)
+#DEFINE C_END_OBJECT_I				'*< END OBJECT:'
+#DEFINE C_END_OBJECT_F				'/>'
+#DEFINE C_LEN_END_OBJECT_I			LEN(C_END_OBJECT_I)
+#DEFINE C_FB2PRG_META_I				'*< FOXBIN2PRG:'
+#DEFINE C_FB2PRG_META_F				'/>'
+#DEFINE C_DEFINE_CLASS				'DEFINE CLASS'
+#DEFINE C_ENDDEFINE					'ENDDEFINE'
+#DEFINE C_TEXT						'TEXT'
+#DEFINE C_ENDTEXT					'ENDTEXT'
+#DEFINE C_PROCEDURE					'PROCEDURE'
+#DEFINE C_ENDPROC					'ENDPROC'
+#DEFINE C_WITH						'WITH'
+#DEFINE C_ENDWITH					'ENDWITH'
+#DEFINE C_SRV_HEAD_I				'*<ServerHead>'
+#DEFINE C_SRV_HEAD_F				'*</ServerHead>'
+#DEFINE C_SRV_DATA_I				'*<ServerData>'
+#DEFINE C_SRV_DATA_F				'*</ServerData>'
+#DEFINE C_DEVINFO_I					'*<DevInfo>'
+#DEFINE C_DEVINFO_F					'*</DevInfo>'
+#DEFINE C_BUILDPROJ_I				'*<BuildProj>'
+#DEFINE C_BUILDPROJ_F				'*</BuildProj>'
+#DEFINE C_PROJPROPS_I				'*<ProjectProperties>'
+#DEFINE C_PROJPROPS_F				'*</ProjectProperties>'
+#DEFINE C_FILE_META_I				'*< FileMetadata:'
+#DEFINE C_FILE_META_F				'/>'
+#DEFINE C_FILE_CMTS_I				'*<FileComments>'
+#DEFINE C_FILE_CMTS_F				'*</FileComments>'
+#DEFINE C_FILE_EXCL_I				'*<ExcludedFiles>'
+#DEFINE C_FILE_EXCL_F				'*</ExcludedFiles>'
+#DEFINE C_FILE_TXT_I				'*<TextFiles>'
+#DEFINE C_FILE_TXT_F				'*</TextFiles>'
+#DEFINE C_FB2P_VALUE_I				'<fb2p_value>'
+#DEFINE C_FB2P_VALUE_F				'</fb2p_value>'
+#DEFINE C_LEN_FB2P_VALUE_I			LEN(C_FB2P_VALUE_I)
+#DEFINE C_LEN_FB2P_VALUE_F			LEN(C_FB2P_VALUE_F)
+#DEFINE C_VFPDATA_I					'<VFPData>'
+#DEFINE C_VFPDATA_F					'</VFPData>'
+#DEFINE C_MEMBERDATA_I				C_VFPDATA_I
+#DEFINE C_MEMBERDATA_F				C_VFPDATA_F
+#DEFINE C_LEN_MEMBERDATA_I			LEN(C_MEMBERDATA_I)
+#DEFINE C_LEN_MEMBERDATA_F			LEN(C_MEMBERDATA_F)
+#DEFINE C_DATA_I					'<![CDATA['
+#DEFINE C_DATA_F					']]>'
+#DEFINE C_TAG_REPORTE				'Reportes'
+#DEFINE C_TAG_REPORTE_I				'<' + C_TAG_REPORTE + '>'
+#DEFINE C_TAG_REPORTE_F				'</' + C_TAG_REPORTE + '>'
+#DEFINE C_DBF_HEAD_I				'<DBF'
+#DEFINE C_DBF_HEAD_F				'/>'
+#DEFINE C_LEN_DBF_HEAD_I			LEN(C_DBF_HEAD_I)
+#DEFINE C_LEN_DBF_HEAD_F			LEN(C_DBF_HEAD_F)
+#DEFINE C_CDX_I						'<indexFile>'
+#DEFINE C_CDX_F						'</indexFile>'
+#DEFINE C_LEN_CDX_I					LEN(C_CDX_I)
+#DEFINE C_LEN_CDX_F					LEN(C_CDX_F)
+#DEFINE C_LEN_INDEX_I				LEN(C_INDEX_I)
+#DEFINE C_LEN_INDEX_F				LEN(C_INDEX_F)
+#DEFINE C_DATABASE_I				'<DATABASE>'
+#DEFINE C_DATABASE_F				'</DATABASE>'
+#DEFINE C_STORED_PROC_I				'<STOREDPROCEDURES><![CDATA['
+#DEFINE C_STORED_PROC_F				']]></STOREDPROCEDURES>'
+#DEFINE C_TABLE_I					'<TABLE>'
+#DEFINE C_TABLE_F					'</TABLE>'
+#DEFINE C_TABLES_I					'<TABLES>'
+#DEFINE C_TABLES_F					'</TABLES>'
+#DEFINE C_VIEW_I					'<VIEW>'
+#DEFINE C_VIEW_F					'</VIEW>'
+#DEFINE C_VIEWS_I					'<VIEWS>'
+#DEFINE C_VIEWS_F					'</VIEWS>'
+#DEFINE C_FIELD_I					'<FIELD>'
+#DEFINE C_FIELD_F					'</FIELD>'
+#DEFINE C_FIELDS_I					'<FIELDS>'
+#DEFINE C_FIELDS_F					'</FIELDS>'
+#DEFINE C_CONNECTION_I				'<CONNECTION>'
+#DEFINE C_CONNECTION_F				'</CONNECTION>'
+#DEFINE C_CONNECTIONS_I				'<CONNECTIONS>'
+#DEFINE C_CONNECTIONS_F				'</CONNECTIONS>'
+#DEFINE C_RELATION_I				'<RELATION>'
+#DEFINE C_RELATION_F				'</RELATION>'
+#DEFINE C_RELATIONS_I				'<RELATIONS>'
+#DEFINE C_RELATIONS_F				'</RELATIONS>'
+#DEFINE C_INDEX_I					'<INDEX>'
+#DEFINE C_INDEX_F					'</INDEX>'
+#DEFINE C_INDEXES_I					'<INDEXES>'
+#DEFINE C_INDEXES_F					'</INDEXES>'
+#DEFINE C_PROC_CODE_I				'*<Procedures>'
+#DEFINE C_PROC_CODE_F				'*</Procedures>'
+#DEFINE C_SETUPCODE_I				'*<SetupCode>'
+#DEFINE C_SETUPCODE_F				'*</SetupCode>'
+#DEFINE C_CLEANUPCODE_I				'*<CleanupCode>'
+#DEFINE C_CLEANUPCODE_F				'*</CleanupCode>'
+#DEFINE C_MENUCODE_I				'*<MenuCode>'
+#DEFINE C_MENUCODE_F				'*</MenuCode>'
+#DEFINE C_MENUTYPE_I				'*<MenuType>'
+#DEFINE C_MENUTYPE_F				'</MenuType>'
+#DEFINE C_MENULOCATION_I			'*<MenuLocation>'
+#DEFINE C_MENULOCATION_F			'</MenuLocation>'
 *--
-#DEFINE C_TAB				CHR(9)
-#DEFINE C_CR				CHR(13)
-#DEFINE C_LF				CHR(10)
-#DEFINE CR_LF				C_CR + C_LF
-#DEFINE C_MPROPHEADER		REPLICATE( CHR(1), 517 )
+#DEFINE C_TAB						CHR(9)
+#DEFINE C_CR						CHR(13)
+#DEFINE C_LF						CHR(10)
+#DEFINE CR_LF						C_CR + C_LF
+#DEFINE C_MPROPHEADER				REPLICATE( CHR(1), 517 )
 *-- Fin / End
 
 *-- From FOXPRO.H
@@ -2314,6 +2318,14 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcPropName	= 'A040' + lcPropName
 		CASE lcPropName == 'Tag'
 			lcPropName	= 'A045' + lcPropName
+		CASE lcPropName == 'DefTop'					&& Propied con evaluación: Debe estar antes que Top
+			lcPropName	= 'A046' + lcPropName
+		CASE lcPropName == 'DefLeft'				&& Propied con evaluación: Debe estar antes que Left
+			lcPropName	= 'A047' + lcPropName
+		CASE lcPropName == 'DefHeight'				&& Propied con evaluación: Debe estar antes que Height
+			lcPropName	= 'A048' + lcPropName
+		CASE lcPropName == 'DefWidth'				&& Propied con evaluación: Debe estar antes que Width
+			lcPropName	= 'A049' + lcPropName
 		CASE lcPropName == 'Top'
 			lcPropName	= 'A050' + lcPropName
 		CASE lcPropName == 'Left'
@@ -2701,6 +2713,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="analizarbloque_foxbin2prg" display="analizarBloque_FoxBin2Prg"/>] ;
 		+ [<memberdata name="analizarbloque_hidden" display="analizarBloque_HIDDEN"/>] ;
 		+ [<memberdata name="analizarbloque_include" display="analizarBloque_INCLUDE"/>] ;
+		+ [<memberdata name="analizarbloque_classcomments" display="analizarBloque_CLASSCOMMENTS"/>] ;
 		+ [<memberdata name="analizarbloque_classmetadata" display="analizarBloque_CLASSMETADATA"/>] ;
 		+ [<memberdata name="analizarbloque_objectmetadata" display="analizarBloque_OBJECTMETADATA"/>] ;
 		+ [<memberdata name="analizarbloque_ole_def" display="analizarBloque_OLE_DEF"/>] ;
@@ -4121,6 +4134,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				LOCAL Z, lcProp, lcValue, loEx AS EXCEPTION ;
 					, llCLASSMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
 					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed, llOBJECTMETADATA_Completed ;
+					, llCLASSCOMMENTS_Completed ;
 					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 
 				STORE '' TO tcProcedureAbierto
@@ -4147,7 +4161,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDIF
 
 				* Búsqueda del ID de fin de bloque (ENDDEFINE)
-				WITH THIS
+				WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 					FOR I = toClase._Ini_Cab TO tnCodeLines
 						tc_Comentario	= ''
 						.set_Line( @tcLine, @taCodeLines, I )
@@ -4159,13 +4173,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						CASE .analizarBloque_PROCEDURE( @toModulo, @toClase, @loObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines ;
 								, @tcProcedureAbierto, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
 							*-- OJO: Esta se analiza primero a propósito, solo porque no puede estar detrás de PROTECTED y HIDDEN
-							llCLASS_PROPERTY_Completed = .T.
-							llPROTECTED_Completed	= .T.
-							llHIDDEN_Completed	= .T.
-							llINCLUDE_Completed	= .T.
-							llCLASSMETADATA_Completed	= .T.
-							llOBJECTMETADATA_Completed	= .T.
-							llDEFINED_PAM_Completed	= .T.
+							STORE .T. TO llCLASSCOMMENTS_Completed ;
+								, llCLASS_PROPERTY_Completed ;
+								, llPROTECTED_Completed ;
+								, llHIDDEN_Completed ;
+								, llINCLUDE_Completed ;
+								, llCLASSMETADATA_Completed ;
+								, llOBJECTMETADATA_Completed ;
+								, llDEFINED_PAM_Completed
 
 
 						CASE NOT llPROTECTED_Completed AND .analizarBloque_PROTECTED( @toClase, @tcLine )
@@ -4181,12 +4196,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llINCLUDE_Completed	= .T.
 
 
+						CASE NOT llCLASSCOMMENTS_Completed AND .analizarBloque_CLASSCOMMENTS( @toClase, @tcLine ,@taCodeLines, tnCodeLines, @I )
+							llCLASSCOMMENTS_Completed	= .T.
+
+
 						CASE NOT llCLASSMETADATA_Completed AND .analizarBloque_CLASSMETADATA( @toClase, @tcLine )
 							llCLASSMETADATA_Completed	= .T.
 
 
 						CASE NOT llOBJECTMETADATA_Completed AND .analizarBloque_OBJECTMETADATA( @toClase, @tcLine )
-							*llOBJECTMETADATA_Completed	= .T.
+							* No se usa flag porque puede haber múltiples ObjectMetadata.
 
 
 						CASE NOT llDEFINED_PAM_Completed AND .analizarBloque_DEFINED_PAM( @toClase, @tcLine, @taCodeLines, tnCodeLines, @I )
@@ -4194,13 +4213,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 						CASE .analizarBloque_ADD_OBJECT( @toModulo, @toClase, @tcLine, @I, @taCodeLines, @tnCodeLines )
-							llCLASS_PROPERTY_Completed = .T.
-							llPROTECTED_Completed	= .T.
-							llHIDDEN_Completed	= .T.
-							llINCLUDE_Completed	= .T.
-							llCLASSMETADATA_Completed	= .T.
-							llOBJECTMETADATA_Completed	= .T.
-							llDEFINED_PAM_Completed	= .T.
+							STORE .T. TO llCLASSCOMMENTS_Completed ;
+								, llCLASS_PROPERTY_Completed ;
+								, llPROTECTED_Completed ;
+								, llHIDDEN_Completed ;
+								, llINCLUDE_Completed ;
+								, llCLASSMETADATA_Completed ;
+								, llOBJECTMETADATA_Completed ;
+								, llDEFINED_PAM_Completed
 
 
 						CASE .analizarBloque_ENDDEFINE( @toClase, @tcLine, @I, @tcProcedureAbierto )
@@ -4333,7 +4353,57 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+	PROCEDURE analizarBloque_CLASSCOMMENTS
+		LPARAMETERS toClase, tcLine ,taCodeLines, tnCodeLines, I
+
+		EXTERNAL ARRAY taCodeLines
+
+		#IF .F.
+			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL llBloqueEncontrado
+
+			IF LEFT( tcLine, C_LEN_CLASSCOMMENTS_I ) == C_CLASSCOMMENTS_I
+				llBloqueEncontrado	= .T.
+				toClase._Comentario	= ''
+
+				WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
+					FOR I = I + 1 TO tnCodeLines
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE LEFT( tcLine, C_LEN_CLASSCOMMENTS_F ) == C_CLASSCOMMENTS_F
+							I = I + 1
+							EXIT
+
+						OTHERWISE
+							toClase._Comentario	= toClase._Comentario + CR_LF + SUBSTR( tcLine, 2 )	&& Le quito el '*' inicial
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+
+				I = I - 1
+				
+				IF NOT EMPTY(toClase._Comentario)
+					toClase._Comentario	= SUBSTR( toClase._Comentario, 3 )	&& Quito el primer CR+LF
+				ENDIF
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
 	PROCEDURE analizarBloque_CLASSMETADATA
 		LPARAMETERS toClase, tcLine
 
@@ -7106,6 +7176,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		EXTERNAL ARRAY taPropsAndComments, taProtected
 
 		TRY
+			LOCAL lcMethodName
+
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				.SortMethod( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount ;
 					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count )
@@ -7115,25 +7187,29 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				*-- o si son de la clase.
 				IF tnMethodCount > 0 THEN
 					FOR I = 1 TO tnMethodCount
+						IF taMethods(I,2) = 0
+							LOOP
+						ENDIF
+
 						IF EMPTY(toRegObj.PARENT)
-							tcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
+							lcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
 						ELSE
 							DO CASE
 							CASE '.' $ toRegObj.PARENT
-								tcMethodName	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT) + 1) + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
+								lcMethodName	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT) + 1) + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 							CASE LEFT(toRegObj.PARENT + '.', LEN( toRegClass.OBJNAME + '.' ) ) == toRegClass.OBJNAME + '.'
-								tcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
+								lcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 							OTHERWISE
-								tcMethodName	= toRegObj.PARENT + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
+								lcMethodName	= toRegObj.PARENT + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 							ENDCASE
 						ENDIF
 
 						*-- Genero el método SIN indentar, ya que se hace luego
 						*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
-						tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + tcMethodName
+						tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + lcMethodName
 						tcMethods	= tcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)) )
 						tcMethods	= tcMethods + CR_LF + 'ENDPROC'
 					ENDFOR
@@ -7393,7 +7469,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			X	= 0
 			FOR I = lnFin TO 1 STEP -1
 				IF NOT EMPTY(laLineas(I))	&& Última línea de código
-					IF LEFT( laLineas(I), 10 ) <> C_ENDPROC
+					IF llProcedure AND LEFT( laLineas(I), 10 ) <> C_ENDPROC
 						*ERROR 'Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [' + laLineas(1) + ']'
 						ERROR (TEXTMERGE(C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC))
 					ENDIF
@@ -8026,9 +8102,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS toRegClass
 		*-- Comentario de la clase
 		IF NOT EMPTY(toRegClass.RESERVED7) THEN
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<<>>		<<'&'+'&'>> <<toRegClass.Reserved7>>
-			ENDTEXT
+			*-- Si es multilínea, debe ir en un tag <ClassComments> aparte
+			IF OCCURS( CHR(13), toRegClass.RESERVED7 ) > 0 THEN
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	<<C_CLASSCOMMENTS_I>>
+					<<THIS.IndentarMemo( toRegClass.Reserved7, C_TAB + C_TAB + '*' )>>
+					<<>>	<<C_CLASSCOMMENTS_F>>
+				ENDTEXT
+			ELSE	&& Comentario in-line
+				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+					<<>>		<<'&'+'&'>> <<toRegClass.Reserved7>>
+				ENDTEXT
+			ENDIF
 		ENDIF
 	ENDPROC
 
