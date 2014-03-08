@@ -2071,7 +2071,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 		IF '&'+'&' $ tcLine
 			ln_AT_Cmt	= AT( '&'+'&', tcLine)
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
 		ENDIF
 
 		RETURN
@@ -2095,9 +2096,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		*-- EVALUAR UNA ASIGNACIÓN ESPECÍFICA INLINE
 		IF '=' $ tcAsignacion
-			ln_AT_Cmt	= AT( '=', tcAsignacion)
-			tcPropName	= ALLTRIM( LEFT( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
-			tcValue		= ALLTRIM( SUBSTR( tcAsignacion, ln_AT_Cmt + 2 ) )
+			ln_AT_Cmt		= AT( '=', tcAsignacion)
+			tcPropName		= ALLTRIM( LEFT( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcValue			= LTRIM( SUBSTR( tcAsignacion, ln_AT_Cmt + 2 ) )
 
 			IF PCOUNT() > 3
 				*-- EVALUAR UNA ASIGNACIÓN QUE PUEDE SER MULTILÍNEA (memberdata, fb2p_value, etc)
@@ -3999,7 +4000,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ELSE	&& VALOR FINAL SIN ", ;" (JUSTO ANTES DEL <END OBJECT>)
-							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
+							.get_SeparatedPropAndValue( tcLine, @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ENDIF
 
@@ -4235,7 +4236,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							*-- NOTA: Las propiedades se agregan tal cual, incluso aunque estén separadas en
 							*--       varias líneas (memberdata y fb2p_value), ya que luego se ensamblan en classProps2Memo().
 							*
-							.get_SeparatedPropAndValue( RTRIM(tcLine), @lcProp, @lcValue, @toClase, @taCodeLines, tnCodeLines, @I )
+							.get_SeparatedPropAndValue( tcLine, @lcProp, @lcValue, @toClase, @taCodeLines, tnCodeLines, @I )
 							toClase.add_Property( @lcProp, @lcValue, RTRIM(tc_Comentario) )
 
 
