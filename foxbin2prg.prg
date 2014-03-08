@@ -7732,7 +7732,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ALL_OBJECT_METHODS
-		LPARAMETERS tcMethods, laPropsAndComments, lnPropsAndComments_Count, laProtected, lnProtected_Count
+		LPARAMETERS tcMethods, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
 		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods, lcMethods2
@@ -7743,11 +7743,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount ;
-					, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count )
 
 				FOR I = 1 TO lnMethodCount
 					*-- Genero los métodos indentados
 					*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
+					IF laMethods(I,2) = 0
+						LOOP
+					ENDIF
+
 					lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + C_PROCEDURE + ' ' + laMethods(I,1)
 					lcMethods	= lcMethods + CR_LF + .IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
 					lcMethods	= lcMethods + CR_LF + C_TAB + C_ENDPROC
