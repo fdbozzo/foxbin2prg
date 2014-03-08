@@ -1086,7 +1086,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
-			IF THIS.l_ShowProgress
+			IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O"
 				THIS.o_Frm_Avance.HIDE()
 				THIS.o_Frm_Avance.RELEASE()
 				STORE NULL TO THIS.o_Frm_Avance
@@ -7100,11 +7100,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE get_ADD_OBJECT_METHODS
-		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount
+		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount ;
+			, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count
+
+		EXTERNAL ARRAY taPropsAndComments, taProtected
 
 		TRY
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
-				.SortMethod( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount )
+				.SortMethod( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount ;
+					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count )
 
 				*-- Ubico los métodos protegidos y les cambio la definición.
 				*-- Los métodos se deben generar con la ruta completa, porque si no es imposible saber a que objeto corresponden,
@@ -7493,7 +7497,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE SortMethod
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
-				, taProtected, tnProtected_Count
+			, taProtected, tnProtected_Count
 		*-- 29/10/2013	Fernando D. Bozzo
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
@@ -7595,7 +7599,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					ENDCASE
 				ENDFOR
-				
+
 				*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
 				FOR I = 1 TO tnPropsAndComments_Count
 					lcMethod	= CHRTRAN( taPropsAndComments(I,1), '*', '' )
@@ -7604,11 +7608,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						DIMENSION taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
 						taMethods(tnMethodCount, 1)	= lcMethod
 						taMethods(tnMethodCount, 2)	= 0
-					
+
 						lnProtectedLine	= ASCAN( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
-						
+
 						IF lnProtectedLine = 0 THEN
-							lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+							IF tnProtected_Count = 0
+								lnProtectedLine	= 0
+							ELSE
+								lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+							ENDIF
 
 							IF lnProtectedLine = 0 THEN
 								taMethods(tnMethodCount, 3)	= ''
@@ -7724,7 +7732,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ALL_OBJECT_METHODS
-		LPARAMETERS tcMethods
+		LPARAMETERS tcMethods, laPropsAndComments, lnPropsAndComments_Count, laProtected, lnProtected_Count
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
 		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods, lcMethods2
@@ -7734,7 +7742,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			DIMENSION laMethods(1,3)
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
-				.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount )
+				.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount ;
+					, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 
 				FOR I = 1 TO lnMethodCount
 					*-- Genero los métodos indentados
@@ -7853,7 +7862,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							LOOP
 						ENDIF
 
-						lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 1)
+						IF tnProtected_Count = 0
+							lnProtectedItem	= 0
+						ELSE
+							lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 1)
+						ENDIF
 
 						DO CASE
 						CASE lnProtectedItem = 0
@@ -8635,8 +8648,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
 				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
-			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
-			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1), laObjs(1)
+			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
+				, lnMethodCount
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -8766,10 +8780,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 							loRegObj.UNIQUEID	= ALLTRIM(loRegObj.UNIQUEID)
 						ENDIF
 
-						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
+						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods, @laMethods, @laCode, @lnMethodCount ;
+							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 					ENDSCAN
 
-					.write_ALL_OBJECT_METHODS( @lcMethods )
+					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 
 					GOTO RECORD (lnRecno)
 				ENDSCAN
@@ -8838,8 +8853,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
 				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
-			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
-			STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
+			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
+				, lnMethodCount
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -8988,10 +9004,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 							loRegObj.UNIQUEID	= ALLTRIM(loRegObj.UNIQUEID)
 						ENDIF
 
-						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods )
+						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods, @laMethods, @laCode, @lnMethodCount ;
+							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 					ENDSCAN
 
-					.write_ALL_OBJECT_METHODS( @lcMethods )
+					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
 
 					GOTO RECORD (lnRecno)
 				ENDSCAN
