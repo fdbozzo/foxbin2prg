@@ -445,7 +445,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
-	l_ShowErrors			= .F.
+	l_ShowErrors			= .T.
 	l_ShowProgress			= .F.
 	l_Recompile				= .F.
 	l_NoTimestamps			= .T.
@@ -748,7 +748,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:     ' + TRANSFORM(tcDontShowProgress) )
 
 						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
-							tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
+							*-- Priorizo si tcDontShowErrors NO viene con "0" como parámetro, ya que los scripts vbs
+							*-- los utilizan para sobreescribir la configuración por defecto de foxbin2prg.cfg
+							IF NOT tcDontShowErrors == '0'
+								tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
+							ENDIF
 							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
 
 						CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
@@ -804,7 +808,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 
 				.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
-				.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
+				IF NOT EMPTY(tcDontShowErrors)
+					.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
+				ENDIF
 				.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
 				.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
 				.l_Debug				= (TRANSFORM(tcDebug)=='1')
@@ -1082,7 +1088,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 				THIS.writeLog( lcErrorInfo )
 			ENDIF
-			IF THIS.l_Debug AND THIS.l_ShowErrors
+			IF THIS.l_ShowErrors
 				MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
 			ENDIF
 			IF tlRelanzarError
@@ -1090,6 +1096,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
+			THIS.writeLog_Flush()
 			IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O"
 				THIS.o_Frm_Avance.HIDE()
 				THIS.o_Frm_Avance.RELEASE()
@@ -1341,7 +1348,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		FINALLY
 			loFSO				= NULL
 			THIS.o_Conversor	= NULL
-			THIS.writeLog_Flush()
+			*THIS.writeLog_Flush()
 
 		ENDTRY
 
