@@ -7867,23 +7867,24 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 					FOR I = 1 TO tnMethodCount
 						lcMethod			= CHRTRAN( taMethods(I,1), '^', '' )
-						lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 1)
-						lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethod, 1, 0, 1, 1+8)
+						lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 1+2+4)
 
-						DO CASE
-						CASE lnProtectedItem = 0
-							*-- Método común
-							lcProcDef	= 'PROCEDURE'
+						IF lnProtectedItem = 0
+							lnProtectedItem		= ASCAN( taProtected, taMethods(I,1) + '^', 1, 0, 0, 1+2+4)
 
-						CASE taProtected(lnProtectedItem) == taMethods(I,1)
+							IF lnProtectedItem = 0
+								*-- Método común
+								lcProcDef	= 'PROCEDURE'
+							ELSE
+								*-- Método oculto
+								lcProcDef	= 'HIDDEN PROCEDURE'
+							ENDIF
+						ELSE
 							*-- Método protegido
 							lcProcDef	= 'PROTECTED PROCEDURE'
+						ENDIF
 
-						CASE taProtected(lnProtectedItem) == taMethods(I,1) + '^'
-							*-- Método oculto
-							lcProcDef	= 'HIDDEN PROCEDURE'
-
-						ENDCASE
+						lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethod, 1, 0, 1, 1+2+4+8)
 
 						*-- Nombre del método
 						TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
