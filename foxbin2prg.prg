@@ -750,7 +750,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
 							*-- Priorizo si tcDontShowErrors NO viene con "0" como parámetro, ya que los scripts vbs
 							*-- los utilizan para sobreescribir la configuración por defecto de foxbin2prg.cfg
-							IF NOT tcDontShowErrors == '0'
+							IF NOT TRANSFORM(tcDontShowErrors) == '0'
 								tcDontShowErrors	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
 							ENDIF
 							.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
