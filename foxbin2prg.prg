@@ -6465,7 +6465,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag2' )
 							*-- ARREGLO ALGUNOS VALORES CAMBIADOS AL TEXTUALIZAR
-							loReg.TAG2	= STRCONV( loReg.TAG2,14 )
+							IF NOT INLIST(loReg.ObjType,"5","6","8")
+								loReg.TAG2	= STRCONV( loReg.TAG2,14 )
+							ENDIF
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'penred' )
 
@@ -8288,7 +8290,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
+				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8347,15 +8349,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" >
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
-				<<>>	<tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
-				<<>>	<tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
-				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
-				<<>>	<style><![CDATA[<<toReg.style>>]]>
-				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
-				<<>>	<user><![CDATA[<<toReg.user>>]]>
-			ENDTEXT
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.tag ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.tag2, STRCONV( toReg.tag2,13 ) ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -8459,16 +8460,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<CHRTRAN( toReg.supexpr, CHR(34), CHR(180))>>" <<>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
-				<<>>	<tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
-				<<>>	<tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
-				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
-				<<>>	<style><![CDATA[<<toReg.style>>]]>
-				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
-				<<>>	<comment><![CDATA[<<toReg.comment>>]]>
-				<<>>	<user><![CDATA[<<toReg.user>>]]>
-			ENDTEXT
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.tag ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.tag2, STRCONV( toReg.tag2,13 ) ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -8572,17 +8571,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<CHRTRAN( toReg.supexpr, CHR(34), CHR(180))>>" <<>>
 			ENDTEXT
 
-			* NOTA: En el DataEnvironment el TAG2 es el TAG compilado, que se recompila con COMPILE REPORT <nombre>
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
-				<<>>	<tag><![CDATA[<<CR_LF>><<toReg.tag>>]]>
-				<<>>	<tag2><![CDATA[]]>
-				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
-				<<>>	<style><![CDATA[<<toReg.style>>]]>
-				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
-				<<>>	<comment><![CDATA[<<toReg.comment>>]]>
-				<<>>	<user><![CDATA[<<toReg.user>>]]>
-			ENDTEXT
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.tag + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>

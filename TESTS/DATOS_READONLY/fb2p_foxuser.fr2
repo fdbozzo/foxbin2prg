@@ -5,7 +5,7 @@
 *< FOXBIN2PRG: Version="1.19" SourceFile="fb2p_foxuser.frx" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="1" objcode="53" name="" vpos="1.000" hpos="5000.000" height="1000.000" width="-1.000" order="" unique=".F." comment="" environ=".T." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="10" mode="0" ruler="1" rulerlines="0" grid=".T." gridv="12" gridh="12" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".T." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="1" curpos=".T." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" >
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="1" objcode="53" name="" vpos="1.000" hpos="5000.000" height="1000.000" width="-1.000" order="" unique=".F." environ=".T." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="10" mode="0" ruler="1" rulerlines="0" grid=".T." gridv="12" gridh="12" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".T." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="1" curpos=".T." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" >
 	<picture><![CDATA[]]>
 	<tag><![CDATA[{8}{0}{18}{0}1{0}{1}{0}winspool{0}{0}Microsoft XPS Document Writer{0}{0}XPSPort:{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}{0}]]>
 	<tag2><![CDATA[TWljcm9zb2Z0IFhQUyBEb2N1bWVudCBXcml0ZXIAAAABBAAGnABYAwP/AAABAAkAmgs0CGQAAQAPAFgCAgABAFgCAgAAAEE0AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAEAAAACAAAAAQAAAP////8AAAAAAAAAAAAAAAAAAAAARElOVSIAEAFMAwwAytL2cgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAJAAAAAAAAAAAAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAAAAAAAAAAAAAAQAQAAU01USgAAAAAQAAABTQBpAGMAcgBvAHMAbwBmAHQAIABYAFAAUwAgAEQAbwBjAHUAbQBlAG4AdAAgAFcAcgBpAHQAZQByAAAASW5wdXRCaW4ARk9STVNPVVJDRQBSRVNETEwAVW5pcmVzRExMAEludGVybGVhdmluZwBPRkYASW1hZ2VUeXBlAEpQRUdNZWQAT3JpZW50YXRpb24AUE9SVFJBSVQAQ29sbGF0ZQBPRkYAUmVzb2x1dGlvbgBPcHRpb24xAFBhcGVyU2l6ZQBMRVRURVIAQ29sb3JNb2RlADI0YnBwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwAAABNWERXAQEAAA==]]>
@@ -25,7 +25,10 @@ YRESOLUTION=600
 TTOPTION=2
 COLLATE=0
 ]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de report Properties]]>
+	<user><![CDATA[Y este es el "user data"
+de report Properties]]>
 </Reportes>
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="9" objcode="0" name="" vpos="0.000" hpos="0.000" height="6459.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" 
@@ -50,7 +53,7 @@ COLLATE=0
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="9" objcode="3" name="" vpos="0.000" hpos="0.000" height="2709.000" width="17085.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="9" objcode="3" name="" vpos="0.000" hpos="0.000" height="2709.000" width="17090.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
 	<tag2><![CDATA[]]>
@@ -72,7 +75,7 @@ COLLATE=0
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="9" objcode="5" name="" vpos="0.000" hpos="0.000" height="4479.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="9" objcode="5" name="" vpos="0.000" hpos="0.000" height="4479.000" width="17090.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
 	<tag2><![CDATA[]]>
@@ -101,6 +104,17 @@ COLLATE=0
 	<penred><![CDATA[0]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[]]>
+	<comment><![CDATA[]]>
+	<user><![CDATA[]]>
+</Reportes>
+<Reportes 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="18" objcode="0" name="var_memo" vpos="0.000" hpos="0.000" height="0.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="" 
+	<picture><![CDATA[]]>
+	<tag><![CDATA[0]]>
+	<tag2><![CDATA[]]>
+	<penred><![CDATA[0]]>
+	<style><![CDATA[]]>
+	<expr><![CDATA[0]]>
 	<comment><![CDATA[]]>
 	<user><![CDATA[]]>
 </Reportes>
@@ -171,15 +185,18 @@ COLLATE=0
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="6" objcode="0" name="" vpos="1145.833" hpos="208.333" height="416.667" width="71666.667" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="4" penpat="8" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="0" supvalchng=".F." supexpr="" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="6" objcode="0" name="" vpos="1145.833" hpos="208.333" height="416.667" width="71666.667" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="4" penpat="8" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".T." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." supexpr="not empty(´no vacio´)" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[]]>
-	<comment><![CDATA[]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de Label Properties]]>
+	<user><![CDATA[Y este es el "user data"
+de Label Properties]]>
 </Reportes>
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="5" objcode="0" name="" vpos="1979.167" hpos="729.167" height="2395.833" width="9583.333" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="1" fontsize="14" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="0" supvalchng=".F." supexpr="" 
@@ -215,17 +232,74 @@ COLLATE=0
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="5" objcode="0" name="" vpos="9791.667" hpos="729.167" height="1562.500" width="4895.833" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="1" fontsize="9" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="1" curpos=".T." supalways=".T." supovflow=".T." suprpcol="0" supgroup="6" supvalchng=".F." supexpr="not empty(´Print expression condition´)" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="5" objcode="0" name="" vpos="9791.667" hpos="729.167" height="1562.500" width="4895.833" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="1" fontsize="9" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="1" curpos=".F." supalways=".T." supovflow=".T." suprpcol="0" supgroup="6" supvalchng=".F." supexpr="not empty(´Print expression condition´)" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[WSBlc3RlIGVzIGVsICJUb29sdGlwIg0KZGUgTGFiZWwgUHJvcGVydGllcw==]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[<VFPData>
-	<reportdata name="" type="R" script="" execute="LPARAMETERS toFX, toListener, tcMethodToken,;   tP1, tP2, tP3, tP4, tP5, tP6,;   tP7, tP8, tP9, tP10, tP11, tP12*---------------------------------------------* MemberDataScripting Tips** If you do not begin your script with* a PARAMETERS or LPARAMETERS statement,* the statement shown above will be added* during runtime execution.** Parameters:* -----------* toFx          - a ref to the executing object* toListener    - a ref to the running ReportListener* tcMethodToken - an uppercase version of the*                 executing event, e.g. &quot;BEFOREREPORT&quot;** Additional parameters depend on the executing event.** If you use your own parameter statement with more* descriptive variable names, you must still include* the full set of parameters (through tP12), even if* you are limiting the events for which the script* will be executed.** ExecWhen:* --------------* You can use any of the following values in ExecWhen* to limit when this script is called. (Remove the* quotation marks shown here):**    -- a single (case-insensitive) method token,*       such as &quot;Render&quot;**    -- an expression that will evaluate to a logical*       value, such as &quot;MyApplication.IncludeScript&quot;*       or &quot;MyTable.MyLogicalField&quot;.**    -- a &quot;|&quot;-delimited set of method tokens (case-*       insensitive), such as &quot;|BeforeReport|AfterReport|&quot;** ExecWhen is evaluated dynamically.** You can even change the expression being evaluated in* ExecWhen, or the script being executed, dynamically in* the script itself. These two items are held in a* read-write cursor (toFX.ScriptAlias) in the* ReportListener's FRXDataSession.** ExecWhen is evaluated in the ReportListener's* CurrentDataSession, and script is executed within the* CurrentDataSession unless you change the session within* the script.*---------------------------------------------" execwhen="not .T. and not empty(&quot;&quot;)" class="" classlib="" declass="" declasslib=""/>
+	<reportdata name="" type="R" script="" execute="LPARAMETERS toFX, toListener, tcMethodToken,;
+   tP1, tP2, tP3, tP4, tP5, tP6,;
+   tP7, tP8, tP9, tP10, tP11, tP12
+
+*---------------------------------------------
+* MemberDataScripting Tips
+*
+* If you do not begin your script with
+* a PARAMETERS or LPARAMETERS statement,
+* the statement shown above will be added
+* during runtime execution.
+*
+* Parameters:
+* -----------
+* toFx          - a ref to the executing object
+* toListener    - a ref to the running ReportListener
+* tcMethodToken - an uppercase version of the 
+*                 executing event, e.g. &quot;BEFOREREPORT&quot;
+*
+* Additional parameters depend on the executing event.
+*
+* If you use your own parameter statement with more 
+* descriptive variable names, you must still include 
+* the full set of parameters (through tP12), even if 
+* you are limiting the events for which the script 
+* will be executed.
+*
+* ExecWhen:
+* --------------
+* You can use any of the following values in ExecWhen
+* to limit when this script is called. (Remove the 
+* quotation marks shown here):
+*
+*    -- a single (case-insensitive) method token, 
+*       such as &quot;Render&quot;
+*        
+*    -- an expression that will evaluate to a logical 
+*       value, such as &quot;MyApplication.IncludeScript&quot; 
+*       or &quot;MyTable.MyLogicalField&quot;.
+*
+*    -- a &quot;|&quot;-delimited set of method tokens (case-
+*       insensitive), such as &quot;|BeforeReport|AfterReport|&quot;
+*
+* ExecWhen is evaluated dynamically.  
+*
+* You can even change the expression being evaluated in 
+* ExecWhen, or the script being executed, dynamically in 
+* the script itself. These two items are held in a 
+* read-write cursor (toFX.ScriptAlias) in the 
+* ReportListener's FRXDataSession.
+*
+* ExecWhen is evaluated in the ReportListener's 
+* CurrentDataSession, and script is executed within the 
+* CurrentDataSession unless you change the session within 
+* the script.
+*---------------------------------------------" execwhen="not .T. and not empty(&quot;&quot;)" class="" classlib="" declass="" declasslib=""/>
 </VFPData>
 ]]>
 	<expr><![CDATA["Updated"]]>
-	<comment><![CDATA[]]>
+	<comment><![CDATA[Este es un "Comment" dentro de
+label properties]]>
 	<user><![CDATA[Esto es "User data"
 dentro de label properties]]>
 </Reportes>
@@ -307,15 +381,18 @@ dentro de label properties]]>
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="16250.000" hpos="729.167" height="1875.000" width="6250.000" order="" unique=".F." environ=".F." boxchar=" " fillchar="C" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="1" fontsize="10" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="0" supvalchng=".F." supexpr="" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="16250.000" hpos="729.167" height="1875.000" width="6250.000" order="" unique=".F." environ=".F." boxchar=" " fillchar="C" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="1" fontsize="10" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[DTOC(UPDATED)]]>
-	<comment><![CDATA[]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de Label Properties]]>
+	<user><![CDATA[Y este es el "User data"
+de Label Properties]]>
 </Reportes>
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="7" objcode="4" name="" vpos="20625.000" hpos="208.333" height="4479.167" width="71666.667" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="1" penpat="8" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="0" supvalchng=".F." supexpr="" 
@@ -329,15 +406,18 @@ dentro de label properties]]>
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="6" objcode="0" name="" vpos="20729.167" hpos="15833.333" height="4270.833" width="104.167" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="1" penpat="8" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="0" supvalchng=".F." supexpr="" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="6" objcode="0" name="" vpos="20729.167" hpos="15833.333" height="4270.833" width="104.167" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="1" penpat="8" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="not empty(´no vacio´)" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[]]>
-	<comment><![CDATA[]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de Label Properties]]>
+	<user><![CDATA[Y este es el "User data"
+de Label Properties]]>
 </Reportes>
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="6" objcode="0" name="" vpos="20729.167" hpos="29166.667" height="4270.833" width="104.167" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="1" penpat="8" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="0" supvalchng=".F." supexpr="" 
@@ -409,12 +489,15 @@ dentro de label properties]]>
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="22916.667" hpos="24583.333" height="1666.667" width="7916.667" order="" unique=".F." environ=".F." boxchar=" " fillchar="N" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".T." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="" 
 	<picture><![CDATA["999,999,999"]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[CKVAL]]>
-	<comment><![CDATA[]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de Label Properties]]>
+	<user><![CDATA[Y este es el "User data"
+de Label Properties]]>
 </Reportes>
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="27708.333" hpos="729.167" height="1666.667" width="16250.000" order="" unique=".F." environ=".F." boxchar=" " fillchar="C" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="" 
@@ -442,23 +525,29 @@ dentro de label properties]]>
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="34375.000" hpos="729.167" height="1666.667" width="14375.000" order="" unique=".F." environ=".F." boxchar=" " fillchar="C" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="2" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".T." suprpcol="0" supgroup="6" supvalchng=".F." supexpr="" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA["Page " + TRANSFORM(_PAGENO)]]>
-	<comment><![CDATA[]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de Label Properties]]>
+	<user><![CDATA[Y este es el "User data"
+de Label Properties]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="39270.833" hpos="729.167" height="1666.667" width="6562.500" order="" unique=".F." environ=".F." boxchar=" " fillchar="C" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="" 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="39270.833" hpos="729.167" height="1666.667" width="6562.500" order="" unique=".F." environ=".F." boxchar=" " fillchar="C" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".T." stretchtop=".F." top=".T." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="0" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="not empty(´no vacio´)" 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
-	<tag2><![CDATA[]]>
+	<tag2><![CDATA[Y este es el "Tooltip"
+de Label Properties]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[[Total Count:]]]>
-	<comment><![CDATA[]]>
-	<user><![CDATA[]]>
+	<comment><![CDATA[Y este es el "Comment"
+de Label Properties]]>
+	<user><![CDATA[Y este es el "User data"
+de Label Properties]]>
 </Reportes>
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="39270.833" hpos="16979.167" height="1666.667" width="11041.667" order="" unique=".F." environ=".F." boxchar=" " fillchar="N" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".T." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="1" resettotal="1" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." supexpr="" 
@@ -479,10 +568,12 @@ dentro de label properties]]>
 	<tag2><![CDATA[]]>
 	<penred><![CDATA[0]]>
 	<style><![CDATA[]]>
-	<expr><![CDATA[Top = 0
-Left = 0
-Width = 0
-Height = 0
+	<expr><![CDATA[Comment = 'Y este es el "Comment'
+Tag = 'Y este es el "Tooltip'
+Top = 220
+Left = 1
+Width = 520
+Height = 200
 DataSource = .NULL.
 Name = "Dataenvironment"
 ]]>
@@ -496,7 +587,9 @@ Name = "Dataenvironment"
 	<tag2><![CDATA[]]>
 	<penred><![CDATA[0]]>
 	<style><![CDATA[]]>
-	<expr><![CDATA[Alias = "foxuser"
+	<expr><![CDATA[Comment = 'Y este es el "Comment'
+Tag = 'Y este es el "Tag'
+Alias = "foxuser"
 Order = "wizard_1"
 CursorSource = ..\..\..\test\varios\vcx2xml\foxuser_fdbozzo.dbf
 Name = "cursor1"
