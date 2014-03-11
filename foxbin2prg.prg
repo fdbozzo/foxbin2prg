@@ -6394,6 +6394,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						lnLenPropName	= LEN(laProps(X))
 						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
 						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
+						lcValue			= CHRTRAN( lcValue, CHR(180), CHR(34) )	&& Restauro ["] desde [´]
 
 						ADDPROPERTY( toReg, laProps(X), lcValue )
 					ENDIF
@@ -6471,6 +6472,8 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'style' )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'expr' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'comment' )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'user' )
 
@@ -8397,7 +8400,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
+				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8453,7 +8456,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<CHRTRAN( toReg.supexpr, CHR(34), CHR(180))>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -8463,6 +8466,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
 				<<>>	<style><![CDATA[<<toReg.style>>]]>
 				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
+				<<>>	<comment><![CDATA[<<toReg.comment>>]]>
 				<<>>	<user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
@@ -8509,7 +8513,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
+				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8565,7 +8569,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<CHRTRAN( toReg.supexpr, CHR(34), CHR(180))>>" <<>>
 			ENDTEXT
 
 			* NOTA: En el DataEnvironment el TAG2 es el TAG compilado, que se recompila con COMPILE REPORT <nombre>
@@ -8576,6 +8580,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
 				<<>>	<style><![CDATA[<<toReg.style>>]]>
 				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
+				<<>>	<comment><![CDATA[<<toReg.comment>>]]>
 				<<>>	<user><![CDATA[<<toReg.user>>]]>
 			ENDTEXT
 
