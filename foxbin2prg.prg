@@ -7763,12 +7763,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			IF '.' $ toRegObj.PARENT
 				*-- Este caso: clase.objeto.objeto ==> se quita clase
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
+					<<>>	ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<LOWER(ALLTRIM(toRegObj.Class))>> <<>>
 				ENDTEXT
 			ELSE
 				*-- Este caso: objeto
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	ADD OBJECT '<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
+					<<>>	ADD OBJECT '<<toRegObj.objName>>' AS <<LOWER(ALLTRIM(toRegObj.Class))>> <<>>
 				ENDTEXT
 			ENDIF
 
@@ -8102,12 +8102,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+8) > 0 )
 
 		IF NOT EMPTY(toRegClass.CLASSLOC)
-			lcOF_Classlib	= 'OF "' + ALLTRIM(toRegClass.CLASSLOC) + '" '
+			lcOF_Classlib	= 'OF "' + LOWER(ALLTRIM(toRegClass.CLASSLOC)) + '" '
 		ENDIF
 
 		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<ALLTRIM(toRegClass.Class)>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+			<<'DEFINE CLASS'>> <<LOWER(ALLTRIM(toRegClass.ObjName))>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
 		ENDTEXT
 
 	ENDPROC
