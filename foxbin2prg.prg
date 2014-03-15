@@ -2074,15 +2074,15 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
-		IF '&'+'&' $ tcLine
-			ln_AT_Cmt	= AT( '&'+'&', tcLine)
+		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
 		ENDIF
 
-		RETURN
+		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
 
@@ -10305,8 +10305,10 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
+
 
 	l_Debug				= .F.
 
@@ -10339,6 +10341,27 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE get_SeparatedLineAndComment
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* tcComment					(@?    OUT) Comentario
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
+
+		IF ln_AT_Cmt > 0
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ENDIF
+
+		RETURN (ln_AT_Cmt > 0)
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10355,6 +10378,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
@@ -10387,6 +10411,27 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
+	ENDPROC
+
+
+	PROCEDURE get_SeparatedLineAndComment
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* tcComment					(@?    OUT) Comentario
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
+
+		IF ln_AT_Cmt > 0
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ENDIF
+
+		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
 
@@ -16672,9 +16717,14 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 				lcExpr		= loReg.PROCEDURE
 				THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T. )
 
-				IF EMPTY(lcProcName)
+				IF EMPTY(lcProcCode)
+					*-- Comando
 					lcText			= lcText + lcTab + 'ON SELECTION POPUP ' + IIF( loReg.OBJCODE = 0, loReg.NAME, 'ALL' ) + ' ' + lcExpr + CR_LF
 				ELSE
+					*-- Procedure
+					IF EMPTY(lcProcName)
+						lcProcName	= CHRTRAN( ALLTRIM( IIF( loReg.OBJCODE = 0, loReg.NAME, 'ALL' ) ), ' ', '_' ) + '_FB2P'
+					ENDIF
 					lcText			= lcText + lcTab + 'ON SELECTION POPUP ' + IIF( loReg.OBJCODE = 0, loReg.NAME, 'ALL' ) + ' DO ' + lcProcName + CR_LF
 					tcEndProcedures	= tcEndProcedures + STRTRAN( lcProcCode, '<<ProcName>>', lcProcName ) + CR_LF
 				ENDIF
@@ -16876,17 +16926,15 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					loReg.PROMPT		= CHRTRAN( ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ' COLOR ' ) ), '"', '' )
 
 					*-- ANALISIS DEL "DEFINE PAD"
-					IF ';' $ tcLine
+					DO CASE
+					CASE ';' $ tcLine
 						FOR I = I + 1 TO tnCodeLines
 							.set_Line( @tcLine, @taCodeLines, I )
 
 							IF EMPTY(loReg.COMMENT)	&& No volver a buscar el comentario si ya existe
-								lnPos	= AT( '&'+'&', tcLine )
-								IF lnPos > 0
-									*-- Busco si tiene comentario
-									loReg.COMMENT	= SUBSTR( tcLine, lnPos + 3 )
-									tcLine	= LEFT( tcLine, lnPos - 1 )
-									lnPos	= 0
+								*-- Busco si tiene comentario
+								IF .get_SeparatedLineAndComment( @tcLine, @lcComment )
+									loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
 								ENDIF
 							ENDIF
 
@@ -16926,7 +16974,12 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								EXIT
 							ENDIF
 						ENDFOR
-					ENDIF	&& ';' $ tcLine
+					
+					CASE .set_Line( @tcLine, @taCodeLines, I ) AND .get_SeparatedLineAndComment( @tcLine, @lcComment )
+						*-- Es un Bar de una sola línea y con comentarios
+						loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
+
+					ENDCASE
 
 
 					* Estructuras ejemplo a analizar:
@@ -17063,17 +17116,15 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					loReg.PROMPT		= CHRTRAN( ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ';', 1, 2 ) ), '"', '' )
 
 					*-- ANALISIS DEL "DEFINE BAR"
-					IF ';' $ tcLine
+					DO CASE
+					CASE ';' $ tcLine
 						FOR I = I + 1 TO tnCodeLines
 							.set_Line( @tcLine, @taCodeLines, I )
 
 							IF EMPTY(loReg.COMMENT)	&& No volver a buscar el comentario si ya existe
-								lnPos	= AT( '&'+'&', tcLine )
-								IF lnPos > 0
-									*-- Busco si tiene comentario
-									loReg.COMMENT	= SUBSTR( tcLine, lnPos + 3 )
-									tcLine	= LEFT( tcLine, lnPos - 1 )
-									lnPos	= 0
+								*-- Busco si tiene comentario
+								IF .get_SeparatedLineAndComment( @tcLine, @lcComment )
+									loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
 								ENDIF
 							ENDIF
 
@@ -17113,7 +17164,12 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								EXIT
 							ENDIF
 						ENDFOR
-					ENDIF	&& ';' $ tcLine
+					
+					CASE .set_Line( @tcLine, @taCodeLines, I ) AND .get_SeparatedLineAndComment( @tcLine, @lcComment )
+						*-- Es un Bar de una sola línea y con comentarios
+						loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
+
+					ENDCASE
 
 					IF LEFT(lcBarName,1) == '_'
 						*-- Es un BAR del Sistema, así que no tiene ON BAR ni nada más.
@@ -17240,12 +17296,23 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					lcExpr		= loReg.PROCEDURE
 					.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T. )
 
-					IF EMPTY(lcProcName)
-						lcProcName	= CHRTRAN( ALLTRIM( STREXTRACT( lcText, 'DEFINE ', 'PROMPT ' ) ), ' ', '_' ) + '_FB2P'
-					ENDIF
+					IF EMPTY(lcProcCode)
+						*-- Comando
+						IF EMPTY(lcExpr)
+							lcText			= STRTRAN( lcText, 'DO <<ProcName>>', '' )
+						ELSE
+							lcText			= STRTRAN( lcText, 'DO <<ProcName>>', lcExpr )
+						ENDIF
+					ELSE
 
-					lcText			= STRTRAN( lcText, '<<ProcName>>', lcProcName )
-					tcEndProcedures	= tcEndProcedures + STRTRAN( lcProcCode, '<<ProcName>>', lcProcName ) + CR_LF
+						*-- Procedure
+						IF EMPTY(lcProcName)
+							lcProcName	= CHRTRAN( ALLTRIM( STREXTRACT( lcText, 'DEFINE ', 'PROMPT ' ) ), ' ', '_' ) + '_FB2P'
+						ENDIF
+						lcProcCode		= STRTRAN( lcProcCode, '<<ProcName>>', lcProcName )
+						lcText			= STRTRAN( lcText, '<<ProcName>>', lcProcName )
+						tcEndProcedures	= tcEndProcedures + lcProcCode + CR_LF
+					ENDIF
 				ENDIF
 
 
@@ -17319,7 +17386,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 			ENDIF
 
 			IF NOT EMPTY(toReg.COMMENT)
-				lcText	= lcText + ' &' + '& ' + toReg.COMMENT
+				lcText	= lcText + ' &' + '& ' + STRTRAN( STRTRAN( toReg.COMMENT, CHR(13), '<CR>' ), CHR(10), '<LF>' )
 			ENDIF
 
 			*-- ON BAR
@@ -17412,7 +17479,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 			ENDIF
 
 			IF NOT EMPTY(toReg.COMMENT)
-				lcText	= lcText + ' &' + '& ' + toReg.COMMENT
+				lcText	= lcText + ' &' + '& ' + STRTRAN( STRTRAN( toReg.COMMENT, CHR(13), '<CR>' ), CHR(10), '<LF>' )
 			ENDIF
 
 			lcText	= lcText + CR_LF
