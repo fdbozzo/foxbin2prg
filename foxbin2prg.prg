@@ -4267,7 +4267,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toClase._PROTECTED		= .hiddenAndProtected_PAM( toClase )
 					toClase._METHODS		= .classMethods2Memo( toClase )
 					toClase._RESERVED1		= IIF( .c_Type = 'SCX', '', 'Class' )
-					toClase._RESERVED2		= IIF( .c_Type = 'VCX' OR toClase._Nombre == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
+					toClase._RESERVED2		= IIF( .c_Type = 'VCX' OR PROPER(toClase._Nombre) == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
 					toClase._RESERVED3		= .defined_PAM2Memo( toClase )
 					toClase._RESERVED4		= toClase._ClassIcon
 					toClase._RESERVED5		= toClase._ProjectClassIcon
