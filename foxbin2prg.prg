@@ -78,6 +78,7 @@
 * 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
 * 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
 * 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
+* 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -98,6 +99,8 @@
 * 23/02/2014	Ryan Harris		BUG cfg v1.19.12: Si se define NoTimestamp en FoxBin2Prg.cfg, se toma el valor opuesto (solucionado en v1.19.13)
 * 27/02/2014					BUG REGRESION v1.19.13: Si no se define ExtraBackupLevels no se generan backups (solucionado en v1.19.14)
 * 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected // Orden de properties defTop,defLeft,etc
+* 10/03/2014	Ryan Harris		REPORTE BUG frx/lbx v1.19.16: Las expresiones con comillas corrompen el fx2/lb2 // La propiedad Comment se pierde si es multilínea (solucionado en v1.19.17)
+* 10/03/2014	Ryan Harris		REPORTE BUG mnx v1.19.16: Al usar comentarios multilínea en las opciones, se corrompe el MN2 y el MNX regenerado (solucionado en v1.19.17)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2074,15 +2077,15 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
-		IF '&'+'&' $ tcLine
-			ln_AT_Cmt	= AT( '&'+'&', tcLine)
+		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
 		ENDIF
 
-		RETURN
+		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
 
@@ -4267,7 +4270,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toClase._PROTECTED		= .hiddenAndProtected_PAM( toClase )
 					toClase._METHODS		= .classMethods2Memo( toClase )
 					toClase._RESERVED1		= IIF( .c_Type = 'SCX', '', 'Class' )
-					toClase._RESERVED2		= IIF( .c_Type = 'VCX' OR toClase._Nombre == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
+					toClase._RESERVED2		= IIF( .c_Type = 'VCX' OR PROPER(toClase._Nombre) == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
 					toClase._RESERVED3		= .defined_PAM2Memo( toClase )
 					toClase._RESERVED4		= toClase._ClassIcon
 					toClase._RESERVED5		= toClase._ProjectClassIcon
@@ -6464,13 +6467,19 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'tag2' )
 							*-- ARREGLO ALGUNOS VALORES CAMBIADOS AL TEXTUALIZAR
-							loReg.TAG2	= STRCONV( loReg.TAG2,14 )
+							IF NOT INLIST(loReg.ObjType,"5","6","8")
+								loReg.TAG2	= STRCONV( loReg.TAG2,14 )
+							ENDIF
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'penred' )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'style' )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'expr' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'supexpr' )
+
+						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'comment' )
 
 						CASE .analizarBloque_CDATA_inline( toReport, @tcLine, @taCodeLines, @I, tnCodeLines, @loReg, 'user' )
 
@@ -7758,12 +7767,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			IF '.' $ toRegObj.PARENT
 				*-- Este caso: clase.objeto.objeto ==> se quita clase
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
+					<<>>	ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<LOWER(ALLTRIM(toRegObj.Class))>> <<>>
 				ENDTEXT
 			ELSE
 				*-- Este caso: objeto
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	ADD OBJECT '<<toRegObj.objName>>' AS <<ALLTRIM(toRegObj.Class)>> <<>>
+					<<>>	ADD OBJECT '<<toRegObj.objName>>' AS <<LOWER(ALLTRIM(toRegObj.Class))>> <<>>
 				ENDTEXT
 			ENDIF
 
@@ -8097,12 +8106,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+8) > 0 )
 
 		IF NOT EMPTY(toRegClass.CLASSLOC)
-			lcOF_Classlib	= 'OF "' + ALLTRIM(toRegClass.CLASSLOC) + '" '
+			lcOF_Classlib	= 'OF "' + LOWER(ALLTRIM(toRegClass.CLASSLOC)) + '" '
 		ENDIF
 
 		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<ALLTRIM(toRegClass.Class)>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+			<<'DEFINE CLASS'>> <<LOWER(ALLTRIM(toRegClass.ObjName))>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
 		ENDTEXT
 
 	ENDPROC
@@ -8285,7 +8294,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
+				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8341,18 +8350,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" >
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
-				<<>>	<tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
-				<<>>	<tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
-				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
-				<<>>	<style><![CDATA[<<toReg.style>>]]>
-				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
-				<<>>	<user><![CDATA[<<toReg.user>>]]>
-			ENDTEXT
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.tag ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.tag2, STRCONV( toReg.tag2,13 ) ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -8397,7 +8406,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
+				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8453,18 +8462,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
 			ENDTEXT
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
-				<<>>	<tag><![CDATA[<<THIS.encode_SpecialCodes_1_31( toReg.tag )>>]]>
-				<<>>	<tag2><![CDATA[<<STRCONV( toReg.tag2,13 )>>]]>
-				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
-				<<>>	<style><![CDATA[<<toReg.style>>]]>
-				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
-				<<>>	<user><![CDATA[<<toReg.user>>]]>
-			ENDTEXT
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.tag ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.tag2, STRCONV( toReg.tag2,13 ) ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -8509,7 +8518,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" comment="<<toReg.comment>>" <<>>
+				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -8565,19 +8574,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" supexpr="<<toReg.supexpr>>" <<>>
+				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
 			ENDTEXT
 
-			* NOTA: En el DataEnvironment el TAG2 es el TAG compilado, que se recompila con COMPILE REPORT <nombre>
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	<picture><![CDATA[<<toReg.picture>>]]>
-				<<>>	<tag><![CDATA[<<CR_LF>><<toReg.tag>>]]>
-				<<>>	<tag2><![CDATA[]]>
-				<<>>	<penred><![CDATA[<<toReg.penred>>]]>
-				<<>>	<style><![CDATA[<<toReg.style>>]]>
-				<<>>	<expr><![CDATA[<<toReg.expr>>]]>
-				<<>>	<user><![CDATA[<<toReg.user>>]]>
-			ENDTEXT
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.tag + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -10304,8 +10312,10 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
+
 
 	l_Debug				= .F.
 
@@ -10338,6 +10348,27 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE get_SeparatedLineAndComment
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* tcComment					(@?    OUT) Comentario
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
+
+		IF ln_AT_Cmt > 0
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ENDIF
+
+		RETURN (ln_AT_Cmt > 0)
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -10354,6 +10385,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [</VFPData>]
@@ -10386,6 +10418,27 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
+	ENDPROC
+
+
+	PROCEDURE get_SeparatedLineAndComment
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* tcComment					(@?    OUT) Comentario
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
+
+		IF ln_AT_Cmt > 0
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ENDIF
+
+		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
 
@@ -16671,9 +16724,14 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 				lcExpr		= loReg.PROCEDURE
 				THIS.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T. )
 
-				IF EMPTY(lcProcName)
+				IF EMPTY(lcProcCode)
+					*-- Comando
 					lcText			= lcText + lcTab + 'ON SELECTION POPUP ' + IIF( loReg.OBJCODE = 0, loReg.NAME, 'ALL' ) + ' ' + lcExpr + CR_LF
 				ELSE
+					*-- Procedure
+					IF EMPTY(lcProcName)
+						lcProcName	= CHRTRAN( ALLTRIM( IIF( loReg.OBJCODE = 0, loReg.NAME, 'ALL' ) ), ' ', '_' ) + '_FB2P'
+					ENDIF
 					lcText			= lcText + lcTab + 'ON SELECTION POPUP ' + IIF( loReg.OBJCODE = 0, loReg.NAME, 'ALL' ) + ' DO ' + lcProcName + CR_LF
 					tcEndProcedures	= tcEndProcedures + STRTRAN( lcProcCode, '<<ProcName>>', lcProcName ) + CR_LF
 				ENDIF
@@ -16872,20 +16930,19 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 						EXIT
 					ENDIF
 
-					loReg.PROMPT		= CHRTRAN( ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ' COLOR ' ) ), '"', '' )
+					loReg.PROMPT		= ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ' COLOR ' ) )
+					loReg.PROMPT		= SUBSTR( loReg.PROMPT, 2, LEN( loReg.PROMPT ) - 2 )
 
 					*-- ANALISIS DEL "DEFINE PAD"
-					IF ';' $ tcLine
+					DO CASE
+					CASE ';' $ tcLine
 						FOR I = I + 1 TO tnCodeLines
 							.set_Line( @tcLine, @taCodeLines, I )
 
 							IF EMPTY(loReg.COMMENT)	&& No volver a buscar el comentario si ya existe
-								lnPos	= AT( '&'+'&', tcLine )
-								IF lnPos > 0
-									*-- Busco si tiene comentario
-									loReg.COMMENT	= SUBSTR( tcLine, lnPos + 3 )
-									tcLine	= LEFT( tcLine, lnPos - 1 )
-									lnPos	= 0
+								*-- Busco si tiene comentario
+								IF .get_SeparatedLineAndComment( @tcLine, @lcComment )
+									loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
 								ENDIF
 							ENDIF
 
@@ -16925,7 +16982,12 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								EXIT
 							ENDIF
 						ENDFOR
-					ENDIF	&& ';' $ tcLine
+					
+					CASE .set_Line( @tcLine, @taCodeLines, I ) AND .get_SeparatedLineAndComment( @tcLine, @lcComment )
+						*-- Es un Bar de una sola línea y con comentarios
+						loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
+
+					ENDCASE
 
 
 					* Estructuras ejemplo a analizar:
@@ -17059,20 +17121,19 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 						EXIT
 					ENDIF
 
-					loReg.PROMPT		= CHRTRAN( ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ';', 1, 2 ) ), '"', '' )
+					loReg.PROMPT		= ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ';', 1, 2 ) )
+					loReg.PROMPT		= SUBSTR( loReg.PROMPT, 2, LEN( loReg.PROMPT ) - 2 )
 
 					*-- ANALISIS DEL "DEFINE BAR"
-					IF ';' $ tcLine
+					DO CASE
+					CASE ';' $ tcLine
 						FOR I = I + 1 TO tnCodeLines
 							.set_Line( @tcLine, @taCodeLines, I )
 
 							IF EMPTY(loReg.COMMENT)	&& No volver a buscar el comentario si ya existe
-								lnPos	= AT( '&'+'&', tcLine )
-								IF lnPos > 0
-									*-- Busco si tiene comentario
-									loReg.COMMENT	= SUBSTR( tcLine, lnPos + 3 )
-									tcLine	= LEFT( tcLine, lnPos - 1 )
-									lnPos	= 0
+								*-- Busco si tiene comentario
+								IF .get_SeparatedLineAndComment( @tcLine, @lcComment )
+									loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
 								ENDIF
 							ENDIF
 
@@ -17112,7 +17173,12 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								EXIT
 							ENDIF
 						ENDFOR
-					ENDIF	&& ';' $ tcLine
+					
+					CASE .set_Line( @tcLine, @taCodeLines, I ) AND .get_SeparatedLineAndComment( @tcLine, @lcComment )
+						*-- Es un Bar de una sola línea y con comentarios
+						loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
+
+					ENDCASE
 
 					IF LEFT(lcBarName,1) == '_'
 						*-- Es un BAR del Sistema, así que no tiene ON BAR ni nada más.
@@ -17239,12 +17305,23 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					lcExpr		= loReg.PROCEDURE
 					.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T. )
 
-					IF EMPTY(lcProcName)
-						lcProcName	= CHRTRAN( ALLTRIM( STREXTRACT( lcText, 'DEFINE ', 'PROMPT ' ) ), ' ', '_' ) + '_FB2P'
-					ENDIF
+					IF EMPTY(lcProcCode)
+						*-- Comando
+						IF EMPTY(lcExpr)
+							lcText			= STRTRAN( lcText, 'DO <<ProcName>>', '' )
+						ELSE
+							lcText			= STRTRAN( lcText, 'DO <<ProcName>>', lcExpr )
+						ENDIF
+					ELSE
 
-					lcText			= STRTRAN( lcText, '<<ProcName>>', lcProcName )
-					tcEndProcedures	= tcEndProcedures + STRTRAN( lcProcCode, '<<ProcName>>', lcProcName ) + CR_LF
+						*-- Procedure
+						IF EMPTY(lcProcName)
+							lcProcName	= CHRTRAN( ALLTRIM( STREXTRACT( lcText, 'DEFINE ', 'PROMPT ' ) ), ' ', '_' ) + '_FB2P'
+						ENDIF
+						lcProcCode		= STRTRAN( lcProcCode, '<<ProcName>>', lcProcName )
+						lcText			= STRTRAN( lcText, '<<ProcName>>', lcProcName )
+						tcEndProcedures	= tcEndProcedures + lcProcCode + CR_LF
+					ENDIF
 				ENDIF
 
 
@@ -17318,7 +17395,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 			ENDIF
 
 			IF NOT EMPTY(toReg.COMMENT)
-				lcText	= lcText + ' &' + '& ' + toReg.COMMENT
+				lcText	= lcText + ' &' + '& ' + STRTRAN( STRTRAN( toReg.COMMENT, CHR(13), '<CR>' ), CHR(10), '<LF>' )
 			ENDIF
 
 			*-- ON BAR
@@ -17411,7 +17488,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 			ENDIF
 
 			IF NOT EMPTY(toReg.COMMENT)
-				lcText	= lcText + ' &' + '& ' + toReg.COMMENT
+				lcText	= lcText + ' &' + '& ' + STRTRAN( STRTRAN( toReg.COMMENT, CHR(13), '<CR>' ), CHR(10), '<LF>' )
 			ENDIF
 
 			lcText	= lcText + CR_LF

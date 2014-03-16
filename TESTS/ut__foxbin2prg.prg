@@ -455,9 +455,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
-				lcClass				= loReg_Esperado.CLASS
-				lcParent			= loReg_Esperado.PARENT
-				lcObjName			= loReg_Esperado.objName
+				lcClass				= LOWER(loReg_Esperado.CLASS)
+				lcParent			= LOWER(loReg_Esperado.PARENT)
+				lcObjName			= LOWER(loReg_Esperado.objName)
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -473,7 +473,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
 					ENDIF
 				ELSE
-					LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
 					IF NOT FOUND()
 						ERROR 'No se encontró el registro para CLASS=="' + lcClass + '" AND PARENT=="' + lcParent + '" AND objName=="' + lcObjName + '"'
 					ENDIF
@@ -704,9 +704,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
-				lcClass				= loReg_Esperado.CLASS
-				lcParent			= loReg_Esperado.PARENT
-				lcObjName			= loReg_Esperado.objName
+				lcClass				= LOWER(loReg_Esperado.CLASS)
+				lcParent			= LOWER(loReg_Esperado.PARENT)
+				lcObjName			= LOWER(loReg_Esperado.objName)
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -722,7 +722,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
 					ENDIF
 				ELSE
-					LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
 					IF NOT FOUND()
 						ERROR 'No se encontró el registro para CLASS=="' + lcClass + '" AND PARENT=="' + lcParent + '" AND objName=="' + lcObjName + '"'
 					ENDIF
@@ -786,9 +786,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
-				lcClass				= loReg_Esperado.CLASS
-				lcParent			= loReg_Esperado.PARENT
-				lcObjName			= loReg_Esperado.objName
+				lcClass				= LOWER(loReg_Esperado.CLASS)
+				lcParent			= LOWER(loReg_Esperado.PARENT)
+				lcObjName			= LOWER(loReg_Esperado.objName)
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -804,7 +804,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
 					ENDIF
 				ELSE
-					LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
 					IF NOT FOUND()
 						ERROR 'No se encontró el registro para CLASS=="' + lcClass + '" AND PARENT=="' + lcParent + '" AND objName=="' + lcObjName + '"'
 					ENDIF
@@ -868,9 +868,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
-				lcClass				= loReg_Esperado.CLASS
-				lcParent			= loReg_Esperado.PARENT
-				lcObjName			= loReg_Esperado.objName
+				lcClass				= LOWER(loReg_Esperado.CLASS)
+				lcParent			= LOWER(loReg_Esperado.PARENT)
+				lcObjName			= LOWER(loReg_Esperado.objName)
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -886,7 +886,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
 					ENDIF
 				ELSE
-					LOCATE FOR CLASS==lcClass AND PARENT==lcParent AND objName==lcObjName
+					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
 					IF NOT FOUND()
 						ERROR 'No se encontró el registro para CLASS=="' + lcClass + '" AND PARENT=="' + lcParent + '" AND objName=="' + lcObjName + '"'
 					ENDIF
