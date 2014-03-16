@@ -70,7 +70,12 @@ ON PAD _40Q0H1MMN OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
 		SKIP FOR valor de skip() ;
 		MESSAGE "un mensaje de texto" && Y este es<CR>el nuevo comando<CR>dentro de un PROC!
 	ON SELECTION BAR 3 OF OpciónA_CS ON ERROR ****
-	ON SELECTION POPUP OpciónA_CS *-- PROCEDURE Le cambié el nombre!
+
+	DEFINE BAR 4 OF OpciónA_CS PROMPT ""About " + oApp.AppName()"
+	ON BAR 4 OF OpciónA_CS ACTIVATE POPUP NewItem
+
+		*----------------------------------
+		DEFINE POPUP NewItem MARGIN RELATIVE SHADOW COLOR SCHEME 4	ON SELECTION POPUP OpciónA_CS *-- PROCEDURE Le cambié el nombre!
 
 DEFINE PAD opc_b OF _MSYSMENU PROMPT "Opción B con comando" COLOR SCHEME 3 ;
 	KEY CTRL+B, "Pulse CTRL+B" ;
@@ -78,7 +83,13 @@ DEFINE PAD opc_b OF _MSYSMENU PROMPT "Opción B con comando" COLOR SCHEME 3 ;
 	MESSAGE "Mensaje para Opción B con Command" && Comentario de la Opción b
 
 ON SELECTION PAD opc_b OF _MSYSMENU WAIT WINDOW "Opción B"
-ON SELECTION POPUP ALL DO ALL_FB2P
+
+DEFINE PAD _40T0B3WE4 OF _MSYSMENU PROMPT "\<About ] + alltrim(oApp.GetPProp([icAppTitle]))+"..." + [" COLOR SCHEME 3
+
+ON PAD _40T0B3WE4 OF _MSYSMENU ACTIVATE POPUP _40t0aif1j
+
+	*----------------------------------
+	DEFINE POPUP _40t0aif1j MARGIN RELATIVE SHADOW COLOR SCHEME 4ON SELECTION POPUP ALL DO ALL_FB2P
 ON SELECTION MENU _MSYSMENU DO SELECTION_MENU__MSYSMENU_FB2P
 
 *</MenuCode>

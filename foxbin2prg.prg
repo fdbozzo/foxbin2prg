@@ -16927,7 +16927,8 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 						EXIT
 					ENDIF
 
-					loReg.PROMPT		= CHRTRAN( ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ' COLOR ' ) ), '"', '' )
+					loReg.PROMPT		= ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ' COLOR ' ) )
+					loReg.PROMPT		= SUBSTR( loReg.PROMPT, 2, LEN( loReg.PROMPT ) - 2 )
 
 					*-- ANALISIS DEL "DEFINE PAD"
 					DO CASE
@@ -17117,7 +17118,8 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 						EXIT
 					ENDIF
 
-					loReg.PROMPT		= CHRTRAN( ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ';', 1, 2 ) ), '"', '' )
+					loReg.PROMPT		= ALLTRIM( STREXTRACT( tcLine, ' PROMPT ', ';', 1, 2 ) )
+					loReg.PROMPT		= SUBSTR( loReg.PROMPT, 2, LEN( loReg.PROMPT ) - 2 )
 
 					*-- ANALISIS DEL "DEFINE BAR"
 					DO CASE
