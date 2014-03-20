@@ -351,19 +351,21 @@ ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *	RETURN lnResp
 *ENDIF
 
+SET COVERAGE TO
+
 *-- Muy útil para procesos batch que capturan el código de error
 IF _VFP.STARTMODE > 1 AND NOT EMPTY(lnResp) AND VARTYPE(loEx) = "O"
+	STORE NULL TO loEx, loCnv
+	RELEASE loEx, loCnv
 	DECLARE ExitProcess IN Win32API INTEGER ExitCode
 	ExitProcess(1)
+	QUIT
+ELSE
+	STORE NULL TO loEx, loCnv
+	RELEASE loEx, loCnv
+	RETURN lnResp
 ENDIF
 
-loEx	= NULL
-loCnv	= NULL
-RELEASE loEx, loCnv
-
-SET COVERAGE TO
-RETURN lnResp
-QUIT
 
 
 *******************************************************************************************************************
