@@ -79,7 +79,7 @@
 * 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
 * 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
 * 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
-* 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales
+* 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -102,7 +102,8 @@
 * 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected // Orden de properties defTop,defLeft,etc
 * 10/03/2014	Ryan Harris		REPORTE BUG frx/lbx v1.19.16: Las expresiones con comillas corrompen el fx2/lb2 // La propiedad Comment se pierde si es multilínea (solucionado en v1.19.17)
 * 10/03/2014	Ryan Harris		REPORTE BUG mnx v1.19.16: Al usar comentarios multilínea en las opciones, se corrompe el MN2 y el MNX regenerado (solucionado en v1.19.17)
-* 20/03/2014	Arturo Ramos	REPORTE BUG scx v1.19.17: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales (Solucionado en v1.19.18)
+* 20/03/2014	Arturo Ramos	REPORTE BUG vcx/scx v1.19.17: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales (Solucionado en v1.19.18)
+* 24/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.17: El comentario a nivel de librería se pierde (Solucionado en v1.19.18)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -158,6 +159,8 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_LEN_END_OBJECT_I			LEN(C_END_OBJECT_I)
 #DEFINE C_FB2PRG_META_I				'*< FOXBIN2PRG:'
 #DEFINE C_FB2PRG_META_F				'/>'
+#DEFINE C_LIBCOMMENT_I				'*< LIBCOMMENT:'
+#DEFINE C_LIBCOMMENT_F				'/>'
 #DEFINE C_DEFINE_CLASS				'DEFINE CLASS'
 #DEFINE C_ENDDEFINE					'ENDDEFINE'
 #DEFINE C_TEXT						'TEXT'
@@ -2637,12 +2640,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarbloque_add_object" display="analizarBloque_ADD_OBJECT"/>] ;
 		+ [<memberdata name="analizarbloque_defined_pam" display="analizarBloque_DEFINED_PAM"/>] ;
 		+ [<memberdata name="analizarbloque_define_class" display="analizarBloque_DEFINE_CLASS"/>] ;
 		+ [<memberdata name="analizarbloque_enddefine" display="analizarBloque_ENDDEFINE"/>] ;
 		+ [<memberdata name="analizarbloque_foxbin2prg" display="analizarBloque_FoxBin2Prg"/>] ;
+		+ [<memberdata name="analizarbloque_libcomment" display="analizarBloque_LIBCOMMENT"/>] ;
 		+ [<memberdata name="analizarbloque_hidden" display="analizarBloque_HIDDEN"/>] ;
 		+ [<memberdata name="analizarbloque_include" display="analizarBloque_INCLUDE"/>] ;
 		+ [<memberdata name="analizarbloque_classcomments" display="analizarBloque_CLASSCOMMENTS"/>] ;
@@ -2959,6 +2964,26 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
+
+	PROCEDURE analizarBloque_LIBCOMMENT
+		*------------------------------------------------------
+		*-- Analiza el bloque *<LIBCOMMENT: Comentarios />
+		*------------------------------------------------------
+		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
+
+		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
+
+		IF LEFT( tcLine, LEN(C_LIBCOMMENT_I) ) == C_LIBCOMMENT_I
+			llBloqueEncontrado	= .T.
+
+			*-- Metadatos del módulo
+			toModulo._Comment		= ALLTRIM( STREXTRACT( tcLine, C_LIBCOMMENT_I, C_LIBCOMMENT_F ) )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
 	*******************************************************************************************************************
 	PROCEDURE createProject
 
@@ -3080,15 +3105,22 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createClasslib_RecordHeader
+		LPARAMETERS toModulo
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		INSERT INTO TABLABIN ;
 			( PLATFORM ;
 			, UNIQUEID ;
-			, RESERVED1 ) ;
+			, RESERVED1 ;
+			, RESERVED7 ) ;
 			VALUES ;
 			( 'COMMENT' ;
 			, 'Class' ;
-			, 'VERSION =   3.00' )
+			, 'VERSION =   3.00' ;
+			, toModulo._Comment )
 
 	ENDPROC
 
@@ -3128,15 +3160,22 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createForm_RecordHeader
+		LPARAMETERS toModulo
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		INSERT INTO TABLABIN ;
 			( PLATFORM ;
 			, UNIQUEID ;
-			, RESERVED1 ) ;
+			, RESERVED1 ;
+			, RESERVED7 ) ;
 			VALUES ;
 			( 'COMMENT' ;
 			, 'Screen' ;
-			, 'VERSION =   3.00' )
+			, 'VERSION =   3.00' ;
+			, toModulo._Comment )
 
 	ENDPROC
 
@@ -4611,7 +4650,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		TRY
 			LOCAL I, loEx AS EXCEPTION ;
-				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed ;
+				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
 				, lc_Comentario, lcProcedureAbierto, lcLine ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 
@@ -4637,6 +4676,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
 							llFoxBin2Prg_Completed	= .T.
+
+						CASE NOT llLIBCOMMENT_Completed AND .analizarBloque_LIBCOMMENT( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							llLIBCOMMENT_Completed	= .T.
 
 						CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @lcLine, @taCodeLines ;
 								, @I, tnCodeLines, @lcProcedureAbierto )
@@ -4824,7 +4866,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				loFSO	= .oFSO
 
 				*-- Creo el registro de cabecera
-				.createClasslib_RecordHeader()
+				.createClasslib_RecordHeader( toModulo )
 
 
 				*-- Recorro las CLASES
@@ -5115,7 +5157,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
 				*-- Creo el registro de cabecera
-				.createForm_RecordHeader()
+				.createForm_RecordHeader( toModulo )
 
 				*-- El SCX tiene el INCLUDE en el primer registro
 				IF NOT EMPTY(toModulo._includeFile)
@@ -8702,6 +8744,17 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				*----------------------------------------------
 				SELECT TABLABIN
 				SET ORDER TO PARENT_OBJ
+				GOTO RECORD 1	&& Class Library Header/Form Header
+
+				SCATTER FIELDS RESERVED7 MEMO NAME loRegClass
+
+				IF NOT EMPTY(loRegClass.RESERVED7) THEN
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<C_LIBCOMMENT_I>> <<loRegClass.Reserved7>> <<C_LIBCOMMENT_F>>
+						*
+					ENDTEXT
+				ENDIF
+
 
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
 					SCATTER MEMO NAME loRegClass
@@ -8908,9 +8961,17 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				*----------------------------------------------
 				SELECT TABLABIN
 				SET ORDER TO PARENT_OBJ
-				GOTO RECORD 1
+				GOTO RECORD 1	&& Class Library Header/Form Header
 
-				SCATTER FIELDS RESERVED8 MEMO NAME loRegClass
+				SCATTER FIELDS RESERVED8,RESERVED7 MEMO NAME loRegClass
+
+				IF NOT EMPTY(loRegClass.RESERVED7) THEN
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<C_LIBCOMMENT_I>> <<loRegClass.Reserved7>> <<C_LIBCOMMENT_F>>
+						*
+					ENDTEXT
+				ENDIF
+
 
 				IF NOT EMPTY(loRegClass.RESERVED8) THEN
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -10384,8 +10445,9 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 		+ [<memberdata name="_clases" display="_Clases"/>] ;
 		+ [<memberdata name="_clases_count" display="_Clases_Count"/>] ;
 		+ [<memberdata name="_includefile" display="_IncludeFile"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
 		+ [<memberdata name="_ole_objs" display="_Ole_Objs"/>] ;
-		+ [<memberdata name="_ole_obj_count" display="_Ole_Obj_Count"/>] ;
+		+ [<memberdata name="_ole_objs" display="_Ole_Objs"/>] ;
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [</VFPData>]
@@ -10397,6 +10459,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	_Ole_Obj_count		= 0
 	_Clases_Count		= 0
 	_includeFile		= ''
+	_Comment			= ''
 
 
 	************************************************************************************************
