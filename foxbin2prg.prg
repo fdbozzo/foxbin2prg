@@ -79,6 +79,7 @@
 * 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
 * 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
 * 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
+* 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -101,6 +102,8 @@
 * 06/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.15: Algunas propiedades no mantienen su visibilidad Hidden/Protected // Orden de properties defTop,defLeft,etc
 * 10/03/2014	Ryan Harris		REPORTE BUG frx/lbx v1.19.16: Las expresiones con comillas corrompen el fx2/lb2 // La propiedad Comment se pierde si es multilínea (solucionado en v1.19.17)
 * 10/03/2014	Ryan Harris		REPORTE BUG mnx v1.19.16: Al usar comentarios multilínea en las opciones, se corrompe el MN2 y el MNX regenerado (solucionado en v1.19.17)
+* 20/03/2014	Arturo Ramos	REPORTE BUG vcx/scx v1.19.17: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales (Solucionado en v1.19.18)
+* 24/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.17: El comentario a nivel de librería se pierde (Solucionado en v1.19.18)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -156,6 +159,8 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_LEN_END_OBJECT_I			LEN(C_END_OBJECT_I)
 #DEFINE C_FB2PRG_META_I				'*< FOXBIN2PRG:'
 #DEFINE C_FB2PRG_META_F				'/>'
+#DEFINE C_LIBCOMMENT_I				'*< LIBCOMMENT:'
+#DEFINE C_LIBCOMMENT_F				'/>'
 #DEFINE C_DEFINE_CLASS				'DEFINE CLASS'
 #DEFINE C_ENDDEFINE					'ENDDEFINE'
 #DEFINE C_TEXT						'TEXT'
@@ -351,19 +356,21 @@ ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *	RETURN lnResp
 *ENDIF
 
+SET COVERAGE TO
+
 *-- Muy útil para procesos batch que capturan el código de error
 IF _VFP.STARTMODE > 1 AND NOT EMPTY(lnResp) AND VARTYPE(loEx) = "O"
+	STORE NULL TO loEx, loCnv
+	RELEASE loEx, loCnv
 	DECLARE ExitProcess IN Win32API INTEGER ExitCode
 	ExitProcess(1)
+	QUIT
+ELSE
+	STORE NULL TO loEx, loCnv
+	RELEASE loEx, loCnv
+	RETURN lnResp
 ENDIF
 
-loEx	= NULL
-loCnv	= NULL
-RELEASE loEx, loCnv
-
-SET COVERAGE TO
-RETURN lnResp
-QUIT
 
 
 *******************************************************************************************************************
@@ -1586,6 +1593,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarasignacion_tag_indicado" display="analizarAsignacion_TAG_Indicado"/>] ;
+		+ [<memberdata name="a_specialprops" display="a_SpecialProps"/>] ;
 		+ [<memberdata name="buscarobjetodelmetodopornombre" display="buscarObjetoDelMetodoPorNombre"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" display="comprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
@@ -1605,6 +1613,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="normalizarvalorpropiedad" display="normalizarValorPropiedad"/>] ;
 		+ [<memberdata name="normalizarvalorxml" display="normalizarValorXML"/>] ;
 		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
+		+ [<memberdata name="sortspecialprops" display="SortSpecialProps"/>] ;
 		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
@@ -1625,6 +1634,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [</VFPData>]
 
 
+	DIMENSION a_SpecialProps(1)
 	l_Debug					= .F.
 	l_Test					= .F.
 	c_InputFile				= ''
@@ -1658,6 +1668,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
 		THIS.c_CurDir	= SYS(5) + CURDIR()
 		THIS.oFSO		= CREATEOBJECT( "Scripting.FileSystemObject")
+		
+		THIS.SortSpecialProps()
 	ENDPROC
 
 
@@ -2295,277 +2307,35 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tcPropName				(!v IN    ) Nombre de la propiedad
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOperation, tcPropName
-		LOCAL lcPropName
-		lcPropName	= tcPropName
-		tcOperation	= UPPER(EVL(tcOperation,''))
 
-		*-- Por defecto son todas System Properties
-		DO CASE
-		CASE tcOperation == 'GETNAME'
-			lcPropName	= SUBSTR(tcPropName,5)
-		CASE NOT tcOperation == 'SETNAME'
-			ERROR C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC
-		CASE lcPropName == 'FRXDataSession'			&& En un VCX lo ví primero de todo y también luego de Height ¿?
-			lcPropName	= 'A001' + lcPropName
-		CASE lcPropName == 'ErasePage'				&& PageFrame: Debe estar antes que PageCount
-			lcPropName	= 'A002' + lcPropName
-		CASE lcPropName == 'PageCount'				&& PageFrame: Debe estar antes que ActivePage
-			lcPropName	= 'A003' + lcPropName
-		CASE lcPropName == 'ActivePage'				&& PageFrame: Debe estar antes que Top/Left/With/Height
-			lcPropName	= 'A004' + lcPropName
-		CASE lcPropName == 'ButtonCount'
-			lcPropName	= 'A005' + lcPropName
-		CASE lcPropName == 'ColumnCount'
-			lcPropName	= 'A010' + lcPropName
-		CASE lcPropName == 'Value'
-			lcPropName	= 'A015' + lcPropName
-		CASE lcPropName == 'Comment'
-			lcPropName	= 'A020' + lcPropName
-		CASE lcPropName == 'ControlSource'
-			lcPropName	= 'A025' + lcPropName
-		CASE lcPropName == 'DataSession'
-			lcPropName	= 'A030' + lcPropName
-		CASE lcPropName == 'DeleteMark'
-			lcPropName	= 'A035' + lcPropName
-		CASE lcPropName == 'ScaleMode'
-			lcPropName	= 'A040' + lcPropName
-		CASE lcPropName == 'Tag'
-			lcPropName	= 'A045' + lcPropName
-		CASE lcPropName == 'DefTop'					&& Propiedad con evaluación: Debe estar antes que Top
-			lcPropName	= 'A046' + lcPropName
-		CASE lcPropName == 'DefLeft'				&& Propiedad con evaluación: Debe estar antes que Left
-			lcPropName	= 'A047' + lcPropName
-		CASE lcPropName == 'DefHeight'				&& Propiedad con evaluación: Debe estar antes que Height
-			lcPropName	= 'A048' + lcPropName
-		CASE lcPropName == 'DefWidth'				&& Propiedad con evaluación: Debe estar antes que Width
-			lcPropName	= 'A049' + lcPropName
-		CASE lcPropName == 'Top'
-			lcPropName	= 'A050' + lcPropName
-		CASE lcPropName == 'Left'
-			lcPropName	= 'A055' + lcPropName
-		CASE lcPropName == 'Height'
-			lcPropName	= 'A060' + lcPropName
-		CASE lcPropName == 'Width'
-			lcPropName	= 'A065' + lcPropName
-		CASE lcPropName == 'MaxLength'
-			lcPropName	= 'A070' + lcPropName
-		CASE lcPropName == 'Alias'
-			lcPropName	= 'A075' + lcPropName
-		CASE lcPropName == 'BufferModeOverride'
-			lcPropName	= 'A080' + lcPropName
-		CASE lcPropName == 'Order'
-			lcPropName	= 'A085' + lcPropName
-		CASE lcPropName == 'OrderDirection'
-			lcPropName	= 'A090' + lcPropName
-		CASE lcPropName == 'CursorSource'
-			lcPropName	= 'A095' + lcPropName
-		CASE lcPropName == 'Exclusive'
-			lcPropName	= 'A100' + lcPropName
-		CASE lcPropName == 'Filter'
-			lcPropName	= 'A105' + lcPropName
-		CASE lcPropName == 'Panel'
-			lcPropName	= 'A110' + lcPropName
-		CASE lcPropName == 'ReadOnly'
-			lcPropName	= 'A115' + lcPropName
-		CASE lcPropName == 'RecordSource'
-			lcPropName	= 'A120' + lcPropName
-		CASE lcPropName == 'RecordSourceType'
-			lcPropName	= 'A125' + lcPropName
-		CASE lcPropName == 'NoDataOnLoad'
-			lcPropName	= 'A130' + lcPropName
-		CASE lcPropName == 'OpenViews'
-			lcPropName	= 'A135' + lcPropName
-		CASE lcPropName == 'AutoOpenTables'
-			lcPropName	= 'A140' + lcPropName
-		CASE lcPropName == 'AutoCloseTables'
-			lcPropName	= 'A145' + lcPropName
-		CASE lcPropName == 'InitialSelectedAlias'
-			lcPropName	= 'A150' + lcPropName
-		CASE lcPropName == 'DataSource'
-			lcPropName	= 'A155' + lcPropName
-		CASE lcPropName == 'DataSourceType '
-			lcPropName	= 'A160' + lcPropName
-		CASE lcPropName == 'Desktop'
-			lcPropName	= 'A165' + lcPropName
-		CASE lcPropName == 'ShowWindow'
-			lcPropName	= 'A170' + lcPropName
-		CASE lcPropName == 'ScrollBars'
-			lcPropName	= 'A175' + lcPropName
-		CASE lcPropName == 'ShowInTaskBar'
-			lcPropName	= 'A180' + lcPropName
-		CASE lcPropName == 'DoCreate'
-			lcPropName	= 'A185' + lcPropName
-		CASE lcPropName == 'Tag'
-			lcPropName	= 'A190' + lcPropName
-		CASE lcPropName == 'OLEDragMode'
-			lcPropName	= 'A195' + lcPropName
-		CASE lcPropName == 'OLEDragPicture'
-			lcPropName	= 'A200' + lcPropName
-		CASE lcPropName == 'OLEDropMode'
-			lcPropName	= 'A205' + lcPropName
-		CASE lcPropName == 'OLEDropEffects'
-			lcPropName	= 'A210' + lcPropName
-		CASE lcPropName == 'ShowTips'
-			lcPropName	= 'A215' + lcPropName
-		CASE lcPropName == 'BufferMode'
-			lcPropName	= 'A220' + lcPropName
-		CASE lcPropName == 'AutoCenter'
-			lcPropName	= 'A225' + lcPropName
-		CASE lcPropName == 'AutoSize'
-			lcPropName	= 'A230' + lcPropName
-		CASE lcPropName == 'WordWrap'
-			lcPropName	= 'A235' + lcPropName
-		CASE lcPropName == 'Picture'
-			lcPropName	= 'A240' + lcPropName
-		CASE lcPropName == 'BackStyle'
-			lcPropName	= 'A245' + lcPropName
-		CASE lcPropName == 'BorderStyle'
-			lcPropName	= 'A250' + lcPropName
-		CASE lcPropName == 'BorderWidth'
-			lcPropName	= 'A255' + lcPropName
-		CASE lcPropName == 'Caption'
-			lcPropName	= 'A260' + lcPropName
-		CASE lcPropName == 'ControlBox'
-			lcPropName	= 'A265' + lcPropName
-		CASE lcPropName == 'Closable'
-			lcPropName	= 'A270' + lcPropName
-		CASE lcPropName == 'Curvature'
-			lcPropName	= 'A275' + lcPropName
-		CASE lcPropName == 'FontBold'
-			lcPropName	= 'A280' + lcPropName
-		CASE lcPropName == 'FontCondense'
-			lcPropName	= 'A285' + lcPropName
-		CASE lcPropName == 'FontExtend'
-			lcPropName	= 'A290' + lcPropName
-		CASE lcPropName == 'FontItalic'
-			lcPropName	= 'A295' + lcPropName
-		CASE lcPropName == 'FontName'
-			lcPropName	= 'A300' + lcPropName
-		CASE lcPropName == 'FontOutline'
-			lcPropName	= 'A305' + lcPropName
-		CASE lcPropName == 'FontShadow'
-			lcPropName	= 'A310' + lcPropName
-		CASE lcPropName == 'FontSize'
-			lcPropName	= 'A315' + lcPropName
-		CASE lcPropName == 'FontStrikethru'
-			lcPropName	= 'A320' + lcPropName
-		CASE lcPropName == 'FontUnderline'
-			lcPropName	= 'A325' + lcPropName
-		CASE lcPropName == 'HalfHeightCaption'
-			lcPropName	= 'A330' + lcPropName
-		CASE lcPropName == 'Margin'
-			lcPropName	= 'A335' + lcPropName
-		CASE lcPropName == 'MaxButton'
-			lcPropName	= 'A340' + lcPropName
-		CASE lcPropName == 'MinButton'
-			lcPropName	= 'A345' + lcPropName
-		CASE lcPropName == 'Movable'
-			lcPropName	= 'A350' + lcPropName
-		CASE lcPropName == 'MaxHeight'
-			lcPropName	= 'A355' + lcPropName
-		CASE lcPropName == 'MaxWidth'
-			lcPropName	= 'A360' + lcPropName
-		CASE lcPropName == 'MinHeight'
-			lcPropName	= 'A365' + lcPropName
-		CASE lcPropName == 'MinWidth'
-			lcPropName	= 'A370' + lcPropName
-		CASE lcPropName == 'MaxTop'
-			lcPropName	= 'A375' + lcPropName
-		CASE lcPropName == 'MaxLeft'
-			lcPropName	= 'A380' + lcPropName
-		CASE lcPropName == 'MDIForm'
-			lcPropName	= 'A385' + lcPropName
-		CASE lcPropName == 'MousePointer'
-			lcPropName	= 'A390' + lcPropName
-		CASE lcPropName == 'MouseIcon'
-			lcPropName	= 'A395' + lcPropName
-		CASE lcPropName == 'Visible'
-			lcPropName	= 'A400' + lcPropName
-		CASE lcPropName == 'ClipControls'
-			lcPropName	= 'A405' + lcPropName
-		CASE lcPropName == 'DrawMode'
-			lcPropName	= 'A410' + lcPropName
-		CASE lcPropName == 'DrawStyle'
-			lcPropName	= 'A415' + lcPropName
-		CASE lcPropName == 'DrawWidth'
-			lcPropName	= 'A420' + lcPropName
-		CASE lcPropName == 'FillStyle'
-			lcPropName	= 'A425' + lcPropName
-		CASE lcPropName == 'Enabled'
-			lcPropName	= 'A430' + lcPropName
-		CASE lcPropName == 'Icon'
-			lcPropName	= 'A435' + lcPropName
-		CASE lcPropName == 'KeyPreview'
-			lcPropName	= 'A440' + lcPropName
-		CASE lcPropName == 'TabIndex'
-			lcPropName	= 'A445' + lcPropName
-		CASE lcPropName == 'TabStop'
-			lcPropName	= 'A450' + lcPropName
-		CASE lcPropName == 'TitleBar'
-			lcPropName	= 'A455' + lcPropName
-		CASE lcPropName == 'WindowType'
-			lcPropName	= 'A460' + lcPropName
-		CASE lcPropName == 'WindowState'
-			lcPropName	= 'A465' + lcPropName
-		CASE lcPropName == 'LockScreen'
-			lcPropName	= 'A470' + lcPropName
-		CASE lcPropName == 'AlwaysOnTop'
-			lcPropName	= 'A475' + lcPropName
-		CASE lcPropName == 'AlwaysOnBottom'
-			lcPropName	= 'A480' + lcPropName
-		CASE lcPropName == 'SizeBox'
-			lcPropName	= 'A485' + lcPropName
-		CASE lcPropName == 'SpecialEffect'
-			lcPropName	= 'A490' + lcPropName
-		CASE lcPropName == 'ZoomBox'
-			lcPropName	= 'A495' + lcPropName
-		CASE lcPropName == 'ZOrderSet'
-			lcPropName	= 'A500' + lcPropName
-		CASE lcPropName == 'HelpContextID'
-			lcPropName	= 'A505' + lcPropName
-		CASE lcPropName == 'WhatsThisHelpID'
-			lcPropName	= 'A510' + lcPropName
-		CASE lcPropName == 'WhatsThisHelp'
-			lcPropName	= 'A515' + lcPropName
-		CASE lcPropName == 'WhatsThisButton'
-			lcPropName	= 'A520' + lcPropName
-		CASE lcPropName == 'RightToLeft'
-			lcPropName	= 'A525' + lcPropName
-		CASE lcPropName == 'DefOleLCID'
-			lcPropName	= 'A530' + lcPropName
-		CASE lcPropName == 'MacDesktop'
-			lcPropName	= 'A535' + lcPropName
-		CASE lcPropName == 'ColorSource'
-			lcPropName	= 'A540' + lcPropName
-		CASE lcPropName == 'ForeColor'
-			lcPropName	= 'A545' + lcPropName
-		CASE lcPropName == 'DisableForeColor'
-			lcPropName	= 'A550' + lcPropName
-		CASE lcPropName == 'BackColor'
-			lcPropName	= 'A555' + lcPropName
-		CASE lcPropName == 'FillColor'
-			lcPropName	= 'A560' + lcPropName
-		CASE lcPropName == 'HScrollSmallChange'
-			lcPropName	= 'A565' + lcPropName
-		CASE lcPropName == 'VScrollSmallChange'
-			lcPropName	= 'A570' + lcPropName
-		CASE lcPropName == 'ContinuousScroll'
-			lcPropName	= 'A575' + lcPropName
-		CASE lcPropName == 'Themes'
-			lcPropName	= 'A580' + lcPropName
-		CASE lcPropName == 'BindControls'
-			lcPropName	= 'A585' + lcPropName
-		CASE lcPropName == 'AllowOutput'
-			lcPropName	= 'A590' + lcPropName
-		CASE lcPropName == 'Dockable'
-			lcPropName	= 'A595' + lcPropName
-		CASE lcPropName == '_memberdata'
-			lcPropName	= 'A995' + lcPropName
-		CASE lcPropName == 'Name'	&& System "Name" property
-			lcPropName	= 'A999' + lcPropName
-		OTHERWISE					&& User Property
-			lcPropName	= 'A998' + lcPropName
-		ENDCASE
+		TRY
+			LOCAL lcPropName, lnPos, loEx as Exception
+			lcPropName	= tcPropName
+			tcOperation	= UPPER(EVL(tcOperation,''))
+		
+			DO CASE
+			CASE tcOperation == 'GETNAME'
+				lcPropName	= SUBSTR(tcPropName,5)
+
+			CASE NOT tcOperation == 'SETNAME'
+				ERROR C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC
+
+			CASE lcPropName == 'Name'	&& System "Name" property
+				lcPropName	= 'A999' + lcPropName
+
+			OTHERWISE
+				lnPos	= ASCAN( THIS.a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
+				lcPropName	= 'A' + PADL( EVL(lnPos,998), 3, '0' ) + lcPropName
+			ENDCASE
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
 
 		RETURN lcPropName
 	ENDPROC
@@ -2696,6 +2466,158 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		RETURN
 	ENDPROC
+	
+	
+	
+	PROTECTED PROCEDURE SortSpecialProps_Add
+		LPARAMETERS tcPropName, I
+		I	= I + 1
+		DIMENSION THIS.a_SpecialProps(I)
+		THIS.a_SpecialProps(I)	= tcPropName
+	ENDPROC
+	
+	
+	
+	PROCEDURE SortSpecialProps
+		LOCAL I
+		I = 0
+
+		WITH THIS AS conversor_base OF "FOXBIN2PRG.PRG"
+			.SortSpecialProps_Add( 'FRXDataSession', @I )		&& En un VCX lo ví primero de todo y también luego de Height ¿?
+			.SortSpecialProps_Add( 'ErasePage', @I )			&& PageFrame: Debe estar antes que PageCount
+			.SortSpecialProps_Add( 'PageCount', @I )			&& PageFrame: Debe estar antes que ActivePage
+			.SortSpecialProps_Add( 'ActivePage', @I )			&& PageFrame: Debe estar antes que Top/Left/With/Height
+			.SortSpecialProps_Add( 'ButtonCount', @I )
+			.SortSpecialProps_Add( 'ColumnCount', @I )
+			.SortSpecialProps_Add( 'Value', @I )
+			.SortSpecialProps_Add( 'Comment', @I )
+			.SortSpecialProps_Add( 'ControlSource', @I )
+			.SortSpecialProps_Add( 'DataSession', @I )
+			.SortSpecialProps_Add( 'DeleteMark', @I )
+			.SortSpecialProps_Add( 'ScaleMode', @I )
+			.SortSpecialProps_Add( 'Tag', @I )
+			.SortSpecialProps_Add( 'OLEDragMode', @I )			&& Image: Debe estar antes que OLEDragPicture
+			.SortSpecialProps_Add( 'OLEDragPicture', @I )		&& Image: Debe estar antes que OLEDropMode
+			.SortSpecialProps_Add( 'OLEDropMode', @I )			&& Image: Debe estar antes que OLEDropEffects
+			.SortSpecialProps_Add( 'OLEDropEffects', @I )		&& Image: Debe estar antes que DragMode
+			.SortSpecialProps_Add( 'DragMode', @I )				&& Image: Debe estar antes que DragIcon
+			.SortSpecialProps_Add( 'DragIcon', @I )				&& Image: Debe estar antes que Anchor
+			.SortSpecialProps_Add( 'Anchor', @I )				&& Image: Debe estar antes que Picture
+			.SortSpecialProps_Add( 'DefTop', @I )				&& Propiedad con evaluación: Debe estar antes que Top
+			.SortSpecialProps_Add( 'DefLeft', @I )				&& Propiedad con evaluación: Debe estar antes que Left
+			.SortSpecialProps_Add( 'DefHeight', @I )			&& Propiedad con evaluación: Debe estar antes que Height
+			.SortSpecialProps_Add( 'DefWidth', @I )				&& Propiedad con evaluación: Debe estar antes que Width
+			.SortSpecialProps_Add( 'Picture', @I )				&& Image: Debe estar antes que Stretch y después de DefTop/DefLeft
+			.SortSpecialProps_Add( 'Stretch', @I )				&& Image: Debe estar antes que BackStyle
+			.SortSpecialProps_Add( 'BackStyle', @I )			&& Image: Debe estar antes que BorderStyle
+			.SortSpecialProps_Add( 'BorderStyle', @I )			&& 
+			.SortSpecialProps_Add( 'BorderWidth', @I )
+			.SortSpecialProps_Add( 'Enabled', @I )
+			.SortSpecialProps_Add( 'Top', @I )
+			.SortSpecialProps_Add( 'Left', @I )
+			.SortSpecialProps_Add( 'Height', @I )
+			.SortSpecialProps_Add( 'Width', @I )
+			.SortSpecialProps_Add( 'MousePointer', @I )
+			.SortSpecialProps_Add( 'MouseIcon', @I )
+			.SortSpecialProps_Add( 'Visible', @I )
+			.SortSpecialProps_Add( 'MaxLength', @I )
+			.SortSpecialProps_Add( 'Alias', @I )
+			.SortSpecialProps_Add( 'BufferModeOverride', @I )
+			.SortSpecialProps_Add( 'Order', @I )
+			.SortSpecialProps_Add( 'OrderDirection', @I )
+			.SortSpecialProps_Add( 'CursorSource', @I )
+			.SortSpecialProps_Add( 'Exclusive', @I )
+			.SortSpecialProps_Add( 'Filter', @I )
+			.SortSpecialProps_Add( 'Panel', @I )
+			.SortSpecialProps_Add( 'ReadOnly', @I )
+			.SortSpecialProps_Add( 'RecordSource', @I )
+			.SortSpecialProps_Add( 'RecordSourceType', @I )
+			.SortSpecialProps_Add( 'NoDataOnLoad', @I )
+			.SortSpecialProps_Add( 'OpenViews', @I )
+			.SortSpecialProps_Add( 'AutoOpenTables', @I )
+			.SortSpecialProps_Add( 'AutoCloseTables', @I )
+			.SortSpecialProps_Add( 'InitialSelectedAlias', @I )
+			.SortSpecialProps_Add( 'DataSource', @I )
+			.SortSpecialProps_Add( 'DataSourceType ', @I )
+			.SortSpecialProps_Add( 'Desktop', @I )
+			.SortSpecialProps_Add( 'ShowWindow', @I )
+			.SortSpecialProps_Add( 'ScrollBars', @I )
+			.SortSpecialProps_Add( 'ShowInTaskBar', @I )
+			.SortSpecialProps_Add( 'DoCreate', @I )
+			.SortSpecialProps_Add( 'Tag', @I )
+			.SortSpecialProps_Add( 'ShowTips', @I )
+			.SortSpecialProps_Add( 'BufferMode', @I )
+			.SortSpecialProps_Add( 'AutoCenter', @I )
+			.SortSpecialProps_Add( 'AutoSize', @I )
+			.SortSpecialProps_Add( 'WordWrap', @I )
+			.SortSpecialProps_Add( 'Caption', @I )
+			.SortSpecialProps_Add( 'ControlBox', @I )
+			.SortSpecialProps_Add( 'Closable', @I )
+			.SortSpecialProps_Add( 'Curvature', @I )
+			.SortSpecialProps_Add( 'FontBold', @I )
+			.SortSpecialProps_Add( 'FontCondense', @I )
+			.SortSpecialProps_Add( 'FontExtend', @I )
+			.SortSpecialProps_Add( 'FontItalic', @I )
+			.SortSpecialProps_Add( 'FontName', @I )
+			.SortSpecialProps_Add( 'FontOutline', @I )
+			.SortSpecialProps_Add( 'FontShadow', @I )
+			.SortSpecialProps_Add( 'FontSize', @I )
+			.SortSpecialProps_Add( 'FontStrikethru', @I )
+			.SortSpecialProps_Add( 'FontUnderline', @I )
+			.SortSpecialProps_Add( 'HalfHeightCaption', @I )
+			.SortSpecialProps_Add( 'Margin', @I )
+			.SortSpecialProps_Add( 'MaxButton', @I )
+			.SortSpecialProps_Add( 'MinButton', @I )
+			.SortSpecialProps_Add( 'Movable', @I )
+			.SortSpecialProps_Add( 'MaxHeight', @I )
+			.SortSpecialProps_Add( 'MaxWidth', @I )
+			.SortSpecialProps_Add( 'MinHeight', @I )
+			.SortSpecialProps_Add( 'MinWidth', @I )
+			.SortSpecialProps_Add( 'MaxTop', @I )
+			.SortSpecialProps_Add( 'MaxLeft', @I )
+			.SortSpecialProps_Add( 'MDIForm', @I )
+			.SortSpecialProps_Add( 'ClipControls', @I )
+			.SortSpecialProps_Add( 'DrawMode', @I )
+			.SortSpecialProps_Add( 'DrawStyle', @I )
+			.SortSpecialProps_Add( 'DrawWidth', @I )
+			.SortSpecialProps_Add( 'FillStyle', @I )
+			.SortSpecialProps_Add( 'Icon', @I )
+			.SortSpecialProps_Add( 'KeyPreview', @I )
+			.SortSpecialProps_Add( 'TabIndex', @I )
+			.SortSpecialProps_Add( 'TabStop', @I )
+			.SortSpecialProps_Add( 'TitleBar', @I )
+			.SortSpecialProps_Add( 'WindowType', @I )
+			.SortSpecialProps_Add( 'WindowState', @I )
+			.SortSpecialProps_Add( 'LockScreen', @I )
+			.SortSpecialProps_Add( 'AlwaysOnTop', @I )
+			.SortSpecialProps_Add( 'AlwaysOnBottom', @I )
+			.SortSpecialProps_Add( 'SizeBox', @I )
+			.SortSpecialProps_Add( 'SpecialEffect', @I )
+			.SortSpecialProps_Add( 'ZoomBox', @I )
+			.SortSpecialProps_Add( 'ZOrderSet', @I )
+			.SortSpecialProps_Add( 'HelpContextID', @I )
+			.SortSpecialProps_Add( 'WhatsThisHelpID', @I )
+			.SortSpecialProps_Add( 'WhatsThisHelp', @I )
+			.SortSpecialProps_Add( 'WhatsThisButton', @I )
+			.SortSpecialProps_Add( 'RightToLeft', @I )
+			.SortSpecialProps_Add( 'DefOleLCID', @I )
+			.SortSpecialProps_Add( 'MacDesktop', @I )
+			.SortSpecialProps_Add( 'ColorSource', @I )
+			.SortSpecialProps_Add( 'ForeColor', @I )
+			.SortSpecialProps_Add( 'DisableForeColor', @I )
+			.SortSpecialProps_Add( 'BackColor', @I )
+			.SortSpecialProps_Add( 'FillColor', @I )
+			.SortSpecialProps_Add( 'HScrollSmallChange', @I )
+			.SortSpecialProps_Add( 'VScrollSmallChange', @I )
+			.SortSpecialProps_Add( 'ContinuousScroll', @I )
+			.SortSpecialProps_Add( 'BindControls', @I )
+			.SortSpecialProps_Add( 'AllowOutput', @I )
+			.SortSpecialProps_Add( 'Dockable', @I )
+			.SortSpecialProps_Add( '_memberdata', @I )
+			.SortSpecialProps_Add( 'Themes', @I )
+			*.SortSpecialProps_Add( 'Name', @I )	&& System "Name" property
+		ENDWITH
+	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -2718,12 +2640,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarbloque_add_object" display="analizarBloque_ADD_OBJECT"/>] ;
 		+ [<memberdata name="analizarbloque_defined_pam" display="analizarBloque_DEFINED_PAM"/>] ;
 		+ [<memberdata name="analizarbloque_define_class" display="analizarBloque_DEFINE_CLASS"/>] ;
 		+ [<memberdata name="analizarbloque_enddefine" display="analizarBloque_ENDDEFINE"/>] ;
 		+ [<memberdata name="analizarbloque_foxbin2prg" display="analizarBloque_FoxBin2Prg"/>] ;
+		+ [<memberdata name="analizarbloque_libcomment" display="analizarBloque_LIBCOMMENT"/>] ;
 		+ [<memberdata name="analizarbloque_hidden" display="analizarBloque_HIDDEN"/>] ;
 		+ [<memberdata name="analizarbloque_include" display="analizarBloque_INCLUDE"/>] ;
 		+ [<memberdata name="analizarbloque_classcomments" display="analizarBloque_CLASSCOMMENTS"/>] ;
@@ -3040,6 +2964,26 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
+
+	PROCEDURE analizarBloque_LIBCOMMENT
+		*------------------------------------------------------
+		*-- Analiza el bloque *<LIBCOMMENT: Comentarios />
+		*------------------------------------------------------
+		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
+
+		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
+
+		IF LEFT( tcLine, LEN(C_LIBCOMMENT_I) ) == C_LIBCOMMENT_I
+			llBloqueEncontrado	= .T.
+
+			*-- Metadatos del módulo
+			toModulo._Comment		= ALLTRIM( STREXTRACT( tcLine, C_LIBCOMMENT_I, C_LIBCOMMENT_F ) )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
 	*******************************************************************************************************************
 	PROCEDURE createProject
 
@@ -3161,15 +3105,22 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createClasslib_RecordHeader
+		LPARAMETERS toModulo
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		INSERT INTO TABLABIN ;
 			( PLATFORM ;
 			, UNIQUEID ;
-			, RESERVED1 ) ;
+			, RESERVED1 ;
+			, RESERVED7 ) ;
 			VALUES ;
 			( 'COMMENT' ;
 			, 'Class' ;
-			, 'VERSION =   3.00' )
+			, 'VERSION =   3.00' ;
+			, toModulo._Comment )
 
 	ENDPROC
 
@@ -3209,15 +3160,22 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createForm_RecordHeader
+		LPARAMETERS toModulo
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		INSERT INTO TABLABIN ;
 			( PLATFORM ;
 			, UNIQUEID ;
-			, RESERVED1 ) ;
+			, RESERVED1 ;
+			, RESERVED7 ) ;
 			VALUES ;
 			( 'COMMENT' ;
 			, 'Screen' ;
-			, 'VERSION =   3.00' )
+			, 'VERSION =   3.00' ;
+			, toModulo._Comment )
 
 	ENDPROC
 
@@ -4692,7 +4650,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		TRY
 			LOCAL I, loEx AS EXCEPTION ;
-				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed ;
+				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
 				, lc_Comentario, lcProcedureAbierto, lcLine ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 
@@ -4718,6 +4676,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
 							llFoxBin2Prg_Completed	= .T.
+
+						CASE NOT llLIBCOMMENT_Completed AND .analizarBloque_LIBCOMMENT( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							llLIBCOMMENT_Completed	= .T.
 
 						CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @lcLine, @taCodeLines ;
 								, @I, tnCodeLines, @lcProcedureAbierto )
@@ -4905,7 +4866,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				loFSO	= .oFSO
 
 				*-- Creo el registro de cabecera
-				.createClasslib_RecordHeader()
+				.createClasslib_RecordHeader( toModulo )
 
 
 				*-- Recorro las CLASES
@@ -5196,7 +5157,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
 				*-- Creo el registro de cabecera
-				.createForm_RecordHeader()
+				.createForm_RecordHeader( toModulo )
 
 				*-- El SCX tiene el INCLUDE en el primer registro
 				IF NOT EMPTY(toModulo._includeFile)
@@ -8783,6 +8744,17 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				*----------------------------------------------
 				SELECT TABLABIN
 				SET ORDER TO PARENT_OBJ
+				GOTO RECORD 1	&& Class Library Header/Form Header
+
+				SCATTER FIELDS RESERVED7 MEMO NAME loRegClass
+
+				IF NOT EMPTY(loRegClass.RESERVED7) THEN
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<C_LIBCOMMENT_I>> <<loRegClass.Reserved7>> <<C_LIBCOMMENT_F>>
+						*
+					ENDTEXT
+				ENDIF
+
 
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
 					SCATTER MEMO NAME loRegClass
@@ -8989,9 +8961,17 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				*----------------------------------------------
 				SELECT TABLABIN
 				SET ORDER TO PARENT_OBJ
-				GOTO RECORD 1
+				GOTO RECORD 1	&& Class Library Header/Form Header
 
-				SCATTER FIELDS RESERVED8 MEMO NAME loRegClass
+				SCATTER FIELDS RESERVED8,RESERVED7 MEMO NAME loRegClass
+
+				IF NOT EMPTY(loRegClass.RESERVED7) THEN
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<C_LIBCOMMENT_I>> <<loRegClass.Reserved7>> <<C_LIBCOMMENT_F>>
+						*
+					ENDTEXT
+				ENDIF
+
 
 				IF NOT EMPTY(loRegClass.RESERVED8) THEN
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -10465,8 +10445,9 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 		+ [<memberdata name="_clases" display="_Clases"/>] ;
 		+ [<memberdata name="_clases_count" display="_Clases_Count"/>] ;
 		+ [<memberdata name="_includefile" display="_IncludeFile"/>] ;
+		+ [<memberdata name="_comment" display="_Comment"/>] ;
 		+ [<memberdata name="_ole_objs" display="_Ole_Objs"/>] ;
-		+ [<memberdata name="_ole_obj_count" display="_Ole_Obj_Count"/>] ;
+		+ [<memberdata name="_ole_objs" display="_Ole_Objs"/>] ;
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [</VFPData>]
@@ -10478,6 +10459,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	_Ole_Obj_count		= 0
 	_Clases_Count		= 0
 	_includeFile		= ''
+	_Comment			= ''
 
 
 	************************************************************************************************
