@@ -116,9 +116,9 @@
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir
-* tcType					(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
-* tcTextName				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
-* tlGenText				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
+* tcType					(         ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG
+* tcTextName				(         ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
+* tlGenText					(         ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
 * tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
@@ -886,9 +886,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
-		* tcType					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tcTextName				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tlGenText					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tcType					(         ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG
+		* tcTextName				(         ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
+		* tlGenText					(         ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
 		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
 		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
@@ -1057,7 +1057,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
 									*-- Create BINARIO desde versión TEXTO
 									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
-									*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
+									*-- para regenerar el binario (tlGenText=.F.) se debe usar como
 									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
 									tc_InputFile		= tcTextName
 									.l_Recompile	= .T.
