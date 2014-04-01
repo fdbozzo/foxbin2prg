@@ -80,6 +80,7 @@
 * 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
 * 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
 * 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
+* 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -115,9 +116,9 @@
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir
-* tcType					(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
-* tcTextName				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
-* tlGenText				(         ) Por ahora se mantiene por compatibilidad con SCCTEXT.PRG
+* tcType					(         ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG
+* tcTextName				(         ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
+* tlGenText					(         ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
 * tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
@@ -405,6 +406,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
+		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
@@ -468,6 +470,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
+	run_AfterCreateTable	= ''
 	c_VC2					= 'VC2'	&& VCX
 	c_SC2					= 'SC2'	&& SCX
 	c_PJ2					= 'PJ2'	&& PJX
@@ -883,9 +886,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
-		* tcType					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tcTextName				(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
-		* tlGenText					(?v IN    ) NO DISPONIBLE. Se mantiene por compatibilidad con SourceSafe
+		* tcType					(         ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG
+		* tcTextName				(         ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
+		* tlGenText					(         ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
 		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
 		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
@@ -1054,7 +1057,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
 									*-- Create BINARIO desde versión TEXTO
 									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
-									*-- para se debe regenerar el binario (tlGenText=.F.) se debe usar como
+									*-- para regenerar el binario (tlGenText=.F.) se debe usar como
 									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
 									tc_InputFile		= tcTextName
 									.l_Recompile	= .T.
@@ -6512,7 +6515,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toTable )
 
-				.escribirArchivoBin( @toTable )
+				.escribirArchivoBin( @toTable, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -6535,17 +6538,18 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE escribirArchivoBin
-		LPARAMETERS toTable
+		LPARAMETERS toTable, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
 			LOCAL I, lnCodError, loEx AS EXCEPTION
 			LOCAL loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			LOCAL loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
-			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate, lcTempDBC
+			LOCAL lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate, lcTempDBC, lnDataSessionID, lnSelect
 			LOCAL loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
@@ -6553,6 +6557,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 				STORE 0 TO lnCodError
 				STORE '' TO lcIndex, lcFieldDef
+				lnDataSessionID	= .DataSessionId
 
 				ERASE (FORCEEXT(.c_OutputFile, 'DBF'))
 				ERASE (FORCEEXT(.c_OutputFile, 'FPT'))
@@ -6612,6 +6617,13 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 				lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
 				&lcCreateTable.
+				
+				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreateTable)
+					lnSelect	= SELECT()
+					DO (toFoxBin2Prg.run_AfterCreateTable) WITH (lnDataSessionID), (.c_OutputFile), (toTable)
+					SET DATASESSION TO (lnDataSessionID)	&& Por las dudas externamente se cambie
+					SELECT (lnSelect)
+				ENDIF
 
 				*-- Regenero los índices
 				FOR EACH loIndex IN toTable._Indexes FOXOBJECT
