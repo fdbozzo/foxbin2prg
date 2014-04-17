@@ -6835,6 +6835,10 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			lnCodError	= 0
 			STORE '' TO lcIndex, lcFieldDef
 
+			IF NOT EMPTY(toDatabase._DBCEventFilename) AND FILE(toDatabase._DBCEventFilename)
+				*-- Si no recompilo el EventFilename.prg, el EXE dará un error (aunque el PRG no)
+				COMPILE ( ADDBS( JUSTPATH( THIS.c_OutputFile ) ) + toDatabase._DBCEventFilename )
+			ENDIF
 			toDatabase.updateDBC( THIS.c_OutputFile )
 
 			IF toFoxBin2Prg.l_Recompile
