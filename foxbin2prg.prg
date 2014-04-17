@@ -81,6 +81,7 @@
 * 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
 * 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
 * 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
+* 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6834,6 +6835,10 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			lnCodError	= 0
 			STORE '' TO lcIndex, lcFieldDef
 
+			IF NOT EMPTY(toDatabase._DBCEventFilename) AND FILE(toDatabase._DBCEventFilename)
+				*-- Si no recompilo el EventFilename.prg, el EXE dará un error (aunque el PRG no)
+				COMPILE ( ADDBS( JUSTPATH( THIS.c_OutputFile ) ) + toDatabase._DBCEventFilename )
+			ENDIF
 			toDatabase.updateDBC( THIS.c_OutputFile )
 
 			IF toFoxBin2Prg.l_Recompile
@@ -14705,7 +14710,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 			*-- Indexes
 			loIndexes	= THIS._Indexes
-			lcText		= lcText + loIndexes.toText()
+			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
@@ -15076,8 +15081,9 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* taTagInfo					(@?    OUT) Array de información de indices
 		* tnTagInfo_Count			(@?    OUT) Cantidad de índices
+		* tc_InputFile				(v! IN    ) Archivo de entrada (el DBF)
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taTagInfo, tnTagInfo_Count
+		LPARAMETERS taTagInfo, tnTagInfo_Count, tc_InputFile
 
 		EXTERNAL ARRAY taTagInfo
 
@@ -15090,7 +15096,7 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 			IF TAGCOUNT() > 0
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
-					<<>>	<<C_CDX_I>><<CDX(1)>><<C_CDX_F>>
+					<<>>	<<C_CDX_I>><<SYS(2014, CDX(1), ADDBS(JUSTPATH(tc_InputFile) ) )>><<C_CDX_F>>
 					<<>>
 					<<>>	<<C_INDEXES_I>>
 				ENDTEXT
