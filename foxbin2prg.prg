@@ -408,6 +408,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
@@ -852,6 +853,24 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE Get_Ext2FromExt
+		LPARAMETERS tcExt
+		LOCAL lcExt2
+		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			lcExt2	= ICASE( tcExt == 'PJX', .c_PJ2 ;
+				, tcExt == 'VCX', .c_VC2 ;
+				, tcExt == 'SCX', .c_SC2 ;
+				, tcExt == 'FRX', .c_FR2 ;
+				, tcExt == 'LBX', .c_LB2 ;
+				, tcExt == 'MNX', .c_MN2 ;
+				, tcExt == 'DBF', .c_DB2 ;
+				, tcExt == 'DBC', .c_DC2 ;
+				, 'XXX' )
+		ENDWITH && THIS
+		RETURN lcExt2
+	ENDPROC
+
+
 	PROCEDURE TieneSoporte_Bin2Prg
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
@@ -1014,7 +1033,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							ENDIF
 
 							IF FILE( lcFile )
-								lnCodError = .Convertir( lcFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+								lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
 							ENDIF
 						ENDFOR
 
@@ -1085,13 +1104,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									DIMENSION laFiles(lnFileCount,1)
 									laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
 								ENDSCAN
-								
+
 								USE IN (SELECT("TABLABIN"))
 
 								IF .l_ShowProgress
 									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
 								ENDIF
 
+								*-- Primero convierto el proyecto
+								*IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(tc_InputFile)) )
+								*	lnCodError = .Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+								*ENDIF
+
+								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I,1)
 									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
@@ -1102,10 +1127,66 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									ENDIF
 
 									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-										lnCodError = .Convertir( lcFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
 									ENDIF
 								ENDFOR
-							
+
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
+								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
+								lcFileSpec	= FULLPATH( tc_InputFile )
+
+								DO CASE
+								CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+									CD (tcRecompile)
+								CASE tcRecompile == '1'
+									CD (JUSTPATH(lcFileSpec))
+								ENDCASE
+
+								.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+								IF .l_Debug
+									IF FILE( .c_LogFile )
+										ERASE ( .c_LogFile )
+									ENDIF
+								ENDIF
+
+								lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
+
+								FOR I = lnFileCount TO 1 STEP -1
+									IF '.ADD(' $ laFiles(I)
+										laFiles(I)	= ADDBS( JUSTPATH( lcFileSpec ) ) + STREXTRACT( laFiles(I), ".ADD('", "')" )
+										laFiles(I)	= FORCEEXT( laFiles(I), .Get_Ext2FromExt( UPPER(JUSTEXT(laFiles(I))) ) )
+									ELSE
+										lnFileCount	= lnFileCount - 1
+										ADEL( laFiles, I )
+										DIMENSION laFiles(lnFileCount)
+									ENDIF
+								ENDFOR
+
+								IF .l_ShowProgress
+									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
+								ENDIF
+
+								*-- Primero convierto el proyecto
+								*IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(tc_InputFile)) )
+								*	lnCodError = .Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+								*ENDIF
+
+								*-- Luego convierto los archivos incluidos
+								FOR I = 1 TO lnFileCount
+									lcFile	= laFiles(I)
+									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
+									.o_Frm_Avance.nVALUE = I
+
+									IF .l_ShowProgress
+										.o_Frm_Avance.SHOW()
+									ENDIF
+
+									IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+									ENDIF
+								ENDFOR
+
 							CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
 								*-- Compatibilidad con SourceSafe
 
@@ -1496,7 +1577,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.n_ExisteCapitalizacion	= 0
 						EXIT
 					ENDIF
-				
+
 				CASE .n_ExisteCapitalizacion = 0
 					*-- Segunda pasada en adelante: No hay programa de capitalización
 					EXIT
@@ -1742,7 +1823,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
 		THIS.c_CurDir	= SYS(5) + CURDIR()
 		THIS.oFSO		= CREATEOBJECT( "Scripting.FileSystemObject")
-		
+
 		THIS.SortSpecialProps()
 	ENDPROC
 
@@ -2383,10 +2464,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS tcOperation, tcPropName
 
 		TRY
-			LOCAL lcPropName, lnPos, loEx as Exception
+			LOCAL lcPropName, lnPos, loEx AS EXCEPTION
 			lcPropName	= tcPropName
 			tcOperation	= UPPER(EVL(tcOperation,''))
-		
+
 			DO CASE
 			CASE tcOperation == 'GETNAME'
 				lcPropName	= SUBSTR(tcPropName,5)
@@ -2540,18 +2621,18 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		RETURN
 	ENDPROC
-	
-	
-	
+
+
+
 	PROTECTED PROCEDURE SortSpecialProps_Add
 		LPARAMETERS tcPropName, I
 		I	= I + 1
 		DIMENSION THIS.a_SpecialProps(I)
 		THIS.a_SpecialProps(I)	= tcPropName
 	ENDPROC
-	
-	
-	
+
+
+
 	PROCEDURE SortSpecialProps
 		LOCAL I
 		I = 0
@@ -2584,7 +2665,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			.SortSpecialProps_Add( 'Picture', @I )				&& Image: Debe estar antes que Stretch y después de DefTop/DefLeft
 			.SortSpecialProps_Add( 'Stretch', @I )				&& Image: Debe estar antes que BackStyle
 			.SortSpecialProps_Add( 'BackStyle', @I )			&& Image: Debe estar antes que BorderStyle
-			.SortSpecialProps_Add( 'BorderStyle', @I )			&& 
+			.SortSpecialProps_Add( 'BorderStyle', @I )			&&
 			.SortSpecialProps_Add( 'BorderWidth', @I )
 			.SortSpecialProps_Add( 'Enabled', @I )
 			.SortSpecialProps_Add( 'Top', @I )
@@ -4430,7 +4511,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDWITH && THIS
 
 				I = I - 1
-				
+
 				IF NOT EMPTY(toClase._Comentario)
 					toClase._Comentario	= SUBSTR( toClase._Comentario, 3 ) + CR_LF	&& Quito el primer CR+LF
 				ENDIF
@@ -6628,7 +6709,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 				STORE 0 TO lnCodError
 				STORE '' TO lcIndex, lcFieldDef
-				lnDataSessionID	= .DataSessionId
+				lnDataSessionID	= .DATASESSIONID
 
 				ERASE (FORCEEXT(.c_OutputFile, 'DBF'))
 				ERASE (FORCEEXT(.c_OutputFile, 'FPT'))
@@ -6688,7 +6769,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 				lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
 				&lcCreateTable.
-				
+
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreateTable)
 					lnSelect	= SELECT()
 					DO (toFoxBin2Prg.run_AfterCreateTable) WITH (lnDataSessionID), (.c_OutputFile), (toTable)
@@ -8401,15 +8482,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
 			ENDTEXT
 
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.tag ) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.tag2, STRCONV( toReg.tag2,13 ) ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.TAG ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.TAG2, STRCONV( toReg.TAG2,13 ) ) + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.STYLE + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.COMMENT + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.USER + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -8513,15 +8594,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
 			ENDTEXT
 
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.tag ) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.tag2, STRCONV( toReg.tag2,13 ) ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.TAG ) + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.TAG2, STRCONV( toReg.TAG2,13 ) ) + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.STYLE + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.COMMENT + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.USER + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -8625,15 +8706,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
 			ENDTEXT
 
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.picture + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.tag + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.TAG + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.style + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.expr + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.STYLE + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.comment + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.user + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.COMMENT + "]]>"
+			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.USER + "]]>"
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -17052,7 +17133,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								EXIT
 							ENDIF
 						ENDFOR
-					
+
 					CASE .set_Line( @tcLine, @taCodeLines, I ) AND .get_SeparatedLineAndComment( @tcLine, @lcComment )
 						*-- Es un Bar de una sola línea y con comentarios
 						loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
@@ -17243,7 +17324,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								EXIT
 							ENDIF
 						ENDFOR
-					
+
 					CASE .set_Line( @tcLine, @taCodeLines, I ) AND .get_SeparatedLineAndComment( @tcLine, @lcComment )
 						*-- Es un Bar de una sola línea y con comentarios
 						loReg.COMMENT	= STRTRAN( STRTRAN( lcComment, '<CR>', CHR(13) ), '<LF>', CHR(10) )
