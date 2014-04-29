@@ -424,6 +424,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
+		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
 		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
@@ -458,6 +459,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_OutputFile			= ''
 	c_Type					= ''
 	lFileMode				= .F.
+	n_ExisteCapitalizacion	= -1
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
@@ -1480,15 +1482,29 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				lcEXE_CAPS	= FORCEPATH( 'filename_caps.exe', lcPath )
 				loFSO		= .o_FSO
 
-				IF FILE(lcEXE_CAPS)
-					*.writeLog( '* Se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
-					.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC) )
-				ELSE
-					*-- No existe el programa de capitalización, así que no se capitalizan los nombres.
-					*.writeLog( '* No se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
-					.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC) )
+				DO CASE
+				CASE .n_ExisteCapitalizacion = -1
+					*-- La primera vez vale -1, hace la verificación por única vez y cachea la respuesta
+					IF FILE(lcEXE_CAPS)
+						*.writeLog( '* Se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
+						.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC) )
+						.n_ExisteCapitalizacion	= 1
+					ELSE
+						*-- No existe el programa de capitalización, así que no se capitalizan los nombres.
+						*.writeLog( '* No se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
+						.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC) )
+						.n_ExisteCapitalizacion	= 0
+						EXIT
+					ENDIF
+				
+				CASE .n_ExisteCapitalizacion = 0
+					*-- Segunda pasada en adelante: No hay programa de capitalización
 					EXIT
-				ENDIF
+
+				OTHERWISE
+					*-- Segunda pasada en adelante: Hay programa de capitalización
+
+				ENDCASE
 
 				.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO )
 
