@@ -82,6 +82,7 @@
 * 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
 * 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
 * 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
+* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -106,6 +107,7 @@
 * 10/03/2014	Ryan Harris		REPORTE BUG mnx v1.19.16: Al usar comentarios multilínea en las opciones, se corrompe el MN2 y el MNX regenerado (solucionado en v1.19.17)
 * 20/03/2014	Arturo Ramos	REPORTE BUG vcx/scx v1.19.17: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales (Solucionado en v1.19.18)
 * 24/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.17: El comentario a nivel de librería se pierde (Solucionado en v1.19.18)
+* 29/04/2014	Matt Slay		MEJORA v1.19.20: Posibilidad de convertir un proyecto entero a tx2  (Agregado en v1.19.21)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -117,9 +119,9 @@
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir
-* tcType					(         ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG
-* tcTextName				(         ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
-* tlGenText					(         ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
+* tcType					(v? IN    ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
+* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
+* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
 * tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
@@ -272,6 +274,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE FILETYPE_LABEL             "B"  && Label (.LBX)
 #DEFINE FILETYPE_CLASSLIB          "V"  && Class Library (.VCX)
 #DEFINE FILETYPE_PROGRAM           "P"  && Program (.PRG)
+#DEFINE FILETYPE_PROJECT           "J"  && Project (.PJX) [NON STANDARD!]
 #DEFINE FILETYPE_APILIB            "L"  && API Library (.FLL)
 #DEFINE FILETYPE_APPLICATION       "Z"  && Application (.APP)
 #DEFINE FILETYPE_MENU              "M"  && Menu (.MNX)
@@ -887,9 +890,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
-		* tcType					(         ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG
-		* tcTextName				(         ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
-		* tlGenText					(         ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
+		* tcType					(v? IN    ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
+		* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
+		* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
 		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
 		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
@@ -1015,7 +1018,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					OTHERWISE
 						*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
-						IF LEN(NVL(tc_InputFile,'')) = 1
+						IF LEN(EVL(tc_InputFile,'')) = 1
 							*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
 							*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
 							*-- para saber si se puede hacer Diff y Merge.
@@ -1042,7 +1045,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							CASE tc_InputFile == FILETYPE_CLASSLIB
 								lnCodError	= .VCX_Conversion_Support
 
-							CASE tc_InputFile $ 'J'	&& PJX (J no exite en FoxPro, es un valor inventado para evitar conflicto con los tipos existentes)
+							CASE tc_InputFile $ FILETYPE_PROJECT	&& PJX (J no exite en FoxPro, es un valor inventado para evitar conflicto con los tipos existentes)
 								lnCodError	= .PJX_Conversion_Support
 
 							OTHERWISE
@@ -1051,7 +1054,57 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						ELSE
 
-							IF EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
+							DO CASE
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
+								*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
+								lcFileSpec	= FULLPATH( tc_InputFile )
+
+								DO CASE
+								CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+									CD (tcRecompile)
+								CASE tcRecompile == '1'
+									CD (JUSTPATH(lcFileSpec))
+								ENDCASE
+
+								.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+								IF .l_Debug
+									IF FILE( .c_LogFile )
+										ERASE ( .c_LogFile )
+									ENDIF
+								ENDIF
+
+								SELECT 0
+								USE (tc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+								lnFileCount	= 0
+
+								SCAN FOR NOT DELETED()
+									lnFileCount	= lnFileCount + 1
+									DIMENSION laFiles(lnFileCount,1)
+									laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
+								ENDSCAN
+								
+								USE IN (SELECT("TABLABIN"))
+
+								IF .l_ShowProgress
+									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
+								ENDIF
+
+								FOR I = 1 TO lnFileCount
+									lcFile	= laFiles(I,1)
+									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
+									.o_Frm_Avance.nVALUE = I
+
+									IF .l_ShowProgress
+										.o_Frm_Avance.SHOW()
+									ENDIF
+
+									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+										lnCodError = .Convertir( lcFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
+									ENDIF
+								ENDFOR
+							
+							CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
 								*-- Compatibilidad con SourceSafe
 
 								IF NOT tlGenText
@@ -1063,7 +1116,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									tc_InputFile		= tcTextName
 									.l_Recompile	= .T.
 								ENDIF
-							ENDIF
+							ENDCASE
 
 							IF FILE(tc_InputFile)
 								ERASE ( tc_InputFile + '.ERR' )
@@ -1110,6 +1163,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
+			USE IN (SELECT("TABLABIN"))
 			THIS.writeLog_Flush()
 			IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O"
 				THIS.o_Frm_Avance.HIDE()
