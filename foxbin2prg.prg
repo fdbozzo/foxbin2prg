@@ -82,11 +82,11 @@
 * 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
 * 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
 * 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
-* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas
+* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
-* <TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
+* <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
 * 23/11/2013	Luis Martínez	REPORTE BUG scx v1.4: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny	REPORTE BUG vcx v1.5: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny	REPORTE BUG scx v1.6: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
@@ -4193,7 +4193,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS toClase, tcLine, taCodeLines, tnCodeLines, I
 
-		*-- ESTRUCTURA A ANALIZAR:
+		*-- ESTRUCTURA A ANALIZAR (también se admite sin los símbolos ^ y *):
 		*<DefinedPropArrayMethod>
 		*m: *metodovacio_con_comentarios		&& Este método no tiene código, pero tiene comentarios. A ver que pasa!
 		*m: *mimetodo		&& Mi metodo
@@ -4209,7 +4209,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, lcDefinedPAM, lnPos, lnPos2, lcPAM_Name, lcItem, lcMethods
+			LOCAL llBloqueEncontrado, lcDefinedPAM, lnPos, lnPos2, lcPAM_Name, lcItem, lcMethods, lcPAM_Type
 
 			IF LEFT( tcLine, C_LEN_DEFINED_PAM_I) == C_DEFINED_PAM_I
 				llBloqueEncontrado	= .T.
@@ -4225,28 +4225,32 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							EXIT
 
 						OTHERWISE
-							lnPos			= AT( ' ', tcLine, 1 )
-							lnPos2			= AT( '&'+'&', tcLine )
+							lnPos		= AT( ':', tcLine, 1 )
+							lnPos2		= AT( '&'+'&', tcLine )
+							lcPAM_Type	= LEFT(tcLine,3)
 
 							IF lnPos2 > 0
 								*-- Con comentarios
-								lcPAM_Name		= LOWER( RTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) )
-								lcItem	= lcPAM_Name + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) + CR_LF
+								lcPAM_Name	= LOWER( ALLTRIM( SUBSTR( tcLine, lnPos+1, lnPos2 - lnPos - 1 ), 0, ' ', CHR(9) ) )
+								lcItem		= lcPAM_Name + ' ' + SUBSTR( tcLine, lnPos2 + 3 ) + CR_LF
 
-								*-- Separo propiedades y métodos
+							ELSE
+								*-- Sin comentarios
+								lcPAM_Name	= LOWER( ALLTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) )
+								lcItem		= lcPAM_Name + IIF( LEFT(lcPAM_Name,1) $ '^*' , ' ', '') + CR_LF
+
+							ENDIF
+
+							*-- Separo propiedades y métodos
+							IF lcPAM_Type == '*m:'
 								IF LEFT(lcItem,1) == '*'
 									lcMethods		= lcMethods + lcItem
 								ELSE
-									lcDefinedPAM	= lcDefinedPAM + lcItem
+									lcMethods		= lcMethods + '*' + lcItem
 								ENDIF
 							ELSE
-								*-- Sin comentarios
-								lcPAM_Name		= LOWER( RTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) )
-								lcItem	= lcPAM_Name + IIF( LEFT(lcPAM_Name,1) $ '^*' , ' ', '') + CR_LF
-
-								*-- Separo propiedades y métodos
-								IF LEFT(lcItem,1) == '*'
-									lcMethods		= lcMethods + lcItem
+								IF lcPAM_Type == '*a:' AND LEFT(lcItem,1) <> '^'
+									lcDefinedPAM	= lcDefinedPAM + '^' + lcItem
 								ELSE
 									lcDefinedPAM	= lcDefinedPAM + lcItem
 								ENDIF
@@ -8240,9 +8244,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					, lcType == '^', 'a' ;
 					, 'p' )
 
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
-				ENDTEXT
+				IF lcType == 'p' THEN
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
+					ENDTEXT
+				ELSE
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<>>		*<<lcType>>: <<SUBSTR( taPropsAndComments(I,1), 2)>>
+					ENDTEXT
+				ENDIF
 
 				IF NOT EMPTY(taPropsAndComments(I,2))
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
