@@ -82,7 +82,7 @@
 * 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
 * 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
 * 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
-* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2
+* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -107,7 +107,8 @@
 * 10/03/2014	Ryan Harris		REPORTE BUG mnx v1.19.16: Al usar comentarios multilínea en las opciones, se corrompe el MN2 y el MNX regenerado (solucionado en v1.19.17)
 * 20/03/2014	Arturo Ramos	REPORTE BUG vcx/scx v1.19.17: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales (Solucionado en v1.19.18)
 * 24/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.17: El comentario a nivel de librería se pierde (Solucionado en v1.19.18)
-* 29/04/2014	Matt Slay		MEJORA v1.19.20: Posibilidad de convertir un proyecto entero a tx2  (Agregado en v1.19.21)
+* 29/04/2014	Matt Slay		MEJORA v1.19.20: Posibilidad de convertir un proyecto entero a tx2 // Optimización de generación según timestamps  (Agregado en v1.19.21)
+* 30/04/2014	Jim Nelson		MEJORA v1.19.20: Agregado de AGAIN en apertura de tablas  (Agregado en v1.19.21)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -328,6 +329,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC				"Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
 	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			"Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
 	#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se sobreescribe por ser igual al generado."
+	#DEFINE C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC				"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
 	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>]"
 	#DEFINE C_PROCESSING_LOC									"Procesando archivo"
 	#DEFINE C_PROCESS_PROGRESS_LOC								"Avance del proceso:"
@@ -442,6 +444,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
 		+ [<memberdata name="tienesoporte_bin2prg" display="TieneSoporte_Bin2Prg"/>] ;
 		+ [<memberdata name="tienesoporte_prg2bin" display="TieneSoporte_Prg2Bin"/>] ;
+		+ [<memberdata name="t_inputfile_timestamp" display="t_InputFile_TimeStamp"/>] ;
+		+ [<memberdata name="t_outputfile_timestamp" display="t_OutputFile_TimeStamp"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
 		+ [</VFPData>]
@@ -459,13 +463,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_TextLog				= ''
 	c_OutputFile			= ''
 	c_Type					= ''
+	t_InputFile_TimeStamp	= {//::}
+	t_OutputFile_TimeStamp	= {//::}
 	lFileMode				= .F.
 	n_ExisteCapitalizacion	= -1
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
 	l_ShowErrors			= .T.
-	l_ShowProgress			= .F.
+	l_ShowProgress			= .T.
 	l_Recompile				= .F.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .F.
@@ -842,7 +848,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( '> l_ShowErrors:           ' + TRANSFORM(.l_ShowErrors) )
 				.writeLog( '> l_Recompile:            ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
 				.writeLog( '> l_NoTimestamps:         ' + TRANSFORM(.l_NoTimestamps) )
-				.writeLog( '> ClearUniqueID:          ' + TRANSFORM(.l_ClearUniqueID) )
+				.writeLog( '> l_ClearUniqueID:        ' + TRANSFORM(.l_ClearUniqueID) )
 				.writeLog( '> l_Debug:                ' + TRANSFORM(.l_Debug) )
 				.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.l_ConfigEvaluated = .T.
@@ -1096,7 +1102,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								ENDIF
 
 								SELECT 0
-								USE (tc_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+								USE (tc_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 								lnFileCount	= 0
 
 								SCAN FOR NOT DELETED()
@@ -1274,7 +1280,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tc_InputFile, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName
 
 		TRY
-			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension ;
+			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -1461,21 +1467,50 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-				.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
-				.o_Conversor.c_InputFile			= .c_InputFile
-				.o_Conversor.c_OutputFile			= .c_OutputFile
-				.o_Conversor.c_LogFile				= .c_LogFile
-				.o_Conversor.l_Debug				= .l_Debug
-				.o_Conversor.l_Test					= .l_Test
-				.o_Conversor.n_FB2PRG_Version		= .n_FB2PRG_Version
-				.o_Conversor.l_MethodSort_Enabled	= .l_MethodSort_Enabled
-				.o_Conversor.l_PropSort_Enabled		= .l_PropSort_Enabled
-				.o_Conversor.l_ReportSort_Enabled	= .l_ReportSort_Enabled
-				.o_Conversor.c_OriginalFileName		= .c_OriginalFileName
-				.o_Conversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
-				*--
-				.o_Conversor.Convertir( @toModulo, .F., THIS )
-				.c_TextLog	= .c_TextLog + CR_LF + .o_Conversor.c_TextLog	&& Recojo el LOG que haya generado el conversor
+				*-- Optimización: Comparación de los timestamps de InputFile y OutputFile para saber
+				*-- si el OutputFile se debe regenerar o no.
+				lnFileCount	= ADIR( laFiles, FORCEEXT( .c_InputFile, '*' ), '', 1 )
+				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp
+				
+				IF lnFileCount >= 1 THEN
+					I	= ASCAN( laFiles, JUSTFNAME(.c_InputFile), 1, 0, 1, 1+2+4+8 )
+					IF I > 0 THEN
+						.t_InputFile_TimeStamp	=	DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
+							, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
+					ENDIF
+
+					IF FILE( .c_OutputFile )
+						I	= ASCAN( laFiles, JUSTFNAME(.c_OutputFile), 1, 0, 1, 1+2+4+8 )
+						IF I > 0 THEN
+							.t_OutputFile_TimeStamp	=	DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
+								, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
+						ENDIF
+					ENDIF
+				ENDIF
+				
+				IF .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
+					.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
+					.o_Conversor.c_InputFile			= .c_InputFile
+					.o_Conversor.c_OutputFile			= .c_OutputFile
+					.o_Conversor.c_LogFile				= .c_LogFile
+					.o_Conversor.l_Debug				= .l_Debug
+					.o_Conversor.l_Test					= .l_Test
+					.o_Conversor.n_FB2PRG_Version		= .n_FB2PRG_Version
+					.o_Conversor.l_MethodSort_Enabled	= .l_MethodSort_Enabled
+					.o_Conversor.l_PropSort_Enabled		= .l_PropSort_Enabled
+					.o_Conversor.l_ReportSort_Enabled	= .l_ReportSort_Enabled
+					.o_Conversor.c_OriginalFileName		= .c_OriginalFileName
+					.o_Conversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
+					*--
+					.o_Conversor.Convertir( @toModulo, .F., THIS )
+					.c_TextLog	= .c_TextLog + CR_LF + .o_Conversor.c_TextLog	&& Recojo el LOG que haya generado el conversor
+				ELSE
+					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
+					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada.' )
+					.writeLog( TEXTMERGE(C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC) )
+					
+				ENDIF
+				
 				.normalizarCapitalizacionArchivos()
 			ENDWITH &&	THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 
@@ -1487,11 +1522,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				IF _VFP.STARTMODE = 0
 					SET STEP ON
 				ENDIF
-				*THIS.writeLog( lcErrorInfo )
 			ENDIF
-			*IF THIS.l_Debug AND THIS.l_ShowErrors
-			*	MESSAGEBOX( lcErrorInfo, 0+16+4096, C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
-			*ENDIF
 			IF tlRelanzarError	&& Usado en Unit Testing
 				THROW
 			ENDIF
@@ -1499,7 +1530,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		FINALLY
 			loFSO				= NULL
 			THIS.o_Conversor	= NULL
-			*THIS.writeLog_Flush()
+			
+			IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
+				THIS.writeLog( REPLICATE('-',80) )
+				*THIS.writeLog_Flush()
+			ENDIF
 
 		ENDTRY
 
@@ -10213,7 +10248,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
 				lnDatabases_Count	= ADATABASES(laDatabases)
 
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -10316,7 +10351,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
 				lnDatabases_Count	= ADATABASES(laDatabases)
 
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS TABLABIN
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 				OPEN DATABASE (.c_InputFile) SHARED NOUPDATE
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
