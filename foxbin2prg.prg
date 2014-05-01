@@ -4227,7 +4227,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						OTHERWISE
 							lnPos		= AT( ':', tcLine, 1 )
 							lnPos2		= AT( '&'+'&', tcLine )
-							lcPAM_Type	= LEFT(tcLine,3)
+							lcPAM_Type	= LEFT(tcLine,3)	&& *p:, *a:, *m:
 
 							IF lnPos2 > 0
 								*-- Con comentarios
@@ -4237,7 +4237,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							ELSE
 								*-- Sin comentarios
 								lcPAM_Name	= LOWER( ALLTRIM( SUBSTR( tcLine, lnPos+1 ), 0, ' ', CHR(9) ) )
-								lcItem		= lcPAM_Name + IIF( LEFT(lcPAM_Name,1) $ '^*' , ' ', '') + CR_LF
+								lcItem		= lcPAM_Name + IIF( lcPAM_Type == '*p:' , '', ' ') + CR_LF
 
 							ENDIF
 
