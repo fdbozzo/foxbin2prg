@@ -26,7 +26,7 @@ _LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): 
 _ProductName = " FOXBIN2PRG v1.19.22"
 _MajorVer = "1"
 _MinorVer = "19"
-_Revision = " 321"
+_Revision = " 325"
 _LanguageID = "1034"
 _AutoIncrement = "1"
 *</DevInfo>
@@ -52,6 +52,7 @@ loProject = _VFP.Projects('foxbin2prg.pjx')
 WITH loProject.FILES
 	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('foxbin2prg.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
+	.ADD('props_all.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()

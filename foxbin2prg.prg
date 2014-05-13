@@ -515,7 +515,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
 
-        lcSys16 = SYS(16)
+		lcSys16 = SYS(16)
 		IF LEFT(lcSys16,10) == 'PROCEDURE '
 			lnPosProg	= AT(" ", lcSys16, 2) + 1
 		ELSE
@@ -1482,7 +1482,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- si el OutputFile se debe regenerar o no.
 				lnFileCount	= ADIR( laFiles, FORCEEXT( .c_InputFile, '*' ), '', 1 )
 				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp
-				
+
 				IF lnFileCount >= 1 THEN
 					I	= ASCAN( laFiles, JUSTFNAME(.c_InputFile), 1, 0, 1, 1+2+4+8 )
 					IF I > 0 THEN
@@ -1498,7 +1498,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDIF
 					ENDIF
 				ENDIF
-				
+
 				IF .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
 					.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
 					.o_Conversor.c_InputFile			= .c_InputFile
@@ -1519,9 +1519,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
 					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada.' )
 					.writeLog( TEXTMERGE(C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC) )
-					
+
 				ENDIF
-				
+
 				.normalizarCapitalizacionArchivos()
 			ENDWITH &&	THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 
@@ -1541,7 +1541,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		FINALLY
 			loFSO				= NULL
 			THIS.o_Conversor	= NULL
-			
+
 			IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
 				THIS.writeLog( REPLICATE('-',80) )
 				*THIS.writeLog_Flush()
@@ -1872,7 +1872,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
 		THIS.c_CurDir	= SYS(5) + CURDIR()
 		THIS.oFSO		= CREATEOBJECT( "Scripting.FileSystemObject")
-        lcSys16         = SYS(16)
+		lcSys16         = SYS(16)
 
 		IF LEFT(lcSys16,10) == 'PROCEDURE '
 			lnPosProg	= AT(" ", lcSys16, 2) + 1
@@ -2536,11 +2536,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 				lcPropName	= 'A999' + lcPropName
 
 			OTHERWISE
-                *-- Soporte de evaluación de propiedades por clase evaluada
+				*-- Soporte de evaluación de propiedades por clase evaluada
 				*IF THIS.c_ClaseActual == 'form'
 				*	lnPos	= ASCAN( THIS.a_SpecialProps_Form, lcPropName, 1, 0, 1, 1+2+4 )
 				*ELSE
-					lnPos	= ASCAN( THIS.a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
+				lnPos	= ASCAN( THIS.a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
 				*ENDIF
 				lcPropName	= 'A' + PADL( EVL(lnPos,998), 3, '0' ) + lcPropName
 			ENDCASE
@@ -2706,162 +2706,162 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	PROCEDURE SortSpecialProps
 		TRY
-		LOCAL I, loEx as Exception, lcPropsFile
-		lcPropsFile	= ''
+			LOCAL I, loEx AS EXCEPTION, lcPropsFile
+			lcPropsFile	= ''
 
-		WITH THIS AS conversor_base OF "FOXBIN2PRG.PRG"
-			*-- (TODAS) => Antes era solo FORM
-			I = 0
-			
-			lcPropsFile	= FORCEPATH( "props_all.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-			
-            I   = ALINES( THIS.a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
+			WITH THIS AS conversor_base OF "FOXBIN2PRG.PRG"
+				*-- (TODAS) => Antes era solo FORM
+				I = 0
 
+				lcPropsFile	= FORCEPATH( "props_all.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
 
+				I   = ALINES( THIS.a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
 
 
-			*-- DEMÁS CLASES
-			IF .F.
-			I = 0
-			.SortSpecialProps_Add( 'FRXDataSession', @I )		&& En un VCX lo ví primero de todo y también luego de Height ¿?
-			.SortSpecialProps_Add( 'ErasePage', @I )			&& PageFrame: Debe estar antes que PageCount
-			.SortSpecialProps_Add( 'PageCount', @I )			&& PageFrame: Debe estar antes que ActivePage
-			.SortSpecialProps_Add( 'ActivePage', @I )			&& PageFrame: Debe estar antes que Top/Left/With/Height
-			.SortSpecialProps_Add( 'ButtonCount', @I )
-			.SortSpecialProps_Add( 'ColumnCount', @I )
-			.SortSpecialProps_Add( 'Value', @I )
-			.SortSpecialProps_Add( 'Comment', @I )
-			.SortSpecialProps_Add( 'ControlSource', @I )
-			.SortSpecialProps_Add( 'DataSession', @I )
-			.SortSpecialProps_Add( 'DeleteMark', @I )
-			.SortSpecialProps_Add( 'ScaleMode', @I )
-			.SortSpecialProps_Add( 'Tag', @I )
-			.SortSpecialProps_Add( 'OLEDragMode', @I )			&& Image: Debe estar antes que OLEDragPicture
-			.SortSpecialProps_Add( 'OLEDragPicture', @I )		&& Image: Debe estar antes que OLEDropMode
-			.SortSpecialProps_Add( 'OLEDropMode', @I )			&& Image: Debe estar antes que OLEDropEffects
-			.SortSpecialProps_Add( 'OLEDropEffects', @I )		&& Image: Debe estar antes que DragMode
-			.SortSpecialProps_Add( 'DragMode', @I )				&& Image: Debe estar antes que DragIcon
-			.SortSpecialProps_Add( 'DragIcon', @I )				&& Image: Debe estar antes que Anchor
-			.SortSpecialProps_Add( 'Anchor', @I )				&& Image: Debe estar antes que Picture
-			.SortSpecialProps_Add( 'DefTop', @I )				&& Propiedad con evaluación: Debe estar antes que Top
-			.SortSpecialProps_Add( 'DefLeft', @I )				&& Propiedad con evaluación: Debe estar antes que Left
-			.SortSpecialProps_Add( 'DefHeight', @I )			&& Propiedad con evaluación: Debe estar antes que Height
-			.SortSpecialProps_Add( 'DefWidth', @I )				&& Propiedad con evaluación: Debe estar antes que Width
-			.SortSpecialProps_Add( 'Picture', @I )				&& Image: Debe estar antes que Stretch y después de DefTop/DefLeft
-			.SortSpecialProps_Add( 'Stretch', @I )				&& Image: Debe estar antes que BackStyle
-			.SortSpecialProps_Add( 'BackStyle', @I )			&& Image: Debe estar antes que BorderStyle
-			.SortSpecialProps_Add( 'BorderStyle', @I )			&&
-			.SortSpecialProps_Add( 'BorderWidth', @I )
-			.SortSpecialProps_Add( 'Enabled', @I )
-			.SortSpecialProps_Add( 'Top', @I )
-			.SortSpecialProps_Add( 'Left', @I )
-			.SortSpecialProps_Add( 'Height', @I )
-			.SortSpecialProps_Add( 'Width', @I )
-			.SortSpecialProps_Add( 'MousePointer', @I )
-			.SortSpecialProps_Add( 'MouseIcon', @I )
-			.SortSpecialProps_Add( 'Visible', @I )
-			.SortSpecialProps_Add( 'MaxLength', @I )
-			.SortSpecialProps_Add( 'Alias', @I )
-			.SortSpecialProps_Add( 'BufferModeOverride', @I )
-			.SortSpecialProps_Add( 'Order', @I )
-			.SortSpecialProps_Add( 'OrderDirection', @I )
-			.SortSpecialProps_Add( 'CursorSource', @I )
-			.SortSpecialProps_Add( 'Exclusive', @I )
-			.SortSpecialProps_Add( 'Filter', @I )
-			.SortSpecialProps_Add( 'Panel', @I )
-			.SortSpecialProps_Add( 'ReadOnly', @I )
-			.SortSpecialProps_Add( 'RecordSource', @I )
-			.SortSpecialProps_Add( 'RecordSourceType', @I )
-			.SortSpecialProps_Add( 'NoDataOnLoad', @I )
-			.SortSpecialProps_Add( 'OpenViews', @I )
-			.SortSpecialProps_Add( 'AutoOpenTables', @I )
-			.SortSpecialProps_Add( 'AutoCloseTables', @I )
-			.SortSpecialProps_Add( 'InitialSelectedAlias', @I )
-			.SortSpecialProps_Add( 'DataSource', @I )
-			.SortSpecialProps_Add( 'DataSourceType ', @I )
-			.SortSpecialProps_Add( 'Desktop', @I )
-			.SortSpecialProps_Add( 'ShowWindow', @I )
-			.SortSpecialProps_Add( 'ScrollBars', @I )
-			.SortSpecialProps_Add( 'ShowInTaskBar', @I )
-			.SortSpecialProps_Add( 'DoCreate', @I )
-			.SortSpecialProps_Add( 'Tag', @I )
-			.SortSpecialProps_Add( 'ShowTips', @I )
-			.SortSpecialProps_Add( 'BufferMode', @I )
-			.SortSpecialProps_Add( 'AutoCenter', @I )
-			.SortSpecialProps_Add( 'AutoSize', @I )
-			.SortSpecialProps_Add( 'WordWrap', @I )
-			.SortSpecialProps_Add( 'Caption', @I )
-			.SortSpecialProps_Add( 'ControlBox', @I )
-			.SortSpecialProps_Add( 'Closable', @I )
-			.SortSpecialProps_Add( 'Curvature', @I )
-			.SortSpecialProps_Add( 'FontBold', @I )
-			.SortSpecialProps_Add( 'FontCondense', @I )
-			.SortSpecialProps_Add( 'FontExtend', @I )
-			.SortSpecialProps_Add( 'FontItalic', @I )
-			.SortSpecialProps_Add( 'FontName', @I )
-			.SortSpecialProps_Add( 'FontOutline', @I )
-			.SortSpecialProps_Add( 'FontShadow', @I )
-			.SortSpecialProps_Add( 'FontSize', @I )
-			.SortSpecialProps_Add( 'FontStrikethru', @I )
-			.SortSpecialProps_Add( 'FontUnderline', @I )
-			.SortSpecialProps_Add( 'HalfHeightCaption', @I )
-			.SortSpecialProps_Add( 'Margin', @I )
-			.SortSpecialProps_Add( 'MaxButton', @I )
-			.SortSpecialProps_Add( 'MinButton', @I )
-			.SortSpecialProps_Add( 'Movable', @I )
-			.SortSpecialProps_Add( 'MaxHeight', @I )
-			.SortSpecialProps_Add( 'MaxWidth', @I )
-			.SortSpecialProps_Add( 'MinHeight', @I )
-			.SortSpecialProps_Add( 'MinWidth', @I )
-			.SortSpecialProps_Add( 'MaxTop', @I )
-			.SortSpecialProps_Add( 'MaxLeft', @I )
-			.SortSpecialProps_Add( 'MDIForm', @I )
-			.SortSpecialProps_Add( 'ClipControls', @I )
-			.SortSpecialProps_Add( 'DrawMode', @I )
-			.SortSpecialProps_Add( 'DrawStyle', @I )
-			.SortSpecialProps_Add( 'DrawWidth', @I )
-			.SortSpecialProps_Add( 'FillStyle', @I )
-			.SortSpecialProps_Add( 'Icon', @I )
-			.SortSpecialProps_Add( 'KeyPreview', @I )
-			.SortSpecialProps_Add( 'TabIndex', @I )
-			.SortSpecialProps_Add( 'TabStop', @I )
-			.SortSpecialProps_Add( 'TitleBar', @I )
-			.SortSpecialProps_Add( 'WindowType', @I )
-			.SortSpecialProps_Add( 'WindowState', @I )
-			.SortSpecialProps_Add( 'LockScreen', @I )
-			.SortSpecialProps_Add( 'AlwaysOnTop', @I )
-			.SortSpecialProps_Add( 'AlwaysOnBottom', @I )
-			.SortSpecialProps_Add( 'SizeBox', @I )
-			.SortSpecialProps_Add( 'SpecialEffect', @I )
-			.SortSpecialProps_Add( 'ZoomBox', @I )
-			.SortSpecialProps_Add( 'ZOrderSet', @I )
-			.SortSpecialProps_Add( 'HelpContextID', @I )
-			.SortSpecialProps_Add( 'WhatsThisHelpID', @I )
-			.SortSpecialProps_Add( 'WhatsThisHelp', @I )
-			.SortSpecialProps_Add( 'WhatsThisButton', @I )
-			.SortSpecialProps_Add( 'RightToLeft', @I )
-			.SortSpecialProps_Add( 'DefOleLCID', @I )
-			.SortSpecialProps_Add( 'MacDesktop', @I )
-			.SortSpecialProps_Add( 'ColorSource', @I )
-			.SortSpecialProps_Add( 'ForeColor', @I )
-			.SortSpecialProps_Add( 'DisableForeColor', @I )
-			.SortSpecialProps_Add( 'BackColor', @I )
-			.SortSpecialProps_Add( 'FillColor', @I )
-			.SortSpecialProps_Add( 'HScrollSmallChange', @I )
-			.SortSpecialProps_Add( 'VScrollSmallChange', @I )
-			.SortSpecialProps_Add( 'ContinuousScroll', @I )
-			.SortSpecialProps_Add( 'BindControls', @I )
-			.SortSpecialProps_Add( 'AllowOutput', @I )
-			.SortSpecialProps_Add( 'Dockable', @I )
-			.SortSpecialProps_Add( '_memberdata', @I )
-			.SortSpecialProps_Add( 'Themes', @I )
-			*.SortSpecialProps_Add( 'Name', @I )	&& System "Name" property
-			ENDIF
-		ENDWITH
+
+
+				*-- DEMÁS CLASES
+				IF .F.
+					I = 0
+					.SortSpecialProps_Add( 'FRXDataSession', @I )		&& En un VCX lo ví primero de todo y también luego de Height ¿?
+					.SortSpecialProps_Add( 'ErasePage', @I )			&& PageFrame: Debe estar antes que PageCount
+					.SortSpecialProps_Add( 'PageCount', @I )			&& PageFrame: Debe estar antes que ActivePage
+					.SortSpecialProps_Add( 'ActivePage', @I )			&& PageFrame: Debe estar antes que Top/Left/With/Height
+					.SortSpecialProps_Add( 'ButtonCount', @I )
+					.SortSpecialProps_Add( 'ColumnCount', @I )
+					.SortSpecialProps_Add( 'Value', @I )
+					.SortSpecialProps_Add( 'Comment', @I )
+					.SortSpecialProps_Add( 'ControlSource', @I )
+					.SortSpecialProps_Add( 'DataSession', @I )
+					.SortSpecialProps_Add( 'DeleteMark', @I )
+					.SortSpecialProps_Add( 'ScaleMode', @I )
+					.SortSpecialProps_Add( 'Tag', @I )
+					.SortSpecialProps_Add( 'OLEDragMode', @I )			&& Image: Debe estar antes que OLEDragPicture
+					.SortSpecialProps_Add( 'OLEDragPicture', @I )		&& Image: Debe estar antes que OLEDropMode
+					.SortSpecialProps_Add( 'OLEDropMode', @I )			&& Image: Debe estar antes que OLEDropEffects
+					.SortSpecialProps_Add( 'OLEDropEffects', @I )		&& Image: Debe estar antes que DragMode
+					.SortSpecialProps_Add( 'DragMode', @I )				&& Image: Debe estar antes que DragIcon
+					.SortSpecialProps_Add( 'DragIcon', @I )				&& Image: Debe estar antes que Anchor
+					.SortSpecialProps_Add( 'Anchor', @I )				&& Image: Debe estar antes que Picture
+					.SortSpecialProps_Add( 'DefTop', @I )				&& Propiedad con evaluación: Debe estar antes que Top
+					.SortSpecialProps_Add( 'DefLeft', @I )				&& Propiedad con evaluación: Debe estar antes que Left
+					.SortSpecialProps_Add( 'DefHeight', @I )			&& Propiedad con evaluación: Debe estar antes que Height
+					.SortSpecialProps_Add( 'DefWidth', @I )				&& Propiedad con evaluación: Debe estar antes que Width
+					.SortSpecialProps_Add( 'Picture', @I )				&& Image: Debe estar antes que Stretch y después de DefTop/DefLeft
+					.SortSpecialProps_Add( 'Stretch', @I )				&& Image: Debe estar antes que BackStyle
+					.SortSpecialProps_Add( 'BackStyle', @I )			&& Image: Debe estar antes que BorderStyle
+					.SortSpecialProps_Add( 'BorderStyle', @I )			&&
+					.SortSpecialProps_Add( 'BorderWidth', @I )
+					.SortSpecialProps_Add( 'Enabled', @I )
+					.SortSpecialProps_Add( 'Top', @I )
+					.SortSpecialProps_Add( 'Left', @I )
+					.SortSpecialProps_Add( 'Height', @I )
+					.SortSpecialProps_Add( 'Width', @I )
+					.SortSpecialProps_Add( 'MousePointer', @I )
+					.SortSpecialProps_Add( 'MouseIcon', @I )
+					.SortSpecialProps_Add( 'Visible', @I )
+					.SortSpecialProps_Add( 'MaxLength', @I )
+					.SortSpecialProps_Add( 'Alias', @I )
+					.SortSpecialProps_Add( 'BufferModeOverride', @I )
+					.SortSpecialProps_Add( 'Order', @I )
+					.SortSpecialProps_Add( 'OrderDirection', @I )
+					.SortSpecialProps_Add( 'CursorSource', @I )
+					.SortSpecialProps_Add( 'Exclusive', @I )
+					.SortSpecialProps_Add( 'Filter', @I )
+					.SortSpecialProps_Add( 'Panel', @I )
+					.SortSpecialProps_Add( 'ReadOnly', @I )
+					.SortSpecialProps_Add( 'RecordSource', @I )
+					.SortSpecialProps_Add( 'RecordSourceType', @I )
+					.SortSpecialProps_Add( 'NoDataOnLoad', @I )
+					.SortSpecialProps_Add( 'OpenViews', @I )
+					.SortSpecialProps_Add( 'AutoOpenTables', @I )
+					.SortSpecialProps_Add( 'AutoCloseTables', @I )
+					.SortSpecialProps_Add( 'InitialSelectedAlias', @I )
+					.SortSpecialProps_Add( 'DataSource', @I )
+					.SortSpecialProps_Add( 'DataSourceType ', @I )
+					.SortSpecialProps_Add( 'Desktop', @I )
+					.SortSpecialProps_Add( 'ShowWindow', @I )
+					.SortSpecialProps_Add( 'ScrollBars', @I )
+					.SortSpecialProps_Add( 'ShowInTaskBar', @I )
+					.SortSpecialProps_Add( 'DoCreate', @I )
+					.SortSpecialProps_Add( 'Tag', @I )
+					.SortSpecialProps_Add( 'ShowTips', @I )
+					.SortSpecialProps_Add( 'BufferMode', @I )
+					.SortSpecialProps_Add( 'AutoCenter', @I )
+					.SortSpecialProps_Add( 'AutoSize', @I )
+					.SortSpecialProps_Add( 'WordWrap', @I )
+					.SortSpecialProps_Add( 'Caption', @I )
+					.SortSpecialProps_Add( 'ControlBox', @I )
+					.SortSpecialProps_Add( 'Closable', @I )
+					.SortSpecialProps_Add( 'Curvature', @I )
+					.SortSpecialProps_Add( 'FontBold', @I )
+					.SortSpecialProps_Add( 'FontCondense', @I )
+					.SortSpecialProps_Add( 'FontExtend', @I )
+					.SortSpecialProps_Add( 'FontItalic', @I )
+					.SortSpecialProps_Add( 'FontName', @I )
+					.SortSpecialProps_Add( 'FontOutline', @I )
+					.SortSpecialProps_Add( 'FontShadow', @I )
+					.SortSpecialProps_Add( 'FontSize', @I )
+					.SortSpecialProps_Add( 'FontStrikethru', @I )
+					.SortSpecialProps_Add( 'FontUnderline', @I )
+					.SortSpecialProps_Add( 'HalfHeightCaption', @I )
+					.SortSpecialProps_Add( 'Margin', @I )
+					.SortSpecialProps_Add( 'MaxButton', @I )
+					.SortSpecialProps_Add( 'MinButton', @I )
+					.SortSpecialProps_Add( 'Movable', @I )
+					.SortSpecialProps_Add( 'MaxHeight', @I )
+					.SortSpecialProps_Add( 'MaxWidth', @I )
+					.SortSpecialProps_Add( 'MinHeight', @I )
+					.SortSpecialProps_Add( 'MinWidth', @I )
+					.SortSpecialProps_Add( 'MaxTop', @I )
+					.SortSpecialProps_Add( 'MaxLeft', @I )
+					.SortSpecialProps_Add( 'MDIForm', @I )
+					.SortSpecialProps_Add( 'ClipControls', @I )
+					.SortSpecialProps_Add( 'DrawMode', @I )
+					.SortSpecialProps_Add( 'DrawStyle', @I )
+					.SortSpecialProps_Add( 'DrawWidth', @I )
+					.SortSpecialProps_Add( 'FillStyle', @I )
+					.SortSpecialProps_Add( 'Icon', @I )
+					.SortSpecialProps_Add( 'KeyPreview', @I )
+					.SortSpecialProps_Add( 'TabIndex', @I )
+					.SortSpecialProps_Add( 'TabStop', @I )
+					.SortSpecialProps_Add( 'TitleBar', @I )
+					.SortSpecialProps_Add( 'WindowType', @I )
+					.SortSpecialProps_Add( 'WindowState', @I )
+					.SortSpecialProps_Add( 'LockScreen', @I )
+					.SortSpecialProps_Add( 'AlwaysOnTop', @I )
+					.SortSpecialProps_Add( 'AlwaysOnBottom', @I )
+					.SortSpecialProps_Add( 'SizeBox', @I )
+					.SortSpecialProps_Add( 'SpecialEffect', @I )
+					.SortSpecialProps_Add( 'ZoomBox', @I )
+					.SortSpecialProps_Add( 'ZOrderSet', @I )
+					.SortSpecialProps_Add( 'HelpContextID', @I )
+					.SortSpecialProps_Add( 'WhatsThisHelpID', @I )
+					.SortSpecialProps_Add( 'WhatsThisHelp', @I )
+					.SortSpecialProps_Add( 'WhatsThisButton', @I )
+					.SortSpecialProps_Add( 'RightToLeft', @I )
+					.SortSpecialProps_Add( 'DefOleLCID', @I )
+					.SortSpecialProps_Add( 'MacDesktop', @I )
+					.SortSpecialProps_Add( 'ColorSource', @I )
+					.SortSpecialProps_Add( 'ForeColor', @I )
+					.SortSpecialProps_Add( 'DisableForeColor', @I )
+					.SortSpecialProps_Add( 'BackColor', @I )
+					.SortSpecialProps_Add( 'FillColor', @I )
+					.SortSpecialProps_Add( 'HScrollSmallChange', @I )
+					.SortSpecialProps_Add( 'VScrollSmallChange', @I )
+					.SortSpecialProps_Add( 'ContinuousScroll', @I )
+					.SortSpecialProps_Add( 'BindControls', @I )
+					.SortSpecialProps_Add( 'AllowOutput', @I )
+					.SortSpecialProps_Add( 'Dockable', @I )
+					.SortSpecialProps_Add( '_memberdata', @I )
+					.SortSpecialProps_Add( 'Themes', @I )
+					*.SortSpecialProps_Add( 'Name', @I )	&& System "Name" property
+				ENDIF
+			ENDWITH
 
 		CATCH TO loEx
-			loEx.UserValue	= 'lcPropsFile = ' + lcPropsFile
-			
+			loEx.USERVALUE	= 'lcPropsFile = ' + lcPropsFile
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -7840,7 +7840,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- taCode[1]
 		*--		Bloque de código del método en su posición original
 		TRY
-			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod
+			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine
 			LOCAL loEx AS EXCEPTION
 			DIMENSION taMethods(1,3)
 			STORE '' TO taMethods, m.tcSorted, taCode
@@ -7885,16 +7885,39 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				*-- Analyze and count line methods, get method names and consolidate block code
 				FOR I = 1 TO lnLineCount
+					lnLine_Len	= LEN( laLine(I) )
+
 					DO CASE
-					CASE LEFT(laLine(I), 4) == C_TEXT
+					CASE UPPER( LEFT(laLine(I), 4) ) == "TEXT"
+						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
+						IF lnLine_Len >= 4 AND LEFT(lcLine,5) == 'TEXT '
+							*-- Es el comando TEXT
+						ELSE
+							*-- Es otra cosa (variable, etc)
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							LOOP
+						ENDIF
+
 						lnTextNodes	= lnTextNodes + 1
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 
-					CASE LEFT(laLine(I), 7) == C_ENDTEXT
+					CASE UPPER( LEFT(laLine(I), 4) ) == "ENDT"
+						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
+						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDTEXT ' ;
+								OR lnLine_Len >= 6 AND LEFT(lcLine,7) == 'ENDTEX ' ;
+								OR lnLine_Len >= 5 AND LEFT(lcLine,6) == 'ENDTE ' ;
+								OR lnLine_Len >= 4 AND LEFT(lcLine,5) == 'ENDT '
+							*-- Es el comando ENDTEXT
+						ELSE
+							*-- Es otra cosa (variable, etc)
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							LOOP
+						ENDIF
+
 						lnTextNodes	= lnTextNodes - 1
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 10) == 'PROCEDURE '
+					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 10) ) == 'PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
 						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 11) )
@@ -7902,7 +7925,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 3)	= ''
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
 
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 17) == 'HIDDEN PROCEDURE '
+					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 17) ) == 'HIDDEN PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
 						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 18) )
@@ -7910,7 +7933,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 3)	= 'HIDDEN '
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
 
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 20) == 'PROTECTED PROCEDURE '
+					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 20) ) == 'PROTECTED PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
 						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 21) )
@@ -7919,6 +7942,15 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
 
 					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
+						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
+						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDPROC '
+							*-- Es el final de estructura ENDPROC
+						ELSE
+							*-- Es otra cosa (variable, etc)
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							LOOP
+						ENDIF
+
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 
 					CASE tnMethodCount = 0	&& Skip empty lines before methods begin
