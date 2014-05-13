@@ -7888,7 +7888,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					lnLine_Len	= LEN( laLine(I) )
 
 					DO CASE
-					CASE UPPER( LEFT(laLine(I), 4) ) == "TEXT"
+					CASE UPPER( LEFT(laLine(I), 4) ) == 'TEXT'
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
 						IF lnLine_Len >= 4 AND LEFT(lcLine,5) == 'TEXT '
 							*-- Es el comando TEXT
@@ -7901,7 +7901,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						lnTextNodes	= lnTextNodes + 1
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 
-					CASE UPPER( LEFT(laLine(I), 4) ) == "ENDT"
+					CASE UPPER( LEFT(laLine(I), 4) ) == 'ENDT'
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
 						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDTEXT ' ;
 								OR lnLine_Len >= 6 AND LEFT(lcLine,7) == 'ENDTEX ' ;
