@@ -1,0 +1,22 @@
+* http://www.tek-tips.com/viewthread.cfm?qid=769626
+* ftp://tek-tips:tek-tips@69.14.191.20/tek-tips/pct_dll/pct_dll.zip
+
+lcWallpaper="C:\Documents and Settings\brian\My Documents\My Pictures\Img_0011.jpg"
+
+Declare Integer tobmp IN "PCT_DLL.dll" ;
+String jpgfilename, String bmpfilename
+
+retval = tobmp(lcWallpaper,JUSTPATH(lcWallpaper)+"\"+JUSTSTEM(lcWallpaper)+".bmp")
+
+lcWallpaper=JUSTPATH(lcWallpaper)+"\"+JUSTSTEM(lcWallpaper)+".bmp"
+
+DO JpgWallPaper WITH lcWallpaper
+
+PROCEDURE  JpgWallPaper
+    PARAMETERS lcWallpaper
+    DECLARE INTEGER SystemParametersInfo IN WIN32API ;
+        INTEGER uiAction, INTEGER uiParam,;
+        STRING @pvParam, INTEGER fWinIni
+
+     SystemParametersInfo (20 , 0, @lcWallpaper, 3) 
+ENDPROC

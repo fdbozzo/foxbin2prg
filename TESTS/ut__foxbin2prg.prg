@@ -25,6 +25,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION SETUP
 		PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		*LOCAL loObj AS c_conversor_base OF "FOXBIN2PRG.PRG"
+		*DOEVENTS FORCE
+		MOUSE AT 0,0
 		SET PROCEDURE TO 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		oFXU_LIB = CREATEOBJECT('CL_FXU_CONFIG')
 		oFXU_LIB.setup_comun()
@@ -48,6 +50,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB = NULL
 		ENDIF
 		RELEASE PROCEDURE 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		SYS(1104)
 
 	ENDFUNC
 
@@ -79,8 +82,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				THIS.messageout( LOWER(PROGRAM(PROGRAM(-1)-1)) )
 
 				THIS.messageout( 'Recno#' + TRANSFORM(tnRecno) + ' UniqueID="' + toReg_Esperado.UniqueID + '" ObjType=' + TRANSFORM(toReg_Esperado.ObjType) ;
-					+ ' ObjCode=' + TRANSFORM(toReg_Esperado.ObjCode) + ' Expr=[' + LEFT(toReg_Esperado.Expr,20) ;
-					+ IIF(LEN(toReg_Esperado.Expr)>20,'...]',']') ;
+					+ ' ObjCode=' + TRANSFORM(toReg_Esperado.ObjCode) + ' Expr=[' + LEFT(toReg_Esperado.EXPR,20) ;
+					+ IIF(LEN(toReg_Esperado.EXPR)>20,'...]',']') ;
 					+ ' vpos=' + TRANSFORM(toReg_Esperado.VPOS) + ' hpos=' + TRANSFORM(toReg_Esperado.HPOS) ;
 					+ ' height=' + TRANSFORM(toReg_Esperado.HEIGHT) + ' width=' + TRANSFORM(toReg_Esperado.WIDTH) )
 
@@ -306,7 +309,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				STORE 0 TO lnCodError_Esperado
 				lnRecno		= RECNO()
 				SCATTER MEMO NAME loReg_Esperado
-				lcUniqueID	= loReg_Esperado.UNIQUEID
+				lcUniqueID	= loReg_Esperado.UniqueID
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -316,7 +319,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 					ERROR 'No se encontró el archivo "' + lc_OutputFile + '"'
 				ENDIF
 
-				LOCATE FOR UNIQUEID==lcUniqueID
+				LOCATE FOR UniqueID==lcUniqueID
 
 				IF NOT FOUND()
 					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIVOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
@@ -382,7 +385,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				STORE 0 TO lnCodError_Esperado
 				lnRecno		= RECNO()
 				SCATTER MEMO NAME loReg_Esperado
-				lcUniqueID	= loReg_Esperado.UNIQUEID
+				lcUniqueID	= loReg_Esperado.UniqueID
 
 				*-- TEST
 				IF FILE(lc_OutputFile)
@@ -392,7 +395,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 					ERROR 'No se encontró el archivo "' + lc_OutputFile + '"'
 				ENDIF
 
-				LOCATE FOR UNIQUEID==lcUniqueID
+				LOCATE FOR UniqueID==lcUniqueID
 
 				IF NOT FOUND()
 					ERROR 'No se encontró el registro #' + TRANSFORM(RECNO('ARCHIVOBIN_IN')) + ' con UniqueID "' + lcUniqueID + '" en el archivo "' + lc_OutputFile + '"'
@@ -451,7 +454,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
-			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Form',10) OR PLATFORM==PADR("WINDOWS",8) )
+			SCAN ALL FOR NOT DELETED() AND ( UniqueID==PADR('Form',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
@@ -468,9 +471,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				ENDIF
 
 				IF EMPTY(lcParent) AND EMPTY(lcClass) AND EMPTY(lcObjName)
-					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UNIQUEID==PADR("Screen",10)
+					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UniqueID==PADR("Screen",10)
 					IF NOT FOUND()
-						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
+						ERROR 'No se encontró el registro de cabecera "' + UniqueID + '"'
 					ENDIF
 				ELSE
 					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
@@ -532,13 +535,13 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SELECT 0
 			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 
-			LOCATE FOR ObjName = 'Pageframe1' AND NOT DELETED() AND PLATFORM==PADR("WINDOWS",8)
-			
-			this.assertequals( .T., FOUND(), 'No se ha encontrado el objeto "Pageframe1" que se iba a testear' )
+			LOCATE FOR objName = 'Pageframe1' AND NOT DELETED() AND PLATFORM==PADR("WINDOWS",8)
+
+			THIS.assertequals( .T., FOUND(), 'No se ha encontrado el objeto "Pageframe1" que se iba a testear' )
 
 			*-- DATOS ESPERADOS
 			STORE 0 TO lnCodError_Esperado
-			SCATTER FIELDS Properties MEMO NAME loReg
+			SCATTER FIELDS PROPERTIES MEMO NAME loReg
 			DIMENSION laProps_Esperado(8)
 			laProps_Esperado( 1)	= 'ErasePage'
 			laProps_Esperado( 2)	= 'PageCount'
@@ -548,27 +551,27 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			laProps_Esperado( 6)	= 'Height'
 			laProps_Esperado( 7)	= 'Width'
 			laProps_Esperado( 8)	= 'Name'
-			
+
 			*-- TEST
-			=ALINES(laProps, loReg.Properties)
-			
-			this.messageout( 'Línea : Valor esperado => Valor actual' )
-			this.messageout( REPLICATE('-',50) )
+			=ALINES(laProps, loReg.PROPERTIES)
+
+			THIS.messageout( 'Línea : Valor esperado => Valor actual' )
+			THIS.messageout( REPLICATE('-',50) )
 
 			FOR I = 1 TO ALEN(laProps_Esperado)
 				lcProp	= GETWORDNUM(laProps(I),1)
-				this.messageout( 'Línea ' + TRANSFORM(I) + ': ' + laProps_Esperado(I) + ' => ' + lcProp )
+				THIS.messageout( 'Línea ' + TRANSFORM(I) + ': ' + laProps_Esperado(I) + ' => ' + lcProp )
 			ENDFOR
 
 			FOR I = 1 TO ALEN(laProps_Esperado)
 				lcProp	= GETWORDNUM(laProps(I),1)
-				this.assertequals( laProps_Esperado(I), lcProp, 'Elemento (' + TRANSFORM(I) + ') del Memo Properties' )
+				THIS.assertequals( laProps_Esperado(I), lcProp, 'Elemento (' + TRANSFORM(I) + ') del Memo Properties' )
 			ENDFOR
 
 			*USE IN (SELECT("TABLABIN"))
 
 			*THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName ;
-				, loReg_Esperado, loReg, lcTipoBinario )
+			, loReg_Esperado, loReg, lcTipoBinario )
 
 		CATCH TO loEx
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
@@ -615,42 +618,49 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SELECT 0
 			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 
-			LOCATE FOR ObjName = 'Optiongroup1' AND NOT DELETED() AND PLATFORM==PADR("WINDOWS",8)
-			
-			this.assertequals( .T., FOUND(), 'No se ha encontrado el objeto "Optiongroup1" que se iba a testear' )
+			LOCATE FOR objName = 'Optiongroup1' AND NOT DELETED() AND PLATFORM==PADR("WINDOWS",8)
+
+			THIS.assertequals( .T., FOUND(), 'No se ha encontrado el objeto "Optiongroup1" que se iba a testear' )
 
 			*-- DATOS ESPERADOS
 			STORE 0 TO lnCodError_Esperado
-			SCATTER FIELDS Properties MEMO NAME loReg
+			SCATTER FIELDS PROPERTIES MEMO NAME loReg
 			DIMENSION laProps_Esperado(7)
 			laProps_Esperado( 1)	= 'ButtonCount'
-			laProps_Esperado( 2)	= 'Value'
-			laProps_Esperado( 3)	= 'Top'
-			laProps_Esperado( 4)	= 'Left'
-			laProps_Esperado( 5)	= 'Height'
-			laProps_Esperado( 6)	= 'Width'
+			*laProps_Esperado( 2)	= 'Value'
+			*laProps_Esperado( 3)	= 'Top'
+			*laProps_Esperado( 4)	= 'Left'
+			*laProps_Esperado( 5)	= 'Height'
+			*laProps_Esperado( 6)	= 'Width'
+			*laProps_Esperado( 7)	= 'Name'
+			*-- 13/05/2014. v1.19.22 - Reordenamiento de todas propiedades
+			laProps_Esperado( 2)	= 'Top'
+			laProps_Esperado( 3)	= 'Left'
+			laProps_Esperado( 4)	= 'Height'
+			laProps_Esperado( 5)	= 'Width'
+			laProps_Esperado( 6)	= 'Value'
 			laProps_Esperado( 7)	= 'Name'
-			
+
 			*-- TEST
-			=ALINES(laProps, loReg.Properties)
-			
-			this.messageout( 'Línea : Valor esperado => Valor actual' )
-			this.messageout( REPLICATE('-',50) )
+			=ALINES(laProps, loReg.PROPERTIES)
+
+			THIS.messageout( 'Línea : Valor esperado => Valor actual' )
+			THIS.messageout( REPLICATE('-',50) )
 
 			FOR I = 1 TO ALEN(laProps_Esperado)
 				lcProp	= GETWORDNUM(laProps(I),1)
-				this.messageout( 'Línea ' + TRANSFORM(I) + ': ' + laProps_Esperado(I) + ' => ' + lcProp )
+				THIS.messageout( 'Línea ' + TRANSFORM(I) + ': ' + laProps_Esperado(I) + ' => ' + lcProp )
 			ENDFOR
 
 			FOR I = 1 TO ALEN(laProps_Esperado)
 				lcProp	= GETWORDNUM(laProps(I),1)
-				this.assertequals( laProps_Esperado(I), lcProp, 'Elemento (' + TRANSFORM(I) + ') del Memo Properties' )
+				THIS.assertequals( laProps_Esperado(I), lcProp, 'Elemento (' + TRANSFORM(I) + ') del Memo Properties' )
 			ENDFOR
 
 			*USE IN (SELECT("TABLABIN"))
 
 			*THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName ;
-				, loReg_Esperado, loReg, lcTipoBinario )
+			, loReg_Esperado, loReg, lcTipoBinario )
 
 		CATCH TO loEx
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
@@ -700,7 +710,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
-			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
+			SCAN ALL FOR NOT DELETED() AND ( UniqueID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
@@ -717,9 +727,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				ENDIF
 
 				IF EMPTY(lcParent) AND EMPTY(lcClass) AND EMPTY(lcObjName)
-					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UNIQUEID==PADR("Class",10)
+					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UniqueID==PADR("Class",10)
 					IF NOT FOUND()
-						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
+						ERROR 'No se encontró el registro de cabecera "' + UniqueID + '"'
 					ENDIF
 				ELSE
 					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
@@ -782,7 +792,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
-			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
+			SCAN ALL FOR NOT DELETED() AND ( UniqueID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
@@ -799,9 +809,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				ENDIF
 
 				IF EMPTY(lcParent) AND EMPTY(lcClass) AND EMPTY(lcObjName)
-					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UNIQUEID==PADR("Class",10)
+					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UniqueID==PADR("Class",10)
 					IF NOT FOUND()
-						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
+						ERROR 'No se encontró el registro de cabecera "' + UniqueID + '"'
 					ENDIF
 				ELSE
 					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
@@ -864,7 +874,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
 
-			SCAN ALL FOR NOT DELETED() AND ( UNIQUEID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
+			SCAN ALL FOR NOT DELETED() AND ( UniqueID==PADR('Class',10) OR PLATFORM==PADR("WINDOWS",8) )
 				*-- DATOS ESPERADOS
 				STORE 0 TO lnCodError_Esperado
 				SCATTER MEMO NAME loReg_Esperado
@@ -881,9 +891,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				ENDIF
 
 				IF EMPTY(lcParent) AND EMPTY(lcClass) AND EMPTY(lcObjName)
-					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UNIQUEID==PADR("Class",10)
+					LOCATE FOR PLATFORM==PADR("COMMENT",8) AND UniqueID==PADR("Class",10)
 					IF NOT FOUND()
-						ERROR 'No se encontró el registro de cabecera "' + UNIQUEID + '"'
+						ERROR 'No se encontró el registro de cabecera "' + UniqueID + '"'
 					ENDIF
 				ELSE
 					LOCATE FOR LOWER(CLASS)==lcClass AND LOWER(PARENT)==lcParent AND LOWER(objName)==lcObjName
@@ -907,6 +917,279 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
 		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Evaluate_Bitmap_Test
+		LPARAMETERS tcTestName, tcControlName, tcFormName
+
+		IF PCOUNT() = 0
+			THIS.messageout( "* Support method, not a valid test." )
+			RETURN .T.
+		ENDIF
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lcFile2, lc_OutputFile, lcTipoBinario, lcLib, lcBMP0, lcBMP1 ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug				= .F.
+			*loCnv.l_ShowErrors			= .F.
+			*loCnv.l_Test				= .T.
+			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
+			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado
+			
+			lcTipoBinario		= EVL( UPPER(JUSTEXT(EVL(tcFormName,''))), 'VCX' )
+
+			*-- Copio la librería en DATOS_TEST
+			lcLib				= FORCEPATH( "LIB_CONTROLES.VCX", oFXU_LIB.cPathDatosTest )
+			lc_File2			= 'LIB_CONTROLES.VCX'
+			lc_OutputFile		= FORCEPATH( lc_File2, oFXU_LIB.cPathDatosTest )
+
+			IF lcTipoBinario = 'SCX'
+				lc_File			= UPPER(tcFormName)
+				lc_OutputFile	= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			ENDIF
+
+			loCnv.l_NoTimestamps			= .F.
+			loCnv.l_ClearUniqueID			= .F.
+
+			IF lcTipoBinario = 'SCX'
+				oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + 'X' ) )
+				oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + 'T' ) )
+			ENDIF
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File2, LEFT( JUSTEXT(lc_File2),2 ) + 'X' ) )
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File2, LEFT( JUSTEXT(lc_File2),2 ) + 'T' ) )
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			*-- Genero BMP con libreria original
+			SET CLASSLIB TO (lcLib) ADDITIVE
+			IF lcTipoBinario = 'SCX'
+				DO FORM (lc_OutputFile) NAME loCtl LINKED NOSHOW
+			ELSE
+				loCtl = CREATEOBJECT( tcControlName )
+			ENDIF
+			loCtl.c_testname = tcTestName + '_0'
+			IF loCtl.BaseClass = 'Formset'
+				loCtl.Forms(1).ALWAYSONTOP= .T.
+				loCtl.SHOW()
+				loCtl.REFRESH()
+			ELSE
+				loCtl.ALWAYSONTOP= .T.
+				loCtl.SHOW()
+			ENDIF
+			loCtl.HIDE()
+			loCtl.RELEASE()
+			loCtl = NULL
+			RELEASE CLASSLIB (lcLib)
+			CLEAR CLASSLIB (lcLib)
+
+			*-- Genero BIN
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			*-- Genero BMP con libreria regenerada
+			SET CLASSLIB TO (lcLib) ADDITIVE
+			IF lcTipoBinario = 'SCX'
+				DO FORM (lc_OutputFile) NAME loCtl LINKED NOSHOW
+			ELSE
+				loCtl = CREATEOBJECT( tcControlName )
+			ENDIF
+			loCtl.c_testname = tcTestName + '_1'
+			IF loCtl.BaseClass = 'Formset'
+				loCtl.Forms(1).ALWAYSONTOP= .T.
+				loCtl.SHOW()
+				loCtl.REFRESH()
+			ELSE
+				loCtl.ALWAYSONTOP= .T.
+				loCtl.SHOW()
+			ENDIF
+			loCtl.HIDE()
+			loCtl.RELEASE()
+			loCtl = NULL
+			RELEASE CLASSLIB (lcLib)
+			CLEAR CLASSLIB (lcLib)
+
+			*-- Comparo resultados
+			lcBMP0		= FORCEPATH( tcTestName + '_0.bmp', oFXU_LIB.cPathDatosTest )
+			lcBMP1		= FORCEPATH( tcTestName + '_1.bmp', oFXU_LIB.cPathDatosTest )
+
+			THIS.messageout( "Se comparan bitmaps de pantalla, para saber si hay cambios estéticos y detectar fallos al ensamblar el binario" )
+			THIS.messageout( "lcBMP0 = " + lcBMP0 )
+			THIS.messageout( "lcBMP1 = " + lcBMP1 )
+			THIS.asserttrue( FILETOSTR( lcBMP0 ) == FILETOSTR( lcBMP1 ), "COMPARACIÓN DE BITMAPS" )
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+		*	USE IN (SELECT("ARCHIVOBIN_IN"))
+		*	USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loCnv, loCtl
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_OptionGroup__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'OptionGroup_Test', 'f_OptionGroup', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_OptionGroup__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'OptionGroup_Test', 'f_OptionGroup', 'F_OPTIONGROUP.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_Checkbox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Checkbox_Test', 'f_Checkbox', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Checkbox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Checkbox_Test', 'f_Checkbox', 'F_CHECKBOX.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_Textbox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Textbox_Test', 'f_Textbox', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Textbox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Textbox_Test', 'f_Textbox', 'F_TEXTBOX.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_Combobox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Combobox_Test', 'f_Combobox', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Combobox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Combobox_Test', 'f_Combobox', 'F_Combobox.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_CommandGroup__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'CommandGroup_Test', 'f_CommandGroup', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_CommandGroup__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'CommandGroup_Test', 'f_CommandGroup', 'F_CommandGroup.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_ListBox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'ListBox_Test', 'f_ListBox', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_ListBox__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'ListBox_Test', 'f_ListBox', 'F_ListBox.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_Form_Controles__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Form_Controles_Test', 'f_Form_Controles', '' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Form_Controles__YValidarLaVisualizacionDePantalla
+
+		THIS.evaluate_bitmap_test( 'Form_Controles_Test', 'f_Form_Controles', 'F_Form_Controles.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Formset__YValidarLaVisualizacionDePantalla
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		oFXU_LIB.copiarArchivosParaTest( 'encuestas.*' )
+		THIS.evaluate_bitmap_test( 'Formset_Test', 'f_Formset', 'F_Formset.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Form_AA__YValidarLaVisualizacionDePantalla
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.evaluate_bitmap_test( 'Form_Test_Eventos_y_Controles', 'f_Form_AA', 'F_Form_AA.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Form_AA2__YValidarLaVisualizacionDePantalla
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.evaluate_bitmap_test( 'Form_Test_Eventos_y_Controles2', 'f_Form_AA2', 'F_Form_AA2.SCX' )
 
 	ENDFUNC
 

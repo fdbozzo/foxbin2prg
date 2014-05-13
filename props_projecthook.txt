@@ -1,0 +1,7 @@
+Comment
+Tag
+Height
+Width
+OLEDropMode
+OLEDropEffects
+Name

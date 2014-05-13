@@ -4,6 +4,46 @@
 *----------------------------------------------------------------------------------------
 
 
+
+FUNCTION TaskBarHeight
+	DECLARE INTEGER GetWindowRect IN user32;
+		INTEGER HWND, STRING lpRect
+	DECLARE INTEGER FindWindow IN user32;
+		STRING lpClassName,;
+		STRING lpWindowName
+
+	LOCAL cBuffer
+	cBuffer = REPLICATE(CHR(0), 16)
+	hWindow= FindWindow('Shell_TrayWnd', '')
+	cRect = GetWinRect(hWindow)
+	RETURN TRANSFORM( buf2dword( SUBSTR(cRect, 13,4)) - buf2dword( SUBSTR(cRect, 5,4) ) )
+ENDFUNC
+
+
+FUNCTION GetWinRect(hWindow)
+	LOCAL cBuffer
+	cBuffer = REPLICATE(CHR(0), 16)
+	= GetWindowRect(hWindow, @cBuffer)
+	RETURN cBuffer
+ENDFUNC
+
+
+FUNCTION buf2dword(lcBuffer)
+	RETURN ASC(SUBSTR(lcBuffer, 1,1)) + ;
+		BITLSHIFT(ASC(SUBSTR(lcBuffer, 2,1)),  8) +;
+		BITLSHIFT(ASC(SUBSTR(lcBuffer, 3,1)), 16) +;
+		BITLSHIFT(ASC(SUBSTR(lcBuffer, 4,1)), 24)
+ENDFUNC
+
+
+DEFINE CLASS cl_Column AS Column
+ENDDEFINE
+
+
+DEFINE CLASS cl_Header AS Header
+ENDDEFINE
+
+
 DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 	#IF .F.
 		LOCAL THIS AS CL_FXU_CONFIG OF 'fxu_lib_objetos_y_funciones_de_soporte.PRG'
@@ -27,12 +67,12 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 	cPathDatosReadOnly	= 'TESTS\DATOS_READONLY'
 	cPathDatosTest		= 'TESTS\DATOS_TEST'
 	cSetDate			= ''
-	
+
 
 	*----------------------------------------------------------------------------------------
 	PROCEDURE INIT
 		THIS.cSetDate	= SET("Date")
-		
+
 		SET DATE TO YMD
 		SET HOURS TO 24
 		SET SAFETY OFF
@@ -66,7 +106,7 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 	*----------------------------------------------------------------------------------------
 	PROCEDURE copiarArchivosParaTest
 		LPARAMETERS tcFileSpec
-		
+
 		COPY FILE (FORCEPATH( tcFileSpec, THIS.cPathDatosReadOnly )) TO (FORCEPATH( tcFileSpec, THIS.cPathDatosTest ))
 	ENDPROC
 

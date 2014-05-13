@@ -6,9 +6,12 @@
 *
 
 *
+*< LIBCOMMENT: Comentario principal de "fb2p_test.vcx" />
+*
 DEFINE CLASS cl_commandgroup AS commandgroup 		&& Descripción de cl_CommandGroup
  	*< CLASSDATA: Baseclass="commandgroup" Timestamp="" Scale="Pixels" Uniqueid="" />
 
+	#INCLUDE "..\..\include\principal.h"
 	*<DefinedPropArrayMethod>
 		*p: una_prop_cmgroup		&& Con comentario, pero sin valor
 	*</DefinedPropArrayMethod>
@@ -46,13 +49,13 @@ DEFINE CLASS cl_form AS form OLEPUBLIC		&& mi OLE server DLL
 	*<DefinedPropArrayMethod>
 		*p: chidden		&& Prop.Hidden
 		*p: cprotected		&& Prop.Protegida
-		*a: ^ahidden[1,0]		&& Array Oculto
-		*a: ^aprotected[1,0]		&& Array Protegido
+		*a: ahidden[1,0]		&& Array Oculto
+		*a: aprotected[1,0]		&& Array Protegido
 		*p: _memberdata		&& XML Metadata for customizable properties
 	*</DefinedPropArrayMethod>
 
-	HIDDEN chidden
-	PROTECTED cprotected
+	HIDDEN chidden,ahidden
+	PROTECTED cprotected,aprotected
 	Caption = "Form"
 	chidden = 		&& Prop.Hidden
 	cprotected = 		&& Prop.Protegida
@@ -60,6 +63,7 @@ DEFINE CLASS cl_form AS form OLEPUBLIC		&& mi OLE server DLL
 	Height = 345
 	Left = 0
 	Name = "cl_form"
+	Picture = bmps\scccheckout.bmp
 	Top = 0
 	Width = 570
 	_memberdata = <VFPData>
@@ -153,7 +157,7 @@ DEFINE CLASS cl_imagen AS image OLEPUBLIC		&& otro ole
  	*< CLASSDATA: Baseclass="image" Timestamp="" Scale="Pixels" Uniqueid="" />
 
 	*<DefinedPropArrayMethod>
-		*m: *un_metodo_de_clase		&& Para testear si el código se va a la clase cl_form
+		*m: un_metodo_de_clase		&& Para testear si el código se va a la clase cl_form
 	*</DefinedPropArrayMethod>
 
 	Height = 16
@@ -180,8 +184,8 @@ DEFINE CLASS cl_optiongroup AS optiongroup 		&& descripcion
  	*< CLASSDATA: Baseclass="optiongroup" Timestamp="" Scale="Pixels" Uniqueid="" />
 
 	*<DefinedPropArrayMethod>
-		*m: *propiedad_de_clase_con_valor_access
-		*m: *propiedad_de_clase_con_valor_assign
+		*m: propiedad_de_clase_con_valor_access
+		*m: propiedad_de_clase_con_valor_assign
 		*p: propiedad_de_clase_con_valor		&& Tiene un valor por defecto
 		*p: propiedad_de_clase_sin_valor		&& Una propiedad sin valor para heredar
 	*</DefinedPropArrayMethod>

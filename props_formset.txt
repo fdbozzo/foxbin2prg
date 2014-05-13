@@ -1,0 +1,14 @@
+DataSession
+Comment
+Tag
+BufferMode
+AutoRelease
+Visible
+WindowList
+WindowType
+ReadSave
+ReadTimeout
+ReadMouse
+ReadCycle
+ReadLock
+Name

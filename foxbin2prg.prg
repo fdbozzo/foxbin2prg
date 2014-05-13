@@ -83,6 +83,7 @@
 * 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
 * 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
 * 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
+* 08/05/2014	FDBOZZO		v1.19.22 Arreglo bug vcx/scx: La propiedad Picture de una clase form se pierde y no muestra la imagen
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -109,6 +110,7 @@
 * 24/03/2014	Ryan Harris		REPORTE BUG vcx/scx v1.19.17: El comentario a nivel de librería se pierde (Solucionado en v1.19.18)
 * 29/04/2014	Matt Slay		MEJORA v1.19.20: Posibilidad de convertir un proyecto entero a tx2 // Optimización de generación según timestamps  (Agregado en v1.19.21)
 * 30/04/2014	Jim Nelson		MEJORA v1.19.20: Agregado de AGAIN en apertura de tablas  (Agregado en v1.19.21)
+* 07/05/2014	Fidel Charny	REPORTE BUG vcx/scx v1.19.21: La propiedad Picture de una clase form se pierde y no muestra la imagen. No ocurre con la propiedad Picture de los controles (Arreglado en v1.19.22)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -503,6 +505,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE INIT
+		LOCAL lcSys16, lnPosProg
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -511,7 +514,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET TABLEPROMPT OFF
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
-		THIS.c_Foxbin2prg_FullPath		= SUBSTR( SYS(16), AT( 'C_FOXBIN2PRG.INIT', SYS(16) ) + LEN('C_FOXBIN2PRG.INIT') + 1 )
+
+        lcSys16 = SYS(16)
+		IF LEFT(lcSys16,10) == 'PROCEDURE '
+			lnPosProg	= AT(" ", lcSys16, 2) + 1
+		ELSE
+			lnPosProg	= 1
+		ENDIF
+
+		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
 		THIS.c_CurDir					= SYS(5) + CURDIR()
 		THIS.o_FSO						= NEWOBJECT("Scripting.FileSystemObject")
@@ -1806,6 +1817,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="sortspecialprops" display="SortSpecialProps"/>] ;
 		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="c_claseactual" display="c_ClaseActual"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
@@ -1824,7 +1836,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [</VFPData>]
 
 
-	DIMENSION a_SpecialProps(1)
+	DIMENSION a_SpecialProps(1), a_SpecialProps_Form(1)
 	l_Debug					= .F.
 	l_Test					= .F.
 	c_InputFile				= ''
@@ -1841,11 +1853,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 	l_PropSort_Enabled		= .T.
 	l_ReportSort_Enabled	= .T.
 	c_OriginalFileName		= ''
+	c_ClaseActual			= ''
 	oFSO					= NULL
 
 
 	*******************************************************************************************************************
 	PROCEDURE INIT
+		LOCAL lcSys16, lnPosProg
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -1858,7 +1872,15 @@ DEFINE CLASS c_conversor_base AS SESSION
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
 		THIS.c_CurDir	= SYS(5) + CURDIR()
 		THIS.oFSO		= CREATEOBJECT( "Scripting.FileSystemObject")
+        lcSys16         = SYS(16)
 
+		IF LEFT(lcSys16,10) == 'PROCEDURE '
+			lnPosProg	= AT(" ", lcSys16, 2) + 1
+		ELSE
+			lnPosProg	= 1
+		ENDIF
+
+		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.SortSpecialProps()
 	ENDPROC
 
@@ -2514,7 +2536,12 @@ DEFINE CLASS c_conversor_base AS SESSION
 				lcPropName	= 'A999' + lcPropName
 
 			OTHERWISE
-				lnPos	= ASCAN( THIS.a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
+                *-- Soporte de evaluación de propiedades por clase evaluada
+				*IF THIS.c_ClaseActual == 'form'
+				*	lnPos	= ASCAN( THIS.a_SpecialProps_Form, lcPropName, 1, 0, 1, 1+2+4 )
+				*ELSE
+					lnPos	= ASCAN( THIS.a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
+				*ENDIF
 				lcPropName	= 'A' + PADL( EVL(lnPos,998), 3, '0' ) + lcPropName
 			ENDCASE
 
@@ -2668,11 +2695,34 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 
+	PROTECTED PROCEDURE SortSpecialProps_Form_Add
+		LPARAMETERS tcPropName, I
+		I	= I + 1
+		DIMENSION THIS.a_SpecialProps_Form(I)
+		THIS.a_SpecialProps_Form(I)	= tcPropName
+	ENDPROC
+
+
+
 	PROCEDURE SortSpecialProps
-		LOCAL I
-		I = 0
+		TRY
+		LOCAL I, loEx as Exception, lcPropsFile
+		lcPropsFile	= ''
 
 		WITH THIS AS conversor_base OF "FOXBIN2PRG.PRG"
+			*-- (TODAS) => Antes era solo FORM
+			I = 0
+			
+			lcPropsFile	= FORCEPATH( "props_all.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+			
+            I   = ALINES( THIS.a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
+
+
+
+
+			*-- DEMÁS CLASES
+			IF .F.
+			I = 0
 			.SortSpecialProps_Add( 'FRXDataSession', @I )		&& En un VCX lo ví primero de todo y también luego de Height ¿?
 			.SortSpecialProps_Add( 'ErasePage', @I )			&& PageFrame: Debe estar antes que PageCount
 			.SortSpecialProps_Add( 'PageCount', @I )			&& PageFrame: Debe estar antes que ActivePage
@@ -2806,7 +2856,21 @@ DEFINE CLASS c_conversor_base AS SESSION
 			.SortSpecialProps_Add( '_memberdata', @I )
 			.SortSpecialProps_Add( 'Themes', @I )
 			*.SortSpecialProps_Add( 'Name', @I )	&& System "Name" property
+			ENDIF
 		ENDWITH
+
+		CATCH TO loEx
+			loEx.UserValue	= 'lcPropsFile = ' + lcPropsFile
+			
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -3536,6 +3600,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
+				THIS.c_ClaseActual	= LOWER(toClase._BaseClass)
 				DIMENSION laPropsAndValues( toClase._Prop_Count, 3 )
 				ACOPY( toClase._Props, laPropsAndValues )
 				lnPropsAndValues_Count	= toClase._Prop_Count
@@ -3578,6 +3643,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lcMemo	= ''
 
 		IF toObjeto._Prop_Count > 0
+			THIS.c_ClaseActual	= LOWER(toObjeto._BaseClass)
 			DIMENSION laPropsAndValues( toObjeto._Prop_Count, 2 )
 			ACOPY( toObjeto._Props, laPropsAndValues )
 
