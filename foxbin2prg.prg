@@ -1836,7 +1836,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [</VFPData>]
 
 
-	DIMENSION a_SpecialProps(1), a_SpecialProps_Form(1)
+	DIMENSION a_SpecialProps(1), a_SpecialProps_Chk(1), a_SpecialProps_Coll(1) ;
+		, a_SpecialProps_Cbo(1), a_SpecialProps_Cmg(1), a_SpecialProps_Cmd(1), a_SpecialProps_Cur(1) ;
+		, a_SpecialProps_CA(1), a_SpecialProps_DE(1), a_SpecialProps_Edt(1), a_SpecialProps_Frs(1) ;
+		, a_SpecialProps_Grd(1), a_SpecialProps_Grc(1), a_SpecialProps_Grh(1), a_SpecialProps_Hlk(1) ;
+		, a_SpecialProps_Img(1), a_SpecialProps_Lbl(1), a_SpecialProps_Lin(1), a_SpecialProps_Lst(1) ;
+		, a_SpecialProps_Ole(1), a_SpecialProps_Opg(1), a_SpecialProps_Opb(1), a_SpecialProps_Phk(1) ;
+		, a_SpecialProps_Rel(1), a_SpecialProps_Rls(1), a_SpecialProps_Sep(1), a_SpecialProps_Shp(1) ;
+		, a_SpecialProps_Spn(1), a_SpecialProps_Txt(1), a_SpecialProps_Tmr(1), a_SpecialProps_Tbr(1) ;
+		, a_SpecialProps_XMLAda(1), a_SpecialProps_XMLFld(1), a_SpecialProps_XMLTbl(1)
+
 	l_Debug					= .F.
 	l_Test					= .F.
 	c_InputFile				= ''
@@ -2537,12 +2546,131 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			OTHERWISE
 				*-- Soporte de evaluación de propiedades por clase evaluada
-				*IF THIS.c_ClaseActual == 'form'
-				*	lnPos	= ASCAN( THIS.a_SpecialProps_Form, lcPropName, 1, 0, 1, 1+2+4 )
-				*ELSE
-				lnPos	= ASCAN( THIS.a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
-				*ENDIF
-				lcPropName	= 'A' + PADL( EVL(lnPos,998), 3, '0' ) + lcPropName
+				WITH THIS
+					DO CASE
+					CASE .c_ClaseActual == 'checkbox'
+						lnPos	= ASCAN( .a_SpecialProps_Chk, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'collection'
+						lnPos	= ASCAN( .a_SpecialProps_Coll, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'combobox'
+						lnPos	= ASCAN( .a_SpecialProps_Cbo, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'commandgroup'
+						lnPos	= ASCAN( .a_SpecialProps_Cmg, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'commandbutton'
+						lnPos	= ASCAN( .a_SpecialProps_Cmd, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'cursor'
+						lnPos	= ASCAN( .a_SpecialProps_Cur, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'cursoradapter'
+						lnPos	= ASCAN( .a_SpecialProps_CA, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'dataenvironment'
+						lnPos	= ASCAN( .a_SpecialProps_DE, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'editbox'
+						lnPos	= ASCAN( .a_SpecialProps_Edt, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'formset'
+						lnPos	= ASCAN( .a_SpecialProps_Frs, lcPropName, 1, 0, 1, 1+2+4 )
+
+                    *-- Comento la clase grid, porque puede contener a todos los controles, como un form
+                    *CASE .c_ClaseActual == 'grid'
+                    *    lnPos   = ASCAN( .a_SpecialProps_Grd, lcPropName, 1, 0, 1, 1+2+4 )
+
+                    *-- Comento la clase form, porque puede contener a todos los controles, como un form
+                    *CASE .c_ClaseActual == 'form'
+                    *    lnPos   = ASCAN( .a_SpecialProps_Frm, lcPropName, 1, 0, 1, 1+2+4 )
+
+                    *-- Comento la clase pageframe, porque puede contener a todos los controles, como un form
+                    *CASE .c_ClaseActual == 'pageframe'
+                    *    lnPos   = ASCAN( .a_SpecialProps_Pgf, lcPropName, 1, 0, 1, 1+2+4 )
+
+                    *-- Comento la clase control, porque puede contener a todos los controles, como un form
+                    *CASE .c_ClaseActual == 'control'
+                    *    lnPos   = ASCAN( .a_SpecialProps_Ctl, lcPropName, 1, 0, 1, 1+2+4 )
+
+                    *-- Comento la clase container, porque puede contener a todos los controles, como un form
+                    *CASE .c_ClaseActual == 'container'
+                    *    lnPos   = ASCAN( .a_SpecialProps_Cnt, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'column'
+						lnPos	= ASCAN( .a_SpecialProps_Grc, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'header'
+						lnPos	= ASCAN( .a_SpecialProps_Grh, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'hyperlink'
+						lnPos	= ASCAN( .a_SpecialProps_Hlk, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'image'
+						lnPos	= ASCAN( .a_SpecialProps_Img, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'label'
+						lnPos	= ASCAN( .a_SpecialProps_Lbl, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'line'
+						lnPos	= ASCAN( .a_SpecialProps_Lin, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'listbox'
+						lnPos	= ASCAN( .a_SpecialProps_Lst, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'olebound'
+						lnPos	= ASCAN( .a_SpecialProps_Ole, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'optiongroup'
+						lnPos	= ASCAN( .a_SpecialProps_Opg, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'optionbutton'
+						lnPos	= ASCAN( .a_SpecialProps_Opb, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'projecthook'
+						lnPos	= ASCAN( .a_SpecialProps_Phk, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'relation'
+						lnPos	= ASCAN( .a_SpecialProps_Rel, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'reportlistener'
+						lnPos	= ASCAN( .a_SpecialProps_Rls, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'separator'
+						lnPos	= ASCAN( .a_SpecialProps_Sep, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'shape'
+						lnPos	= ASCAN( .a_SpecialProps_Shp, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'spinner'
+						lnPos	= ASCAN( .a_SpecialProps_Spn, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'textbox'
+						lnPos	= ASCAN( .a_SpecialProps_Txt, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'timer'
+						lnPos	= ASCAN( .a_SpecialProps_Tmr, lcPropName, 1, 0, 1, 1+2+4 )
+
+                    *-- Comento la clase toolbar, porque puede contener a todos los controles, como un form
+					*CASE .c_ClaseActual == 'toolbar'
+					*	lnPos	= ASCAN( .a_SpecialProps_Tbr, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'xmladapter'
+						lnPos	= ASCAN( .a_SpecialProps_XMLAda, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'xmlfield'
+						lnPos	= ASCAN( .a_SpecialProps_Fld, lcPropName, 1, 0, 1, 1+2+4 )
+
+					CASE .c_ClaseActual == 'xmltable'
+						lnPos	= ASCAN( .a_SpecialProps_XMLTbl, lcPropName, 1, 0, 1, 1+2+4 )
+
+					OTHERWISE
+						lnPos	= ASCAN( .a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
+					ENDCASE
+
+					lcPropName	= 'A' + PADL( EVL(lnPos,998), 3, '0' ) + lcPropName
+				ENDWITH && THIS
 			ENDCASE
 
 		CATCH TO loEx
@@ -2686,25 +2814,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 
-	PROTECTED PROCEDURE SortSpecialProps_Add
-		LPARAMETERS tcPropName, I
-		I	= I + 1
-		DIMENSION THIS.a_SpecialProps(I)
-		THIS.a_SpecialProps(I)	= tcPropName
-	ENDPROC
-
-
-
-	PROTECTED PROCEDURE SortSpecialProps_Form_Add
-		LPARAMETERS tcPropName, I
-		I	= I + 1
-		DIMENSION THIS.a_SpecialProps_Form(I)
-		THIS.a_SpecialProps_Form(I)	= tcPropName
-	ENDPROC
-
-
-
-	PROCEDURE SortSpecialProps
+    PROCEDURE SortSpecialProps
 		TRY
 			LOCAL I, loEx AS EXCEPTION, lcPropsFile
 			lcPropsFile	= ''
@@ -2714,150 +2824,111 @@ DEFINE CLASS c_conversor_base AS SESSION
 				I = 0
 
 				lcPropsFile	= FORCEPATH( "props_all.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
 
-				I   = ALINES( THIS.a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
+                lcPropsFile = FORCEPATH( "props_checkbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Chk, FILETOSTR( lcPropsFile ), 1+4 )
 
+				lcPropsFile	= FORCEPATH( "props_collection.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Coll, FILETOSTR( lcPropsFile ), 1+4 )
 
+				lcPropsFile	= FORCEPATH( "props_combobox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Cbo, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_commandgroup.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Cmg, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_commandbutton.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Cmd, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_cursor.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Cur, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_cursoradapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_CA, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_dataenvironment.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_DE, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_editbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Edt, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_formset.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Frs, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_grid.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Grd, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_grid_column.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Grc, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_grid_header.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Grh, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_hyperlink.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Hlk, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_image.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Img, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_label.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Lbl, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_line.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Lin, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_listbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Lst, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_olebound.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Ole, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_optiongroup.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Opg, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_optiongroup_option.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Opb, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_projecthook.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Phk, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_relation.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Rel, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_reportlistener.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Rls, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_separator.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Sep, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_shape.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Shp, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_spinner.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Spn, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_textbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Txt, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_timer.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Tmr, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_toolbar.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_Tbr, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_xmladapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_XMLAda, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_xmladapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_XMLAda, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_xmlfield.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_XMLFld, FILETOSTR( lcPropsFile ), 1+4 )
+				
+				lcPropsFile	= FORCEPATH( "props_xmltable.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				I   = ALINES( .a_SpecialProps_XMLTbl, FILETOSTR( lcPropsFile ), 1+4 )
 
-
-				*-- DEMÁS CLASES
-				IF .F.
-					I = 0
-					.SortSpecialProps_Add( 'FRXDataSession', @I )		&& En un VCX lo ví primero de todo y también luego de Height ¿?
-					.SortSpecialProps_Add( 'ErasePage', @I )			&& PageFrame: Debe estar antes que PageCount
-					.SortSpecialProps_Add( 'PageCount', @I )			&& PageFrame: Debe estar antes que ActivePage
-					.SortSpecialProps_Add( 'ActivePage', @I )			&& PageFrame: Debe estar antes que Top/Left/With/Height
-					.SortSpecialProps_Add( 'ButtonCount', @I )
-					.SortSpecialProps_Add( 'ColumnCount', @I )
-					.SortSpecialProps_Add( 'Value', @I )
-					.SortSpecialProps_Add( 'Comment', @I )
-					.SortSpecialProps_Add( 'ControlSource', @I )
-					.SortSpecialProps_Add( 'DataSession', @I )
-					.SortSpecialProps_Add( 'DeleteMark', @I )
-					.SortSpecialProps_Add( 'ScaleMode', @I )
-					.SortSpecialProps_Add( 'Tag', @I )
-					.SortSpecialProps_Add( 'OLEDragMode', @I )			&& Image: Debe estar antes que OLEDragPicture
-					.SortSpecialProps_Add( 'OLEDragPicture', @I )		&& Image: Debe estar antes que OLEDropMode
-					.SortSpecialProps_Add( 'OLEDropMode', @I )			&& Image: Debe estar antes que OLEDropEffects
-					.SortSpecialProps_Add( 'OLEDropEffects', @I )		&& Image: Debe estar antes que DragMode
-					.SortSpecialProps_Add( 'DragMode', @I )				&& Image: Debe estar antes que DragIcon
-					.SortSpecialProps_Add( 'DragIcon', @I )				&& Image: Debe estar antes que Anchor
-					.SortSpecialProps_Add( 'Anchor', @I )				&& Image: Debe estar antes que Picture
-					.SortSpecialProps_Add( 'DefTop', @I )				&& Propiedad con evaluación: Debe estar antes que Top
-					.SortSpecialProps_Add( 'DefLeft', @I )				&& Propiedad con evaluación: Debe estar antes que Left
-					.SortSpecialProps_Add( 'DefHeight', @I )			&& Propiedad con evaluación: Debe estar antes que Height
-					.SortSpecialProps_Add( 'DefWidth', @I )				&& Propiedad con evaluación: Debe estar antes que Width
-					.SortSpecialProps_Add( 'Picture', @I )				&& Image: Debe estar antes que Stretch y después de DefTop/DefLeft
-					.SortSpecialProps_Add( 'Stretch', @I )				&& Image: Debe estar antes que BackStyle
-					.SortSpecialProps_Add( 'BackStyle', @I )			&& Image: Debe estar antes que BorderStyle
-					.SortSpecialProps_Add( 'BorderStyle', @I )			&&
-					.SortSpecialProps_Add( 'BorderWidth', @I )
-					.SortSpecialProps_Add( 'Enabled', @I )
-					.SortSpecialProps_Add( 'Top', @I )
-					.SortSpecialProps_Add( 'Left', @I )
-					.SortSpecialProps_Add( 'Height', @I )
-					.SortSpecialProps_Add( 'Width', @I )
-					.SortSpecialProps_Add( 'MousePointer', @I )
-					.SortSpecialProps_Add( 'MouseIcon', @I )
-					.SortSpecialProps_Add( 'Visible', @I )
-					.SortSpecialProps_Add( 'MaxLength', @I )
-					.SortSpecialProps_Add( 'Alias', @I )
-					.SortSpecialProps_Add( 'BufferModeOverride', @I )
-					.SortSpecialProps_Add( 'Order', @I )
-					.SortSpecialProps_Add( 'OrderDirection', @I )
-					.SortSpecialProps_Add( 'CursorSource', @I )
-					.SortSpecialProps_Add( 'Exclusive', @I )
-					.SortSpecialProps_Add( 'Filter', @I )
-					.SortSpecialProps_Add( 'Panel', @I )
-					.SortSpecialProps_Add( 'ReadOnly', @I )
-					.SortSpecialProps_Add( 'RecordSource', @I )
-					.SortSpecialProps_Add( 'RecordSourceType', @I )
-					.SortSpecialProps_Add( 'NoDataOnLoad', @I )
-					.SortSpecialProps_Add( 'OpenViews', @I )
-					.SortSpecialProps_Add( 'AutoOpenTables', @I )
-					.SortSpecialProps_Add( 'AutoCloseTables', @I )
-					.SortSpecialProps_Add( 'InitialSelectedAlias', @I )
-					.SortSpecialProps_Add( 'DataSource', @I )
-					.SortSpecialProps_Add( 'DataSourceType ', @I )
-					.SortSpecialProps_Add( 'Desktop', @I )
-					.SortSpecialProps_Add( 'ShowWindow', @I )
-					.SortSpecialProps_Add( 'ScrollBars', @I )
-					.SortSpecialProps_Add( 'ShowInTaskBar', @I )
-					.SortSpecialProps_Add( 'DoCreate', @I )
-					.SortSpecialProps_Add( 'Tag', @I )
-					.SortSpecialProps_Add( 'ShowTips', @I )
-					.SortSpecialProps_Add( 'BufferMode', @I )
-					.SortSpecialProps_Add( 'AutoCenter', @I )
-					.SortSpecialProps_Add( 'AutoSize', @I )
-					.SortSpecialProps_Add( 'WordWrap', @I )
-					.SortSpecialProps_Add( 'Caption', @I )
-					.SortSpecialProps_Add( 'ControlBox', @I )
-					.SortSpecialProps_Add( 'Closable', @I )
-					.SortSpecialProps_Add( 'Curvature', @I )
-					.SortSpecialProps_Add( 'FontBold', @I )
-					.SortSpecialProps_Add( 'FontCondense', @I )
-					.SortSpecialProps_Add( 'FontExtend', @I )
-					.SortSpecialProps_Add( 'FontItalic', @I )
-					.SortSpecialProps_Add( 'FontName', @I )
-					.SortSpecialProps_Add( 'FontOutline', @I )
-					.SortSpecialProps_Add( 'FontShadow', @I )
-					.SortSpecialProps_Add( 'FontSize', @I )
-					.SortSpecialProps_Add( 'FontStrikethru', @I )
-					.SortSpecialProps_Add( 'FontUnderline', @I )
-					.SortSpecialProps_Add( 'HalfHeightCaption', @I )
-					.SortSpecialProps_Add( 'Margin', @I )
-					.SortSpecialProps_Add( 'MaxButton', @I )
-					.SortSpecialProps_Add( 'MinButton', @I )
-					.SortSpecialProps_Add( 'Movable', @I )
-					.SortSpecialProps_Add( 'MaxHeight', @I )
-					.SortSpecialProps_Add( 'MaxWidth', @I )
-					.SortSpecialProps_Add( 'MinHeight', @I )
-					.SortSpecialProps_Add( 'MinWidth', @I )
-					.SortSpecialProps_Add( 'MaxTop', @I )
-					.SortSpecialProps_Add( 'MaxLeft', @I )
-					.SortSpecialProps_Add( 'MDIForm', @I )
-					.SortSpecialProps_Add( 'ClipControls', @I )
-					.SortSpecialProps_Add( 'DrawMode', @I )
-					.SortSpecialProps_Add( 'DrawStyle', @I )
-					.SortSpecialProps_Add( 'DrawWidth', @I )
-					.SortSpecialProps_Add( 'FillStyle', @I )
-					.SortSpecialProps_Add( 'Icon', @I )
-					.SortSpecialProps_Add( 'KeyPreview', @I )
-					.SortSpecialProps_Add( 'TabIndex', @I )
-					.SortSpecialProps_Add( 'TabStop', @I )
-					.SortSpecialProps_Add( 'TitleBar', @I )
-					.SortSpecialProps_Add( 'WindowType', @I )
-					.SortSpecialProps_Add( 'WindowState', @I )
-					.SortSpecialProps_Add( 'LockScreen', @I )
-					.SortSpecialProps_Add( 'AlwaysOnTop', @I )
-					.SortSpecialProps_Add( 'AlwaysOnBottom', @I )
-					.SortSpecialProps_Add( 'SizeBox', @I )
-					.SortSpecialProps_Add( 'SpecialEffect', @I )
-					.SortSpecialProps_Add( 'ZoomBox', @I )
-					.SortSpecialProps_Add( 'ZOrderSet', @I )
-					.SortSpecialProps_Add( 'HelpContextID', @I )
-					.SortSpecialProps_Add( 'WhatsThisHelpID', @I )
-					.SortSpecialProps_Add( 'WhatsThisHelp', @I )
-					.SortSpecialProps_Add( 'WhatsThisButton', @I )
-					.SortSpecialProps_Add( 'RightToLeft', @I )
-					.SortSpecialProps_Add( 'DefOleLCID', @I )
-					.SortSpecialProps_Add( 'MacDesktop', @I )
-					.SortSpecialProps_Add( 'ColorSource', @I )
-					.SortSpecialProps_Add( 'ForeColor', @I )
-					.SortSpecialProps_Add( 'DisableForeColor', @I )
-					.SortSpecialProps_Add( 'BackColor', @I )
-					.SortSpecialProps_Add( 'FillColor', @I )
-					.SortSpecialProps_Add( 'HScrollSmallChange', @I )
-					.SortSpecialProps_Add( 'VScrollSmallChange', @I )
-					.SortSpecialProps_Add( 'ContinuousScroll', @I )
-					.SortSpecialProps_Add( 'BindControls', @I )
-					.SortSpecialProps_Add( 'AllowOutput', @I )
-					.SortSpecialProps_Add( 'Dockable', @I )
-					.SortSpecialProps_Add( '_memberdata', @I )
-					.SortSpecialProps_Add( 'Themes', @I )
-					*.SortSpecialProps_Add( 'Name', @I )	&& System "Name" property
-				ENDIF
-			ENDWITH
+            ENDWITH
 
 		CATCH TO loEx
 			loEx.USERVALUE	= 'lcPropsFile = ' + lcPropsFile
