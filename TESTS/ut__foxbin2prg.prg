@@ -19,6 +19,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	#DEFINE C_DEFINE_CLASS		'DEFINE CLASS'
 	#DEFINE C_ENDDEFINE_CLASS	'ENDDEFINE'
 	icObj = NULL
+	nMouseX	= 0
+	nMouseY	= 0
 
 
 	*******************************************************************************************************************************************
@@ -26,7 +28,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		*LOCAL loObj AS c_conversor_base OF "FOXBIN2PRG.PRG"
 		*DOEVENTS FORCE
-		MOUSE AT 0,0
+		THIS.nMouseX	= MCOL('',3)
+		THIS.nMouseY	= MROW('',3)
+		MOUSE AT (_SCREEN.Height), (_SCREEN.Width) PIXELS
 		SET PROCEDURE TO 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		oFXU_LIB = CREATEOBJECT('CL_FXU_CONFIG')
 		oFXU_LIB.setup_comun()
@@ -50,6 +54,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB = NULL
 		ENDIF
 		RELEASE PROCEDURE 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		MOUSE AT (THIS.nMouseY), (THIS.nMouseX) PIXELS
 		SYS(1104)
 
 	ENDFUNC
@@ -626,7 +631,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			STORE 0 TO lnCodError_Esperado
 			SCATTER FIELDS PROPERTIES MEMO NAME loReg
 			DIMENSION laProps_Esperado(7)
-			laProps_Esperado( 1)	= 'ButtonCount'
+			*laProps_Esperado( 1)	= 'ButtonCount'
 			*laProps_Esperado( 2)	= 'Value'
 			*laProps_Esperado( 3)	= 'Top'
 			*laProps_Esperado( 4)	= 'Left'
@@ -634,11 +639,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*laProps_Esperado( 6)	= 'Width'
 			*laProps_Esperado( 7)	= 'Name'
 			*-- 13/05/2014. v1.19.22 - Reordenamiento de todas propiedades
-			laProps_Esperado( 2)	= 'Top'
-			laProps_Esperado( 3)	= 'Left'
-			laProps_Esperado( 4)	= 'Height'
-			laProps_Esperado( 5)	= 'Width'
-			laProps_Esperado( 6)	= 'Value'
+			laProps_Esperado( 1)	= 'ButtonCount'
+			laProps_Esperado( 2)	= 'Value'
+			laProps_Esperado( 3)	= 'Height'
+			laProps_Esperado( 4)	= 'Left'
+			laProps_Esperado( 5)	= 'Top'
+			laProps_Esperado( 6)	= 'Width'
 			laProps_Esperado( 7)	= 'Name'
 
 			*-- TEST
@@ -943,11 +949,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		TRY
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			*loCnv.l_Debug				= .F.
+			loCnv.EvaluarConfiguracion( '', '', '', '1', '1', '4' )
+			*loCnv.n_ExtraBackupLevels	= 4
+			*loCnv.l_Debug				= .T.
 			*loCnv.l_ShowErrors			= .F.
 			*loCnv.l_Test				= .T.
-			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
-			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
 
 
 			*-- DATOS DE ENTRADA
@@ -976,10 +982,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File2, LEFT( JUSTEXT(lc_File2),2 ) + 'X' ) )
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File2, LEFT( JUSTEXT(lc_File2),2 ) + 'T' ) )
 
-			*-- Genero TX2
-			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
-
-			*-- Genero BMP con libreria original
+			*-- Genero BMP con libreria ORIGINAL
 			SET CLASSLIB TO (lcLib) ADDITIVE
 			IF lcTipoBinario = 'SCX'
 				DO FORM (lc_OutputFile) NAME loCtl LINKED NOSHOW
@@ -1000,6 +1003,15 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCtl = NULL
 			RELEASE CLASSLIB (lcLib)
 			CLEAR CLASSLIB (lcLib)
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			*-- Genero BIN
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
 
 			*-- Genero BIN
 			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )

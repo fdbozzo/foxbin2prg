@@ -42,6 +42,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	*< OBJECTDATA: ObjPath="pgf.Page1.textbox" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.timer" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.Pageframe1" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="pgf.Page1.Cl_optiongroup1" UniqueID="" Timestamp="" />
 
 	*<DefinedPropArrayMethod>
 		*m: add_control
@@ -149,12 +150,12 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
-	Command2.Height = 27
-	Command2.Left = 764
-	Command2.Name = "Command2"
-	Command2.RightToLeft = .F.
-	Command2.Top = 392
-	Command2.Width = 212
+	cmdCapturar.Height = 27
+	cmdCapturar.Left = 764
+	cmdCapturar.Name = "cmdCapturar"
+	cmdCapturar.RightToLeft = .F.
+	cmdCapturar.Top = 392
+	cmdCapturar.Width = 212
 	Edit1.Height = 356
 	Edit1.Left = 764
 	Edit1.Name = "Edit1"
@@ -829,6 +830,118 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		WordWrap = .F.
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="checkbox" />
 
+	ADD OBJECT 'pgf.Page1.Cl_optiongroup1' AS cl_optiongroup WITH ;
+		Anchor = 0, ;
+		AutoSize = .F., ;
+		BackColor = 240,240,240, ;
+		BackStyle = 1, ;
+		BorderColor = 100,100,100, ;
+		BorderStyle = 1, ;
+		ButtonCount = 2, ;
+		ColorSource = 4, ;
+		Comment = "", ;
+		ControlSource = "", ;
+		DefHeight = , ;
+		DefWidth = , ;
+		DragIcon = ..\..\, ;
+		DragMode = 0, ;
+		Enabled = .T., ;
+		Height = (46), ;
+		HelpContextID = 0, ;
+		Left = 123, ;
+		MouseIcon = ..\..\, ;
+		MousePointer = 0, ;
+		Name = "Cl_optiongroup1", ;
+		OLEDragMode = 0, ;
+		OLEDragPicture = ..\..\, ;
+		OLEDropEffects = 3, ;
+		OLEDropMode = 0, ;
+		SpecialEffect = 0, ;
+		StatusBarText = "", ;
+		TabIndex = 1, ;
+		Tag = "", ;
+		TerminateRead = .F., ;
+		test_aa = .F., ;
+		Themes = .T., ;
+		ToolTipText = "", ;
+		Top = 231, ;
+		Value = 2, ;
+		Visible = .T., ;
+		WhatsThisHelpID = -1, ;
+		Width = (112), ;
+		Option1.Alignment = 0, ;
+		Option1.Anchor = 0, ;
+		Option1.AutoSize = .F., ;
+		Option1.BackColor = 192,192,192, ;
+		Option1.BackStyle = 1, ;
+		Option1.Caption = "Esta es la opc. 1", ;
+		Option1.ColorScheme = 1, ;
+		Option1.ColorSource = 4, ;
+		Option1.Comment = "", ;
+		Option1.ControlSource = "", ;
+		Option1.DisabledBackColor = 240,240,240, ;
+		Option1.DisabledForeColor = 109,109,109, ;
+		Option1.DisabledPicture = ..\..\, ;
+		Option1.DownPicture = ..\..\, ;
+		Option1.DragIcon = ..\..\, ;
+		Option1.DragMode = 0, ;
+		Option1.Enabled = .T., ;
+		Option1.FontBold = .F., ;
+		Option1.FontCondense = .F., ;
+		Option1.FontExtend = .F., ;
+		Option1.FontItalic = .F., ;
+		Option1.FontName = "Arial", ;
+		Option1.FontOutline = .F., ;
+		Option1.FontShadow = .F., ;
+		Option1.FontSize = 8, ;
+		Option1.FontStrikethru = .F., ;
+		Option1.FontUnderline = .F., ;
+		Option1.ForeColor = 0,0,0, ;
+		Option1.Height = 16, ;
+		Option1.HelpContextID = 0, ;
+		Option1.Left = 5, ;
+		Option1.MouseIcon = ..\..\, ;
+		Option1.MousePointer = 0, ;
+		Option1.Name = "Option1", ;
+		Option1.OLEDragMode = 0, ;
+		Option1.OLEDragPicture = ..\..\, ;
+		Option1.OLEDropEffects = 3, ;
+		Option1.OLEDropMode = 0, ;
+		Option1.Picture = bmps\scccheckout.bmp, ;
+		Option1.PictureMargin = 0, ;
+		Option1.PicturePosition = 4, ;
+		Option1.PictureSpacing = 0, ;
+		Option1.RightToLeft = .F., ;
+		Option1.SpecialEffect = 0, ;
+		Option1.StatusBarText = "", ;
+		Option1.Style = 0, ;
+		Option1.TabIndex = 1, ;
+		Option1.TabStop = .T., ;
+		Option1.Tag = "", ;
+		Option1.TerminateRead = .F., ;
+		Option1.Themes = .T., ;
+		Option1.ToolTipText = "", ;
+		Option1.Top = 5, ;
+		Option1.Value = 0, ;
+		Option1.Visible = .T., ;
+		Option1.WhatsThisHelpID = -1, ;
+		Option1.Width = 98, ;
+		Option1.WordWrap = .F., ;
+		Option2.AutoSize = .F., ;
+		Option2.BackColor = 192,192,192, ;
+		Option2.Caption = "Esta es la opc. 2", ;
+		Option2.FontSize = 8, ;
+		Option2.Height = 16, ;
+		Option2.Left = 5, ;
+		Option2.Name = "Option2", ;
+		Option2.Picture = bmps\scccheckout.bmp, ;
+		Option2.PicturePosition = 4, ;
+		Option2.Style = 0, ;
+		Option2.Top = 24, ;
+		Option2.Value = 1, ;
+		Option2.Width = 102
+		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="optiongroup" />
+
 	ADD OBJECT 'pgf.Page1.collection' AS cl_collection WITH ;
 		Left = 218, ;
 		Name = "collection", ;
@@ -859,7 +972,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		DisabledItemBackColor = 255,255,255, ;
 		DisabledItemForeColor = 109,109,109, ;
 		DisplayCount = 0, ;
-		DisplayValue = combobox, ;
+		DisplayValue = , ;
 		DragIcon = ..\..\, ;
 		DragMode = 0, ;
 		Enabled = .T., ;
@@ -1368,7 +1481,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		DisabledForeColor = 109,109,109, ;
 		DisabledItemBackColor = 255,255,255, ;
 		DisabledItemForeColor = 109,109,109, ;
-		DisplayValue = listbox, ;
+		DisplayValue = , ;
 		DragIcon = ..\..\, ;
 		DragMode = 0, ;
 		Enabled = .T., ;
@@ -1418,7 +1531,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Themes = .T., ;
 		ToolTipText = "", ;
 		Top = (164), ;
-		Value = listbox, ;
+		Value = , ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (224)
@@ -1428,14 +1541,12 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		AutoSize = .F., ;
 		Caption = "Esta es la opción B", ;
 		DefHeight = , ;
-		DefLeft = , ;
-		DefTop = , ;
 		DefWidth = , ;
 		FontSize = 8, ;
 		Height = (16), ;
-		Left = (123), ;
+		Left = 11, ;
 		Name = "option", ;
-		Top = (232), ;
+		Top = 283, ;
 		Width = (110)
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="optionbutton" />
 
@@ -1476,7 +1587,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Themes = .T., ;
 		ToolTipText = "", ;
 		Top = (232), ;
-		Value = 0, ;
+		Value = 2, ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (112), ;
@@ -1508,7 +1619,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Option1.FontStrikethru = .F., ;
 		Option1.FontUnderline = .F., ;
 		Option1.ForeColor = 0,0,0, ;
-		Option1.Height = 16, ;
+		Option1.Height = 41, ;
 		Option1.HelpContextID = 0, ;
 		Option1.Left = 5, ;
 		Option1.MouseIcon = ..\..\, ;
@@ -1536,7 +1647,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Option1.Value = 0, ;
 		Option1.Visible = .T., ;
 		Option1.WhatsThisHelpID = -1, ;
-		Option1.Width = 98, ;
+		Option1.Width = 112, ;
 		Option1.WordWrap = .F., ;
 		Option2.AutoSize = .F., ;
 		Option2.BackColor = 192,192,192, ;
@@ -1549,6 +1660,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Option2.PicturePosition = 4, ;
 		Option2.Style = 1, ;
 		Option2.Top = 24, ;
+		Option2.Value = 1, ;
 		Option2.Width = 103
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="optiongroup" />
 
@@ -1586,8 +1698,6 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Comment = "", ;
 		ControlSource = "", ;
 		DefHeight = , ;
-		DefLeft = , ;
-		DefTop = , ;
 		DefWidth = , ;
 		DisabledBackColor = 240,240,240, ;
 		DisabledForeColor = 109,109,109, ;
@@ -1614,7 +1724,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		InputMask = "", ;
 		KeyboardHighValue = 2147483647, ;
 		KeyboardLowValue = -2147483647, ;
-		Left = (11), ;
+		Left = 11, ;
 		Margin = 0, ;
 		MouseIcon = ..\..\, ;
 		MousePointer = 0, ;
@@ -1641,7 +1751,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		test_aa = .F., ;
 		Themes = .T., ;
 		ToolTipText = "", ;
-		Top = (292), ;
+		Top = 303, ;
 		Value = 0, ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
@@ -1666,8 +1776,6 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		DateFormat = 0, ;
 		DateMark = "", ;
 		DefHeight = , ;
-		DefLeft = , ;
-		DefTop = , ;
 		DefWidth = , ;
 		DisabledBackColor = 240,240,240, ;
 		DisabledForeColor = 109,109,109, ;
@@ -1695,7 +1803,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		IMEMode = 0, ;
 		InputMask = "", ;
 		IntegralHeight = .F., ;
-		Left = (11), ;
+		Left = 11, ;
 		Margin = 0, ;
 		MaxLength = 0, ;
 		MemoWindow = "", ;
@@ -1726,7 +1834,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		test_aa = .F., ;
 		Themes = .T., ;
 		ToolTipText = "", ;
-		Top = (320), ;
+		Top = 327, ;
 		Value = , ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
@@ -1736,17 +1844,15 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	ADD OBJECT 'pgf.Page1.timer' AS cl_timer WITH ;
 		Comment = "", ;
 		DefHeight = , ;
-		DefLeft = , ;
-		DefTop = , ;
 		DefWidth = , ;
 		Enabled = .T., ;
 		Height = (23), ;
 		Interval = 0, ;
-		Left = (207), ;
+		Left = 235, ;
 		Name = "timer", ;
 		Tag = "", ;
 		test_aa = .F., ;
-		Top = (252), ;
+		Top = 255, ;
 		Width = (23)
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="timer" />
 	
@@ -2006,11 +2112,48 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
 	PROCEDURE pgf.Page1.checkbox.UIEnable
+		LPARAMETERS lEnable
+		
+		IF lEnable
+			THIS.Tag = 'UI'
+		ENDIF
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.Cl_optiongroup1.Init
+		THISFORM.add_control( THIS )
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.Cl_optiongroup1.ProgrammaticChange
+		THISFORM.Tag = 'PC'
+		
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.Cl_optiongroup1.test_aa_access
+		IF EMPTY(THIS.Tag)
+			RETURN "ACCESS_OK"
+		ELSE
+			RETURN THIS.Tag
+		ENDIF
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.Cl_optiongroup1.test_aa_assign
+		LPARAMETERS vNewVal
+		
+		THIS.test_aa = m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.Cl_optiongroup1.UIEnable
 		LPARAMETERS lEnable
 		
 		IF lEnable
@@ -2037,7 +2180,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2070,7 +2213,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2101,7 +2244,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2137,7 +2280,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2168,7 +2311,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2199,7 +2342,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2235,7 +2378,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2266,7 +2409,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2288,7 +2431,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2319,7 +2462,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2350,7 +2493,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2393,7 +2536,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2424,7 +2567,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2461,7 +2604,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2497,7 +2640,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2513,6 +2656,11 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 			THISFORM.pgf.Tag = 'UI'
 		ENDIF
 		
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.spinner.Init
+		THISFORM.add_control( THIS )
 		
 	ENDPROC
 
@@ -2535,7 +2683,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2545,6 +2693,11 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		IF lEnable
 			THIS.Tag = 'UI'
 		ENDIF
+		
+	ENDPROC
+
+	PROCEDURE pgf.Page1.textbox.Init
+		THISFORM.add_control( THIS )
 		
 	ENDPROC
 
@@ -2566,7 +2719,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2592,7 +2745,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
@@ -2609,7 +2762,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		LPARAMETERS vNewVal
 		
 		THIS.test_aa = m.vNewVal
-		THIS.Tag	= m.vNewVal
+		THIS.Tag	= EVL(m.vNewVal,'')
 		
 	ENDPROC
 
