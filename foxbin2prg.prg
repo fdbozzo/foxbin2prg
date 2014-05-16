@@ -358,6 +358,7 @@ LOCAL lnResp, loEx AS EXCEPTION
 *ENDIF
 
 loCnv	= CREATEOBJECT("c_foxbin2prg")
+
 loEx	= NULL
 lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
 	, '', NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps )
@@ -369,19 +370,25 @@ ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 
 SET COVERAGE TO
 
-*-- Muy útil para procesos batch que capturan el código de error
-IF _VFP.STARTMODE > 1 AND NOT EMPTY(lnResp) AND VARTYPE(loEx) = "O"
-	STORE NULL TO loEx, loCnv
-	RELEASE loEx, loCnv
-	DECLARE ExitProcess IN Win32API INTEGER ExitCode
-	ExitProcess(1)
-	QUIT
-ELSE
+IF _VFP.STARTMODE # 4
 	STORE NULL TO loEx, loCnv
 	RELEASE loEx, loCnv
 	RETURN lnResp
 ENDIF
 
+IF EMPTY(lnResp) OR VARTYPE(loEx) # "O"
+	STORE NULL TO loEx, loCnv
+	RELEASE loEx, loCnv
+	QUIT
+ENDIF
+
+STORE NULL TO loEx, loCnv
+RELEASE loEx, loCnv
+
+*-- Muy útil para procesos batch que capturan el código de error
+DECLARE ExitProcess IN Win32API INTEGER ExitCode
+ExitProcess(1)	&& Esta debe ser de las últimas instrucciones
+QUIT
 
 
 *******************************************************************************************************************
@@ -529,6 +536,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.c_CurDir					= SYS(5) + CURDIR()
 		THIS.o_FSO						= NEWOBJECT("Scripting.FileSystemObject")
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
+		RETURN
 	ENDPROC
 
 
@@ -537,14 +545,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			LOCAL lcFileCDX
 			lcFileCDX	= FORCEPATH( "TABLABIN.CDX", JUSTPATH(THIS.c_InputFile) )
 
-			IF FILE( lcFileCDX )
+			*IF FILE( lcFileCDX )
 				ERASE ( lcFileCDX )
-			ENDIF
+			*ENDIF
 
 			THIS.writeLog_Flush()
+
 		CATCH
+
+		FINALLY
+			THIS.o_FSO	= NULL
 		ENDTRY
 
+		RETURN
 	ENDPROC
 
 
@@ -564,71 +577,82 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		#DEFINE FILE_ATTRIBUTE_TEMPORARY	512
 		#DEFINE FILE_ATTRIBUTE_COMPRESSED	2048
 
-		DECLARE SHORT SetFileAttributes IN kernel32 STRING tcFileName, INTEGER dwFileAttributes
-		DECLARE INTEGER GetFileAttributes IN kernel32 STRING tcFileName
+		TRY
+			LOCAL loEx as Exception, dwFileAttributes
+			DECLARE SHORT 'SetFileAttributes' IN kernel32 AS 'fb2p_SetFileAttributes' STRING tcFileName, INTEGER dwFileAttributes
+			DECLARE INTEGER 'GetFileAttributes' IN kernel32 AS 'fb2p_GetFileAttributes' STRING tcFileName
 
-		* read current attributes for this file
-		dwFileAttributes = GetFileAttributes(tcFileName)
+			* read current attributes for this file
+			dwFileAttributes = fb2p_GetFileAttributes(tcFileName)
 
-		IF dwFileAttributes = -1
-			* the file does not exist
-			RETURN
-		ENDIF
-
-		IF dwFileAttributes > 0
-			IF '+R' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_READONLY)
-			ENDIF
-			IF '+A' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_ARCHIVE)
-			ENDIF
-			IF '+S' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_SYSTEM)
-			ENDIF
-			IF '+H' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_HIDDEN)
-			ENDIF
-			IF '+D' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)
-			ENDIF
-			IF '+N' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_NORMAL)
-			ENDIF
-			IF '+T' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY)
-			ENDIF
-			IF '+C' $ tcAttrib
-				dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_COMPRESSED)
+			IF dwFileAttributes = -1
+				* the file does not exist
+				EXIT
 			ENDIF
 
-			IF '-R' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_READONLY) = FILE_ATTRIBUTE_READONLY
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_READONLY
-			ENDIF
-			IF '-A' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_ARCHIVE) = FILE_ATTRIBUTE_ARCHIVE
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_ARCHIVE
-			ENDIF
-			IF '-S' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_SYSTEM) = FILE_ATTRIBUTE_SYSTEM
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_SYSTEM
-			ENDIF
-			IF '-H' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_HIDDEN) = FILE_ATTRIBUTE_HIDDEN
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_HIDDEN
-			ENDIF
-			IF '-D' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY) = FILE_ATTRIBUTE_DIRECTORY
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_DIRECTORY
-			ENDIF
-			IF '-N' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_NORMAL) = FILE_ATTRIBUTE_NORMAL
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_NORMAL
-			ENDIF
-			IF '-T' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY) = FILE_ATTRIBUTE_TEMPORARY
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_TEMPORARY
-			ENDIF
-			IF '-C' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_COMPRESSED) = FILE_ATTRIBUTE_COMPRESSED
-				dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_COMPRESSED
-			ENDIF
+			IF dwFileAttributes > 0
+				IF '+R' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_READONLY)
+				ENDIF
+				IF '+A' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_ARCHIVE)
+				ENDIF
+				IF '+S' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_SYSTEM)
+				ENDIF
+				IF '+H' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_HIDDEN)
+				ENDIF
+				IF '+D' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY)
+				ENDIF
+				IF '+N' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_NORMAL)
+				ENDIF
+				IF '+T' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY)
+				ENDIF
+				IF '+C' $ tcAttrib
+					dwFileAttributes = BITOR(dwFileAttributes, FILE_ATTRIBUTE_COMPRESSED)
+				ENDIF
 
-			* setting selected attributes
-			=SetFileAttributes(tcFileName, dwFileAttributes)
-		ENDIF
+				IF '-R' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_READONLY) = FILE_ATTRIBUTE_READONLY
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_READONLY
+				ENDIF
+				IF '-A' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_ARCHIVE) = FILE_ATTRIBUTE_ARCHIVE
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_ARCHIVE
+				ENDIF
+				IF '-S' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_SYSTEM) = FILE_ATTRIBUTE_SYSTEM
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_SYSTEM
+				ENDIF
+				IF '-H' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_HIDDEN) = FILE_ATTRIBUTE_HIDDEN
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_HIDDEN
+				ENDIF
+				IF '-D' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_DIRECTORY) = FILE_ATTRIBUTE_DIRECTORY
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_DIRECTORY
+				ENDIF
+				IF '-N' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_NORMAL) = FILE_ATTRIBUTE_NORMAL
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_NORMAL
+				ENDIF
+				IF '-T' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_TEMPORARY) = FILE_ATTRIBUTE_TEMPORARY
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_TEMPORARY
+				ENDIF
+				IF '-C' $ tcAttrib AND BITAND(dwFileAttributes, FILE_ATTRIBUTE_COMPRESSED) = FILE_ATTRIBUTE_COMPRESSED
+					dwFileAttributes = dwFileAttributes - FILE_ATTRIBUTE_COMPRESSED
+				ENDIF
+
+				* setting selected attributes
+				=fb2p_SetFileAttributes(tcFileName, dwFileAttributes)
+			ENDIF
+		
+		CATCH TO loEx
+			THROW
+
+		FINALLY
+			CLEAR DLLS 'fb2p_SetFileAttributes', 'fb2p_GetFileAttributes'
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -760,7 +784,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			IF NOT .l_ConfigEvaluated
-				lcConfigFile	= THIS.c_Foxbin2prg_ConfigFile
+				lcConfigFile	= .c_Foxbin2prg_ConfigFile
 				llExisteConfig	= FILE( lcConfigFile )
 
 				IF llExisteConfig
@@ -1900,8 +1924,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 	PROCEDURE DESTROY
 		C_FB2PRG_CODE	= ''
 		USE IN (SELECT("TABLABIN"))
-
 		THIS.writeLog( C_CONVERTER_UNLOAD_LOC )
+		THIS.oFSO	= NULL
 	ENDPROC
 
 
@@ -2146,7 +2170,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ENDCASE
 
 		RETURN tcValue
-	ENDFUNC
+	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -2300,7 +2324,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ENDTRY
 
 		RETURN lcTimeStamp_Ret
-	ENDPROC
+	ENDFUNC
 
 
 	PROCEDURE get_SeparatedLineAndComment
