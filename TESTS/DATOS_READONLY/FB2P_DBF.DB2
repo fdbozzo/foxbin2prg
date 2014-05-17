@@ -117,7 +117,7 @@
 	</FIELDS>
 
 
-	<indexFile>C:\DESA\FOXBIN2PRG\TESTS\DATOS_READONLY\FB2P_DBF.CDX</indexFile>
+	<indexFile>FB2P_DBF.CDX</indexFile>
 
 	<INDEXES>
 		<INDEX>

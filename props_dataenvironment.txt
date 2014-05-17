@@ -1,0 +1,13 @@
+Comment
+Tag
+Top
+Left
+Width
+Height
+OpenViews
+AutoOpenTables
+AutoCloseTables
+InitialSelectedAlias
+DataSource
+DataSourceType
+Name

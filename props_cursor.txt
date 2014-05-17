@@ -1,0 +1,17 @@
+Comment
+Tag
+Top
+Left
+Height
+Width
+Alias
+BufferModeOverride
+Order
+OrderDirection
+Database
+CursorSource
+Exclusive
+Filter
+ReadOnly
+NoDataOnLoad
+Name
