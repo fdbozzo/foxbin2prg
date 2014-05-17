@@ -363,9 +363,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 			*loCnv.l_Debug		= .F.
-			loCnv.l_ShowErrors	= .F.
+			*loCnv.l_ShowErrors	= .F.
 			*loCnv.l_Test		= .T.
 			*loCnv.l_ReportSort_Enabled	= .F.
+			*loCnv.l_NoTimestamps	= .F.
+			*loCnv.l_ClearUniqueID	= .F.
 
 
 			*-- DATOS DE ENTRADA
@@ -374,9 +376,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			lc_InputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosReadOnly )
 			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
-			loCnv.EvaluarConfiguracion( '1', '1', '0', '0', SYS(5)+CURDIR(), '1' )
-			loCnv.l_NoTimestamps			= .F.
-			loCnv.l_ClearUniqueID			= .F.
+			loCnv.EvaluarConfiguracion( '1', '1', '0', '0', SYS(5)+CURDIR(), '1', '0', '0' )
 
 			*oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, 'LBX' ) )
@@ -384,8 +384,6 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
 			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
-			*loCnv.Ejecutar( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			*loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T.  )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN

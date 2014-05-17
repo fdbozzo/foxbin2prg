@@ -4,10 +4,10 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 		LOCAL THIS AS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion OF ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion.PRG
 	#ENDIF
 
-	#DEFINE CR_LF				CHR(13) + CHR(10)
-	#DEFINE C_CR				CHR(13)
-	#DEFINE C_LF				CHR(10)
-	#DEFINE C_TAB				CHR(9)
+	#DEFINE C_CR		CHR(13)
+	#DEFINE C_LF		CHR(10)
+	#DEFINE CRLF		C_CR + C_LF
+	#DEFINE C_TAB		CHR(9)
 	ioFB2P = NULL
 
 
@@ -62,21 +62,65 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 		IF ISNULL(toEx)
-			*-- Visualización de valores
 			LOCAL loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
+			LOCAL loFB2P_Esperado AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 			loFB2P		= THIS.ioFB2P
+			loFB2P_Esperado	= teValorEsperado
 			THIS.messageout( LOWER(PROGRAM(PROGRAM(-1)-1)) )
 			THIS.messageout( '.' )
 			THIS.messageout( 'Archivo ' + loFB2P.c_Foxbin2prg_ConfigFile + IIF(FILE(loFB2P.c_Foxbin2prg_ConfigFile),': EXISTE', ': NO EXISTE') )
-			THIS.messageout( TRANSFORM(tcSeteo) )
-			THIS.messageout( 'Valor esperado: ' + TRANSFORM(teValorEsperado) )
-			THIS.messageout( 'Valor: ' + TRANSFORM(teValor) )
+			THIS.messageout( '.' )
 
-			*-- Formateo
-			* '[' + oFXU_LIB.mejorarPresentacionCaracteresEspeciales( TRANSFORM( EVALUATE('toReg_Esperado.'+laProps(I)) ) ) + ']' )
+			IF tcSeteo = 'CONFIG' THEN
+				*-- Evaluación de configuraciones
+				THIS.messageout( 'CONFIGURACIÓN ESPERADA: ' )
+				THIS.messageout( 'PJX_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.PJX_Conversion_Support) )
+				THIS.messageout( 'VCX_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.VCX_Conversion_Support) )
+				THIS.messageout( 'SCX_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.SCX_Conversion_Support) )
+				THIS.messageout( 'FRX_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.FRX_Conversion_Support) )
+				THIS.messageout( 'LBX_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.LBX_Conversion_Support) )
+				THIS.messageout( 'MNX_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.MNX_Conversion_Support) )
+				THIS.messageout( 'DBF_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.DBF_Conversion_Support) )
+				THIS.messageout( 'DBC_Conversion_Support: ' + TRANSFORM(loFB2P_Esperado.DBC_Conversion_Support) )
+				THIS.messageout( 'l_ShowProgress: ' + TRANSFORM(loFB2P_Esperado.l_ShowProgress) )
+				THIS.messageout( 'l_ShowErrors: ' + TRANSFORM(loFB2P_Esperado.l_ShowErrors) )
+				THIS.messageout( 'l_Recompile: ' + TRANSFORM(loFB2P_Esperado.l_Recompile) )
+				THIS.messageout( 'l_NoTimestamps: ' + TRANSFORM(loFB2P_Esperado.l_NoTimestamps) )
+				THIS.messageout( 'l_ClearUniqueID: ' + TRANSFORM(loFB2P_Esperado.l_ClearUniqueID) )
+				THIS.messageout( 'l_Debug: ' + TRANSFORM(loFB2P_Esperado.l_Debug) )
+				THIS.messageout( 'n_ExtraBackupLevels: ' + TRANSFORM(loFB2P_Esperado.n_ExtraBackupLevels) )
+				THIS.messageout( 'l_OptimizeByFilestamp: ' + TRANSFORM(loFB2P_Esperado.l_OptimizeByFilestamp) )
+			
+				*-- VALIDACIONES
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.PJX_Conversion_Support), TRANSFORM(loFB2P.PJX_Conversion_Support), '> PJX_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.VCX_Conversion_Support), TRANSFORM(loFB2P.VCX_Conversion_Support), '> VCX_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.SCX_Conversion_Support), TRANSFORM(loFB2P.SCX_Conversion_Support), '> SCX_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.FRX_Conversion_Support), TRANSFORM(loFB2P.FRX_Conversion_Support), '> FRX_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.LBX_Conversion_Support), TRANSFORM(loFB2P.LBX_Conversion_Support), '> LBX_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.MNX_Conversion_Support), TRANSFORM(loFB2P.MNX_Conversion_Support), '> MNX_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.DBF_Conversion_Support), TRANSFORM(loFB2P.DBF_Conversion_Support), '> DBF_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.DBC_Conversion_Support), TRANSFORM(loFB2P.DBC_Conversion_Support), '> DBC_Conversion_Support' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_ShowProgress), TRANSFORM(loFB2P.l_ShowProgress), '> l_ShowProgress' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_ShowErrors), TRANSFORM(loFB2P.l_ShowErrors), '> l_ShowErrors' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_Recompile), TRANSFORM(loFB2P.l_Recompile), '> l_Recompile' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_NoTimestamps), TRANSFORM(loFB2P.l_NoTimestamps), '> l_NoTimestamps' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_ClearUniqueID), TRANSFORM(loFB2P.l_ClearUniqueID), '> l_ClearUniqueID' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_Debug), TRANSFORM(loFB2P.l_Debug), '> l_Debug' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.n_ExtraBackupLevels), TRANSFORM(loFB2P.n_ExtraBackupLevels), '> n_ExtraBackupLevels' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_OptimizeByFilestamp), TRANSFORM(loFB2P.l_OptimizeByFilestamp), '> l_OptimizeByFilestamp' )
 
-			*-- COMPARO
-			THIS.assertequals( TRANSFORM(teValorEsperado), TRANSFORM(teValor), tcSeteo )
+			ELSE
+				*-- Visualización de valores
+				THIS.messageout( TRANSFORM(tcSeteo) )
+				THIS.messageout( 'Valor esperado: ' + TRANSFORM(teValorEsperado) )
+				THIS.messageout( 'Valor: ' + TRANSFORM(teValor) )
+
+				*-- Formateo
+				* '[' + oFXU_LIB.mejorarPresentacionCaracteresEspeciales( TRANSFORM( EVALUATE('toReg_Esperado.'+laProps(I)) ) ) + ']' )
+
+				*-- VALIDACIONES
+				THIS.assertequals( TRANSFORM(teValorEsperado), TRANSFORM(teValor), tcSeteo )
+			ENDIF
 
 
 		ELSE
@@ -92,6 +136,199 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 		THIS.messageout( '' )
 		THIS.messageout( REPLICATE('*',80) )
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_GenerarLaConfiguracionPorDefectoCuandoNoHayArchivoDeConfiguracion
+		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loFB2P_Esperado AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loFB2P_Esperado	= CREATEOBJECT("EMPTY")
+			loFB2P		= THIS.ioFB2P
+			loFB2P.c_Foxbin2prg_ConfigFile	= 'TESTS\DATOS_TEST\foxbin2prg.cfg'
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lcSeteo		= 'CONFIG'
+			ADDPROPERTY( loFB2P_Esperado, 'PJX_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'VCX_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'SCX_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'FRX_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'LBX_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'MNX_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'DBF_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'DBC_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ShowProgress', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ShowErrors', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .T. )
+			*STRTOFILE('', 'TESTS\DATOS_TEST\foxbin2prg.cfg')
+
+
+			*-- TEST
+			loFB2P.EvaluarConfiguracion()
+
+
+		CATCH TO loEx
+
+		FINALLY
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lcSeteo, loFB2P_Esperado, leValor )
+
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_UsarLaConfiguracionDelArchivoDeConfiguracion
+		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loFB2P_Esperado AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loFB2P_Esperado	= CREATEOBJECT("EMPTY")
+			loFB2P		= THIS.ioFB2P
+			loFB2P.c_Foxbin2prg_ConfigFile	= 'TESTS\DATOS_TEST\foxbin2prg.cfg'
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lcSeteo		= 'CONFIG'
+			ADDPROPERTY( loFB2P_Esperado, 'PJX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'VCX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'SCX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'FRX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'LBX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'MNX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'DBF_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'DBC_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ShowProgress', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ShowErrors', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 0 )
+			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .F. )
+			*--
+			STRTOFILE( '* ' + PROGRAM() + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg')
+			STRTOFILE( 'PJX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'VCX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'SCX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'FRX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'LBX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'MNX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DBF_Conversion_Support: 2' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DBC_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DontShowProgress: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DontShowErrors: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			*STRTOFILE( 'Recompile: ' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'NoTimestamps: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'ClearUniqueID: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'Debug: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'ExtraBackupLevels: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'OptimizeByFilestamp: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+
+
+			*-- TEST
+			loFB2P.EvaluarConfiguracion()
+
+
+		CATCH TO loEx
+
+		FINALLY
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lcSeteo, loFB2P_Esperado, leValor )
+
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_UsarLaConfiguracionPorParametrosAunqueHayaArchivoDeConfiguracion
+		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loFB2P_Esperado AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loFB2P_Esperado	= CREATEOBJECT("EMPTY")
+			loFB2P		= THIS.ioFB2P
+			loFB2P.c_Foxbin2prg_ConfigFile	= 'TESTS\DATOS_TEST\foxbin2prg.cfg'
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lcSeteo		= 'CONFIG'
+			ADDPROPERTY( loFB2P_Esperado, 'PJX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'VCX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'SCX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'FRX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'LBX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'MNX_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'DBF_Conversion_Support', 2 )
+			ADDPROPERTY( loFB2P_Esperado, 'DBC_Conversion_Support', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ShowProgress', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ShowErrors', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .T. )
+			*--
+			STRTOFILE( '* ' + PROGRAM() + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg')
+			STRTOFILE( 'PJX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'VCX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'SCX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'FRX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'LBX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'MNX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DBF_Conversion_Support: 2' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DBC_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DontShowProgress: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DontShowErrors: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			*STRTOFILE( 'Recompile: ' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'NoTimestamps: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'ClearUniqueID: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'Debug: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'ExtraBackupLevels: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'OptimizeByFilestamp: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+
+
+			*-- TEST
+			loFB2P.EvaluarConfiguracion( '0', '0', '1', '1', '0', '1', '1', '1' )
+
+
+		CATCH TO loEx
+
+		FINALLY
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lcSeteo, loFB2P_Esperado, leValor )
+
+		ENDTRY
+
 	ENDFUNC
 
 
