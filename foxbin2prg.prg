@@ -582,8 +582,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL loEx AS EXCEPTION, dwFileAttributes
-			DECLARE SHORT 'SetFileAttributes' IN kernel32 AS 'fb2p_SetFileAttributes' STRING tcFileName, INTEGER dwFileAttributes
-			DECLARE INTEGER 'GetFileAttributes' IN kernel32 AS 'fb2p_GetFileAttributes' STRING tcFileName
+			DECLARE SHORT 'SetFileAttributes' IN kernel32 AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
+			DECLARE INTEGER 'GetFileAttributes' IN kernel32 AS fb2p_GetFileAttributes STRING tcFileName
 
 			* read current attributes for this file
 			dwFileAttributes = fb2p_GetFileAttributes(tcFileName)
@@ -652,7 +652,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			THROW
 
 		FINALLY
-			CLEAR DLLS 'fb2p_SetFileAttributes', 'fb2p_GetFileAttributes'
+			CLEAR DLLS fb2p_SetFileAttributes, fb2p_GetFileAttributes
 		ENDTRY
 
 		RETURN
@@ -965,6 +965,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE Get_Ext2FromExt
 		LPARAMETERS tcExt
 		LOCAL lcExt2
+		tcExt	= UPPER(tcExt)
+
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			lcExt2	= ICASE( tcExt == 'PJX', .c_PJ2 ;
 				, tcExt == 'VCX', .c_VC2 ;
@@ -976,6 +978,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, tcExt == 'DBC', .c_DC2 ;
 				, 'XXX' )
 		ENDWITH && THIS
+
 		RETURN lcExt2
 	ENDPROC
 
@@ -1592,7 +1595,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 				ENDIF
 
-				IF .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
+				IF NOT .l_OptimizeByFilestamp OR .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
 					.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
 					.o_Conversor.c_InputFile			= .c_InputFile
 					.o_Conversor.c_OutputFile			= .c_OutputFile

@@ -1209,4 +1209,148 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	ENDFUNC
 
 
+	*******************************************************************************************************************************************
+	FUNCTION Evaluate_TX2_Output_Test
+		LPARAMETERS tcFileName
+
+		IF PCOUNT() = 0
+			THIS.messageout( "* Support method, not a valid test." )
+			RETURN .T.
+		ENDIF
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileBak, lcExt2 ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			loCnv.EvaluarConfiguracion( '', '', '1', '1', '1', '4', '1', '0' )
+			*loCnv.l_Test				= .T.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado
+			
+			*-- Copio la librería en DATOS_TEST
+			lc_File				= UPPER(tcFileName)
+			lcExt2				= loCnv.Get_Ext2FromExt( JUSTEXT( tcFileName ) )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2	= FORCEEXT( FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest ), lcExt2 )
+			lc_OutputFileBak	= lc_OutputFileTx2 + '.bak'
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+			COPY FILE (lc_OutputFileTx2) TO (lc_OutputFileBak)
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Genero BIN
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Comparo resultados
+			THIS.messageout( "Se compara el archivo de texto generado con el original luego de 2 regeneraciones, para saber si hay cambios" )
+			THIS.messageout( "OutputFileTx2 = " + lc_OutputFileTx2 )
+			THIS.messageout( "OutputFileBak = " + lc_OutputFileBak )
+			THIS.asserttrue( FILETOSTR( lc_OutputFileTx2 ) == FILETOSTR( lc_OutputFileBak ), "COMPARACIÓN DE ARCHIVOS TX2" )
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+		*	USE IN (SELECT("ARCHIVOBIN_IN"))
+		*	USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loCnv, loCtl
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__test_public_protected_vcx__ValidarEl_VC2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'test_public_protected.vcx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__test_report_frx__ValidarEl_FR2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'test_report.frx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__Menu_LineBreak_mnx__ValidarEl_MN2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'Menu_LineBreak.mnx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__Menu_Comments_Procedure_mnx__ValidarEl_MN2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'Menu_Comments_Procedure.mnx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__Lib_Controles_vcx__ValidarEl_MN2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'Lib_Controles.vcx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__f_form_aa_scx__ValidarEl_MN2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'f_form_aa.scx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__f_form_aa2_scx__ValidarEl_MN2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'f_form_aa2.scx' )
+
+	ENDFUNC
+
+
 ENDDEFINE
