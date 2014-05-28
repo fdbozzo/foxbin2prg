@@ -63,7 +63,8 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 
 
 	cOldPath			= ''
-	cPath				= 'FOXUNIT;TESTS;TESTS\DATOS_TEST'
+	cPath				= 'TESTS;TESTS\DATOS_TEST'
+	
 	cPathDatosReadOnly	= 'TESTS\DATOS_READONLY'
 	cPathDatosTest		= 'TESTS\DATOS_TEST'
 	cSetDate			= ''
@@ -80,6 +81,13 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 		SET TALK OFF
 
 		THIS.cOldPath	= SET("Path")
+
+		IF FILE("FOXUNIT_PATH.TXT")
+			THIS.cPath	= THIS.cPath + ';' + FILETOSTR("FOXUNIT_PATH.TXT")
+		ELSE
+			THIS.cPath	= THIS.cPath + ';FOXUNIT'
+		ENDIF
+		
 		SET PATH TO (THIS.cPath)
 	ENDPROC
 
