@@ -91,6 +91,24 @@ WITH loProject.FILES
 	.ADD('props_xmladapter.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_xmlfield.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_xmltable.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\foxunit_path.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ft__foxbin2prg__c_conversor_prg_a_dbc.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ft__foxbin2prg__c_conversor_prg_a_dbf.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ft__foxbin2prg__c_conversor_prg_a_mnx.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\fxu_lib_objetos_y_funciones_de_soporte.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__dobackup.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__get_separatedpropandvalue.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__gettimestamp.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdecodigo.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdeexclusion.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__normalizarvalorpropiedad.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_base__rowtimestamp.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_bin_a_prg__get_propsandvaluesfrom_properties.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_bin_a_prg__indentarmemo.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_prg_a_bin__analizarasignacion_tag_indicado.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_conversor_prg_a_bin__insert_allobjects.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_foxbin2prg__evaluarconfiguracion.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
@@ -101,6 +119,24 @@ WITH loProject.FILES
 	*</FileComments>
 
 	*<ExcludedFiles>
+	.ITEM(lcCurdir + 'tests\foxunit_path.txt').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_prg_a_dbc.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_prg_a_dbf.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_prg_a_mnx.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\fxu_lib_objetos_y_funciones_de_soporte.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__dobackup.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__get_separatedpropandvalue.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__gettimestamp.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdecodigo.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdeexclusion.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__normalizarvalorpropiedad.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__rowtimestamp.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_bin_a_prg__get_propsandvaluesfrom_properties.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_bin_a_prg__indentarmemo.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_prg_a_bin__analizarasignacion_tag_indicado.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_prg_a_bin__insert_allobjects.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_foxbin2prg__evaluarconfiguracion.prg').Exclude = .T.
 	*</ExcludedFiles>
 
 	*<TextFiles>
