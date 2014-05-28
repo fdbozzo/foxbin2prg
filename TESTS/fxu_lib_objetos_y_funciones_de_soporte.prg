@@ -122,7 +122,14 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 	PROCEDURE copiarArchivosParaTest
 		LPARAMETERS tcFileSpec
 
-		COPY FILE (FORCEPATH( tcFileSpec, THIS.cPathDatosReadOnly )) TO (FORCEPATH( tcFileSpec, THIS.cPathDatosTest ))
+		TRY
+			LOCAL loEx as Exception
+			COPY FILE (FORCEPATH( tcFileSpec, THIS.cPathDatosReadOnly )) TO (FORCEPATH( tcFileSpec, THIS.cPathDatosTest ))
+
+		CATCH TO loEx
+			SET STEP ON
+			THROW
+		ENDTRY
 	ENDPROC
 
 
