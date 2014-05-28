@@ -101,7 +101,14 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 
 	*----------------------------------------------------------------------------------------
 	PROCEDURE SETUP_COMUN
-		ERASE (FORCEPATH( '*.*', THIS.cPathDatosTest ) )
+		IF DIRECTORY( THIS.cPathDatosTest )
+			ERASE (FORCEPATH( '*.*', THIS.cPathDatosTest ) )
+		ELSE
+			TRY
+				MKDIR (THIS.cPathDatosTest)
+			CATCH
+			ENDTRY
+		ENDIF
 	ENDPROC
 
 
