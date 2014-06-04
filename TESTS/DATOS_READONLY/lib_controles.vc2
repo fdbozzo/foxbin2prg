@@ -1466,6 +1466,7 @@ DEFINE CLASS f_base AS form
 		*p: c_testname
 	*</DefinedPropArrayMethod>
 
+	AlwaysOnTop = .T.
 	BackColor = 192,192,192
 	Caption = "OptionGroup_Test"
 	c_testname = OptionGroup_Test
