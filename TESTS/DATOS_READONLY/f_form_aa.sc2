@@ -99,7 +99,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	FontUnderline = .F.
 	ForeColor = 0,0,0
 	HalfHeightCaption = .F.
-	Height = (424)
+	Height = (460)
 	HelpContextID = 0
 	HScrollSmallChange = 10
 	Icon = bmps\container.ico
@@ -217,7 +217,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		GridLines = 3, ;
 		GridLineWidth = 1, ;
 		HeaderHeight = 18, ;
-		Height = 384, ;
+		Height = 424, ;
 		HelpContextID = 0, ;
 		Highlight = .T., ;
 		HighlightBackColor = 51,153,255, ;
@@ -972,7 +972,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		DisabledItemBackColor = 255,255,255, ;
 		DisabledItemForeColor = 109,109,109, ;
 		DisplayCount = 0, ;
-		DisplayValue = , ;
+		DisplayValue = combobox, ;
 		DragIcon = ..\..\, ;
 		DragMode = 0, ;
 		Enabled = .T., ;
@@ -1971,6 +1971,14 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 						loCtl.ControlSource = ''
 		
 					CASE loCtl.Baseclass == 'Optiongroup'
+						.valor	= 2
+						loCtl.ControlSource = 'THISFORM.valor'
+						IF loCtl.Value = .valor
+							REPLACE c_Value WITH "S"
+						ENDIF
+						loCtl.ControlSource = ''
+		
+					CASE loCtl.Baseclass == 'Option'
 						.valor	= 2
 						loCtl.ControlSource = 'THISFORM.valor'
 						IF loCtl.Value = .valor
