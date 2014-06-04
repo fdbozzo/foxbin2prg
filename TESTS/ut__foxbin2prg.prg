@@ -1189,6 +1189,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaClase__LIB_CONTROLES__F_Form_Controles__YValidarLaVisualizacionDePantalla
 
+		IF NOT DIRECTORY( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
+			MKDIR ( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
+		ENDIF
+		COPY FILE ( ADDBS(oFXU_LIB.cPathDatosReadOnly) + 'bmps\*.*' ) TO ( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps\*.*' )
+
 		THIS.evaluate_bitmap_test( 'Form_Controles_Test', 'f_Form_Controles', '' )
 
 	ENDFUNC
@@ -1196,6 +1201,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_Form_Controles__YValidarLaVisualizacionDePantalla
+
+		IF NOT DIRECTORY( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
+			MKDIR ( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
+		ENDIF
+		COPY FILE ( ADDBS(oFXU_LIB.cPathDatosReadOnly) + 'bmps\*.*' ) TO ( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps\*.*' )
 
 		THIS.evaluate_bitmap_test( 'Form_Controles_Test', 'f_Form_Controles', 'F_Form_Controles.SCX' )
 
