@@ -952,6 +952,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		#ENDIF
 
 		TRY
+			THIS.messageout( this.ICCURRENTTEST )
+			THIS.messageout( '' )
+
 			IF VARTYPE(tnComparacionEsperada) = "L"
 				tnComparacionEsperada = 1
 			ENDIF
@@ -998,7 +1001,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ELSE
 				loCtl = CREATEOBJECT( tcControlName )
 			ENDIF
-			loCtl.c_testname = tcTestName + '_0'
+			*loCtl.c_testname = tcTestName + '_0'
+			loCtl.c_testname = FORCEPATH( THIS.ICCURRENTTEST + '_0.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 			IF loCtl.BaseClass = 'Formset'
 				loCtl.Forms(1).ALWAYSONTOP= .T.
 				loCtl.SHOW()
@@ -1032,7 +1036,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ELSE
 				loCtl = CREATEOBJECT( tcControlName )
 			ENDIF
-			loCtl.c_testname = tcTestName + '_1'
+			*loCtl.c_testname = tcTestName + '_1'
+			loCtl.c_testname = FORCEPATH( THIS.ICCURRENTTEST + '_1.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 			IF loCtl.BaseClass = 'Formset'
 				loCtl.Forms(1).ALWAYSONTOP= .T.
 				loCtl.SHOW()
@@ -1048,15 +1053,18 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			CLEAR CLASSLIB (lcLib)
 
 			*-- Comparo resultados
-			lcBMP0		= FORCEPATH( tcTestName + '_0.bmp', oFXU_LIB.cPathDatosTest )
-			lcBMP1		= FORCEPATH( tcTestName + '_1.bmp', oFXU_LIB.cPathDatosTest )
+			*lcBMP0		= FORCEPATH( tcTestName + '_0.bmp', oFXU_LIB.cPathDatosTest )
+			*lcBMP1		= FORCEPATH( tcTestName + '_1.bmp', oFXU_LIB.cPathDatosTest )
+			lcBMP0		= FORCEPATH( THIS.ICCURRENTTEST + '_0.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
+			lcBMP1		= FORCEPATH( THIS.ICCURRENTTEST + '_1.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 
 			llEqual	= ( FILETOSTR( lcBMP0 ) == FILETOSTR( lcBMP1 ) )
 
 			THIS.messageout( "Se comparan bitmaps de pantalla, para saber si hay cambios estéticos y detectar fallos al ensamblar el binario" )
 			THIS.messageout( "lcBMP0 = " + lcBMP0 )
 			THIS.messageout( "lcBMP1 = " + lcBMP1 )
-			THIS.messageout( "Comparación esperada = " + IIF(llEqual, "IGUALES", "DISTINTOS") )
+			THIS.messageout( "Comparación esperada  = " + ICASE(tnComparacionEsperada = 0, "DISTINTOS", tnComparacionEsperada = 1, "IGUALES", "NO_COMPARAR") )
+			THIS.messageout( "Comparación realizada = " + IIF(llEqual, "IGUALES", "DISTINTOS") )
 			
 			DO CASE
 			CASE tnComparacionEsperada = 0

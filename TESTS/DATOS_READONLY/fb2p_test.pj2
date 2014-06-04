@@ -89,7 +89,6 @@ WITH loProject.FILES
 	.ADD('..\ut__foxbin2prg__c_conversor_base__dobackup.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('..\ut__foxbin2prg__c_conversor_base__get_separatedpropandvalue.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('..\ut__foxbin2prg__c_conversor_base__gettimestamp.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
-	.ADD('..\ut__foxbin2prg__c_conversor_base__identificarbloquesdecodigo.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('..\ut__foxbin2prg__c_conversor_base__identificarbloquesdeexclusion.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('..\ut__foxbin2prg__c_conversor_base__normalizarvalorpropiedad.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('..\ut__foxbin2prg__c_conversor_base__rowtimestamp.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
