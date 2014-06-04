@@ -5848,7 +5848,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		DisabledItemBackColor = 255,255,255, ;
 		DisabledItemForeColor = 109,109,109, ;
 		DisplayCount = 0, ;
-		DisplayValue = , ;
+		DisplayValue = combobox, ;
 		DragIcon = ..\..\, ;
 		DragMode = 0, ;
 		Enabled = .T., ;
@@ -6847,6 +6847,14 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 						loCtl.ControlSource = ''
 		
 					CASE loCtl.Baseclass == 'Optiongroup'
+						.valor	= 2
+						loCtl.ControlSource = 'THISFORM.valor'
+						IF loCtl.Value = .valor
+							REPLACE c_Value WITH "S"
+						ENDIF
+						loCtl.ControlSource = ''
+		
+					CASE loCtl.Baseclass == 'Optionbutton'
 						.valor	= 2
 						loCtl.ControlSource = 'THISFORM.valor'
 						IF loCtl.Value = .valor

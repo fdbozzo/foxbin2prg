@@ -1978,7 +1978,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 						ENDIF
 						loCtl.ControlSource = ''
 		
-					CASE loCtl.Baseclass == 'Option'
+					CASE loCtl.Baseclass == 'Optionbutton'
 						.valor	= 2
 						loCtl.ControlSource = 'THISFORM.valor'
 						IF loCtl.Value = .valor
