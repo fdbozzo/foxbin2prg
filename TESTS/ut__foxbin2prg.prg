@@ -932,7 +932,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 	*******************************************************************************************************************************************
 	FUNCTION Evaluate_Bitmap_Test
-		LPARAMETERS tcTestName, tcControlName, tcFormName
+		LPARAMETERS tcTestName, tcControlName, tcFormName, tnComparacionEsperada
+		*-- tnComparacionEsperada		0=False, [1]=True, 2=Don't report (special case)
 
 		IF PCOUNT() = 0
 			THIS.messageout( "* Support method, not a valid test." )
@@ -940,16 +941,21 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		ENDIF
 
 		LOCAL lnCodError, lnCodError_Esperado  ;
-			, lc_File, lcFile2, lc_OutputFile, lcTipoBinario, lcLib, lcBMP0, lcBMP1 ;
+			, lc_File, lcFile2, lc_OutputFile, lcTipoBinario, lcLib, lcBMP0, lcBMP1, llEqual ;
 			, lcParent, lcClass, lcObjName, loReg_Esperado ;
 			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
 			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
 			, loEx AS EXCEPTION
+
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		#ENDIF
 
 		TRY
+			IF VARTYPE(tnComparacionEsperada) = "L"
+				tnComparacionEsperada = 1
+			ENDIF
+
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 			loCnv.EvaluarConfiguracion( '', '', '', '1', '1', '4' )
@@ -1045,10 +1051,23 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			lcBMP0		= FORCEPATH( tcTestName + '_0.bmp', oFXU_LIB.cPathDatosTest )
 			lcBMP1		= FORCEPATH( tcTestName + '_1.bmp', oFXU_LIB.cPathDatosTest )
 
+			llEqual	= ( FILETOSTR( lcBMP0 ) == FILETOSTR( lcBMP1 ) )
+
 			THIS.messageout( "Se comparan bitmaps de pantalla, para saber si hay cambios estéticos y detectar fallos al ensamblar el binario" )
 			THIS.messageout( "lcBMP0 = " + lcBMP0 )
 			THIS.messageout( "lcBMP1 = " + lcBMP1 )
-			THIS.asserttrue( FILETOSTR( lcBMP0 ) == FILETOSTR( lcBMP1 ), "COMPARACIÓN DE BITMAPS" )
+			THIS.messageout( "Comparación esperada = " + IIF(llEqual, "IGUALES", "DISTINTOS") )
+			
+			DO CASE
+			CASE tnComparacionEsperada = 0
+				THIS.asserttrue( NOT llEqual, "COMPARACIÓN DE BITMAPS" )
+
+			CASE tnComparacionEsperada = 1
+				THIS.asserttrue( llEqual, "COMPARACIÓN DE BITMAPS" )
+
+			OTHERWISE
+				*- No se quiere reporte de respuesta para evitar un fallo (caso especial)
+			ENDCASE
 
 
 		CATCH TO loEx
@@ -1074,7 +1093,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm__F_OptionGroup__YValidarLaVisualizacionDePantalla
 
-		THIS.evaluate_bitmap_test( 'OptionGroup_Test', 'f_OptionGroup', 'F_OPTIONGROUP.SCX' )
+		THIS.evaluate_bitmap_test( 'OptionGroup_Test', 'f_OptionGroup', 'F_OPTIONGROUP.SCX', 2 )
 
 	ENDFUNC
 
