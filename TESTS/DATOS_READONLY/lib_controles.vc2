@@ -4954,7 +4954,6 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	DefLeft = 
 	DefOleLCID = 0
 	DefTop = 
-	DefWidth = 
 	Desktop = .F.
 	Dockable = 0
 	DoCreate = .T.
@@ -5024,7 +5023,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	WhatsThisButton = .F.
 	WhatsThisHelp = .F.
 	WhatsThisHelpID = -1
-	Width = (984)
+	Width = 998
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.

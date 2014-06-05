@@ -26,7 +26,6 @@ DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx"
 	Left = (2)
 	Name = "F_form_aa1"
 	Top = (4)
-	Width = 984
 	Cl_grid1.AllowAddNew = .F.
 	Cl_grid1.AllowAutoColumnFit = 0
 	Cl_grid1.AllowCellSelection = .T.

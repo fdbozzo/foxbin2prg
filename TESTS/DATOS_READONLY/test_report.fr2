@@ -74,8 +74,7 @@ COLOR=2
 	<tag2><![CDATA[]]>
 	<penred><![CDATA[-1]]>
 	<style><![CDATA[]]>
-	<expr><![CDATA["A test:
-Caption!"]]>
+	<expr><![CDATA["A test:Caption!"]]>
 	<supexpr><![CDATA[LEN("This is an example with a CRLF after it") > 0
 and .t.]]>
 	<comment><![CDATA[]]>
