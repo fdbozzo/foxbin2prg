@@ -54,8 +54,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB = NULL
 		ENDIF
 		RELEASE PROCEDURE 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
-		MOUSE AT (THIS.nMouseY), (THIS.nMouseX) PIXELS
+		RELEASE oFXU_LIB
+		CLOSE PROCEDURES
+		CLEAR RESOURCES
 		SYS(1104)
+		MOUSE AT (THIS.nMouseY), (THIS.nMouseX) PIXELS
 
 	ENDFUNC
 
@@ -342,6 +345,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -421,6 +426,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -503,6 +510,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -586,6 +595,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -676,6 +687,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -760,6 +773,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -842,6 +857,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -925,6 +942,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		FINALLY
 			USE IN (SELECT("ARCHIVOBIN_IN"))
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -1001,7 +1020,6 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ELSE
 				loCtl = CREATEOBJECT( tcControlName )
 			ENDIF
-			*loCtl.c_testname = tcTestName + '_0'
 			loCtl.c_testname = FORCEPATH( THIS.ICCURRENTTEST + '_0.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 			IF loCtl.BaseClass = 'Formset'
 				loCtl.Forms(1).ALWAYSONTOP= .T.
@@ -1036,7 +1054,6 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			ELSE
 				loCtl = CREATEOBJECT( tcControlName )
 			ENDIF
-			*loCtl.c_testname = tcTestName + '_1'
 			loCtl.c_testname = FORCEPATH( THIS.ICCURRENTTEST + '_1.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 			IF loCtl.BaseClass = 'Formset'
 				loCtl.Forms(1).ALWAYSONTOP= .T.
@@ -1053,8 +1070,6 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			CLEAR CLASSLIB (lcLib)
 
 			*-- Comparo resultados
-			*lcBMP0		= FORCEPATH( tcTestName + '_0.bmp', oFXU_LIB.cPathDatosTest )
-			*lcBMP1		= FORCEPATH( tcTestName + '_1.bmp', oFXU_LIB.cPathDatosTest )
 			lcBMP0		= FORCEPATH( THIS.ICCURRENTTEST + '_0.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 			lcBMP1		= FORCEPATH( THIS.ICCURRENTTEST + '_1.bmp', ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps' )
 
@@ -1082,9 +1097,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
 
 		FINALLY
-		*	USE IN (SELECT("ARCHIVOBIN_IN"))
-		*	USE IN (SELECT("TABLABIN"))
-			STORE NULL TO loCnv, loCtl
+			STORE NULL TO loCtl, loCnv
+			RELEASE loCtl, loCnv
 		ENDTRY
 
 	ENDFUNC
@@ -1318,6 +1332,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		*	USE IN (SELECT("ARCHIVOBIN_IN"))
 		*	USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loCnv, loCtl
+			RELEASE loCnv, loCtl
 		ENDTRY
 
 	ENDFUNC

@@ -692,8 +692,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	ADD OBJECT 'Cl_image1' AS cl_image WITH ;
 		Anchor = 0, ;
 		BackStyle = 1, ;
-		BorderColor = 100,100,100, ;
-		BorderStyle = 0, ;
+		BorderColor = 255,0,0, ;
+		BorderStyle = 1, ;
 		ColorSource = 4, ;
 		Comment = "", ;
 		DragIcon = ..\..\, ;
@@ -725,11 +725,14 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="image" />
 
 	ADD OBJECT 'Image1' AS image WITH ;
-		Height = 100, ;
+		BorderColor = 255,0,0, ;
+		BorderStyle = 1, ;
+		Enabled = .T., ;
+		Height = 104, ;
 		Left = 764, ;
 		Name = "Image1", ;
 		Picture = bmps\vfpxlogo.bmp, ;
-		Top = 184, ;
+		Top = 180, ;
 		Width = 212
 		*< END OBJECT: BaseClass="image" />
 

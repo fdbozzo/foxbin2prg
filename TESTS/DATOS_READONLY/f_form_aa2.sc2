@@ -23,7 +23,11 @@ DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx"
 	DefTop = 
 	DefWidth = 
 	DoCreate = .T.
+	Height = (460)
+	Left = (2)
 	Name = "F_form_aa1"
+	Top = (4)
+	Width = (980)
 	Cl_grid1.AllowAddNew = .F.
 	Cl_grid1.AllowAutoColumnFit = 0
 	Cl_grid1.AllowCellSelection = .T.
@@ -400,8 +404,10 @@ DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx"
 	Cl_grid1.View = 0
 	Cl_grid1.Visible = .T.
 	Cl_grid1.WhatsThisHelpID = -1
+	Cl_image1.Name = "Cl_image1"
 	cmdCapturar.Name = "cmdCapturar"
 	Edit1.Name = "Edit1"
+	Image1.Name = "Image1"
 	Label1.Name = "Label1"
 	Label2.Name = "Label2"
 	Label3.Name = "Label3"
