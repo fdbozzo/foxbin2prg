@@ -480,7 +480,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_Type					= ''
 	t_InputFile_TimeStamp	= {//::}
 	t_OutputFile_TimeStamp	= {//::}
-	lFileMode				= .F.
+	lFileMode				= .T.
 	n_ExisteCapitalizacion	= -1
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
@@ -3477,6 +3477,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, OBJECT ;
 			, RESERVED1 ;
 			, RESERVED2 ;
+			, SCCDATA ;
 			, LOCAL ;
 			, KEY ) ;
 			VALUES ;
@@ -3495,6 +3496,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, toProject._HomeDir + CHR(0) ;
 			, UPPER(THIS.c_OutputFile) ;
 			, toProject._ServerHead.getRowServerInfo() ;
+			, toProject._SccData ;
 			, .T. ;
 			, UPPER( JUSTSTEM( THIS.c_OutputFile) ) )
 
@@ -4099,6 +4101,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				lcPropsMemo		= .objectProps2Memo( toObjeto, toClase )
 				lcMethodsMemo	= .objectMethods2Memo( toObjeto, toClase )
 
+				IF EMPTY(toObjeto._TIMESTAMP)
+					toObjeto._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+				ENDIF
+				IF EMPTY(toObjeto._UNIQUEID)
+					toObjeto._UNIQUEID	= SYS(2015)
+				ENDIF
+
 				*-- Inserto el objeto
 				INSERT INTO TABLABIN ;
 					( PLATFORM ;
@@ -4125,8 +4134,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, USER) ;
 					VALUES ;
 					( 'WINDOWS' ;
-					, IIF( toFoxBin2Prg.l_ClearUniqueID, '', toObjeto._UniqueID ) ;
-					, IIF( toFoxBin2Prg.l_NoTimestamps, 0, toObjeto._TimeStamp ) ;
+					, toObjeto._UniqueID ;
+					, toObjeto._TimeStamp ;
 					, toObjeto._Class ;
 					, toObjeto._ClassLib ;
 					, toObjeto._BaseClass ;
@@ -4176,6 +4185,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 					FOR X = 1 TO toClase._AddObject_Count
 						loObjeto			= toClase._AddObjects( X )
+
+						IF EMPTY(loObjeto._TIMESTAMP)
+							loObjeto._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+						ENDIF
+						IF EMPTY(loObjeto._UNIQUEID)
+							loObjeto._UNIQUEID	= SYS(2015)
+						ENDIF
+
 						laObjNames( X, 1 )	= loObjeto._Nombre
 						laObjNames( X, 2 )	= loObjeto._ZOrder
 						loObjeto			= NULL
@@ -5341,6 +5358,13 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							LOOP
 						ENDIF
 
+						IF EMPTY(loClase._TIMESTAMP)
+							loClase._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+						ENDIF
+						IF EMPTY(loClase._UNIQUEID)
+							loClase._UNIQUEID	= SYS(2015)
+						ENDIF
+
 						*-- Inserto la clase
 						INSERT INTO TABLABIN ;
 							( PLATFORM ;
@@ -5367,8 +5391,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							, USER) ;
 							VALUES ;
 							( 'WINDOWS' ;
-							, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
-							, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loClase._TimeStamp ) ;
+							, loClase._UniqueID ;
+							, loClase._TimeStamp ;
 							, loClase._Class ;
 							, loClase._ClassLoc ;
 							, loClase._BaseClass ;
@@ -5637,6 +5661,13 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							LOOP
 						ENDIF
 
+						IF EMPTY(loClase._TIMESTAMP)
+							loClase._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+						ENDIF
+						IF EMPTY(loClase._UNIQUEID)
+							loClase._UNIQUEID	= SYS(2015)
+						ENDIF
+
 						*-- Inserto la clase
 						INSERT INTO TABLABIN ;
 							( PLATFORM ;
@@ -5663,8 +5694,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							, USER) ;
 							VALUES ;
 							( 'WINDOWS' ;
-							, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
-							, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loClase._TimeStamp ) ;
+							, loClase._UniqueID ;
+							, loClase._TimeStamp ;
 							, loClase._Class ;
 							, loClase._ClassLoc ;
 							, loClase._BaseClass ;
@@ -5858,6 +5889,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loFile, loServerHead
 				toProject._HomeDir	= CHRTRAN( toProject._HomeDir, ['], [] )
+				toProject._SccData	= CHR(3) + CHR(0) + CHR(1) + REPLICATE( CHR(0), 651 )
 
 				*-- Creo solo el registro de cabecera del proyecto
 				.createProject_RecordHeader( toProject )
@@ -5866,6 +5898,13 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 				IF NOT EMPTY(toProject._MainProg)
 					lcMainProg	= LOWER( SYS(2014, toProject._MainProg, ADDBS(toProject._HomeDir) ) )
+				ENDIF
+
+				IF EMPTY(toProject._TIMESTAMP)
+					toProject._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+				ENDIF
+				IF EMPTY(toProject._ID)
+					toProject._ID	= INT(VAL(SYS(3)))
 				ENDIF
 
 				*-- Si hay ProjectHook de proyecto, lo inserto
@@ -5900,6 +5939,14 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 				*-- Agrego los ARCHIVOS
 				FOR EACH loFile IN toProject FOXOBJECT
+
+					IF EMPTY(loFile._TIMESTAMP)
+						loFile._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+					ENDIF
+					IF EMPTY(loFile._ID)
+						loFile._ID	= INT(VAL(SYS(3)))
+					ENDIF
+
 					INSERT INTO TABLABIN ;
 						( NAME ;
 						, TYPE ;
@@ -5920,8 +5967,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, loFile._Comments ;
 						, .T. ;
 						, loFile._CPID ;
-						, IIF( toFoxBin2Prg.l_ClearUniqueID, 0, loFile._ID ) ;
-						, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loFile._TimeStamp ) ;
+						, loFile._ID ;
+						, loFile._TimeStamp ;
 						, loFile._ObjRev ;
 						, UPPER(JUSTSTEM(loFile._Name)) )
 				ENDFOR
@@ -6629,11 +6676,17 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			*-- Agrego los registros
 			FOR EACH loReg IN toReport FOXOBJECT
 
-				IF toFoxBin2Prg.l_NoTimestamps
-					loReg.TIMESTAMP	= 0
+				*IF toFoxBin2Prg.l_NoTimestamps
+				*	loReg.TIMESTAMP	= 0
+				*ENDIF
+				*IF toFoxBin2Prg.l_ClearUniqueID
+				*	loReg.UNIQUEID	= ''
+				*ENDIF
+				IF EMPTY(loReg.TIMESTAMP)
+					loReg.TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
 				ENDIF
-				IF toFoxBin2Prg.l_ClearUniqueID
-					loReg.UNIQUEID	= ''
+				IF EMPTY(loReg.UNIQUEID) OR ALLTRIM(loReg.UNIQUEID) = '0'
+					loReg.UNIQUEID	= SYS(2015)
 				ENDIF
 
 				*-- Ajuste de los tipos de dato
@@ -11450,6 +11503,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [<memberdata name="_timestamp" display="_TimeStamp"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_sccdata" display="_SccData"/>] ;
 		+ [<memberdata name="_address" display="_Address"/>] ;
 		+ [<memberdata name="_author" display="_Author"/>] ;
 		+ [<memberdata name="_company" display="_Company"/>] ;
@@ -11495,6 +11549,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	_SourceFile			= ''
 	_TimeStamp			= 0
 	_Version			= ''
+	_SccData			= ''
 
 	*-- Dev.info
 	_Author				= ''
