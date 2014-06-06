@@ -1390,6 +1390,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
+				, ltFilestamp, lcExtA, lcExtB ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -1579,7 +1580,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Optimización: Comparación de los timestamps de InputFile y OutputFile para saber
 				*-- si el OutputFile se debe regenerar o no.
 				lnFileCount	= ADIR( laFiles, FORCEEXT( .c_InputFile, '*' ), '', 1 )
-				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp
+				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp, ltFilestamp
 
 				IF lnFileCount >= 1 THEN
 					I	= ASCAN( laFiles, JUSTFNAME(.c_InputFile), 1, 0, 1, 1+2+4+8 )
@@ -1594,6 +1595,25 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							.t_OutputFile_TimeStamp	=	DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
 								, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
 						ENDIF
+						
+						lcExtA	= UPPER(JUSTEXT(.c_OutputFile))
+						
+						DO CASE
+						CASE INLIST(lcExtA, 'SCX', 'VCX', 'MNX', 'FRX', 'LBX')
+							lcExtB	= ICASE(lcExtA = 'SCX', 'SCT' ;
+								, lcExtA = 'VCX', 'VCT' ;
+								, lcExtA = 'MNX', 'MNT' ;
+								, lcExtA = 'FRX', 'FRT' ;
+								, lcExtA = 'LBX', 'LBT')
+							I	= ASCAN( laFiles, JUSTFNAME( FORCEEXT(.c_OutputFile, lcExtB) ), 1, 0, 1, 1+2+4+8 )
+							IF I > 0 THEN
+								ltFilestamp	= DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
+									, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
+							ENDIF
+
+						ENDCASE
+						
+						.t_OutputFile_TimeStamp	=	MAX( .t_OutputFile_TimeStamp, ltFilestamp )
 					ENDIF
 				ENDIF
 
