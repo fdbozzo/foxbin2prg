@@ -62,6 +62,7 @@ ColorSource
 ColorScheme
 ForeColor
 BackColor
+BorderColor
 DisabledForeColor
 DisabledBackColor
 RightToLeft
