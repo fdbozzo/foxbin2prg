@@ -1,0 +1,246 @@
+Lparameters toUpdateInfo
+
+Local lcNote
+With toUpdateInfo
+    .VersionNumber        = 'v1.19.23'
+    .VersionDate          = Date(2014,06,07)
+    .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
+
+    .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
+    .LinkPrompt           = 'FoxBin2Prg Home Page'
+EndWith
+
+Text to lcNote NoShow
+2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
+
+Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
+
+Change History -------------------------------------------------------------
+
+2014/06/07	v1.19.23
+- Timestamps and UniqueIds values are back on binaries, and they are just cleaned up on tx2 files if NoTimestamps and ClearUniqueID flags are set. This minimizes some differences on the binary side.
+- Added sccdata default value when regenerating PJX binary (which is automatically completed on the PJX when opened anyway)
+- Fixed timestamp evaluation for "OptimizeByFilestamp" optimization that evaluates just .??X files, and now .??T (memo) filestamps are evaluated too
+- Fixed missing BordeCcolor property on props_optiongroup.txt file
+- Fixed missing Stretch property on props_image.txt file (Kenny Vermassen)
+- Fixed missing Enabled property on props_image.txt file
+
+2014/05/17	v1.19.22
+- Bug Fix vcx/scx: Picture property of a form class does not show the image. Does not happen with control pictures (Fidel Charny)
+- Bug Fix scx/vcx: Incorrect detection of PROCEDURE/ENDPROC/TEXT/ENDTEXT that can cause lost of some methods in some circunstantes (Andres Mendoza)
+- Bug Fix scx/vcx: Some options from the optiongroup control loose there width when subclassed from a class with autosize=.T. (Miguel Duran)
+- Added evaluation and generation of properties by classtype, when applicable
+- Added support of property evaluation from external file (props_*.txt)
+- Added enhanced Unit Tests of bitmap comparisons of screen captures before/after (the original is compared with the regenerated of the regenerated binary, for more accuracy)
+- A lot of garbage collect optimizations all over the code
+- Added Unit Testing of configuration by defaults, by file and by parameters
+- Added Unit Testing for checking the generation of classes, forms, reports and menus
+- Added new switch OptimizeByFilestamp (active by default) for making possible deactivation of this regeneration optimization by file timestamp, in case someone wants to force regeneration allways
+
+2014/05/01	v1.19.21
+- Added support to convert to text or binary all files of a project from pjx or pj2 (Matt Slay)
+- Added optimization on the search of the capitalization program when processing projects
+- Added keyword AGAIN on table openings, for enhancing concurrence (Jim Nelson)
+- Added optimization based on file timestamps for regenerating only newer binaries and tx2 files (Matt Slay)
+- Added English translation in foxbin2prg_en.h for the LOG message of new timestamp optimization
+- <DefinedPropArrayMethod> section simplification: Methods and arrays doesn't require preceding * and ^ symbols anymore.
+
+2014/04/17	v1.19.20
+- New: CDX filename in DB2 files have relative paths now. This help show less differences when regenerating DB2 files from different paths
+
+2014/04/02	v1.19.19
+- New: DBF Hook that let intercalate a personalized process between DBF creation and index creation when processing a DB2 file (example program in "tests\demo_hook_dbf.prg" included)
+
+2014/03/25	v1.19.18
+- Bug Fix vcx/scx: Image controls with stretched icons or images, get redimensioned to original size when regenerating binary (Arturo Ramos)
+- Bug Fix vcx/scx: Library level comments are not kept (Ryan Harris)
+
+2014/03/16	v1.19.17
+- Bug Fix frx/lbx: Double-quoted expressiones make fx2/lb2 files corrupt (Ryan Harris)
+- Bug Fix frx/lbx: Multiline Comments are lost (Ryan Harris)
+- frx/lbx tag2 field enhance: when used for tooltips, real values are shown in regards of b64 normal encoding
+- Bug Fix mnx: Multiline Comments on Bars/Pads makes MN2 file corrupt (Ryan Harris)
+- Bug Fix mnx: Some procedures doesn't generate correctly (Ryan Harris)
+- English translation file foxbin2prg_en.h syntax corrected (Ryan Harris)
+- Bug Fix vcx/scx: Lowercase saved Dataenvironment property causes Reserved2 value to be not calculated
+- Bug Fix frx: <CR> character on print condition on field makes fr2 file corrupt
+- Bug Fix mnx: Using double-quotes on prompt option fields makes mn2 file invalid (Ryan Harris)
+
+2014/03/10	v1.19.16
+- Bug Fix vcx/scx: properties loose there hidden/protected visibility when no default value assigned (Ryan Harris)
+- Bug Fix vcx/scx: character value with length >255 in addobject property regenerates with tag <fb2p_value> included (Ryan Harris)
+- Bug Fix vcx/scx: When regenerating binari file with empty procedure makes FoxPro crash when trying to modify it on IDE
+- Bug Fix scx/vcx: Binary can be corrupted if the class have a multiline comment (Tested on: Ffc\_frxcursor.vcx)
+- Bug Fix: If _memberdata contains CR inside there values, they can be lost when regenerating tx2 text files
+- Bug Fix: Property values with spaces at the right loose this spaces
+- Bug Fix: When 2 or more methods share the same name (ej: met and met2) tx2 text file gets corrupted (Ryan Harris)
+
+2014/03/04	v1.19.15
+- Bug Fix: OLE information cleared when a legacy TX2 is processed
+- Bug Fix: Default value of NoTimestamp = 0 ==> Now is 1, as should be
+- Bug Fix: DBFs backlink info cleared when DBC is recreated (Ryan Harris)
+- Feature: Lowercase capitalization in tx2 filename headers to minimize differences
+
+2014/03/01	v1.19.14
+- Load of configuration is optimized (foxbin2prg.cfg) to read cfg only once for a massive processing of multiple conversions
+- .vbs scripts have been modified to respect the conversion support configuration defined in foxbin2prg.cfg configuration file
+- 2 new functions where added to enhance and encapsulate the external use of the evaluation of the conversion support (requires previous call to EvaluarConfiguracion()). Used on .vbs scripts
+- ExtraBackupLevels Regression: when no defined value, no backup is made
+- New default value ClearUniqueID = 1 in foxbin2prg.cfg for minimizing differences in the SCM
+
+2014/02/26	v1.19.13
+- Bug Fix: If NoTimestamp setting of foxbin2prg.cfg is changed, opposite value is evaluated (Ryan Harris)
+- Encapsulated foxbin2prg.cfg file for enhancing FoxUnit automated testing
+- Internal change of property l_UseTimestamps by l_NoTimestamps
+- With ExtraBackupLevels setting you can now deactivate backups if setting to 0 (Ryan Harris proposal)
+- foxbin2prg.log file checking dropped, to activate the log file use foxbin2prg.cfg setting Debug=1
+- In TX2 header files show the file without path, because genereting it from different places makes unnecesary differences in Diff (Ryan Harris proposal)
+- Created a lot of FoxUnit automated tests to check all settings of foxbin2prg.cfg configuration file
+
+2014/02/23	v1.19.12
+- Generation of VC2/SC2 with new header metadata <OBJECTDATA> for centralizing uniqueid, timestamp and ZOrder and big reduce of differences in a diff/merge (enhancement proposed by Ryan Harris)
+- BINARY regeneration from the new metadata <OBJECTDATA> header (remains compatible with old VC2/SC2)
+- FoxUnit test cases fixed for the new functionality
+- Cleaning, Refactorization and optimization of Code
+- Presentation enhancement of VC2/SC2 file headers
+
+2014/02/13	v1.19.11
+- WITH/ENDWITH optimizations with a conversion performance gain up to 16% more fast
+- Bug Fix: Just one level of #IF was contemplated, throwing an error if more levels are nested
+- Bug Fix: When regenerating the PJX, default home directory not always was correct
+- New FoxUnit automated test added to check bug fix of nested #IF
+
+2014/02/09	v1.19.10
+- Added parametrization to enable configuration support for each kind of binary (0=None, 1=Only TX2, 2=TX2 and Binary)
+- Fixed default NoTimestamps setting
+- EXPERIMENTAL: Added new configuration parameter "ClearUniqueID" in foxbin2prg.cfg for Clearing UniqueID in binaries and text versions. Works well and apparently FoxProdoesn't make use of it, but more testing is required
+- Adjusted some FoxUnit test cases
+
+2014/02/08	v1.19.9
+- New configuration items in foxbin2prg.cfg
+- Localization Bug: When recompiling with localization file foxbin2prg_en.h renamed to foxbin2prg.h, syntax error occurs
+- Debug information of .LOG files enhanced
+- New parametrization for the number of backups, now just one .BAK by default (earlier was 10)
+- Enabled configuration file foxbin2prg.cfg by default
+- Change in default behavior: Now Timestamps are disabled by default. You can change this on foxbin2prg.cfg
+
+2014/02/03 	v1.19.8
+- Bug fix: ActivePage error when executing a regenerated binary with a PageFrame / New FoxUnit test to test solution
+- Added cNoTimestamps='1' to batch conversion vbs scripts
+
+2014/02/02 	v1.19.7
+- Added Ole encapsulation in just 1 place
+- Adjusted Blocksize of generated binaries
+- New cNoTimestamps parameter. If '1' is given, then no timestamps are generated (useful for diff/merge)
+
+2014/01/31 	v1.19.6
+- Added SourceSafe support (SCCAPI) for Diff and Merge
+- SCX bug fix: Dataenvironment sometimes doesn't regenerates correctly
+- Functionality change: Automatic recompilation enabled by default again because some methods doesn't show on form edit. Can be deactivated passing '0' to cRecompile param
+
+2014/01/26 	v1.19.5
+- Added Multilanguage support and Localization file for English. To use it rename the new file foxbin2prg_en.h to foxbin2prg.h and recompile
+
+2014/01/24 	v1.19.4
+- New "Recompile" parameter for recompiling from PJX directory (if provided)
+- Functionality change: Now FoxBin2Prg does not recompile bins for default, because it do on bin dir and that can throw compilation errors. Use new parameter if needed or recompile by your own
+- DBC: Added support for multiline "comment" property
+- VBS Batch scripts: Added progress bar
+
+2014/01/18 	v1.19.3
+- Change on TXT timestamps to preserve empty values that can save a lot of differences when diff/merging. Previously empty timestamps get converted to datetime
+- Optimization on TXT generation of ZOrders
+
+2014/01/13 	v1.19.2
+- Fix on PJX regeneration caused for something missing in the last change of "Autor" to "Author"
+
+2014/01/08 	v1.19.1
+- Small change on TX2 headers to drop the "Generated" timestamp that causes innecesary differences / Updated the EXE version with the correct one
+
+2014/01/08 	v1.19
+- Added new debug flag on .vbs scripts to show a "End process" message for batch processing
+- Bug Fix scx/vcx: Improper order of Reserved3 props cause event access to not fire
+- Bug Fix dbf: Improper index generated when the type is Candidate
+- Added support for converting SourceSafe PJM to FoxBin PJ2
+- Added validation for Menus when converting from older versions, so user can convert it to VFP 9 format first
+- Change in MN2 property: "Autor" was changed to "Author". You can add the missing letter to MN2 or regenerate
+
+2014/01/07 	v1.18.1
+- Added a vbs script (Normalize_FileNames.vbs) for FileNames normalizing in batch mode, and updated FileName_Caps.exe and the call on FoxBin2prg
+
+2014/01/06 	v1.18
+- mnx bug fix: Generation of DO Procedure or Command when no Procedure or Command available to call when empty option is created (Fidel Charny)
+- Added support for DBFs earlier than VFP 9 for generating DB2 text, but DBF regeneration is in VFP 9 version!
+- dbf bug fix: DBFs linked to a DBC that use long field names throw error when regenerating DBFs
+- dbf bug fix: Some view info is lost when generating text from DBC
+
+2014/01/03 	v1.17
+- mnx bug fix: Location value is lost and some menus doesn't render properly (Fidel Charny)
+- Added 2 VB scripts (Convert_VFP9_BIN_2_PRG.vbs and Convert_VFP9_PRG_2_BIN.vbs) for batch converting of dirs and files if a shortcut is placed on "SendTo" user folder
+- Added new Unit Testing cases for menus
+
+2014/01/02 	v1.16
+- Added support for Menus (MNX)
+
+2013/12/18 	v1.15
+- Added support for DBF, DBC and CDX binaries
+
+2013/12/15 	v1.14
+- scx bug fix: autocenter property do nothing (Arturo Ramos)
+- scx bug fix: Last COMMENT record is lost (Fidel Charny)
+
+2013/12/08 	v1.13
+- frx/lbx bug fix: "Error 1924, TOREG is not an object" on some reports (Fidel Charny)
+
+2013/12/08 	v1.12
+- Added support for Reports (FRX) and Labels (LBX)
+
+2013/12/08 	v1.11
+- scx/vcx bug fix: _memberdata value corrupted when the value is a long one (Edgar Kummers)
+
+2013/12/07 	v1.10
+- scx/vcx bug fix: when there are methods with the same name, there code is assigned to erroneous objects (Fidel Charny)
+
+2013/12/07 	v1.9
+- scx/vcx bug fix: last fix keep loosing some properties (Fidel Charny)
+
+2013/12/06 	v1.8
+- scx/vcx bug fix: last fix keep loosing some properties (Fidel Charny)
+- sort function encapsulated and reused on BIN and TXT generation for safety
+
+2013/12/03 	v1.7
+- vcx/scx bug fix: some properties get lost and picture clause is not displayed if "Name" is not the last property on memo (Fidel Charny)
+- Added verification of readOnly files and report this to Log file in debug mode
+
+2013/12/02 	v1.6
+- Complete refactoring of BIN and TXT generation
+- Changes of various algorithms
+- scx/vcx bug fix: Array properties didn't save (Fidel Charny)
+- Unit testing cases with FoxUnit
+
+2013/11/27 	v1.5
+- Bug fix: On some forms dataenvironment didn't regenerate appropiately (Luis Martínez)
+
+2013/11/27 	v1.4
+- Added mask support
+- Added support for extension configuration on file foxbin2prg.cfg, so one can use "vca" instead of "vc2", etc
+- Added support for a new parameter for Log generation
+
+2013/11/24 	v1.3
+- Bug fixes, code cleaning, refactoring
+
+2013/11/24 	v1.2
+- Bug fixes, code cleaning, refactoring
+
+2013/11/22 	v1.1
+- Bug fixes
+
+2013/11/22 	v1.0
+- Initial creation of clases on prg and support of VCX/SCX/PJX files 
+
+EndText
+
+AddProperty(toUpdateInfo, 'Notes', 				lcNote)
+
+Execscript (_Screen.cThorDispatcher, 'Result=', toUpdateInfo)
+Return toUpdateInfo
