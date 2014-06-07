@@ -37,54 +37,54 @@
 *
 *---------------------------------------------------------------------------------------------------
 * <HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
-* 04/11/2013	FDBOZZO		v1.0	Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
-* 22/11/2013	FDBOZZO		v1.1	Corrección de bugs
-* 23/11/2013	FDBOZZO		v1.2	Corrección de bugs, limpieza de código y refactorización
-* 24/11/2013	FDBOZZO		v1.3	Corrección de bugs, limpieza de código y refactorización
-* 27/11/2013	FDBOZZO		v1.4	Agregado soporte comodines *.VCX, configuración de extensiones (vca), parámetro p/log
-* 27/11/2013	FDBOZZO		v1.5	Arreglo bug que no generaba form completo
-* 01/12/2013	FDBOZZO		v1.6	Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
-* 02/12/2013	FDBOZZO		v1.7	Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
-* 03/12/2013	FDBOZZO		v1.8	Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
-* 06/12/2013	FDBOZZO		v1.9	Arreglo bug pérdida de propiedades causado por una mejora anterior
-* 06/12/2013	FDBOZZO		v1.10	Arreglo del bug de mezcla de métodos de una clase con la siguiente
-* 07/12/2013	FDBOZZO		v1.11	Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
-* 07/12/2013    FDBOZZO     v1.12	Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
-* 08/12/2013	FDBOZZO		v1.13	Arreglo bug "Error 1924, TOREG is not an object"
-* 15/12/2013	FDBOZZO		v1.14	Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
-* 08/12/2013    FDBOZZO     v1.15	Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
-* 18/12/2013	FDBOZZO		v1.16	Agregado soporte para menús (MNX)
-* 03/01/2014	FDBOZZO		v1.17	Agregado Unit Testing de menús y arreglo de las incidencias del menu
-* 05/01/2013	FDBOZZO		v1.18	Agregado soporte para generar estructuras TEXTO de DBFs anteriores a VFP 9, pero los binarios a VFP 9 // Arreglado bug de datos faltantes en campos de vistas // Arreglado bug mnx
-* 08/01/2014	FDBOZZO		v1.19	Arreglo bug SCX-VCX: Orden incorrecto en Reserved3 ocaciona que no se disparen eventos ACCESS (y probablemente ASIGN)
-* 08/01/2014	FDBOZZO		v1.19	Arreglo bug DBF: Tipo de índice generado incorrecto en DB2 cuando es Candidate
-* 08/01/2014	FDBOZZO		v1.19	Agregado soporte para convertir PJM a PJ2
-* 08/01/2014	FDBOZZO		v1.19	Agregada validación al convertir Menús con estructura anterior a VFP9
-* 08/01/2014	FDBOZZO		v1.19	Cambiada la propiedad "Autor" por "Author" en los archivos MN2
-* 08/01/2014	FDBOZZO		v1.19.1	Cambio en los headers de los archivos TX2 para quitar el timestamp "Generated" que causa diferencias innecesarias
-* 08/01/2014	FDBOZZO		v1.19.2	Arreglo de bug PJ2: Al regenerar da un error por buscar "Autor" en vez de "Author"
-* 08/01/2014	FDBOZZO		v1.19.3	Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
-* 22/01/2014	FDBOZZO		v1.19.4	Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
-* 22/01/2014	FDBOZZO		v1.19.4	DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
-* 26/01/2014	FDBOZZO		v1.19.5	Agregado soporte multiidioma y traducción al Inglés
-* 01/02/2014	FDBOZZO		v1.19.6	Agregada compatibilidad con SourceSafe para Diff y Merge
-* 02/02/2014	FDBOZZO		v1.19.7	Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
-* 03/02/2014	FDBOZZO		v1.19.8	Arreglo bug pageframe (error activePage)
-* 08/02/2014	FDBOZZO		v1.19.9 Nuevos items de config.en foxbin2prg.cfg / Bug en Localización  / Mejora log / Parametrización Nº backups / Timestamps desactivados por defecto
-* 09/02/2014	FDBOZZO		v1.19.10 Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
-* 13/02/2014	FDBOZZO		v1.19.11 Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
-* 21/02/2014	FDBOZZO		v1.19.12 Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
-* 26/02/2014	FDBOZZO		v1.19.13 Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
-* 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
-* 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
-* 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
-* 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
-* 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
-* 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
-* 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
-* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
-* 08/05/2014	FDBOZZO		v1.19.22 Arreglo bug vcx/scx: La propiedad Picture de una clase form se pierde y no muestra la imagen
-* 27/05/2014	Kenny Vermassen		REPORTE DE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones  (Arreglado en v1.19.23)
+* 04/11/2013	FDBOZZO		v1.0		Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
+* 22/11/2013	FDBOZZO		v1.1		Corrección de bugs
+* 23/11/2013	FDBOZZO		v1.2		Corrección de bugs, limpieza de código y refactorización
+* 24/11/2013	FDBOZZO		v1.3		Corrección de bugs, limpieza de código y refactorización
+* 27/11/2013	FDBOZZO		v1.4		Agregado soporte comodines *.VCX, configuración de extensiones (vca), parámetro p/log
+* 27/11/2013	FDBOZZO		v1.5		Arreglo bug que no generaba form completo
+* 01/12/2013	FDBOZZO		v1.6		Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
+* 02/12/2013	FDBOZZO		v1.7		Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
+* 03/12/2013	FDBOZZO		v1.8		Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
+* 06/12/2013	FDBOZZO		v1.9		Arreglo bug pérdida de propiedades causado por una mejora anterior
+* 06/12/2013	FDBOZZO		v1.10		Arreglo del bug de mezcla de métodos de una clase con la siguiente
+* 07/12/2013	FDBOZZO		v1.11		Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
+* 07/12/2013    FDBOZZO     v1.12		Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
+* 08/12/2013	FDBOZZO		v1.13		Arreglo bug "Error 1924, TOREG is not an object"
+* 15/12/2013	FDBOZZO		v1.14		Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
+* 08/12/2013    FDBOZZO     v1.15		Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
+* 18/12/2013	FDBOZZO		v1.16		Agregado soporte para menús (MNX)
+* 03/01/2014	FDBOZZO		v1.17		Agregado Unit Testing de menús y arreglo de las incidencias del menu
+* 05/01/2013	FDBOZZO		v1.18		Agregado soporte para generar estructuras TEXTO de DBFs anteriores a VFP 9, pero los binarios a VFP 9 // Arreglado bug de datos faltantes en campos de vistas // Arreglado bug mnx
+* 08/01/2014	FDBOZZO		v1.19		Arreglo bug SCX-VCX: Orden incorrecto en Reserved3 ocaciona que no se disparen eventos ACCESS (y probablemente ASIGN)
+* 08/01/2014	FDBOZZO		v1.19		Arreglo bug DBF: Tipo de índice generado incorrecto en DB2 cuando es Candidate
+* 08/01/2014	FDBOZZO		v1.19		Agregado soporte para convertir PJM a PJ2
+* 08/01/2014	FDBOZZO		v1.19		Agregada validación al convertir Menús con estructura anterior a VFP9
+* 08/01/2014	FDBOZZO		v1.19		Cambiada la propiedad "Autor" por "Author" en los archivos MN2
+* 08/01/2014	FDBOZZO		v1.19.1		Cambio en los headers de los archivos TX2 para quitar el timestamp "Generated" que causa diferencias innecesarias
+* 08/01/2014	FDBOZZO		v1.19.2		Arreglo de bug PJ2: Al regenerar da un error por buscar "Autor" en vez de "Author"
+* 08/01/2014	FDBOZZO		v1.19.3		Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
+* 22/01/2014	FDBOZZO		v1.19.4		Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
+* 22/01/2014	FDBOZZO		v1.19.4		DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
+* 26/01/2014	FDBOZZO		v1.19.5		Agregado soporte multiidioma y traducción al Inglés
+* 01/02/2014	FDBOZZO		v1.19.6		Agregada compatibilidad con SourceSafe para Diff y Merge
+* 02/02/2014	FDBOZZO		v1.19.7		Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
+* 03/02/2014	FDBOZZO		v1.19.8		Arreglo bug pageframe (error activePage)
+* 08/02/2014	FDBOZZO		v1.19.9		Nuevos items de config.en foxbin2prg.cfg / Bug en Localización  / Mejora log / Parametrización Nº backups / Timestamps desactivados por defecto
+* 09/02/2014	FDBOZZO		v1.19.10	Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
+* 13/02/2014	FDBOZZO		v1.19.11	Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
+* 21/02/2014	FDBOZZO		v1.19.12	Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
+* 26/02/2014	FDBOZZO		v1.19.13	Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
+* 01/03/2014	FDBOZZO		v1.19.14	Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
+* 04/03/2014	FDBOZZO		v1.19.15	Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
+* 07/03/2014	FDBOZZO		v1.19.16	Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
+* 16/03/2014	FDBOZZO		v1.19.17	Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
+* 22/03/2014	FDBOZZO		v1.19.18	Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
+* 29/03/2014	FDBOZZO		v1.19.19	Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
+* 17/04/2014	FDBOZZO		v1.19.20	Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
+* 29/04/2014	FDBOZZO		v1.19.21	Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
+* 08/05/2014	FDBOZZO		v1.19.22	Arreglo bug vcx/scx: La propiedad Picture de una clase form se pierde y no muestra la imagen
+* 27/05/2014	FDBOZZO		v1.19.23	Arreglo bugs vcx/scx: Redimensionamiento incorrecto de imagenes en ciertas situaciones (props_image.txt y props_optiongroup.txt actualizados)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
