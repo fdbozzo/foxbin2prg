@@ -37,53 +37,54 @@
 *
 *---------------------------------------------------------------------------------------------------
 * <HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
-* 04/11/2013	FDBOZZO		v1.0	Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
-* 22/11/2013	FDBOZZO		v1.1	Corrección de bugs
-* 23/11/2013	FDBOZZO		v1.2	Corrección de bugs, limpieza de código y refactorización
-* 24/11/2013	FDBOZZO		v1.3	Corrección de bugs, limpieza de código y refactorización
-* 27/11/2013	FDBOZZO		v1.4	Agregado soporte comodines *.VCX, configuración de extensiones (vca), parámetro p/log
-* 27/11/2013	FDBOZZO		v1.5	Arreglo bug que no generaba form completo
-* 01/12/2013	FDBOZZO		v1.6	Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
-* 02/12/2013	FDBOZZO		v1.7	Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
-* 03/12/2013	FDBOZZO		v1.8	Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
-* 06/12/2013	FDBOZZO		v1.9	Arreglo bug pérdida de propiedades causado por una mejora anterior
-* 06/12/2013	FDBOZZO		v1.10	Arreglo del bug de mezcla de métodos de una clase con la siguiente
-* 07/12/2013	FDBOZZO		v1.11	Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
-* 07/12/2013    FDBOZZO     v1.12	Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
-* 08/12/2013	FDBOZZO		v1.13	Arreglo bug "Error 1924, TOREG is not an object"
-* 15/12/2013	FDBOZZO		v1.14	Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
-* 08/12/2013    FDBOZZO     v1.15	Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
-* 18/12/2013	FDBOZZO		v1.16	Agregado soporte para menús (MNX)
-* 03/01/2014	FDBOZZO		v1.17	Agregado Unit Testing de menús y arreglo de las incidencias del menu
-* 05/01/2013	FDBOZZO		v1.18	Agregado soporte para generar estructuras TEXTO de DBFs anteriores a VFP 9, pero los binarios a VFP 9 // Arreglado bug de datos faltantes en campos de vistas // Arreglado bug mnx
-* 08/01/2014	FDBOZZO		v1.19	Arreglo bug SCX-VCX: Orden incorrecto en Reserved3 ocaciona que no se disparen eventos ACCESS (y probablemente ASIGN)
-* 08/01/2014	FDBOZZO		v1.19	Arreglo bug DBF: Tipo de índice generado incorrecto en DB2 cuando es Candidate
-* 08/01/2014	FDBOZZO		v1.19	Agregado soporte para convertir PJM a PJ2
-* 08/01/2014	FDBOZZO		v1.19	Agregada validación al convertir Menús con estructura anterior a VFP9
-* 08/01/2014	FDBOZZO		v1.19	Cambiada la propiedad "Autor" por "Author" en los archivos MN2
-* 08/01/2014	FDBOZZO		v1.19.1	Cambio en los headers de los archivos TX2 para quitar el timestamp "Generated" que causa diferencias innecesarias
-* 08/01/2014	FDBOZZO		v1.19.2	Arreglo de bug PJ2: Al regenerar da un error por buscar "Autor" en vez de "Author"
-* 08/01/2014	FDBOZZO		v1.19.3	Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
-* 22/01/2014	FDBOZZO		v1.19.4	Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
-* 22/01/2014	FDBOZZO		v1.19.4	DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
-* 26/01/2014	FDBOZZO		v1.19.5	Agregado soporte multiidioma y traducción al Inglés
-* 01/02/2014	FDBOZZO		v1.19.6	Agregada compatibilidad con SourceSafe para Diff y Merge
-* 02/02/2014	FDBOZZO		v1.19.7	Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
-* 03/02/2014	FDBOZZO		v1.19.8	Arreglo bug pageframe (error activePage)
-* 08/02/2014	FDBOZZO		v1.19.9 Nuevos items de config.en foxbin2prg.cfg / Bug en Localización  / Mejora log / Parametrización Nº backups / Timestamps desactivados por defecto
-* 09/02/2014	FDBOZZO		v1.19.10 Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
-* 13/02/2014	FDBOZZO		v1.19.11 Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
-* 21/02/2014	FDBOZZO		v1.19.12 Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
-* 26/02/2014	FDBOZZO		v1.19.13 Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
-* 01/03/2014	FDBOZZO		v1.19.14 Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
-* 04/03/2014	FDBOZZO		v1.19.15 Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
-* 07/03/2014	FDBOZZO		v1.19.16 Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
-* 16/03/2014	FDBOZZO		v1.19.17 Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
-* 22/03/2014	FDBOZZO		v1.19.18 Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
-* 29/03/2014	FDBOZZO		v1.19.19 Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
-* 17/04/2014	FDBOZZO		v1.19.20 Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
-* 29/04/2014	FDBOZZO		v1.19.21 Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
-* 08/05/2014	FDBOZZO		v1.19.22 Arreglo bug vcx/scx: La propiedad Picture de una clase form se pierde y no muestra la imagen
+* 04/11/2013	FDBOZZO		v1.0		Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
+* 22/11/2013	FDBOZZO		v1.1		Corrección de bugs
+* 23/11/2013	FDBOZZO		v1.2		Corrección de bugs, limpieza de código y refactorización
+* 24/11/2013	FDBOZZO		v1.3		Corrección de bugs, limpieza de código y refactorización
+* 27/11/2013	FDBOZZO		v1.4		Agregado soporte comodines *.VCX, configuración de extensiones (vca), parámetro p/log
+* 27/11/2013	FDBOZZO		v1.5		Arreglo bug que no generaba form completo
+* 01/12/2013	FDBOZZO		v1.6		Refactorización completa generación BIN y PRG, cambio de algoritmos, arreglo de bugs, Unit Testing con FoxUnit
+* 02/12/2013	FDBOZZO		v1.7		Arreglo bug "Name", barra de progreso, agregado mensaje de ayuda si se llama sin parámetros, verificación y logueo de archivos READONLY con debug activa
+* 03/12/2013	FDBOZZO		v1.8		Arreglo bug "Name" (otra vez), sort encapsulado y reutilizado para versiones TEXTO y BIN por seguridad
+* 06/12/2013	FDBOZZO		v1.9		Arreglo bug pérdida de propiedades causado por una mejora anterior
+* 06/12/2013	FDBOZZO		v1.10		Arreglo del bug de mezcla de métodos de una clase con la siguiente
+* 07/12/2013	FDBOZZO		v1.11		Arreglo del bug de _amembers detectado por Edgar K.con la clase BlowFish.vcx (http://www.tortugaproductiva.galeon.com/docs/blowfish/index.html)
+* 07/12/2013    FDBOZZO     v1.12		Agregado soporte preliminar de conversión de reportes y etiquetas (FRX/LBX)
+* 08/12/2013	FDBOZZO		v1.13		Arreglo bug "Error 1924, TOREG is not an object"
+* 15/12/2013	FDBOZZO		v1.14		Arreglo de bug AutoCenter y registro COMMENT en regeneración de forms
+* 08/12/2013    FDBOZZO     v1.15		Agregado soporte preliminar de conversión de tablas, índices y bases de datos (DBF,CDX,DBC)
+* 18/12/2013	FDBOZZO		v1.16		Agregado soporte para menús (MNX)
+* 03/01/2014	FDBOZZO		v1.17		Agregado Unit Testing de menús y arreglo de las incidencias del menu
+* 05/01/2013	FDBOZZO		v1.18		Agregado soporte para generar estructuras TEXTO de DBFs anteriores a VFP 9, pero los binarios a VFP 9 // Arreglado bug de datos faltantes en campos de vistas // Arreglado bug mnx
+* 08/01/2014	FDBOZZO		v1.19		Arreglo bug SCX-VCX: Orden incorrecto en Reserved3 ocaciona que no se disparen eventos ACCESS (y probablemente ASIGN)
+* 08/01/2014	FDBOZZO		v1.19		Arreglo bug DBF: Tipo de índice generado incorrecto en DB2 cuando es Candidate
+* 08/01/2014	FDBOZZO		v1.19		Agregado soporte para convertir PJM a PJ2
+* 08/01/2014	FDBOZZO		v1.19		Agregada validación al convertir Menús con estructura anterior a VFP9
+* 08/01/2014	FDBOZZO		v1.19		Cambiada la propiedad "Autor" por "Author" en los archivos MN2
+* 08/01/2014	FDBOZZO		v1.19.1		Cambio en los headers de los archivos TX2 para quitar el timestamp "Generated" que causa diferencias innecesarias
+* 08/01/2014	FDBOZZO		v1.19.2		Arreglo de bug PJ2: Al regenerar da un error por buscar "Autor" en vez de "Author"
+* 08/01/2014	FDBOZZO		v1.19.3		Cambio en los timestamps de los TXT para mantener los valores vacíos que generaban muchísimas diferencias
+* 22/01/2014	FDBOZZO		v1.19.4		Nuevo parámetro Recompile para forzar la recompilación. Ahora por defecto el binario no se recompila para ganar velocidad y evitar errores. Debe recompilar manualmente.
+* 22/01/2014	FDBOZZO		v1.19.4		DBC: Agregado soporte para comentarios multilínea (propiedad Comment)
+* 26/01/2014	FDBOZZO		v1.19.5		Agregado soporte multiidioma y traducción al Inglés
+* 01/02/2014	FDBOZZO		v1.19.6		Agregada compatibilidad con SourceSafe para Diff y Merge
+* 02/02/2014	FDBOZZO		v1.19.7		Encapsulación de objetos OLE en el propio control o clase // Blocksize ajustado
+* 03/02/2014	FDBOZZO		v1.19.8		Arreglo bug pageframe (error activePage)
+* 08/02/2014	FDBOZZO		v1.19.9		Nuevos items de config.en foxbin2prg.cfg / Bug en Localización  / Mejora log / Parametrización Nº backups / Timestamps desactivados por defecto
+* 09/02/2014	FDBOZZO		v1.19.10	Parametrización soporte de tipo de conversión por archivo / ClearUniqueID
+* 13/02/2014	FDBOZZO		v1.19.11	Optimizaciones WITH/ENDWITH (16%+velocidad) / Arreglo bug #IF anidados
+* 21/02/2014	FDBOZZO		v1.19.12	Centralizar ZOrder controles en metadata de cabecera de clase para minimizar diferencias / También mover UniqueIDs y Timestamps a metadata
+* 26/02/2014	FDBOZZO		v1.19.13	Arreglo bug TimeStamp en archivo cfg / ExtraBackupLevels se puede desactivar / Optimizaciones / Casos FoxUnit
+* 01/03/2014	FDBOZZO		v1.19.14	Arreglo bug regresion cuando no se define ExtraBackupLevels no hace backups / Optimización carga cfg en batch
+* 04/03/2014	FDBOZZO		v1.19.15	Arreglo bugs: OLE TX2 legacy / NoTimestamp=0 / DBFs backlink
+* 07/03/2014	FDBOZZO		v1.19.16	Arreglo bugs: Propiedades y métodos Hidden/Protected que no se generan /// Crash métodos vacíos
+* 16/03/2014	FDBOZZO		v1.19.17	Arreglo bugs frx/lbx: Expresiones con comillas // comment multilínea // Mejora tag2 para Tooltips // Arreglo bugs mnx
+* 22/03/2014	FDBOZZO		v1.19.18	Arreglo bug vcx/scx: Las imágenes no mantienen sus dimensiones programadas y asumen sus dimensiones reales // El comentario a nivel de librería se pierde
+* 29/03/2014	FDBOZZO		v1.19.19	Nueva característica: Hooks al regenerar DBF para poder realizar procesos intermedios, como la carga de datos del DBF regenerado desde una fuente externa
+* 17/04/2014	FDBOZZO		v1.19.20	Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
+* 29/04/2014	FDBOZZO		v1.19.21	Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
+* 08/05/2014	FDBOZZO		v1.19.22	Arreglo bug vcx/scx: La propiedad Picture de una clase form se pierde y no muestra la imagen
+* 27/05/2014	FDBOZZO		v1.19.23	Arreglo bugs vcx/scx: Redimensionamiento incorrecto de imagenes en ciertas situaciones (props_image.txt y props_optiongroup.txt actualizados)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -113,6 +114,7 @@
 * 07/05/2014	Fidel Charny		REPORTE BUG vcx/scx v1.19.21: La propiedad Picture de una clase form se pierde y no muestra la imagen. No ocurre con la propiedad Picture de los controles (Arreglado en v1.19.22)
 * 09/05/2014	Miguel Durán		REPORTE BUG vcx/scx v1.19.21: Algunas opciones del optiongroup pierden el width cuando se subclasan de una clase con autosize=.T. (Arreglado en v1.19.22)
 * 13/05/2014	Andrés Mendoza		REPORTE BUG vcx/scx v1.19.21: Los métodos que contengan líneas o variables que comiencen con TEXT, provocan que los siguientes métodos queden mal indentados y se dupliquen vacíos (Arreglado en v1.19.22)
+* 27/05/2014	Kenny Vermassen		REPORTE DE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones  (Arreglado en v1.19.23)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -478,7 +480,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_Type					= ''
 	t_InputFile_TimeStamp	= {//::}
 	t_OutputFile_TimeStamp	= {//::}
-	lFileMode				= .F.
+	lFileMode				= .T.
 	n_ExisteCapitalizacion	= -1
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
@@ -1388,6 +1390,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
+				, ltFilestamp, lcExtA, lcExtB ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -1577,7 +1580,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*-- Optimización: Comparación de los timestamps de InputFile y OutputFile para saber
 				*-- si el OutputFile se debe regenerar o no.
 				lnFileCount	= ADIR( laFiles, FORCEEXT( .c_InputFile, '*' ), '', 1 )
-				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp
+				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp, ltFilestamp
 
 				IF lnFileCount >= 1 THEN
 					I	= ASCAN( laFiles, JUSTFNAME(.c_InputFile), 1, 0, 1, 1+2+4+8 )
@@ -1592,6 +1595,25 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							.t_OutputFile_TimeStamp	=	DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
 								, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
 						ENDIF
+						
+						lcExtA	= UPPER(JUSTEXT(.c_OutputFile))
+						
+						DO CASE
+						CASE INLIST(lcExtA, 'SCX', 'VCX', 'MNX', 'FRX', 'LBX')
+							lcExtB	= ICASE(lcExtA = 'SCX', 'SCT' ;
+								, lcExtA = 'VCX', 'VCT' ;
+								, lcExtA = 'MNX', 'MNT' ;
+								, lcExtA = 'FRX', 'FRT' ;
+								, lcExtA = 'LBX', 'LBT')
+							I	= ASCAN( laFiles, JUSTFNAME( FORCEEXT(.c_OutputFile, lcExtB) ), 1, 0, 1, 1+2+4+8 )
+							IF I > 0 THEN
+								ltFilestamp	= DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
+									, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
+							ENDIF
+
+						ENDCASE
+						
+						.t_OutputFile_TimeStamp	=	MAX( .t_OutputFile_TimeStamp, ltFilestamp )
 					ENDIF
 				ENDIF
 
@@ -3475,6 +3497,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, OBJECT ;
 			, RESERVED1 ;
 			, RESERVED2 ;
+			, SCCDATA ;
 			, LOCAL ;
 			, KEY ) ;
 			VALUES ;
@@ -3493,6 +3516,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, toProject._HomeDir + CHR(0) ;
 			, UPPER(THIS.c_OutputFile) ;
 			, toProject._ServerHead.getRowServerInfo() ;
+			, toProject._SccData ;
 			, .T. ;
 			, UPPER( JUSTSTEM( THIS.c_OutputFile) ) )
 
@@ -4097,6 +4121,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				lcPropsMemo		= .objectProps2Memo( toObjeto, toClase )
 				lcMethodsMemo	= .objectMethods2Memo( toObjeto, toClase )
 
+				IF EMPTY(toObjeto._TIMESTAMP)
+					toObjeto._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+				ENDIF
+				IF EMPTY(toObjeto._UNIQUEID)
+					toObjeto._UNIQUEID	= SYS(2015)
+				ENDIF
+
 				*-- Inserto el objeto
 				INSERT INTO TABLABIN ;
 					( PLATFORM ;
@@ -4123,8 +4154,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, USER) ;
 					VALUES ;
 					( 'WINDOWS' ;
-					, IIF( toFoxBin2Prg.l_ClearUniqueID, '', toObjeto._UniqueID ) ;
-					, IIF( toFoxBin2Prg.l_NoTimestamps, 0, toObjeto._TimeStamp ) ;
+					, toObjeto._UniqueID ;
+					, toObjeto._TimeStamp ;
 					, toObjeto._Class ;
 					, toObjeto._ClassLib ;
 					, toObjeto._BaseClass ;
@@ -4174,6 +4205,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 					FOR X = 1 TO toClase._AddObject_Count
 						loObjeto			= toClase._AddObjects( X )
+
+						IF EMPTY(loObjeto._TIMESTAMP)
+							loObjeto._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+						ENDIF
+						IF EMPTY(loObjeto._UNIQUEID)
+							loObjeto._UNIQUEID	= SYS(2015)
+						ENDIF
+
 						laObjNames( X, 1 )	= loObjeto._Nombre
 						laObjNames( X, 2 )	= loObjeto._ZOrder
 						loObjeto			= NULL
@@ -5339,6 +5378,13 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							LOOP
 						ENDIF
 
+						IF EMPTY(loClase._TIMESTAMP)
+							loClase._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+						ENDIF
+						IF EMPTY(loClase._UNIQUEID)
+							loClase._UNIQUEID	= SYS(2015)
+						ENDIF
+
 						*-- Inserto la clase
 						INSERT INTO TABLABIN ;
 							( PLATFORM ;
@@ -5365,8 +5411,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							, USER) ;
 							VALUES ;
 							( 'WINDOWS' ;
-							, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
-							, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loClase._TimeStamp ) ;
+							, loClase._UniqueID ;
+							, loClase._TimeStamp ;
 							, loClase._Class ;
 							, loClase._ClassLoc ;
 							, loClase._BaseClass ;
@@ -5635,6 +5681,13 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							LOOP
 						ENDIF
 
+						IF EMPTY(loClase._TIMESTAMP)
+							loClase._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+						ENDIF
+						IF EMPTY(loClase._UNIQUEID)
+							loClase._UNIQUEID	= SYS(2015)
+						ENDIF
+
 						*-- Inserto la clase
 						INSERT INTO TABLABIN ;
 							( PLATFORM ;
@@ -5661,8 +5714,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							, USER) ;
 							VALUES ;
 							( 'WINDOWS' ;
-							, IIF( toFoxBin2Prg.l_ClearUniqueID, '', loClase._UniqueID ) ;
-							, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loClase._TimeStamp ) ;
+							, loClase._UniqueID ;
+							, loClase._TimeStamp ;
 							, loClase._Class ;
 							, loClase._ClassLoc ;
 							, loClase._BaseClass ;
@@ -5856,6 +5909,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loFile, loServerHead
 				toProject._HomeDir	= CHRTRAN( toProject._HomeDir, ['], [] )
+				toProject._SccData	= CHR(3) + CHR(0) + CHR(1) + REPLICATE( CHR(0), 651 )
 
 				*-- Creo solo el registro de cabecera del proyecto
 				.createProject_RecordHeader( toProject )
@@ -5864,6 +5918,13 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 				IF NOT EMPTY(toProject._MainProg)
 					lcMainProg	= LOWER( SYS(2014, toProject._MainProg, ADDBS(toProject._HomeDir) ) )
+				ENDIF
+
+				IF EMPTY(toProject._TIMESTAMP)
+					toProject._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+				ENDIF
+				IF EMPTY(toProject._ID)
+					toProject._ID	= INT(VAL(SYS(3)))
 				ENDIF
 
 				*-- Si hay ProjectHook de proyecto, lo inserto
@@ -5898,6 +5959,14 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 				*-- Agrego los ARCHIVOS
 				FOR EACH loFile IN toProject FOXOBJECT
+
+					IF EMPTY(loFile._TIMESTAMP)
+						loFile._TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+					ENDIF
+					IF EMPTY(loFile._ID)
+						loFile._ID	= INT(VAL(SYS(3)))
+					ENDIF
+
 					INSERT INTO TABLABIN ;
 						( NAME ;
 						, TYPE ;
@@ -5918,8 +5987,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, loFile._Comments ;
 						, .T. ;
 						, loFile._CPID ;
-						, IIF( toFoxBin2Prg.l_ClearUniqueID, 0, loFile._ID ) ;
-						, IIF( toFoxBin2Prg.l_NoTimestamps, 0, loFile._TimeStamp ) ;
+						, loFile._ID ;
+						, loFile._TimeStamp ;
 						, loFile._ObjRev ;
 						, UPPER(JUSTSTEM(loFile._Name)) )
 				ENDFOR
@@ -6627,11 +6696,17 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			*-- Agrego los registros
 			FOR EACH loReg IN toReport FOXOBJECT
 
-				IF toFoxBin2Prg.l_NoTimestamps
-					loReg.TIMESTAMP	= 0
+				*IF toFoxBin2Prg.l_NoTimestamps
+				*	loReg.TIMESTAMP	= 0
+				*ENDIF
+				*IF toFoxBin2Prg.l_ClearUniqueID
+				*	loReg.UNIQUEID	= ''
+				*ENDIF
+				IF EMPTY(loReg.TIMESTAMP)
+					loReg.TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
 				ENDIF
-				IF toFoxBin2Prg.l_ClearUniqueID
-					loReg.UNIQUEID	= ''
+				IF EMPTY(loReg.UNIQUEID) OR ALLTRIM(loReg.UNIQUEID) = '0'
+					loReg.UNIQUEID	= SYS(2015)
 				ENDIF
 
 				*-- Ajuste de los tipos de dato
@@ -11448,6 +11523,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [<memberdata name="_timestamp" display="_TimeStamp"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_sccdata" display="_SccData"/>] ;
 		+ [<memberdata name="_address" display="_Address"/>] ;
 		+ [<memberdata name="_author" display="_Author"/>] ;
 		+ [<memberdata name="_company" display="_Company"/>] ;
@@ -11493,6 +11569,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	_SourceFile			= ''
 	_TimeStamp			= 0
 	_Version			= ''
+	_SccData			= ''
 
 	*-- Dev.info
 	_Author				= ''

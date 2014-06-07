@@ -1466,6 +1466,7 @@ DEFINE CLASS f_base AS form
 		*p: c_testname
 	*</DefinedPropArrayMethod>
 
+	AlwaysOnTop = .T.
 	BackColor = 192,192,192
 	Caption = "OptionGroup_Test"
 	c_testname = OptionGroup_Test
@@ -1539,8 +1540,12 @@ DEFINE CLASS f_base AS form
 		LOCAL retVal
 		tcFilename	= EVL(tcFilename, 'optiongroup')
 		
+		IF NOT '\' $ tcFilename
+			tcFilename	= SYS(5) + ADDBS(CURDIR()) + "TESTS\DATOS_TEST\" + tcFilename + '.bmp'
+		ENDIF
+		
 		Declare Integer formtobmp IN "TESTS\PCT_DLL.dll" integer hwnd,String bmpFileName
-		retVal = formtobmp( THISFORM.HWnd, SYS(5) + ADDBS(CURDIR()) + "TESTS\DATOS_TEST\" + tcFilename + '.bmp' )
+		retVal = formtobmp( THISFORM.HWnd, tcFilename )
 		
 		*Declare Integer formtobmpA  IN "TESTS\PCT_DLL.dll" string bmpfilename,integer nX,integer nY,integer nX2,integer nY2
 		
@@ -4890,6 +4895,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
  	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="Pixels" Uniqueid="" />
 
 	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder 
+	*< OBJECTDATA: ObjPath="Cl_image1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Cl_grid1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Cl_grid1.Column6.Header1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Cl_grid1.Column6.Text1" UniqueID="" Timestamp="" />
@@ -4914,6 +4920,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	*< OBJECTDATA: ObjPath="pgf.Page1.timer" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.Pageframe1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.Cl_optiongroup1" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="Image1" UniqueID="" Timestamp="" />
 
 	*<DefinedPropArrayMethod>
 		*m: add_control
@@ -4947,7 +4954,6 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	DefLeft = 
 	DefOleLCID = 0
 	DefTop = 
-	DefWidth = 
 	Desktop = .F.
 	Dockable = 0
 	DoCreate = .T.
@@ -4970,7 +4976,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	FontUnderline = .F.
 	ForeColor = 0,0,0
 	HalfHeightCaption = .F.
-	Height = (424)
+	Height = (460)
 	HelpContextID = 0
 	HScrollSmallChange = 10
 	Icon = bmps\container.ico
@@ -5017,7 +5023,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	WhatsThisButton = .F.
 	WhatsThisHelp = .F.
 	WhatsThisHelpID = -1
-	Width = (980)
+	Width = 998
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
@@ -5027,7 +5033,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	cmdCapturar.RightToLeft = .F.
 	cmdCapturar.Top = 392
 	cmdCapturar.Width = 212
-	Edit1.Height = 356
+	Edit1.Height = 144
 	Edit1.Left = 764
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
@@ -5088,7 +5094,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		GridLines = 3, ;
 		GridLineWidth = 1, ;
 		HeaderHeight = 18, ;
-		Height = 384, ;
+		Height = 420, ;
 		HelpContextID = 0, ;
 		Highlight = .T., ;
 		HighlightBackColor = 51,153,255, ;
@@ -5557,6 +5563,52 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		RightToLeft = .F., ;
 		Visible = .T.
 		*< END OBJECT: BaseClass="textbox" />
+
+	ADD OBJECT 'Cl_image1' AS cl_image WITH ;
+		Anchor = 0, ;
+		BackStyle = 1, ;
+		BorderColor = 255,0,0, ;
+		BorderStyle = 1, ;
+		ColorSource = 4, ;
+		Comment = "", ;
+		DragIcon = ..\..\, ;
+		DragMode = 0, ;
+		Enabled = .T., ;
+		Height = 104, ;
+		HelpContextID = 0, ;
+		Left = 764, ;
+		MouseIcon = ..\..\, ;
+		MousePointer = 0, ;
+		Name = "Cl_image1", ;
+		OLEDragMode = 0, ;
+		OLEDragPicture = ..\..\, ;
+		OLEDropEffects = 3, ;
+		OLEDropMode = 0, ;
+		Picture = bmps\vfpxlogo.bmp, ;
+		RotateFlip = 0, ;
+		StatusBarText = "", ;
+		Stretch = 0, ;
+		Tag = "", ;
+		test_aa = .F., ;
+		Themes = .T., ;
+		ToolTipText = "", ;
+		Top = 284, ;
+		Visible = .T., ;
+		WhatsThisHelpID = -1, ;
+		Width = 212, ;
+		ZOrderSet = 0
+		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="image" />
+
+	ADD OBJECT 'Image1' AS image WITH ;
+		BorderColor = 255,0,0, ;
+		BorderStyle = 1, ;
+		Height = 104, ;
+		Left = 764, ;
+		Name = "Image1", ;
+		Picture = bmps\vfpxlogo.bmp, ;
+		Top = 180, ;
+		Width = 212
+		*< END OBJECT: BaseClass="image" />
 
 	ADD OBJECT 'pgf' AS cl_pageframe WITH ;
 		ActivePage = 2, ;

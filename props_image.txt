@@ -12,8 +12,10 @@ DefLeft
 DefHeight
 DefWidth
 Picture
+Stretch
 BackStyle
 BorderStyle
+Enabled
 Height
 HelpContextID
 WhatsThisHelpID

@@ -19,6 +19,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
  	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="" Uniqueid="" />
 
 	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder 
+	*< OBJECTDATA: ObjPath="Cl_image1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Cl_grid1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Cl_grid1.Column6.Header1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="Cl_grid1.Column6.Text1" UniqueID="" Timestamp="" />
@@ -41,8 +42,9 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	*< OBJECTDATA: ObjPath="pgf.Page1.spinner" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.textbox" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.timer" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="pgf.Page1.Pageframe1" UniqueID="" Timestamp="" />
 	*< OBJECTDATA: ObjPath="pgf.Page1.Cl_optiongroup1" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="pgf.Page1.Pageframe1" UniqueID="" Timestamp="" />
+	*< OBJECTDATA: ObjPath="Image1" UniqueID="" Timestamp="" />
 
 	*<DefinedPropArrayMethod>
 		*m: add_control
@@ -99,7 +101,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	FontUnderline = .F.
 	ForeColor = 0,0,0
 	HalfHeightCaption = .F.
-	Height = (424)
+	Height = (460)
 	HelpContextID = 0
 	HScrollSmallChange = 10
 	Icon = bmps\container.ico
@@ -146,7 +148,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	WhatsThisButton = .F.
 	WhatsThisHelp = .F.
 	WhatsThisHelpID = -1
-	Width = (980)
+	Width = (998)
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
@@ -156,7 +158,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	cmdCapturar.RightToLeft = .F.
 	cmdCapturar.Top = 392
 	cmdCapturar.Width = 212
-	Edit1.Height = 356
+	Edit1.Height = 144
 	Edit1.Left = 764
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
@@ -217,7 +219,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		GridLines = 3, ;
 		GridLineWidth = 1, ;
 		HeaderHeight = 18, ;
-		Height = 384, ;
+		Height = 424, ;
 		HelpContextID = 0, ;
 		Highlight = .T., ;
 		HighlightBackColor = 51,153,255, ;
@@ -687,6 +689,53 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T.
 		*< END OBJECT: BaseClass="textbox" />
 
+	ADD OBJECT 'Cl_image1' AS cl_image WITH ;
+		Anchor = 0, ;
+		BackStyle = 1, ;
+		BorderColor = 255,0,0, ;
+		BorderStyle = 1, ;
+		ColorSource = 4, ;
+		Comment = "", ;
+		DragIcon = ..\..\, ;
+		DragMode = 0, ;
+		Enabled = .T., ;
+		Height = 104, ;
+		HelpContextID = 0, ;
+		Left = 764, ;
+		MouseIcon = ..\..\, ;
+		MousePointer = 0, ;
+		Name = "Cl_image1", ;
+		OLEDragMode = 0, ;
+		OLEDragPicture = ..\..\, ;
+		OLEDropEffects = 3, ;
+		OLEDropMode = 0, ;
+		Picture = bmps\vfpxlogo.bmp, ;
+		RotateFlip = 0, ;
+		StatusBarText = "", ;
+		Stretch = 0, ;
+		Tag = "", ;
+		test_aa = .F., ;
+		Themes = .T., ;
+		ToolTipText = "", ;
+		Top = 284, ;
+		Visible = .T., ;
+		WhatsThisHelpID = -1, ;
+		Width = 212, ;
+		ZOrderSet = 0
+		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="image" />
+
+	ADD OBJECT 'Image1' AS image WITH ;
+		BorderColor = 255,0,0, ;
+		BorderStyle = 1, ;
+		Enabled = .T., ;
+		Height = 104, ;
+		Left = 764, ;
+		Name = "Image1", ;
+		Picture = bmps\vfpxlogo.bmp, ;
+		Top = 180, ;
+		Width = 212
+		*< END OBJECT: BaseClass="image" />
+
 	ADD OBJECT 'pgf' AS cl_pageframe WITH ;
 		ActivePage = 2, ;
 		Anchor = 0, ;
@@ -827,7 +876,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (199), ;
-		WordWrap = .F.
+		WordWrap = .F., ;
+		ZOrderSet = 1
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="checkbox" />
 
 	ADD OBJECT 'pgf.Page1.Cl_optiongroup1' AS cl_optiongroup WITH ;
@@ -869,6 +919,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (112), ;
+		ZOrderSet = 20, ;
 		Option1.Alignment = 0, ;
 		Option1.Anchor = 0, ;
 		Option1.AutoSize = .F., ;
@@ -1037,7 +1088,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Value = , ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (196)
+		Width = (196), ;
+		ZOrderSet = 3
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="combobox" />
 
 	ADD OBJECT 'pgf.Page1.commandbutton' AS cl_commandbutton WITH ;
@@ -1060,7 +1112,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (80), ;
-		WordWrap = .F.
+		WordWrap = .F., ;
+		ZOrderSet = 5
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="commandbutton" />
 
 	ADD OBJECT 'pgf.Page1.commandgroup' AS cl_commandgroup WITH ;
@@ -1104,6 +1157,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (93), ;
+		ZOrderSet = 4, ;
 		Command1.Alignment = 2, ;
 		Command1.Anchor = 0, ;
 		Command1.AutoSize = .F., ;
@@ -1213,7 +1267,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Top = (127), ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (20)
+		Width = (20), ;
+		ZOrderSet = 6
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="container" />
 
 	ADD OBJECT 'pgf.Page1.control' AS cl_control WITH ;
@@ -1254,7 +1309,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Top = (127), ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (20)
+		Width = (20), ;
+		ZOrderSet = 7
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="control" />
 
 	ADD OBJECT 'pgf.Page1.editbox' AS cl_editbox WITH ;
@@ -1330,7 +1386,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Value = , ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (68)
+		Width = (68), ;
+		ZOrderSet = 8
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="editbox" />
 
 	ADD OBJECT 'pgf.Page1.hyperlink' AS cl_hyperlink WITH ;
@@ -1373,7 +1430,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Top = 107, ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = 16
+		Width = 16, ;
+		ZOrderSet = 10
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="image" />
 
 	ADD OBJECT 'pgf.Page1.label' AS cl_label WITH ;
@@ -1419,7 +1477,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (104), ;
-		WordWrap = .F.
+		WordWrap = .F., ;
+		ZOrderSet = 11
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="label" />
 
 	ADD OBJECT 'pgf.Page1.line' AS cl_line WITH ;
@@ -1457,7 +1516,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Top = (136), ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (50)
+		Width = (50), ;
+		ZOrderSet = 12
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="line" />
 
 	ADD OBJECT 'pgf.Page1.listbox' AS cl_listbox WITH ;
@@ -1534,7 +1594,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Value = , ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (224)
+		Width = (224), ;
+		ZOrderSet = 13
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="listbox" />
 
 	ADD OBJECT 'pgf.Page1.option' AS cl_option WITH ;
@@ -1547,7 +1608,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Left = 11, ;
 		Name = "option", ;
 		Top = 283, ;
-		Width = (110)
+		Width = (110), ;
+		ZOrderSet = 15
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="optionbutton" />
 
 	ADD OBJECT 'pgf.Page1.optiongroup' AS cl_optiongroup WITH ;
@@ -1591,6 +1653,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
 		Width = (112), ;
+		ZOrderSet = 14, ;
 		Option1.Alignment = 0, ;
 		Option1.Anchor = 0, ;
 		Option1.AutoSize = .F., ;
@@ -1680,6 +1743,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Themes = .F., ;
 		Top = (284), ;
 		Width = (117), ;
+		ZOrderSet = 19, ;
 		Cl_page1.Caption = "Pg1", ;
 		Cl_page1.Name = "Cl_page1", ;
 		Cl_page2.BackColor = 255,193,132, ;
@@ -1755,7 +1819,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Value = 0, ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (108)
+		Width = (108), ;
+		ZOrderSet = 16
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="spinner" />
 
 	ADD OBJECT 'pgf.Page1.textbox' AS cl_textbox WITH ;
@@ -1838,7 +1903,8 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 		Value = , ;
 		Visible = .T., ;
 		WhatsThisHelpID = -1, ;
-		Width = (108)
+		Width = (108), ;
+		ZOrderSet = 17
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="textbox" />
 
 	ADD OBJECT 'pgf.Page1.timer' AS cl_timer WITH ;
@@ -1971,6 +2037,14 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 						loCtl.ControlSource = ''
 		
 					CASE loCtl.Baseclass == 'Optiongroup'
+						.valor	= 2
+						loCtl.ControlSource = 'THISFORM.valor'
+						IF loCtl.Value = .valor
+							REPLACE c_Value WITH "S"
+						ENDIF
+						loCtl.ControlSource = ''
+		
+					CASE loCtl.Baseclass == 'Optionbutton'
 						.valor	= 2
 						loCtl.ControlSource = 'THISFORM.valor'
 						IF loCtl.Value = .valor

@@ -63,7 +63,8 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 
 
 	cOldPath			= ''
-	cPath				= 'FOXUNIT;TESTS;TESTS\DATOS_TEST'
+	cPath				= 'TESTS;TESTS\DATOS_TEST'
+	
 	cPathDatosReadOnly	= 'TESTS\DATOS_READONLY'
 	cPathDatosTest		= 'TESTS\DATOS_TEST'
 	cSetDate			= ''
@@ -80,6 +81,13 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 		SET TALK OFF
 
 		THIS.cOldPath	= SET("Path")
+
+		IF FILE("FOXUNIT_PATH.TXT")
+			THIS.cPath	= THIS.cPath + ';' + FILETOSTR("FOXUNIT_PATH.TXT")
+		ELSE
+			THIS.cPath	= THIS.cPath + ';FOXUNIT'
+		ENDIF
+		
 		SET PATH TO (THIS.cPath)
 	ENDPROC
 
@@ -93,7 +101,21 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 
 	*----------------------------------------------------------------------------------------
 	PROCEDURE SETUP_COMUN
-		ERASE (FORCEPATH( '*.*', THIS.cPathDatosTest ) )
+		IF DIRECTORY( THIS.cPathDatosTest )
+			ERASE ( FORCEPATH( '*.*', THIS.cPathDatosTest ) )
+		ELSE
+			TRY
+				MKDIR ( THIS.cPathDatosTest )
+			CATCH
+			ENDTRY
+		ENDIF
+
+		IF NOT DIRECTORY( ADDBS(THIS.cPathDatosTest) + 'bmps' )
+			TRY
+				MKDIR ( ADDBS(THIS.cPathDatosTest) + 'bmps' )
+			CATCH
+			ENDTRY
+		ENDIF
 	ENDPROC
 
 
@@ -107,7 +129,15 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 	PROCEDURE copiarArchivosParaTest
 		LPARAMETERS tcFileSpec
 
-		COPY FILE (FORCEPATH( tcFileSpec, THIS.cPathDatosReadOnly )) TO (FORCEPATH( tcFileSpec, THIS.cPathDatosTest ))
+		TRY
+			LOCAL loEx AS Exception
+			COPY FILE (FORCEPATH( tcFileSpec, THIS.cPathDatosReadOnly )) TO (FORCEPATH( tcFileSpec, THIS.cPathDatosTest ))
+
+		CATCH TO loEx
+			loEx.UserValue = 'cPathDatosReadOnly = "' + THIS.cPathDatosReadOnly + CHR(13) + CHR(10) ;
+				+ 'cPathDatosTest = "' + THIS.cPathDatosTest
+			THROW
+		ENDTRY
 	ENDPROC
 
 
