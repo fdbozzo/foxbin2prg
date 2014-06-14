@@ -23,10 +23,10 @@ _CompanyName = "Fernando D. Bozzo"
 _FileDescription = "Conversor bidireccional de binarios FoxPro 9 (scx,vcx,pjx) a texto para sustituir al scctext :-)"
 _LegalCopyright = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
 _LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
-_ProductName = " FOXBIN2PRG v1.19.23"
+_ProductName = " FOXBIN2PRG v1.19.24"
 _MajorVer = "1"
 _MinorVer = "19"
-_Revision = "23"
+_Revision = "24"
 _LanguageID = "1034"
 _AutoIncrement = "0"
 *</DevInfo>
@@ -91,6 +91,7 @@ WITH loProject.FILES
 	.ADD('props_xmladapter.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_xmlfield.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_xmltable.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('readme.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('tests\foxunit_path.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('tests\ft__foxbin2prg__c_conversor_prg_a_dbc.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ft__foxbin2prg__c_conversor_prg_a_dbf.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
@@ -118,6 +119,7 @@ WITH loProject.FILES
 	*</FileComments>
 
 	*<ExcludedFiles>
+	.ITEM(lcCurdir + 'readme.txt').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\foxunit_path.txt').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_prg_a_dbc.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_prg_a_dbf.prg').Exclude = .T.
