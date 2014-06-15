@@ -2413,8 +2413,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lnResto		= lnResto % 2**5
 			lnSeconds	= lnResto
 
-			lcTimeStamp	= STR(lnYear,4) + "/" + STR(lnMonth,2) + "/" + STR(lnDay,2) + " " ;
-				+ STR(lnHour,2) + ":" + STR(lnMinutes,2) + ":" + STR(lnSeconds,2)
+			lcTimeStamp	= PADL(lnYear,4,'0') + "/" + PADL(lnMonth,2,'0') + "/" + PADL(lnDay,2,'0') + " " ;
+				+ PADL(lnHour,2,'0') + ":" + PADL(lnMinutes,2,'0') + ":" + PADL(lnSeconds,2,'0')
 
 			ltTimeStamp	= EVALUATE( "{^" + lcTimeStamp + "}" )
 
