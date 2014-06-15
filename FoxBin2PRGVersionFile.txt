@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.23'
-    .VersionDate          = Date(2014,06,07)
+    .VersionNumber        = 'v1.19.24'
+    .VersionDate          = Date(2014,06,15)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,14 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/06/15	v1.19.24
+- Bug Fix scx/vcx: The absence of AGAIN keyword on some USE commands throws "tabla in use" error if used the PRG version from VFP command window (Matt Slay)
+- Bug Fix scx/vcx: A table field called "text" that begins the line can be confused with the TEXT/ENDTEXT structure and can wrong recognize the rest of the code (Mario Peschke)
+- Bug Fix scx/vcx: GetTimeStamp internal method throwse an error when day or month have just 1 digit (happen from v1.19.23)
+- New "run_aftercreate_db2" event that permits execution of an external program when using FoxBin2Prg as object (for example, to export table data)
+- New FoxUnit Unit Tests to verify new functionality and "text" bug fix
+- Added foxbin2prg_de.h file translation of most messages to German (Mario Peschke)
 
 2014/06/07	v1.19.23
 - Timestamps and UniqueIds values are back on binaries, and they are just cleaned up on tx2 files if NoTimestamps and ClearUniqueID flags are set. This minimizes some differences on the binary side.
