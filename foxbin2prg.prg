@@ -1,6 +1,7 @@
 *---------------------------------------------------------------------------------------------------
 * Módulo.........: FOXBIN2PRG.PRG - PARA VISUAL FOXPRO 9.0
 * Autor..........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com) - http://fdbozzo.blogspot.com
+* Project info...: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
 * Fecha creación.: 04/11/2013
 *
 * LICENCIA:
@@ -84,7 +85,9 @@
 * 17/04/2014	FDBOZZO		v1.19.20	Relativización de directorios de CDX dentro de los DB2 para minimizar diferencias
 * 29/04/2014	FDBOZZO		v1.19.21	Agregada posibilidad de convertir un proyecto entero a tx2 // Optimizaciones en generación según timestamps // AGAIN en aperturas // Simplificación sección PAM
 * 08/05/2014	FDBOZZO		v1.19.22	Arreglo bug vcx/scx: La propiedad Picture de una clase form se pierde y no muestra la imagen
-* 27/05/2014	FDBOZZO		v1.19.23	Arreglo bugs vcx/scx: Redimensionamiento incorrecto de imagenes en ciertas situaciones (props_image.txt y props_optiongroup.txt actualizados)
+* 27/05/2014	FDBOZZO		v1.19.23	Arreglo bug vcx/scx: Redimensionamiento incorrecto de imagenes en ciertas situaciones (props_image.txt y props_optiongroup.txt actualizados)
+* 09/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: La falta de AGAIN en algunos comandos USE provoca error de "tabla en uso" si se usa el PRG desde la ventana de comandos
+* 14/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -114,7 +117,9 @@
 * 07/05/2014	Fidel Charny		REPORTE BUG vcx/scx v1.19.21: La propiedad Picture de una clase form se pierde y no muestra la imagen. No ocurre con la propiedad Picture de los controles (Arreglado en v1.19.22)
 * 09/05/2014	Miguel Durán		REPORTE BUG vcx/scx v1.19.21: Algunas opciones del optiongroup pierden el width cuando se subclasan de una clase con autosize=.T. (Arreglado en v1.19.22)
 * 13/05/2014	Andrés Mendoza		REPORTE BUG vcx/scx v1.19.21: Los métodos que contengan líneas o variables que comiencen con TEXT, provocan que los siguientes métodos queden mal indentados y se dupliquen vacíos (Arreglado en v1.19.22)
-* 27/05/2014	Kenny Vermassen		REPORTE DE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones  (Arreglado en v1.19.23)
+* 27/05/2014	Kenny Vermassen		REPORTE DE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones (Arreglado en v1.19.23)
+* 09/06/2014	Matt Slay			REPORTE BUG vcx/scx v1.19.23: La falta de AGAIN en algunos comandos USE provoca error de "tabla en uso" si se usa el PRG desde la ventana de comandos (Arreglado en v1.19.24)
+* 13/06/2014	Mario Peschke		REPORTE BUG vcx/scx v1.19.23: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.24)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -428,6 +433,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
+		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
@@ -500,6 +506,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
 	run_AfterCreateTable	= ''
+	run_AfterCreate_DB2		= ''
 	c_VC2					= 'VC2'	&& VCX
 	c_SC2					= 'SC2'	&& SCX
 	c_PJ2					= 'PJ2'	&& PJX
@@ -2408,8 +2415,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lnResto		= lnResto % 2**5
 			lnSeconds	= lnResto
 
-			lcTimeStamp	= STR(lnYear,4) + "/" + STR(lnMonth,2) + "/" + STR(lnDay,2) + " " ;
-				+ STR(lnHour,2) + ":" + STR(lnMinutes,2) + ":" + STR(lnSeconds,2)
+			lcTimeStamp	= PADL(lnYear,4,'0') + "/" + PADL(lnMonth,2,'0') + "/" + PADL(lnDay,2,'0') + " " ;
+				+ PADL(lnHour,2,'0') + ":" + PADL(lnMinutes,2,'0') + ":" + PADL(lnSeconds,2,'0')
 
 			ltTimeStamp	= EVALUATE( "{^" + lcTimeStamp + "}" )
 
@@ -3304,7 +3311,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		EXTERNAL ARRAY ta_ID_Bloques, taBloquesExclusion
 
 		TRY
-			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos
+			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
 			DIMENSION taBloquesExclusion(1,2)
 			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
 
@@ -3340,6 +3347,15 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						ENDFOR
 
 						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
+							IF I > 1
+								*-- Analizo la línea anterior para saber si termina con ";" y la actual es continuación
+								lcPrevLine	= taCodeLines(I-1)
+								.get_SeparatedLineAndComment( @lcPrevLine )
+								IF RIGHT( lcPrevLine,1 ) = ';'	&& Esta línea es continuación de la anterior
+									LOOP
+								ENDIF
+							ENDIF
+
 							tnBloquesExclusion		= tnBloquesExclusion + 1
 							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
 							DIMENSION taBloquesExclusion(tnBloquesExclusion,2)
@@ -4020,7 +4036,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			LOCAL lcStructure, lnSelect
 			lnSelect	= SELECT()
 			SELECT 0
-			USE (THIS.c_InputFile) AGAIN SHARED ALIAS _TABLABIN
+			USE (THIS.c_InputFile) SHARED AGAIN ALIAS _TABLABIN
 			COPY STRUCTURE EXTENDED TO ( FORCEPATH( '_FRX_STRUC.DBF', ADDBS( SYS(2023) ) ) )
 			**** CONTINUAR SI ES NECESARIO - SIN USO POR AHORA
 
@@ -7182,6 +7198,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
 				&lcCreateTable.
 
+				*-- Hook para permitir ejecución externa (por ejemplo, para rellenar la tabla con datos)
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreateTable)
 					lnSelect	= SELECT()
 					DO (toFoxBin2Prg.run_AfterCreateTable) WITH (lnDataSessionID), (.c_OutputFile), (toTable)
@@ -9351,7 +9368,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -9573,7 +9590,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -9810,7 +9827,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 
 			WITH THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -10536,7 +10553,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
 
 			WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -10694,7 +10711,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		TRY
 			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 				, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loTable, loDBFUtils
@@ -10707,6 +10724,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				lnDatabases_Count	= ADATABASES(laDatabases)
 
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+				lnDataSessionID	= .DATASESSIONID
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -10731,6 +10749,15 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 					ENDCASE
 				ENDIF
+
+				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
+				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreate_DB2)
+					lnSelect	= SELECT()
+					DO (toFoxBin2Prg.run_AfterCreate_DB2) WITH (lnDataSessionID), (.c_OutputFile), (loTable)
+					SET DATASESSION TO (lnDataSessionID)	&& Por las dudas externamente se cambie
+					SELECT (lnSelect)
+				ENDIF
+
 			ENDWITH && THIS
 
 
@@ -10774,7 +10801,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			STORE NULL TO loTable, loDBFUtils
 			RELEASE lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable, loDBFUtils
 		ENDTRY
 
@@ -10887,7 +10914,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			STORE 0 TO lnCodError
 
 			WITH THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
-				USE (.c_InputFile) SHARED NOUPDATE ALIAS _TABLAORIG
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -11966,7 +11993,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 				lcDBF		= DBF()
 
 				SELECT 0
-				USE (lcDBF) AGAIN SHARED NOUPDATE ALIAS C_TABLABIN2
+				USE (lcDBF) SHARED AGAIN NOUPDATE ALIAS C_TABLABIN2
 
 				IF INLIST( tcType, 'Index', 'Field' )
 					SELECT TB.Property FROM C_TABLABIN2 TB ;
@@ -12421,7 +12448,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 				lcDBF		= DBF()
 
 				SELECT 0
-				USE (lcDBF) AGAIN SHARED NOUPDATE ALIAS C_TABLABIN2
+				USE (lcDBF) SHARED AGAIN NOUPDATE ALIAS C_TABLABIN2
 
 				IF INLIST( tcType, 'Index', 'Field' )
 					SELECT TB.Property FROM C_TABLABIN2 TB ;
