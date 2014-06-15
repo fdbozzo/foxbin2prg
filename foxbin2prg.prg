@@ -433,6 +433,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
+		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
@@ -505,6 +506,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
 	run_AfterCreateTable	= ''
+	run_AfterCreate_DB2		= ''
 	c_VC2					= 'VC2'	&& VCX
 	c_SC2					= 'SC2'	&& SCX
 	c_PJ2					= 'PJ2'	&& PJX
@@ -2413,8 +2415,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lnResto		= lnResto % 2**5
 			lnSeconds	= lnResto
 
-			lcTimeStamp	= STR(lnYear,4) + "/" + STR(lnMonth,2) + "/" + STR(lnDay,2) + " " ;
-				+ STR(lnHour,2) + ":" + STR(lnMinutes,2) + ":" + STR(lnSeconds,2)
+			lcTimeStamp	= PADL(lnYear,4,'0') + "/" + PADL(lnMonth,2,'0') + "/" + PADL(lnDay,2,'0') + " " ;
+				+ PADL(lnHour,2,'0') + ":" + PADL(lnMinutes,2,'0') + ":" + PADL(lnSeconds,2,'0')
 
 			ltTimeStamp	= EVALUATE( "{^" + lcTimeStamp + "}" )
 
@@ -7196,6 +7198,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
 				&lcCreateTable.
 
+				*-- Hook para permitir ejecución externa (por ejemplo, para rellenar la tabla con datos)
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreateTable)
 					lnSelect	= SELECT()
 					DO (toFoxBin2Prg.run_AfterCreateTable) WITH (lnDataSessionID), (.c_OutputFile), (toTable)
@@ -10708,7 +10711,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		TRY
 			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 				, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loTable, loDBFUtils
@@ -10721,6 +10724,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				lnDatabases_Count	= ADATABASES(laDatabases)
 
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+				lnDataSessionID	= .DATASESSIONID
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -10745,6 +10749,15 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 					ENDCASE
 				ENDIF
+
+				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
+				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreate_DB2)
+					lnSelect	= SELECT()
+					DO (toFoxBin2Prg.run_AfterCreate_DB2) WITH (lnDataSessionID), (.c_OutputFile), (loTable)
+					SET DATASESSION TO (lnDataSessionID)	&& Por las dudas externamente se cambie
+					SELECT (lnSelect)
+				ENDIF
+
 			ENDWITH && THIS
 
 
@@ -10788,7 +10801,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			STORE NULL TO loTable, loDBFUtils
 			RELEASE lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name ;
+				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable, loDBFUtils
 		ENDTRY
 

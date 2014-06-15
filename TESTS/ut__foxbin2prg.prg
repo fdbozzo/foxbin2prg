@@ -21,6 +21,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	icObj = NULL
 	nMouseX	= 0
 	nMouseY	= 0
+	run_AfterCreate_DB2__Ejecutado	= .F.
+	run_AfterCreateTable__Ejecutado	= .F.
 
 
 	*******************************************************************************************************************************************
@@ -1415,4 +1417,131 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	ENDFUNC
 
 
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_CrearUnArchivo_DB2_DesdeUn_DBF_Y_EjecutarElMetodo__run_AfterCreate_DB2
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lcFileName, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileBak, lcExt2 ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			PUBLIC goFXU AS ut__foxbin2prg OF ut__foxbin2prg.prg
+			goFXU		= THIS
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			loCnv.EvaluarConfiguracion( '', '1', '1', '1', '1', '4', '1', '0' )
+			*loCnv.l_Test				= .T.
+			loCnv.run_AfterCreate_DB2	= 'run_AfterCreate_DB2__Ejecutado'
+			THIS.run_AfterCreate_DB2__Ejecutado	= .F.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado
+			
+			*-- Copio la librería en DATOS_TEST
+			lcFileName			= FORCEPATH( 'FB2P_FREE.DBF', oFXU_LIB.cPathDatosReadOnly )
+			lc_File				= UPPER(lcFileName)
+			lcExt2				= loCnv.Get_Ext2FromExt( JUSTEXT( lcFileName ) )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2	= FORCEEXT( FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest ), lcExt2 )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, '*' ) )
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Comparo resultados
+			THIS.messageout( "Respuesta esperada = .T." )
+			THIS.asserttrue( THIS.run_AfterCreate_DB2__Ejecutado, "RESPUESTA DE run_AfterCreate_DB2__Ejecutado" )
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+		*	USE IN (SELECT("ARCHIVOBIN_IN"))
+		*	USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loCnv, loCtl, goFXU
+			RELEASE loCnv, loCtl, goFXU
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_CrearUnArchivo_DBF_DesdeUn_DB2_Y_EjecutarElMetodo__run_AfterCreateTable
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lcFileName, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileBak, lcExt2 ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			PUBLIC goFXU AS ut__foxbin2prg OF ut__foxbin2prg.prg
+			goFXU		= THIS
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			loCnv.EvaluarConfiguracion( '', '1', '1', '1', '1', '4', '1', '0' )
+			*loCnv.l_Test				= .T.
+			loCnv.DBF_Conversion_Support	= 2
+			loCnv.run_AfterCreateTable	= 'run_AfterCreateTable__Ejecutado'
+			THIS.run_AfterCreateTable__Ejecutado	= .F.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado
+			
+			*-- Copio la librería en DATOS_TEST
+			lcFileName			= FORCEPATH( 'FB2P_FREE.DB2', oFXU_LIB.cPathDatosReadOnly )
+			lc_File				= UPPER(lcFileName)
+			lcExt2				= loCnv.Get_Ext2FromExt( JUSTEXT( lcFileName ) )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2	= FORCEEXT( FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest ), lcExt2 )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, '*' ) )
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Comparo resultados
+			THIS.messageout( "Respuesta esperada = .T." )
+			THIS.asserttrue( THIS.run_AfterCreateTable__Ejecutado, "RESPUESTA DE run_AfterCreateTable__Ejecutado" )
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+		*	USE IN (SELECT("ARCHIVOBIN_IN"))
+		*	USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loCnv, loCtl, goFXU
+			RELEASE loCnv, loCtl, goFXU
+		ENDTRY
+
+	ENDFUNC
+
+
 ENDDEFINE
+
+
+PROCEDURE run_AfterCreate_DB2__Ejecutado
+	LPARAMETERS tnDataSession, tcOutputFile, toTable
+	goFXU.run_AfterCreate_DB2__Ejecutado	= .T.
+ENDPROC
+
+
+PROCEDURE run_AfterCreateTable__Ejecutado
+	LPARAMETERS tnDataSession, tcOutputFile, toTable
+	goFXU.run_AfterCreateTable__Ejecutado	= .T.
+ENDPROC
+
+
