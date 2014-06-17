@@ -129,7 +129,7 @@
 *	_memberdata				Se separan las definiciones en lineas para evitar una sola muy larga
 *
 *---------------------------------------------------------------------------------------------------
-* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir
 * tcType					(v? IN    ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
 * tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
@@ -144,7 +144,7 @@
 *										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 *										generar errores de compilación, típicamente los #include.
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
-* tcNoTimestamps			(         ) Sin uso. Utilizar el archivo de configuración.
+* tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
 *
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
@@ -696,7 +696,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROCEDURE doBackup
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toEx						(@? IN    ) Objeto Exception con información del error
 		* tlRelanzarError			(v? IN    ) Indica si se debe relanzar el error
 		* tcBakFile_1				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,frx,lbx,dbf,dbc,mnx,vc2,sc2,pj2,etc)
@@ -1030,17 +1030,17 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROCEDURE ejecutar
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada
 		* tcType					(v? IN    ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
 		* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
 		* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
-		* tcDontShowErrors			(?v IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
-		* tcDebug					(?v IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
-		* tcDontShowProgress		(?v IN    ) '1' para inhabilitar la barra de progreso
-		* toModulo					(?@    OUT) Referencia de objeto del módulo generado (para Unit Testing)
-		* toEx						(?@    OUT) Objeto con información del error
-		* tlRelanzarError			(?v IN    ) Indica si el error debe relanzarse o no
+		* tcDontShowErrors			(v? IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
+		* tcDebug					(v? IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
+		* tcDontShowProgress		(v? IN    ) '1' para inhabilitar la barra de progreso
+		* toModulo					(@?    OUT) Referencia de objeto del módulo generado (para Unit Testing)
+		* toEx						(@?    OUT) Objeto con información del error
+		* tlRelanzarError			(v? IN    ) Indica si el error debe relanzarse o no
 		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
 		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 		* tcRecompile				(v? IN    ) Indica recompilar ('1') el binario una vez regenerado. [Cambio de funcionamiento por defecto]
@@ -1048,8 +1048,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
 		*										generar errores de compilación, típicamente los #include.
 		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
-		* tcNoTimestamps			(         ) Sin uso. Utilizar el archivo de configuración.
+		* tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
 		* tcBackupLevels			(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
+		* tcClearUniqueID			(v? IN    ) Indica si se debe limpiar el UniqueID ('1') o no ('0' ó vacío)
+		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp ('1') o no ('0' ó vacío)
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
@@ -1385,11 +1387,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROCEDURE Convertir
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tc_InputFile				(!v IN    ) Nombre del archivo de entrada
-		* toModulo					(?@    OUT) Referencia de objeto del módulo generado (para Unit Testing)
-		* toEx						(?@    OUT) Objeto con información del error
-		* tlRelanzarError			(?v IN    ) Indica si el error debe relanzarse o no
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada
+		* toModulo					(@?    OUT) Referencia de objeto del módulo generado (para Unit Testing)
+		* toEx						(@?    OUT) Objeto con información del error
+		* tlRelanzarError			(v? IN    ) Indica si el error debe relanzarse o no
 		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
 		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 		*--------------------------------------------------------------------------------------------------------------
@@ -1698,8 +1700,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROCEDURE getNext_BAK
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tc_OutputFilename			(!v IN    ) Nombre del archivo de salida a crear el backup
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tc_OutputFilename			(v! IN    ) Nombre del archivo de salida a crear el backup
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOutputFileName
 		LOCAL lcNext_Bak, I
@@ -2046,16 +2048,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*	<fb2p_value>Este es un&#13;valor especial</fb2p_value>
 		*
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcPropName				(!v IN    ) Nombre de la propiedad
-		* tcValue					(!v IN    ) Valor (o inicio del valor) de la propiedad
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcPropName				(v! IN    ) Nombre de la propiedad
+		* tcValue					(v! IN    ) Valor (o inicio del valor) de la propiedad
 		* taProps					(!@ IN    ) El array con las líneas del código donde buscar
 		* tnProp_Count				(!@ IN    ) Cantidad de líneas de código
 		* I							(!@ IN    ) Línea actualmente evaluada
-		* tcTAG_I					(!v IN    ) TAG de inicio	<tag>
-		* tcTAG_F					(!v IN    ) TAG de fin		</tag>
-		* tnLEN_TAG_I				(!v IN    ) Longitud del tag de inicio
-		* tnLEN_TAG_F				(!v IN    ) Longitud del tag de fin
+		* tcTAG_I					(v! IN    ) TAG de inicio	<tag>
+		* tcTAG_F					(v! IN    ) TAG de fin		</tag>
+		* tnLEN_TAG_I				(v! IN    ) Longitud del tag de inicio
+		* tnLEN_TAG_F				(v! IN    ) Longitud del tag de fin
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F
 		EXTERNAL ARRAY taProps
@@ -2199,9 +2201,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase correspondiente con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -2215,8 +2217,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	PROCEDURE decode_SpecialCodes_1_31
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcText					(@! IN    ) Decodifica los primeros 31 caracteres ASCII de {nCode} a CHR(nCode)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Decodifica los primeros 31 caracteres ASCII de {nCode} a CHR(nCode)
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcText
 		LOCAL I
@@ -2365,7 +2367,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	FUNCTION GetTimeStamp
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tnTimeStamp				(v! IN    ) Timestamp en formato numérico
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tnTimeStamp
@@ -2437,8 +2439,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	PROCEDURE get_SeparatedLineAndComment
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
@@ -2459,12 +2461,12 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*-- Devuelve el valor separado de la propiedad.
 		*-- Si se indican más de 3 parámetros, evalúa el valor completo a través de las líneas de código
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
 		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
 		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
-		* toModulo					(?@    OUT) Objeto con toda la información del módulo analizado
+		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcAsignacion, tcPropName, tcValue, toClase, taCodeLines, tnCodeLines, I
 		LOCAL ln_AT_Cmt
@@ -2656,9 +2658,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 	*******************************************************************************************************************
 	PROCEDURE sortPropsAndValues_SetAndGetSCXPropNames
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcOperation				(!v IN    ) Operación a realizar ("SETNAME" o "GETNAME")
-		* tcPropName				(!v IN    ) Nombre de la propiedad
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcOperation				(v! IN    ) Operación a realizar ("SETNAME" o "GETNAME")
+		* tcPropName				(v! IN    ) Nombre de la propiedad
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOperation, tcPropName
 
@@ -2826,10 +2828,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*							si se ordenan alfabéticamente en un ADD OBJECT. Pierde "picture" y otras más.
 		*							Pareciera que la última debe ser "Name".
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taPropsAndValues			(!@ IN    ) El array con las propiedades y valores del objeto o clase
-		* tnPropsAndValues_Count	(!v IN    ) Cantidad de propiedades
-		* tnSortType				(!v IN    ) Tipo de sort:
+		* tnPropsAndValues_Count	(v! IN    ) Cantidad de propiedades
+		* tnSortType				(v! IN    ) Tipo de sort:
 		*											0=Solo separar propiedades de clase y de objetos (.)
 		*											1=Sort completo de propiedades (para la versión TEXTO)
 		*											2=Sort completo de propiedades con "Name" al final (para la versión BIN)
@@ -3148,9 +3150,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase correspondiente con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -3209,10 +3211,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*< FileMetadata: Type="V" Cpid="1252" Timestamp="1131901580" ID="1129207528" ObjRev="544" />
 		*< OLE: Nombre="frm_form.Pageframe1.Page1.Cnt_controles_h.Olecontrol1" Parent="frm_form.Pageframe1.Page1.Cnt_controles_h" ObjName="Olecontrol1" Checksum="1685567300" Value="0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPg...ADAP7AAAA==" />
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLineWithMetadata		(@! IN    ) Línea con metadatos y un tag de metadatos
-		* taPropsAndValues			(@!    OUT) Array a devolver con las propiedades y valores encontrados
-		* tnPropsAndValues_Count	(@!    OUT) Cantidad de propiedades encontradas
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLineWithMetadata		(!@ IN    ) Línea con metadatos y un tag de metadatos
+		* taPropsAndValues			(!@    OUT) Array a devolver con las propiedades y valores encontrados
+		* tnPropsAndValues_Count	(!@    OUT) Cantidad de propiedades encontradas
 		* tcLeftTag					(v! IN    ) TAG de inicio de los metadatos
 		* tcRightTag				(v! IN    ) TAG de fin de los metadatos
 		*--------------------------------------------------------------------------------------------------------------
@@ -3301,12 +3303,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		* LOS BLOQUES DE EXCLUSIÓN SON AQUELLOS QUE TIENEN TEXT/ENDTEXT OF #IF .F./#ENDIF Y SE USAN PARA NO BUSCAR
 		* INSTRUCCIONES COMO "DEFINE CLASS" O "PROCEDURE" EN LOS MISMOS.
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
-		* tnCodeLines				(?@ IN    ) Cantidad de líneas de código
-		* ta_ID_Bloques				(?@ IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
-		* taBloquesExclusion		(?@    OUT) Array con las posiciones de los bloques (2 cols). Ej: 3,14 ; 23,58 ; etc
-		* tnBloquesExclusion		(?@    OUT) Cantidad de bloques de exclusión
+		* tnCodeLines				(@? IN    ) Cantidad de líneas de código
+		* ta_ID_Bloques				(@? IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
+		* taBloquesExclusion		(@?    OUT) Array con las posiciones de los bloques (2 cols). Ej: 3,14 ; 23,58 ; etc
+		* tnBloquesExclusion		(@?    OUT) Cantidad de bloques de exclusión
 		*--------------------------------------------------------------------------------------------------------------
 		EXTERNAL ARRAY ta_ID_Bloques, taBloquesExclusion
 
@@ -4055,7 +4057,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE defined_PAM2Memo
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toClase					(!@ IN    ) Objeto de la Clase
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS toClase
@@ -4495,7 +4497,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*--------------------------------------------------------------------------------------------------------------
 		* 07/01/2014	FDBOZZO		Los *métodos deben ir siempre al final, si no los eventos ACCESS no se ejecutan!
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toClase					(!@ IN    ) Objeto de la Clase
 		* tcLine					(!@ IN    ) Línea de datos en evaluación
 		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
@@ -5140,12 +5142,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
 		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
 		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
-		* toModulo					(?@    OUT) Objeto con toda la información del módulo analizado
+		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -5242,9 +5244,9 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -5546,9 +5548,9 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -5854,9 +5856,9 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	*******************************************************************************************************************
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toProject					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toProject					(!@    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toProject, toEx AS EXCEPTION, toFoxBin2Prg
@@ -6037,12 +6039,12 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	PROCEDURE identificarBloquesDeCodigo
 		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toProject
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
 		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
 		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
-		* toProject					(?@    OUT) Objeto con toda la información del proyecto analizado
+		* toProject					(@?    OUT) Objeto con toda la información del proyecto analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -6640,9 +6642,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toReport					(@!    OUT) Objeto generado de clase CL_REPORT con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toReport					(!@    OUT) Objeto generado de clase CL_REPORT con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toReport, toEx AS EXCEPTION, toFoxBin2Prg
@@ -6791,12 +6793,12 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	PROCEDURE identificarBloquesDeCodigo
 		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toReport
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(?@ IN    ) Sin uso
-		* tnBloquesExclusion		(?@ IN    ) Sin uso
-		* toReport					(?@    OUT) Objeto con toda la información del reporte analizado
+		* taBloquesExclusion		(@? IN    ) Sin uso
+		* tnBloquesExclusion		(@? IN    ) Sin uso
+		* toReport					(@?    OUT) Objeto con toda la información del reporte analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -7068,9 +7070,9 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toTable					(@!    OUT) Objeto generado de clase CL_TABLE con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toTable					(!@    OUT) Objeto generado de clase CL_TABLE con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toTable, toEx AS EXCEPTION, toFoxBin2Prg
@@ -7274,12 +7276,12 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(?@ IN    ) Sin uso
-		* tnBloquesExclusion		(?@ IN    ) Sin uso
-		* toTable					(?@    OUT) Objeto con toda la información de la tabla analizada
+		* taBloquesExclusion		(@? IN    ) Sin uso
+		* tnBloquesExclusion		(@? IN    ) Sin uso
+		* toTable					(@?    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toTable
 		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
@@ -7352,9 +7354,9 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toDatabase				(!@    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toDatabase, toEx AS EXCEPTION, toFoxBin2Prg
@@ -7447,12 +7449,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(?@ IN    ) Sin uso
-		* tnBloquesExclusion		(?@ IN    ) Sin uso
-		* toDatabase				(?@    OUT) Objeto con toda la información de la base de datos analizada
+		* taBloquesExclusion		(@? IN    ) Sin uso
+		* tnBloquesExclusion		(@? IN    ) Sin uso
+		* toDatabase				(@?    OUT) Objeto con toda la información de la base de datos analizada
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -7527,9 +7529,9 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 	*******************************************************************************************************************
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toMenu					(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toMenu					(!@    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toMenu, toEx AS EXCEPTION, toFoxBin2Prg
@@ -7581,12 +7583,12 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(?@ IN    ) Sin uso
-		* tnBloquesExclusion		(?@ IN    ) Sin uso
-		* toMenu					(?@    OUT) Objeto con toda la información del menú analizado
+		* taBloquesExclusion		(@? IN    ) Sin uso
+		* tnBloquesExclusion		(@? IN    ) Sin uso
+		* toMenu					(@?    OUT) Objeto con toda la información del menú analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -7643,8 +7645,8 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 	PROCEDURE escribirArchivoBin
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toMenu					(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toMenu					(!@    OUT) Objeto generado de clase CL_DBC con la información leida del texto
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toMenu
 
@@ -7733,9 +7735,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase correspondiente con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase correspondiente con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -7822,11 +7824,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE get_PropsAndCommentsFrom_RESERVED3
 		*-- Sirve para el memo RESERVED3
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcMemo					(v! IN    ) Contenido de un campo MEMO
 		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
-		* taPropsAndComments		(@!    OUT) Array con las propiedades y comentarios
-		* tnPropsAndComments_Count	(@!    OUT) Cantidad de propiedades
+		* taPropsAndComments		(!@    OUT) Array con las propiedades y comentarios
+		* tnPropsAndComments_Count	(!@    OUT) Cantidad de propiedades
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo
@@ -7881,11 +7883,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*							los objetos contenidos, causa un error. Se deben ordenar primero las
 		*							props.nativas (sin punto) y luego las de los objetos (con punto)
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcMemo					(v! IN    ) Contenido de un campo MEMO
 		* tnSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los objetos y props (1), o no (0)
-		* taPropsAndValues			(@!    OUT) Array con las propiedades y comentarios
-		* tnPropsAndValues_Count	(@!    OUT) Cantidad de propiedades
+		* taPropsAndValues			(!@    OUT) Array con las propiedades y comentarios
+		* tnPropsAndValues_Count	(!@    OUT) Cantidad de propiedades
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
@@ -7987,11 +7989,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE get_PropsFrom_PROTECTED
 		*-- Sirve para el memo PROTECTED
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcMemo					(v! IN    ) Contenido de un campo MEMO
 		* tlSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los nombres
-		* taProtected				(@!    OUT) Array con las propiedades y comentarios
-		* tnProtected_Count			(@!    OUT) Cantidad de propiedades
+		* taProtected				(!@    OUT) Array con las propiedades y comentarios
+		* tnProtected_Count			(!@    OUT) Cantidad de propiedades
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo
@@ -9347,9 +9349,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -9567,9 +9569,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -9806,9 +9808,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -10148,9 +10150,9 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -10534,9 +10536,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 	*******************************************************************************************************************
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -10698,9 +10700,9 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toModulo					(@!    OUT) Contenido del texto generado
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Contenido del texto generado
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
@@ -10819,9 +10821,9 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* toDatabase				(@!    OUT) Objeto generado de clase CL_DBC con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toDatabase				(!@    OUT) Objeto generado de clase CL_DBC con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toDatabase, toEx AS EXCEPTION, toFoxBin2Prg
@@ -10896,9 +10898,9 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* totoMenu					(@!    OUT) Objeto generado de clase CL_MENU con la información leida del texto
-		* toEx						(@!    OUT) Objeto con información del error
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* totoMenu					(!@    OUT) Objeto generado de clase CL_MENU con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
 		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toMenu, toEx AS EXCEPTION, toFoxBin2Prg
@@ -11010,9 +11012,9 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 
 	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@!    OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@    OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
 		* I							(v! IN    ) Número de línea en análisis
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
@@ -11022,8 +11024,8 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 
 	PROCEDURE get_SeparatedLineAndComment
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
@@ -11083,9 +11085,9 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@!    OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@    OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
 		* I							(v! IN    ) Número de línea en análisis
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I
@@ -11095,8 +11097,8 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 	PROCEDURE get_SeparatedLineAndComment
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Línea a separar del comentario
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
@@ -11115,7 +11117,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taArray					(@?    OUT) Array de conexiones
 		* tnArray_Count				(@?    OUT) Cantidad de conexiones
 		*---------------------------------------------------------------------------------------------------
@@ -11816,9 +11818,9 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 
 	PROCEDURE updateDBC
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
-		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnLastID					(!@ IN    ) Último número de ID usado
 		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
@@ -11877,7 +11879,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	FUNCTION add_Property
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcPropertyName			(v! IN    ) Nombre de la propiedad a agregar o modificar
 		* teValue					(v! IN    ) Valor de la propiedad
 		*---------------------------------------------------------------------------------------------------
@@ -11932,11 +11934,11 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE analizarBloque_Comment
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -11969,11 +11971,11 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE getAllPropertiesFromObjectname
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcName					(v! IN    ) Nombre del objeto
 		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
-		* taProperties				(@!    OUT) Array con las propiedades encontradas y sus valores
-		* tnProperty_Count			(@!    OUT) Cantidad de propiedades encontradas
+		* taProperties				(!@    OUT) Array con las propiedades encontradas y sus valores
+		* tnProperty_Count			(!@    OUT) Cantidad de propiedades encontradas
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcName, tcType, taProperties, tnProperty_Count
 
@@ -12091,7 +12093,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE getDBCPropertyIDByName
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcPropertyName			(v! IN    ) Nombre de la propiedad
 		* tlRethrowError			(v? IN    ) Indica si se debe relanzar el error o solo devolver -1
 		*---------------------------------------------------------------------------------------------------
@@ -12244,7 +12246,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE getDBCPropertyNameByID
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcPropertyID				(v! IN    ) Nombre de la propiedad
 		* tlRethrowError			(v? IN    ) Indica si se debe relanzar el error o solo devolver -1
 		*---------------------------------------------------------------------------------------------------
@@ -12396,7 +12398,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE getDBCPropertyValueTypeByPropertyID
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tnPropertyID				(v! IN    ) ID de la Propiedad
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tnPropertyID
@@ -12428,7 +12430,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE DBGETPROP
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcName					(v! IN    ) Nombre del objeto
 		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
 		* tcProperty				(v! IN    ) Nombre de la propiedad
@@ -12541,7 +12543,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE DBSETPROP
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcName					(v! IN    ) Nombre del objeto
 		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
 		* tcProperty				(v! IN    ) Nombre de la propiedad
@@ -12555,7 +12557,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	PROCEDURE getBinPropertyDataRecord
 		LPARAMETERS teData, tnPropertyID
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* teData					(v! IN    ) Dato a codificar
 		* tnPropertyID				(v! IN    ) ID de la propiedad a la que pertenece
 		*---------------------------------------------------------------------------------------------------
@@ -12676,9 +12678,9 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE updateDBC
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
-		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnLastID					(!@ IN    ) Último número de ID usado
 		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
@@ -12779,11 +12781,11 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -12861,11 +12863,11 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque_SP
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -12894,9 +12896,9 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 	PROCEDURE updateDBC
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
-		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnLastID					(!@ IN    ) Último número de ID usado
 		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
@@ -13054,11 +13056,11 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -13121,7 +13123,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taConnections				(@?    OUT) Array de conexiones
 		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
 		*---------------------------------------------------------------------------------------------------
@@ -13227,11 +13229,11 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -13286,7 +13288,7 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcConnection				(v! IN    ) Nombre de la Conexión
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcConnection
@@ -13371,11 +13373,11 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -13435,7 +13437,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taTables					(@?    OUT) Array de conexiones
 		* lnTable_Count				(@?    OUT) Cantidad de conexiones
 		*---------------------------------------------------------------------------------------------------
@@ -13544,11 +13546,11 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -13623,7 +13625,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcTable
@@ -13685,9 +13687,9 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 
 	PROCEDURE updateDBC
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
-		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnLastID					(!@ IN    ) Último número de ID usado
 		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
@@ -13735,11 +13737,11 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -13799,7 +13801,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcTable
@@ -13897,11 +13899,11 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -13956,7 +13958,7 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
 		* tcField					(v! IN    ) Nombre del campo
 		*---------------------------------------------------------------------------------------------------
@@ -14033,11 +14035,11 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -14097,7 +14099,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcTable
@@ -14181,11 +14183,11 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -14240,7 +14242,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcIndex					(v! IN    ) Nombre del índice en la forma "tabla.indice"
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcIndex
@@ -14308,11 +14310,11 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -14372,7 +14374,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taViews					(@?    OUT) Array de vistas
 		* tnView_Count				(@?    OUT) Cantidad de vistas
 		*---------------------------------------------------------------------------------------------------
@@ -14518,11 +14520,11 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -14600,7 +14602,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(v! IN    ) Vista en evaluación
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcView
@@ -14689,9 +14691,9 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 	PROCEDURE updateDBC
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_OutputFile				(v! IN    ) Nombre del archivo de salida
-		* tnLastID					(@! IN    ) Último número de ID usado
+		* tnLastID					(!@ IN    ) Último número de ID usado
 		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
@@ -14760,11 +14762,11 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -14825,7 +14827,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(v! IN    ) Nombre de la Vista
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcView
@@ -14931,11 +14933,11 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -14991,7 +14993,7 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(v! IN    ) Nombre de la Vista
 		* tcField					(v! IN    ) Nombre del campo
 		*---------------------------------------------------------------------------------------------------
@@ -15072,11 +15074,11 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -15136,7 +15138,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Tabla de la que obtener las relaciones
 		* taRelations				(@?    OUT) Array de relaciones
 		* tnRelation_Count			(@?    OUT) Cantidad de relaciones
@@ -15224,11 +15226,11 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -15280,9 +15282,9 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* taRelations				(@! IN    ) Array de relaciones
-		* I							(@! IN    ) Número de relación evaluado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* taRelations				(!@ IN    ) Array de relaciones
+		* I							(!@ IN    ) Número de relación evaluado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taRelations, I
 
@@ -15389,11 +15391,11 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -15460,7 +15462,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_FileTypeDesc			(v! IN    ) Tipo de archivo (en Hex)
 		* tl_FileHasCDX				(v! IN    ) Indica si el archivo tiene CDX asociado
 		* tl_FileHasMemo			(v! IN    ) Indica si el archivo tiene MEMO (FPT) asociado
@@ -15532,11 +15534,11 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -15597,7 +15599,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taFields					(@?    OUT) Array de información de campos
 		* tnField_Count				(@?    OUT) Cantidad de campos
 		*---------------------------------------------------------------------------------------------------
@@ -15702,11 +15704,11 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -15758,9 +15760,9 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* taFields					(@! IN    ) Array de información de campos
-		* I							(@! IN    ) Campo en evaluación
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* taFields					(!@ IN    ) Array de información de campos
+		* I							(!@ IN    ) Campo en evaluación
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, I
 
@@ -15819,11 +15821,11 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -15883,7 +15885,7 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taTagInfo					(@?    OUT) Array de información de indices
 		* tnTagInfo_Count			(@?    OUT) Cantidad de índices
 		* tc_InputFile				(v! IN    ) Archivo de entrada (el DBF)
@@ -15968,11 +15970,11 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
@@ -16024,7 +16026,7 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taTagInfo					(@? IN    ) Array de información de indices
 		* I							(@? IN    ) Indice en evaluación
 		*---------------------------------------------------------------------------------------------------
@@ -16460,7 +16462,7 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 
 	PROCEDURE get_DataFromTablabin
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toReg						(v! IN    ) Objeto de datos del registro
 		* toCol_LastLevelName		(v! IN    ) Objeto collection con la pila de niveles analizados
 		*---------------------------------------------------------------------------------------------------
@@ -16569,7 +16571,7 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 
 	PROCEDURE updateMENU
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toConversor
@@ -16578,10 +16580,10 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 
 	PROCEDURE AnalizarSiExpresionEsComandoOProcedimiento
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcExpr					(v! IN    ) Expresión a analizar (puede ser una línea o un Procedure)
-		* tcProcName				(@!    OUT) Nombre del Procedimiento, si se encuentra uno
-		* tcProcCode				(@!    OUT) Código del Procedimiento, si se encuentra uno
+		* tcProcName				(!@    OUT) Nombre del Procedimiento, si se encuentra uno
+		* tcProcCode				(!@    OUT) Código del Procedimiento, si se encuentra uno
 		* tcSourceCode				(@? IN    ) Si se indica, se buscará el nombre de Procedure para obtener su código
 		* tnIndentation				(v? IN    ) En caso de devolver código, indica si se debe indentar o quitar indentación
 		* tlAddProcEndproc			(v? IN    ) En caso de devolver código, indica si se debe encerrar con PROCEDURE/ENDPROC
@@ -16694,11 +16696,11 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -16796,11 +16798,11 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque_SetupCode
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -16850,11 +16852,11 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque_CleanupCode
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -16904,11 +16906,11 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque_MenuCode
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -17067,11 +17069,11 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque_PROCEDURE
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -17120,7 +17122,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		*---------------------------------------------------------------------------------------------------
 
 		TRY
@@ -17272,7 +17274,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE get_DataFromTablabin
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		*---------------------------------------------------------------------------------------------------
 		LOCAL loReg, loCol_LastLevelName AS COLLECTION
 		STORE NULL TO loReg, loCol_LastLevelName
@@ -17287,7 +17289,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE updateMENU
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toConversor
@@ -17316,7 +17318,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 	PROCEDURE UpdateMenu_Recursivo
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toObj						(v! IN    ) Referencia del objeto CL_MENU_BARPOP o CL_MENU_OPTION
 		* tnNivel					(v! IN    ) Nivel de indentación (solo para debug)
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
@@ -17406,11 +17408,11 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -17534,10 +17536,10 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toParentReg				(v! IN    ) Objeto registro Padre
 		* tnNivel					(v! IN    ) Nivel para indentar
-		* tcEndProcedures			(@!    OUT) Agregar aquí los procedimientos que irán al final
+		* tcEndProcedures			(!@    OUT) Agregar aquí los procedimientos que irán al final
 		* toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toParentReg, tnNivel, tcEndProcedures, toHeader
@@ -17647,11 +17649,11 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -17755,11 +17757,11 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque_DefinePAD
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -17938,11 +17940,11 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 	PROCEDURE analizarBloque_DefineBAR
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
-		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
-		* I							(@! IN/OUT) Número de línea en análisis
-		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toConversor
@@ -18135,10 +18137,10 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toParentReg				(v? IN    ) Objeto registro Padre
 		* tnNivel					(v? IN    ) Nivel para indentar
-		* tcEndProcedures			(@!    OUT) Agregar aquí los procedimientos que irán al final
+		* tcEndProcedures			(!@    OUT) Agregar aquí los procedimientos que irán al final
 		* toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toParentReg, tnNivel, tcEndProcedures, toHeader
@@ -18231,7 +18233,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 	PROCEDURE get_DefineBarText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toReg						(v? IN    ) Objeto registro
 		* toBarPop					(v? IN    ) Bar o Popup hijo
 		* tnNivel					(v? IN    ) Nivel para indentar
@@ -18320,7 +18322,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 	PROCEDURE get_DefinePadText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toReg						(v? IN    ) Objeto registro
 		* toBarPop					(v? IN    ) Bar o Popup hijo
 		* tnNivel					(v? IN    ) Nivel para indentar
@@ -18483,7 +18485,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 	PROCEDURE getDBFmetadata
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
 		* tn_HexFileType			(@?    OUT) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
 		* tl_FileHasCDX				(@?    OUT) Indica si el archivo tiene CDX asociado
@@ -18599,7 +18601,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 	PROCEDURE fileTypeDescription
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tn_HexFileType			(@? IN    ) Tipo de archivo en hexadecimal (Está detallado en la ayuda de Fox)
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tn_HexFileType
@@ -18640,7 +18642,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 	PROCEDURE getCodePageInfo
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tnHexCodePage				(v! IN    ) Código de página en hexadecimal (Está detallado en la ayuda de Fox)
 		* tnCodePage				(@?    OUT) Código de página normal
 		* tcDescrip					(@?    OUT) Descripción del código de página
@@ -18769,7 +18771,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		*---------------------------------------------------------------------------------------------------
 		LOCAL lcText, loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
 		lcText	= ''
@@ -18823,7 +18825,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 	PROCEDURE write_DBC_BackLink
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_FileName				(v! IN    ) Nombre del DBF a analizar
 		* tcDBC_Name				(v! IN    ) Nombre del DBC a asociar
 		* tdLastUpdate				(v! IN    ) Fecha de última actualización
