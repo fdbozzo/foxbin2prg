@@ -88,6 +88,7 @@
 * 27/05/2014	FDBOZZO		v1.19.23	Arreglo bug vcx/scx: Redimensionamiento incorrecto de imagenes en ciertas situaciones (props_image.txt y props_optiongroup.txt actualizados)
 * 09/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: La falta de AGAIN en algunos comandos USE provoca error de "tabla en uso" si se usa el PRG desde la ventana de comandos
 * 14/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
+* 16/06/2014	FDBOZZO		v1.19.25	Mejora: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del principal (Mario Peschke)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -120,6 +121,7 @@
 * 27/05/2014	Kenny Vermassen		REPORTE DE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones (Arreglado en v1.19.23)
 * 09/06/2014	Matt Slay			REPORTE BUG vcx/scx v1.19.23: La falta de AGAIN en algunos comandos USE provoca error de "tabla en uso" si se usa el PRG desde la ventana de comandos (Arreglado en v1.19.24)
 * 13/06/2014	Mario Peschke		REPORTE BUG vcx/scx v1.19.23: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.24)
+* 16/06/2014	Mario Peschke		MEJORA v1.19.24: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del CFG principal (Agregado en v1.19.25)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
