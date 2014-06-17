@@ -409,6 +409,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
+		+ [<memberdata name="c_errorlog" display="c_ErrorLog"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_foxbin2prg_configfile" display="c_Foxbin2prg_ConfigFile"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
@@ -440,6 +441,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_error" display="l_Error"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
@@ -469,6 +471,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="tienesoporte_prg2bin" display="TieneSoporte_Prg2Bin"/>] ;
 		+ [<memberdata name="t_inputfile_timestamp" display="t_InputFile_TimeStamp"/>] ;
 		+ [<memberdata name="t_outputfile_timestamp" display="t_OutputFile_TimeStamp"/>] ;
+		+ [<memberdata name="writeerrorlog" display="writeErrorLog"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
 		+ [</VFPData>]
@@ -492,6 +495,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_ExisteCapitalizacion	= -1
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
+	l_Error					= .F.
+	c_ErrorLog				= ''
 	l_Test					= .F.
 	l_ShowErrors			= .T.
 	l_ShowProgress			= .T.
@@ -1347,10 +1352,17 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDWITH && THIS
 
 		CATCH TO toEx
-			lnCodError	= toEx.ERRORNO
-			lcErrorInfo	= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
+			lnCodError		= toEx.ERRORNO
+			THIS.l_Error	= .T.
+			lcErrorInfo		= THIS.Exception2Str(toEx) + CR_LF + CR_LF + C_SOURCEFILE_LOC + THIS.c_InputFile
 			ADDPROPERTY(_SCREEN, 'ExitCode', toEx.ERRORNO)
 
+			*-- Escribo la información de error en la variable log de errores
+			THIS.writeErrorLog( TTOC(DATETIME(),3) + '  ' + REPLICATE('-', 80) )
+			THIS.writeErrorLog( lcErrorInfo )
+			THIS.writeErrorLog( )
+
+			*-- Escribo la información de error en el archivo log de errores
 			TRY
 				STRTOFILE( lcErrorInfo, EVL(tc_InputFile,'foxbin2prg') + '.ERR' )
 			CATCH TO loEx2
@@ -1819,6 +1831,17 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lcLog	= ''
 		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, .T.
 		THIS.writeLog( lcLog )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE writeErrorLog
+		LPARAMETERS tcText
+
+		TRY
+			THIS.c_ErrorLog	= THIS.c_ErrorLog + EVL(tcText,'') + CR_LF
+		CATCH
+		ENDTRY
 	ENDPROC
 
 
