@@ -431,15 +431,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
 		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
+		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
+		+ [<memberdata name="l_allowmulticonfig" display="l_AllowMultiConfig"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
@@ -450,12 +454,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
+		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
 		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
+		+ [<memberdata name="o_configuration" display="o_Configuration"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
 		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
@@ -474,6 +480,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [</VFPData>]
 
 
+	PROTECTED l_ConfigEvaluated, n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
 	n_FB2PRG_Version		= 1.19
 	*--
@@ -490,11 +497,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	t_OutputFile_TimeStamp	= {//::}
 	lFileMode				= .T.
 	n_ExisteCapitalizacion	= -1
+	l_CFG_CachedAccess		= .F.
 	l_ConfigEvaluated		= .F.
 	l_Debug					= .F.
 	l_Test					= .F.
 	l_ShowErrors			= .T.
 	l_ShowProgress			= .T.
+	l_AllowMultiConfig		= .F.
 	l_Recompile				= .T.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .F.
@@ -502,11 +511,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_Main_CFG_Loaded		= .F.
 	n_ExtraBackupLevels		= 1
-	nClassTimeStamp			= ''
+	n_ClassTimeStamp		= 0
+	n_CFG_Actual			= 0
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
+	o_Configuration			= NULL
 	run_AfterCreateTable	= ''
 	run_AfterCreate_DB2		= ''
 	c_VC2					= 'VC2'	&& VCX
@@ -549,6 +561,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
 		THIS.c_CurDir					= SYS(5) + CURDIR()
 		THIS.o_FSO						= NEWOBJECT("Scripting.FileSystemObject")
+		THIS.o_Configuration			= CREATEOBJECT("COLLECTION")
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 		RETURN
 	ENDPROC
@@ -559,9 +572,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			LOCAL lcFileCDX
 			lcFileCDX	= FORCEPATH( "TABLABIN.CDX", JUSTPATH(THIS.c_InputFile) )
 
-			*IF FILE( lcFileCDX )
 			ERASE ( lcFileCDX )
-			*ENDIF
 
 			THIS.writeLog_Flush()
 
@@ -572,6 +583,227 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		ENDTRY
 
 		RETURN
+	ENDPROC
+
+
+	FUNCTION get_l_CFG_CachedAccess
+		RETURN THIS.l_CFG_CachedAccess
+	ENDFUNC
+
+
+	PROCEDURE l_Debug_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_Debug
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_Debug, THIS.l_Debug )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_ShowErrors_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_ShowErrors
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ShowErrors, THIS.l_ShowErrors )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_ShowProgress_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_ShowProgress
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ShowProgress, THIS.l_ShowProgress )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_Recompile_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_Recompile
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_Recompile, THIS.l_Recompile )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_NoTimestamps_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_NoTimestamps
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_NoTimestamps, THIS.l_NoTimestamps )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_ClearUniqueID_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_ClearUniqueID
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ClearUniqueID, THIS.l_ClearUniqueID )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_OptimizeByFilestamp_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_OptimizeByFilestamp
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_OptimizeByFilestamp, THIS.l_OptimizeByFilestamp )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE n_ExtraBackupLevels_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_ExtraBackupLevels
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_ExtraBackupLevels, THIS.n_ExtraBackupLevels )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_VC2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_VC2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_VC2, THIS.c_VC2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_SC2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_SC2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_SC2, THIS.c_SC2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_PJ2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_PJ2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_PJ2, THIS.c_PJ2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_FR2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_FR2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_FR2, THIS.c_FR2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_LB2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_LB2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_LB2, THIS.c_LB2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_DB2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_DB2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_DB2, THIS.c_DB2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_DC2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_DC2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_DC2, THIS.c_DC2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_MN2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_MN2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_MN2, THIS.c_MN2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE PJX_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.PJX_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).PJX_Conversion_Support, THIS.PJX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE VCX_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.VCX_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).VCX_Conversion_Support, THIS.VCX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE SCX_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.SCX_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).SCX_Conversion_Support, THIS.SCX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE FRX_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.FRX_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).FRX_Conversion_Support, THIS.FRX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE LBX_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.LBX_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).LBX_Conversion_Support, THIS.LBX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE MNX_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.MNX_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).MNX_Conversion_Support, THIS.MNX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE DBF_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.DBF_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).DBF_Conversion_Support, THIS.DBF_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE DBC_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.DBC_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).DBC_Conversion_Support, THIS.DBC_Conversion_Support )
+		ENDIF
 	ENDPROC
 
 
@@ -795,17 +1027,47 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 			, tcClearUniqueID, tcOptimizeByFilestamp
 
-		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt, lcValue
+		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt, lcValue ;
+			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
+			, lo_Configuration AS Collection
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			tcRecompile		= EVL(tcRecompile,'1')
+			STORE 0 TO lnKey
+			tcRecompile			= EVL(tcRecompile,'1')
+			lcConfigFile		= .c_Foxbin2prg_ConfigFile
+			
+			IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded
+				IF EMPTY(.c_InputFile)
+					ERROR C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + .c_InputFile + '"'
+				ENDIF
+				lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(.c_InputFile) )
+			ENDIF
+			
+			lo_Configuration	= .o_Configuration
+			.n_CFG_Actual		= 0
+			.l_CFG_CachedAccess	= .F.
+			
+			IF .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
+				.n_CFG_Actual		= lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
+				.l_CFG_CachedAccess	= (.n_CFG_Actual > 0)
+			ENDIF
 
-			IF NOT .l_ConfigEvaluated
-				lcConfigFile	= .c_Foxbin2prg_ConfigFile
-				llExisteConfig	= FILE( lcConfigFile )
+			*IF NOT .l_ConfigEvaluated
+				lo_CFG			= THIS
+				
+				IF .n_CFG_Actual = 0 THEN
+					llExisteConfig	= FILE( lcConfigFile )
+				ENDIF
 
-				IF llExisteConfig
+				IF llExisteConfig AND .n_CFG_Actual = 0
 					.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
+
+					IF .l_AllowMultiConfig AND .l_ConfigEvaluated AND .l_Main_CFG_Loaded
+						lo_CFG	= CREATEOBJECT('CL_CFG')
+						lo_Configuration.Add( lo_CFG, UPPER( JUSTPATH( lcConfigFile ) ) )
+					ELSE
+						lo_Configuration.Add( NULL, UPPER( JUSTPATH( lcConfigFile ) ) )
+					ENDIF
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
 						laConfig(I)	= LOWER( laConfig(I) )
@@ -877,83 +1139,89 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.PJX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support: ' + TRANSFORM(.PJX_Conversion_Support) )
+								lo_CFG.PJX_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support: ' + TRANSFORM(lo_CFG.PJX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.VCX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support: ' + TRANSFORM(.VCX_Conversion_Support) )
+								lo_CFG.VCX_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support: ' + TRANSFORM(lo_CFG.VCX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.SCX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support: ' + TRANSFORM(.SCX_Conversion_Support) )
+								lo_CFG.SCX_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support: ' + TRANSFORM(lo_CFG.SCX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.FRX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support: ' + TRANSFORM(.FRX_Conversion_Support) )
+								lo_CFG.FRX_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support: ' + TRANSFORM(lo_CFG.FRX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.LBX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support: ' + TRANSFORM(.LBX_Conversion_Support) )
+								lo_CFG.LBX_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support: ' + TRANSFORM(lo_CFG.LBX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.MNX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support: ' + TRANSFORM(.MNX_Conversion_Support) )
+								lo_CFG.MNX_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support: ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.DBF_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support: ' + TRANSFORM(.DBF_Conversion_Support) )
+								lo_CFG.DBF_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support: ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
-								.DBC_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support: ' + TRANSFORM(.DBC_Conversion_Support) )
+								lo_CFG.DBC_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support: ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
 							ENDIF
 
 						ENDCASE
 					ENDFOR
-				ENDIF
+
+					IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
+						.n_CFG_Actual	= lo_Configuration.Count	&&lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
+					ENDIF
+				ENDIF && llExisteConfig
 
 				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) THEN
-					.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
+					lo_CFG.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
 				ENDIF
 				IF NOT EMPTY(tcDontShowErrors)
-					.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
+					lo_CFG.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
 				ENDIF
-				.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
+				IF NOT .l_Main_CFG_Loaded
+					lo_CFG.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
+				ENDIF
 				IF INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) THEN
-					.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
+					lo_CFG.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
 				ENDIF
 				IF INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) THEN
-					.l_ClearUniqueID		= NOT (TRANSFORM(tcClearUniqueID) == '0')
+					lo_CFG.l_ClearUniqueID		= NOT (TRANSFORM(tcClearUniqueID) == '0')
 				ENDIF
 				IF INLIST( TRANSFORM(tcDebug), '0', '1' ) THEN
-					.l_Debug				= (TRANSFORM(tcDebug)=='1')
+					lo_CFG.l_Debug				= (TRANSFORM(tcDebug)=='1')
 				ENDIF
-				tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( .n_ExtraBackupLevels ) )
-				.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
+				tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
+				lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 				IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
-					.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
+					lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
 				ENDIF
 
 				.writeLog( '---' )
@@ -965,8 +1233,24 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( '> l_Debug:                ' + TRANSFORM(.l_Debug) )
 				.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( '> l_OptimizeByFilestamp:  ' + TRANSFORM(.l_OptimizeByFilestamp) )
+
+				lo_CFG	= NULL
+				RELEASE lo_CFG
+				
+				*-- Si existe una configuración y es NULL, se usa la predeterminada
+				*IF .l_AllowMultiConfig AND .n_CFG_Actual > 0 AND ISNULL( .o_Configuration( .n_CFG_Actual ) ) THEN
+				IF .n_CFG_Actual > 0 AND ISNULL( .o_Configuration( .n_CFG_Actual ) ) THEN
+					.n_CFG_Actual = 0
+				ENDIF
+				IF NOT llExisteConfig OR .n_CFG_Actual = 0 THEN
+					.l_CFG_CachedAccess	= .T.	&& Es acceso cacheado porque usa config.por defecto sin archivo CFG
+				ENDIF
+				IF NOT .l_Main_CFG_Loaded THEN
+					.l_Main_CFG_Loaded	= .T.
+				ENDIF
+
 				.l_ConfigEvaluated = .T.
-			ENDIF && .l_ConfigEvaluated
+			*ENDIF && .l_ConfigEvaluated
 		ENDWITH && THIS
 
 		RETURN
@@ -1104,7 +1388,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				OTHERWISE
 					*-- Ejecución normal
 
-					*-- ARCHIVO DE CONFIGURACIÓN
+					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 					.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 						, @tcClearUniqueID, @tcOptimizeByFilestamp )
 
@@ -1378,7 +1662,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				STORE NULL TO THIS.o_Frm_Avance
 			ENDIF
 			CD (JUSTPATH(THIS.c_CurDir))
-			*SET PATH TO (lcPath)
 		ENDTRY
 
 		RETURN lnCodError
@@ -1413,6 +1696,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 
 				.c_InputFile	= loFSO.GetAbsolutePathName( FORCEPATH( laDirFile(1,1), JUSTPATH(.c_InputFile) ) )
+
+				*-- ARCHIVO DE CONFIGURACIÓN SECUNDARIO
+				.EvaluarConfiguracion()
 
 				IF NOT EMPTY(tcOriginalFileName)
 					tcOriginalFileName	= loFSO.GetAbsolutePathName( tcOriginalFileName )
@@ -1985,7 +2271,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	c_InputFile				= ''
 	c_OutputFile			= ''
 	lFileMode				= .F.
-	nClassTimeStamp			= ''
+	n_ClassTimeStamp		= 0
 	n_FB2PRG_Version		= 1.0
 	c_Foxbin2prg_FullPath	= ''
 	c_Type					= ''
@@ -2396,7 +2682,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 					EXIT
 				ENDIF
 
-				tnTimeStamp = THIS.nClassTimeStamp
+				tnTimeStamp = THIS.n_ClassTimeStamp
 
 				IF EMPTY(tnTimeStamp)
 					EXIT
@@ -18969,6 +19255,80 @@ DEFINE CLASS CL_DBF_UTILS_FIELD AS CUSTOM
 
 		RETURN lcText
 	ENDPROC
+
+
+ENDDEFINE
+
+
+DEFINE CLASS CL_CFG AS CUSTOM
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
+		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
+		+ [<memberdata name="c_foxbin2prg_configfile" display="c_Foxbin2prg_ConfigFile"/>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
+		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
+		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
+		+ [<memberdata name="c_lb2" display="c_LB2"/>] ;
+		+ [<memberdata name="c_mn2" display="c_MN2"/>] ;
+		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
+		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
+		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
+		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
+		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
+		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
+		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
+		+ [<memberdata name="l_test" display="l_Test"/>] ;
+		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
+		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
+		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
+		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
+		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
+		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
+		+ [<memberdata name="frx_conversion_support" display="FRX_Conversion_Support"/>] ;
+		+ [<memberdata name="lbx_conversion_support" display="LBX_Conversion_Support"/>] ;
+		+ [<memberdata name="mnx_conversion_support" display="MNX_Conversion_Support"/>] ;
+		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
+		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
+		+ [</VFPData>]
+
+	#IF .F.
+		LOCAL THIS AS CL_CFG OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*--
+	c_Foxbin2prg_FullPath	= ''
+	c_Foxbin2prg_ConfigFile	= ''
+	c_CurDir				= ''
+	l_Debug					= NULL
+	l_ShowErrors			= NULL
+	l_ShowProgress			= NULL
+	l_Recompile				= NULL
+	l_NoTimestamps			= NULL
+	l_ClearUniqueID			= NULL
+	l_OptimizeByFilestamp	= NULL
+	n_ExtraBackupLevels		= NULL
+	c_VC2					= NULL
+	c_SC2					= NULL
+	c_PJ2					= NULL
+	c_FR2					= NULL
+	c_LB2					= NULL
+	c_DB2					= NULL
+	c_DC2					= NULL
+	c_MN2					= NULL
+	PJX_Conversion_Support	= NULL
+	VCX_Conversion_Support	= NULL
+	SCX_Conversion_Support	= NULL
+	FRX_Conversion_Support	= NULL
+	LBX_Conversion_Support	= NULL
+	MNX_Conversion_Support	= NULL
+	DBF_Conversion_Support	= NULL
+	DBC_Conversion_Support	= NULL
 
 
 ENDDEFINE
