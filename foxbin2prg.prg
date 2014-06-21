@@ -503,11 +503,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_Test					= .F.
 	l_ShowErrors			= .T.
 	l_ShowProgress			= .T.
-	l_AllowMultiConfig		= .F.
+	l_AllowMultiConfig		= .T.
 	l_Recompile				= .T.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .F.
-	l_OptimizeByFilestamp	= .T.
+	l_OptimizeByFilestamp	= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -1134,6 +1134,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcOptimizeByFilestamp	= lcValue
 								.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:    ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 21 )) ) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:    ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 18 )) ) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')

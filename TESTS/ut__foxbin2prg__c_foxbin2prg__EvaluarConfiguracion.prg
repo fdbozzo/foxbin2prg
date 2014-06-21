@@ -2465,7 +2465,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 	*******************************************************************************************************************************************
-	FUNCTION Deberia_SetearElSoporte_LBX_Como_0_CuandoNoHaya_CFG_Principal_Y_NoExista_CFG_Secundario_EnDirEvaluado
+	FUNCTION Deberia_SetearElSoporte_LBX_Como_0_CuandoNoHaya_CFG_Principal_Y_NoExista_CFG_Secundario_EnElDirEvaluado
 		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor, lcCFG_File ;
 			, laCFG_CachedAccess(3), laCFG_CachedAccess_Esperado(3), I ;
 			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
@@ -2505,6 +2505,140 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 			loFB2P.LBX_Conversion_Support = 0
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + 'otro' )
+			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
+
+			leValor		= loFB2P.LBX_Conversion_Support
+			
+			
+
+		CATCH TO loEx
+
+		FINALLY
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor )
+
+			THIS.messageout( 'Configuración Principal: ' + loFB2P.c_Foxbin2prg_ConfigFile )
+			THIS.messageout( 'Configuración Secundaria: ' + lcCFG_File )
+
+			FOR I = 1 TO ALEN(laCFG_CachedAccess_Esperado)
+				THIS.messageout( 'Configuración cacheada en acceso ' + TRANSFORM(I) + ' esperada: ' + TRANSFORM( laCFG_CachedAccess_Esperado(I) ) )
+				THIS.assertequals( laCFG_CachedAccess_Esperado(I), laCFG_CachedAccess(I), 'CONFIGURACIÓN CACHEADA EN ACCESO ' + TRANSFORM(I) )
+			ENDFOR
+
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_SetearElSoporte_LBX_Como_0_CuandoExista_CFG_Secundario_EnElDirEvaluado_Y_NoUsarValorCacheadoEnPrimerAcceso
+		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor, lcCFG_File ;
+			, laCFG_CachedAccess(3), laCFG_CachedAccess_Esperado(3), I ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loFB2P		= THIS.ioFB2P
+			loFB2P.l_ShowErrors	= .F.
+			loFB2P.l_AllowMultiConfig	= .T.
+			lcCFG_File	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
+			STRTOFILE( 'LBX_Conversion_Support: 1', lcCFG_File )
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lcSeteo			= 'LBX_Conversion_Support:'
+			leValorEsperado	= 1
+			laCFG_CachedAccess_Esperado(1)	= .T.
+			laCFG_CachedAccess_Esperado(2)	= .T.
+			laCFG_CachedAccess_Esperado(3)	= .F.
+
+
+			*-- TEST
+			loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+
+			loFB2P.c_InputFile	= loFB2P.c_Foxbin2prg_ConfigFile
+			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
+
+			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + 'otro' )
+			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
+
+			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', oFXU_LIB.cPathDatosTest )
+			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
+
+			leValor		= loFB2P.LBX_Conversion_Support
+			
+			
+
+		CATCH TO loEx
+
+		FINALLY
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor )
+
+			THIS.messageout( 'Configuración Principal: ' + loFB2P.c_Foxbin2prg_ConfigFile )
+			THIS.messageout( 'Configuración Secundaria: ' + lcCFG_File )
+
+			FOR I = 1 TO ALEN(laCFG_CachedAccess_Esperado)
+				THIS.messageout( 'Configuración cacheada en acceso ' + TRANSFORM(I) + ' esperada: ' + TRANSFORM( laCFG_CachedAccess_Esperado(I) ) )
+				THIS.assertequals( laCFG_CachedAccess_Esperado(I), laCFG_CachedAccess(I), 'CONFIGURACIÓN CACHEADA EN ACCESO ' + TRANSFORM(I) )
+			ENDFOR
+
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_SetearElSoporte_LBX_Como_0_CuandoExista_CFG_Secundario_EnElDirEvaluado_Y_UsarValorCacheadoDesdeSegundoAccesoConsecutivo
+		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor, lcCFG_File ;
+			, laCFG_CachedAccess(3), laCFG_CachedAccess_Esperado(3), I ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loFB2P		= THIS.ioFB2P
+			loFB2P.l_ShowErrors	= .F.
+			loFB2P.l_AllowMultiConfig	= .T.
+			*loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', ADDBS(oFXU_LIB.cPathDatosTest) + 'noexiste' )
+			*loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', oFXU_LIB.cPathDatosTest )
+			lcCFG_File	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
+			STRTOFILE( 'LBX_Conversion_Support: 1', lcCFG_File )
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lcSeteo			= 'LBX_Conversion_Support:'
+			leValorEsperado	= 1
+			laCFG_CachedAccess_Esperado(1)	= .T.
+			laCFG_CachedAccess_Esperado(2)	= .F.
+			laCFG_CachedAccess_Esperado(3)	= .T.
+
+
+			*-- TEST
+			loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+
+			*loFB2P.c_InputFile	= loFB2P.c_Foxbin2prg_ConfigFile
+
+			loFB2P.c_InputFile	= FORCEPATH( 'test1.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + 'otro' )
+			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
+
+			loFB2P.c_InputFile	= FORCEPATH( 'test2.vcx', oFXU_LIB.cPathDatosTest )
+			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
+
+			loFB2P.c_InputFile	= FORCEPATH( 'test3.vcx', oFXU_LIB.cPathDatosTest )
 			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
 
