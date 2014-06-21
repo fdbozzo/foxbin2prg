@@ -507,7 +507,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_Recompile				= .T.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .F.
-	l_OptimizeByFilestamp	= .F.
+	l_OptimizeByFilestamp	= .T.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
