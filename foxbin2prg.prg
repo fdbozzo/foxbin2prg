@@ -501,7 +501,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	n_ExtraBackupLevels		= 1
-	nClassTimeStamp			= ''
+	n_ClassTimeStamp			= 0
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
@@ -1985,7 +1985,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	c_InputFile				= ''
 	c_OutputFile			= ''
 	lFileMode				= .F.
-	nClassTimeStamp			= ''
+	n_ClassTimeStamp			= 0
 	n_FB2PRG_Version		= 1.0
 	c_Foxbin2prg_FullPath	= ''
 	c_Type					= ''
@@ -2396,7 +2396,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 					EXIT
 				ENDIF
 
-				tnTimeStamp = THIS.nClassTimeStamp
+				tnTimeStamp = THIS.n_ClassTimeStamp
 
 				IF EMPTY(tnTimeStamp)
 					EXIT
