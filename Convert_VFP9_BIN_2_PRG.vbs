@@ -151,11 +151,11 @@ End Sub
 Private Sub evaluateFile( tcFile )
 	lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
 	oVFP9.SetVar "gc_Ext", lcExt
-	If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Bin2Prg(gc_Ext)") Then
+	'If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Bin2Prg(gc_Ext)") Then
 		nFile_Count = nFile_Count + 1
 		ReDim Preserve aFiles(nFile_Count)
 		aFiles(nFile_Count) = tcFile
-	End If
+	'End If
 End Sub
 
 

@@ -1038,7 +1038,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROCEDURE EvaluarConfiguracion
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-			, tcClearUniqueID, tcOptimizeByFilestamp
+			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
 
 		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt, lcValue ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
@@ -1048,12 +1048,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			STORE 0 TO lnKey
 			tcRecompile			= EVL(tcRecompile,'1')
 			lcConfigFile		= .c_Foxbin2prg_ConfigFile
+			tc_InputFile		= EVL(tc_InputFile, .c_InputFile)
 			
 			IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded
-				IF EMPTY(.c_InputFile)
-					ERROR C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + .c_InputFile + '"'
+				IF EMPTY(tc_InputFile)
+					ERROR C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + tc_InputFile + '"'
 				ENDIF
-				lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(.c_InputFile) )
+				lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(tc_InputFile) )
 			ENDIF
 			
 			lo_Configuration	= .o_Configuration
