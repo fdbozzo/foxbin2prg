@@ -432,6 +432,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
+		+ [<memberdata name="get_l_configevaluated" display="get_l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
@@ -584,6 +585,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		RETURN
 	ENDPROC
+
+
+	FUNCTION get_l_ConfigEvaluated
+		RETURN THIS.l_ConfigEvaluated
+	ENDFUNC
 
 
 	FUNCTION get_l_CFG_CachedAccess
@@ -1396,8 +1402,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- Ejecución normal
 
 					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
-					.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-						, @tcClearUniqueID, @tcOptimizeByFilestamp )
+					IF NOT THIS.l_ConfigEvaluated THEN
+						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
+							, @tcClearUniqueID, @tcOptimizeByFilestamp )
+					ENDIF
 
 					IF .l_ShowProgress
 						.cargar_frm_avance()
