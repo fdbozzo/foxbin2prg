@@ -171,10 +171,10 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_ShowErrors', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
-			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .F. )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
-			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .F. )
 			*STRTOFILE('', 'TESTS\DATOS_TEST\foxbin2prg.cfg')
 
 
@@ -868,7 +868,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 	*******************************************************************************************************************************************
-	FUNCTION Deberia_Setear_ClearUniqueID_False_CuandoNoExistaElArhivo_foxbin2prg_cfg
+	FUNCTION Deberia_Setear_ClearUniqueID_True_CuandoNoExistaElArhivo_foxbin2prg_cfg
 		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor ;
 			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
 			, loEx AS EXCEPTION
@@ -886,7 +886,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
 			lcSeteo			= 'l_ClearUniqueID'
-			leValorEsperado	= .F.
+			leValorEsperado	= .T.
 
 
 			*-- TEST

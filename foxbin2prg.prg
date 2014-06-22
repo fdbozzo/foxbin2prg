@@ -1069,7 +1069,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				lo_CFG			= THIS
 				
 				IF .n_CFG_Actual = 0 THEN
-				llExisteConfig	= FILE( lcConfigFile )
+					llExisteConfig	= FILE( lcConfigFile )
 				ENDIF
 
 				IF llExisteConfig AND .n_CFG_Actual = 0
@@ -1217,7 +1217,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
 						.n_CFG_Actual	= lo_Configuration.Count	&&lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
-				ENDIF
+					ENDIF
 				ENDIF && llExisteConfig
 
 				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) THEN
@@ -1394,7 +1394,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					SET ESCAPE OFF
 				ENDIF
 
-				loFSO	= .o_FSO
+				loFSO			= .o_FSO
+				tcRecompile		= EVL(tcRecompile,'1')
 
 				DO CASE
 				CASE VERSION(5) < 900
@@ -1412,8 +1413,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 					IF NOT THIS.l_ConfigEvaluated THEN
-					.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-						, @tcClearUniqueID, @tcOptimizeByFilestamp )
+						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
+							, @tcClearUniqueID, @tcOptimizeByFilestamp )
 					ENDIF
 
 					IF .l_ShowProgress
