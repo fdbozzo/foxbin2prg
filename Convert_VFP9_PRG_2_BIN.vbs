@@ -14,7 +14,7 @@
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, lcExt, foxbin2prg_cfg, aFiles(), nFile_Count
-Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps
+Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps, cErrFile
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
@@ -119,11 +119,19 @@ Else
 
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.HIDE()" )
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance = NULL" )
-	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
 
 	If GetBit(nDebug, 4) Then
-		MsgBox "End of Process!", 64, WScript.ScriptName
+		If oVFP9.Eval("oFoxBin2prg.l_Error") Then
+			MsgBox "End of Process! (with errors)", 48, WScript.ScriptName
+			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
+			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
+			WSHShell.run cErrFile
+		Else
+			MsgBox "End of Process!", 64, WScript.ScriptName
+		End If
 	End If
+
+	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
 End If
 
 WScript.Quit(nExitCode)
