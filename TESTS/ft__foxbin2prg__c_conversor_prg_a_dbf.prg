@@ -102,7 +102,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 
 			*-- DATOS DE ENTRADA
-			STORE 0 TO lnCodError
+			STORE 0 TO lnCodError, lnCodError_Esperado
 			lc_File				= 'FB2P_FREE.DB2'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
@@ -174,7 +174,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 
 			*-- DATOS DE ENTRADA
-			STORE 0 TO lnCodError
+			STORE 0 TO lnCodError, lnCodError_Esperado
 			lc_File				= 'FB2P_FREE.DB2'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
@@ -247,7 +247,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 
 			*-- DATOS DE ENTRADA
-			STORE 0 TO lnCodError
+			STORE 0 TO lnCodError, lnCodError_Esperado
 			lc_File				= 'FB2P_FREE.DB2'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
@@ -320,7 +320,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 
 			*-- DATOS DE ENTRADA
-			STORE 0 TO lnCodError
+			STORE 0 TO lnCodError, lnCodError_Esperado
 			lc_File				= 'FB2P_FREE.DB2'
 			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
 			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )

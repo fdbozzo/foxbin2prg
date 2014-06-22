@@ -507,8 +507,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_AllowMultiConfig		= .T.
 	l_Recompile				= .T.
 	l_NoTimestamps			= .T.
-	l_ClearUniqueID			= .F.
-	l_OptimizeByFilestamp	= .T.
+	l_ClearUniqueID			= .T.
+	l_OptimizeByFilestamp	= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -1385,7 +1385,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					SET ESCAPE OFF
 				ENDIF
 
-				loFSO	= .o_FSO
+				loFSO			= .o_FSO
+				tcRecompile		= EVL(tcRecompile,'1')
 
 				DO CASE
 				CASE VERSION(5) < 900
