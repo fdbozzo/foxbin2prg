@@ -489,6 +489,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROTECTED l_ConfigEvaluated, n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
 	n_FB2PRG_Version		= 1.19
+	*-- Localized properties
+	c_loc_processing_file	= C_PROCESSING_LOC
 	*--
 	c_Foxbin2prg_FullPath	= ''
 	c_Foxbin2prg_ConfigFile	= ''

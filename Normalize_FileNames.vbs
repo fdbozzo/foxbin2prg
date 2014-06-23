@@ -47,7 +47,7 @@ Else
 	Next
 
 	If GetBit(nDebug, 4) Then
-		MsgBox "Fin del Proceso!", 64, WScript.ScriptName
+		MsgBox "End of Process!", 64, WScript.ScriptName
 	End If
 End If
 
@@ -89,7 +89,7 @@ Private Sub evaluateFile( tcFile )
 	
 	cCMD	= "DO '" & cEXETool & "' WITH '" & tcFile & "','','F','',.F.," & cFlagDontShowErrMsg
 	If cFlagJustShowCall = "1" Then
-		MsgBox cCMD, 0, "PARAMETROS ENVIADOS"
+		MsgBox cCMD, 0, "PARAMETERS"
 	Else
 		oVFP9.DoCmd( cCMD )
 		'nExitCode = oVFP9.Eval("_SCREEN.ExitCode")

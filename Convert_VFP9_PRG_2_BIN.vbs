@@ -97,7 +97,7 @@ Else
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.SHOW()" )
 
 	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = 'Procesando " & aFiles(i) & "...'" )
+		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...'" )
 		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & i )
 		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
 
