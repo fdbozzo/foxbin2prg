@@ -2598,9 +2598,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE desnormalizarValorPropiedad
+		*-- Este método se ejecuta cuando se regenera el binario desde el tx2
 		LPARAMETERS tcProp, tcValue, tcComentario
 		LOCAL lnCodError, lnPos, lcValue
 		tcComentario	= ''
+
+		*-- Limpieza de caracteres sin uso
+		IF INLIST(tcValue, '..\', '..\..\' ) THEN
+			*MESSAGEBOX( 'Encontrado valor "' + tcValue + '" en propiedad "' + tcProp, 4096, PROGRAM() )
+			tcValue = ''
+		ENDIF
 
 		*-- Ajustes de algunos casos especiales
 		DO CASE
@@ -2813,7 +2820,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	PROCEDURE get_SeparatedPropAndValue
 		*-- Devuelve el valor separado de la propiedad.
-		*-- Si se indican más de 3 parámetros, evalúa el valor completo a través de las líneas de código
+		*-- Si se indican más de 3 parámetros, evalúa el valor completo a través de las líneas de código (valores multi-línea)
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
@@ -2929,9 +2936,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE normalizarValorPropiedad
+		*-- Este método se ejecuta cuando se genera el tx2 desde el binario
 		LPARAMETERS tcProp, tcValue, tcComentario
 		LOCAL lcValue, I
 		tcComentario	= ''
+
+		*-- Limpieza de caracteres sin uso
+		IF INLIST(tcValue, '..\', '..\..\' ) THEN
+			*MESSAGEBOX( 'Encontrado valor "' + tcValue + '" en propiedad "' + tcProp, 4096, PROGRAM() )
+			tcValue = ''
+		ENDIF
 
 		*-- Ajustes de algunos casos especiales
 		DO CASE
