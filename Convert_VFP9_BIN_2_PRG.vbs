@@ -14,7 +14,7 @@
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, lcExt, foxbin2prg_cfg, aFiles(), nFile_Count
-Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps
+Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps, cErrFile
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
@@ -90,7 +90,7 @@ Else
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.SHOW()" )
 
 	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = 'Procesando " & aFiles(i) & "...'" )
+		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...'" )
 		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & i )
 		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
 
@@ -112,11 +112,19 @@ Else
 
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.HIDE()" )
 	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance = NULL" )
-	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
 
 	If GetBit(nDebug, 4) Then
-		MsgBox "End of Process!", 64, WScript.ScriptName
+		If oVFP9.Eval("oFoxBin2prg.l_Error") Then
+			MsgBox "End of Process! (with errors)", 48, WScript.ScriptName
+			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
+			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
+			WSHShell.run cErrFile
+		Else
+			MsgBox "End of Process!", 64, WScript.ScriptName
+		End If
 	End If
+
+	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
 End If
 
 WScript.Quit(nExitCode)
@@ -143,6 +151,7 @@ End Sub
 Private Sub evaluateFile( tcFile )
 	lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
 	oVFP9.SetVar "gc_Ext", lcExt
+	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '', '', '', '', '', '', '', '', '" & tcFile & "' )" )
 	If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Bin2Prg(gc_Ext)") Then
 		nFile_Count = nFile_Count + 1
 		ReDim Preserve aFiles(nFile_Count)
