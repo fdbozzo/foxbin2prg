@@ -18,6 +18,7 @@ ENDDEFINE
 DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx" 
  	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="" Uniqueid="" />
 
+	AlwaysOnTop = .T.
 	DefHeight = 
 	DefLeft = 
 	DefTop = 

@@ -101,7 +101,7 @@ DEFINE CLASS f_base1 AS f_base OF "lib_controles.vcx"
 
 	AllowOutput = .T.
 	AlwaysOnBottom = .F.
-	AlwaysOnTop = .F.
+	AlwaysOnTop = .T.
 	AutoCenter = .F.
 	BackColor = 192,192,192
 	BindControls = .T.
@@ -192,8 +192,8 @@ DEFINE CLASS f_base1 AS f_base OF "lib_controles.vcx"
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
-	Command2.Name = "Command2"
-	Command2.RightToLeft = .F.
+	cmdCapturar.Name = "cmdCapturar"
+	cmdCapturar.RightToLeft = .F.
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
 	Label1.Caption = "CONTROL NORMAL"
