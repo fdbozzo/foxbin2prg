@@ -33,7 +33,7 @@ DEFINE CLASS form1 AS form
 
 	AllowOutput = .T.
 	AlwaysOnBottom = .F.
-	AlwaysOnTop = .F.
+	AlwaysOnTop = .T.
 	AutoCenter = .F.
 	a_otra = .F.
 	BackColor = 240,240,240
