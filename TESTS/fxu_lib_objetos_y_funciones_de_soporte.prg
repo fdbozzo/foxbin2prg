@@ -88,6 +88,9 @@ DEFINE CLASS CL_FXU_CONFIG AS CUSTOM
 			THIS.cPath	= THIS.cPath + ';FOXUNIT'
 		ENDIF
 		
+		THIS.cPathDatosReadOnly	= ADDBS( SYS(5) + CURDIR() ) + THIS.cPathDatosReadOnly
+		THIS.cPathDatosTest		= ADDBS( SYS(5) + CURDIR() ) + THIS.cPathDatosTest
+		
 		SET PATH TO (THIS.cPath)
 	ENDPROC
 

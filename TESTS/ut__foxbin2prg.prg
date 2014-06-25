@@ -358,7 +358,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElReporte_FB2P_LBX_YValidarLosCamposDelRegistro
 		*-- ETIQUETAS (LBX)
 		LOCAL lnCodError, lnCodError_Esperado  ;
-			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario, lnRecno ;
+			, lc_File, lc_InputFile, lc_OutputFile, lc_OutputFile2, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario, lnRecno ;
 			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
 			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
 			, loEx AS EXCEPTION
@@ -380,17 +380,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
 			lc_File				= 'FB2P_FOXUSER.LBX'
-			lc_InputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosReadOnly )
-			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_InputFile		= FULLPATH( FORCEPATH( lc_File, oFXU_LIB.cPathDatosReadOnly ) )
+			lc_OutputFile		= FULLPATH( FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest ) )
+			lc_OutputFile2		= FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
 			loCnv.EvaluarConfiguracion( '1', '1', '0', '0', SYS(5)+CURDIR(), '1', '0', '0' )
 
-			*oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, 'LBX' ) )
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, 'LBT' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+			loCnv.Ejecutar( lc_OutputFile2, '', '', '', '1', '0', '1', '', '', .T. )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN

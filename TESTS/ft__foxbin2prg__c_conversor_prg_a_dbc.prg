@@ -102,27 +102,27 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbc AS FxuTestCase OF FxuTestCase
 
 
 			*-- DATOS DE ENTRADA
-			STORE 0 TO lnCodError
+			STORE 0 TO lnCodError, lnCodError_Esperado
 			lc_File				= 'FB2P_DBC.DBC'
-			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
-			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+			lc_InputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosReadOnly )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 			oFXU_LIB.copiarArchivosParaTest( 'EVENTSFILE.PRG' )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DC2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DC2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'DC2')) TO (FORCEEXT(lc_OutputFile,'DC3'))
 			*-- Genero el DC2 desde el DBC regenerado
 			*WAIT WINDOW TIMEOUT 2	&& Para forzar una diferencia de 2 segundos entre el DC2 y el DC3
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los DC2 y DC3
-			lcDC2	= STREXTRACT( FILETOSTR( FORCEEXT(lc_File,'DC2') ), '<DATABASE>', '</DATABASE>' )
-			lcDC3	= STREXTRACT( FILETOSTR( FORCEEXT(lc_File,'DC3') ), '<DATABASE>', '</DATABASE>' )
+			lcDC2	= STREXTRACT( FILETOSTR( FORCEEXT(lc_OutputFile,'DC2') ), '<DATABASE>', '</DATABASE>' )
+			lcDC3	= STREXTRACT( FILETOSTR( FORCEEXT(lc_OutputFile,'DC3') ), '<DATABASE>', '</DATABASE>' )
 			
 			
 			*-- Visualización de valores

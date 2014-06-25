@@ -57,7 +57,7 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 
 	AllowOutput = .T.
 	AlwaysOnBottom = .F.
-	AlwaysOnTop = .F.
+	AlwaysOnTop = .T.
 	AutoCenter = .F.
 	BackColor = 192,192,192
 	BindControls = .T.
