@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.24'
-    .VersionDate          = Date(2014,06,15)
+    .VersionNumber        = 'v1.19.25'
+    .VersionDate          = Date(2014,06,25)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,13 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/06/25	v1.19.25
+- When processing one or multiple files with vbs scripts, show a message indicating the status of the generation, and show the error log if any error occurs (Pedro Gutiérrez M.)
+- Code cleaning and normalization
+- ClearUniqueID is True by default for tx2 files
+- OptimizeByTimestamp is False by default, to avoid possible automatic modifications made by VFP when opening a form or a classlib
+- New AllowMultiConfig switch enabled by default, that allow a foxbin2prg.CFG file per directory, overriding main CFG (Mario Peschke)
 
 2014/06/15	v1.19.24
 - Bug Fix scx/vcx: The absence of AGAIN keyword on some USE commands throws "tabla in use" error if used the PRG version from VFP command window (Matt Slay)
