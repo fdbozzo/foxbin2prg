@@ -2606,7 +2606,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*-- Limpieza de caracteres sin uso
 		IF INLIST(tcValue, '..\', '..\..\' ) THEN
 			*MESSAGEBOX( 'Encontrado valor "' + tcValue + '" en propiedad "' + tcProp, 4096, PROGRAM() )
-			tcValue = ''
+			*tcValue = ''
 		ENDIF
 
 		*-- Ajustes de algunos casos especiales
@@ -2944,7 +2944,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*-- Limpieza de caracteres sin uso
 		IF INLIST(tcValue, '..\', '..\..\' ) THEN
 			*MESSAGEBOX( 'Encontrado valor "' + tcValue + '" en propiedad "' + tcProp, 4096, PROGRAM() )
-			tcValue = ''
+			*tcValue = ''
 		ENDIF
 
 		*-- Ajustes de algunos casos especiales
