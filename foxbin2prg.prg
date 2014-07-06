@@ -90,6 +90,7 @@
 * 14/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * 16/06/2014	FDBOZZO		v1.19.25	Mejora: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del principal (Mario Peschke)
 * 17/06/2014	FDBOZZO		v1.19.25	Mejora: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Pedro Gutiérrez M.)
+* 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -963,7 +964,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				IF THIS.n_ExtraBackupLevels > 0 THEN
+				IF .n_ExtraBackupLevels > 0 THEN
 					lcNext_Bak	= .getNext_BAK( .c_OutputFile )
 					lcExt_1		= JUSTEXT( .c_OutputFile )
 					tcBakFile_1	= FORCEEXT(.c_OutputFile, lcExt_1 + lcNext_Bak)
@@ -1245,7 +1246,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						lo_CFG.l_Debug				= (TRANSFORM(tcDebug)=='1')
 					ENDIF
 					tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
-					lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
+					IF ISDIGIT(tcExtraBackupLevels)
+						lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
+					ENDIF
 					IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
 						lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
 					ENDIF
