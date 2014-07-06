@@ -128,10 +128,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 					, laProtected(1), lnProtected_Count, laProtected_Esperado(1), lnProtected_Count_Esperado ;
 					, laMethods(1,2), lnMethods_Count, laMethods_Esperado(1,2), lnMethods_Count_Esperado, lcExtraData
 				LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
+				LOCAL loFoxBin2Prg AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 
 				*-- Algunos ajustes para mejor visualización de caracteres especiales
 				*tcPropValue				= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcPropValue )
-				loObj		= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
+				loFoxBin2Prg	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+				loObj			= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
 
 				*-- Reserved3
 				loObj.get_PropsAndCommentsFrom_RESERVED3( toReg.RESERVED3, .F., @laPropsAndComments, @lnPropsAndComments_Count, '' )
@@ -146,8 +148,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				loObj.get_PropsFrom_PROTECTED( toReg_Esperado.PROTECTED, .F., @laProtected_Esperado, @lnProtected_Count_Esperado, '' )
 
 				*-- Methods
-				loObj.get_ADD_OBJECT_METHODS( toReg, toReg, '', @laMethods, '', @lnMethods_Count, '', 0, '', 0 )
-				loObj.get_ADD_OBJECT_METHODS( toReg_Esperado, toReg_Esperado, '', @laMethods_Esperado, '', @lnMethods_Count_Esperado, '', 0, '', 0 )
+				loObj.get_ADD_OBJECT_METHODS( toReg, toReg, '', @laMethods, '', @lnMethods_Count, '', 0, '', 0, loFoxBin2Prg )
+				loObj.get_ADD_OBJECT_METHODS( toReg_Esperado, toReg_Esperado, '', @laMethods_Esperado, '', @lnMethods_Count_Esperado, '', 0, '', 0, loFoxBin2Prg )
 				lcExtraData	= tcParent + '.' + tcObjName + ' (' + tcClass + ')'
 
 
@@ -257,6 +259,9 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 					THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 0+2+4) > 0 ;
 						, ' Comprobación de que existe el Method "' + TRANSFORM(laMethods_Esperado(I,1)) + '"' + " para " + lcExtraData )
 				ENDFOR
+				
+				loFoxBin2Prg = NULL
+				RELEASE loFoxBin2Prg
 
 			ENDCASE
 
@@ -438,7 +443,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaElForm_FB2P_FRM_1_SCX_YValidarLosCamposDelRegistro
 		LOCAL lnCodError, lnCodError_Esperado  ;
-			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
+			, lc_File, lc_InputFile, lc_OutputFile, lc_OutputFile2, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
 			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
 			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
 			, loEx AS EXCEPTION
@@ -457,16 +462,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
 			lc_File				= 'FB2P_FRM_1.SCX'
-			lc_InputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_READONLY' )
-			lc_OutputFile		= FORCEPATH( lc_File, 'TESTS\DATOS_TEST' )
+			lc_InputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosReadOnly )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFile2		= FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' )
 			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
 			loCnv.l_NoTimestamps			= .F.
 			loCnv.l_ClearUniqueID			= .F.
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '', '', '', '', '', .T. )
+			loCnv.Ejecutar( lc_OutputFile2, '', '', '', '', '', '', '', '', .T. )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -1268,6 +1274,120 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		COPY FILE ( ADDBS(oFXU_LIB.cPathDatosReadOnly) + 'bmps\*.*' ) TO ( ADDBS(oFXU_LIB.cPathDatosTest) + 'bmps\*.*' )
 
 		THIS.evaluate_bitmap_test( 'Form_Test_Eventos_y_Controles2', 'f_Form_AA2', 'F_Form_AA2.SCX' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_GenerarUnArchivo_SC2_DesdeUnBinarioQueContieneNullsEnElCodigo_SinLosNulls
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileBak, lcExt2, lcFileName, lnNulls, lnNulls_Esperados ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			loCnv.EvaluarConfiguracion( '', '', '1', '1', '1', '4', '1', '0' )
+			*loCnv.l_DropNullCharsFromCode	= .T.
+			*loCnv.l_Test				= .T.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado, lnNulls, lnNulls_Esperados
+			lcFileName			= 'f_nullchars_incode.scx'
+			lnNulls_Esperados	= 0
+			
+			*-- Copio la librería en DATOS_TEST
+			lc_File				= UPPER(lcFileName)
+			lcExt2				= loCnv.Get_Ext2FromExt( JUSTEXT( lc_File ) )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2	= FORCEEXT( FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest ), lcExt2 )
+			lc_OutputFileBak	= lc_OutputFileTx2 + '.bak'
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+			COPY FILE (lc_OutputFileTx2) TO (lc_OutputFileBak)
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnNulls		= OCCURS( CHR(0), FILETOSTR( lc_OutputFileTx2 ) )
+
+			*-- Comparo resultados
+			THIS.messageout( "Se comprueba si el archivo texto generado contiene NULLs" )
+			THIS.messageout( "NULLs esperados:   " + TRANSFORM(lnNulls_Esperados) )
+			THIS.messageout( "NULLs encontrados: " + TRANSFORM(lnNulls) )
+			THIS.assertequals( lnNulls_Esperados, lnNulls, "COMPROBACIÓN THE NULLS" )
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			STORE NULL TO loCnv, loCtl
+			RELEASE loCnv, loCtl
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_GenerarUnArchivo_SC2_DesdeUnBinarioQueContieneNullsEnElCodigo_ConLosNulls
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileBak, lcExt2, lcFileName, lnNulls, lnNulls_Esperados ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			loCnv.EvaluarConfiguracion( '', '', '1', '1', '1', '4', '1', '0' )
+			loCnv.l_DropNullCharsFromCode	= .F.
+			*loCnv.l_Test				= .T.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado, lnNulls, lnNulls_Esperados
+			lcFileName			= 'f_nullchars_incode.scx'
+			lnNulls_Esperados	= 2
+			
+			*-- Copio la librería en DATOS_TEST
+			lc_File				= UPPER(lcFileName)
+			lcExt2				= loCnv.Get_Ext2FromExt( JUSTEXT( lc_File ) )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2	= FORCEEXT( FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest ), lcExt2 )
+			lc_OutputFileBak	= lc_OutputFileTx2 + '.bak'
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+			COPY FILE (lc_OutputFileTx2) TO (lc_OutputFileBak)
+
+			*-- Genero TX2
+			loCnv.Ejecutar( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnNulls		= OCCURS( CHR(0), FILETOSTR( lc_OutputFileTx2 ) )
+
+			*-- Comparo resultados
+			THIS.messageout( "Se comprueba si el archivo texto generado contiene NULLs" )
+			THIS.messageout( "NULLs esperados:   " + TRANSFORM(lnNulls_Esperados) )
+			THIS.messageout( "NULLs encontrados: " + TRANSFORM(lnNulls) )
+			THIS.assertequals( lnNulls_Esperados, lnNulls, "COMPROBACIÓN THE NULLS" )
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			STORE NULL TO loCnv, loCtl
+			RELEASE loCnv, loCtl
+		ENDTRY
 
 	ENDFUNC
 

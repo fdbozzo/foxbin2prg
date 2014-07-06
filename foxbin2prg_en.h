@@ -35,7 +35,7 @@
 #DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			"Operation not recognized. Only SETNAME and GETNAME allowed."
 #DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimization: Output file [<<THIS.c_OutputFile>>] was not overwritten because it is the same as was generated."
 #DEFINE C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC				"Optimization: Output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
-#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>]"
+#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 #DEFINE C_PROCESSING_LOC									"Processing file"
 #DEFINE C_PROCESS_PROGRESS_LOC								"Process Progress:"
 #DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					"Property [<<TRANSFORM(tnPropertyID)>>] is not recognized."

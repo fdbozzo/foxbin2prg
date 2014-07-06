@@ -90,6 +90,9 @@
 * 14/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * 16/06/2014	FDBOZZO		v1.19.25	Mejora: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del principal (Mario Peschke)
 * 17/06/2014	FDBOZZO		v1.19.25	Mejora: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Pedro Gutiérrez M.)
+* 06/07/2014	FDBOZZO		v1.19.26	Mejora: Cuando se convierten binarios a texto, los CHR(0) pasan también, pudiendo provocar falsa detección como binario. Se agrega opción para quitar los NULLs. (Matt Slay)
+* 27/06/2014	FDBOZZO		v1.19.26	Mejora: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg lo procesa igualmente. (Daniel Sánchez)
+* 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -124,6 +127,8 @@
 * 13/06/2014	Mario Peschke		REPORTE BUG vcx/scx v1.19.23: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.24)
 * 16/06/2014	Mario Peschke		MEJORA v1.19.24: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del CFG principal (Agregado en v1.19.25)
 * 17/06/2014	Pedro Gutiérrez M.	MEJORA v1.19.24: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Agregado en v1.19.25)
+* 02/07/2014	Matt Slay			MEJORA v1.19.25: Se filtran algunos CHR(0) de los binarios al tx2, provocando que a veces no sea reconocido como texto. Deberían poderse quitar los NULLs (Arreglado en v1.19.26)
+* 27/06/2014	Daniel Sánchez		MEJORA v1.19.25: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg falla. Debería poder procesarlo igual.
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -277,6 +282,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_TAB						CHR(9)
 #DEFINE C_CR						CHR(13)
 #DEFINE C_LF						CHR(10)
+#DEFINE C_NULL_CHAR					CHR(0)
 #DEFINE CR_LF						C_CR + C_LF
 #DEFINE C_MPROPHEADER				REPLICATE( CHR(1), 517 )
 *-- Fin / End
@@ -346,7 +352,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			"Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
 	#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se sobreescribe por ser igual al generado."
 	#DEFINE C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC				"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
-	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>]"
+	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 	#DEFINE C_PROCESSING_LOC									"Procesando archivo"
 	#DEFINE C_PROCESS_PROGRESS_LOC								"Avance del proceso:"
 	#DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					"Propiedad [<<TRANSFORM(tnPropertyID)>>] no reconocida."
@@ -444,6 +450,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="l_allowmulticonfig" display="l_AllowMultiConfig"/>] ;
+		+ [<memberdata name="l_dropnullcharsfromcode" display="l_DropNullCharsFromCode"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
@@ -514,6 +521,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ShowErrors			= .T.
 	l_ShowProgress			= .T.
 	l_AllowMultiConfig		= .T.
+	l_DropNullCharsFromCode	= .T.
 	l_Recompile				= .T.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .T.
@@ -963,7 +971,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				IF THIS.n_ExtraBackupLevels > 0 THEN
+				IF .n_ExtraBackupLevels > 0 THEN
 					lcNext_Bak	= .getNext_BAK( .c_OutputFile )
 					lcExt_1		= JUSTEXT( .c_OutputFile )
 					tcBakFile_1	= FORCEEXT(.c_OutputFile, lcExt_1 + lcNext_Bak)
@@ -1145,21 +1153,28 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 15 ) )
 								IF NOT INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 									tcClearUniqueID	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 15 )) ) )
+									.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(lcValue) )
 								ENDIF
 
 							CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
 								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 21 ) )
 								IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 									tcOptimizeByFilestamp	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:    ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 21 )) ) )
+									.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:    ' + TRANSFORM(lcValue) )
 								ENDIF
 
 							CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
 								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
 								IF INLIST( lcValue, '0', '1' ) THEN
 									.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:    ' + TRANSFORM(ALLTRIM( SUBSTR( laConfig(I), 18 )) ) )
+									.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:       ' + TRANSFORM(lcValue) )
+								ENDIF
+
+							CASE LEFT( laConfig(I), 22 ) == LOWER('DropNullCharsFromCode:')
+								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 23 ) )
+								IF INLIST( lcValue, '0', '1' ) THEN
+									.l_DropNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
+									.writeLog( JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:  ' + TRANSFORM(lcValue) )
 								ENDIF
 
 							CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
@@ -1245,20 +1260,23 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						lo_CFG.l_Debug				= (TRANSFORM(tcDebug)=='1')
 					ENDIF
 					tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
+					IF ISDIGIT(tcExtraBackupLevels)
 					lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
+					ENDIF
 					IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
 						lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
 					ENDIF
 
 					.writeLog( '---' )
-					.writeLog( '> l_ShowProgress:         ' + TRANSFORM(.l_ShowProgress) )
-					.writeLog( '> l_ShowErrors:           ' + TRANSFORM(.l_ShowErrors) )
-					.writeLog( '> l_Recompile:            ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
-					.writeLog( '> l_NoTimestamps:         ' + TRANSFORM(.l_NoTimestamps) )
-					.writeLog( '> l_ClearUniqueID:        ' + TRANSFORM(.l_ClearUniqueID) )
-					.writeLog( '> l_Debug:                ' + TRANSFORM(.l_Debug) )
-					.writeLog( '> n_ExtraBackupLevels:    ' + TRANSFORM(.n_ExtraBackupLevels) )
-					.writeLog( '> l_OptimizeByFilestamp:  ' + TRANSFORM(.l_OptimizeByFilestamp) )
+					.writeLog( '> l_ShowProgress:          ' + TRANSFORM(.l_ShowProgress) )
+					.writeLog( '> l_ShowErrors:            ' + TRANSFORM(.l_ShowErrors) )
+					.writeLog( '> l_Recompile:             ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
+					.writeLog( '> l_NoTimestamps:          ' + TRANSFORM(.l_NoTimestamps) )
+					.writeLog( '> l_ClearUniqueID:         ' + TRANSFORM(.l_ClearUniqueID) )
+					.writeLog( '> l_Debug:                 ' + TRANSFORM(.l_Debug) )
+					.writeLog( '> n_ExtraBackupLevels:     ' + TRANSFORM(.n_ExtraBackupLevels) )
+					.writeLog( '> l_OptimizeByFilestamp:   ' + TRANSFORM(.l_OptimizeByFilestamp) )
+					.writeLog( '> l_DropNullCharsFromCode: ' + TRANSFORM(.l_DropNullCharsFromCode) )
 
 					lo_CFG	= NULL
 					RELEASE lo_CFG
@@ -8119,16 +8137,20 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE get_ADD_OBJECT_METHODS
 		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount ;
-			, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count
+			, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count ;
+			, toFoxBin2Prg
 
 		EXTERNAL ARRAY taPropsAndComments, taProtected
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL lcMethodName
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				.SortMethod( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount ;
-					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count )
+					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count, @toFoxBin2Prg )
 
 				*-- Ubico los métodos protegidos y les cambio la definición.
 				*-- Los métodos se deben generar con la ruta completa, porque si no es imposible saber a que objeto corresponden,
@@ -8510,11 +8532,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE SortMethod
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
-			, taProtected, tnProtected_Count
+			, taProtected, tnProtected_Count, toFoxBin2Prg
 		*-- 29/10/2013	Fernando D. Bozzo
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
 		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		*-- ESTRUCTURA DE LOS ARRAYS CREADOS:
 		*-- taMethods[1,3]
@@ -8524,7 +8549,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- taCode[1]
 		*--		Bloque de código del método en su posición original
 		TRY
-			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine
+			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen
 			LOCAL loEx AS EXCEPTION
 			DIMENSION taMethods(1,3)
 			STORE '' TO taMethods, tcSorted, taCode
@@ -8538,11 +8563,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				DIMENSION laLine(1), taMethods(1,3)
 				STORE '' TO laLine, taMethods, taCode
 				STORE 0 TO tnMethodCount, lnTextNodes
+				
 				lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
 
 				*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
 				FOR I = 1 TO lnLineCount
-					IF NOT EMPTY(laLine(I))
+					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
+						*-- Skip empty and commented lines
+					ELSE
 						IF I > 1
 							FOR X = I-1 TO 1 STEP -1
 								ADEL(laLine, X)
@@ -8556,7 +8584,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
 				FOR I = lnLineCount TO 1 STEP -1
-					IF EMPTY(laLine(I))
+					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
 						ADEL(laLine, I)
 					ELSE
 						IF I < lnLineCount
@@ -8569,6 +8597,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				*-- Analyze and count line methods, get method names and consolidate block code
 				FOR I = 1 TO lnLineCount
+					IF toFoxBin2Prg.l_DropNullCharsFromCode
+						laLine(I)	= CHRTRAN( laLine(I), C_NULL_CHAR, '' )
+					ENDIF
+
 					lnLine_Len	= LEN( laLine(I) )
 
 					DO CASE
@@ -8608,6 +8640,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= ''
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 17) ) == 'HIDDEN PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
@@ -8616,6 +8649,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'HIDDEN '
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 20) ) == 'PROTECTED PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
@@ -8624,6 +8658,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'PROTECTED '
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
@@ -8636,8 +8671,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+						llProcOpen				= .F.
 
-					CASE tnMethodCount = 0	&& Skip empty lines before methods begin
+					CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+						*-- Skip empty and commented lines before methods begin
+						*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
 
 					OTHERWISE && Method Code
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
@@ -8777,7 +8815,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ALL_OBJECT_METHODS
-		LPARAMETERS tcMethods, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count
+		LPARAMETERS tcMethods, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count, toFoxBin2Prg
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
 		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods
@@ -8788,7 +8826,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount ;
-					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count )
+					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count, @toFoxBin2Prg )
 
 				FOR I = 1 TO lnMethodCount
 					*-- Genero los métodos indentados
@@ -9850,7 +9888,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					DIMENSION laMethods(1,3)
 					laMethods	= ''
 					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
-						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 
 					.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
@@ -9878,10 +9916,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						ENDIF
 
 						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods, @laMethods, @laCode, @lnMethodCount ;
-							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 					ENDSCAN
 
-					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
+						, lnProtected_Count, @toFoxBin2Prg )
 
 					GOTO RECORD (lnRecno)
 				ENDSCAN
@@ -10087,7 +10126,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					DIMENSION laMethods(1,3)
 					laMethods	= ''
 					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
-						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 
 					.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
@@ -10117,10 +10156,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						ENDIF
 
 						.get_ADD_OBJECT_METHODS( @loRegObj, @loRegClass, @lcMethods, @laMethods, @laCode, @lnMethodCount ;
-							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 					ENDSCAN
 
-					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count )
+					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
+						, lnProtected_Count, @toFoxBin2Prg )
 
 					GOTO RECORD (lnRecno)
 				ENDSCAN
