@@ -90,6 +90,7 @@
 * 14/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * 16/06/2014	FDBOZZO		v1.19.25	Mejora: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del principal (Mario Peschke)
 * 17/06/2014	FDBOZZO		v1.19.25	Mejora: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Pedro Gutiérrez M.)
+* 27/06/2014	FDBOZZO		v1.19.26	Mejora: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg lo procesa igualmente. (Daniel Sánchez)
 * 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
@@ -125,6 +126,7 @@
 * 13/06/2014	Mario Peschke		REPORTE BUG vcx/scx v1.19.23: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.24)
 * 16/06/2014	Mario Peschke		MEJORA v1.19.24: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del CFG principal (Agregado en v1.19.25)
 * 17/06/2014	Pedro Gutiérrez M.	MEJORA v1.19.24: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Agregado en v1.19.25)
+* 27/06/2014	Daniel Sánchez		MEJORA v1.19.25: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg falla. Debería poder procesarlo igual.
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -347,7 +349,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			"Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
 	#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se sobreescribe por ser igual al generado."
 	#DEFINE C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC				"Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
-	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>]"
+	#DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 	#DEFINE C_PROCESSING_LOC									"Procesando archivo"
 	#DEFINE C_PROCESS_PROGRESS_LOC								"Avance del proceso:"
 	#DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					"Propiedad [<<TRANSFORM(tnPropertyID)>>] no reconocida."
@@ -1247,7 +1249,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
 					IF ISDIGIT(tcExtraBackupLevels)
-						lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
+					lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 					ENDIF
 					IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
 						lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
@@ -8527,7 +8529,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- taCode[1]
 		*--		Bloque de código del método en su posición original
 		TRY
-			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine
+			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen
 			LOCAL loEx AS EXCEPTION
 			DIMENSION taMethods(1,3)
 			STORE '' TO taMethods, tcSorted, taCode
@@ -8545,7 +8547,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
 				FOR I = 1 TO lnLineCount
-					IF NOT EMPTY(laLine(I))
+					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
+						*-- Skip empty and commented lines
+					ELSE
 						IF I > 1
 							FOR X = I-1 TO 1 STEP -1
 								ADEL(laLine, X)
@@ -8559,7 +8563,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 				*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
 				FOR I = lnLineCount TO 1 STEP -1
-					IF EMPTY(laLine(I))
+					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
 						ADEL(laLine, I)
 					ELSE
 						IF I < lnLineCount
@@ -8611,6 +8615,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= ''
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 17) ) == 'HIDDEN PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
@@ -8619,6 +8624,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'HIDDEN '
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 20) ) == 'PROTECTED PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
@@ -8627,6 +8633,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'PROTECTED '
 						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
@@ -8639,8 +8646,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+						llProcOpen				= .F.
 
-					CASE tnMethodCount = 0	&& Skip empty lines before methods begin
+					CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+						*-- Skip empty and commented lines before methods begin
+						*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
 
 					OTHERWISE && Method Code
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
