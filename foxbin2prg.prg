@@ -268,6 +268,15 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_LF						CHR(10)
 #DEFINE CR_LF						C_CR + C_LF
 #DEFINE C_MPROPHEADER				REPLICATE( CHR(1), 517 )
+
+*** DH 06/02/2014: added additional constants
+#DEFINE C_RECORDS_I					'<RECORDS>'
+#DEFINE C_RECORDS_F					'</RECORDS>'
+#DEFINE C_RECORD_I					'<RECORD>'
+#DEFINE C_RECORD_F					'</RECORD>'
+#DEFINE C_RECNO_I					'<RECNO>'
+#DEFINE C_RECNO_F					'</RECNO>'
+
 *-- Fin / End
 
 *-- From FOXPRO.H
@@ -7032,7 +7041,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
-
 		TRY
 			LOCAL I, lnCodError, loEx AS EXCEPTION ;
 				, loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG' ;
@@ -15280,6 +15288,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		*--
 		THIS.ADDOBJECT("_Fields", "CL_DBF_FIELDS")
 		THIS.ADDOBJECT("_Indexes", "CL_DBF_INDEXES")
+*** DH 06/02/2014: added _Records
+		THIS.ADDOBJECT("_Records", "CL_DBF_RECORDS")
 	ENDPROC
 
 
@@ -15385,13 +15395,21 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>	<FileType_Descrip><<tc_FileTypeDesc>></FileType_Descrip>
 			ENDTEXT
 
+*** DH 06/02/2014: created variables
+			local laFields[1], lnFieldCount
+
 			*-- Fields
 			loFields	= THIS._Fields
-			lcText		= lcText + loFields.toText()
+*** DH 06/02/2014: passed variables to toText
+*			lcText		= lcText + loFields.toText()
+			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
 
 			*-- Indexes
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
+
+*** DH 06/02/2014: added _Records
+			lcText = lcText + This._Records.toText(@laFields, lnFieldCount)
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
@@ -15958,6 +15976,172 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 
 
 ENDDEFINE
+
+*** DH 06/02/2014: added classes CL_DBF_RECORDS and CL_DBF_RECORD
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+*** DH 06/02/2014: not implemented
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taFields					(@?    OUT) Array de información de campos
+		* tnField_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taFields, tnField_Count
+
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION ;
+				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+			lcText = ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>	<<C_RECORDS_I>>
+			ENDTEXT
+
+			loRecord = CREATEOBJECT('CL_DBF_RECORD')
+
+			scan
+				lcText	= lcText + loRecord.toText(@taFields, tnField_Count)
+			endscan
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>	<<C_RECORDS_F>>
+				<<>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loRecord
+			RELEASE loRecord
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+*** DH 06/02/2014: not implemented
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taFields					(@?    OUT) Array de información de campos
+		* tnField_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taFields, tnField_Count
+
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue
+			lcText	= ''
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		<<C_RECORD_I>>
+				<<>>			<<C_RECNO_I>><<recno()>><<C_RECNO_F>>
+			endtext
+
+			for I = 1 to tnField_Count
+				lcField = taFields[I, 1]
+				luValue = evaluate(lcField)
+				do case
+					case taFields[I, 2] $ 'CMV'
+						luValue = trim(luValue)
+						if This.Encode(luValue) <> luValue
+							luValue = '<![CDATA[' + luValue + ']]>'
+						endif This.Encode(luValue) <> luValue
+				endcase
+				TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
+					<<>>			<<'<' + lcField + '>'>><<luValue>></<<lcField>>>
+				endtext
+			next
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2 additive
+				<<>>		<<C_RECORD_F>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	endproc
+	
+	procedure Encode
+		lparameters tcString
+		local lcString
+		lcString = strtran(tcString, '&',     '&amp;')
+		lcString = strtran(lcString, '>',     '&gt;')
+		lcString = strtran(lcString, '<',     '&lt;')
+		lcString = strtran(lcString, '"',     '&quot;')
+		lcString = strtran(lcString, "'",     '&#39;')
+		lcString = strtran(lcString, '/',     '&#47;')
+		lcString = strtran(lcString, chr(13), '&#13;')
+		lcString = strtran(lcString, chr(10), '&#10;')
+		lcString = strtran(lcString, chr(9),  '&#9;')
+		return lcString
+	endproc
+
+ENDDEFINE
+
+*** DH 06/02/2014: end of added classes
 
 
 *******************************************************************************************************************
