@@ -285,6 +285,15 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_NULL_CHAR					CHR(0)
 #DEFINE CR_LF						C_CR + C_LF
 #DEFINE C_MPROPHEADER				REPLICATE( CHR(1), 517 )
+
+*** DH 06/02/2014: added additional constants
+#DEFINE C_RECORDS_I					'<RECORDS>'
+#DEFINE C_RECORDS_F					'</RECORDS>'
+#DEFINE C_RECORD_I					'<RECORD num="##">'	&& *** FDBOZZO 2014/07/15: Optimized RECORD tag adding num property to not use REGNUM field
+#DEFINE C_RECORD_F					'</RECORD>'
+#DEFINE C_RECNO_I					'<RECNO>'
+#DEFINE C_RECNO_F					'</RECNO>'
+
 *-- Fin / End
 
 *-- From FOXPRO.H
@@ -1056,7 +1065,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			, loEx as Exception
 
 		TRY
-			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnKey
 				tcRecompile			= EVL(tcRecompile,'1')
 				lcConfigFile		= .c_Foxbin2prg_ConfigFile
@@ -1083,11 +1092,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					lo_CFG			= THIS
 					
 					IF .n_CFG_Actual = 0 THEN
-						llExisteConfig	= FILE( lcConfigFile )
+				llExisteConfig	= FILE( lcConfigFile )
 					ENDIF
 
 					IF llExisteConfig AND .n_CFG_Actual = 0
-						.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
+					.writeLog( C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
 						IF .l_AllowMultiConfig AND .l_ConfigEvaluated AND .l_Main_CFG_Loaded
 							lo_CFG	= CREATEOBJECT('CL_CFG')
@@ -1096,72 +1105,72 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							lo_Configuration.Add( NULL, lc_CFG_Path )
 						ENDIF
 
-						FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-							laConfig(I)	= LOWER( laConfig(I) )
+					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
+						laConfig(I)	= LOWER( laConfig(I) )
 
-							DO CASE
-							CASE INLIST( LEFT( laConfig(I), 1 ), '*', '#', '/', "'" )
-								LOOP
+						DO CASE
+						CASE INLIST( LEFT( laConfig(I), 1 ), '*', '#', '/', "'" )
+							LOOP
 
-							CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
-								lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
-								lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-								IF PEMSTATUS( THIS, lcExt, 5 )
-									.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-									*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > ' + C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								ENDIF
+						CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
+							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
+							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+							IF PEMSTATUS( THIS, lcExt, 5 )
+								.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > ' + C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+							ENDIF
 
-							CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
-								IF NOT INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
-									tcDontShowProgress	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:     ' + TRANSFORM(tcDontShowProgress) )
-								ENDIF
+						CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
+							IF NOT INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+								tcDontShowProgress	= lcValue
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:     ' + TRANSFORM(tcDontShowProgress) )
+							ENDIF
 
-							CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
-								*-- Priorizo si tcDontShowErrors NO viene con "0" como parámetro, ya que los scripts vbs
-								*-- los utilizan para sobreescribir la configuración por defecto de foxbin2prg.cfg
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
-								IF NOT INLIST( TRANSFORM(tcDontShowErrors), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
-									tcDontShowErrors	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
-								ENDIF
+						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
+							*-- Priorizo si tcDontShowErrors NO viene con "0" como parámetro, ya que los scripts vbs
+							*-- los utilizan para sobreescribir la configuración por defecto de foxbin2prg.cfg
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
+							IF NOT INLIST( TRANSFORM(tcDontShowErrors), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+								tcDontShowErrors	= lcValue
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:       ' + TRANSFORM(tcDontShowErrors) )
+							ENDIF
 
-							CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
-								IF NOT INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
-									tcNoTimestamps	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:         ' + TRANSFORM(tcNoTimestamps) )
-								ENDIF
+						CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
+							IF NOT INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+								tcNoTimestamps	= lcValue
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:         ' + TRANSFORM(tcNoTimestamps) )
+							ENDIF
 
-							CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
-								IF NOT INLIST( TRANSFORM(tcDebug), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
-									tcDebug	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                ' + TRANSFORM(tcDebug) )
-								ENDIF
+						CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
+							IF NOT INLIST( TRANSFORM(tcDebug), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+								tcDebug	= lcValue
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                ' + TRANSFORM(tcDebug) )
+							ENDIF
 
-							CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
-								IF NOT ISDIGIT( TRANSFORM(tcExtraBackupLevels) ) AND ISDIGIT( lcValue ) THEN
-									tcExtraBackupLevels	= lcValue
-									.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:    ' + TRANSFORM(tcExtraBackupLevels) )
-								ENDIF
+						CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
+							IF NOT ISDIGIT( TRANSFORM(tcExtraBackupLevels) ) AND ISDIGIT( lcValue ) THEN
+								tcExtraBackupLevels	= lcValue
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:    ' + TRANSFORM(tcExtraBackupLevels) )
+							ENDIF
 
-							CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 15 ) )
-								IF NOT INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
-									tcClearUniqueID	= lcValue
+						CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 15 ) )
+							IF NOT INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+								tcClearUniqueID	= lcValue
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:          ' + TRANSFORM(lcValue) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 21 ) )
-								IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
-									tcOptimizeByFilestamp	= lcValue
+						CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 21 ) )
+							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+								tcOptimizeByFilestamp	= lcValue
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:    ' + TRANSFORM(lcValue) )
-								ENDIF
+							ENDIF
 
 							CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
 								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
@@ -1177,97 +1186,97 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:  ' + TRANSFORM(lcValue) )
 								ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.PJX_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support: ' + TRANSFORM(lo_CFG.PJX_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.VCX_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support: ' + TRANSFORM(lo_CFG.VCX_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.SCX_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support: ' + TRANSFORM(lo_CFG.SCX_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.FRX_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support: ' + TRANSFORM(lo_CFG.FRX_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.LBX_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support: ' + TRANSFORM(lo_CFG.LBX_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.MNX_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support: ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.DBF_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support: ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
-								lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-								IF INLIST( lcValue, '0', '1', '2' ) THEN
+						CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
 									lo_CFG.DBC_Conversion_Support	= INT( VAL( lcValue ) )
 									.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support: ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
-								ENDIF
+							ENDIF
 
-							ENDCASE
-						ENDFOR
+						ENDCASE
+					ENDFOR
 
 						IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
 							.n_CFG_Actual	= lo_Configuration.Count	&&lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
-						ENDIF
+				ENDIF
 					ENDIF && llExisteConfig
 
-					IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) THEN
+				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) THEN
 						lo_CFG.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
-					ENDIF
-					IF NOT EMPTY(tcDontShowErrors)
+				ENDIF
+				IF NOT EMPTY(tcDontShowErrors)
 						lo_CFG.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
-					ENDIF
+				ENDIF
 					IF NOT .l_Main_CFG_Loaded
 						lo_CFG.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
 					ENDIF
-					IF INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) THEN
+				IF INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) THEN
 						lo_CFG.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
-					ENDIF
-					IF INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) THEN
+				ENDIF
+				IF INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) THEN
 						lo_CFG.l_ClearUniqueID		= NOT (TRANSFORM(tcClearUniqueID) == '0')
-					ENDIF
-					IF INLIST( TRANSFORM(tcDebug), '0', '1' ) THEN
+				ENDIF
+				IF INLIST( TRANSFORM(tcDebug), '0', '1' ) THEN
 						lo_CFG.l_Debug				= (TRANSFORM(tcDebug)=='1')
-					ENDIF
+				ENDIF
 					tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
 					IF ISDIGIT(tcExtraBackupLevels)
 					lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 					ENDIF
-					IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
+				IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
 						lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
-					ENDIF
+				ENDIF
 
-					.writeLog( '---' )
+				.writeLog( '---' )
 					.writeLog( '> l_ShowProgress:          ' + TRANSFORM(.l_ShowProgress) )
 					.writeLog( '> l_ShowErrors:            ' + TRANSFORM(.l_ShowErrors) )
 					.writeLog( '> l_Recompile:             ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
@@ -1297,9 +1306,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.l_Main_CFG_Loaded	= .T.
 					ENDIF
 
-					.l_ConfigEvaluated = .T.
+				.l_ConfigEvaluated = .T.
 				*ENDIF && .l_ConfigEvaluated
-			ENDWITH && THIS
+		ENDWITH && THIS
 			
 		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -1454,8 +1463,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 					IF NOT THIS.l_ConfigEvaluated THEN
-						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-							, @tcClearUniqueID, @tcOptimizeByFilestamp )
+					.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
+						, @tcClearUniqueID, @tcOptimizeByFilestamp )
 					ENDIF
 
 					IF .l_ShowProgress
@@ -1979,12 +1988,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							IF I > 0 THEN
 								ltFilestamp	= DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
 									, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
-							ENDIF
+					ENDIF
 
 						ENDCASE
 						
 						.t_OutputFile_TimeStamp	=	MAX( .t_OutputFile_TimeStamp, ltFilestamp )
-					ENDIF
+				ENDIF
 				ENDIF
 
 				IF NOT .l_OptimizeByFilestamp OR .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
@@ -15794,6 +15803,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		*--
 		THIS.ADDOBJECT("_Fields", "CL_DBF_FIELDS")
 		THIS.ADDOBJECT("_Indexes", "CL_DBF_INDEXES")
+		*** DH 06/02/2014: added _Records
+		THIS.ADDOBJECT("_Records", "CL_DBF_RECORDS")
 	ENDPROC
 
 
@@ -15885,6 +15896,9 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			LOCAL lcText, loEx AS EXCEPTION ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
 				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+			*** DH 06/02/2014: created variables
+			LOCAL laFields[1], lnFieldCount
+
 			STORE NULL TO loIndexes, loFields
 			lcText	= ''
 
@@ -15901,11 +15915,17 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 			*-- Fields
 			loFields	= THIS._Fields
-			lcText		= lcText + loFields.toText()
+
+			*** DH 06/02/2014: passed variables to toText
+			*lcText		= lcText + loFields.toText()
+			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
 
 			*-- Indexes
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
+
+			*** DH 06/02/2014: added _Records
+			lcText = lcText + THIS._Records.toText(@laFields, lnFieldCount)
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
@@ -16472,6 +16492,185 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 
 
 ENDDEFINE
+
+*** DH 06/02/2014: added classes CL_DBF_RECORDS and CL_DBF_RECORD
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+		*** DH 06/02/2014: not implemented
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taFields					(@?    OUT) Array de información de campos
+		* tnField_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taFields, tnField_Count
+
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL lcText, loEx AS EXCEPTION ;
+				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+			lcText = ''
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				<<>>	<<C_RECORDS_I>>
+			ENDTEXT
+
+			loRecord = CREATEOBJECT('CL_DBF_RECORD')
+
+			SCAN
+				lcText	= lcText + loRecord.toText(@taFields, tnField_Count)
+			ENDSCAN
+
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>	<<C_RECORDS_F>>
+				<<>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loRecord
+			RELEASE loRecord
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
+	#IF .F.
+		LOCAL THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* tcLine					(@! IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
+		* I							(@! IN/OUT) Número de línea en análisis
+		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+		*** DH 06/02/2014: not implemented
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taFields					(@?    OUT) Array de información de campos
+		* tnField_Count				(@?    OUT) Cantidad de campos
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS taFields, tnField_Count
+
+		EXTERNAL ARRAY taFields
+
+		TRY
+			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue, lcFieldType
+			lcText	= ''
+
+			*** FDBOZZO 2014/07/15: New "num" property invalidates the use of REGNUM field
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>		<<STRTRAN( C_RECORD_I, '##', TRANSFORM(RECNO()) )>>
+			ENDTEXT
+
+			FOR I = 1 TO tnField_Count
+				lcField		= taFields[I, 1]
+				lcFieldType	= taFields[I, 2]
+
+				*** FDBOZZO 2014/07/15: Added field restrictions on binary and general fields
+				DO CASE
+				CASE lcFieldType == 'G'
+					luValue		= 'GENERAL FIELD NOT SUPPORTED'
+				CASE lcFieldType == 'W'
+					luValue		= 'BLOB FIELD NOT SUPPORTED'
+				CASE lcFieldType == 'Q'
+					luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+				OTHERWISE
+					luValue		= EVALUATE(lcField)
+				ENDCASE
+
+				DO CASE
+				CASE taFields[I, 2] $ 'CMV'
+					luValue = TRIM(luValue)
+					IF THIS.Encode(luValue) <> luValue
+						luValue = '<![CDATA[' + luValue + ']]>'
+					ENDIF THIS.Encode(luValue) <> luValue
+				ENDCASE
+				TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
+					<<>>			<<'<' + lcField + '>'>><<luValue>></<<lcField>>>
+				ENDTEXT
+			NEXT
+
+			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2 additive
+				<<>>		<<C_RECORD_F>>
+			ENDTEXT
+
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lcText
+	ENDPROC
+
+	PROCEDURE Encode
+		LPARAMETERS tcString
+		LOCAL lcString
+		lcString = STRTRAN(tcString, '&',     '&amp;')
+		lcString = STRTRAN(lcString, '>',     '&gt;')
+		lcString = STRTRAN(lcString, '<',     '&lt;')
+		lcString = STRTRAN(lcString, '"',     '&quot;')
+		lcString = STRTRAN(lcString, "'",     '&#39;')
+		lcString = STRTRAN(lcString, '/',     '&#47;')
+		lcString = STRTRAN(lcString, CHR(13), '&#13;')
+		lcString = STRTRAN(lcString, CHR(10), '&#10;')
+		lcString = STRTRAN(lcString, CHR(9),  '&#9;')
+		RETURN lcString
+	ENDPROC
+
+ENDDEFINE
+
+*** DH 06/02/2014: end of added classes
 
 
 *******************************************************************************************************************
