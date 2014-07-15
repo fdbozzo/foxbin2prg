@@ -93,7 +93,7 @@
 * 06/07/2014	FDBOZZO		v1.19.26	Mejora: Cuando se convierten binarios a texto, los CHR(0) pasan también, pudiendo provocar falsa detección como binario. Se agrega opción para quitar los NULLs. (Matt Slay)
 * 27/06/2014	FDBOZZO		v1.19.26	Mejora: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg lo procesa igualmente. (Daniel Sánchez)
 * 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
-* 02/06/2014	DH			v1.19.27	Mejora: Agregado soporte para exportar datos para DIFF (no para importar) (Doug Hennig/FDBOZZO)
+* 02/06/2014	DH/FDBOZZO	v1.19.27	Mejora: Agregado soporte para exportar datos para DIFF (no para importar)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -15900,7 +15900,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		#ENDIF
 
 		TRY
-			LOCAL lcText, loEx AS EXCEPTION ;
+			LOCAL lcText, lcTableCFG, lcIndexKey, lcIndexFile, loEx AS EXCEPTION ;
 				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG' ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
 				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
@@ -15924,25 +15924,34 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			*-- Fields
 			loFields	= THIS._Fields
 
-			DO CASE
-			CASE INLIST(toFoxBin2Prg.DBF_Conversion_Support, 1, 2)	&& BIN2PRG o PRG2BIN
-				lcText		= lcText + loFields.toText()
+			*** DH 06/02/2014: passed variables to toText
+			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
 
-			CASE toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				*** DH 06/02/2014: passed variables to toText
-				lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
+			*-- Indexes
+			loIndexes	= THIS._Indexes
+			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
 
-				*-- Indexes
-				loIndexes	= THIS._Indexes
-				lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
+			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
+				*-- If table CFG exists, use it to order records. FDBOZZO. 2014/06/15
+				lcTableCFG	= tc_InputFile + '.CFG'
 
+				IF FILE(lcTableCFG)
+					toFoxBin2Prg.writeLog()
+					toFoxBin2Prg.writeLog('* Found configuration file: ' + lcTableCFG)
+					lcIndexKey	= ALLTRIM( FILETOSTR(lcTableCFG), 0, ' ', CHR(13), CHR(10) )
+					
+					IF NOT EMPTY(lcIndexKey)
+						lcIndexFile	= FORCEEXT(tc_InputFile,'IDX')
+						INDEX ON &lcIndexKey. TO (lcIndexFile) COMPACT
+						toFoxBin2Prg.writeLog('  > Using Index order key: ' + lcIndexKey)
+					ENDIF
+				ENDIF
+			
 				*** DH 06/02/2014: added _Records
 				loRecords	= THIS._Records
 				lcText = lcText + loRecords.toText(@laFields, lnFieldCount)
 
-			OTHERWISE
-				*-- Ignorar soporte no contemplado
-			ENDCASE
+			ENDIF
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
@@ -15960,6 +15969,10 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		FINALLY
 			STORE NULL TO loIndexes, loFields, loRecords
 			RELEASE loFields, loIndexes, loRecords
+			IF NOT EMPTY(lcIndexFile) AND FILE(lcIndexFile)
+				SET INDEX TO
+				ERASE (lcIndexFile)
+			ENDIF
 		ENDTRY
 
 		RETURN lcText
