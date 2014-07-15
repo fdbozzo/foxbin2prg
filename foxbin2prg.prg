@@ -272,7 +272,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *** DH 06/02/2014: added additional constants
 #DEFINE C_RECORDS_I					'<RECORDS>'
 #DEFINE C_RECORDS_F					'</RECORDS>'
-#DEFINE C_RECORD_I					'<RECORD>'
+#DEFINE C_RECORD_I					'<RECORD num="##">'	&& *** FDBOZZO 2014/07/15: Optimized RECORD tag adding num property to not use REGNUM field
 #DEFINE C_RECORD_F					'</RECORD>'
 #DEFINE C_RECNO_I					'<RECNO>'
 #DEFINE C_RECNO_F					'</RECNO>'
@@ -11726,13 +11726,13 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 		* tnParentID				(v! IN    ) ID del objeto Padre
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_OutputFile, tnLastID, tnParentID
-        LOCAL loObject
-        loObject    = NULL
+		LOCAL loObject
+		loObject    = NULL
 
 		FOR EACH loObject IN THIS FOXOBJECT
-            loObject.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
+			loObject.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
 			loObject	= NULL
-        ENDFOR
+		ENDFOR
 
 		RETURN
 	ENDPROC
@@ -15288,7 +15288,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		*--
 		THIS.ADDOBJECT("_Fields", "CL_DBF_FIELDS")
 		THIS.ADDOBJECT("_Indexes", "CL_DBF_INDEXES")
-*** DH 06/02/2014: added _Records
+		*** DH 06/02/2014: added _Records
 		THIS.ADDOBJECT("_Records", "CL_DBF_RECORDS")
 	ENDPROC
 
@@ -15381,6 +15381,9 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			LOCAL lcText, loEx AS EXCEPTION ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
 				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+			*** DH 06/02/2014: created variables
+			LOCAL laFields[1], lnFieldCount
+
 			STORE NULL TO loIndexes, loFields
 			lcText	= ''
 
@@ -15395,21 +15398,17 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>	<FileType_Descrip><<tc_FileTypeDesc>></FileType_Descrip>
 			ENDTEXT
 
-*** DH 06/02/2014: created variables
-			local laFields[1], lnFieldCount
-
 			*-- Fields
 			loFields	= THIS._Fields
-*** DH 06/02/2014: passed variables to toText
-*			lcText		= lcText + loFields.toText()
+			*** DH 06/02/2014: passed variables to toText
 			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
 
 			*-- Indexes
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
 
-*** DH 06/02/2014: added _Records
-			lcText = lcText + This._Records.toText(@laFields, lnFieldCount)
+			*** DH 06/02/2014: added _Records
+			lcText = lcText + THIS._Records.toText(@laFields, lnFieldCount)
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
@@ -15996,7 +15995,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
-*** DH 06/02/2014: not implemented
+		*** DH 06/02/2014: not implemented
 	ENDPROC
 
 
@@ -16022,9 +16021,9 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 
 			loRecord = CREATEOBJECT('CL_DBF_RECORD')
 
-			scan
+			SCAN
 				lcText	= lcText + loRecord.toText(@taFields, tnField_Count)
-			endscan
+			ENDSCAN
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	<<C_RECORDS_F>>
@@ -16069,7 +16068,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
-*** DH 06/02/2014: not implemented
+		*** DH 06/02/2014: not implemented
 	ENDPROC
 
 
@@ -16084,28 +16083,41 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		EXTERNAL ARRAY taFields
 
 		TRY
-			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue
+			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue, lcFieldType
 			lcText	= ''
 
+			*** FDBOZZO 2014/07/15: New "num" property invalidates the use of REGNUM field
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>		<<C_RECORD_I>>
-				<<>>			<<C_RECNO_I>><<recno()>><<C_RECNO_F>>
-			endtext
+				<<>>		<<STRTRAN( C_RECORD_I, '##', TRANSFORM(RECNO()) )>>
+			ENDTEXT
 
-			for I = 1 to tnField_Count
-				lcField = taFields[I, 1]
-				luValue = evaluate(lcField)
-				do case
-					case taFields[I, 2] $ 'CMV'
-						luValue = trim(luValue)
-						if This.Encode(luValue) <> luValue
-							luValue = '<![CDATA[' + luValue + ']]>'
-						endif This.Encode(luValue) <> luValue
-				endcase
+			FOR I = 1 TO tnField_Count
+				lcField		= taFields[I, 1]
+				lcFieldType	= taFields[I, 2]
+
+				*** FDBOZZO 2014/07/15: Added field restrictions on binary and general fields
+				DO CASE
+				CASE lcFieldType == 'G'
+					luValue		= 'GENERAL FIELD NOT SUPPORTED'
+				CASE lcFieldType == 'W'
+					luValue		= 'BLOB FIELD NOT SUPPORTED'
+				CASE lcFieldType == 'Q'
+					luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+				OTHERWISE
+					luValue		= EVALUATE(lcField)
+				ENDCASE
+
+				DO CASE
+				CASE taFields[I, 2] $ 'CMV'
+					luValue = TRIM(luValue)
+					IF THIS.Encode(luValue) <> luValue
+						luValue = '<![CDATA[' + luValue + ']]>'
+					ENDIF THIS.Encode(luValue) <> luValue
+				ENDCASE
 				TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
 					<<>>			<<'<' + lcField + '>'>><<luValue>></<<lcField>>>
-				endtext
-			next
+				ENDTEXT
+			NEXT
 
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2 additive
 				<<>>		<<C_RECORD_F>>
@@ -16122,22 +16134,22 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		ENDTRY
 
 		RETURN lcText
-	endproc
-	
-	procedure Encode
-		lparameters tcString
-		local lcString
-		lcString = strtran(tcString, '&',     '&amp;')
-		lcString = strtran(lcString, '>',     '&gt;')
-		lcString = strtran(lcString, '<',     '&lt;')
-		lcString = strtran(lcString, '"',     '&quot;')
-		lcString = strtran(lcString, "'",     '&#39;')
-		lcString = strtran(lcString, '/',     '&#47;')
-		lcString = strtran(lcString, chr(13), '&#13;')
-		lcString = strtran(lcString, chr(10), '&#10;')
-		lcString = strtran(lcString, chr(9),  '&#9;')
-		return lcString
-	endproc
+	ENDPROC
+
+	PROCEDURE Encode
+		LPARAMETERS tcString
+		LOCAL lcString
+		lcString = STRTRAN(tcString, '&',     '&amp;')
+		lcString = STRTRAN(lcString, '>',     '&gt;')
+		lcString = STRTRAN(lcString, '<',     '&lt;')
+		lcString = STRTRAN(lcString, '"',     '&quot;')
+		lcString = STRTRAN(lcString, "'",     '&#39;')
+		lcString = STRTRAN(lcString, '/',     '&#47;')
+		lcString = STRTRAN(lcString, CHR(13), '&#13;')
+		lcString = STRTRAN(lcString, CHR(10), '&#10;')
+		lcString = STRTRAN(lcString, CHR(9),  '&#9;')
+		RETURN lcString
+	ENDPROC
 
 ENDDEFINE
 
@@ -16633,14 +16645,14 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 			THROW
 
 		FINALLY
-            IF toReg.ObjType = 2
+			IF toReg.ObjType = 2
 				lnLastKey	= toCol_LastLevelName.GETKEY(toReg.LevelName)
 				IF lnLastKey > 0
 					toCol_LastLevelName.REMOVE(lnLastKey)
 				ENDIF
 			ENDIF
 			STORE NULL TO loBarPop, loOption
-            RELEASE I, lcLevelName, lnLastKey, llHayDatos, loReg, loBarPop, loOption
+			RELEASE I, lcLevelName, lnLastKey, llHayDatos, loReg, loBarPop, loOption
 		ENDTRY
 
 		RETURN llRetorno
