@@ -15400,7 +15400,9 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 			*-- Fields
 			loFields	= THIS._Fields
+
 			*** DH 06/02/2014: passed variables to toText
+			*lcText		= lcText + loFields.toText()
 			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
 
 			*-- Indexes
