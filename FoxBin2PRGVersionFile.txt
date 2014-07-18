@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.26'
-    .VersionDate          = Date(2014,07,06)
+    .VersionNumber        = 'v1.19.27'
+    .VersionDate          = Date(2014,07,18)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,10 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+
+2014/07/18	v1.19.27
+- Feature: Added support for exporting DBF data for DIFF (It's intended just for DIFF small DBFs, as config ones, not for true Data export. Binary fields are not exported and there is not an Import Data feature) (Doug Hennig)
 
 2014/07/06	v1.19.26
 - Feature: Drop asterisks between "ENDPROC" and "PROCEDURE", analyzed in that exact order, to regenerate binary without errors. (Daniel Sánchez)
