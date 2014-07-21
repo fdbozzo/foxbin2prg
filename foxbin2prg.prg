@@ -451,6 +451,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
+		+ [<memberdata name="filenamefoundinfilter" display="FilenameFoundInFilter"/>] ;
 		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="get_l_configevaluated" display="get_l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
@@ -492,6 +493,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="lbx_conversion_support" display="LBX_Conversion_Support"/>] ;
 		+ [<memberdata name="mnx_conversion_support" display="MNX_Conversion_Support"/>] ;
 		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
+		+ [<memberdata name="dbf_conversion_included" display="DBF_Conversion_Included"/>] ;
+		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
 		+ [<memberdata name="tienesoporte_bin2prg" display="TieneSoporte_Bin2Prg"/>] ;
@@ -566,6 +569,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	MNX_Conversion_Support	= 2
 	DBF_Conversion_Support	= 1
 	DBC_Conversion_Support	= 2
+	DBF_Conversion_Included	= ''
+	DBF_Conversion_Excluded	= ''
 
 
 	PROCEDURE INIT
@@ -828,6 +833,24 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			RETURN THIS.DBF_Conversion_Support
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).DBF_Conversion_Support, THIS.DBF_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE DBF_Conversion_Included_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.DBF_Conversion_Included
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).DBF_Conversion_Included, THIS.DBF_Conversion_Included )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE DBF_Conversion_Excluded_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.DBF_Conversion_Excluded
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).DBF_Conversion_Excluded, THIS.DBF_Conversion_Excluded )
 		ENDIF
 	ENDPROC
 
@@ -1327,6 +1350,28 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		RETURN
 	ENDPROC
+
+
+	FUNCTION FilenameFoundInFilter
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcFilename				(v! IN    ) Nombre del archivo a evaluar
+		* tcFilters					(v! IN    ) Filtros a evaluar (*,??E.*,R*.*)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcFilename, tcFilters
+		
+		LOCAL llFound, laFiltros(1)
+		tcFilename	= UPPER(tcFilename)
+
+		FOR I = 1 TO ALINES( laFiltros, tcFilters + ',', 1+4, ',' )
+			IF LIKE( UPPER(laFiltros(I)), tcFilename )
+				llFound = .T.
+				EXIT
+			ENDIF
+		ENDFOR
+		
+		RETURN llFound
+	ENDFUNC
 
 
 	PROCEDURE Get_Ext2FromExt
@@ -11131,7 +11176,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc ;
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1) ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 				, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
@@ -11140,6 +11185,22 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
 
 			WITH THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
+				*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
+
+				*-- Include
+				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Included) AND NOT toFoxBin2Prg.DBF_Conversion_Included == '*' ;
+						AND NOT toFoxBin2Prg.FilenameFoundInFilter( .c_InputFile, toFoxBin2Prg.DBF_Conversion_Included )
+					toFoxBin2Prg.writeLog('  ' + .c_InputFile + ' no está en el filtro DBF_Conversion_Included (' + toFoxBin2Prg.DBF_Conversion_Included + ')' )
+					EXIT
+				ENDIF
+
+				*-- Exclude
+				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Excluded) ;
+						AND toFoxBin2Prg.FilenameFoundInFilter( .c_InputFile, toFoxBin2Prg.DBF_Conversion_Excluded )
+					toFoxBin2Prg.writeLog('  ' + .c_InputFile + ' está en el filtro DBF_Conversion_Excluded (' + toFoxBin2Prg.DBF_Conversion_Included + ')' )
+					EXIT
+				ENDIF
+				
 				loDBFUtils.getDBFmetadata( .c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
 				lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
 				lnDatabases_Count	= ADATABASES(laDatabases)
@@ -15900,7 +15961,9 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		#ENDIF
 
 		TRY
-			LOCAL lcText, lcTableCFG, lcIndexKey, lcIndexFile, loEx AS EXCEPTION ;
+			LOCAL lcText, lcTableCFG, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
+				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition ;
+				, loEx AS EXCEPTION ;
 				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG' ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
 				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
@@ -15932,24 +15995,43 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
 
 			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				*-- If table CFG exists, use it to order records. FDBOZZO. 2014/06/15
+				*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
 				lcTableCFG	= tc_InputFile + '.CFG'
 
 				IF FILE(lcTableCFG)
 					toFoxBin2Prg.writeLog()
 					toFoxBin2Prg.writeLog('* Found configuration file: ' + lcTableCFG)
-					lcIndexKey	= ALLTRIM( FILETOSTR(lcTableCFG), 0, ' ', CHR(13), CHR(10) )
 					
-					IF NOT EMPTY(lcIndexKey)
+					*-- Leer valores de configuración
+					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcTableCFG ), 1+4 )
+						lcConfigItem	= LOWER( laConfig(I) )
+
+						DO CASE
+						CASE INLIST( LEFT( lcConfigItem, 1 ), '*', '#', '/', "'" )
+							LOOP
+
+						CASE LEFT( lcConfigItem, 21 ) == LOWER('DBF_Conversion_Order:')
+							lc_DBF_Conversion_Order		= ALLTRIM( SUBSTR( laConfig(I), 22 ) )
+							toFoxBin2Prg.writeLog('  ' + JUSTFNAME(lcTableCFG) + ' -> DBF_Conversion_Order: ' + lc_DBF_Conversion_Order )
+
+						CASE LEFT( lcConfigItem, 25 ) == LOWER('DBF_Conversion_Condition:')
+							lc_DBF_Conversion_Condition	= ALLTRIM( SUBSTR( laConfig(I), 26 ) )
+							toFoxBin2Prg.writeLog('  ' + JUSTFNAME(lcTableCFG) + ' -> DBF_Conversion_Condition: ' + lc_DBF_Conversion_Condition )
+
+						ENDCASE
+					ENDFOR
+					
+					IF NOT EMPTY(lc_DBF_Conversion_Order)
 						lcIndexFile	= FORCEEXT(tc_InputFile,'IDX')
-						INDEX ON &lcIndexKey. TO (lcIndexFile) COMPACT
-						toFoxBin2Prg.writeLog('  > Using Index order key: ' + lcIndexKey)
+						INDEX ON &lc_DBF_Conversion_Order. TO (lcIndexFile) COMPACT
+						toFoxBin2Prg.writeLog('  > Using Index order key: ' + lc_DBF_Conversion_Order)
 					ENDIF
+					
 				ENDIF
 			
 				*** DH 06/02/2014: added _Records
 				loRecords	= THIS._Records
-				lcText = lcText + loRecords.toText(@laFields, lnFieldCount)
+				lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
 
 			ENDIF
 
@@ -16548,11 +16630,12 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
-		* taFields					(@! IN    ) Array de información de campos
-		* tnField_Count				(v! IN    ) Cantidad de campos
+		* PARÁMETROS:					(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
+		* taFields						(@! IN    ) Array de información de campos
+		* tnField_Count					(v! IN    ) Cantidad de campos
+		* tc_DBF_Conversion_Condition	(v? IN    ) Condición de filtro para la conversión. Solo se exporta lo que la cumpla.
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taFields, tnField_Count
+		LPARAMETERS taFields, tnField_Count, tc_DBF_Conversion_Condition
 
 		EXTERNAL ARRAY taFields
 
@@ -16567,8 +16650,12 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			ENDTEXT
 
 			loRecord = CREATEOBJECT('CL_DBF_RECORD')
+			
+			IF EMPTY(tc_DBF_Conversion_Condition)
+				tc_DBF_Conversion_Condition	= '.T.'
+			ENDIF
 
-			SCAN
+			SCAN FOR &tc_DBF_Conversion_Condition.
 				lcText	= lcText + loRecord.toText(@taFields, tnField_Count)
 			ENDSCAN
 
@@ -16579,6 +16666,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 
 
 		CATCH TO loEx
+			loEx.UserValue = loEx.UserValue + 'tc_DBF_Conversion_Condition = [' + TRANSFORM(tc_DBF_Conversion_Condition) + ']' + CR_LF
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -19652,7 +19740,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	#ENDIF
 
 
-	*--
+	*-- Configuration class. By default asumes master value, except when overriding one.
 	c_Foxbin2prg_FullPath	= ''
 	c_Foxbin2prg_ConfigFile	= ''
 	c_CurDir				= ''
@@ -19679,6 +19767,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	LBX_Conversion_Support	= NULL
 	MNX_Conversion_Support	= NULL
 	DBF_Conversion_Support	= NULL
+	DBF_Conversion_Included	= NULL
+	DBF_Conversion_Excluded	= NULL
 	DBC_Conversion_Support	= NULL
 
 
