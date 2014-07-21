@@ -94,6 +94,7 @@
 * 27/06/2014	FDBOZZO		v1.19.26	Mejora: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg lo procesa igualmente. (Daniel Sánchez)
 * 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
 * 02/06/2014	DH/FDBOZZO	v1.19.27	Mejora: Agregado soporte para exportar datos para DIFF (no para importar)
+* 21/07/2014	FDBOZZO		v1.19.28	Mejora: Agregada funcionalidad para filtrado de tablas y datos cuando se elige DBF_Conversion_Support:4 (Edyshor)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -131,6 +132,7 @@
 * 02/07/2014	Matt Slay			MEJORA v1.19.25: Se filtran algunos CHR(0) de los binarios al tx2, provocando que a veces no sea reconocido como texto. Deberían poderse quitar los NULLs (Arreglado en v1.19.26)
 * 27/06/2014	Daniel Sánchez		MEJORA v1.19.25: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg falla. Debería poder procesarlo igual.
 * 02/06/2014	Doug Hennig			MEJORA v1.19.22: Agregada funcionalidad para exportar los datos de las tablas al archivo db2 (Agregado en v1.19.27)
+* 21/07/2014	Edyshor				PROPUESTA DE MEJORA db2 v1.19.27: Sería útil poder filtrar tablas y datos cuando se elige DBF_Conversion_Support:4 (Agregado en v1.19.28)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
