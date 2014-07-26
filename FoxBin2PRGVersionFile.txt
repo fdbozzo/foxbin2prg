@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.27'
-    .VersionDate          = Date(2014,07,18)
+    .VersionNumber        = 'v1.19.28'
+    .VersionDate          = Date(2014,07,26)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,6 +17,8 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
+2014/07/26	v1.19.28
+- Feature: Added new options in foxbin2prg.cfg (DBF_Conversion_Included, DBF_Conversion_Excluded) and in filename.dbf.cfg (DBF_Conversion_Order, DBF_Conversion_Condition) for exporting DBFs data to text when DBF_Conversion_Support is 4 (Edyshor)
 
 2014/07/18	v1.19.27
 - Feature: Added support for exporting DBF data for DIFF (It's intended just for DIFF small DBFs, as config ones, not for true Data export. Binary fields are not exported and there is not an Import Data feature) (Doug Hennig)
