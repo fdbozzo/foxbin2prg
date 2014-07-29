@@ -95,6 +95,7 @@
 * 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
 * 02/06/2014	DH/FDBOZZO	v1.19.27	Mejora: Agregado soporte para exportar datos para DIFF (no para importar)
 * 21/07/2014	FDBOZZO		v1.19.28	Mejora: Agregada funcionalidad para filtrado de tablas y datos cuando se elige DBF_Conversion_Support:4 (Edyshor)
+* 29/07/2014	FDBOZZO		v1.19.29	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -133,6 +134,7 @@
 * 27/06/2014	Daniel Sánchez		MEJORA v1.19.25: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg falla. Debería poder procesarlo igual.
 * 02/06/2014	Doug Hennig			MEJORA v1.19.22: Agregada funcionalidad para exportar los datos de las tablas al archivo db2 (Agregado en v1.19.27)
 * 21/07/2014	Edyshor				PROPUESTA DE MEJORA db2 v1.19.27: Sería útil poder filtrar tablas y datos cuando se elige DBF_Conversion_Support:4 (Agregado en v1.19.28)
+* 29/07/2014	M_N_M				REPORTE BUG vcx/scx v1.19.28: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.29)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3585,6 +3587,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="createproject_recordheader" display="createProject_RecordHeader"/>] ;
 		+ [<memberdata name="createreport" display="createReport"/>] ;
 		+ [<memberdata name="createmenu" display="createMenu"/>] ;
+		+ [<memberdata name="currentlineispreviouslinecontinuation" display="currentLineIsPreviousLineContinuation"/>] ;
 		+ [<memberdata name="defined_pam2memo" display="defined_PAM2Memo"/>] ;
 		+ [<memberdata name="eltextoevaluadoeseltokenindicado" display="elTextoEvaluadoEsElTokenIndicado"/>] ;
 		+ [<memberdata name="emptyrecord" display="emptyRecord"/>] ;
@@ -3754,6 +3757,24 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		RETURN llEncontrado
 	ENDPROC
+	
+	
+	PROCEDURE currentLineIsPreviousLineContinuation
+		LPARAMETERS taCodeLines, I
+
+		LOCAL lcPrevLine, llIsContinuation
+		*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
+		IF I > 1
+			lcPrevLine	= taCodeLines(I-1)
+		ELSE
+			lcPrevLine	= ''
+		ENDIF
+		.get_SeparatedLineAndComment( @lcPrevLine )
+		IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
+			llIsContinuation	= .T.
+		ENDIF
+		RETURN llIsContinuation
+	ENDPROC
 
 
 	PROCEDURE identificarBloquesDeExclusion
@@ -3799,7 +3820,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						FOR X = 1 TO lnID_Bloques_Count
 							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
-							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 )
+							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
 								lnPrimerID		= X
 								lnAnidamientos	= 1
 								EXIT
@@ -3807,14 +3829,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						ENDFOR
 
 						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
-							IF I > 1
-								*-- Analizo la línea anterior para saber si termina con ";" y la actual es continuación
-								lcPrevLine	= taCodeLines(I-1)
-								.get_SeparatedLineAndComment( @lcPrevLine )
-								IF RIGHT( lcPrevLine,1 ) = ';'	&& Esta línea es continuación de la anterior
-									LOOP
-								ENDIF
-							ENDIF
+							*IF I > 1
+							*	*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
+							*	lcPrevLine	= taCodeLines(I-1)
+							*	.get_SeparatedLineAndComment( @lcPrevLine )
+							*	IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
+							*		LOOP
+							*	ENDIF
+							*ENDIF
 
 							tnBloquesExclusion		= tnBloquesExclusion + 1
 							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
@@ -3831,10 +3853,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 								ENDIF
 
 								DO CASE
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 )
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
 									lnAnidamientos	= lnAnidamientos + 1
 
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 )
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 ) ;
+										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
 									lnAnidamientos	= lnAnidamientos - 1
 
 									IF lnAnidamientos = 0

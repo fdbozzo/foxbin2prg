@@ -159,7 +159,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 
 
 	*******************************************************************************************************************************************
-	FUNCTION Deberia_NoEncontrarNingunBloque_TEXT_ENDTEXT_CuandoUnaLineaQueComienzaConUnCampoLlamado_Text_esEvaluado
+	FUNCTION Deberia_NoEncontrarBloque_TEXT_ENDTEXT_CuandoEvaluaUnaLineaQueComienzaConUnCampoLlamado_Text_YLineaAnteriorTerminaEn_PuntoYComa
 		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(1,2)
 		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
 		loObj	= THIS.icObj
@@ -174,7 +174,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 				*-- Code Block
 				IF !FOUND()
 					APPEND BLANK
-					REPLACE CURSOR	WITH "cawlmain", START WITH 1, END WITH 999999, isnumeric WITH .F., lastused WITH "", ;	&& Worst case for next line
+					REPLACE CURSOR	WITH "cawlmain", START WITH 1, END WITH 999999, isnumeric WITH .F., lastused WITH "", ;	&& Worst case for next line with a field called "text"
 						  TEXT	WITH "Wärmeobjekte", standard WITH .T.
 				ENDIF
 
@@ -187,7 +187,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 					Empfaenger		C(2),;
 					Rohdatum			C(8),;
 					RohZeit			C(4),;
-					LFDNr				C(4),;	&& Worst case for next line
+					LFDNr				C(4),;	&& Worst case for next line with a field called "text"
 					Text				C(26),;
 					Trenner			C(2),;
 					DATUM				D				NULL,;
@@ -204,7 +204,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 					lfdnr c(30) NULL DEFAULT .NULL.,;
 					linkkey int,;
 					email CHAR(60) NULL DEFAULT .NULL.,;
-					subject VARCHAR(254) NULL DEFAULT .NULL.,;	&& Worst case for next line
+					subject VARCHAR(254) NULL DEFAULT .NULL.,;	&& Worst case for next line with a field called "text"
 					TEXT m NULL DEFAULT .NULL.,;
 					docname c(50) NULL DEFAULT .NULL.,;
 					versenden l NOT NULL DEFAULT .F.,;
@@ -222,6 +222,59 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 					Text C(200) NULL ;
 					)
 
+			<<C_ENDPROC>>
+		ENDTEXT
+		
+		lnLineas	= ALINES( laLineas, lcMethod )
+
+		*-- Test
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laPos, @lnPos_Count )
+		
+		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count )
+		
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_NoEncontrarBloque_TEXT_ENDTEXT_CuandoEvaluaUnaLineaQueComienzaConUnCampoLlamado_Text_YLineaAnteriorTerminaEn_Coma
+		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(1,2)
+		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
+		loObj	= THIS.icObj
+		
+		*-- Input and expected params
+		STORE '' TO lcMethod
+		laExpected_Pos(1,1)	= 4
+		laExpected_Pos(1,2)	= 15
+
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2+4
+			<<C_PROC>> myMethod_B
+				*-- Code Block
+				IF ODBC_Query.odbc
+				   <<C_TEXT>> TO cSQL NOSHOW
+				      update menuitems
+				      set    parent_menuitem_id = ?iParent_menuitem_id,	&& Worst case for next line with a field called "text"
+				             text     = ?strText,
+				             command  = ?strCommand,
+				             message  = ?strMessage,
+				             keyname  = ?strKeyname,
+				             keylabel = ?strKeylabel,
+				             skipfor  = ?strSkipfor,
+				             sequence = ?iSequence
+				      where  menuitem_id = ?iMenuitem_id
+				   <<C_ENDTEXT>>
+				   ODBC_Query(cSQL)
+				ELSE
+				   update menuitems;
+				   set    parent_menuitem_id = iParent_menuitem_id,;	&& Worst case for next line with a field called "text"
+				          text     = strText,;
+				          command  = strCommand,;
+				          message  = strMessage,;
+				          keyname  = strKeyname,;
+				          keylabel = strKeylabel,;
+				          skipfor  = strSkipfor,;
+				          sequence = iSequence;
+				   where  menuitem_id == iMenuitem_id
+				ENDIF
 			<<C_ENDPROC>>
 		ENDTEXT
 		
