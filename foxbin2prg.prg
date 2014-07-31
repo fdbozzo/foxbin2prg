@@ -8495,9 +8495,17 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				ASORT( taProtected, 1, -1, 0, 1 )
 			ENDIF
 
-			FOR I = 1 TO tnProtected_Count
-				tcSortedMemo	= tcSortedMemo + taProtected(I) + CR_LF
+			FOR I = tnProtected_Count TO 1 STEP -1
+				*-- El ASCAN es para evitar valores repetidos, que se eliminarán. v1.19.29
+				IF ASCAN( taProtected, taProtected(I), 1, -1, 0,1+2+4 ) = I
+					tcSortedMemo	= tcSortedMemo + LOWER(taProtected(I)) + CR_LF
+				ELSE
+					ADEL( taProtected, I )
+					tnProtected_Count	= tnProtected_Count - 1
+				ENDIF
 			ENDFOR
+			
+			DIMENSION taProtected(tnProtected_Count)
 		ENDIF
 
 		RETURN
