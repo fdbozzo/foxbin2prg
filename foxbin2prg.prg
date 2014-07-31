@@ -2378,13 +2378,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="buscarobjetodelmetodopornombre" display="buscarObjetoDelMetodoPorNombre"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" display="comprobarExpresionValida"/>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="currentlineispreviouslinecontinuation" display="currentLineIsPreviousLineContinuation"/>] ;
 		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="desnormalizarasignacion" display="desnormalizarAsignacion"/>] ;
 		+ [<memberdata name="desnormalizarvalorpropiedad" display="desnormalizarValorPropiedad"/>] ;
 		+ [<memberdata name="desnormalizarvalorxml" display="desnormalizarValorXML"/>] ;
+		+ [<memberdata name="eltextoevaluadoeseltokenindicado" display="elTextoEvaluadoEsElTokenIndicado"/>] ;
 		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filetypecode" display="fileTypeCode"/>] ;
+		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="get_separatedpropandvalue" display="get_SeparatedPropAndValue"/>] ;
 		+ [<memberdata name="get_valuefromnullterminatedvalue" display="get_ValueFromNullTerminatedValue"/>] ;
@@ -2661,6 +2664,170 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
+	PROCEDURE currentLineIsPreviousLineContinuation
+		LPARAMETERS taCodeLines, I
+
+		LOCAL lcPrevLine, llIsContinuation
+		*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
+		IF I > 1
+			lcPrevLine	= taCodeLines(I-1)
+		ELSE
+			lcPrevLine	= ''
+		ENDIF
+		.get_SeparatedLineAndComment( @lcPrevLine )
+		IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
+			llIsContinuation	= .T.
+		ENDIF
+		RETURN llIsContinuation
+	ENDPROC
+
+
+	PROCEDURE elTextoEvaluadoEsElTokenIndicado
+		LPARAMETERS tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin
+		LOCAL llEncontrado, lcWord
+
+		TRY
+			IF tnIniFin = 1
+				*-- TOKENS DE INICIO
+				IF UPPER( LEFT( tcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
+					*-- Evaluar casos especiales
+					lcWord	= UPPER( ALLTRIM(GETWORDNUM(tcLine,1) ) )
+
+					IF ta_ID_Bloques(X,1) == 'TEXT' AND NOT lcWord == 'TEXT'
+						EXIT
+					ENDIF
+
+					llEncontrado	= .T.
+				ENDIF
+			ELSE
+				*-- TOKENS DE FIN
+				IF LEFT( UPPER( tcLine ), tnLen_IDFinBQ ) == ta_ID_Bloques(X,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
+					*-- Evaluar casos especiales
+					lcWord	= UPPER( ALLTRIM(GETWORDNUM(tcLine,1) ) )
+
+					IF ta_ID_Bloques(X,2) == 'ENDT' AND NOT lcWord == LEFT( 'ENDTEXT', LEN(lcWord) )
+						EXIT
+					ENDIF
+
+					llEncontrado	= .T.
+				ENDIF
+			ENDIF
+		ENDTRY
+
+		RETURN llEncontrado
+	ENDPROC
+	
+	
+	PROCEDURE identificarBloquesDeExclusion
+		LPARAMETERS taCodeLines, tnCodeLines, ta_ID_Bloques, taBloquesExclusion, tnBloquesExclusion, taLineasDeExclusion
+		* LOS BLOQUES DE EXCLUSIÓN SON AQUELLOS QUE TIENEN TEXT/ENDTEXT OF #IF .F./#ENDIF Y SE USAN PARA NO BUSCAR
+		* INSTRUCCIONES COMO "DEFINE CLASS" O "PROCEDURE" EN LOS MISMOS.
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
+		* tnCodeLines				(@? IN    ) Cantidad de líneas de código
+		* ta_ID_Bloques				(@? IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
+		* taBloquesExclusion		(@?    OUT) Array con las posiciones de los bloques (2 cols). Ej: 3,14 ; 23,58 ; etc
+		* tnBloquesExclusion		(@?    OUT) Cantidad de bloques de exclusión
+		* taLineasDeExclusion		(@?    OUT) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
+		*--------------------------------------------------------------------------------------------------------------
+		EXTERNAL ARRAY ta_ID_Bloques, taBloquesExclusion
+
+		TRY
+			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
+			DIMENSION taBloquesExclusion(1,2), taLineasDeExclusion(tnCodeLines)
+			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
+
+			IF tnCodeLines > 1
+				IF EMPTY(ta_ID_Bloques)
+					DIMENSION ta_ID_Bloques(2,2)
+					ta_ID_Bloques(1,1)	= '#IF'
+					ta_ID_Bloques(1,2)	= '#ENDI'
+					ta_ID_Bloques(2,1)	= 'TEXT'
+					ta_ID_Bloques(2,2)	= 'ENDT'
+					lnID_Bloques_Count	= ALEN( ta_ID_Bloques, 1 )
+				ENDIF
+
+				*-- Búsqueda del ID de inicio de bloque
+				WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
+					FOR I = 1 TO tnCodeLines
+						* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
+
+						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+							LOOP
+						ENDIF
+
+						lnPrimerID		= 0
+
+						FOR X = 1 TO lnID_Bloques_Count
+							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
+							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+								lnPrimerID		= X
+								lnAnidamientos	= 1
+								EXIT
+							ENDIF
+						ENDFOR
+
+						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
+							tnBloquesExclusion		= tnBloquesExclusion + 1
+							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
+							DIMENSION taBloquesExclusion(tnBloquesExclusion,2)
+							taBloquesExclusion(tnBloquesExclusion,1)	= I
+							taLineasDeExclusion(I)	= .T.
+
+							* Búsqueda del ID de fin de bloque
+							FOR I = I + 1 TO tnCodeLines
+								* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+								lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
+								taLineasDeExclusion(I)	= .T.
+
+								IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+									LOOP
+								ENDIF
+
+								DO CASE
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									lnAnidamientos	= lnAnidamientos + 1
+
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 ) ;
+										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									lnAnidamientos	= lnAnidamientos - 1
+
+									IF lnAnidamientos = 0
+										taBloquesExclusion(tnBloquesExclusion,2)	= I
+										EXIT
+									ENDIF
+								ENDCASE
+							ENDFOR
+
+							*-- Validación
+							IF EMPTY(taBloquesExclusion(tnBloquesExclusion,2))
+								*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
+								+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
+								+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
+								ERROR (TEXTMERGE(C_END_MARKER_NOT_FOUND_LOC))
+							ENDIF
+						ENDIF
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
 	PROCEDURE decode_SpecialCodes_1_31
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -2888,6 +3055,64 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		RETURN lcTimeStamp_Ret
 	ENDFUNC
+
+
+	PROCEDURE get_ListNamesWithValuesFrom_InLine_MetadataTag
+		*-- OBTENGO EL ARRAY DE DATOS Y VALORES DE LA LINEA DE METADATOS INDICADA
+		*-- NOTA: Los valores NO PUEDEN contener comillas dobles en su valor, ya que generaría un error al parsearlos.
+		*-- Ejemplo:
+		*< FileMetadata: Type="V" Cpid="1252" Timestamp="1131901580" ID="1129207528" ObjRev="544" />
+		*< OLE: Nombre="frm_form.Pageframe1.Page1.Cnt_controles_h.Olecontrol1" Parent="frm_form.Pageframe1.Page1.Cnt_controles_h" ObjName="Olecontrol1" Checksum="1685567300" Value="0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPg...ADAP7AAAA==" />
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLineWithMetadata		(!@ IN    ) Línea con metadatos y un tag de metadatos
+		* taPropsAndValues			(!@    OUT) Array a devolver con las propiedades y valores encontrados
+		* tnPropsAndValues_Count	(!@    OUT) Cantidad de propiedades encontradas
+		* tcLeftTag					(v! IN    ) TAG de inicio de los metadatos
+		* tcRightTag				(v! IN    ) TAG de fin de los metadatos
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag
+		EXTERNAL ARRAY taPropsAndValues
+
+		LOCAL lcMetadatos, I, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+		STORE '' TO lcVirtualMeta
+		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
+
+		lcMetadatos		= ALLTRIM( STREXTRACT( tcLineWithMetadata, tcLeftTag, tcRightTag, 1, 1) )
+		lnCantComillas	= OCCURS( '"', lcMetadatos )
+
+		IF lnCantComillas % 2 <> 0	&& Valido que las comillas "" sean pares
+			*ERROR "Error de datos: No se puede parsear porque las comillas no son pares en la línea [" + lcMetadatos + "]"
+			ERROR (TEXTMERGE(C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC))
+		ENDIF
+
+		lnLastPos	= 1
+		DIMENSION taPropsAndValues( lnCantComillas / 2, 2 )
+
+		*-------------------------------------------------------------------------------------
+		* IMPORTANTE!!
+		* ------------
+		* SI SE SEPARAN LAS IGUALDADES CON ESPACIOS, ÉSTAS DEJAN DE RECONOCERSE!!  (prop = "valor" en vez de prop="valor")
+		* TENER EN CUENTA AL GENERAR EL TEXTO O AL MODIFICARLO MANUALMENTE AL MERGEAR
+		*-------------------------------------------------------------------------------------
+		FOR I = 1 TO lnCantComillas STEP 2
+			tnPropsAndValues_Count	= tnPropsAndValues_Count + 1
+
+			*  Type="V" Cpid="1252"
+			*       ^ ^					=> Posiciones del par de comillas dobles
+			lnPos1	= AT( '"', lcMetadatos, I )
+			lnPos2	= AT( '"', lcMetadatos, I + 1 )
+
+			*  Type="V" Cpid="1252"
+			*          ^     ^    ^			=> LastPos, lnPos1 y lnPos2
+			taPropsAndValues(tnPropsAndValues_Count,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
+			taPropsAndValues(tnPropsAndValues_Count,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
+
+			lnLastPos = lnPos2 + 1
+		ENDFOR
+
+		RETURN
+	ENDPROC
 
 
 	PROCEDURE get_SeparatedLineAndComment
@@ -3587,19 +3812,15 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="createproject_recordheader" display="createProject_RecordHeader"/>] ;
 		+ [<memberdata name="createreport" display="createReport"/>] ;
 		+ [<memberdata name="createmenu" display="createMenu"/>] ;
-		+ [<memberdata name="currentlineispreviouslinecontinuation" display="currentLineIsPreviousLineContinuation"/>] ;
 		+ [<memberdata name="defined_pam2memo" display="defined_PAM2Memo"/>] ;
-		+ [<memberdata name="eltextoevaluadoeseltokenindicado" display="elTextoEvaluadoEsElTokenIndicado"/>] ;
 		+ [<memberdata name="emptyrecord" display="emptyRecord"/>] ;
 		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
 		+ [<memberdata name="evaluate_pam" display="Evaluate_PAM"/>] ;
 		+ [<memberdata name="evaluardefiniciondeprocedure" display="evaluarDefinicionDeProcedure"/>] ;
 		+ [<memberdata name="getclassmethodcomment" display="getClassMethodComment"/>] ;
 		+ [<memberdata name="getclasspropertycomment" display="getClassPropertyComment"/>] ;
-		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
 		+ [<memberdata name="get_valuebyname_fromlistnameswithvalues" display="get_ValueByName_FromListNamesWithValues"/>] ;
 		+ [<memberdata name="hiddenandprotected_pam" display="hiddenAndProtected_PAM"/>] ;
-		+ [<memberdata name="identificarbloquesdeexclusion" display="identificarBloquesDeExclusion"/>] ;
 		+ [<memberdata name="insert_allobjects" display="insert_AllObjects"/>] ;
 		+ [<memberdata name="insert_object" display="insert_Object"/>] ;
 		+ [<memberdata name="objectmethods2memo" display="objectMethods2Memo"/>] ;
@@ -3662,235 +3883,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		RETURN luPropValue
 	ENDFUNC
-
-
-	*******************************************************************************************************************
-	PROCEDURE get_ListNamesWithValuesFrom_InLine_MetadataTag
-		*-- OBTENGO EL ARRAY DE DATOS Y VALORES DE LA LINEA DE METADATOS INDICADA
-		*-- NOTA: Los valores NO PUEDEN contener comillas dobles en su valor, ya que generaría un error al parsearlos.
-		*-- Ejemplo:
-		*< FileMetadata: Type="V" Cpid="1252" Timestamp="1131901580" ID="1129207528" ObjRev="544" />
-		*< OLE: Nombre="frm_form.Pageframe1.Page1.Cnt_controles_h.Olecontrol1" Parent="frm_form.Pageframe1.Page1.Cnt_controles_h" ObjName="Olecontrol1" Checksum="1685567300" Value="0M8R4KGxGuEAAAAAAAAAAAAAAAAAAAAAPg...ADAP7AAAA==" />
-		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcLineWithMetadata		(!@ IN    ) Línea con metadatos y un tag de metadatos
-		* taPropsAndValues			(!@    OUT) Array a devolver con las propiedades y valores encontrados
-		* tnPropsAndValues_Count	(!@    OUT) Cantidad de propiedades encontradas
-		* tcLeftTag					(v! IN    ) TAG de inicio de los metadatos
-		* tcRightTag				(v! IN    ) TAG de fin de los metadatos
-		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag
-		EXTERNAL ARRAY taPropsAndValues
-
-		LOCAL lcMetadatos, I, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
-		STORE '' TO lcVirtualMeta
-		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
-
-		lcMetadatos		= ALLTRIM( STREXTRACT( tcLineWithMetadata, tcLeftTag, tcRightTag, 1, 1) )
-		lnCantComillas	= OCCURS( '"', lcMetadatos )
-
-		IF lnCantComillas % 2 <> 0	&& Valido que las comillas "" sean pares
-			*ERROR "Error de datos: No se puede parsear porque las comillas no son pares en la línea [" + lcMetadatos + "]"
-			ERROR (TEXTMERGE(C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC))
-		ENDIF
-
-		lnLastPos	= 1
-		DIMENSION taPropsAndValues( lnCantComillas / 2, 2 )
-
-		*-------------------------------------------------------------------------------------
-		* IMPORTANTE!!
-		* ------------
-		* SI SE SEPARAN LAS IGUALDADES CON ESPACIOS, ÉSTAS DEJAN DE RECONOCERSE!!  (prop = "valor" en vez de prop="valor")
-		* TENER EN CUENTA AL GENERAR EL TEXTO O AL MODIFICARLO MANUALMENTE AL MERGEAR
-		*-------------------------------------------------------------------------------------
-		FOR I = 1 TO lnCantComillas STEP 2
-			tnPropsAndValues_Count	= tnPropsAndValues_Count + 1
-
-			*  Type="V" Cpid="1252"
-			*       ^ ^					=> Posiciones del par de comillas dobles
-			lnPos1	= AT( '"', lcMetadatos, I )
-			lnPos2	= AT( '"', lcMetadatos, I + 1 )
-
-			*  Type="V" Cpid="1252"
-			*          ^     ^    ^			=> LastPos, lnPos1 y lnPos2
-			taPropsAndValues(tnPropsAndValues_Count,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
-			taPropsAndValues(tnPropsAndValues_Count,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
-
-			lnLastPos = lnPos2 + 1
-		ENDFOR
-
-		RETURN
-	ENDPROC
-
-
-	PROCEDURE elTextoEvaluadoEsElTokenIndicado
-		LPARAMETERS tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin
-		LOCAL llEncontrado, lcWord
-
-		TRY
-			IF tnIniFin = 1
-				*-- TOKENS DE INICIO
-				IF UPPER( LEFT( tcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
-					*-- Evaluar casos especiales
-					lcWord	= UPPER( ALLTRIM(GETWORDNUM(tcLine,1) ) )
-
-					IF ta_ID_Bloques(X,1) == 'TEXT' AND NOT lcWord == 'TEXT'
-						EXIT
-					ENDIF
-
-					llEncontrado	= .T.
-				ENDIF
-			ELSE
-				*-- TOKENS DE FIN
-				IF LEFT( UPPER( tcLine ), tnLen_IDFinBQ ) == ta_ID_Bloques(X,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
-					*-- Evaluar casos especiales
-					lcWord	= UPPER( ALLTRIM(GETWORDNUM(tcLine,1) ) )
-
-					IF ta_ID_Bloques(X,2) == 'ENDT' AND NOT lcWord == LEFT( 'ENDTEXT', LEN(lcWord) )
-						EXIT
-					ENDIF
-
-					llEncontrado	= .T.
-				ENDIF
-			ENDIF
-		ENDTRY
-
-		RETURN llEncontrado
-	ENDPROC
-	
-	
-	PROCEDURE currentLineIsPreviousLineContinuation
-		LPARAMETERS taCodeLines, I
-
-		LOCAL lcPrevLine, llIsContinuation
-		*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
-		IF I > 1
-			lcPrevLine	= taCodeLines(I-1)
-		ELSE
-			lcPrevLine	= ''
-		ENDIF
-		.get_SeparatedLineAndComment( @lcPrevLine )
-		IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
-			llIsContinuation	= .T.
-		ENDIF
-		RETURN llIsContinuation
-	ENDPROC
-
-
-	PROCEDURE identificarBloquesDeExclusion
-		LPARAMETERS taCodeLines, tnCodeLines, ta_ID_Bloques, taBloquesExclusion, tnBloquesExclusion
-		* LOS BLOQUES DE EXCLUSIÓN SON AQUELLOS QUE TIENEN TEXT/ENDTEXT OF #IF .F./#ENDIF Y SE USAN PARA NO BUSCAR
-		* INSTRUCCIONES COMO "DEFINE CLASS" O "PROCEDURE" EN LOS MISMOS.
-		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
-		* tnCodeLines				(@? IN    ) Cantidad de líneas de código
-		* ta_ID_Bloques				(@? IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
-		* taBloquesExclusion		(@?    OUT) Array con las posiciones de los bloques (2 cols). Ej: 3,14 ; 23,58 ; etc
-		* tnBloquesExclusion		(@?    OUT) Cantidad de bloques de exclusión
-		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY ta_ID_Bloques, taBloquesExclusion
-
-		TRY
-			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
-			DIMENSION taBloquesExclusion(1,2)
-			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
-
-			IF tnCodeLines > 1
-				IF EMPTY(ta_ID_Bloques)
-					DIMENSION ta_ID_Bloques(2,2)
-					ta_ID_Bloques(1,1)	= '#IF'
-					ta_ID_Bloques(1,2)	= '#ENDI'
-					ta_ID_Bloques(2,1)	= 'TEXT'
-					ta_ID_Bloques(2,2)	= 'ENDT'
-					lnID_Bloques_Count	= ALEN( ta_ID_Bloques, 1 )
-				ENDIF
-
-				*-- Búsqueda del ID de inicio de bloque
-				WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
-					FOR I = 1 TO tnCodeLines
-						* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
-						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
-
-						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
-							LOOP
-						ENDIF
-
-						lnPrimerID		= 0
-
-						FOR X = 1 TO lnID_Bloques_Count
-							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
-							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
-								lnPrimerID		= X
-								lnAnidamientos	= 1
-								EXIT
-							ENDIF
-						ENDFOR
-
-						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
-							*IF I > 1
-							*	*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
-							*	lcPrevLine	= taCodeLines(I-1)
-							*	.get_SeparatedLineAndComment( @lcPrevLine )
-							*	IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
-							*		LOOP
-							*	ENDIF
-							*ENDIF
-
-							tnBloquesExclusion		= tnBloquesExclusion + 1
-							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
-							DIMENSION taBloquesExclusion(tnBloquesExclusion,2)
-							taBloquesExclusion(tnBloquesExclusion,1)	= I
-
-							* Búsqueda del ID de fin de bloque
-							FOR I = I + 1 TO tnCodeLines
-								* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
-								lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
-
-								IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
-									LOOP
-								ENDIF
-
-								DO CASE
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
-									lnAnidamientos	= lnAnidamientos + 1
-
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
-									lnAnidamientos	= lnAnidamientos - 1
-
-									IF lnAnidamientos = 0
-										taBloquesExclusion(tnBloquesExclusion,2)	= I
-										EXIT
-									ENDIF
-								ENDCASE
-							ENDFOR
-
-							*-- Validación
-							IF EMPTY(taBloquesExclusion(tnBloquesExclusion,2))
-								*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
-								+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
-								+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
-								ERROR (TEXTMERGE(C_END_MARKER_NOT_FOUND_LOC))
-							ENDIF
-						ENDIF
-					ENDFOR
-				ENDWITH && THIS
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
 
 
 	*******************************************************************************************************************
@@ -8653,8 +8645,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- taCode[1]
 		*--		Bloque de código del método en su posición original
 		TRY
-			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen
-			LOCAL loEx AS EXCEPTION
+			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
+				, laBloquesExclusion(1,2), lnBloquesExclusion, laLineasDeExclusion(1) ;
+				, loEx AS EXCEPTION
 			DIMENSION taMethods(1,3)
 			STORE '' TO taMethods, tcSorted, taCode
 			tnMethodCount	= 0
@@ -8699,6 +8692,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					ENDIF
 				ENDFOR
 
+				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+				THIS.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laBloquesExclusion, @lnBloquesExclusion, @laLineasDeExclusion )
+				
 				*-- Analyze and count line methods, get method names and consolidate block code
 				FOR I = 1 TO lnLineCount
 					IF toFoxBin2Prg.l_DropNullCharsFromCode
@@ -8708,35 +8704,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					lnLine_Len	= LEN( laLine(I) )
 
 					DO CASE
-					CASE UPPER( LEFT(laLine(I), 4) ) == 'TEXT'
-						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
-						IF lnLine_Len >= 4 AND LEFT(lcLine,5) == 'TEXT '
-							*-- Es el comando TEXT
-						ELSE
-							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-							LOOP
-						ENDIF
-
-						lnTextNodes	= lnTextNodes + 1
+					CASE laLineasDeExclusion(I)
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					CASE UPPER( LEFT(laLine(I), 4) ) == 'ENDT'
-						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
-						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDTEXT ' ;
-								OR lnLine_Len >= 6 AND LEFT(lcLine,7) == 'ENDTEX ' ;
-								OR lnLine_Len >= 5 AND LEFT(lcLine,6) == 'ENDTE ' ;
-								OR lnLine_Len >= 4 AND LEFT(lcLine,5) == 'ENDT '
-							*-- Es el comando ENDTEXT
-						ELSE
-							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-							LOOP
-						ENDIF
-
-						lnTextNodes	= lnTextNodes - 1
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
+					
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 10) ) == 'PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
