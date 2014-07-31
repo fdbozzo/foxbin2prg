@@ -2718,116 +2718,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 	
 	
-	PROCEDURE identificarBloquesDeExclusion
-		LPARAMETERS taCodeLines, tnCodeLines, ta_ID_Bloques, taBloquesExclusion, tnBloquesExclusion, taLineasDeExclusion
-		* LOS BLOQUES DE EXCLUSIÓN SON AQUELLOS QUE TIENEN TEXT/ENDTEXT OF #IF .F./#ENDIF Y SE USAN PARA NO BUSCAR
-		* INSTRUCCIONES COMO "DEFINE CLASS" O "PROCEDURE" EN LOS MISMOS.
-		*--------------------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
-		* tnCodeLines				(@? IN    ) Cantidad de líneas de código
-		* ta_ID_Bloques				(@? IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
-		* taBloquesExclusion		(@?    OUT) Array con las posiciones de los bloques (2 cols). Ej: 3,14 ; 23,58 ; etc
-		* tnBloquesExclusion		(@?    OUT) Cantidad de bloques de exclusión
-		* taLineasDeExclusion		(@?    OUT) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
-		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY ta_ID_Bloques, taBloquesExclusion
-
-		TRY
-			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
-			DIMENSION taBloquesExclusion(1,2), taLineasDeExclusion(tnCodeLines)
-			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
-
-			IF tnCodeLines > 1
-				IF EMPTY(ta_ID_Bloques)
-					DIMENSION ta_ID_Bloques(2,2)
-					ta_ID_Bloques(1,1)	= '#IF'
-					ta_ID_Bloques(1,2)	= '#ENDI'
-					ta_ID_Bloques(2,1)	= 'TEXT'
-					ta_ID_Bloques(2,2)	= 'ENDT'
-					lnID_Bloques_Count	= ALEN( ta_ID_Bloques, 1 )
-				ENDIF
-
-				*-- Búsqueda del ID de inicio de bloque
-				WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
-					FOR I = 1 TO tnCodeLines
-						* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
-						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
-
-						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
-							LOOP
-						ENDIF
-
-						lnPrimerID		= 0
-
-						FOR X = 1 TO lnID_Bloques_Count
-							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
-							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
-								lnPrimerID		= X
-								lnAnidamientos	= 1
-								EXIT
-							ENDIF
-						ENDFOR
-
-						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
-							tnBloquesExclusion		= tnBloquesExclusion + 1
-							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
-							DIMENSION taBloquesExclusion(tnBloquesExclusion,2)
-							taBloquesExclusion(tnBloquesExclusion,1)	= I
-							taLineasDeExclusion(I)	= .T.
-
-							* Búsqueda del ID de fin de bloque
-							FOR I = I + 1 TO tnCodeLines
-								* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
-								lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
-								taLineasDeExclusion(I)	= .T.
-
-								IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
-									LOOP
-								ENDIF
-
-								DO CASE
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
-									lnAnidamientos	= lnAnidamientos + 1
-
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
-									lnAnidamientos	= lnAnidamientos - 1
-
-									IF lnAnidamientos = 0
-										taBloquesExclusion(tnBloquesExclusion,2)	= I
-										EXIT
-									ENDIF
-								ENDCASE
-							ENDFOR
-
-							*-- Validación
-							IF EMPTY(taBloquesExclusion(tnBloquesExclusion,2))
-								*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
-								+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
-								+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
-								ERROR (TEXTMERGE(C_END_MARKER_NOT_FOUND_LOC))
-							ENDIF
-						ENDIF
-					ENDFOR
-				ENDWITH && THIS
-			ENDIF
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
 	PROCEDURE decode_SpecialCodes_1_31
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -3140,11 +3030,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*-- Si se indican más de 3 parámetros, evalúa el valor completo a través de las líneas de código (valores multi-línea)
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
-		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
-		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
-		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
+		* tcAsignacion				(v! IN    ) Asignación completa con variable, igualdad y valor
+		* tcPropName				(@!    OUT) Nombre de la variable
+		* tcValue					(@?    OUT) Valor
+		* toClase					(v! IN    ) 
+		* taCodeLines				(@! IN    ) Líneas de código a analizar
+		* tnCodeLines				(v! IN    ) Cantidad de líneas de código
+		* I							(@! IN/OUT) Línea actual
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcAsignacion, tcPropName, tcValue, toClase, taCodeLines, tnCodeLines, I
 		LOCAL ln_AT_Cmt
@@ -3197,25 +3089,135 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toModulo
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo
+	ENDPROC
+
+
+	PROCEDURE identificarBloquesDeExclusion
+		LPARAMETERS taCodeLines, tnCodeLines, ta_ID_Bloques, taLineasExclusion, tnBloquesExclusion, taBloquesExclusion
+		* LOS BLOQUES DE EXCLUSIÓN SON AQUELLOS QUE TIENEN TEXT/ENDTEXT OF #IF/#ENDIF Y SE USAN PARA NO BUSCAR
+		* INSTRUCCIONES COMO "DEFINE CLASS" O "PROCEDURE" EN LOS MISMOS.
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
+		* tnCodeLines				(@? IN    ) Cantidad de líneas de código
+		* ta_ID_Bloques				(@? IN    ) Array de pares de identificadores (2 cols). Ej: '#IF .F.','#ENDI' ; 'TEXT','ENDTEXT' ; etc
+		* taLineasExclusion			(@?    OUT) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
+		* tnBloquesExclusion		(@?    OUT) Cantidad de bloques de exclusión
+		*--------------------------------------------------------------------------------------------------------------
+		EXTERNAL ARRAY ta_ID_Bloques, taLineasExclusion
+
+		TRY
+			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
+			DIMENSION taLineasExclusion(tnCodeLines), taBloquesExclusion(1,2)
+			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
+
+			IF tnCodeLines > 1
+				IF EMPTY(ta_ID_Bloques)
+					DIMENSION ta_ID_Bloques(2,2)
+					ta_ID_Bloques(1,1)	= '#IF'
+					ta_ID_Bloques(1,2)	= '#ENDI'
+					ta_ID_Bloques(2,1)	= 'TEXT'
+					ta_ID_Bloques(2,2)	= 'ENDT'
+					lnID_Bloques_Count	= ALEN( ta_ID_Bloques, 1 )
+				ENDIF
+
+				*-- Búsqueda del ID de inicio de bloque
+				WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
+					FOR I = 1 TO tnCodeLines
+						* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
+
+						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+							LOOP
+						ENDIF
+
+						lnPrimerID		= 0
+
+						FOR X = 1 TO lnID_Bloques_Count
+							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
+							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+								lnPrimerID		= X
+								lnAnidamientos	= 1
+								EXIT
+							ENDIF
+						ENDFOR
+
+						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
+							tnBloquesExclusion		= tnBloquesExclusion + 1
+							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
+							DIMENSION taBloquesExclusion(tnBloquesExclusion,2)
+							taBloquesExclusion(tnBloquesExclusion,1)	= I
+							taLineasExclusion(I)	= .T.
+
+							* Búsqueda del ID de fin de bloque
+							FOR I = I + 1 TO tnCodeLines
+								* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+								lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
+								taLineasExclusion(I)	= .T.
+
+								IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+									LOOP
+								ENDIF
+
+								DO CASE
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									lnAnidamientos	= lnAnidamientos + 1
+
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 ) ;
+										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									lnAnidamientos	= lnAnidamientos - 1
+
+									IF lnAnidamientos = 0
+										taBloquesExclusion(tnBloquesExclusion,2)	= I
+										EXIT
+									ENDIF
+								ENDCASE
+							ENDFOR
+
+							*-- Validación
+							IF EMPTY(taBloquesExclusion(tnBloquesExclusion,2))
+								*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
+								+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
+								+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
+								ERROR (TEXTMERGE(C_END_MARKER_NOT_FOUND_LOC))
+							ENDIF
+						ENDIF
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
 	*******************************************************************************************************************
 	PROCEDURE lineaExcluida
-		LPARAMETERS tn_Linea, tnBloquesExclusion, taBloquesExclusion
+		LPARAMETERS tn_Linea, tnBloquesExclusion, taLineasExclusion
 
-		EXTERNAL ARRAY taBloquesExclusion
-		LOCAL X, llExcluida
+		EXTERNAL ARRAY taLineasExclusion
+		*LOCAL X, llExcluida
 
-		FOR X = 1 TO tnBloquesExclusion
-			IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
-				llExcluida	= .T.
-				EXIT
-			ENDIF
-		ENDFOR
+		*FOR X = 1 TO tnBloquesExclusion
+		*	IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
+		*		llExcluida	= .T.
+		*		EXIT
+		*	ENDIF
+		*ENDFOR
 
-		RETURN llExcluida
+		*RETURN llExcluida
+		RETURN taLineasExclusion(tn_Linea)
 	ENDPROC
 
 
@@ -4766,7 +4768,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
-			, taBloquesExclusion, tnBloquesExclusion
+			, taLineasExclusion, tnBloquesExclusion
 		EXTERNAL ARRAY taCodeLines
 
 		#IF .F.
@@ -4789,7 +4791,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				FOR I = I + 1 TO tnCodeLines
 					.set_Line( @tcLine, @taCodeLines, I )
 
-					IF NOT .lineaExcluida( I, tnBloquesExclusion, @taBloquesExclusion ) ;
+					IF NOT .lineaExcluida( I, tnBloquesExclusion, @taLineasExclusion ) ;
 							AND NOT .lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
 
 						DO CASE
@@ -5069,9 +5071,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque_DEFINE_CLASS
 		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
-			, taBloquesExclusion, tnBloquesExclusion, tc_Comentario
+			, taLineasExclusion, tnBloquesExclusion, tc_Comentario
 
-		EXTERNAL ARRAY taCodeLines, tnBloquesExclusion, taBloquesExclusion
+		EXTERNAL ARRAY taCodeLines, tnBloquesExclusion, taLineasExclusion
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -5123,7 +5125,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							LOOP
 
 						CASE .analizarBloque_PROCEDURE( @toModulo, @toClase, @loObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines ;
-								, @tcProcedureAbierto, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
+								, @tcProcedureAbierto, @tc_Comentario, @taLineasExclusion, @tnBloquesExclusion )
 							*-- OJO: Esta se analiza primero a propósito, solo porque no puede estar detrás de PROTECTED y HIDDEN
 							STORE .T. TO llCLASSCOMMENTS_Completed ;
 								, llCLASS_PROPERTY_Completed ;
@@ -5479,7 +5481,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE analizarBloque_PROCEDURE
 		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
-			, tc_Comentario, taBloquesExclusion, tnBloquesExclusion
+			, tc_Comentario, taLineasExclusion, tnBloquesExclusion
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -5514,7 +5516,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		IF llBloqueEncontrado
 			*-- Evalúo todo el contenido del PROCEDURE
 			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, @tcProcedureAbierto ;
-				, @tc_Comentario, @taBloquesExclusion, @tnBloquesExclusion )
+				, @tc_Comentario, @taLineasExclusion, @tnBloquesExclusion )
 		ENDIF
 
 		RETURN llBloqueEncontrado
@@ -5617,18 +5619,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
-		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
-		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
+		* taCodeLines				(@! IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(@! IN    ) Cantidad de líneas de código
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
+		* tnBloquesExclusion		(@! IN    ) Cantidad de bloques de exclusión
 		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toModulo
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo
 
-		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -5657,7 +5659,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						.set_Line( @lcLine, @taCodeLines, I )
 
 						DO CASE
-						CASE .lineaExcluida( I, tnBloquesExclusion, @taBloquesExclusion ) ;
+						CASE .lineaExcluida( I, tnBloquesExclusion, @taLineasExclusion ) ;
 								OR .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
 
 						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
@@ -5676,7 +5678,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llINCLUDE_SCX_Completed	= .T.
 
 						CASE .analizarBloque_DEFINE_CLASS( @toModulo, @loClase, @lcLine, @taCodeLines, @I, tnCodeLines ;
-								, @lcProcedureAbierto, @taBloquesExclusion, @tnBloquesExclusion, @lc_Comentario )
+								, @lcProcedureAbierto, @taLineasExclusion, @tnBloquesExclusion, @lc_Comentario )
 							*-- Puede haber varias
 
 						ENDCASE
@@ -5731,7 +5733,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, lcLine, laCodeLines(1), lnCodeLines ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
@@ -5747,10 +5749,10 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				.createClasslib()
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
+				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toModulo )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo )
 
 				.escribirArchivoBin( @toModulo, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -5765,7 +5767,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			RELEASE lnCodError, lcLine, laCodeLines, lnCodeLines, laBloquesExclusion, lnBloquesExclusion, I
+			RELEASE lnCodError, lcLine, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
 
 		RETURN
@@ -6035,7 +6037,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lnFB2P_Version ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
@@ -6050,10 +6052,10 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				.createForm()
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
+				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toModulo )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo )
 
 				.escribirArchivoBin( @toModulo, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -6344,7 +6346,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL laCodeLines(1), lnCodeLines, laBloquesExclusion(1,2), lnBloquesExclusion, I
+			LOCAL laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodeLines
@@ -6359,10 +6361,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				.createProject()
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				*.identificarBloquesDeExclusion( @laCodeLines, .F., @laBloquesExclusion, @lnBloquesExclusion )
+				*.identificarBloquesDeExclusion( @laCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toProject )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
 
 				.escribirArchivoBin( @toProject, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -6377,7 +6379,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			RELEASE laCodeLines, lnCodeLines, laBloquesExclusion, lnBloquesExclusion, I
+			RELEASE laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
 
 		RETURN
@@ -6511,19 +6513,19 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toProject
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toProject
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
-		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(!@ IN    ) Array con las posiciones de inicio/fin de los bloques de exclusion
-		* tnBloquesExclusion		(!@ IN    ) Cantidad de bloques de exclusión
+		* taCodeLines				(@! IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(@! IN    ) Cantidad de líneas de código
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
+		* tnBloquesExclusion		(@! IN    ) Cantidad de bloques de exclusión
 		* toProject					(@?    OUT) Objeto con toda la información del proyecto analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
@@ -7131,7 +7133,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, lnFB2P_Version ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
@@ -7146,7 +7148,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				.createReport()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toReport )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
 
 				.escribirArchivoBin( @toReport, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -7265,19 +7267,19 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 	*******************************************************************************************************************
 	PROCEDURE identificarBloquesDeCodigo
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toReport
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toReport
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(@? IN    ) Sin uso
-		* tnBloquesExclusion		(@? IN    ) Sin uso
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
+		* tnBloquesExclusion		(@? IN    ) Cantidad de bloques de exclusion
 		* toReport					(@?    OUT) Objeto con toda la información del reporte analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
@@ -7558,7 +7560,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laBloquesExclusion(1,2), lnBloquesExclusion, I
+			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines
 
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
@@ -7568,7 +7570,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toTable )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toTable )
 
 				.escribirArchivoBin( @toTable, @toFoxBin2Prg )
 			ENDWITH && THIS
@@ -7753,12 +7755,12 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(@? IN    ) Sin uso
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
 		* tnBloquesExclusion		(@? IN    ) Sin uso
 		* toTable					(@?    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toTable
-		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toTable
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
@@ -7843,7 +7845,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I
 			STORE 0 TO lnCodError, lnCodeLines
 			STORE '' TO lcLine
 			STORE NULL TO loReg, toModulo
@@ -7858,7 +7860,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				*.createTable()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toDatabase )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase )
 
 				.escribirArchivoBin( @toDatabase, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -7926,15 +7928,15 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(@? IN    ) Sin uso
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
 		* tnBloquesExclusion		(@? IN    ) Sin uso
 		* toDatabase				(@?    OUT) Objeto con toda la información de la base de datos analizada
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toDatabase
-		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
@@ -8018,7 +8020,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion
+				, laLineasExclusion(1), lnBloquesExclusion
 			STORE 0 TO lnCodError, lnCodeLines
 			STORE '' TO lcLine
 
@@ -8032,7 +8034,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				.createMenu()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laBloquesExclusion, lnBloquesExclusion, @toMenu )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
 
 				.escribirArchivoBin( @toMenu )
 			ENDWITH && THIS
@@ -8060,15 +8062,15 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(!@ IN    ) El array con las líneas del código donde buscar
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
-		* taBloquesExclusion		(@? IN    ) Sin uso
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
 		* tnBloquesExclusion		(@? IN    ) Sin uso
 		* toMenu					(@?    OUT) Objeto con toda la información del menú analizado
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS taCodeLines, tnCodeLines, taBloquesExclusion, tnBloquesExclusion, toMenu
-		EXTERNAL ARRAY taCodeLines, taBloquesExclusion
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toMenu
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
@@ -8646,7 +8648,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*--		Bloque de código del método en su posición original
 		TRY
 			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
-				, laBloquesExclusion(1,2), lnBloquesExclusion, laLineasDeExclusion(1) ;
+				, laLineasExclusion(1), lnBloquesExclusion ;
 				, loEx AS EXCEPTION
 			DIMENSION taMethods(1,3)
 			STORE '' TO taMethods, tcSorted, taCode
@@ -8693,7 +8695,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				ENDFOR
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				THIS.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laBloquesExclusion, @lnBloquesExclusion, @laLineasDeExclusion )
+				THIS.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laLineasExclusion, @lnBloquesExclusion )
 				
 				*-- Analyze and count line methods, get method names and consolidate block code
 				FOR I = 1 TO lnLineCount
@@ -8704,7 +8706,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					lnLine_Len	= LEN( laLine(I) )
 
 					DO CASE
-					CASE laLineasDeExclusion(I)
+					CASE laLineasExclusion(I)
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 					
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 10) ) == 'PROCEDURE '

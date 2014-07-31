@@ -81,7 +81,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		lnLineas	= ALINES( laLineas, lcMethod )
 
 		*-- Test
-		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laPos, @lnPos_Count )
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , , @lnPos_Count, @laPos )
 		
 		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count )
 		
@@ -115,7 +115,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		lnLineas	= ALINES( laLineas, lcMethod )
 
 		*-- Test
-		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laPos, @lnPos_Count )
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , , @lnPos_Count, @laPos )
 		
 		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count )
 		
@@ -151,7 +151,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		lnLineas	= ALINES( laLineas, lcMethod )
 
 		*-- Test
-		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laPos, @lnPos_Count )
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , , @lnPos_Count, @laPos )
 		
 		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count )
 		
@@ -228,7 +228,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		lnLineas	= ALINES( laLineas, lcMethod )
 
 		*-- Test
-		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laPos, @lnPos_Count )
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , , @lnPos_Count, @laPos )
 		
 		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count )
 		
@@ -281,7 +281,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		lnLineas	= ALINES( laLineas, lcMethod )
 
 		*-- Test
-		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laPos, @lnPos_Count )
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , , @lnPos_Count, @laPos )
 		
 		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count )
 		
