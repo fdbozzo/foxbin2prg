@@ -3164,10 +3164,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 								DO CASE
 								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
 										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									*-- Busca el primer marcador (#IF o TEXT)
 									lnAnidamientos	= lnAnidamientos + 1
 
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 )
+									*-- Busca el segundo marcador (#ENDIF o ENDTEXT)
 									lnAnidamientos	= lnAnidamientos - 1
 
 									IF lnAnidamientos = 0

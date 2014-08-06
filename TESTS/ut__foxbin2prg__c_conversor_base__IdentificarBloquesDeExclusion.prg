@@ -89,7 +89,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		laLineasExclusion_Esperadas( 8)	= .T.
 		laLineasExclusion_Esperadas( 9)	= .T.
 
-		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2+4
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				<<C_IF_F>>
@@ -132,7 +132,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		laLineasExclusion_Esperadas( 8)	= .T.
 		laLineasExclusion_Esperadas( 9)	= .T.
 
-		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2+4
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				<<C_IF_F>>
@@ -176,7 +176,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		laLineasExclusion_Esperadas( 8)	= .T.
 		laLineasExclusion_Esperadas( 9)	= .T.
 
-		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2+4
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				<<C_TEXT>>
@@ -211,7 +211,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		laExpected_Pos(1,1)	= 0
 		laExpected_Pos(1,2)	= 0
 
-		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2+4
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				IF !FOUND()
@@ -292,7 +292,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 			laLineasExclusion_Esperadas(I)	= .T.
 		ENDFOR
 
-		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2+4
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				IF ODBC_Query.odbc
@@ -321,6 +321,58 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 				          sequence = iSequence;
 				   where  menuitem_id == iMenuitem_id
 				ENDIF
+			<<C_ENDPROC>>
+		ENDTEXT
+		
+		lnLineas	= ALINES( laLineas, lcMethod )
+
+		*-- Test
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laLineasExclusion, @lnPos_Count, @laPos )
+		
+		*-- Evaluación de resultados
+		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count, @laLineasExclusion_Esperadas, @laLineasExclusion )
+		
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_EncontrarBloque_TEXT_ENDTEXT_CuandoEvaluaUnaLineaQueTerminaConUn_EndText_YLineaAnteriorTerminaEn_Coma
+		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(1,2) ;
+			, laLineasExclusion(23), laLineasExclusion_Esperadas(23)
+		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
+		loObj	= THIS.icObj
+		
+		*-- Input and expected params
+		STORE '' TO lcMethod
+		laExpected_Pos(1,1)	= 3
+		laExpected_Pos(1,2)	= 13
+		FOR I = 3 TO 13
+			laLineasExclusion_Esperadas(I)	= .T.
+		ENDFOR
+
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
+			<<C_PROC>> Init
+			Local lcRowSource
+			<<C_TEXT>> To lcRowSource Textmerge Noshow
+			Overview,ItemDtl,
+			Forecasting,Forecasting,
+			Purchase Orders,PurchaseOrders,
+			Sales Orders,SalesOrders,
+			Sales History,History,
+			Inventory,Bins,
+			Inventory History,InventoryHistory,
+			Configuration,PartsInfo,
+			Operations,Operations,
+			<<C_ENDTEXT>>
+
+
+			This.RowSource	   = Chrtran(lcRowSource, CRLF, '')
+			This.ControlSource = 'Thisform.cStartPage'
+			This.Value		   = ReadSetting('Item Detail Start Page', 'ItemDtl', .F., .T.)
+			<<C_ENDPROC>>
+			<<C_PROC>> Valid
+			WriteSetting('Item Detail Start Page', This.Value, .F., .T.)
+			Thisform.comboPartno.SetFocus()
 			<<C_ENDPROC>>
 		ENDTEXT
 		
