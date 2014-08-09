@@ -148,6 +148,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				loObj.get_PropsFrom_PROTECTED( toReg_Esperado.PROTECTED, .F., @laProtected_Esperado, @lnProtected_Count_Esperado, '' )
 
 				*-- Methods
+				STORE 0 TO lnMethods_Count, lnMethods_Count_Esperado
 				loObj.get_ADD_OBJECT_METHODS( toReg, toReg, '', @laMethods, '', @lnMethods_Count, '', 0, '', 0, loFoxBin2Prg )
 				loObj.get_ADD_OBJECT_METHODS( toReg_Esperado, toReg_Esperado, '', @laMethods_Esperado, '', @lnMethods_Count_Esperado, '', 0, '', 0, loFoxBin2Prg )
 				lcExtraData	= tcParent + '.' + tcObjName + ' (' + tcClass + ')'
@@ -256,7 +257,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 				THIS.assertequals( lnMethods_Count_Esperado, lnMethods_Count, "Cantidad de METHODS para " + lcExtraData )
 				FOR I = 1 TO lnMethods_Count_Esperado
-					THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 0+2+4) > 0 ;
+					THIS.asserttrue( ASCAN( laMethods, laMethods_Esperado(I,1), 1, -1, 1, 1+2+4) > 0 ;
 						, ' Comprobación de que existe el Method "' + TRANSFORM(laMethods_Esperado(I,1)) + '"' + " para " + lcExtraData )
 				ENDFOR
 				

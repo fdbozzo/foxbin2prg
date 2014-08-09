@@ -8170,12 +8170,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_add_object_methods" display="get_ADD_OBJECT_METHODS"/>] ;
+		+ [<memberdata name="get_class_methods" display="get_CLASS_METHODS"/>] ;
 		+ [<memberdata name="get_nombresobjetosolepublic" display="get_NombresObjetosOLEPublic"/>] ;
 		+ [<memberdata name="get_propsfrom_protected" display="get_PropsFrom_PROTECTED"/>] ;
 		+ [<memberdata name="get_propsandcommentsfrom_reserved3" display="get_PropsAndCommentsFrom_RESERVED3"/>] ;
 		+ [<memberdata name="get_propsandvaluesfrom_properties" display="get_PropsAndValuesFrom_PROPERTIES"/>] ;
 		+ [<memberdata name="indentarmemo" display="IndentarMemo"/>] ;
 		+ [<memberdata name="memoinoneline" display="MemoInOneLine"/>] ;
+		+ [<memberdata name="method2array" display="Method2Array"/>] ;
 		+ [<memberdata name="normalizarasignacion" display="normalizarAsignacion"/>] ;
 		+ [<memberdata name="set_multilinememowithaddobjectproperties" display="set_MultilineMemoWithAddObjectProperties"/>] ;
 		+ [<memberdata name="sortmethod" display="SortMethod"/>] ;
@@ -8239,17 +8241,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL lcMethodName
+			LOCAL lcMethodName, lnMethodCount
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
-				.SortMethod( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount ;
+				lnMethodCount	= tnMethodCount
+				.Method2Array( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount ;
 					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count, @toFoxBin2Prg )
 
 				*-- Ubico los métodos protegidos y les cambio la definición.
 				*-- Los métodos se deben generar con la ruta completa, porque si no es imposible saber a que objeto corresponden,
 				*-- o si son de la clase.
-				IF tnMethodCount > 0 THEN
-					FOR I = 1 TO tnMethodCount
+				IF tnMethodCount - lnMethodCount > 0 THEN
+					FOR I = lnMethodCount + 1 TO tnMethodCount
 						IF taMethods(I,2) = 0
 							LOOP
 						ENDIF
@@ -8272,12 +8275,101 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 						*-- Genero el método SIN indentar, ya que se hace luego
 						*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
-						tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + lcMethodName
-						tcMethods	= tcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)) )
-						tcMethods	= tcMethods + CR_LF + 'ENDPROC'
+						*tcMethods	= tcMethods + CR_LF + 'PROCEDURE ' + lcMethodName
+						*tcMethods	= tcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)) )
+						*tcMethods	= tcMethods + CR_LF + 'ENDPROC'
+						taCode(taMethods(I,2))	= 'PROCEDURE ' + lcMethodName + CR_LF + .IndentarMemo( taCode(taMethods(I,2)) ) + CR_LF + 'ENDPROC'
+						taMethods(I,1)	= lcMethodName
 					ENDFOR
 				ENDIF
 			ENDWITH && THIS
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE get_CLASS_METHODS
+		LPARAMETERS tnMethodCount, taMethods, taCode, taProtected, taPropsAndComments
+		*-- DEFINIR MÉTODOS DE LA CLASE
+		*-- Ubico los métodos protegidos y les cambio la definición
+		EXTERNAL ARRAY taMethods, taCode, taProtected, taPropsAndComments
+
+		TRY
+			LOCAL lcMethod, lcMethodName, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods, lnLen
+			STORE '' TO lcMethod, lcMethodName, lcProcDef, lcMethods
+
+			IF tnMethodCount > 0 THEN
+				WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
+					FOR I = 1 TO tnMethodCount
+						lcMethodName		= CHRTRAN( taMethods(I,1), '^', '' )
+						lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 1+2+4)
+
+						IF lnProtectedItem = 0
+							lnProtectedItem		= ASCAN( taProtected, taMethods(I,1) + '^', 1, 0, 0, 1+2+4)
+
+							IF lnProtectedItem = 0
+								*-- Método común
+								lcProcDef	= 'PROCEDURE'
+							ELSE
+								*-- Método oculto
+								lcProcDef	= 'HIDDEN PROCEDURE'
+							ENDIF
+						ELSE
+							*-- Método protegido
+							lcProcDef	= 'PROTECTED PROCEDURE'
+						ENDIF
+
+						lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethodName, 1, 0, 1, 1+2+4+8)
+
+						*-- Nombre del método
+						*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	<<lcProcDef>> <<taMethods(I,1)>>
+						*ENDTEXT
+						*lcMethods	= lcMethods + CR_LF + lcProcDef + ' ' + taMethods(I,1)
+						lcMethod	= lcProcDef + ' ' + taMethods(I,1)
+
+						*-- Comentarios del método (si tiene)
+						IF lnCommentRow > 0 AND NOT EMPTY(taPropsAndComments(lnCommentRow,2))
+							*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							*	<<>>		&& <<taPropsAndComments(lnCommentRow,2)>>
+							*ENDTEXT
+							*lcMethods	= lcMethods + C_TAB + C_TAB + taPropsAndComments(lnCommentRow,2)
+							lcMethod	= lcMethod + C_TAB + C_TAB + '&' + '& ' + taPropsAndComments(lnCommentRow,2)
+						ENDIF
+
+						*-- Código del método
+						IF taMethods(I,2) > 0 THEN
+							*lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+							*lcMethod	= lcMethod + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+							taCode(taMethods(I,2))	= lcMethod + CR_LF + .IndentarMemo( taCode(taMethods(I,2)) ) + CR_LF + 'ENDPROC'
+						ELSE
+							lnLen	= ALEN(taCode,1) + 1
+							DIMENSION taCode( lnLen )
+							taCode( lnLen )	= lcMethod + CR_LF + 'ENDPROC'
+							taMethods(I,2)	= lnLen
+						ENDIF
+
+						*lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
+						*lcMethods	= lcMethods + CR_LF
+
+						*lcMethod	= lcMethod + CR_LF + C_TAB + 'ENDPROC'
+						*lcMethod	= lcMethod + CR_LF
+						*lcMethods	= lcMethods + lcMethod
+					ENDFOR
+
+				ENDWITH && THIS
+				*C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + lcMethods &&+ CR_LF
+
+			ENDIF
 
 		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -8511,16 +8603,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE IndentarMemo
-		LPARAMETERS tcMethod, tcIndentation
+		LPARAMETERS tcMethod, tcIndentation, tlKeepProcHeader
 		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
 		TRY
-			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1)
+			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1), lnOffset
 			lcMethod		= ''
-			llProcedure		= ( LEFT(tcMethod,10) == 'PROCEDURE ' ;
-				OR LEFT(tcMethod,17) == 'HIDDEN PROCEDURE ' ;
-				OR LEFT(tcMethod,20) == 'PROTECTED PROCEDURE ' )
 			lnInicio		= 1
+			lnOffset		= 0
 			lnFin			= ALINES(laLineas, tcMethod)
+			llProcedure		= ( LEFT(laLineas(1),10) == 'PROCEDURE ' ;
+				OR LEFT(laLineas(1),17) == 'HIDDEN PROCEDURE ' ;
+				OR LEFT(laLineas(1),20) == 'PROTECTED PROCEDURE ' )
+
 			IF VARTYPE(tcIndentation) # 'C'
 				tcIndentation	= ''
 			ENDIF
@@ -8546,14 +8640,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			*-- Si encuentra la cabecera de un PROCEDURE, la saltea
 			IF llProcedure
-				lnInicio	= 2
-				lnFin		= lnFin - 1
+				lnOffset	= 1
 			ENDIF
 
-			FOR I = lnInicio TO lnFin
+			FOR I = lnInicio + lnOffset TO lnFin - lnOffset
 				*-- TEXT/ENDTEXT aquí da error 2044 de recursividad. No usar.
 				lcMethod	= lcMethod + CR_LF + tcIndentation + laLineas(I)
 			ENDFOR
+
+			IF llProcedure AND tlKeepProcHeader
+				laLineas(lnInicio)	= C_TAB + laLineas(lnInicio)
+				laLineas(lnFin)		= C_TAB + laLineas(lnFin)
+				lcMethod	= CR_LF + laLineas(lnInicio) + lcMethod + CR_LF + laLineas(lnFin)
+			ENDIF
 
 			lcMethod	= SUBSTR(lcMethod,3)	&& Quito el primer ENTER (CR+LF)
 
@@ -8634,6 +8733,75 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE SortMethod
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
 			, taProtected, tnProtected_Count, toFoxBin2Prg
+
+		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL I, I2, laMethods(1,3), lnDeleted, lcMethodName, lnMethodPos, lcMethodType, loEx AS EXCEPTION
+
+			IF tnMethodCount > 0 THEN
+
+				*-- taMethods[1,3]
+				*--		1.Nombre Método
+				*--		2.Posición Original
+				*--		3.Tipo (HIDDEN/PROTECTED/NORMAL)
+
+				*-- Alphabetical ordering of methods
+				IF THIS.l_MethodSort_Enabled
+					ASORT(taMethods,1,-1,0,1)
+				ENDIF
+
+				*FOR I = 1 TO tnMethodCount
+				*	IF taMethods(I,2) > 0 THEN
+				*		tcSorted	= m.tcSorted + taCode( taMethods(I,2) )
+				*	ENDIF
+				*ENDFOR
+				
+				DIMENSION laMethods(tnMethodCount,3)
+				lnDeleted	= 0
+
+				FOR I = tnMethodCount TO 1 STEP -1
+					IF taMethods(I,2) > 0 THEN
+						IF '.' $ taMethods(I,1)
+							*-- Los métodos con '.' los mando a otro array
+							lnDeleted	= lnDeleted + 1
+							laMethods(lnDeleted,1)	= taMethods(I,1)
+							laMethods(lnDeleted,2)	= taMethods(I,2)
+							laMethods(lnDeleted,3)	= taMethods(I,3)
+							ADEL( taMethods, I )
+						ENDIF
+					ENDIF
+				ENDFOR
+
+				FOR I = lnDeleted TO 1 STEP -1
+					*-- Los métodos con '.' los paso al final
+					I2	= tnMethodCount - lnDeleted + (lnDeleted - I) + 1
+					taMethods(I2,1)	= laMethods(I,1)
+					taMethods(I2,2)	= laMethods(I,2)
+					taMethods(I2,3)	= laMethods(I,3)
+				ENDFOR
+
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+		ENDTRY
+
+		RETURN
+	ENDPROC	&& SordMethod
+
+
+	*******************************************************************************************************************
+	PROCEDURE Method2Array
+		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+			, taProtected, tnProtected_Count, toFoxBin2Prg
 		*-- 29/10/2013	Fernando D. Bozzo
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
@@ -8653,18 +8821,20 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
 				, laLineasExclusion(1), lnBloquesExclusion ;
 				, loEx AS EXCEPTION
-			DIMENSION taMethods(1,3)
-			STORE '' TO taMethods, tcSorted, taCode
-			tnMethodCount	= 0
+			*DIMENSION taMethods(1,3)
+			*STORE '' TO taMethods, tcSorted, taCode
+			*tnMethodCount	= 0
 
 			IF NOT EMPTY(m.tcMethod) AND LEFT(m.tcMethod,9) == "ENDPROC"+CHR(13)+CHR(10)
 				tcMethod	= SUBSTR(m.tcMethod,10)
 			ENDIF
 
 			IF NOT EMPTY(m.tcMethod)
-				DIMENSION laLine(1), taMethods(1,3)
-				STORE '' TO laLine, taMethods, taCode
-				STORE 0 TO tnMethodCount, lnTextNodes
+				DIMENSION laLine(1) &&, taMethods(1,3)
+				STORE '' TO laLine
+				STORE 0 TO lnTextNodes
+				*STORE '' TO taMethods, taCode
+				*STORE 0 TO tnMethodCount
 
 				lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
 
@@ -8749,7 +8919,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							LOOP
 						ENDIF
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) &&+ CR_LF
 						llProcOpen				= .F.
 
 					CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
@@ -8790,18 +8960,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						ENDIF
 					ENDIF
 				ENDFOR
-
-				*-- Alphabetical ordering of methods
-				IF THIS.l_MethodSort_Enabled
-					ASORT(taMethods,1,-1,0,1)
-				ENDIF
-
-				FOR I = 1 TO tnMethodCount
-					IF taMethods(I,2) > 0 THEN
-						m.tcSorted	= m.tcSorted + taCode(taMethods(I,2))
-					ENDIF
-				ENDFOR
-
 			ENDIF
 
 		CATCH TO loEx
@@ -8813,7 +8971,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTRY
 
 		RETURN
-	ENDPROC	&& SordMethod
+	ENDPROC	&& Method2Array
 
 
 	*******************************************************************************************************************
@@ -8894,29 +9052,33 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ALL_OBJECT_METHODS
-		LPARAMETERS tcMethods, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count, toFoxBin2Prg
+		LPARAMETERS tcMethods, taMethods, taCode, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count, toFoxBin2Prg
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
 		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods
 
-		IF NOT EMPTY(tcMethods)
+        IF tnMethodCount > 0 THEN
 			STORE '' TO lcMethods
 			DIMENSION laMethods(1,3)
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
-				.SortMethod( @tcMethods, @laMethods, @laCode, '', @lnMethodCount ;
+				.SortMethod( @tcMethods, @taMethods, @taCode, '', @tnMethodCount ;
 					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count, @toFoxBin2Prg )
 
-				FOR I = 1 TO lnMethodCount
+				lcMethods	= C_TAB
+
+				FOR I = 1 TO tnMethodCount
 					*-- Genero los métodos indentados
 					*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
-					IF laMethods(I,2) = 0
+					IF taMethods(I,2) = 0
 						LOOP
 					ENDIF
 
-					lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + C_PROCEDURE + ' ' + laMethods(I,1)
-					lcMethods	= lcMethods + CR_LF + .IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
-					lcMethods	= lcMethods + CR_LF + C_TAB + C_ENDPROC
+					*lcMethods	= lcMethods + CR_LF + C_TAB + laMethods(I,3) + C_PROCEDURE + ' ' + laMethods(I,1)
+					*lcMethods	= lcMethods + CR_LF + .IndentarMemo( laCode(laMethods(I,2)), CHR(9) + CHR(9) )
+					*lcMethods	= lcMethods + CR_LF + C_TAB + C_ENDPROC
+					
+					lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), CHR(9) + CHR(9), .T. )
 					lcMethods	= lcMethods + CR_LF
 				ENDFOR
 			ENDWITH && THIS
@@ -8936,13 +9098,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		EXTERNAL ARRAY taMethods, taCode, taProtected, taPropsAndComments
 
 		TRY
-			LOCAL lcMethod, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods
-			STORE '' TO lcMethod, lcProcDef, lcMethods
+			LOCAL lcMethod, lcMethodName, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods
+			STORE '' TO lcMethod, lcMethodName, lcProcDef, lcMethods
 
 			IF tnMethodCount > 0 THEN
 				WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 					FOR I = 1 TO tnMethodCount
-						lcMethod			= CHRTRAN( taMethods(I,1), '^', '' )
+						lcMethodName		= CHRTRAN( taMethods(I,1), '^', '' )
 						lnProtectedItem		= ASCAN( taProtected, taMethods(I,1), 1, 0, 0, 1+2+4)
 
 						IF lnProtectedItem = 0
@@ -8960,28 +9122,35 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							lcProcDef	= 'PROTECTED PROCEDURE'
 						ENDIF
 
-						lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethod, 1, 0, 1, 1+2+4+8)
+						lnCommentRow		= ASCAN( taPropsAndComments, '*' + lcMethodName, 1, 0, 1, 1+2+4+8)
 
 						*-- Nombre del método
-						TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	<<lcProcDef>> <<taMethods(I,1)>>
-						ENDTEXT
+						*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	<<lcProcDef>> <<taMethods(I,1)>>
+						*ENDTEXT
+						*lcMethods	= lcMethods + CR_LF + lcProcDef + ' ' + taMethods(I,1)
+						lcMethod	= CR_LF + lcProcDef + ' ' + taMethods(I,1)
 
 						*-- Comentarios del método (si tiene)
 						IF lnCommentRow > 0 AND NOT EMPTY(taPropsAndComments(lnCommentRow,2))
-							TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-								<<>>		&& <<taPropsAndComments(lnCommentRow,2)>>
-							ENDTEXT
+							*TEXT TO lcMethods ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							*	<<>>		&& <<taPropsAndComments(lnCommentRow,2)>>
+							*ENDTEXT
+							*lcMethods	= lcMethods + C_TAB + C_TAB + taPropsAndComments(lnCommentRow,2)
+							lcMethod	= lcMethod + C_TAB + C_TAB + taPropsAndComments(lnCommentRow,2)
 						ENDIF
 
 						*-- Código del método
-						*-- Sustituyo el TEXT/ENDTEXT aquí porque a veces quita espacios de la derecha, y eso es peligroso
 						IF taMethods(I,2) > 0 THEN
-							lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+							*lcMethods	= lcMethods + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
+							lcMethod	= lcMethod + CR_LF + .IndentarMemo( taCode(taMethods(I,2)), C_TAB + C_TAB )
 						ENDIF
 
-						lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
-						lcMethods	= lcMethods + CR_LF
+						*lcMethods	= lcMethods + CR_LF + C_TAB + 'ENDPROC'
+						*lcMethods	= lcMethods + CR_LF
+						lcMethod	= lcMethod + CR_LF + C_TAB + 'ENDPROC'
+						lcMethod	= lcMethod + CR_LF
+						lcMethods	= lcMethods + lcMethod
 					ENDFOR
 
 				ENDWITH && THIS
@@ -9889,6 +10058,10 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
+					STORE 0 TO lnMethodCount
+					STORE '' TO laMethods, laCode
+
+					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
 
 					IF toFoxBin2Prg.l_NoTimestamps
@@ -9964,12 +10137,15 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
-					DIMENSION laMethods(1,3)
-					laMethods	= ''
-					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
+					DIMENSION laMethods(1,3), laCode(1)
+					STORE '' TO laMethods, laCode
+					lnMethodCount	= 0
+
+					.Method2Array( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
 						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 
-					.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
+					*.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
+					.get_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
 					lnLastClass		= 1
 					lcMethods		= ''
@@ -9998,7 +10174,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 					ENDSCAN
 
-					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
+					.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
 						, lnProtected_Count, @toFoxBin2Prg )
 
 					GOTO RECORD (lnRecno)
@@ -10125,6 +10301,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						AND (EMPTY(TABLABIN.PARENT) ;
 						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
 
+					STORE 0 TO lnMethodCount
+					STORE '' TO laMethods, laCode
+
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
 
@@ -10202,12 +10381,15 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
-					DIMENSION laMethods(1,3)
-					laMethods	= ''
-					.SortMethod( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
+					DIMENSION laMethods(1,3), laCode(1)
+					STORE '' TO laMethods, laCode
+					lnMethodCount	= 0
+
+					.Method2Array( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
 						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 
-					.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
+					*.write_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
+					.get_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
 					lnLastClass		= 1
 					lcMethods		= ''
@@ -10238,7 +10420,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 					ENDSCAN
 
-					.write_ALL_OBJECT_METHODS( @lcMethods, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
+					.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
 						, lnProtected_Count, @toFoxBin2Prg )
 
 					GOTO RECORD (lnRecno)
