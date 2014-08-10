@@ -72,32 +72,36 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_ObtenerLaUbicacionDelBloque_IF_ENDIF_CuandoCodigoCon_IF_ENDIF_predominante_esEvaluado
 		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(2,2) ;
-			, laLineasExclusion(10), laLineasExclusion_Esperadas(10)
+			, laLineasExclusion(12), laLineasExclusion_Esperadas(12)
 		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
 		loObj	= THIS.icObj
 		
 		*-- Input and expected params
 		STORE '' TO lcMethod
 		laExpected_Pos(1,1)	= 3
-		laExpected_Pos(1,2)	= 5
-		laExpected_Pos(2,1)	= 7
-		laExpected_Pos(2,2)	= 9
+		laExpected_Pos(1,2)	= 6
+		laExpected_Pos(2,1)	= 8
+		laExpected_Pos(2,2)	= 11
 		laLineasExclusion_Esperadas( 3)	= .T.
 		laLineasExclusion_Esperadas( 4)	= .T.
 		laLineasExclusion_Esperadas( 5)	= .T.
 		laLineasExclusion_Esperadas( 7)	= .T.
 		laLineasExclusion_Esperadas( 8)	= .T.
 		laLineasExclusion_Esperadas( 9)	= .T.
+		laLineasExclusion_Esperadas(10)	= .T.
+		laLineasExclusion_Esperadas(11)	= .T.
 
 		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				<<C_IF_F>>
 					<<C_TEXT>>
+					value ;
 				<<C_ENDIF>>
 				*-- Code Block
 				<<C_IF_F>>
 					<<C_ENDTEXT>>
+					value ,
 				<<C_ENDIF>>
 			<<C_ENDPROC>>
 		ENDTEXT
@@ -138,7 +142,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 				<<C_IF_F>>
 					<<C_IF_F>>
 						<<C_TEXT>>
-						*-- Code Block
+						*-- Code Block ;
 						<<C_ENDTEXT>>
 					<<C_ENDIF>>
 				<<C_ENDIF>>
@@ -159,32 +163,36 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 	*******************************************************************************************************************************************
 	FUNCTION Deberia_ObtenerLaUbicacionDelBloque_TEXT_ENDTEXT_CuandoCodigoCon_TEXT_ENDTEXT_predominante_esEvaluado
 		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(2,2) ;
-			, laLineasExclusion(10), laLineasExclusion_Esperadas(10)
+			, laLineasExclusion(12), laLineasExclusion_Esperadas(12)
 		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
 		loObj	= THIS.icObj
 		
 		*-- Input and expected params
 		STORE '' TO lcMethod
 		laExpected_Pos(1,1)	= 3
-		laExpected_Pos(1,2)	= 5
-		laExpected_Pos(2,1)	= 7
-		laExpected_Pos(2,2)	= 9
+		laExpected_Pos(1,2)	= 6
+		laExpected_Pos(2,1)	= 8
+		laExpected_Pos(2,2)	= 11
 		laLineasExclusion_Esperadas( 3)	= .T.
 		laLineasExclusion_Esperadas( 4)	= .T.
 		laLineasExclusion_Esperadas( 5)	= .T.
 		laLineasExclusion_Esperadas( 7)	= .T.
 		laLineasExclusion_Esperadas( 8)	= .T.
 		laLineasExclusion_Esperadas( 9)	= .T.
+		laLineasExclusion_Esperadas(10)	= .T.
+		laLineasExclusion_Esperadas(11)	= .T.
 
 		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
 			<<C_PROC>> myMethod_B
 				*-- Code Block
 				<<C_TEXT>>
 					<<C_IF_F>>
+					value ;
 				<<C_ENDTEXT>>
 				*-- Code Block
 				<<C_TEXT>>
 					<<C_ENDIF>>
+					value ,
 				<<C_ENDTEXT>>
 			<<C_ENDPROC>>
 		ENDTEXT

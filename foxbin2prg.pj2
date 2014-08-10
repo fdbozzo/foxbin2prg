@@ -109,6 +109,7 @@ WITH loProject.FILES
 	.ADD('tests\ut__foxbin2prg__c_conversor_prg_a_bin__analizarasignacion_tag_indicado.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_prg_a_bin__insert_allobjects.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_foxbin2prg__evaluarconfiguracion.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
+	.ADD('tests\ut__foxbin2prg__c_foxbin2prg__filenamefoundinfilter.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
@@ -137,6 +138,7 @@ WITH loProject.FILES
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_prg_a_bin__analizarasignacion_tag_indicado.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_prg_a_bin__insert_allobjects.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_foxbin2prg__evaluarconfiguracion.prg').Exclude = .T.
+	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_foxbin2prg__filenamefoundinfilter.prg').Exclude = .T.
 	*</ExcludedFiles>
 
 	*<TextFiles>

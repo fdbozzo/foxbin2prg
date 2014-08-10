@@ -874,6 +874,64 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_CLASSLIB_METHOD_ORDER_BUG_TEST_VCX_YValidarEl_BUG_DelOrdenDeMetodosDeClases_v1_19_29
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario, lcTXT0, lcTXT1 ;
+			, loModulo AS CL_CLASE OF "FOXBIN2PRG.PRG" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.l_Debug				= .F.
+			loCnv.l_ShowErrors			= .F.
+			*loCnv.l_Test				= .T.
+			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
+			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			lc_File				= 'CLASSLIB_METHOD_ORDER_BUG_TEST.VCX'
+			lc_InputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosReadOnly )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lcTipoBinario		= UPPER( JUSTEXT( lc_OutputFile ) )
+
+			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
+
+			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
+			*loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+
+			*-- Comparo resultados
+			lcTXT0		= FORCEPATH( FORCEEXT(lc_File,'VC2'), ADDBS( oFXU_LIB.cPathDatosReadOnly ) )
+			lcTXT1		= FORCEPATH( FORCEEXT(lc_File,'VC2'), ADDBS( oFXU_LIB.cPathDatosTest ) )
+
+			llEqual	= ( FILETOSTR( lcTXT0 ) == FILETOSTR( lcTXT1 ) )
+
+			THIS.messageout( "Se comparan archivos VC2, para saber si hay cambios" )
+			THIS.messageout( "lcTXT0 = " + lcTXT0 )
+			THIS.messageout( "lcTXT1 = " + lcTXT1 )
+
+			THIS.asserttrue( llEqual, "COMPARACIÓN DE VC2" )
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+			USE IN (SELECT("ARCHIVOBIN_IN"))
+			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loModulo, loCnv
+			RELEASE loModulo, loCnv
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_ParaLaLibreria_FB2P_TEST_VCX_YValidarEl_BUG_Del_PROCEDURE_SIN_ENDPROC
 		LOCAL lnCodError, lnCodError_Esperado  ;
 			, lc_File, lc_InputFile, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado, loReg, lcTipoBinario ;
