@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.29'
-    .VersionDate          = Date(2014,08,01)
+    .VersionNumber        = 'v1.19.30'
+    .VersionDate          = Date(2014,08,07)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,8 +17,13 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
+2014/08/07	v1.19.30
+- Bug Fix vcx/scx: Bad EndText block detection when the previous line ends with "," or ";" (Jim Nelson)
+- Bug Fix vcx/scx: Some methods are not alphabetically sorted in some inheritance situations (Ryan Harris)
+- Added FoxUnit test cases to bug fix confirmation of both
+
 2014/08/01	v1.19.29
-- Bug Fix vcx/scx: Bad text/endtext block detection when there is a line that begins with a "text" field and previous line end with "," in regards of ";" (M_N_M)
+- Bug Fix vcx/scx: Bad Text block detection when the previous line ends with "," (M_N_M)
 - Optimizations and refactoring
 
 2014/07/26	v1.19.28
