@@ -8846,7 +8846,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					DO CASE
 					CASE laLineasExclusion(I)
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+						IF tnMethodCount > 0 AND llProcOpen
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+						ELSE
+							*-- Invalid method code, as outer code added for tools like ReFox or others, is cleaned up
+						ENDIF
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 10) ) == 'PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
@@ -8854,7 +8858,16 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 11) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= ''
-						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+						llProcOpen					= .T.
+
+					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 10) )
+						taMethods(tnMethodCount, 2)	= tnMethodCount
+						taMethods(tnMethodCount, 3)	= ''
+						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 17) ) == 'HIDDEN PROCEDURE '
@@ -8863,7 +8876,16 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 18) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'HIDDEN '
-						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+						llProcOpen					= .T.
+
+					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 17) )
+						taMethods(tnMethodCount, 2)	= tnMethodCount
+						taMethods(tnMethodCount, 3)	= 'HIDDEN '
+						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 20) ) == 'PROTECTED PROCEDURE '
@@ -8872,7 +8894,16 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 21) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'PROTECTED '
-						taCode(tnMethodCount)		= laLine(I) + CR_LF
+						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+						llProcOpen					= .T.
+
+					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+						tnMethodCount	= tnMethodCount + 1
+						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 20) )
+						taMethods(tnMethodCount, 2)	= tnMethodCount
+						taMethods(tnMethodCount, 3)	= 'PROTECTED '
+						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
 					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
@@ -8888,7 +8919,22 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) &&+ CR_LF
 						llProcOpen				= .F.
 
-					CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDFUNC'	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
+						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDFUNC '
+							*-- Es el final de estructura ENDPROC
+							laLine(I)	= STRTRAN( laLine(I), 'ENDFUNC', 'ENDPROC' )
+						ELSE
+							*-- Es otra cosa (variable, etc)
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							LOOP
+						ENDIF
+
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) &&+ CR_LF
+						llProcOpen				= .F.
+
+					*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+					CASE tnMethodCount = 0 OR NOT llProcOpen
 						*-- Skip empty and commented lines before methods begin
 						*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
 
