@@ -100,6 +100,7 @@
 * 08/08/2014	FDBOZZO		v1.19.30	Arreglo bug vcx/vct v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (Ryan Harris)
 * 17/08/2014	FDBOZZO		v1.19.31	Agregada versión del EXE cuando se genera LOG de depuración
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora vcx/scx: Mejorado el reconocimiento de instrucciones #IF..#ENDIF cuando hay espacios entre # y el nombre de función
+* 20/08/2014	FDBOZZO		v1.19.31	Mejora: Ajuste de capitalización de los archivos origen, así ya no hay que hacerlo manualmente
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1878,6 +1879,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 
 				lcExtension	= UPPER( JUSTEXT(.c_InputFile) )
+				.normalizarCapitalizacionArchivos( .T. )
 
 				DO CASE
 				CASE lcExtension = 'VCX'
@@ -2173,9 +2175,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE normalizarCapitalizacionArchivos
+		LPARAMETERS tl_NormalizeInputFile
+
 		TRY
 			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, loEx AS EXCEPTION ;
-				, loFSO AS Scripting.FileSystemObject
+				, loFSO AS Scripting.FileSystemObject, lcType
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				lcPath		= JUSTPATH(.c_Foxbin2prg_FullPath)
@@ -2206,40 +2210,82 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-				.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO )
+				IF tl_NormalizeInputFile
+					lcType	= UPPER( JUSTEXT( .c_InputFile ) )
 
-				DO CASE
-				CASE .c_Type = 'PJX'
-					.RenameFile( FORCEEXT(.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO )
+					*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
+					.RenameFile( .c_InputFile, lcEXE_CAPS, loFSO )
 
-				CASE .c_Type = 'VCX'
-					.RenameFile( FORCEEXT(.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO )
+					DO CASE
+					CASE lcType = 'PJX'
+						.RenameFile( FORCEEXT(.c_InputFile,'PJT'), lcEXE_CAPS, loFSO )
 
-				CASE .c_Type = 'SCX'
-					.RenameFile( FORCEEXT(.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO )
+					CASE lcType = 'VCX'
+						.RenameFile( FORCEEXT(.c_InputFile,'VCT'), lcEXE_CAPS, loFSO )
 
-				CASE .c_Type = 'FRX'
-					.RenameFile( FORCEEXT(.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO )
+					CASE lcType = 'SCX'
+						.RenameFile( FORCEEXT(.c_InputFile,'SCT'), lcEXE_CAPS, loFSO )
 
-				CASE .c_Type = 'LBX'
-					.RenameFile( FORCEEXT(.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO )
+					CASE lcType = 'FRX'
+						.RenameFile( FORCEEXT(.c_InputFile,'FRT'), lcEXE_CAPS, loFSO )
 
-				CASE .c_Type = 'DBF'
-					IF FILE( FORCEEXT(.c_OutputFile,'FPT') )
-						.RenameFile( FORCEEXT(.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO )
-					ENDIF
-					IF FILE( FORCEEXT(.c_OutputFile,'CDX') )
-						.RenameFile( FORCEEXT(.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO )
-					ENDIF
+					CASE lcType = 'LBX'
+						.RenameFile( FORCEEXT(.c_InputFile,'LBT'), lcEXE_CAPS, loFSO )
 
-				CASE .c_Type = 'DBC'
-					.RenameFile( FORCEEXT(.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO )
-					.RenameFile( FORCEEXT(.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO )
+					CASE lcType = 'DBF'
+						IF FILE( FORCEEXT(.c_InputFile,'FPT') )
+							.RenameFile( FORCEEXT(.c_InputFile,'FPT'), lcEXE_CAPS, loFSO )
+						ENDIF
+						IF FILE( FORCEEXT(.c_InputFile,'CDX') )
+							.RenameFile( FORCEEXT(.c_InputFile,'CDX'), lcEXE_CAPS, loFSO )
+						ENDIF
 
-				CASE .c_Type = 'MNX'
-					.RenameFile( FORCEEXT(.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO )
+					CASE lcType = 'DBC'
+						.RenameFile( FORCEEXT(.c_InputFile,'DCX'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'DCT'), lcEXE_CAPS, loFSO )
 
-				ENDCASE
+					CASE lcType = 'MNX'
+						.RenameFile( FORCEEXT(.c_InputFile,'MNT'), lcEXE_CAPS, loFSO )
+
+					ENDCASE
+					
+				ELSE
+					*-- Normalizar archivo(s) de salida. El primero siempre se normaliza (??2, ??X, DBF, DBC)
+					.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO )
+
+					DO CASE
+					CASE .c_Type = 'PJX'
+						.RenameFile( FORCEEXT(.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO )
+
+					CASE .c_Type = 'VCX'
+						.RenameFile( FORCEEXT(.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO )
+
+					CASE .c_Type = 'SCX'
+						.RenameFile( FORCEEXT(.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO )
+
+					CASE .c_Type = 'FRX'
+						.RenameFile( FORCEEXT(.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO )
+
+					CASE .c_Type = 'LBX'
+						.RenameFile( FORCEEXT(.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO )
+
+					CASE .c_Type = 'DBF'
+						IF FILE( FORCEEXT(.c_OutputFile,'FPT') )
+							.RenameFile( FORCEEXT(.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO )
+						ENDIF
+						IF FILE( FORCEEXT(.c_OutputFile,'CDX') )
+							.RenameFile( FORCEEXT(.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO )
+						ENDIF
+
+					CASE .c_Type = 'DBC'
+						.RenameFile( FORCEEXT(.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO )
+
+					CASE .c_Type = 'MNX'
+						.RenameFile( FORCEEXT(.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO )
+
+					ENDCASE
+				ENDIF
 			ENDWITH && THIS
 
 		CATCH TO loEx
