@@ -99,6 +99,7 @@
 * 07/08/2014	FDBOZZO		v1.19.30	Arreglo bug vcx/scx: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Jim Nelson)
 * 08/08/2014	FDBOZZO		v1.19.30	Arreglo bug vcx/vct v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (Ryan Harris)
 * 17/08/2014	FDBOZZO		v1.19.31	Agregada versión del EXE cuando se genera LOG de depuración
+* 20/08/2014	FDBOZZO		v1.19.31	Mejora vcx/scx: Mejorado el reconocimiento de instrucciones #IF..#ENDIF cuando hay espacios entre # y el nombre de función
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2697,6 +2698,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LOCAL llEncontrado, lcWord
 
 		TRY
+			*-- Pre-normalización
+			lcLine	= tcLine
+
+			IF LEFT(lcLine,1) == '#'
+				lcLine	= CHRTRAN( lcLine, ' ', '' )	&& Quito los espacios a lo que comience con #
+			ENDIF
+			
 			IF tnIniFin = 1
 				*-- TOKENS DE INICIO
 				IF UPPER( LEFT( tcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
