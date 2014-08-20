@@ -368,6 +368,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC							"¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
 	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC						"FOXBIN2PRG: ¡ATENCIÓN!"
 	#DEFINE C_MENU_NOT_IN_VFP9_FORMAT_LOC						"El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU <<JUSTFNAME((THIS.c_InputFile))>>"
+	#DEFINE C_LANGUAGE_LOC										"ES"
 	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC			"* Se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC		"* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 	#DEFINE C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC				"Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
@@ -444,6 +445,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_foxbin2prg_configfile" display="c_Foxbin2prg_ConfigFile"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="c_language" display="c_Language"/>] ;
 		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
@@ -525,6 +527,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	*-- Localized properties
 	c_loc_processing_file	= C_PROCESSING_LOC
 	*--
+	c_Language				= 'ES'
 	c_FB2PRG_EXE_Version	= 0
 	c_Foxbin2prg_FullPath	= ''
 	c_Foxbin2prg_ConfigFile	= ''
@@ -604,6 +607,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			lnPosProg	= 1
 		ENDIF
 
+		THIS.c_Language					= C_LANGUAGE_LOC
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
 		THIS.c_CurDir					= SYS(5) + CURDIR()
