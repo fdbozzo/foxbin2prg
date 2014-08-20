@@ -98,6 +98,7 @@
 * 29/07/2014	FDBOZZO		v1.19.29	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * 07/08/2014	FDBOZZO		v1.19.30	Arreglo bug vcx/scx: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Jim Nelson)
 * 08/08/2014	FDBOZZO		v1.19.30	Arreglo bug vcx/vct v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (Ryan Harris)
+* 17/08/2014	FDBOZZO		v1.19.31	Agregada versión del EXE cuando se genera LOG de depuración
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -435,6 +436,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="c_fb2prg_exe_version" display="c_FB2PRG_EXE_Version"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_errorlog" display="c_ErrorLog"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
@@ -521,6 +523,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	*-- Localized properties
 	c_loc_processing_file	= C_PROCESSING_LOC
 	*--
+	c_FB2PRG_EXE_Version	= 0
 	c_Foxbin2prg_FullPath	= ''
 	c_Foxbin2prg_ConfigFile	= ''
 	c_CurDir				= ''
@@ -582,7 +585,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE INIT
-		LOCAL lcSys16, lnPosProg
+		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5)
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -604,6 +607,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.c_CurDir					= SYS(5) + CURDIR()
 		THIS.o_FSO						= NEWOBJECT("Scripting.FileSystemObject")
 		THIS.o_Configuration			= CREATEOBJECT("COLLECTION")
+		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
+		THIS.c_FB2PRG_EXE_Version		= IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 		RETURN
 	ENDPROC
@@ -1491,7 +1496,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				lnCodError		= 0
 
-				.writeLog( .c_Foxbin2prg_FullPath + CR_LF ;
+				.writeLog( '---' )
+				.writeLog( .c_Foxbin2prg_FullPath + ' (EXE Version: ' + .c_FB2PRG_EXE_Version + ')' + CR_LF ;
 					+ C_TAB + 'tc_InputFile:          ' + TRANSFORM(tc_InputFile) + CR_LF ;
 					+ C_TAB + 'tcType:                ' + TRANSFORM(tcType) + CR_LF;
 					+ C_TAB + 'tcTextName:            ' + TRANSFORM(tcTextName) + CR_LF ;
