@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.30'
-    .VersionDate          = Date(2014,08,07)
+    .VersionNumber        = 'v1.19.31'
+    .VersionDate          = Date(2014,08,22)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,13 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/08/22	v1.19.31
+- Trash cleanup code on binary methods, normally added by tools like ReFox and others
+- Added EXE version number when generating a debug LOG file
+- Enhanced recognition of #IF..#ENDIF instructions when there are spaces between # symbol and the command name
+- Added capitalization normalization for input files
+- Added new c_Language property for querying actual compiled language (EN,ES,DE,etc)
 
 2014/08/07	v1.19.30
 - Bug Fix vcx/scx: Bad EndText block detection when the previous line ends with "," or ";" (Jim Nelson)

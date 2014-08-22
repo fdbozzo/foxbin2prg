@@ -9,7 +9,7 @@
 '---------------------------------------------------------------------------------------------------
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
-Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, cConvertType, aExtensions(8), filename_caps_log
+Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, cConvertType, aExtensions(8), filename_caps_log, nRet
 Dim i, x, str_cfg, aConf
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
@@ -91,7 +91,7 @@ Private Sub evaluateFile( tcFile )
 	If cFlagJustShowCall = "1" Then
 		MsgBox cCMD, 0, "PARAMETERS"
 	Else
-		oVFP9.DoCmd( cCMD )
+		nRet = oVFP9.DoCmd( cCMD )
 		'nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
 	End If
 End Sub
