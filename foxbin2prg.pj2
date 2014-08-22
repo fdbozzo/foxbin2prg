@@ -23,10 +23,10 @@ _CompanyName = "Fernando D. Bozzo"
 _FileDescription = "Conversor bidireccional de binarios FoxPro 9 (scx,vcx,pjx) a texto para sustituir al scctext :-)"
 _LegalCopyright = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
 _LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
-_ProductName = " FOXBIN2PRG v1.19.30"
+_ProductName = " FOXBIN2PRG v1.19.31"
 _MajorVer = "1"
 _MinorVer = "19"
-_Revision = "30"
+_Revision = "31"
 _LanguageID = "1034"
 _AutoIncrement = "0"
 *</DevInfo>
@@ -109,7 +109,7 @@ WITH loProject.FILES
 	.ADD('tests\ut__foxbin2prg__c_conversor_prg_a_bin__analizarasignacion_tag_indicado.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_prg_a_bin__insert_allobjects.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_foxbin2prg__evaluarconfiguracion.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
-	.ADD('tests\ut__foxbin2prg__c_foxbin2prg__filenamefoundinfilter.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('tests\ut__foxbin2prg__c_foxbin2prg__filenamefoundinfilter.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
