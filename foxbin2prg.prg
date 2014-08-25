@@ -101,7 +101,7 @@
 * 17/08/2014	FDBOZZO		v1.19.31	Agregada versión del EXE cuando se genera LOG de depuración
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora vcx/scx: Mejorado el reconocimiento de instrucciones #IF..#ENDIF cuando hay espacios entre # y el nombre de función
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora: Ajuste de capitalización de los archivos origen, así ya no hay que hacerlo manualmente
-* 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (desconocido)
+* 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (ph42)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -143,6 +143,7 @@
 * 29/07/2014	M_N_M				REPORTE BUG vcx/scx v1.19.28: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.29)
 * 07/08/2014	Jim Nelson			REPORTE BUG vcx/scx v1.19.29: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Arreglado en v1.19.30)
 * 08/08/2014	Ryan Harris			REPORTE BUG vcx/vct v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
+* 25/08/2014	ph42				REPORTE BUG bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
