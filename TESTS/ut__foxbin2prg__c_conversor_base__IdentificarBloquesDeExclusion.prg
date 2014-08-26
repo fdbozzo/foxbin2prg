@@ -344,6 +344,51 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 
 
 	*******************************************************************************************************************************************
+	FUNCTION Deberia_NoEncontrarBloque_TEXT_ENDTEXT_CuandoExisteUnaPropiedadLlamada_Text
+		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(1,2) ;
+			, laLineasExclusion(19), laLineasExclusion_Esperadas(19)
+		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
+		loObj	= THIS.icObj
+		
+		*-- Input and expected params
+		STORE '' TO lcMethod
+		laExpected_Pos(1,1)	= 0
+		laExpected_Pos(1,2)	= 0
+
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
+			DEFINE CLASS test AS custom 
+			 	*< CLASSDATA: Baseclass="custom" Timestamp="" Scale="Pixels" Uniqueid="" />
+				*<DefinedPropArrayMethod>
+					*m: text_access
+					*m: text_assign
+					*p: text		&& Returns all of the text in a text-entry area of a control.
+				*</DefinedPropArrayMethod>
+				
+				text = 		PRETEXT
+				
+				PROCEDURE text_access
+					RETURN THIS.text
+				ENDPROC
+
+				PROCEDURE text_assign
+					LPARAMETERS vNewVal		
+					THIS.text = m.vNewVal
+				ENDPROC
+			ENDDEFINE
+		ENDTEXT
+		
+		lnLineas	= ALINES( laLineas, lcMethod )
+
+		*-- Test
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laLineasExclusion, @lnPos_Count, @laPos )
+		
+		*-- Evaluación de resultados
+		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count, @laLineasExclusion_Esperadas, @laLineasExclusion )
+		
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
 	FUNCTION Deberia_EncontrarBloque_TEXT_ENDTEXT_CuandoEvaluaUnaLineaQueTerminaConUn_EndText_YLineaAnteriorTerminaEn_Coma
 		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(1,2) ;
 			, laLineasExclusion(23), laLineasExclusion_Esperadas(23)
