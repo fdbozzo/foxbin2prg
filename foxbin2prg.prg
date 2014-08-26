@@ -101,6 +101,7 @@
 * 17/08/2014	FDBOZZO		v1.19.31	Agregada versión del EXE cuando se genera LOG de depuración
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora vcx/scx: Mejorado el reconocimiento de instrucciones #IF..#ENDIF cuando hay espacios entre # y el nombre de función
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora: Ajuste de capitalización de los archivos origen, así ya no hay que hacerlo manualmente
+* 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (ph42)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -142,6 +143,7 @@
 * 29/07/2014	M_N_M				REPORTE BUG vcx/scx v1.19.28: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.29)
 * 07/08/2014	Jim Nelson			REPORTE BUG vcx/scx v1.19.29: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Arreglado en v1.19.30)
 * 08/08/2014	Ryan Harris			REPORTE BUG vcx/vct v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
+* 25/08/2014	ph42				REPORTE BUG bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2252,7 +2254,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.RenameFile( FORCEEXT(.c_InputFile,'MNT'), lcEXE_CAPS, loFSO )
 
 					ENDCASE
-					
+
 				ELSE
 					*-- Normalizar archivo(s) de salida. El primero siempre se normaliza (??2, ??X, DBF, DBC)
 					.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO )
@@ -2754,24 +2756,33 @@ DEFINE CLASS c_conversor_base AS SESSION
 			IF LEFT(lcLine,1) == '#'
 				lcLine	= CHRTRAN( lcLine, ' ', '' )	&& Quito los espacios a lo que comience con #
 			ENDIF
-			
+
 			IF tnIniFin = 1
 				*-- TOKENS DE INICIO
-				IF UPPER( LEFT( tcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
+				IF UPPER( LEFT( lcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
 					*-- Evaluar casos especiales
-					lcWord	= UPPER( ALLTRIM(GETWORDNUM(tcLine,1) ) )
+					lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
 
-					IF ta_ID_Bloques(X,1) == 'TEXT' AND NOT lcWord == 'TEXT'
-						EXIT
+					IF ta_ID_Bloques(X,1) == 'TEXT' THEN
+						lcLine	= UPPER( lcLine ) + ' '
+
+						DO CASE
+						CASE NOT lcWord == 'TEXT'
+							EXIT
+
+						CASE UPPER( LEFT( CHRTRAN( lcLine, ' ', '' ), 5 ) ) == 'TEXT='
+							EXIT
+
+						ENDCASE
 					ENDIF
 
 					llEncontrado	= .T.
 				ENDIF
 			ELSE
 				*-- TOKENS DE FIN
-				IF LEFT( UPPER( tcLine ), tnLen_IDFinBQ ) == ta_ID_Bloques(X,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
+				IF LEFT( UPPER( lcLine ), tnLen_IDFinBQ ) == ta_ID_Bloques(X,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
 					*-- Evaluar casos especiales
-					lcWord	= UPPER( ALLTRIM(GETWORDNUM(tcLine,1) ) )
+					lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
 
 					IF ta_ID_Bloques(X,2) == 'ENDT' AND NOT lcWord == LEFT( 'ENDTEXT', LEN(lcWord) )
 						EXIT
@@ -8862,7 +8873,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			IF NOT EMPTY(m.tcMethod)
-                DIMENSION laLine(1)
+				DIMENSION laLine(1)
 				STORE '' TO laLine
 				STORE 0 TO lnTextNodes
 
@@ -8997,7 +9008,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) &&+ CR_LF
 						llProcOpen				= .F.
 
-					*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+						*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
 					CASE tnMethodCount = 0 OR NOT llProcOpen
 						*-- Skip empty and commented lines before methods begin
 						*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
