@@ -102,6 +102,7 @@
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora vcx/scx: Mejorado el reconocimiento de instrucciones #IF..#ENDIF cuando hay espacios entre # y el nombre de función
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora: Ajuste de capitalización de los archivos origen, así ya no hay que hacerlo manualmente
 * 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (ph42)
+* 27/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (ph42)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -142,8 +143,9 @@
 * 21/07/2014	Edyshor				PROPUESTA DE MEJORA db2 v1.19.27: Sería útil poder filtrar tablas y datos cuando se elige DBF_Conversion_Support:4 (Agregado en v1.19.28)
 * 29/07/2014	M_N_M				REPORTE BUG vcx/scx v1.19.28: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.29)
 * 07/08/2014	Jim Nelson			REPORTE BUG vcx/scx v1.19.29: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Arreglado en v1.19.30)
-* 08/08/2014	Ryan Harris			REPORTE BUG vcx/vct v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
-* 25/08/2014	ph42				REPORTE BUG bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
+* 08/08/2014	Ryan Harris			REPORTE BUG vcx/scx v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
+* 25/08/2014	ph42				REPORTE BUG bug vcx/scx v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
+* 27/08/2014	ph42				REPORTE BUG bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -18998,6 +19000,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					*	ON BAR _3YM1DR90Z OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
 					*	ON BAR _3YM1DR90Z OF _MSYSMENU wait window "algo"
 					*	ON BAR _3YM1DR90Z OF _MSYSMENU DO Menu1_Opción_A_2_Sub_SNIPPET
+					*	ON SELECTION BAR 1 OF Contracts DO BAR_1_OF_Contracts_FB2P
 					*--------------------------------
 
 					*-- ANALISIS DEL "ON BAR" u "ON SELECTION BAR"
@@ -19007,6 +19010,12 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 						DO CASE
 						CASE EMPTY( tcLine )
 							LOOP
+
+						CASE LEFT( tcLine, 11 ) == 'DEFINE BAR '
+							*-- Se encontró el siguiente DEFNE BAR, por lo que el analizado es de tipo #BAR vacío
+							*-- y no tiene ON BAR ni nada más.
+							loReg.OBJCODE	= 78	&& Bar#
+							EXIT
 
 						CASE LEFT( tcLine, 7 ) == 'ON BAR '
 							loReg.OBJCODE	= 77	&& Submenu
