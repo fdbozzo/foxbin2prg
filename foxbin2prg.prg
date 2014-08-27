@@ -19011,8 +19011,8 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 						CASE EMPTY( tcLine )
 							LOOP
 
-						CASE LEFT( tcLine, 11 ) == 'DEFINE BAR '
-							*-- Se encontró el siguiente DEFNE BAR, por lo que el analizado es de tipo #BAR vacío
+						CASE INLIST( LEFT( tcLine, 11 ), 'DEFINE BAR ', 'DEFINE PAD ' )
+							*-- Se encontró el siguiente DEFINE BAR/PAD, por lo que el analizado es de tipo #BAR vacío
 							*-- y no tiene ON BAR ni nada más.
 							loReg.OBJCODE	= 78	&& Bar#
 							EXIT
