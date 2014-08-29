@@ -17909,11 +17909,11 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 						CASE LEFT( tcLine, 12 ) == 'DEFINE MENU '
 							loReg.OBJCODE		= C_OBJCODE_MENUDEFAULT_DEFAULT
-							loReg.PROCTYPE		= 1
-							loReg.MARK			= CHR(4)
-							loReg.SETUPTYPE		= 1
-							loReg.CLEANTYPE		= 1
-							loReg.ITEMNUM		= STR(0,3)
+							loReg.ProcType		= 1
+							loReg.Mark			= CHR(4)
+							loReg.SetupType		= 1
+							loReg.CleanType		= 1
+							loReg.ItemNum		= STR(0,3)
 							lcMenuType			= ALLTRIM( GETWORDNUM( tcLine, 3 ) )
 							*loReg.ObjType		= IIF( UPPER(lcMenuType) = '_MSYSMENU', 1, 5 )
 
@@ -17943,12 +17943,12 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 						CASE LEFT( tcLine, 13 ) == 'DEFINE POPUP '
 							loReg.OBJCODE		= C_OBJCODE_MENUDEFAULT_DEFAULT
-							loReg.PROCTYPE		= 1
+							loReg.ProcType		= 1
 							loReg.MARK			= CHR(4)
-							loReg.SETUPTYPE		= 1
-							loReg.CLEANTYPE		= 1
-							loReg.ITEMNUM		= STR(0,3)
-							loReg.SCHEME		= 0
+							loReg.SetupType		= 1
+							loReg.CleanType		= 1
+							loReg.ItemNum		= STR(0,3)
+							loReg.Scheme		= 0
 							lcExpr				= ALLTRIM( STREXTRACT( C_FB2PRG_CODE, 'ON SELECTION POPUP ALL ', CR_LF ) )
 							.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1, .F. )
 
@@ -17982,7 +17982,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 								.LevelName	= '_MSYSMENU'
 								loBarPop.ADD( loOption )
 								loBarPop.oReg.NUMITEMS	= loBarPop.COUNT
-								.ITEMNUM	= STR(loBarPop.COUNT,3)
+								.ItemNum	= STR(loBarPop.COUNT,3)
 								.SCHEME	= 0
 								loBarPop		= NULL
 							ENDWITH
@@ -18301,7 +18301,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 							+ ', ObjCode=' + TRANSFORM(loReg.OBJCODE) ;
 							+ ', Name=' + TRANSFORM(loReg.NAME) ;
 							+ ', LevelName=' + TRANSFORM(loReg.LevelName) ;
-							+ ', ItemNum=' + TRANSFORM(loReg.ITEMNUM) ;
+							+ ', ItemNum=' + TRANSFORM(loReg.ItemNum) ;
 							+ ', Location=' + TRANSFORM(loReg.Location) ;
 							+ ', Prompt=' + TRANSFORM(loReg.PROMPT) ;
 							+ ', Message=' + TRANSFORM(loReg.MESSAGE) ;
@@ -18390,9 +18390,9 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 				.oReg			= toConversor.emptyRecord()
 				loReg				= .oReg
 				loReg.ObjType		= C_OBJTYPE_MENUTYPE_BARorPOPUP
-				loReg.PROCTYPE		= 1
+				loReg.ProcType		= 1
 				loReg.MARK			= CHR(0)
-				loReg.ITEMNUM		= STR(0,3)
+				loReg.ItemNum		= STR(0,3)
 				llBloqueEncontrado	= .T.
 
 				FOR I = I + 0 TO tnCodeLines
@@ -18463,7 +18463,7 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 						ENDIF
 
 						.ADD( loOption )
-						loOption.oReg.ITEMNUM	= STR(.COUNT,3)
+						loOption.oReg.ItemNum	= STR(.COUNT,3)
 						loReg.NUMITEMS			= .COUNT
 						loReg.SCHEME			= IIF( loReg.OBJCODE = C_OBJCODE_MENUBARPOPUP_MENUBAR, 3, 4 )
 						loOption	= NULL
@@ -18631,7 +18631,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 				.oReg		= toConversor.emptyRecord()
 				loReg			= .oReg
 				loReg.MARK		= CHR(0)
-				loReg.ITEMNUM	= STR(0,3)
+				loReg.ItemNum	= STR(0,3)
 
 				llBloqueEncontrado	= .T.
 
@@ -18847,7 +18847,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 							DO CASE
 							CASE EMPTY(lcProcCode)
 								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_COMMAND
-								loReg.COMMAND	= lcExpr
+								loReg.Command	= lcExpr
 
 							OTHERWISE
 								loReg.PROCEDURE	= STRTRAN( lcProcCode, '<<ProcName>>', lcProcName )
@@ -18857,7 +18857,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 									loReg.COMMAND	= lcExpr
 								ELSE
 									loReg.OBJCODE	= C_OBJCODE_MENUOPTION_PROCEDURE
-									loReg.PROCTYPE	= 1
+									loReg.ProcType	= 1
 								ENDIF
 
 							ENDCASE
@@ -19062,7 +19062,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 									loReg.COMMAND	= lcExpr
 								ELSE
 									loReg.OBJCODE	= C_OBJCODE_MENUOPTION_PROCEDURE
-									loReg.PROCTYPE	= 1
+									loReg.ProcType	= 1
 								ENDIF
 
 							OTHERWISE
@@ -19219,7 +19219,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 			*-- DEFINE BAR
 			*lcText	= lcTab + '*----------------------------------' + CR_LF
-			lcText	= lcText + lcTab + 'DEFINE BAR ' + ALLTRIM( EVL( toReg.NAME, toReg.ITEMNUM ) ) + ' OF ' + ALLTRIM(toReg.LevelName) ;
+			lcText	= lcText + lcTab + 'DEFINE BAR ' + ALLTRIM( EVL( toReg.NAME, toReg.ItemNum ) ) + ' OF ' + ALLTRIM(toReg.LevelName) ;
 				+ ' PROMPT "' + toReg.PROMPT + '"'
 
 			IF NOT EMPTY(toReg.KEYNAME)
@@ -19252,10 +19252,10 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 				IF toReg.OBJCODE = C_OBJCODE_MENUOPTION_SUBMENU	&& Submenu
 					loBarPop	= THIS.ITEM(1).oReg
-					lcText	= lcText + lcTab + 'ON BAR ' + ALLTRIM( EVL( toReg.NAME, toReg.ITEMNUM ) ) + ' OF ' + ALLTRIM(toReg.LevelName) ;
+					lcText	= lcText + lcTab + 'ON BAR ' + ALLTRIM( EVL( toReg.NAME, toReg.ItemNum ) ) + ' OF ' + ALLTRIM(toReg.LevelName) ;
 						+ ' ACTIVATE POPUP ' + ALLTRIM(loBarPop.NAME)
 				ELSE
-					lcText	= lcText + lcTab + 'ON SELECTION BAR ' + ALLTRIM( EVL( toReg.NAME, toReg.ITEMNUM ) ) + ' OF ' + ALLTRIM(toReg.LevelName)
+					lcText	= lcText + lcTab + 'ON SELECTION BAR ' + ALLTRIM( EVL( toReg.NAME, toReg.ItemNum ) ) + ' OF ' + ALLTRIM(toReg.LevelName)
 
 					DO CASE
 					CASE toReg.OBJCODE = C_OBJCODE_MENUOPTION_COMMAND	&& Command
