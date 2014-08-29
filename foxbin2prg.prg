@@ -101,8 +101,8 @@
 * 17/08/2014	FDBOZZO		v1.19.31	Agregada versión del EXE cuando se genera LOG de depuración
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora vcx/scx: Mejorado el reconocimiento de instrucciones #IF..#ENDIF cuando hay espacios entre # y el nombre de función
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora: Ajuste de capitalización de los archivos origen, así ya no hay que hacerlo manualmente
-* 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (ph42)
-* 27/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (ph42)
+* 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (Peter Hipp)
+* 27/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (Peter Hipp)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -144,8 +144,8 @@
 * 29/07/2014	M_N_M				REPORTE BUG vcx/scx v1.19.28: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.29)
 * 07/08/2014	Jim Nelson			REPORTE BUG vcx/scx v1.19.29: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Arreglado en v1.19.30)
 * 08/08/2014	Ryan Harris			REPORTE BUG vcx/scx v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
-* 25/08/2014	ph42				REPORTE BUG bug vcx/scx v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
-* 27/08/2014	ph42				REPORTE BUG bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
+* 25/08/2014	Peter Hipp			REPORTE BUG bug vcx/scx v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
+* 27/08/2014	Peter Hipp			REPORTE BUG bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -332,7 +332,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 
 *-- Menu OBJTYPE constants
 #DEFINE C_OBJTYPE_MENUTYPE_DEFAULT			1
-#DEFINE C_OBJTYPE_MENUTYPE_BARorPOPUP			2
+#DEFINE C_OBJTYPE_MENUTYPE_BARorPOPUP		2
 #DEFINE C_OBJTYPE_MENUTYPE_OPTION			3
 #DEFINE C_OBJTYPE_MENUTYPE_SHORTCUT			4
 #DEFINE C_OBJTYPE_MENUTYPE_MENUBARONTOP		5
@@ -17543,11 +17543,12 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 		* tcSourceCode				(@? IN    ) Si se indica, se buscará el nombre de Procedure para obtener su código
 		* tnIndentation				(v? IN    ) En caso de devolver código, indica si se debe indentar o quitar indentación
 		* tlAddProcEndproc			(v? IN    ) En caso de devolver código, indica si se debe encerrar con PROCEDURE/ENDPROC
+		* tlForceProcedure			(v? IN    ) Indica que se evalúe como Procedure, no como Command
 		*---------------------------------------------------------------------------------------------------
 		* DETALLE: Los menus guardan en los primeros registros los Comandos o Procedimientos en el campo PROCEDURE,
 		*		y luego al generar el código lo muestran como Comando si es una sola línea, y si no como Procedure.
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcExpr, tcProcName, tcProcCode, tcSourceCode, tnIndentation, tlAddProcEndproc
+		LPARAMETERS tcExpr, tcProcName, tcProcCode, tcSourceCode, tnIndentation, tlAddProcEndproc, tlForceProcedure
 
 		LOCAL laProcLines(1), lnLine_Count, I
 		tcProcName		= ''
@@ -17555,7 +17556,7 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 		tnIndentation	= EVL(tnIndentation,0)
 		lnLine_Count	= ALINES( laProcLines, tcExpr )
 
-		IF lnLine_Count > 1
+		IF lnLine_Count > 1 OR tlForceProcedure
 			*-- ES UN PROCEDIMIENTO
 			tcProcCode	= tcExpr
 
@@ -18151,7 +18152,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 
 				DO CASE
 				CASE loHeader.ObjType = C_OBJTYPE_MENUTYPE_DEFAULT OR loHeader.ObjType = C_OBJTYPE_MENUTYPE_MENUBARONTOP
-					*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22)
+					*-- Propecimiento principal de _MSYSMENU (ObjType:1, ObjCode:22) (C_OBJTYPE_MENUTYPE_DEFAULT, C_OBJCODE_MENUDEFAULT_DEFAULT)
 					IF NOT EMPTY(loHeader.PROCEDURE)
 						lcExpr		= loHeader.PROCEDURE
 						.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T. )
@@ -19143,7 +19144,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 				IF loReg.OBJCODE = C_OBJCODE_MENUOPTION_PROCEDURE	&& Procedure de BAR o PAD
 					*-- Reemplazo el nombre definitivo
 					lcExpr		= loReg.PROCEDURE
-					.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T. )
+					.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, '', 1, .T., .T. )
 
 					IF EMPTY(lcProcCode)
 						*-- Comando
