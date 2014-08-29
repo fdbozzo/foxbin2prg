@@ -103,6 +103,7 @@
 * 20/08/2014	FDBOZZO		v1.19.31	Mejora: Ajuste de capitalización de los archivos origen, así ya no hay que hacerlo manualmente
 * 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (Peter Hipp)
 * 27/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (Peter Hipp)
+* 29/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (Peter Hipp)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -146,6 +147,7 @@
 * 08/08/2014	Ryan Harris			REPORTE BUG vcx/scx v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
 * 25/08/2014	Peter Hipp			REPORTE BUG bug vcx/scx v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
 * 27/08/2014	Peter Hipp			REPORTE BUG bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
+* 28/08/2014	Peter Hipp			REPORTE BUG bug mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
