@@ -104,6 +104,7 @@
 * 25/08/2014	FDBOZZO		v1.19.32	Arreglo bug vcx/vct v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (Peter Hipp)
 * 27/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (Peter Hipp)
 * 29/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (Peter Hipp)
+* 19/09/2014	FDBOZZO		v1.19.34	Arreglo bug: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error al intentar capitalizar el archivo de entrada (Jim Nelson)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -133,7 +134,7 @@
 * 07/05/2014	Fidel Charny		REPORTE BUG vcx/scx v1.19.21: La propiedad Picture de una clase form se pierde y no muestra la imagen. No ocurre con la propiedad Picture de los controles (Arreglado en v1.19.22)
 * 09/05/2014	Miguel Durán		REPORTE BUG vcx/scx v1.19.21: Algunas opciones del optiongroup pierden el width cuando se subclasan de una clase con autosize=.T. (Arreglado en v1.19.22)
 * 13/05/2014	Andrés Mendoza		REPORTE BUG vcx/scx v1.19.21: Los métodos que contengan líneas o variables que comiencen con TEXT, provocan que los siguientes métodos queden mal indentados y se dupliquen vacíos (Arreglado en v1.19.22)
-* 27/05/2014	Kenny Vermassen		REPORTE DE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones (Arreglado en v1.19.23)
+* 27/05/2014	Kenny Vermassen		REPORTE BUG img v1.19.22: La propiedad Stretch no estaba incluida en la lista de propiedades props_image.txt, lo que provocaba un mal redimensionamiento de las imagenes en ciertas situaciones (Arreglado en v1.19.23)
 * 09/06/2014	Matt Slay			REPORTE BUG vcx/scx v1.19.23: La falta de AGAIN en algunos comandos USE provoca error de "tabla en uso" si se usa el PRG desde la ventana de comandos (Arreglado en v1.19.24)
 * 13/06/2014	Mario Peschke		REPORTE BUG vcx/scx v1.19.23: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.24)
 * 16/06/2014	Mario Peschke		MEJORA v1.19.24: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del CFG principal (Agregado en v1.19.25)
@@ -145,9 +146,10 @@
 * 29/07/2014	M_N_M				REPORTE BUG vcx/scx v1.19.28: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.29)
 * 07/08/2014	Jim Nelson			REPORTE BUG vcx/scx v1.19.29: Cuando la línea anterior a un ENDTEXT termina en ";" o "," no se reconoce como ENDTEXT sino como continuación (Arreglado en v1.19.30)
 * 08/08/2014	Ryan Harris			REPORTE BUG vcx/scx v1.19.29: En ciertos casos de herencia no se mantiene el orden alfabetico de algunos metodos (solucionado en v1.19.30)
-* 25/08/2014	Peter Hipp			REPORTE BUG bug vcx/scx v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
-* 27/08/2014	Peter Hipp			REPORTE BUG bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
-* 28/08/2014	Peter Hipp			REPORTE BUG bug mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
+* 25/08/2014	Peter Hipp			REPORTE BUG vcx/scx v1.19.31: Una propiedad llamada "text" es confundida con la estructura text/endtext (solucionado en v1.19.32)
+* 27/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
+* 28/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
+* 19/09/2014	Jim  Nelson			REPORTE BUG v1.19.33: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error (solucionado en v1.19.34)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -159,7 +161,7 @@
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir
-* tcType					(v? IN    ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
+* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
 * tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
 * tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
@@ -419,6 +421,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp, loEx AS EXCEPTION
 
+*SET COVERAGE TO c:\desa\foxbin2prg\foxbin2prg_coverage.log
 *SYS(2030,1)
 *SYS(2335,0)
 *IF PCOUNT() > 1 && Saltear las querys de SourceSafe sobre soporte de archivos
@@ -2246,75 +2249,75 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					lcType	= UPPER( JUSTEXT( .c_InputFile ) )
 
 					*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
-					.RenameFile( .c_InputFile, lcEXE_CAPS, loFSO )
+					.RenameFile( .c_InputFile, lcEXE_CAPS, loFSO, .F. )
 
 					DO CASE
 					CASE lcType = 'PJX'
-						.RenameFile( FORCEEXT(.c_InputFile,'PJT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'PJT'), lcEXE_CAPS, loFSO, .F. )
 
 					CASE lcType = 'VCX'
-						.RenameFile( FORCEEXT(.c_InputFile,'VCT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'VCT'), lcEXE_CAPS, loFSO, .F. )
 
 					CASE lcType = 'SCX'
-						.RenameFile( FORCEEXT(.c_InputFile,'SCT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'SCT'), lcEXE_CAPS, loFSO, .F. )
 
 					CASE lcType = 'FRX'
-						.RenameFile( FORCEEXT(.c_InputFile,'FRT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'FRT'), lcEXE_CAPS, loFSO, .F. )
 
 					CASE lcType = 'LBX'
-						.RenameFile( FORCEEXT(.c_InputFile,'LBT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'LBT'), lcEXE_CAPS, loFSO, .F. )
 
 					CASE lcType = 'DBF'
 						IF FILE( FORCEEXT(.c_InputFile,'FPT') )
-							.RenameFile( FORCEEXT(.c_InputFile,'FPT'), lcEXE_CAPS, loFSO )
+							.RenameFile( FORCEEXT(.c_InputFile,'FPT'), lcEXE_CAPS, loFSO, .F. )
 						ENDIF
 						IF FILE( FORCEEXT(.c_InputFile,'CDX') )
-							.RenameFile( FORCEEXT(.c_InputFile,'CDX'), lcEXE_CAPS, loFSO )
+							.RenameFile( FORCEEXT(.c_InputFile,'CDX'), lcEXE_CAPS, loFSO, .F. )
 						ENDIF
 
 					CASE lcType = 'DBC'
-						.RenameFile( FORCEEXT(.c_InputFile,'DCX'), lcEXE_CAPS, loFSO )
-						.RenameFile( FORCEEXT(.c_InputFile,'DCT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'DCX'), lcEXE_CAPS, loFSO, .F. )
+						.RenameFile( FORCEEXT(.c_InputFile,'DCT'), lcEXE_CAPS, loFSO, .F. )
 
 					CASE lcType = 'MNX'
-						.RenameFile( FORCEEXT(.c_InputFile,'MNT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_InputFile,'MNT'), lcEXE_CAPS, loFSO, .F. )
 
 					ENDCASE
 
 				ELSE
 					*-- Normalizar archivo(s) de salida. El primero siempre se normaliza (??2, ??X, DBF, DBC)
-					.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO )
+					.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO, .T. )
 
 					DO CASE
 					CASE .c_Type = 'PJX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO, .T. )
 
 					CASE .c_Type = 'VCX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO, .T. )
 
 					CASE .c_Type = 'SCX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO, .T. )
 
 					CASE .c_Type = 'FRX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO, .T. )
 
 					CASE .c_Type = 'LBX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO, .T. )
 
 					CASE .c_Type = 'DBF'
 						IF FILE( FORCEEXT(.c_OutputFile,'FPT') )
-							.RenameFile( FORCEEXT(.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO )
+							.RenameFile( FORCEEXT(.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO, .T. )
 						ENDIF
 						IF FILE( FORCEEXT(.c_OutputFile,'CDX') )
-							.RenameFile( FORCEEXT(.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO )
+							.RenameFile( FORCEEXT(.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO, .T. )
 						ENDIF
 
 					CASE .c_Type = 'DBC'
-						.RenameFile( FORCEEXT(.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO )
-						.RenameFile( FORCEEXT(.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO, .T. )
+						.RenameFile( FORCEEXT(.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO, .T. )
 
 					CASE .c_Type = 'MNX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO )
+						.RenameFile( FORCEEXT(.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO, .T. )
 
 					ENDCASE
 				ENDIF
@@ -2334,14 +2337,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE RenameFile
-		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS Scripting.FileSystemObject
+		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS Scripting.FileSystemObject, tlRelanzarError
 
 		LOCAL lcLog, laFile(1,5)
 		*THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
 		THIS.writeLog( TEXTMERGE(C_REQUESTING_CAPITALIZATION_OF_FILE_LOC) )
 		THIS.ChangeFileAttribute( tcFileName, '+N' )
 		lcLog	= ''
-		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, .T.
+		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, tlRelanzarError, '1'
 		THIS.writeLog( lcLog )
 	ENDPROC
 
