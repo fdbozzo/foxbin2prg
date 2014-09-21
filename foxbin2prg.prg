@@ -421,6 +421,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp, loEx AS EXCEPTION
 
+*SET COVERAGE TO c:\desa\foxbin2prg\foxbin2prg_coverage.log
 *SYS(2030,1)
 *SYS(2335,0)
 *IF PCOUNT() > 1 && Saltear las querys de SourceSafe sobre soporte de archivos
