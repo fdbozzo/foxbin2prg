@@ -105,6 +105,7 @@
 * 27/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (Peter Hipp)
 * 29/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (Peter Hipp)
 * 19/09/2014	FDBOZZO		v1.19.34	Arreglo bug: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error al intentar capitalizar el archivo de entrada (Jim Nelson)
+* 26/09/2014	FDBOZZO		v1.19.35	Mejora: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Marcio Gomez G.)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -150,6 +151,7 @@
 * 27/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si se crea un menú con una opción de tipo #Bar vacía, el menú se genera mal (solucionado en v1.19.33)
 * 28/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
 * 19/09/2014	Jim  Nelson			REPORTE BUG v1.19.33: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error (solucionado en v1.19.34)
+* 26/09/2014	Marcio Gomez G.		MEJORA v1.19.34: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Agregado en v1.19.35)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -571,7 +573,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_Type					= ''
 	t_InputFile_TimeStamp	= {//::}
 	t_OutputFile_TimeStamp	= {//::}
-	lFileMode				= .T.
+	lFileMode				= .F.
 	n_ExisteCapitalizacion	= -1
 	l_CFG_CachedAccess		= .F.
 	l_ConfigEvaluated		= .F.
@@ -592,8 +594,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_Main_CFG_Loaded		= .F.
 	n_ExtraBackupLevels		= 1
-	n_ClassTimeStamp		= 0
+	n_ClassTimeStamp		= 1130668032	&& 2013/11/04 20:00:00
 	n_CFG_Actual			= 0
+	n_ID					= 0
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
@@ -2389,6 +2392,20 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			+ toEx.LINECONTENTS + CR_LF + CR_LF ;
 			+ EVL(toEx.USERVALUE,'')
 		RETURN lcError
+	ENDPROC
+
+
+	PROCEDURE Unique_ID
+		LPARAMETERS tcValType
+
+		tcValType	= EVL(tcValType,'C')
+		THIS.n_ID	= INT( THIS.n_ID + 1 )
+
+		IF tcValType = 'N'
+			RETURN THIS.n_ID
+		ELSE
+			RETURN '_' + TRANSFORM( THIS.n_ID, '@L #########' )
+		ENDIF
 	ENDPROC
 
 
@@ -4725,10 +4742,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				lcMethodsMemo	= .objectMethods2Memo( toObjeto, toClase )
 
 				IF EMPTY(toObjeto._TimeStamp)
-					toObjeto._TimeStamp	= THIS.RowTimeStamp(DATETIME())
+					toObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toObjeto._UniqueID)
-					toObjeto._UniqueID	= SYS(2015)
+					toObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
 				ENDIF
 
 				*-- Inserto el objeto
@@ -4810,10 +4827,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						loObjeto			= toClase._AddObjects( X )
 
 						IF EMPTY(loObjeto._TimeStamp)
-							loObjeto._TimeStamp	= THIS.RowTimeStamp(DATETIME())
+							loObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loObjeto._UniqueID)
-							loObjeto._UniqueID	= SYS(2015)
+							loObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
 						ENDIF
 
 						laObjNames( X, 1 )	= loObjeto._Nombre
@@ -5863,7 +5880,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo )
 
-				.escribirArchivoBin( @toModulo, toFoxBin2Prg )
+				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -5982,10 +5999,10 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp(DATETIME())
+							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
-							loClase._UniqueID	= SYS(2015)
+							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
 						ENDIF
 
 						*-- Inserto la clase
@@ -6037,7 +6054,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							, loClase._User )
 
 
-						.insert_AllObjects( @loClase, toFoxBin2Prg )
+						.insert_AllObjects( @loClase, @toFoxBin2Prg )
 
 
 						*-- Inserto el COMMENT
@@ -6166,7 +6183,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo )
 
-				.escribirArchivoBin( @toModulo, toFoxBin2Prg )
+				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -6285,10 +6302,10 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp(DATETIME())
+							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
-							loClase._UniqueID	= SYS(2015)
+							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
 						ENDIF
 
 						*-- Inserto la clase
@@ -6340,7 +6357,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							, loClase._User )
 
 
-						.insert_AllObjects( @loClase, toFoxBin2Prg )
+						.insert_AllObjects( @loClase, @toFoxBin2Prg )
 
 					ENDFOR	&& I = 1 TO toModulo._Clases_Count
 				ENDFOR	&& X = 1 TO 2
@@ -6524,10 +6541,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				ENDIF
 
 				IF EMPTY(toProject._TimeStamp)
-					toProject._TimeStamp	= THIS.RowTimeStamp(DATETIME())
+					toProject._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toProject._ID)
-					toProject._ID	= INT(VAL(SYS(3)))
+					toProject._ID	= toFoxBin2Prg.Unique_ID('N')
 				ENDIF
 
 				*-- Si hay ProjectHook de proyecto, lo inserto
@@ -6564,10 +6581,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				FOR EACH loFile IN toProject FOXOBJECT
 
 					IF EMPTY(loFile._TimeStamp)
-						loFile._TimeStamp	= THIS.RowTimeStamp(DATETIME())
+						loFile._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 					ENDIF
 					IF EMPTY(loFile._ID)
-						loFile._ID	= INT(VAL(SYS(3)))
+						loFile._ID	= toFoxBin2Prg.Unique_ID('N')
 					ENDIF
 
 					INSERT INTO TABLABIN ;
@@ -7306,10 +7323,10 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				*	loReg.UNIQUEID	= ''
 				*ENDIF
 				IF EMPTY(loReg.TIMESTAMP)
-					loReg.TIMESTAMP	= THIS.RowTimeStamp(DATETIME())
+					loReg.TIMESTAMP	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(loReg.UNIQUEID) OR ALLTRIM(loReg.UNIQUEID) = '0'
-					loReg.UNIQUEID	= SYS(2015)
+					loReg.UNIQUEID	= toFoxBin2Prg.Unique_ID()
 				ENDIF
 
 				*-- Ajuste de los tipos de dato
@@ -19309,7 +19326,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loBarPop
 			lcTab		= REPLICATE(CHR(9),tnNivel)
-			toReg.NAME	= EVL(toReg.NAME,SYS(2015))
+			toReg.NAME	= EVL(toReg.NAME, '_' + TRANSFORM(toReg.NUMITEMS, '@L #########') )
 			lcText		= ''
 
 			*-- DEFINE PAD
