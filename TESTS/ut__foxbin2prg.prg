@@ -1047,7 +1047,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			loCnv.EvaluarConfiguracion( '', '', '', '1', '1', '4' )
+			loCnv.EvaluarConfiguracion( '1', '1', '', '0', '1', '4' )
 			*loCnv.n_ExtraBackupLevels	= 4
 			*loCnv.l_Debug				= .T.
 			*loCnv.l_ShowErrors			= .F.
@@ -1352,7 +1352,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		TRY
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			loCnv.EvaluarConfiguracion( '', '', '1', '1', '1', '4', '1', '0' )
+			loCnv.EvaluarConfiguracion( '1', '1', '1', '1', '1', '4', '1', '0' )
 			*loCnv.l_DropNullCharsFromCode	= .T.
 			*loCnv.l_Test				= .T.
 
@@ -1409,7 +1409,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		TRY
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			loCnv.EvaluarConfiguracion( '', '', '1', '1', '1', '4', '1', '0' )
+			loCnv.EvaluarConfiguracion( '1', '1', '1', '0', '1', '4', '1', '0' )
 			loCnv.l_DropNullCharsFromCode	= .F.
 			*loCnv.l_Test				= .T.
 
@@ -1473,7 +1473,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 		TRY
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			loCnv.EvaluarConfiguracion( '', '', '1', '1', '1', '4', '1', '0' )
+			loCnv.EvaluarConfiguracion( '1', '1', '1', '0', '1', '4', '1', '0' )
 			*loCnv.l_Test				= .T.
 
 
@@ -1613,7 +1613,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			goFXU		= THIS
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			loCnv.EvaluarConfiguracion( '', '1', '1', '1', '1', '4', '1', '0' )
+			loCnv.EvaluarConfiguracion( '1', '1', '1', '0', '1', '4', '1', '0' )
 			*loCnv.l_Test				= .T.
 			loCnv.run_AfterCreate_DB2	= 'run_AfterCreate_DB2__Ejecutado'
 			THIS.run_AfterCreate_DB2__Ejecutado	= .F.
@@ -1669,7 +1669,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			goFXU		= THIS
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-			loCnv.EvaluarConfiguracion( '', '1', '1', '1', '1', '4', '1', '0' )
+			loCnv.EvaluarConfiguracion( '1', '1', '1', '0', '1', '4', '1', '0' )
 			*loCnv.l_Test				= .T.
 			loCnv.DBF_Conversion_Support	= 2
 			loCnv.run_AfterCreateTable	= 'run_AfterCreateTable__Ejecutado'

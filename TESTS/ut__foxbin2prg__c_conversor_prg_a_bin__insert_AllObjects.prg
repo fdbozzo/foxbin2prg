@@ -108,15 +108,20 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__insert_AllObjects AS FxuTest
 			, laWriteOrder_Esperado(3) ;
 			, loEx AS EXCEPTION
 
+		LOCAL loFoxBin2Prg AS C_FOXBIN2PRG OF "FOXBIN2PRG.PRG"
 		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
 		LOCAL loObjeto AS CL_OBJETO OF "FOXBIN2PRG.PRG"
 		LOCAL loClase AS CL_CLASE OF "FOXBIN2PRG.PRG"
+
 		loObj		= THIS.icObj
 		loClase		= THIS.icClase
 		loEx		= NULL
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
+		*--
+		loFoxBin2Prg	= NULL
+		loFoxBin2Prg	= NEWOBJECT("C_FOXBIN2PRG", "FOXBIN2PRG.PRG", "")
 		*--
 		loObjeto	= NULL
 		loObjeto	= NEWOBJECT("CL_OBJETO", "FOXBIN2PRG.PRG")
@@ -151,9 +156,11 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__insert_AllObjects AS FxuTest
 		laWriteOrder_Esperado(3)	= 1
 
 		*-- TEST
-		loObj.insert_AllObjects( @loClase )
+		loObj.insert_AllObjects( @loClase, @loFoxBin2Prg )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado, @loClase, @laWriteOrder_Esperado )
+
+		STORE NULL TO loFoxBin2Prg, loObj, loClase, loObject
 
 	ENDFUNC
 

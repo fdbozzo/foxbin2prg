@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.34'
-    .VersionDate          = Date(2014,09,19)
+    .VersionNumber        = 'v1.19.35'
+    .VersionDate          = Date(2014,09,26)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,9 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/09/26	v1.19.35
+- Enhancement: Always generate the same Timestamp and UniqueID for binaries, for minimizing differences when regenerating them (Marcio Gomez G.)
 
 2014/09/19	v1.19.34
 - Bug Fix: If run from VFP Command Window and there is a file in use, an error is thrown because can't capitalize source file (Jim Nelson)
