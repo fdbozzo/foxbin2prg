@@ -1,6 +1,7 @@
 '---------------------------------------------------------------------------------------------------
-'	Convert_VFP9_PRG_2_BIN.vbs (VFPx: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg)
-'	03/01/2014 - Fernando D. Bozzo (fdbozzo@gmail.com - Blog: http://fdbozzo.blogspot.com.es/)
+'	VFP9_FoxBin2Prg.vbs (VFPx: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg)
+'	08/10/2014 - Fernando D. Bozzo (fdbozzo@gmail.com - Blog: http://fdbozzo.blogspot.com.es/)
+'
 '---------------------------------------------------------------------------------------------------
 '	ENGLISH:
 '		- Copy this file in the same directory of FoxBin2prg and create a shortcut
@@ -12,14 +13,11 @@
 '		en la carpeta "SendTo" del usuario
 '		- Ahora puede seleccionar archivos o directorios, pulsar click derecho y "Enviar a" FoxBin2prg para conversiones batch
 '---------------------------------------------------------------------------------------------------
-Const ForReading = 1 
 Dim WSHShell, FileSystemObject
-Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, lcExt, foxbin2prg_cfg, aFiles(), nFile_Count
-Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps, cErrFile
-Set WSHShell = WScript.CreateObject("WScript.Shell")
+Dim nExitCode, cEXETool, cEXETool2, nDebug
+Set wshShell = CreateObject( "WScript.Shell" )
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
-foxbin2prg_cfg	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.cfg")
 nExitCode = 0
 '---------------------------------------------------------------------------------------------------
 'Cumulative Flags:
@@ -52,6 +50,10 @@ If WScript.Arguments.Count = 0 Then
 		cErrMsg	= cErrMsg & Chr(13) & "Bit 4 ON: (16) Empty timestamps"
 	End If
 	MsgBox cErrMsg, 64, "No parameters - Debug Status"
+
+ElseIf WScript.Arguments.Count > 1 Then
+	MsgBox cErrMsg, 64, "You can select just ONE file with this script!"
+	
 Else
 	'CON PARÁMETROS
 	cEXETool	= Replace(WScript.ScriptFullName, WScript.ScriptName, "foxbin2prg.exe")
@@ -59,25 +61,12 @@ Else
 	oVFP9.DoCmd( "SET PROCEDURE TO '" & cEXETool & "'" )
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
-	'.o_FoxBin2Prg.EvaluarConfiguracion( tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels )
 	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1' )" )
-	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
 	
-	For i = 0 To WScript.Arguments.Count-1
-		scanDirs( WScript.Arguments(i) )
-	Next
-
-	If WScript.Arguments.Count = 1 AND FileSystemObject.FolderExists( WScript.Arguments(0) ) Then
-		'-- Es un solo directorio. Lo tomo como origen de compilación
-		cFlagRecompile			= "'" & WScript.Arguments(0) & "'"
-	Else
-		cFlagRecompile			= "'1'"
-	End If
-
 	cFlagGenerateLog		= "'0'"
 	cFlagDontShowErrMsg		= "'0'"
 	cFlagShowCall			= "'0'"
-	'cFlagRecompile			= "'1'"
+	cFlagRecompile			= "'1'"
 
 	If GetBit(nDebug, 1) Then
 		cFlagGenerateLog	= "'1'"
@@ -91,35 +80,22 @@ Else
 	If GetBit(nDebug, 5) Then
 		cNoTimestamps	= "'1'"
 	End If
+	
+	cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( WScript.Arguments(0) ) & "'"
 
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nMAX_VALUE = " & nFile_Count )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & 0 )
-	'oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.AlwaysOnTop = .T." )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.SHOW()" )
-
-	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...'" )
-		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & i )
-		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
-
-		If nDebug = 0 Or nDebug = 2 Then
-			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "' )"
-		Else
-			cCMD	= "oFoxBin2prg.ejecutar(  '" & aFiles(i) & "','0','0','0'," _
-				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
-				& cFlagRecompile & "," & cNoTimestamps & " )"
-		End If
-		If cFlagJustShowCall = "1" Then
-			MsgBox cCMD, 64, "PARAMETERS"
-		Else
-			oVFP9.DoCmd( cCMD )
-			nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
-		End If
-
-	Next
-
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.HIDE()" )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance = NULL" )
+	If nDebug = 0 Or nDebug = 2 Then
+		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
+	Else
+		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','0','0','0'," _
+			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
+			& cFlagRecompile & "," & cNoTimestamps & " )"
+	End If
+	If cFlagJustShowCall = "1" Then
+		MsgBox cCMD, 64, "PARAMETERS"
+	Else
+		oVFP9.DoCmd( cCMD )
+		nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
+	End If
 
 	If GetBit(nDebug, 4) Then
 		If oVFP9.Eval("oFoxBin2prg.l_Error") Then
@@ -133,44 +109,11 @@ Else
 	End If
 
 	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
+	oVFP9.DoCmd( "CLEAR ALL" )
+	Set oVFP9 = Nothing
 End If
 
 WScript.Quit(nExitCode)
-
-
-Private Sub scanDirs( tcArgument )
-	Dim omFolder, oFolder
-	If FileSystemObject.FolderExists( tcArgument ) Then
-		'-- Es un directorio
-		Set omFolder = FileSystemObject.GetFolder( tcArgument )
-		For Each oFile IN omFolder.Files
-			evaluateFile( oFile.Path )
-		Next
-		For Each oFolder IN omFolder.SubFolders
-			scanDirs( oFolder.Path )
-		Next
-	Else
-		'-- Es un archivo
-		evaluateFile( tcArgument )
-	End If
-End Sub
-
-
-Private Sub evaluateFile( tcFile )
-	lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
-	oVFP9.SetVar "gc_Ext", lcExt
-	
-	'PROCEDURE EvaluarConfiguracion
-	'	LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-	'		, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
-	
-	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '', '', '', '', '', '', '', '', '" & tcFile & "' )" )
-	If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Prg2Bin(gc_Ext)") Then
-		nFile_Count = nFile_Count + 1
-		ReDim Preserve aFiles(nFile_Count)
-		aFiles(nFile_Count) = tcFile
-	End If
-End Sub
 
 
 Function GetBit(lngValue, BitNum)
