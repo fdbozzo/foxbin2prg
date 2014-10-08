@@ -19326,7 +19326,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 				, loBarPop AS CL_MENU_BARPOP OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loBarPop
 			lcTab		= REPLICATE(CHR(9),tnNivel)
-			toReg.NAME	= EVL(toReg.NAME, '_' + TRANSFORM(toReg.NUMITEMS, '@L #########') )
+			toReg.NAME	= EVL(toReg.NAME, '_' + TRANSFORM( INT( VAL( toReg.ItemNum ) ), '@L #########') )
 			lcText		= ''
 
 			*-- DEFINE PAD

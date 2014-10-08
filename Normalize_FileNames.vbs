@@ -1,5 +1,6 @@
 '---------------------------------------------------------------------------------------------------
-'	Normalize_FileNames.vbs - 06/01/2014 - Fernando D. Bozzo (fdbozzo@gmail.com)
+'	Normalize_FileNames.vbs (VFPx: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg)
+'	06/01/2014 - Fernando D. Bozzo (fdbozzo@gmail.com - Blog: http://fdbozzo.blogspot.com.es/)
 '---------------------------------------------------------------------------------------------------
 '	ENGLISH:
 '		Create a shortcut on user's "SendTo" folder and configure CAPS on filename_caps.cfg

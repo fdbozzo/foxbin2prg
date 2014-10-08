@@ -35,8 +35,9 @@ DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Generates the TEXT version sc2 
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenerates the binary version with scx extension
 
 USEFUL TRICK:
-You can create a shortcut in the "SendTo" folder on your user Windows Profile, so you can "send"
-the selected file (pjx,pj2,etc) to Foxbin2prg.exe, and make on-the-fly conversions.
+You can create shortcuts for all vbs scripts in the "SendTo" folder on your user Windows Profile, so you can "send"
+the selected file (pjx,pj2,etc) to the selected script, and make on-the-fly conversions.
+In example: Select a file, right-click, SendTo -> VFP9_FoxBin2Prg.vbs
 
 LOCALIZATION:
 If file [foxbin2prg.h] is created, texts to other languages can be translated. En example
@@ -87,8 +88,9 @@ DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Genera la versión TEXTO con ex
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenera la versión binaria con extensión scx
 
 TRUCO UTIL:
-Se puede crear un acceso directo en la carpeta "SendTo" del perfil del usuario, para poder "enviar"
-el archivo elegido (pjx,pj2,etc) a Foxbin2prg.exe, y así se hacen conversiones al vuelo.
+Se puede crear accesos directos de todos los scripts vbs en la carpeta "SendTo" del perfil del usuario, para poder "enviar"
+el archivo elegido (pjx,pj2,etc) al script seleccionado, y así hacer conversiones al vuelo.
+Por ejemplo: Seleccionar un archivo, click-derecho, Enviar A -> VFP9_FoxBin2Prg.vbs
 
 LOCALIZACIÓN:
 Si se crea un archivo [foxbin2prg.h], se pueden trasladar los textos a otros idiomas. Se adjunta

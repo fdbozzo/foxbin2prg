@@ -1,5 +1,6 @@
 '---------------------------------------------------------------------------------------------------
-'	Convert_VFP9_BIN_2_PRG.vbs - 03/01/2014 - Fernando D. Bozzo (fdbozzo@gmail.com)
+'	Convert_VFP9_BIN_2_PRG.vbs (VFPx: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg)
+'	03/01/2014 - Fernando D. Bozzo (fdbozzo@gmail.com - Blog: http://fdbozzo.blogspot.com.es/)
 '---------------------------------------------------------------------------------------------------
 '	ENGLISH:
 '		- Copy this file in the same directory of FoxBin2prg and create a shortcut

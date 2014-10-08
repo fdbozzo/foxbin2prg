@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.35'
-    .VersionDate          = Date(2014,09,26)
+    .VersionNumber        = 'v1.19.36'
+    .VersionDate          = Date(2014,10,08)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,10 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/10/08	v1.19.36
+- Bug fix mnx: When generating mn2 text view, menu all pad IDs are generated as _000000000 (bug introduced in v1.19.36)
+- Enhancement: New "VFP9_FoxBin2Prg.vbs" script for "SendTo" menu, that replaces FoxBin2Prg.exe in this menu and adds a process status message
 
 2014/09/26	v1.19.35
 - Enhancement: Always generate the same Timestamp and UniqueID for binaries, for minimizing differences when regenerating them (Marcio Gomez G.)
