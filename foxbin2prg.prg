@@ -5879,16 +5879,28 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, lcLine, laCodeLines(1), lnCodeLines ;
+			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lnFileCount, laFiles(1,5) ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
-				STORE '' TO lcLine
+				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
-				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
-				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				C_FB2PRG_CODE	= FILETOSTR( .c_InputFile )
+
+				IF toFoxBin2Prg.l_UseFilePerClass
+					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
+					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
+					lnFileCount		= ADIR( laFiles, lcInputFile )
+					ASORT( laFiles, 1, 0, 0, 1)
+					
+					FOR I = 1 TO lnFileCount
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile ) )
+					ENDFOR
+				ENDIF
+
+				lnCodeLines		= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -5914,7 +5926,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			RELEASE lnCodError, lcLine, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I
+			RELEASE lnCodError, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I ;
+				, lcInputFile, lnFileCount, laFiles
 		ENDTRY
 
 		RETURN
@@ -6183,14 +6196,27 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lnFB2P_Version ;
+			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lnFileCount, laFiles(1,5) ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
-				STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
+				STORE 0 TO lnCodError, lnCodeLines
+				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
-				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
+				C_FB2PRG_CODE	= FILETOSTR( .c_InputFile )
+
+				IF toFoxBin2Prg.l_UseFilePerClass
+					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
+					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
+					lnFileCount		= ADIR( laFiles, lcInputFile )
+					ASORT( laFiles, 1, 0, 0, 1)
+					
+					FOR I = 1 TO lnFileCount
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile ) )
+					ENDFOR
+				ENDIF
+
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
@@ -6217,6 +6243,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			RELEASE lnCodError, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I ;
+				, lcInputFile, lnFileCount, laFiles
 		ENDTRY
 
 		RETURN
@@ -7279,7 +7307,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, lnFB2P_Version ;
+			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
