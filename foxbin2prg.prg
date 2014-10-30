@@ -1579,7 +1579,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- Ejecución normal
 
 					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
-					IF NOT THIS.l_ConfigEvaluated THEN
+					IF NOT .l_ConfigEvaluated THEN
 						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 							, @tcClearUniqueID, @tcOptimizeByFilestamp )
 					ENDIF
@@ -3146,12 +3146,13 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
-		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
 		RETURN (ln_AT_Cmt > 0)
@@ -3272,7 +3273,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 						FOR X = 1 TO lnID_Bloques_Count
 							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
 							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
 								lnPrimerID		= X
 								lnAnidamientos	= 1
 								EXIT
@@ -3298,7 +3299,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 								DO CASE
 								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+										AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
 									*-- Busca el primer marcador (#IF o TEXT)
 									lnAnidamientos	= lnAnidamientos + 1
 
@@ -4744,7 +4745,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				lcMethodsMemo	= .objectMethods2Memo( toObjeto, toClase )
 
 				IF EMPTY(toObjeto._TimeStamp)
-					toObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					toObjeto._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toObjeto._UniqueID)
 					toObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -4829,7 +4830,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						loObjeto			= toClase._AddObjects( X )
 
 						IF EMPTY(loObjeto._TimeStamp)
-							loObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loObjeto._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loObjeto._UniqueID)
 							loObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6012,7 +6013,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loClase._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
 							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6315,7 +6316,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loClase._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
 							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6554,7 +6555,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				ENDIF
 
 				IF EMPTY(toProject._TimeStamp)
-					toProject._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					toProject._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toProject._ID)
 					toProject._ID	= toFoxBin2Prg.Unique_ID('N')
@@ -6594,7 +6595,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				FOR EACH loFile IN toProject FOXOBJECT
 
 					IF EMPTY(loFile._TimeStamp)
-						loFile._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+						loFile._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 					ENDIF
 					IF EMPTY(loFile._ID)
 						loFile._ID	= toFoxBin2Prg.Unique_ID('N')
@@ -7347,7 +7348,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				*	loReg.UNIQUEID	= ''
 				*ENDIF
 				IF EMPTY(loReg.TIMESTAMP)
-					loReg.TIMESTAMP	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					loReg.TIMESTAMP	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(loReg.UNIQUEID) OR ALLTRIM(loReg.UNIQUEID) = '0'
 					loReg.UNIQUEID	= toFoxBin2Prg.Unique_ID()
@@ -13725,7 +13726,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 				IF NOT EMPTY(._StoredProcedures)
 					UPDATE TABLABIN ;
-						SET CODE = THIS._StoredProcedures ;
+						SET CODE = ._StoredProcedures ;
 						WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
 				ENDIF
 
