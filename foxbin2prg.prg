@@ -107,6 +107,7 @@
 * 19/09/2014	FDBOZZO		v1.19.34	Arreglo bug: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error al intentar capitalizar el archivo de entrada (Jim Nelson)
 * 26/09/2014	FDBOZZO		v1.19.35	Mejora: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Marcio Gomez G.)
 * 08/10/2014	FDBOZZO		v1.19.36	Arreglo bug: Al generar el mn2 el identificador queda vacío (bug introducido en v1.19.35)
+* 30/10/2014	FDBOZZO		v1.19.37	Mejora: Optimizaciones y condicionamiento de EXTERNAL
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2619,7 +2620,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tnLEN_TAG_F				(v! IN    ) Longitud del tag de fin
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F
-		EXTERNAL ARRAY taProps
+		
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taProps
+		ENDIF
 		LOCAL llBloqueEncontrado, loEx AS EXCEPTION
 
 		TRY
@@ -3088,7 +3092,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tcRightTag				(v! IN    ) TAG de fin de los metadatos
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag
-		EXTERNAL ARRAY taPropsAndValues
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndValues
+		ENDIF
 
 		LOCAL lcMetadatos, I, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
 		STORE '' TO lcVirtualMeta
@@ -3231,7 +3238,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* taLineasExclusion			(@?    OUT) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
 		* tnBloquesExclusion		(@?    OUT) Cantidad de bloques de exclusión
 		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY ta_ID_Bloques, taLineasExclusion
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY ta_ID_Bloques, taLineasExclusion
+		ENDIF
 
 		TRY
 			LOCAL lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
@@ -3333,17 +3342,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 	PROCEDURE lineaExcluida
 		LPARAMETERS tn_Linea, tnBloquesExclusion, taLineasExclusion
 
-		EXTERNAL ARRAY taLineasExclusion
-		*LOCAL X, llExcluida
-
-		*FOR X = 1 TO tnBloquesExclusion
-		*	IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
-		*		llExcluida	= .T.
-		*		EXIT
-		*	ENDIF
-		*ENDFOR
-
-		*RETURN llExcluida
 		RETURN taLineasExclusion(tn_Linea)
 	ENDPROC
 
@@ -3651,7 +3649,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*											2=Sort completo de propiedades con "Name" al final (para la versión BIN)
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taPropsAndValues, tnPropsAndValues_Count, tnSortType
-		EXTERNAL ARRAY taPropsAndValues
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndValues
+		ENDIF
 
 		TRY
 			LOCAL I, X, lnArrayCols, laPropsAndValues(1,2), lcPropName, lcSortedMemo, lcMethods
@@ -4896,7 +4897,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 			, taLineasExclusion, tnBloquesExclusion
-		EXTERNAL ARRAY taCodeLines
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines
+		ENDIF
 
 		#IF .F.
 			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
@@ -4974,7 +4978,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	PROCEDURE analizarBloque_ADD_OBJECT
 		LPARAMETERS toModulo, toClase, tcLine, I, taCodeLines, tnCodeLines
 
-		EXTERNAL ARRAY taCodeLines
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines
+		ENDIF
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -5200,7 +5206,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
 			, taLineasExclusion, tnBloquesExclusion, tc_Comentario
 
-		EXTERNAL ARRAY taCodeLines, tnBloquesExclusion, taLineasExclusion
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, tnBloquesExclusion, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -5437,7 +5445,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	PROCEDURE analizarBloque_CLASSCOMMENTS
 		LPARAMETERS toClase, tcLine ,taCodeLines, tnCodeLines, I
 
-		EXTERNAL ARRAY taCodeLines
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines
+		ENDIF
 
 		#IF .F.
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
@@ -5757,7 +5767,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo
 
-		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -6652,7 +6664,9 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
@@ -6985,7 +6999,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		*------------------------------------------------------
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
-		EXTERNAL ARRAY toProject
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY toProject
+		ENDIF
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7047,7 +7064,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		*------------------------------------------------------
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
-		EXTERNAL ARRAY toProject
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY toProject
+		ENDIF
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7109,7 +7129,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		*------------------------------------------------------
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
-		EXTERNAL ARRAY toProject
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY toProject
+		ENDIF
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7406,7 +7429,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toReport AS CL_REPORT OF 'FOXBIN2PRG.PRG'
@@ -7887,7 +7912,10 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		* toTable					(@?    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toTable
-		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
@@ -8063,7 +8091,10 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase
-		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toDatabase AS CL_DBC OF 'FOXBIN2PRG.PRG'
@@ -8197,7 +8228,10 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toMenu
-		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taCodeLines, taLineasExclusion
+		ENDIF
 
 		#IF .F.
 			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
@@ -8358,7 +8392,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count ;
 			, toFoxBin2Prg
 
-		EXTERNAL ARRAY taPropsAndComments, taProtected
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndComments, taProtected
+		ENDIF
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -8420,7 +8457,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tnMethodCount, taMethods, taCode, taProtected, taPropsAndComments
 		*-- DEFINIR MÉTODOS DE LA CLASE
 		*-- Ubico los métodos protegidos y les cambio la definición
-		EXTERNAL ARRAY taMethods, taCode, taProtected, taPropsAndComments
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taMethods, taCode, taProtected, taPropsAndComments
+		ENDIF
 
 		TRY
 			LOCAL lcMethod, lcMethodName, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods, lnLen
@@ -8506,7 +8545,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo
-		EXTERNAL ARRAY taPropsAndComments
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndComments
+		ENDIF
 
 		TRY
 			LOCAL laLines(1), I, lnPos, loEx AS EXCEPTION
@@ -8565,7 +8607,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
-		EXTERNAL ARRAY taPropsAndValues
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndValues
+		ENDIF
+
 		TRY
 			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
 			tcSortedMemo			= ''
@@ -8671,7 +8717,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo
-		EXTERNAL ARRAY taProtected
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taProtected
+		ENDIF
 
 		tcSortedMemo		= ''
 		tnProtected_Count	= ALINES(taProtected, tcMemo, 1+4)
@@ -8796,7 +8845,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE set_MultilineMemoWithAddObjectProperties
 		LPARAMETERS taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine
-		EXTERNAL ARRAY taPropsAndValues
+
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndValues
+		ENDIF
 
 		TRY
 			LOCAL lcLine, I, lcComentarios, laLines(1), lcFinDeLinea
@@ -8833,7 +8885,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
 			, taProtected, tnProtected_Count, toFoxBin2Prg
 
-		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+		ENDIF
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -8898,7 +8953,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- 29/10/2013	Fernando D. Bozzo
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
-		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+		ENDIF
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -9225,7 +9283,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
 			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count
 
-		EXTERNAL ARRAY taPropsAndValues, taPropsAndComments
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taPropsAndValues, taPropsAndComments
+		ENDIF
 
 		TRY
 			LOCAL lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, I ;
@@ -12712,7 +12772,9 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcName, tcType, taProperties, tnProperty_Count
 
-		EXTERNAL ARRAY taProperties	&& STRUCTURE: PropName,RecordLen,DataIDLen,DataID,DataType,Data
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taProperties	&& STRUCTURE: PropName,RecordLen,DataIDLen,DataID,DataType,Data
+		ENDIF
 
 		TRY
 			LOCAL lcValue, leValue, lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnPropertyID ;
@@ -14176,7 +14238,9 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTables, tnTable_Count
 
-		EXTERNAL ARRAY taTables
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taTables
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION ;
@@ -15113,7 +15177,9 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taViews, tnView_Count
 
-		EXTERNAL ARRAY taViews
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taViews
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION ;
@@ -15878,7 +15944,9 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcTable, taRelations, tnRelation_Count
 
-		EXTERNAL ARRAY taRelations
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taRelations
+		ENDIF
 
 		TRY
 			LOCAL I, X, lcText, loEx AS EXCEPTION ;
@@ -16398,7 +16466,9 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, tnField_Count
 
-		EXTERNAL ARRAY taFields
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taFields
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION ;
@@ -16559,7 +16629,9 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, I
 
-		EXTERNAL ARRAY taFields
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taFields
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION
@@ -16685,7 +16757,9 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTagInfo, tnTagInfo_Count, tc_InputFile
 
-		EXTERNAL ARRAY taTagInfo
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taTagInfo
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION ;
@@ -16825,7 +16899,9 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTagInfo, I
 
-		EXTERNAL ARRAY taTagInfo
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taTagInfo
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION
@@ -16890,7 +16966,9 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, tnField_Count, tc_DBF_Conversion_Condition
 
-		EXTERNAL ARRAY taFields
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taFields
+		ENDIF
 
 		TRY
 			LOCAL lcText, loEx AS EXCEPTION ;
@@ -16968,7 +17046,9 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taFields, tnField_Count
 
-		EXTERNAL ARRAY taFields
+		IF .F.	&& EXTERNAL consume ciclos de ejecución, pero no aporta nada fuera del proyecto.
+			EXTERNAL ARRAY taFields
+		ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue, lcFieldType
