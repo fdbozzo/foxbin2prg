@@ -153,7 +153,7 @@
 * 28/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
 * 19/09/2014	Jim  Nelson			REPORTE BUG v1.19.33: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error (solucionado en v1.19.34)
 * 26/09/2014	Marcio Gomez G.		MEJORA v1.19.34: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Agregado en v1.19.35)
-* 21/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta)
+* 14/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta)
 * 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -526,7 +526,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
-		+ [<memberdata name="l_usefileperclass" display="l_UseFilePerClass"/>] ;
+		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
@@ -590,7 +590,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_AllowMultiConfig		= .T.
 	l_DropNullCharsFromCode	= .T.
 	l_Recompile				= .T.
-	l_UseFilePerClass		= .F.
+	l_UseClassPerFile		= .F.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .T.
 	l_OptimizeByFilestamp	= .F.
@@ -733,11 +733,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	PROCEDURE l_UseFilePerClass_ACCESS
+	PROCEDURE l_UseClassPerFile_ACCESS
 		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
-			RETURN THIS.l_UseFilePerClass
+			RETURN THIS.l_UseClassPerFile
 		ELSE
-			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_UseFilePerClass, THIS.l_UseFilePerClass )
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_UseClassPerFile, THIS.l_UseClassPerFile )
 		ENDIF
 	ENDPROC
 
@@ -1271,11 +1271,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:        ' + TRANSFORM(lcValue) )
 							ENDIF
 
-						CASE LEFT( laConfig(I), 16 ) == LOWER('UseFilePerClass:')
+						CASE LEFT( laConfig(I), 16 ) == LOWER('UseClassPerFile:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								.l_UseFilePerClass	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > UseFilePerClass:        ' + TRANSFORM(lcValue) )
+								.l_UseClassPerFile	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > UseClassPerFile:        ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 22 ) == LOWER('DropNullCharsFromCode:')
@@ -1395,7 +1395,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( '> l_Recompile:             ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
 				.writeLog( '> l_NoTimestamps:          ' + TRANSFORM(.l_NoTimestamps) )
 				.writeLog( '> l_ClearUniqueID:         ' + TRANSFORM(.l_ClearUniqueID) )
-				.writeLog( '> l_UseFilePerClass:       ' + TRANSFORM(.l_UseFilePerClass) )
+				.writeLog( '> l_UseClassPerFile:       ' + TRANSFORM(.l_UseClassPerFile) )
 				.writeLog( '> l_Debug:                 ' + TRANSFORM(.l_Debug) )
 				.writeLog( '> n_ExtraBackupLevels:     ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( '> l_OptimizeByFilestamp:   ' + TRANSFORM(.l_OptimizeByFilestamp) )
@@ -5890,7 +5890,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				C_FB2PRG_CODE	= FILETOSTR( .c_InputFile )
 
-				IF toFoxBin2Prg.l_UseFilePerClass
+				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
 					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
 					lnFileCount		= ADIR( laFiles, lcInputFile )
@@ -6207,7 +6207,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 				C_FB2PRG_CODE	= FILETOSTR( .c_InputFile )
 
-				IF toFoxBin2Prg.l_UseFilePerClass
+				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
 					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
 					lnFileCount		= ADIR( laFiles, lcInputFile )
@@ -10311,7 +10311,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ENDFOR
 					toModulo	= lcCodigo
 				ELSE
-					IF toFoxBin2Prg.l_UseFilePerClass
+					IF toFoxBin2Prg.l_UseClassPerFile
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 						FOR I = 1 TO lnClassCount
@@ -10569,7 +10569,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ENDFOR
 					toModulo	= lcCodigo
 				ELSE
-					IF toFoxBin2Prg.l_UseFilePerClass
+					IF toFoxBin2Prg.l_UseClassPerFile
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 						FOR I = 1 TO lnClassCount
@@ -20087,7 +20087,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
-		+ [<memberdata name="l_usefileperclass" display="l_UseFilePerClass"/>] ;
+		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
 		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
@@ -20116,7 +20116,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_NoTimestamps			= NULL
 	l_ClearUniqueID			= NULL
 	l_OptimizeByFilestamp	= NULL
-	l_UseFilePerClass		= NULL
+	l_UseClassPerFile		= NULL
 	n_ExtraBackupLevels		= NULL
 	c_VC2					= NULL
 	c_SC2					= NULL
