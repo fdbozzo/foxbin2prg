@@ -5869,7 +5869,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lnFileCount, laFiles(1,5) ;
+			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
@@ -5886,7 +5886,9 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					ASORT( laFiles, 1, 0, 0, 1)
 					
 					FOR I = 1 TO lnFileCount
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile ) )
+						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
+						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
 					ENDFOR
 				ENDIF
 
@@ -5917,7 +5919,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			RELEASE lnCodError, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I ;
-				, lcInputFile, lnFileCount, laFiles
+				, lcInputFile, lcInputFile_Class, lnFileCount, laFiles
 		ENDTRY
 
 		RETURN
@@ -6186,7 +6188,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lnFileCount, laFiles(1,5) ;
+			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
@@ -6203,7 +6205,9 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 					ASORT( laFiles, 1, 0, 0, 1)
 					
 					FOR I = 1 TO lnFileCount
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile ) )
+						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
+						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
 					ENDFOR
 				ENDIF
 
@@ -6234,7 +6238,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			RELEASE lnCodError, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I ;
-				, lcInputFile, lnFileCount, laFiles
+				, lcInputFile, lcInputFile_Class, lnFileCount, laFiles
 		ENDTRY
 
 		RETURN
@@ -10019,17 +10023,25 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE write_OutputFile
 		LPARAMETERS tcCodigo, tcOutputFile, toFoxBin2Prg
 
-		DO CASE
-		CASE FILE(tcOutputFile) AND FILETOSTR( tcOutputFile ) == tcCodigo
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		IF FILE(tcOutputFile) AND FILETOSTR( tcOutputFile ) == tcCodigo
 			*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 			THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 
-		CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '', tcOutputFile ) ;
-				AND toFoxBin2Prg.ChangeFileAttribute( tcOutputFile, '-R' ) ;
-				AND STRTOFILE( tcCodigo, tcOutputFile ) = 0
-			*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-			ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-		ENDCASE
+		ELSE
+			toFoxBin2Prg.doBackup( .F., .T., '', '', '', tcOutputFile )
+			toFoxBin2Prg.ChangeFileAttribute( tcOutputFile, '-R' )
+
+			IF STRTOFILE( tcCodigo, tcOutputFile ) = 0
+				*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+				ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+			ELSE
+				toFoxBin2Prg.normalizarCapitalizacionArchivos( .F., tcOutputFile )
+			ENDIF
+		ENDIF
 	ENDPROC
 
 
