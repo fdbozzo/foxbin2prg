@@ -1059,23 +1059,26 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* tlRelanzarError			(v? IN    ) Indica si se debe relanzar el error
 		* tcBakFile_1				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,frx,lbx,dbf,dbc,mnx,vc2,sc2,pj2,etc)
 		* tcBakFile_2				(@?    OUT) Nombre del archivo backup 2 (vct,sct,pjt,frt,lbt,fpt,dct,mnt,etc)
-		* tcBakFile_3				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,cdx,dcx,etc)
+		* tcBakFile_3				(@?    OUT) Nombre del archivo backup 3 (cdx,dcx,etc)
+		* tcOutputFile				(v? IN    ) Nombre del archivo de salida. Si no se indica se asume .c_OutputFile
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3
+		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3, tcOutputFile
 
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
-			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
+			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3
+			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3, lcExt_1, lcExt_2, lcExt_3 ;
+				, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				IF .n_ExtraBackupLevels > 0 THEN
-					lcNext_Bak	= .getNext_BAK( .c_OutputFile )
-					lcExt_1		= JUSTEXT( .c_OutputFile )
-					tcBakFile_1	= FORCEEXT(.c_OutputFile, lcExt_1 + lcNext_Bak)
+					tcOutputFile	= EVL( tcOutputFile, .c_OutputFile )
+					lcNext_Bak		= .getNext_BAK( tcOutputFile )
+					lcExt_1			= JUSTEXT( tcOutputFile )
+					tcBakFile_1		= FORCEEXT(tcOutputFile, lcExt_1 + lcNext_Bak)
 
 					DO CASE
 					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, 'PJM' )
@@ -1085,43 +1088,55 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						*-- DBF
 						lcExt_2		= 'FPT'
 						lcExt_3		= 'CDX'
-						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-						tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
+						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_3	= FORCEEXT(tcOutputFile, lcExt_3 + lcNext_Bak)
 
 					CASE lcExt_1 = 'DBC'
 						*-- DBC
 						lcExt_2		= 'DCT'
 						lcExt_3		= 'DCX'
-						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-						tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
+						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_3	= FORCEEXT(tcOutputFile, lcExt_3 + lcNext_Bak)
 
 					OTHERWISE
 						*-- PJX, VCX, SCX, FRX, LBX, MNX
 						lcExt_2		= LEFT(lcExt_1,2) + 'T'
-						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
 
 					ENDCASE
 
-					IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(.c_OutputFile, lcExt_1) )
-						*-- LOG
-						DO CASE
-						CASE EMPTY(lcExt_2)
-							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) )
-						CASE EMPTY(lcExt_3)
-							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
-						OTHERWISE
-							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
-						ENDCASE
+					IF NOT EMPTY(lcExt_1)
+						tcOutputFile_Ext1	= FORCEEXT(tcOutputFile, lcExt_1)
 
-						*-- COPIA BACKUP
-						COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
+						IF FILE( tcOutputFile_Ext1 )
+							*-- LOG
+							DO CASE
+							CASE EMPTY(lcExt_2)
+								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 )
+							CASE EMPTY(lcExt_3)
+								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 + '/' + lcExt_2 )
+							OTHERWISE
+								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 + '/' + lcExt_2 + '/' + lcExt_3 )
+							ENDCASE
 
-						IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(.c_OutputFile, lcExt_2) )
-							COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
-						ENDIF
+							*-- COPIA BACKUP
+							COPY FILE ( tcOutputFile_Ext1 ) TO ( tcBakFile_1 )
 
-						IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(.c_OutputFile, lcExt_3) )
-							COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
+							IF NOT EMPTY(lcExt_2)
+								tcOutputFile_Ext2	= FORCEEXT(tcOutputFile, lcExt_2)
+
+								IF FILE( tcOutputFile_Ext2 )
+									COPY FILE ( tcOutputFile_Ext2 ) TO ( tcBakFile_2 )
+								ENDIF
+							ENDIF
+
+							IF NOT EMPTY(lcExt_3)
+								tcOutputFile_Ext3	= FORCEEXT(tcOutputFile, lcExt_3)
+
+								IF FILE( tcOutputFile_Ext3 )
+									COPY FILE ( tcOutputFile_Ext3 ) TO ( tcBakFile_3 )
+								ENDIF
+							ENDIF
 						ENDIF
 					ENDIF
 				ENDIF
@@ -1136,6 +1151,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THROW
 			ENDIF
 
+		FINALLY
+			RELEASE lcNext_Bak, lcExt_1, lcExt_2, lcExt_3, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3 ;
+				, tcOutputFile
 		ENDTRY
 
 		RETURN
@@ -2235,16 +2253,26 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	*******************************************************************************************************************
 	PROCEDURE normalizarCapitalizacionArchivos
-		LPARAMETERS tl_NormalizeInputFile
+		LPARAMETERS tl_NormalizeInputFile, tcFileName
 
 		TRY
-			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, loEx AS EXCEPTION ;
-				, loFSO AS Scripting.FileSystemObject, lcType
+			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType ;
+				, loEx AS EXCEPTION ;
+				, loFSO AS Scripting.FileSystemObject
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				lcPath		= JUSTPATH(.c_Foxbin2prg_FullPath)
-				lcEXE_CAPS	= FORCEPATH( 'filename_caps.exe', lcPath )
-				loFSO		= .o_FSO
+				lcPath			= JUSTPATH(.c_Foxbin2prg_FullPath)
+				lcEXE_CAPS		= FORCEPATH( 'filename_caps.exe', lcPath )
+				loFSO			= .o_FSO
+				llRelanzarError	= NOT tl_NormalizeInputFile
+				
+				IF tl_NormalizeInputFile
+					tcFileName	= EVL( tcFileName, .c_InputFile )
+					lcType		= UPPER( JUSTEXT( tcFileName ) )
+				ELSE
+					tcFileName	= EVL( tcFileName, .c_OutputFile )
+					lcType		= .c_Type
+				ENDIF
 
 				DO CASE
 				CASE .n_ExisteCapitalizacion = -1
@@ -2270,82 +2298,42 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-				IF tl_NormalizeInputFile
-					lcType	= UPPER( JUSTEXT( .c_InputFile ) )
+				*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
+				.RenameFile( tcFileName, lcEXE_CAPS, loFSO, llRelanzarError )
 
-					*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
-					.RenameFile( .c_InputFile, lcEXE_CAPS, loFSO, .F. )
+				DO CASE
+				CASE lcType = 'PJX'
+					.RenameFile( FORCEEXT(tcFileName,'PJT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					DO CASE
-					CASE lcType = 'PJX'
-						.RenameFile( FORCEEXT(.c_InputFile,'PJT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'VCX'
+					.RenameFile( FORCEEXT(tcFileName,'VCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'VCX'
-						.RenameFile( FORCEEXT(.c_InputFile,'VCT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'SCX'
+					.RenameFile( FORCEEXT(tcFileName,'SCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'SCX'
-						.RenameFile( FORCEEXT(.c_InputFile,'SCT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'FRX'
+					.RenameFile( FORCEEXT(tcFileName,'FRT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'FRX'
-						.RenameFile( FORCEEXT(.c_InputFile,'FRT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'LBX'
+					.RenameFile( FORCEEXT(tcFileName,'LBT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'LBX'
-						.RenameFile( FORCEEXT(.c_InputFile,'LBT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'DBF'
+					IF FILE( FORCEEXT(tcFileName,'FPT') )
+						.RenameFile( FORCEEXT(tcFileName,'FPT'), lcEXE_CAPS, loFSO, llRelanzarError )
+					ENDIF
+					IF FILE( FORCEEXT(tcFileName,'CDX') )
+						.RenameFile( FORCEEXT(tcFileName,'CDX'), lcEXE_CAPS, loFSO, llRelanzarError )
+					ENDIF
 
-					CASE lcType = 'DBF'
-						IF FILE( FORCEEXT(.c_InputFile,'FPT') )
-							.RenameFile( FORCEEXT(.c_InputFile,'FPT'), lcEXE_CAPS, loFSO, .F. )
-						ENDIF
-						IF FILE( FORCEEXT(.c_InputFile,'CDX') )
-							.RenameFile( FORCEEXT(.c_InputFile,'CDX'), lcEXE_CAPS, loFSO, .F. )
-						ENDIF
+				CASE lcType = 'DBC'
+					.RenameFile( FORCEEXT(tcFileName,'DCX'), lcEXE_CAPS, loFSO, llRelanzarError )
+					.RenameFile( FORCEEXT(tcFileName,'DCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'DBC'
-						.RenameFile( FORCEEXT(.c_InputFile,'DCX'), lcEXE_CAPS, loFSO, .F. )
-						.RenameFile( FORCEEXT(.c_InputFile,'DCT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'MNX'
+					.RenameFile( FORCEEXT(tcFileName,'MNT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'MNX'
-						.RenameFile( FORCEEXT(.c_InputFile,'MNT'), lcEXE_CAPS, loFSO, .F. )
+				ENDCASE
 
-					ENDCASE
-
-				ELSE
-					*-- Normalizar archivo(s) de salida. El primero siempre se normaliza (??2, ??X, DBF, DBC)
-					.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO, .T. )
-
-					DO CASE
-					CASE .c_Type = 'PJX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'VCX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'SCX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'FRX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'LBX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'DBF'
-						IF FILE( FORCEEXT(.c_OutputFile,'FPT') )
-							.RenameFile( FORCEEXT(.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO, .T. )
-						ENDIF
-						IF FILE( FORCEEXT(.c_OutputFile,'CDX') )
-							.RenameFile( FORCEEXT(.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO, .T. )
-						ENDIF
-
-					CASE .c_Type = 'DBC'
-						.RenameFile( FORCEEXT(.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO, .T. )
-						.RenameFile( FORCEEXT(.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'MNX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO, .T. )
-
-					ENDCASE
-				ENDIF
 			ENDWITH && THIS
 
 		CATCH TO loEx
@@ -2353,6 +2341,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			loFSO	= NULL
+			RELEASE lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType, loFSO
 
 		ENDTRY
 
@@ -10035,7 +10024,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 			THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 
-		CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+		CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '', tcOutputFile ) ;
 				AND toFoxBin2Prg.ChangeFileAttribute( tcOutputFile, '-R' ) ;
 				AND STRTOFILE( tcCodigo, tcOutputFile ) = 0
 			*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
@@ -10315,12 +10304,10 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 						FOR I = 1 TO lnClassCount
-							.c_OutputFile	= FORCEPATH( JUSTSTEM( lcOutputFile ), JUSTPATH( lcOutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( lcOutputFile )
+							lcOutputFile	= FORCEPATH( JUSTSTEM( .c_OutputFile ), JUSTPATH( .c_OutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
 							lcCodigo		= laClasses(I,2)
-							.write_OutputFile( @lcCodigo, .c_OutputFile, @toFoxBin2Prg )
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 						ENDFOR
-
-						.c_OutputFile	= lcOutputFile
 					ELSE
 						FOR I = 1 TO lnClassCount
 							lcCodigo	= lcCodigo + laClasses(I,2)
@@ -10573,11 +10560,10 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 						FOR I = 1 TO lnClassCount
-							.c_OutputFile	= FORCEPATH( JUSTSTEM( lcOutputFile ), JUSTPATH( lcOutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( lcOutputFile )
+							lcOutputFile	= FORCEPATH( JUSTSTEM( .c_OutputFile ), JUSTPATH( .c_OutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
 							lcCodigo		= laClasses(I,2)
-							.write_OutputFile( @lcCodigo, .c_OutputFile, @toFoxBin2Prg )
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 						ENDFOR
-
 					ELSE
 						FOR I = 1 TO lnClassCount
 							lcCodigo	= lcCodigo + laClasses(I,2)
@@ -10911,17 +10897,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11292,17 +11268,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11467,17 +11433,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11567,17 +11523,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
@@ -11684,17 +11630,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11766,17 +11702,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				IF .l_Test
 					toMenu	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
