@@ -535,6 +535,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
+		+ [<memberdata name="o_fnc" display="o_FNC"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
 		+ [<memberdata name="o_configuration" display="o_Configuration"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
@@ -605,6 +606,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
+	o_FNC					= NULL	&& Filename_caps object
 	o_Configuration			= NULL
 	run_AfterCreateTable	= ''
 	run_AfterCreate_DB2		= ''
@@ -672,6 +674,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			THIS.o_FSO	= NULL
+			THIS.o_FNC	= NULL
+			SET PROCEDURE TO
 		ENDTRY
 
 		RETURN
@@ -2280,6 +2284,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					IF FILE(lcEXE_CAPS)
 						*.writeLog( '* Se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
 						.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC) )
+						SET PROCEDURE TO (lcEXE_CAPS) ADDITIVE
+						.o_FNC	= CREATEOBJECT( 'cl_FileName_Caps' )
+
 						.n_ExisteCapitalizacion	= 1
 					ELSE
 						*-- No existe el programa de capitalización, así que no se capitalizan los nombres.
@@ -2358,7 +2365,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.writeLog( TEXTMERGE(C_REQUESTING_CAPITALIZATION_OF_FILE_LOC) )
 		THIS.ChangeFileAttribute( tcFileName, '+N' )
 		lcLog	= ''
-		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, tlRelanzarError, '1'
+		THIS.o_FNC.Capitalize( tcFileName, '', 'F', lcLog, tlRelanzarError, '1' )
 		THIS.writeLog( lcLog )
 	ENDPROC
 
