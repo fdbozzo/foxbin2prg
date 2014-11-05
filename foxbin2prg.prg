@@ -5882,7 +5882,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
 					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
-					lnFileCount		= ADIR( laFiles, lcInputFile )
+					lnFileCount		= ADIR( laFiles, lcInputFile, "", 1 )
 					ASORT( laFiles, 1, 0, 0, 1)
 					
 					FOR I = 1 TO lnFileCount
@@ -6201,9 +6201,9 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
 					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
-					lnFileCount		= ADIR( laFiles, lcInputFile )
+					lnFileCount		= ADIR( laFiles, lcInputFile, "", 1 )
 					ASORT( laFiles, 1, 0, 0, 1)
-					
+
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
 						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
@@ -10026,22 +10026,28 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
+		
+		LOCAL llFileExists
+		
+		llFileExists	= FILE(tcOutputFile)
 
-		IF FILE(tcOutputFile) AND FILETOSTR( tcOutputFile ) == tcCodigo
+		IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
 			*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 			THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 
 		ELSE
-			toFoxBin2Prg.doBackup( .F., .T., '', '', '', tcOutputFile )
-			toFoxBin2Prg.ChangeFileAttribute( tcOutputFile, '-R' )
-
+			IF llFileExists THEN
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '', tcOutputFile )
+				toFoxBin2Prg.ChangeFileAttribute( tcOutputFile, '-R' )
+			ENDIF
+			
 			IF STRTOFILE( tcCodigo, tcOutputFile ) = 0
 				*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
 				ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-			ELSE
-				toFoxBin2Prg.normalizarCapitalizacionArchivos( .F., tcOutputFile )
 			ENDIF
 		ENDIF
+
+		toFoxBin2Prg.normalizarCapitalizacionArchivos( .F., tcOutputFile )
 	ENDPROC
 
 
