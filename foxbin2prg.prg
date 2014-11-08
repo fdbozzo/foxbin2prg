@@ -6169,17 +6169,17 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
-				toModulo		= CREATEOBJECT('CL_MODULO')
-				C_FB2PRG_CODE	= FILETOSTR( .c_InputFile )
+				toModulo			= CREATEOBJECT('CL_MODULO')
+				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 
-				lnCodeLines		= ALINES( laCodeLines, C_FB2PRG_CODE )
+				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
 				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
-					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
-					lnFileCount		= ADIR( laFiles, lcInputFile, "", 1 )
+					lcInputFile			= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
+					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 					ASORT( laFiles, 1, 0, 0, 1)
 					
 					FOR I = 1 TO lnFileCount
@@ -6220,8 +6220,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			RELEASE lnCodError, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I ;
-				, lcInputFile, lcInputFile_Class, lnFileCount, laFiles
+			RELEASE lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
+				, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
 
 		RETURN
@@ -6487,6 +6487,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
@@ -6500,8 +6501,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
-				toModulo		= CREATEOBJECT('CL_MODULO')
-				C_FB2PRG_CODE	= FILETOSTR( .c_InputFile )
+				toModulo			= CREATEOBJECT('CL_MODULO')
+				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
@@ -6509,8 +6510,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
-					lcInputFile		= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
-					lnFileCount		= ADIR( laFiles, lcInputFile, "", 1 )
+					lcInputFile			= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
+					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 					ASORT( laFiles, 1, 0, 0, 1)
 
 					FOR I = 1 TO lnFileCount
@@ -6551,8 +6552,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			RELEASE lnCodError, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I ;
-				, lcInputFile, lcInputFile_Class, lnFileCount, laFiles
+			RELEASE lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
+				, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
 
 		RETURN
@@ -10665,7 +10666,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 						FOR I = 1 TO lnClassCount
 							lcOutputFile	= FORCEPATH( JUSTSTEM( .c_OutputFile ), JUSTPATH( .c_OutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
-							lcCodigo		= laClasses(I,2)
+							lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + laClasses(I,2)
 							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 						ENDFOR
 					ELSE
@@ -10924,7 +10925,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 						FOR I = 1 TO lnClassCount
 							lcOutputFile	= FORCEPATH( JUSTSTEM( .c_OutputFile ), JUSTPATH( .c_OutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
-							lcCodigo		= laClasses(I,2)
+							lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + laClasses(I,2)
 							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 						ENDFOR
 					ELSE
