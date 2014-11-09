@@ -2782,16 +2782,22 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS taCodeLines, I
 
 		LOCAL lcPrevLine, llIsContinuation
+
 		*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
 		IF I > 1
 			lcPrevLine	= taCodeLines(I-1)
 		ELSE
 			lcPrevLine	= ''
 		ENDIF
-		.get_SeparatedLineAndComment( @lcPrevLine )
+
+		THIS.get_SeparatedLineAndComment( @lcPrevLine )
+
 		IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
 			llIsContinuation	= .T.
 		ENDIF
+		
+		RELEASE lcPrevLine
+
 		RETURN llIsContinuation
 	ENDPROC
 
@@ -3265,6 +3271,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
 
 						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+							*-- Optimización: Excluyo las líneas que solo son comentarios
+							taLineasExclusion(I)	= .T.
+							*--
 							LOOP
 						ENDIF
 
