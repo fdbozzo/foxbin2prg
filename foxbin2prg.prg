@@ -10652,9 +10652,13 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					laClasses(lnClassCount,2)	= lcCodigo
 				ENDSCAN
 
+				IF toFoxBin2Prg.l_UseClassPerFile
+					lcExternalHeader	= lcExternalHeader + CR_LF
+				ENDIF
+
 				*-- Genero el VC2
 				lcOutputFile	= .c_OutputFile
-				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + CR_LF + C_FB2PRG_CODE
+				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 				IF .l_Test
 					FOR I = 1 TO lnClassCount
@@ -10911,9 +10915,13 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					laClasses(lnClassCount,2)	= lcCodigo
 				ENDSCAN
 
+				IF toFoxBin2Prg.l_UseClassPerFile
+					lcExternalHeader	= lcExternalHeader + CR_LF
+				ENDIF
+
 				*-- Genero el SC2
 				lcOutputFile	= .c_OutputFile
-				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + CR_LF + C_FB2PRG_CODE
+				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 				IF .l_Test
 					FOR I = 1 TO lnClassCount
