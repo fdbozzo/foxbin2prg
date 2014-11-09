@@ -10503,6 +10503,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 				.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
+				.write_DefinicionObjetosOLE( toFoxBin2Prg )
+
 				*-- Escribo los métodos ordenados
 				lnLastClass		= 0
 
@@ -10749,6 +10751,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				SET ORDER TO 0 IN TABLABIN
 
 				.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
+
+				.write_DefinicionObjetosOLE( toFoxBin2Prg )
 
 				*-- Escribo los métodos ordenados
 				lnLastObj		= 0
