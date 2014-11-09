@@ -10300,63 +10300,63 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LPARAMETERS toFoxBin2Prg
 
-		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
+		*!*			LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
 
-		#IF .F.
-			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-		#ENDIF
+		*!*			#IF .F.
+		*!*				LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		*!*			#ENDIF
 
-		TRY
-			SELECT TABLABIN
-			SET ORDER TO PARENT_OBJ
-			lnOLECount	= 0
+		*!*			TRY
+		*!*				SELECT TABLABIN
+		*!*				SET ORDER TO PARENT_OBJ
+		*!*				lnOLECount	= 0
 
-			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
-				loReg	= NULL
-				SCATTER MEMO NAME loReg
+		*!*				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
+		*!*					loReg	= NULL
+		*!*					SCATTER MEMO NAME loReg
 
-				IF toFoxBin2Prg.l_NoTimestamps
-					loReg.TIMESTAMP	= 0
-				ENDIF
-				IF toFoxBin2Prg.l_ClearUniqueID
-					loReg.UNIQUEID	= ''
-				ENDIF
+		*!*					IF toFoxBin2Prg.l_NoTimestamps
+		*!*						loReg.TIMESTAMP	= 0
+		*!*					ENDIF
+		*!*					IF toFoxBin2Prg.l_ClearUniqueID
+		*!*						loReg.UNIQUEID	= ''
+		*!*					ENDIF
 
-				lcOLEChecksum	= SYS(2007, loReg.OLE, 0, 1)
-				llOleExistente	= .F.
+		*!*					lcOLEChecksum	= SYS(2007, loReg.OLE, 0, 1)
+		*!*					llOleExistente	= .F.
 
-				IF lnOLECount > 0 AND ASCAN(laOLE, lcOLEChecksum, 1, 0, 0, 0) > 0
-					llOleExistente	= .T.
-				ENDIF
+		*!*					IF lnOLECount > 0 AND ASCAN(laOLE, lcOLEChecksum, 1, 0, 0, 0) > 0
+		*!*						llOleExistente	= .T.
+		*!*					ENDIF
 
-				lnOLECount	= lnOLECount + 1
-				DIMENSION laOLE( lnOLECount )
-				laOLE( lnOLECount )	= lcOLEChecksum
+		*!*					lnOLECount	= lnOLECount + 1
+		*!*					DIMENSION laOLE( lnOLECount )
+		*!*					laOLE( lnOLECount )	= lcOLEChecksum
 
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-				ENDTEXT
+		*!*					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+		*!*						<<>>
+		*!*					ENDTEXT
 
-			ENDSCAN
+		*!*				ENDSCAN
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				*
-			ENDTEXT
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			*
+		ENDTEXT
 
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
+		*!*			CATCH TO loEx
+		*!*				IF THIS.l_Debug AND _VFP.STARTMODE = 0
+		*!*					SET STEP ON
+		*!*				ENDIF
 
-			THROW
+		*!*				THROW
 
-		FINALLY
-			loReg	= NULL
-			RELEASE loReg
+		*!*			FINALLY
+		*!*				loReg	= NULL
+		*!*				RELEASE loReg
 
-		ENDTRY
+		*!*			ENDTRY
 
-		RETURN
+		*!*			RETURN
 	ENDPROC
 
 
