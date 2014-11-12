@@ -107,6 +107,7 @@
 * 19/09/2014	FDBOZZO		v1.19.34	Arreglo bug: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error al intentar capitalizar el archivo de entrada (Jim Nelson)
 * 26/09/2014	FDBOZZO		v1.19.35	Mejora: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Marcio Gomez G.)
 * 08/10/2014	FDBOZZO		v1.19.36	Arreglo bug: Al generar el mn2 el identificador queda vacío (bug introducido en v1.19.35)
+* 30/10/2014	FDBOZZO		v1.19.37	Mejora: Optimizaciones y condicionamiento de EXTERNAL
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -651,6 +652,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
 		THIS.c_FB2PRG_EXE_Version		= IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
+		RELEASE lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues
 		RETURN
 	ENDPROC
 
@@ -1007,6 +1009,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			CLEAR DLLS fb2p_SetFileAttributes, fb2p_GetFileAttributes
+			RELEASE tcFileName, tcAttrib, dwFileAttributes
 		ENDTRY
 
 		RETURN
@@ -1036,6 +1039,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			COMPILE DATABASE (tcFileName)
 
 		ENDCASE
+
+		RELEASE tcFileName, lcType
+		RETURN
 	ENDPROC
 
 
@@ -1123,6 +1129,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THROW
 			ENDIF
 
+		FINALLY
+			RELEASE toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3 ;
+				, lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
 		ENDTRY
 
 		RETURN
@@ -1411,8 +1420,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			THROW
 
 		FINALLY
-			STORE NULL TO lo_Configuration, lo_CFG
-			RELEASE lo_Configuration, lo_CFG
+			STORE NULL TO lo_Configuration, lo_CFG, loEx
+			RELEASE tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
+				, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile ;
+				, lcConfigFile, llExisteConfig, laConfig, I, lcConfData, lcExt, lcValue, lc_CFG_Path ;
+				, lo_CFG, lo_Configuration, loEx
 
 		ENDTRY
 
@@ -1438,6 +1450,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 		ENDFOR
 
+		RELEASE tcFileName, tcFilters, llFound, laFiltros
 		RETURN llFound
 	ENDFUNC
 
@@ -1459,6 +1472,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, 'XXX' )
 		ENDWITH && THIS
 
+		RELEASE tcExt
 		RETURN lcExt2
 	ENDPROC
 
@@ -1466,6 +1480,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE TieneSoporte_Bin2Prg
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
+
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			llTieneSoporte	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support >= 1 ;
 				, tcExt == 'VCX', .VCX_Conversion_Support >= 1 ;
@@ -1477,6 +1492,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, tcExt == 'DBC', .DBC_Conversion_Support >= 1 ;
 				, .F. )
 		ENDWITH && THIS
+
+		RELEASE tcExt
 		RETURN llTieneSoporte
 	ENDPROC
 
@@ -1484,6 +1501,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE TieneSoporte_Prg2Bin
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
+
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			llTieneSoporte	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
 				, tcExt == .c_VC2, .VCX_Conversion_Support = 2 ;
@@ -1495,6 +1513,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, tcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
+
+		RELEASE tcExt
 		RETURN llTieneSoporte
 	ENDPROC
 
@@ -1578,7 +1598,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- Ejecución normal
 
 					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
-					IF NOT THIS.l_ConfigEvaluated THEN
+					IF NOT .l_ConfigEvaluated THEN
 						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 							, @tcClearUniqueID, @tcOptimizeByFilestamp )
 					ENDIF
@@ -1861,7 +1881,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 			CD (JUSTPATH(THIS.c_CurDir))
 			STORE NULL TO loFSO
-			RELEASE loFSO
+			RELEASE tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
+				, toModulo, toEx, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+				, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp ;
+				, I, lcPath, lcFileSpec, lcFile, laFiles, lnFileCount, lcErrorInfo, loEx, loFSO
 		ENDTRY
 
 		RETURN lnCodError
@@ -2161,6 +2184,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*THIS.writeLog_Flush()
 			ENDIF
 
+			RELEASE tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName ;
+				, lcErrorInfo, laDirFile, lcExtension, lnFileCount, laFiles, I ;
+				, ltFilestamp, lcExtA, lcExtB ;
+				, loFSO
 		ENDTRY
 
 		RETURN lnCodError
@@ -2584,6 +2611,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.SortSpecialProps()
+		RELEASE lcSys16, lnPosProg
+		RETURN
 	ENDPROC
 
 
@@ -2619,7 +2648,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tnLEN_TAG_F				(v! IN    ) Longitud del tag de fin
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F
+		
 		EXTERNAL ARRAY taProps
+
 		LOCAL llBloqueEncontrado, loEx AS EXCEPTION
 
 		TRY
@@ -2679,6 +2710,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F, loEx
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -2735,6 +2768,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE tcNombreObjeto, toClase, I, X, N, lcRutaDelNombre, loObjeto
 		ENDTRY
 
 		RETURN lnObjeto
@@ -2752,6 +2787,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		CATCH TO loEx
 			llError		= .T.
 			tnCodError	= loEx.ERRORNO
+
+		FINALLY
+			RELEASE tcAsignacion, tnCodError, tcExpNormalizada, loEx
 		ENDTRY
 
 		RETURN NOT llError
@@ -2771,6 +2809,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 		#ENDIF
 		THIS.writeLog( '' )
 		THIS.writeLog( C_CONVERTING_FILE_LOC + ' ' + THIS.c_OutputFile + '...' )
+		RELEASE toModulo, toEx, toFoxBin2Prg
+		RETURN
 	ENDPROC
 
 
@@ -2778,23 +2818,29 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS taCodeLines, I
 
 		LOCAL lcPrevLine, llIsContinuation
+
 		*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
 		IF I > 1
 			lcPrevLine	= taCodeLines(I-1)
 		ELSE
 			lcPrevLine	= ''
 		ENDIF
-		.get_SeparatedLineAndComment( @lcPrevLine )
+
+		THIS.get_SeparatedLineAndComment( @lcPrevLine )
+
 		IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
 			llIsContinuation	= .T.
 		ENDIF
+		
+		RELEASE taCodeLines, I, lcPrevLine
+
 		RETURN llIsContinuation
 	ENDPROC
 
 
 	PROCEDURE elTextoEvaluadoEsElTokenIndicado
 		LPARAMETERS tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin
-		LOCAL llEncontrado, lcWord
+		LOCAL llEncontrado, lcWord, lcLine
 
 		TRY
 			*-- Pre-normalización
@@ -2838,6 +2884,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 					llEncontrado	= .T.
 				ENDIF
 			ENDIF
+		
+		FINALLY
+			RELEASE tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin, lcLine
 		ENDTRY
 
 		RETURN llEncontrado
@@ -2854,6 +2903,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		FOR I = 0 TO 31
 			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
 		ENDFOR
+		RELEASE I
 		RETURN tcText
 	ENDPROC
 
@@ -2866,7 +2916,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		lcComentario	= ''
 		THIS.desnormalizarValorPropiedad( @lcPropName, @lcValor, @lcComentario )
 		tcAsignacion	= lcPropName + ' = ' + lcValor
-
+		RELEASE lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
 		RETURN tcAsignacion
 	ENDPROC
 
@@ -2915,6 +2965,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		ENDCASE
 
+		RELEASE tcProp, tcComentario, lnCodError, lnPos, lcValue
 		RETURN tcValue
 	ENDPROC
 
@@ -2952,6 +3003,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			tcValor	= STUFF(tcValor, lnPos, lnPos2 - lnPos + 1, CHR(lnAscii))		&&	ASCII
 		ENDDO
 
+		RELEASE lnPos, lnPos2, lnAscii
 		RETURN tcValor
 	ENDPROC
 
@@ -2963,6 +3015,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		FOR I = 0 TO 31
 			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
 		ENDFOR
+		RELEASE I
 		RETURN tcText
 	ENDPROC
 
@@ -2974,6 +3027,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CHR(13) + CHR(13) ;
 			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CHR(13) + CHR(13) ;
 			+ toEx.LINECONTENTS
+		RELEASE toEx
 		RETURN lcError
 	ENDPROC
 
@@ -3088,9 +3142,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tcRightTag				(v! IN    ) TAG de fin de los metadatos
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag
+
 		EXTERNAL ARRAY taPropsAndValues
 
-		LOCAL lcMetadatos, I, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+		LOCAL lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
 		STORE '' TO lcVirtualMeta
 		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
 
@@ -3127,6 +3182,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lnLastPos = lnPos2 + 1
 		ENDFOR
 
+		RELEASE tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag ;
+			, lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
 		RETURN
 	ENDPROC
 
@@ -3139,14 +3196,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
-		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
+		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -3195,6 +3254,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			ENDIF
 		ENDIF
 
+		RELEASE tcAsignacion, tcPropName, tcValue, toClase, taCodeLines, tnCodeLines, I, ln_AT_Cmt
 		RETURN
 	ENDPROC
 
@@ -3209,6 +3269,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ELSE
 			lcValue		= CHRTRAN( LEFT( tcNullTerminatedValue, lnNullPos - 1 ), ['], ["] )
 		ENDIF
+		RELEASE tcNullTerminatedValue, lnNullPos
 		RETURN lcValue
 	ENDPROC
 
@@ -3255,6 +3316,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
 
 						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+							*-- Optimización: Excluyo las líneas que solo son comentarios
+							taLineasExclusion(I)	= .T.
+							*--
 							LOOP
 						ENDIF
 
@@ -3263,7 +3327,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 						FOR X = 1 TO lnID_Bloques_Count
 							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
 							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
 								lnPrimerID		= X
 								lnAnidamientos	= 1
 								EXIT
@@ -3289,7 +3353,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 								DO CASE
 								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+										AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
 									*-- Busca el primer marcador (#IF o TEXT)
 									lnAnidamientos	= lnAnidamientos + 1
 
@@ -3323,6 +3387,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, ta_ID_Bloques, taLineasExclusion, tnBloquesExclusion, taBloquesExclusion ;
+				, lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
 		ENDTRY
 
 		RETURN
@@ -3333,17 +3400,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 	PROCEDURE lineaExcluida
 		LPARAMETERS tn_Linea, tnBloquesExclusion, taLineasExclusion
 
-		EXTERNAL ARRAY taLineasExclusion
-		*LOCAL X, llExcluida
-
-		*FOR X = 1 TO tnBloquesExclusion
-		*	IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
-		*		llExcluida	= .T.
-		*		EXIT
-		*	ENDIF
-		*ENDFOR
-
-		*RETURN llExcluida
 		RETURN taLineasExclusion(tn_Linea)
 	ENDPROC
 
@@ -3364,6 +3420,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		ENDCASE
 
+		RELEASE tcLine, tcComment, ln_AT_Cmt
 		RETURN lllineIsOnlyCommentAndNoMetadata
 	ENDPROC
 
@@ -3376,6 +3433,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		tcComentario	= ''
 		THIS.normalizarValorPropiedad( @lcPropName, @lcValor, @tcComentario )
 		tcAsignacion	= lcPropName + ' = ' + lcValor
+		RELEASE tcComentario, lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
 		RETURN tcAsignacion
 	ENDPROC
 
@@ -3421,6 +3479,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		ENDCASE
 
+		RELEASE tcProp, lcValue, I, tcComentario
 		RETURN tcValue
 	ENDPROC
 
@@ -3629,6 +3688,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE tcOperation, tcPropName, lnPos, loEx
 		ENDTRY
 
 		RETURN lcPropName
@@ -3651,6 +3712,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*											2=Sort completo de propiedades con "Name" al final (para la versión BIN)
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taPropsAndValues, tnPropsAndValues_Count, tnSortType
+
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
@@ -3756,6 +3818,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE taPropsAndValues, tnPropsAndValues_Count, tnSortType ;
+				, I, X, lnArrayCols, laPropsAndValues, lcPropName, lcSortedMemo, lcMethods
 		ENDTRY
 
 		RETURN
@@ -4010,6 +4075,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		ENDCASE
 
+		RELEASE tcPropName, tcValueType, taPropsAndValues, lnPos
 		RETURN luPropValue
 	ENDFUNC
 
@@ -4032,6 +4098,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toModulo._SourceFile	= THIS.get_ValueByName_FromListNamesWithValues( 'SourceFile', 'C', @laPropsAndValues )
 		ENDIF
 
+		RELEASE toModulo, tcLine, taCodeLines, I, tnCodeLines
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -4052,6 +4119,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toModulo._Comment		= ALLTRIM( STREXTRACT( tcLine, C_LIBCOMMENT_I, C_LIBCOMMENT_F ) )
 		ENDIF
 
+		RELEASE toModulo, tcLine, taCodeLines, I, tnCodeLines, laPropsAndValues, lnPropsAndValues_Count
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -4415,8 +4483,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*-- Fin: ESTRUCTURA A ANALIZAR:
 
 		TRY
-			LOCAL lcDefinedPAM, lnPos, lnPos2, laProps(1,2), lcLine, lcPropName, lcValue, I, lcAsignacion, lcMemo ;
-				, laPropsAndValues(1,2), lnPropsAndValues_Count
+			LOCAL I, lcMemo, laPropsAndValues(1,2), lnPropsAndValues_Count
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
@@ -4434,7 +4501,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
 				ENDFOR
 
-			ENDIF && laProps > 0
+			ENDIF && toClase._Prop_Count > 0
 
 		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -4443,6 +4510,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toClase, I, laPropsAndValues, lnPropsAndValues_Count
 		ENDTRY
 
 		RETURN lcMemo
@@ -4459,7 +4528,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				, toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcMemo, I, laPropsAndValues(1,2), lcPropName, lcValue
+		LOCAL lcMemo, I, laPropsAndValues(1,2)
 		lcMemo	= ''
 
 		IF toObjeto._Prop_Count > 0
@@ -4479,6 +4548,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		ENDIF
 
+		RELEASE toObjeto, toClase, I, laPropsAndValues
 		RETURN lcMemo
 	ENDPROC
 
@@ -4536,7 +4606,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDFOR
 
 		loProcedure	= NULL
-		RELEASE loProcedure
+		RELEASE toClase, I, X, lcNombreObjeto, loProcedure
 		RETURN lcMemo
 	ENDPROC
 
@@ -4577,7 +4647,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDFOR
 
 		loProcedure	= NULL
-		RELEASE loProcedure
+		RELEASE toObjeto, toClase, I, X, lcNombreObjeto, loProcedure
 		RETURN lcMemo
 	ENDPROC
 
@@ -4602,6 +4672,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 		ENDFOR
 
+		RELEASE tcPropName, toClase, I
 		RETURN lcComentario
 	ENDPROC
 
@@ -4629,7 +4700,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDFOR
 
 		loProcedure	= NULL
-		RELEASE loProcedure
+		RELEASE tcMethodName, toClase, loProcedure, I
 
 		RETURN lcComentario
 	ENDPROC
@@ -4678,6 +4749,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lnPos2	= AT( ']', tcSeparatedCommaVars, I )
 			tcSeparatedCommaVars	= STUFF( tcSeparatedCommaVars, lnPos1, lnPos2 - lnPos1 + 1, '' )
 		ENDFOR
+		
+		RELEASE tcSeparatedCommaVars, lnPos1, lnPos2, I
+		RETURN
 	ENDPROC
 
 
@@ -4699,6 +4773,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			.Evaluate_PAM( @lcMemo, toClase._HiddenMethods, 'method', 'hidden' )
 		ENDWITH && THIS
 
+		RELEASE toClase, I, lcPAM, lcComentario
 		RETURN lcMemo
 	ENDPROC
 
@@ -4723,6 +4798,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDTEXT
 			ENDIF
 		ENDFOR
+
+		RELEASE tcMemo, tcPAM, tcPAM_Type, tcPAM_Visibility, lcPAM, I
+		RETURN 
 	ENDPROC
 
 
@@ -4743,7 +4821,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				lcMethodsMemo	= .objectMethods2Memo( toObjeto, toClase )
 
 				IF EMPTY(toObjeto._TimeStamp)
-					toObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					toObjeto._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toObjeto._UniqueID)
 					toObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -4798,6 +4876,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, toObjeto._User )
 			ENDIF
 		ENDWITH && THIS
+		
+		RELEASE toClase, toObjeto, toFoxBin2Prg, lcPropsMemo, lcMethodsMemo
+		RETURN
 	ENDPROC
 
 
@@ -4828,7 +4909,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						loObjeto			= toClase._AddObjects( X )
 
 						IF EMPTY(loObjeto._TimeStamp)
-							loObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loObjeto._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loObjeto._UniqueID)
 							loObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -4877,7 +4958,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			loObjeto	= NULL
-			RELEASE loObjeto
+			RELEASE toClase, toFoxBin2Prg, N, X, lcObjName, loObjeto
 
 		ENDTRY
 
@@ -4896,6 +4977,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 			, taLineasExclusion, tnBloquesExclusion
+
 		EXTERNAL ARRAY taCodeLines
 
 		#IF .F.
@@ -4962,7 +5044,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			loProcedure	= NULL
-			RELEASE loProcedure
+			RELEASE toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
+			, taLineasExclusion, tnBloquesExclusion, llEsProcedureDeClase, loProcedure
 
 		ENDTRY
 
@@ -5089,6 +5172,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toModulo, toClase, tcLine, I, taCodeLines, tnCodeLines ;
+				, laPropsAndValues, lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -5189,6 +5275,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toClase, tcLine, taCodeLines, tnCodeLines, I ;
+				, lcDefinedPAM, lnPos, lnPos2, lcPAM_Name, lcItem, lcMethods, lcPAM_Type
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -5354,6 +5443,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				THROW
 
+			FINALLY
+				RELEASE toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
+					, taLineasExclusion, tnBloquesExclusion, tc_Comentario, Z, lcProp, lcValue, loEx ;
+					, llCLASSMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
+					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed, llOBJECTMETADATA_Completed ;
+					, llCLASSCOMMENTS_Completed, loObjeto
 			ENDTRY
 		ENDIF
 
@@ -5388,6 +5483,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			STORE '' TO tcProcedureAbierto
 		ENDIF
 
+		RELEASE toClase, tcLine, I, tcProcedureAbierto
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5407,6 +5503,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toClase._HiddenProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 8 ) ) )
 		ENDIF
 
+		RELEASE toClase, tcLine
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5430,6 +5527,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 		ENDIF
 
+		RELEASE toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5479,6 +5577,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toClase, tcLine ,taCodeLines, tnCodeLines, I
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -5518,6 +5618,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 		ENDIF
 
+		RELEASE toClase, tcLine, laPropsAndValues, lnPropsAndValues_Count
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5549,7 +5650,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDWITH && THIS
 
 			loObjeto	= NULL
-			RELEASE laPropsAndValues, lnPropsAndValues_Count, loObjeto
+			RELEASE toClase, tcLine, laPropsAndValues, lnPropsAndValues_Count, loObjeto
 		ENDIF
 
 		RETURN llBloqueEncontrado
@@ -5601,6 +5702,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			RELEASE loOle, laPropsAndValues, lnPropsAndValues_Count
 		ENDIF
 
+		RELEASE toModulo, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5646,6 +5748,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				, @tc_Comentario, @taLineasExclusion, @tnBloquesExclusion )
 		ENDIF
 
+		RELEASE toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
+			, tc_Comentario, taLineasExclusion, tnBloquesExclusion
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5665,6 +5769,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toClase._ProtectedProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 11 ) ) )
 		ENDIF
 
+		RELEASE toClase, tcLine
 		RETURN llBloqueEncontrado
 	ENDPROC
 
@@ -5734,8 +5839,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			STORE NULL TO loProcedure
-			RELEASE loProcedure, I, lcNombreObjeto, lnObjProc
-
+			RELEASE loProcedure, I, lcNombreObjeto, lnObjProc ;
+				, toClase, tnX, tc_Comentario, tcProcName, tcProcType, toObjeto
 		ENDTRY
 
 		RETURN
@@ -5823,7 +5928,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			STORE NULL TO loClase
-			RELEASE loClase, I ;
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo, loClase, I ;
 				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
 				, lc_Comentario, lcProcedureAbierto, lcLine
 		ENDTRY
@@ -6000,7 +6105,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loClase._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
 							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6303,7 +6408,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loClase._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
 							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6542,7 +6647,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				ENDIF
 
 				IF EMPTY(toProject._TimeStamp)
-					toProject._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					toProject._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toProject._ID)
 					toProject._ID	= toFoxBin2Prg.Unique_ID('N')
@@ -6582,7 +6687,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				FOR EACH loFile IN toProject FOXOBJECT
 
 					IF EMPTY(loFile._TimeStamp)
-						loFile._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+						loFile._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 					ENDIF
 					IF EMPTY(loFile._ID)
 						loFile._ID	= toFoxBin2Prg.Unique_ID('N')
@@ -6719,6 +6824,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toProject ;
+				, I, lc_Comentario, lcLine, llBuildProj_Completed, llDevInfo_Completed ;
+				, llServerHead_Completed, llFileComments_Completed, llFoxBin2Prg_Completed ;
+				, llExcludedFiles_Completed, llTextFiles_Completed, llProjectProperties_Completed
 		ENDTRY
 
 		RETURN
@@ -6799,7 +6909,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 		FINALLY
 			STORE NULL TO loFile
-			RELEASE lcComment, lcMetadatos, luValor, laPropsAndValues, lnPropsAndValues_Count, loFile
+			RELEASE toProject, tcLine, taCodeLines, I, tnCodeLines ;
+				, lcComment, lcMetadatos, luValor, laPropsAndValues, lnPropsAndValues_Count, loFile
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -6986,6 +7097,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
 		EXTERNAL ARRAY toProject
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7048,6 +7160,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
 		EXTERNAL ARRAY toProject
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7110,6 +7223,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
 		EXTERNAL ARRAY toProject
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7324,7 +7438,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				*	loReg.UNIQUEID	= ''
 				*ENDIF
 				IF EMPTY(loReg.TIMESTAMP)
-					loReg.TIMESTAMP	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					loReg.TIMESTAMP	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(loReg.UNIQUEID) OR ALLTRIM(loReg.UNIQUEID) = '0'
 					loReg.UNIQUEID	= toFoxBin2Prg.Unique_ID()
@@ -7507,6 +7621,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName ;
+				, lcValue, loEx
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -7525,9 +7642,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps(1) ;
-				, lcComment, lcMetadatos, luValor ;
-				, laPropsAndValues(1,2), lnPropsAndValues_Count
+			LOCAL llBloqueEncontrado, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps(1)
 
 			IF LOWER( LEFT(tcLine, 10) ) == 'platform="'
 				llBloqueEncontrado	= .T.
@@ -7556,6 +7671,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE toReport, tcLine, taCodeLines, I, tnCodeLines, toReg ;
+				, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -7887,6 +8005,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		* toTable					(@?    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toTable
+
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
@@ -7930,6 +8049,9 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toTable ;
+				, I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueTable_Completed
 		ENDTRY
 
 		RETURN
@@ -8063,6 +8185,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase
+
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
@@ -8106,6 +8229,9 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase ;
+				, I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueDatabase_Completed
 		ENDTRY
 
 		RETURN
@@ -8197,6 +8323,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toMenu
+
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
@@ -8240,6 +8367,9 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toMenu ;
+				, I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueMenu_Completed
 		ENDTRY
 
 		RETURN
@@ -8359,6 +8489,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			, toFoxBin2Prg
 
 		EXTERNAL ARRAY taPropsAndComments, taProtected
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -8409,6 +8540,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount ;
+			, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count ;
+			, toFoxBin2Prg, lcMethodName, lnMethodCount
 		ENDTRY
 
 		RETURN
@@ -8476,6 +8612,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tnMethodCount, taMethods, taCode, taProtected, taPropsAndComments ;
+				, lcMethod, lcMethodName, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods, lnLen
 		ENDTRY
 
 		RETURN
@@ -8506,6 +8646,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo
+
 		EXTERNAL ARRAY taPropsAndComments
 
 		TRY
@@ -8542,6 +8683,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo ;
+				, laLines, I, lnPos, loEx
 		ENDTRY
 
 		RETURN
@@ -8565,7 +8710,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
+
 		EXTERNAL ARRAY taPropsAndValues
+
 		TRY
 			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
 			tcSortedMemo			= ''
@@ -8653,6 +8800,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo ;
+				, laItems, I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
 		ENDTRY
 
 		RETURN
@@ -8671,8 +8822,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo
+
 		EXTERNAL ARRAY taProtected
 
+		LOCAL I
 		tcSortedMemo		= ''
 		tnProtected_Count	= ALINES(taProtected, tcMemo, 1+4)
 
@@ -8696,6 +8849,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			DIMENSION taProtected(tnProtected_Count)
 		ENDIF
 
+		RELEASE tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo, I
 		RETURN
 	ENDPROC
 
@@ -8761,6 +8915,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tcMethod, tcIndentation, tlKeepProcHeader ;
+				, I, X, llProcedure, lnInicio, lnFin, laLineas, lnOffset
 		ENDTRY
 
 		RETURN lcMethod
@@ -8768,7 +8926,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE MemoInOneLine( tcMethod )
+	PROCEDURE MemoInOneLine
+		LPARAMETERS tcMethod
+
 		TRY
 			LOCAL lcLine, I
 			lcLine	= ''
@@ -8787,6 +8947,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tcMethod, I
 		ENDTRY
 
 		RETURN lcLine
@@ -8796,6 +8959,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE set_MultilineMemoWithAddObjectProperties
 		LPARAMETERS taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine
+
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
@@ -8822,6 +8986,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine ;
+				, I, lcComentarios, laLines, lcFinDeLinea
 		ENDTRY
 
 		RETURN lcLine
@@ -8834,6 +9002,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			, taProtected, tnProtected_Count, toFoxBin2Prg
 
 		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -8885,6 +9054,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+			, taProtected, tnProtected_Count, toFoxBin2Prg ;
+			, I, I2, laMethods, lnDeleted, lcMethodName, lnMethodPos, lcMethodType, loEx
 		ENDTRY
 
 		RETURN
@@ -8899,6 +9073,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
 		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -9102,6 +9277,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+			, taProtected, tnProtected_Count, toFoxBin2Prg ;
+			, lnLineCount, laLine, I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
+			, laLineasExclusion, lnBloquesExclusion ;
+			, loEx
 		ENDTRY
 
 		RETURN
@@ -9178,6 +9360,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE toRegObj, lcMemo, laPropsAndValues, lnPropsAndValues_Count
 		ENDTRY
 
 		RETURN
@@ -9216,6 +9401,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcMethods
 		ENDIF
 
+		RELEASE tcMethods, taMethods, taCode, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count, toFoxBin2Prg ;
+			, laMethods, laCode, lnMethodCount, I, lcMethods
 		RETURN
 	ENDPROC
 
@@ -9229,7 +9416,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		TRY
 			LOCAL lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, I ;
-				, lcPropName, lnProtectedItem, lcComentarios
+				, lcPropName, lnProtectedItem, lcComentarios ;
+				, loEx as Exception
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- DEFINIR PROPIEDADES ( HIDDEN, PROTECTED, *DEFINED_PAM )
@@ -9322,6 +9510,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+		
+		FINALLY
+			RELEASE toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
+			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count ;
+			, lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, I ;
+			, lcPropName, lnProtectedItem, lcComentarios, loEx
 		ENDTRY
 
 		RETURN
@@ -9384,8 +9578,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
 
+			RELEASE I, lcPropsMethodsDefd, lcType
 		ENDIF
 
+		RELEASE taPropsAndComments, tnPropsAndComments_Count
 		RETURN
 	ENDPROC
 
@@ -10260,7 +10456,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loRegClass, loRegObj
-			RELEASE lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
 				, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle ;
 				, laObjs, I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
 
@@ -10505,7 +10702,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loRegClass, loRegObj
-			RELEASE lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
 				, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle ;
 				, laObjs, I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
 
@@ -10849,7 +11047,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
-			RELEASE lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
 				, loProject, loServerHead, loServerData
 
 		ENDTRY
@@ -11230,7 +11429,8 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			*USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
-			RELEASE lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
 				, lcStrPJM, laLines, laProps, loProject, loServerHead, loServerData
 
 		ENDTRY
@@ -11398,7 +11598,8 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			USE IN (SELECT("TABLABIN"))
 			USE IN (SELECT("TABLABIN_0"))
 			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
-			RELEASE lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen ;
 				, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle
 
 		ENDTRY
@@ -11535,7 +11736,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			ENDFOR
 
 			STORE NULL TO loTable, loDBFUtils
-			RELEASE lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable, loDBFUtils
 		ENDTRY
@@ -11614,7 +11816,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			CLOSE DATABASES
-
+			RELEASE toDatabase, toEx, toFoxBin2Prg ;
+				, lnCodError, laDatabases, lnDatabases_Count, lnLen
 		ENDTRY
 
 		RETURN
@@ -11695,7 +11898,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-
+			RELEASE toMenu, toEx, toFoxBin2Prg, lnCodError, lnLen
 		ENDTRY
 
 		RETURN
@@ -11763,15 +11966,16 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
-		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
+		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -11842,8 +12046,11 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
+		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -13663,7 +13870,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 				IF NOT EMPTY(._StoredProcedures)
 					UPDATE TABLABIN ;
-						SET CODE = THIS._StoredProcedures ;
+						SET CODE = ._StoredProcedures ;
 						WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
 				ENDIF
 
@@ -18912,7 +19119,8 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 		FINALLY
 			STORE NULL TO loReg
-			RELEASE lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, lnNegContainer, lnNegObject
+			RELEASE tcLine, taCodeLines, I, tnCodeLines, toConversor ;
+				, lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, lnNegContainer, lnNegObject
 
 		ENDTRY
 
