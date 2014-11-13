@@ -1450,7 +1450,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 		ENDFOR
 
-		RELEASE tcFileName, tcFilters, llFound, laFiltros
+		RELEASE tcFileName, tcFilters, laFiltros
 		RETURN llFound
 	ENDFUNC
 
@@ -13847,12 +13847,14 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			LOCAL loTables AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG' ;
 				, loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG' ;
 				, loViews AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
+			LOCAL lcStoredProcedures
 			STORE NULL TO loTables, loConnections, loViews
 
-			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
-				loTables		= ._Tables
-				loConnections	= ._Connections
-				loViews			= ._Views
+			WITH THIS AS CL_DBC OF 'FOXBIN2PRG.PRG'
+				loTables			= ._Tables
+				loConnections		= ._Connections
+				loViews				= ._Views
+				lcStoredProcedures	= ._StoredProcedures
 
 				ERASE (tc_OutputFile)
 				CREATE DATABASE (tc_OutputFile)
@@ -13868,9 +13870,9 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 					SET Property = lcMemoWithProperties ;
 					WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
 
-				IF NOT EMPTY(._StoredProcedures)
+				IF NOT EMPTY(lcStoredProcedures)
 					UPDATE TABLABIN ;
-						SET CODE = ._StoredProcedures ;
+						SET CODE = lcStoredProcedures ;
 						WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
 				ENDIF
 
