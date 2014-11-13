@@ -15,10 +15,12 @@
 #DEFINE C_ENDDEFINE_MARKER_NOT_FOUND_LOC					"Kann keinen Ende Marker [ENDDEFINE] in Zeile <<TRANSFORM( toClase._Inicio )>> für die ID [<<toClase._Nombre>>] finden"
 #DEFINE C_END_MARKER_NOT_FOUND_LOC							"Kann keinen Ende Marker [<<ta_ID_Bloques(lnPrimerID,2)>>] welcher den Start Marker [<<ta_ID_Bloques(lnPrimerID,1)>>] in Zeile <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>> schließt"
 #DEFINE C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				"Feld [<<laProps(I)>>] nicht in der Struktur von Datei <<DBF('TABLABIN')>> gefunden"
-#DEFINE C_FILE_DOESNT_EXIST_LOC								'Datei existiert nicht:'
+#DEFINE C_FILE_DOESNT_EXIST_LOC								"Datei existiert nicht:"
 #DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					"Datei [<<.c_InputFile>>] wird nicht unterstützt"
 #DEFINE C_FILE_NOT_FOUND_LOC								"Datei nicht gefunden"
 #DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Erweiterungsneukonfiguration:"
+#DEFINE C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES	"Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
+#DEFINE C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND				"Externe Klasse (<<toModulo._ExternalClasses(I)>>) nicht in der Datei [<<toFoxBin2Prg.c_InputFile>>] gefunden"
 #DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						"FOXBIN2PRG: FEHLER!!"
 #DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						"FOXBIN2PRG: SYNTAX INFO"
 #DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				"FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
