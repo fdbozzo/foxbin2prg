@@ -4046,6 +4046,70 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	FUNCTION get_ValueByName_FromListNamesWithValues
+		*-- ASIGNO EL VALOR DEL ARRAY DE DATOS Y VALORES PARA LA PROPIEDAD INDICADA
+		LPARAMETERS tcPropName, tcValueType, taPropsAndValues
+		LOCAL lnPos, luPropValue
+
+		lnPos	= ASCAN( taPropsAndValues, tcPropName, 1, 0, 1, 1+2+4+8)
+
+		IF lnPos = 0 OR EMPTY( taPropsAndValues( lnPos, 2 ) )
+			*-- Valores no encontrados o vacíos
+			luPropValue	= ''
+		ELSE
+			luPropValue	= taPropsAndValues( lnPos, 2 )
+		ENDIF
+
+		DO CASE
+		CASE tcValueType = 'I'
+			luPropValue	= CAST( luPropValue AS INTEGER )
+
+		CASE tcValueType = 'N'
+			luPropValue	= CAST( luPropValue AS DOUBLE )
+
+		CASE tcValueType = 'T'
+			luPropValue	= CAST( luPropValue AS DATETIME )
+
+		CASE tcValueType = 'D'
+			luPropValue	= CAST( luPropValue AS DATE )
+
+		CASE tcValueType = 'E'
+			luPropValue	= EVALUATE( luPropValue )
+
+		OTHERWISE && Asumo 'C' para lo demás
+			luPropValue	= luPropValue
+
+		ENDCASE
+
+		RETURN luPropValue
+	ENDFUNC
+
+
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_FoxBin2Prg
+		*------------------------------------------------------
+		*-- Analiza el bloque <FOXBIN2PRG>
+		*------------------------------------------------------
+		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
+
+		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
+
+		IF LEFT( tcLine + ' ', LEN(C_FB2PRG_META_I) + 1 ) == C_FB2PRG_META_I + ' '
+			llBloqueEncontrado	= .T.
+
+			*-- Metadatos del módulo
+			THIS.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_FB2PRG_META_I, C_FB2PRG_META_F )
+			toModulo._Version		= THIS.get_ValueByName_FromListNamesWithValues( 'Version', 'N', @laPropsAndValues )
+			toModulo._SourceFile	= THIS.get_ValueByName_FromListNamesWithValues( 'SourceFile', 'C', @laPropsAndValues )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+
+	*******************************************************************************************************************
 	PROCEDURE createProject
 
 		CREATE TABLE (THIS.c_OutputFile) ;
@@ -4644,47 +4708,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		RETURN lcStructure
 	ENDPROC
-
-
-
-	*******************************************************************************************************************
-	FUNCTION get_ValueByName_FromListNamesWithValues
-		*-- ASIGNO EL VALOR DEL ARRAY DE DATOS Y VALORES PARA LA PROPIEDAD INDICADA
-		LPARAMETERS tcPropName, tcValueType, taPropsAndValues
-		LOCAL lnPos, luPropValue
-
-		lnPos	= ASCAN( taPropsAndValues, tcPropName, 1, 0, 1, 1+2+4+8)
-
-		IF lnPos = 0 OR EMPTY( taPropsAndValues( lnPos, 2 ) )
-			*-- Valores no encontrados o vacíos
-			luPropValue	= ''
-		ELSE
-			luPropValue	= taPropsAndValues( lnPos, 2 )
-		ENDIF
-
-		DO CASE
-		CASE tcValueType = 'I'
-			luPropValue	= CAST( luPropValue AS INTEGER )
-
-		CASE tcValueType = 'N'
-			luPropValue	= CAST( luPropValue AS DOUBLE )
-
-		CASE tcValueType = 'T'
-			luPropValue	= CAST( luPropValue AS DATETIME )
-
-		CASE tcValueType = 'D'
-			luPropValue	= CAST( luPropValue AS DATE )
-
-		CASE tcValueType = 'E'
-			luPropValue	= EVALUATE( luPropValue )
-
-		OTHERWISE && Asumo 'C' para lo demás
-			luPropValue	= luPropValue
-
-		ENDCASE
-
-		RETURN luPropValue
-	ENDFUNC
 
 
 
@@ -5428,29 +5451,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 
 			STORE '' TO tcProcedureAbierto
-		ENDIF
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_FoxBin2Prg
-		*------------------------------------------------------
-		*-- Analiza el bloque <FOXBIN2PRG>
-		*------------------------------------------------------
-		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
-
-		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
-
-		IF LEFT( tcLine + ' ', LEN(C_FB2PRG_META_I) + 1 ) == C_FB2PRG_META_I + ' '
-			llBloqueEncontrado	= .T.
-
-			*-- Metadatos del módulo
-			THIS.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_FB2PRG_META_I, C_FB2PRG_META_F )
-			toModulo._Version		= THIS.get_ValueByName_FromListNamesWithValues( 'Version', 'N', @laPropsAndValues )
-			toModulo._SourceFile	= THIS.get_ValueByName_FromListNamesWithValues( 'SourceFile', 'C', @laPropsAndValues )
 		ENDIF
 
 		RETURN llBloqueEncontrado
