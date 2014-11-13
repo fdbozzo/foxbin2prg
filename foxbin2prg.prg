@@ -687,7 +687,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		FINALLY
 			THIS.o_FSO	= NULL
 			THIS.o_FNC	= NULL
-			SET PROCEDURE TO
 		ENDTRY
 
 		RETURN
@@ -1147,17 +1146,17 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						tcOutputFile_Ext1	= FORCEEXT(tcOutputFile, lcExt_1)
 
 						IF FILE( tcOutputFile_Ext1 )
-						*-- LOG
-						DO CASE
-						CASE EMPTY(lcExt_2)
+							*-- LOG
+							DO CASE
+							CASE EMPTY(lcExt_2)
 								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 )
-						CASE EMPTY(lcExt_3)
+							CASE EMPTY(lcExt_3)
 								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 + '/' + lcExt_2 )
-						OTHERWISE
+							OTHERWISE
 								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 + '/' + lcExt_2 + '/' + lcExt_3 )
-						ENDCASE
+							ENDCASE
 
-						*-- COPIA BACKUP
+							*-- COPIA BACKUP
 							COPY FILE ( tcOutputFile_Ext1 ) TO ( tcBakFile_1 )
 
 							IF NOT EMPTY(lcExt_2)
@@ -1165,7 +1164,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 								IF FILE( tcOutputFile_Ext2 )
 									COPY FILE ( tcOutputFile_Ext2 ) TO ( tcBakFile_2 )
-						ENDIF
+								ENDIF
 							ENDIF
 
 							IF NOT EMPTY(lcExt_3)
@@ -1173,9 +1172,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 								IF FILE( tcOutputFile_Ext3 )
 									COPY FILE ( tcOutputFile_Ext3 ) TO ( tcBakFile_3 )
+								ENDIF
+							ENDIF
 						ENDIF
-					ENDIF
-				ENDIF
 					ENDIF
 				ENDIF
 			ENDWITH && THIS
@@ -2345,7 +2344,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				lcEXE_CAPS		= FORCEPATH( 'filename_caps.exe', lcPath )
 				loFSO			= .o_FSO
 				llRelanzarError	= NOT tl_NormalizeInputFile
-
+				
 				IF tl_NormalizeInputFile
 					tcFileName	= EVL( tcFileName, .c_InputFile )
 					lcType		= UPPER( JUSTEXT( tcFileName ) )
@@ -2362,6 +2361,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC) )
 						SET PROCEDURE TO (lcEXE_CAPS) ADDITIVE
 						.o_FNC	= CREATEOBJECT( 'cl_FileName_Caps' )
+						RELEASE PROCEDURE (lcEXE_CAPS)
 
 						.n_ExisteCapitalizacion	= 1
 					ELSE
@@ -2381,41 +2381,41 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-					*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
+				*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
 				.RenameFile( tcFileName, lcEXE_CAPS, loFSO, llRelanzarError )
 
-					DO CASE
-					CASE lcType = 'PJX'
+				DO CASE
+				CASE lcType = 'PJX'
 					.RenameFile( FORCEEXT(tcFileName,'PJT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'VCX'
+				CASE lcType = 'VCX'
 					.RenameFile( FORCEEXT(tcFileName,'VCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'SCX'
+				CASE lcType = 'SCX'
 					.RenameFile( FORCEEXT(tcFileName,'SCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'FRX'
+				CASE lcType = 'FRX'
 					.RenameFile( FORCEEXT(tcFileName,'FRT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'LBX'
+				CASE lcType = 'LBX'
 					.RenameFile( FORCEEXT(tcFileName,'LBT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'DBF'
+				CASE lcType = 'DBF'
 					IF FILE( FORCEEXT(tcFileName,'FPT') )
 						.RenameFile( FORCEEXT(tcFileName,'FPT'), lcEXE_CAPS, loFSO, llRelanzarError )
-						ENDIF
+					ENDIF
 					IF FILE( FORCEEXT(tcFileName,'CDX') )
 						.RenameFile( FORCEEXT(tcFileName,'CDX'), lcEXE_CAPS, loFSO, llRelanzarError )
-						ENDIF
+					ENDIF
 
-					CASE lcType = 'DBC'
+				CASE lcType = 'DBC'
 					.RenameFile( FORCEEXT(tcFileName,'DCX'), lcEXE_CAPS, loFSO, llRelanzarError )
 					.RenameFile( FORCEEXT(tcFileName,'DCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'MNX'
+				CASE lcType = 'MNX'
 					.RenameFile( FORCEEXT(tcFileName,'MNT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					ENDCASE
+				ENDCASE
 
 			ENDWITH && THIS
 
@@ -6014,7 +6014,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					*-- Defino el objeto de módulo y sus propiedades
 					*toModulo	= NULL
 					*toModulo	= CREATEOBJECT('CL_MODULO')
-
+					
 					*IF NOT (toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain)
 					*	llEXTERNAL_CLASS_Completed	= .T.
 					*ENDIF
@@ -6285,7 +6285,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					lcInputFile			= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 					ASORT( laFiles, 1, 0, 0, 1)
-
+					
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
 
@@ -10533,9 +10533,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*!*				ENDSCAN
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				*
-			ENDTEXT
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			*
+		ENDTEXT
 
 		*!*			CATCH TO loEx
 		*!*				IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -10876,7 +10876,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
-				ENDIF
+					ENDIF
 				ENDIF
 			ENDWITH && THIS
 
@@ -11142,7 +11142,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
-				ENDIF
+					ENDIF
 				ENDIF
 			ENDWITH && THIS
 
