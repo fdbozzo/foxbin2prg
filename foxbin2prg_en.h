@@ -14,11 +14,13 @@
 #DEFINE C_DUPLICATED_FILE_LOC								"Duplicated file"
 #DEFINE C_ENDDEFINE_MARKER_NOT_FOUND_LOC					"Cannot find end marker [ENDDEFINE] of line <<TRANSFORM( toClase._Inicio )>> for ID [<<toClase._Nombre>>]"
 #DEFINE C_END_MARKER_NOT_FOUND_LOC							"Cannot find end marker [<<ta_ID_Bloques(lnPrimerID,2)>>] that closes start marker [<<ta_ID_Bloques(lnPrimerID,1)>>] on line <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
+#DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Extension Reconfiguration:"
+#DEFINE C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES	"External class count (<<toModulo._ExternalClasses_Count>>) does not match found classes (<<toModulo._Clases_Count>>) for file [<<toFoxBin2Prg.c_InputFile>>]"
+#DEFINE C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND				"External class [<<toModulo._ExternalClasses(I)>>] is not found in file [<<toFoxBin2Prg.c_InputFile>>]"
 #DEFINE C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				"Field [<<laProps(I)>>] not found in structure of file <<DBF('TABLABIN')>>"
 #DEFINE C_FILE_DOESNT_EXIST_LOC								'File does not exist:'
 #DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					"File [<<.c_InputFile>>] is not supported"
 #DEFINE C_FILE_NOT_FOUND_LOC								"File not found"
-#DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Extension Reconfiguration:"
 #DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						"FOXBIN2PRG: ERROR!!"
 #DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						"FOXBIN2PRG: SYNTAX INFO"
 #DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				"FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;

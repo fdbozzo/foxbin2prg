@@ -158,17 +158,23 @@ End Sub
 
 Private Sub evaluateFile( tcFile )
 	lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
-	oVFP9.SetVar "gc_Ext", lcExt
-	
-	'PROCEDURE EvaluarConfiguracion
-	'	LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-	'		, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
-	
-	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '', '', '', '', '', '', '', '', '" & tcFile & "' )" )
-	If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Prg2Bin(gc_Ext)") Then
-		nFile_Count = nFile_Count + 1
-		ReDim Preserve aFiles(nFile_Count)
-		aFiles(nFile_Count) = tcFile
+	lcFileName = FileSystemObject.GetFileName( tcFile )
+	laPoints = Split( lcFileName, "." )
+	lnPoints = UBound(laPoint)
+	'-- No proceso los archivos con más de un punto (clases en archivos individuales) por performance
+	If lnPoints = 1 Then
+		oVFP9.SetVar "gc_Ext", lcExt
+		
+		'PROCEDURE EvaluarConfiguracion
+		'	LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
+		'		, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
+		
+		oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '', '', '', '', '', '', '', '', '" & tcFile & "' )" )
+		If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Prg2Bin(gc_Ext)") Then
+			nFile_Count = nFile_Count + 1
+			ReDim Preserve aFiles(nFile_Count)
+			aFiles(nFile_Count) = tcFile
+		End If
 	End If
 End Sub
 
