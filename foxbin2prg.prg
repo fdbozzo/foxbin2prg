@@ -4110,6 +4110,27 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE analizarBloque_LIBCOMMENT
+		*------------------------------------------------------
+		*-- Analiza el bloque *<LIBCOMMENT: Comentarios />
+		*------------------------------------------------------
+		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
+
+		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
+
+		IF LEFT( tcLine, LEN(C_LIBCOMMENT_I) ) == C_LIBCOMMENT_I
+			llBloqueEncontrado	= .T.
+
+			*-- Metadatos del módulo
+			toModulo._Comment		= ALLTRIM( STREXTRACT( tcLine, C_LIBCOMMENT_I, C_LIBCOMMENT_F ) )
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+
+	*******************************************************************************************************************
 	PROCEDURE createProject
 
 		CREATE TABLE (THIS.c_OutputFile) ;
@@ -5618,27 +5639,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				DIMENSION toModulo._ExternalClasses( toModulo._ExternalClasses_Count )
 				toModulo._ExternalClasses( toModulo._ExternalClasses_Count )	= .get_ValueByName_FromListNamesWithValues( 'Name', 'C', @laPropsAndValues )
 			ENDWITH && THIS
-		ENDIF
-
-		RETURN llBloqueEncontrado
-	ENDPROC
-
-
-
-	*******************************************************************************************************************
-	PROCEDURE analizarBloque_LIBCOMMENT
-		*------------------------------------------------------
-		*-- Analiza el bloque *<LIBCOMMENT: Comentarios />
-		*------------------------------------------------------
-		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
-
-		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
-
-		IF LEFT( tcLine, LEN(C_LIBCOMMENT_I) ) == C_LIBCOMMENT_I
-			llBloqueEncontrado	= .T.
-
-			*-- Metadatos del módulo
-			toModulo._Comment		= ALLTRIM( STREXTRACT( tcLine, C_LIBCOMMENT_I, C_LIBCOMMENT_F ) )
 		ENDIF
 
 		RETURN llBloqueEncontrado
