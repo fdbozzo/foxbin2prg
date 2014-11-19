@@ -107,6 +107,7 @@
 * 19/09/2014	FDBOZZO		v1.19.34	Arreglo bug: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error al intentar capitalizar el archivo de entrada (Jim Nelson)
 * 26/09/2014	FDBOZZO		v1.19.35	Mejora: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Marcio Gomez G.)
 * 08/10/2014	FDBOZZO		v1.19.36	Arreglo bug: Al generar el mn2 el identificador queda vacío (bug introducido en v1.19.35)
+* 19/11/2014	FDBOZZO		v1.19.37	Arreglo bug: String is too long to fit (edyshor)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -153,6 +154,7 @@
 * 28/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
 * 19/09/2014	Jim  Nelson			REPORTE BUG v1.19.33: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error (solucionado en v1.19.34)
 * 26/09/2014	Marcio Gomez G.		MEJORA v1.19.34: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Agregado en v1.19.35)
+* 19/11/2014	edyshor				REPORTE BUG dbf v1.19.36: 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -530,6 +532,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
 		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="n_filehandle" display="n_FileHandle"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
@@ -598,6 +601,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_ClassTimeStamp		= 1130668032	&& 2013/11/04 20:00:00
 	n_CFG_Actual			= 0
 	n_ID					= 0
+	n_FileHandle			= 0
 	o_Conversor				= NULL
 	o_Frm_Avance			= NULL
 	o_FSO					= NULL
@@ -11465,24 +11469,59 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				*-- Header
 				loTable			= CREATEOBJECT('CL_DBF_TABLE')
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+				
+				IF toFoxBin2Prg.DBF_Conversion_Support = 4
+					*-- Exportación de estructura y datos (para Diff solamente)
+					ERASE (.c_OutputFile + '.TMP' )
+					toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+					
+					IF toFoxBin2Prg.n_FileHandle = -1 THEN
+						ERROR 102, (.c_OutputFile)
+					ENDIF
+					
+					FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+					FCLOSE( toFoxBin2Prg.n_FileHandle )
+					*fdb*
+					
+					*-- Genero el DB2
+					IF .l_Test
+						toModulo	= C_FB2PRG_CODE
+					ELSE
+						lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+						DO CASE
+						CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
+							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+							.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
+								AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
+							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+							ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+						ENDCASE
+					ENDIF
 
-
-				*-- Genero el DB2
-				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+
+
+					*-- Genero el DB2
+					IF .l_Test
+						toModulo	= C_FB2PRG_CODE
+					ELSE
+						lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
+						DO CASE
+						CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
+							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+							.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
+								AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
+							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+							ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+						ENDCASE
+					ENDIF
+
 				ENDIF
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
@@ -16284,14 +16323,21 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 				*** DH 06/02/2014: added _Records
 				loRecords	= THIS._Records
-				lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
-
+				*lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
+				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
+				lcText	= ''
 			ENDIF
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
 				<<>>
 			ENDTEXT
+
+			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
+				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				lcText	= ''
+			ENDIF
 
 
 		CATCH TO loEx
@@ -16887,21 +16933,29 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 		* taFields						(@! IN    ) Array de información de campos
 		* tnField_Count					(v! IN    ) Cantidad de campos
 		* tc_DBF_Conversion_Condition	(v? IN    ) Condición de filtro para la conversión. Solo se exporta lo que la cumpla.
+		* toFoxBin2Prg					(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taFields, tnField_Count, tc_DBF_Conversion_Condition
+		LPARAMETERS taFields, tnField_Count, tc_DBF_Conversion_Condition, toFoxBin2Prg
 
 		EXTERNAL ARRAY taFields
 
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
 		TRY
-			LOCAL lcText, loEx AS EXCEPTION ;
+			LOCAL lcText, loEx AS EXCEPTION, I ;
 				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
-			lcText = ''
+			lcText	= ''
+			I		= 0
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
 				<<>>	<<C_RECORDS_I>>
 			ENDTEXT
 
+			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			lcText	= ''
 			loRecord = CREATEOBJECT('CL_DBF_RECORD')
 
 			IF EMPTY(tc_DBF_Conversion_Condition)
@@ -16909,13 +16963,23 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			ENDIF
 
 			SCAN FOR &tc_DBF_Conversion_Condition.
-				lcText	= lcText + loRecord.toText(@taFields, tnField_Count)
+				I	= I + 1
+				lcText	= loRecord.toText(@taFields, tnField_Count)
+				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				IF MOD(I,10000) = 0 THEN
+					FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
+				ENDIF
 			ENDSCAN
+			
+			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	<<C_RECORDS_F>>
 				<<>>
 			ENDTEXT
+
+			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			lcText	= ''
 
 
 		CATCH TO loEx
