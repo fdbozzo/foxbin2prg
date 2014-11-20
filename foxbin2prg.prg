@@ -108,6 +108,7 @@
 * 26/09/2014	FDBOZZO		v1.19.35	Mejora: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Marcio Gomez G.)
 * 08/10/2014	FDBOZZO		v1.19.36	Arreglo bug: Al generar el mn2 el identificador queda vacío (bug introducido en v1.19.35)
 * 19/11/2014	FDBOZZO		v1.19.37	Arreglo bug: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (edyshor)
+* 19/11/2014	FDBOZZO		v1.19.37	Mejora dbf: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (edyshor)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -155,6 +156,7 @@
 * 19/09/2014	Jim  Nelson			REPORTE BUG v1.19.33: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error (solucionado en v1.19.34)
 * 26/09/2014	Marcio Gomez G.		MEJORA v1.19.34: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Agregado en v1.19.35)
 * 19/11/2014	edyshor				REPORTE BUG dbf v1.19.36: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (Agregado en v1.19.37)
+* 19/11/2014	edyshor				MEJORA dbf v1.19.36: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (Agregado en v1.19.37)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -515,6 +517,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_allowmulticonfig" display="l_AllowMultiConfig"/>] ;
 		+ [<memberdata name="l_dropnullcharsfromcode" display="l_DropNullCharsFromCode"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
+		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
@@ -594,6 +597,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_Recompile				= .T.
 	l_NoTimestamps			= .T.
 	l_ClearUniqueID			= .T.
+	l_ClearDBFLastUpdate	= .T.
 	l_OptimizeByFilestamp	= .F.
 	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -740,6 +744,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			RETURN THIS.l_ClearUniqueID
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ClearUniqueID, THIS.l_ClearUniqueID )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_ClearDBFLastUpdate_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_ClearDBFLastUpdate
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ClearDBFLastUpdate, THIS.l_ClearDBFLastUpdate )
 		ENDIF
 	ENDPROC
 
@@ -1248,6 +1261,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							IF NOT INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcClearUniqueID	= lcValue
 								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:           ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 19 ) == LOWER('ClearDBFLastUpdate:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 20 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.l_ClearDBFLastUpdate	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearDBFLastUpdate:      ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
@@ -7947,7 +7967,12 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				USE IN (SELECT(JUSTSTEM(.c_OutputFile)))
 
 				*-- La actualización de la fecha sirve para evitar diferencias al regenerar el DBF
-				ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
+				IF toFoxBin2Prg.l_ClearDBFLastUpdate THEN
+					ldLastUpdate	= EVALUATE( '{^2013/11/04}' )
+				ELSE
+					ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
+				ENDIF
+
 				loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
 			ENDWITH && THIS
 
@@ -16374,7 +16399,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<C_TABLE_I>>
 				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(tc_InputFile, 'FPT'), '' )>></MemoFile>
 				<<>>	<CodePage><<CPDBF('TABLABIN')>></CodePage>
-				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
+				<<>>	<LastUpdate><<IIF( toFoxBin2Prg.l_ClearDBFLastUpdate, '', LUPDATE('TABLABIN') )>></LastUpdate>
 				<<>>	<Database><<tc_DBC_Name>></Database>
 				<<>>	<FileType><<TRANSFORM(tn_HexFileType, '@0')>></FileType>
 				<<>>	<FileType_Descrip><<tc_FileTypeDesc>></FileType_Descrip>
@@ -20149,6 +20174,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
+		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
@@ -20187,6 +20213,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_Recompile				= NULL
 	l_NoTimestamps			= NULL
 	l_ClearUniqueID			= NULL
+	l_ClearDBFLastUpdate	= NULL
 	l_OptimizeByFilestamp	= NULL
 	n_ExtraBackupLevels		= NULL
 	c_VC2					= NULL
