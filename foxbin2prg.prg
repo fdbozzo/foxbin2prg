@@ -502,6 +502,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filenamefoundinfilter" display="FilenameFoundInFilter"/>] ;
+		+ [<memberdata name="filescomparedareequal" display="FilesComparedAreEqual"/>] ;
 		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="get_l_configevaluated" display="get_l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
@@ -548,6 +549,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
+		+ [<memberdata name="renametmpfile2tx2file" display="RenameTmpFile2Tx2File"/>] ;
 		+ [<memberdata name="tienesoporte_bin2prg" display="TieneSoporte_Bin2Prg"/>] ;
 		+ [<memberdata name="tienesoporte_prg2bin" display="TieneSoporte_Prg2Bin"/>] ;
 		+ [<memberdata name="t_inputfile_timestamp" display="t_InputFile_TimeStamp"/>] ;
@@ -1422,6 +1424,84 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		RETURN
 	ENDPROC
+
+
+	FUNCTION FilesComparedAreEqual
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcFilename1				(v! IN    ) Nombre del archivo1 a comparar
+		* tcFilename2				(v! IN    ) Nombre del archivo2 a comparar
+		* tcStrFileName2			(v! IN    ) ***NO IMPLEMENTADO*** Contenido del archivo2 a comparar
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcFilename1, tcFilename2, tcStrFileName2
+		
+		LOCAL lnComparacion, lnLen1, lnLen2, lnHandle1, lnHandle2, lnTipoComp, lnChunkSize ;
+			, loEx as Exception
+
+		TRY
+			STORE -1 TO lnComparacion, lnHandle1, lnHandle2
+			lnTipoComp		= 0
+			lnChunkSize		= 65535
+
+			DO CASE
+			CASE NOT EMPTY(tcFilename1) AND NOT EMPTY(tcFilename2)
+				lnTipoComp	= 1
+				lnHandle1	= FOPEN( tcFilename1 )
+
+				IF lnHandle1 = -1
+					EXIT
+				ENDIF
+
+				lnHandle2	= FOPEN( tcFilename2 )
+
+				IF lnHandle2 = -1
+					EXIT
+				ENDIF
+
+				lnLen1		= FSEEK( lnHandle1, 0, 2 )
+				lnLen2		= FSEEK( lnHandle2, 0, 2 )
+
+				*-- Comparación de tamaño
+				IF lnLen1 <> lnLen2 THEN
+					lnComparacion	= 0	&& Son distintos
+					EXIT
+				ENDIF
+				
+				*-- Comparación de contenido
+				FSEEK( lnHandle1, 0, 0 )
+				FSEEK( lnHandle2, 0, 0 )
+				
+				DO WHILE NOT ( FEOF(lnHandle1) OR FEOF(lnHandle2) )
+					IF NOT SYS( 2007, FREAD( lnHandle1, lnChunkSize ), -1, 1 ) == SYS( 2007, FREAD( lnHandle2, lnChunkSize ), -1, 1 ) THEN
+						lnComparacion	= 0	&& Son distintos
+						EXIT
+					ENDIF
+				ENDDO
+				
+				IF lnComparacion = 0 THEN
+					EXIT
+				ENDIF
+				
+				lnComparacion	= 1	&& Son iguales
+
+			ENDCASE
+		
+		CATCH TO loEx
+			lnComparacion	= -1	&& Error
+			THROW
+		
+		FINALLY
+			DO CASE
+			CASE lnTipoComp = 1
+				FCLOSE( lnHandle1 )
+				FCLOSE( lnHandle2 )
+
+			ENDCASE
+
+		ENDTRY
+		
+		RETURN lnComparacion
+	ENDFUNC
 
 
 	FUNCTION FilenameFoundInFilter
@@ -2354,6 +2434,30 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lcLog	= ''
 		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, tlRelanzarError, '1'
 		THIS.writeLog( lcLog )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE RenameTmpFile2Tx2File
+		LPARAMETERS tcFileName
+
+		LOCAL lcTmpFile, loFSO AS Scripting.FileSystemObject, loEx as Exception
+		
+		TRY
+			*loFSO		= THIS.o_FSO
+			lcTmpFile	= tcFileName + '.TMP'
+			THIS.ChangeFileAttribute( tcFileName, '+N' )
+			ERASE (tcFileName)
+			RENAME (lcTmpFile) TO (tcFileName)
+
+		CATCH TO loEx
+			THROW
+
+		FINALLY
+			*loFSO	= NULL
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -11482,20 +11586,20 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
 					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 					FCLOSE( toFoxBin2Prg.n_FileHandle )
-					*fdb*
+
 					
-					*-- Genero el DB2
+					*-- Genero el DB2, renombrando el TMP
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
-						lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
 						DO CASE
-						CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
+						CASE FILE(.c_OutputFile) AND toFoxBin2Prg.FilesComparedAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
+							ERASE (.c_OutputFile + '.TMP')
 							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 							.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
 								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-								AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
+								AND NOT toFoxBin2Prg.RenameTmpFile2Tx2File( .c_OutputFile )
 							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
 							ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
 						ENDCASE
