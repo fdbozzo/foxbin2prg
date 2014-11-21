@@ -1505,6 +1505,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( '> n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( '> l_OptimizeByFilestamp:        ' + TRANSFORM(.l_OptimizeByFilestamp) )
 				.writeLog( '> l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
+                .writeLog( '> l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
 
 				lo_CFG	= NULL
 				RELEASE lo_CFG
@@ -1557,7 +1558,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* tcStrFileName2			(v! IN    ) ***NO IMPLEMENTADO*** Contenido del archivo2 a comparar
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcFilename1, tcFilename2, tcStrFileName2
-
+		
 		LOCAL lnComparacion, lnLen1, lnLen2, lnHandle1, lnHandle2, lnTipoComp, lnChunkSize ;
 			, loEx as Exception
 
@@ -1589,30 +1590,30 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					lnComparacion	= 0	&& Son distintos
 					EXIT
 				ENDIF
-
+				
 				*-- Comparación de contenido
 				FSEEK( lnHandle1, 0, 0 )
 				FSEEK( lnHandle2, 0, 0 )
-
+				
 				DO WHILE NOT ( FEOF(lnHandle1) OR FEOF(lnHandle2) )
 					IF NOT SYS( 2007, FREAD( lnHandle1, lnChunkSize ), -1, 1 ) == SYS( 2007, FREAD( lnHandle2, lnChunkSize ), -1, 1 ) THEN
 						lnComparacion	= 0	&& Son distintos
 						EXIT
 					ENDIF
 				ENDDO
-
+				
 				IF lnComparacion = 0 THEN
 					EXIT
 				ENDIF
-
+				
 				lnComparacion	= 1	&& Son iguales
 
 			ENDCASE
-
+		
 		CATCH TO loEx
 			lnComparacion	= -1	&& Error
 			THROW
-
+		
 		FINALLY
 			DO CASE
 			CASE lnTipoComp = 1
@@ -1622,7 +1623,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDCASE
 
 		ENDTRY
-
+		
 		RETURN lnComparacion
 	ENDFUNC
 
@@ -2582,7 +2583,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tcFileName
 
 		LOCAL lcTmpFile, loFSO AS Scripting.FileSystemObject, loEx as Exception
-
+		
 		TRY
 			*loFSO		= THIS.o_FSO
 			lcTmpFile	= tcFileName + '.TMP'
@@ -8480,7 +8481,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				IF toFoxBin2Prg.l_ClearDBFLastUpdate THEN
 					ldLastUpdate	= EVALUATE( '{^2013/11/04}' )
 				ELSE
-				ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
+					ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
 				ENDIF
 
 				loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
@@ -12259,37 +12260,37 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				*-- Header
 				loTable			= CREATEOBJECT('CL_DBF_TABLE')
-
+				
 				IF toFoxBin2Prg.DBF_Conversion_Support = 4
 					*-- Exportación de estructura y datos (para Diff solamente)
 					ERASE (.c_OutputFile + '.TMP' )
 					toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
-
+					
 					IF toFoxBin2Prg.n_FileHandle = -1 THEN
 						ERROR 102, (.c_OutputFile)
 					ENDIF
-
+					
 					FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
 					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 					FCLOSE( toFoxBin2Prg.n_FileHandle )
 
-
+					
 					*-- Genero el DB2, renombrando el TMP
-				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
-				ELSE
-					DO CASE
+					IF .l_Test
+						toModulo	= C_FB2PRG_CODE
+					ELSE
+						DO CASE
 						CASE FILE(.c_OutputFile) AND toFoxBin2Prg.FilesComparedAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
 							ERASE (.c_OutputFile + '.TMP')
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
+							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+							.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
 								AND NOT toFoxBin2Prg.RenameTmpFile2Tx2File( .c_OutputFile )
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
-				ENDIF
+							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+							ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+						ENDCASE
+					ENDIF
 
 				ELSE
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
@@ -17743,7 +17744,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 					FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 				ENDIF
 			ENDSCAN
-
+			
 			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
