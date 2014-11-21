@@ -1405,6 +1405,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( '> n_ExtraBackupLevels:     ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( '> l_OptimizeByFilestamp:   ' + TRANSFORM(.l_OptimizeByFilestamp) )
 				.writeLog( '> l_DropNullCharsFromCode: ' + TRANSFORM(.l_DropNullCharsFromCode) )
+				.writeLog( '> l_ClearDBFLastUpdate:    ' + TRANSFORM(.l_ClearDBFLastUpdate) )
 
 				lo_CFG	= NULL
 				RELEASE lo_CFG
