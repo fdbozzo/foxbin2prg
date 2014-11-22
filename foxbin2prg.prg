@@ -2825,6 +2825,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		SET SAFETY OFF
 		SET TABLEPROMPT OFF
 		SET BLOCKSIZE TO 0
+		SET EXACT ON
 
 		PUBLIC C_FB2PRG_CODE
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
@@ -10887,7 +10888,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 
-				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
+				SCAN ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class"
 					STORE 0 TO lnMethodCount
 					STORE '' TO laMethods, laCode, lcCodigo
 					lnClassCount	= lnClassCount + 1
@@ -10905,8 +10906,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
-					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
-					laClasses(lnClassCount,1)	= LOWER(lcObjName)
+					lcObjName	= LOWER( ALLTRIM( loRegClass.OBJNAME ) )
+					laClasses(lnClassCount,1)	= lcObjName
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -10923,9 +10924,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 
-					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
@@ -10986,11 +10987,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 
 					SCAN REST ;
-							FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT TABLABIN.RESERVED1=="Class" ;
-							WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND NOT PROPER( TABLABIN.RESERVED1 ) == "Class" ;
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
@@ -11148,8 +11149,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
-						AND (EMPTY(TABLABIN.PARENT) ;
-						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
+						AND ( EMPTY( TABLABIN.PARENT ) ;
+						AND INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment', 'form', 'formset' ) )
 
 					STORE 0 TO lnMethodCount
 					STORE '' TO laMethods, laCode, lcCodigo
@@ -11168,8 +11169,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
-					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
-					laClasses(lnClassCount,1)	= LOWER(lcObjName)
+					lcObjName	= LOWER( ALLTRIM(loRegClass.OBJNAME) )
+					laClasses(lnClassCount,1)	= lcObjName
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -11186,9 +11187,9 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 
-					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
@@ -11250,13 +11251,13 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 
 					SCAN REST ;
-							FOR TABLABIN.PLATFORM = "WINDOWS" ;
+							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
 							AND NOT (EMPTY(TABLABIN.PARENT) ;
-							AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
-							WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+							AND ( INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment' , 'form', 'formset' ) ) ) ;
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
