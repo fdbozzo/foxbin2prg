@@ -2740,6 +2740,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarasignacion_tag_indicado" display="analizarAsignacion_TAG_Indicado"/>] ;
+		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
 		+ [<memberdata name="a_specialprops" display="a_SpecialProps"/>] ;
 		+ [<memberdata name="buscarobjetodelmetodopornombre" display="buscarObjetoDelMetodoPorNombre"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" display="comprobarExpresionValida"/>] ;
@@ -2781,6 +2782,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="n_avance_proceso" display="n_Avance_Proceso"/>] ;
+		+ [<memberdata name="n_avance_maximo" display="n_Avance_Maximo"/>] ;
 		+ [<memberdata name="ofso" display="oFSO"/>] ;
 		+ [</VFPData>]
 
@@ -2813,6 +2816,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 	c_OriginalFileName		= ''
 	c_ClaseActual			= ''
 	oFSO					= NULL
+	n_Avance_Proceso		= 0
+	n_Avance_Maximo			= 0
 
 
 	*******************************************************************************************************************
@@ -2944,6 +2949,11 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ENDTRY
 
 		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE AvanceDelProceso
+		LPARAMETERS tcTexto, tnValor, tnTotal
 	ENDPROC
 
 
@@ -6462,7 +6472,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					ENDFOR
 				ENDIF
 
-				lnCodeLines		= ALINES( laCodeLines, C_FB2PRG_CODE )
+				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
 				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
@@ -6795,6 +6806,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				ENDIF
 
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
 				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
@@ -7107,6 +7119,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -7903,6 +7916,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -8332,6 +8346,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -8628,6 +8643,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -8806,6 +8822,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_mnx OF 'FOXBIN2PRG.PRG'
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+				.n_Avance_Maximo	= lnCodeLines
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -10858,6 +10875,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
@@ -11108,6 +11126,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
@@ -11370,6 +11389,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
 
 				loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
@@ -12078,6 +12098,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
+				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
 
 				*-- Header
@@ -12463,6 +12484,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
 
 				*-- Verificación de menú VFP 9
