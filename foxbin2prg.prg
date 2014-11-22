@@ -10340,6 +10340,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*!*				ENDSCAN
 
 		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<>>
 			*
 		ENDTEXT
 
