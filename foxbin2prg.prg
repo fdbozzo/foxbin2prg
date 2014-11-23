@@ -10022,17 +10022,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					.write_PROTECTED_Properties( @lcProtectedProp, @tcCodigo )
 
 					*-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
-					FOR I = 1 TO ALEN(taPropsAndValues, 1)
+					FOR I = 1 TO tnPropsAndValues_Count
 						TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
 						ENDTEXT
 
-						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+2+4+8)
+						IF tnPropsAndComments_Count > 0 THEN
+							lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+2+4+8)
 
-						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
-							TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-								<<>>		&& <<taPropsAndComments(lnComment,2)>>
-							ENDTEXT
+							IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
+								TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+									<<>>		&& <<taPropsAndComments(lnComment,2)>>
+								ENDTEXT
+							ENDIF
 						ENDIF
 					ENDFOR
 
