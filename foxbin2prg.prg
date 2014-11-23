@@ -9205,11 +9205,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE get_NombresObjetosOLEPublic
 		LPARAMETERS ta_NombresObjsOle
 		*-- Obtengo los objetos "OLEPublic"
+		LOCAL I
+
 		SELECT PADR(OBJNAME,100) OBJNAME ;
 			FROM TABLABIN ;
 			WHERE TABLABIN.PLATFORM = "COMMENT" AND TABLABIN.RESERVED2 == "OLEPublic" ;
 			ORDER BY 1 ;
 			INTO ARRAY ta_NombresObjsOle
+		
+		FOR I = 1 TO _TALLY
+			ta_NombresObjsOle(I)	= ALLTRIM( ta_NombresObjsOle(I) )
+		ENDFOR
+
+		RETURN
 	ENDPROC
 
 
@@ -9244,10 +9252,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				lnPos			= AT(' ', laLines(I))	&& Un espacio separa la propiedad de su comentario (si tiene)
 
 				IF lnPos = 0
-					taPropsAndComments(I,1)	= laLines(I)
+					taPropsAndComments(I,1)	= LOWER( laLines(I) )
 					taPropsAndComments(I,2)	= ''
 				ELSE
-					taPropsAndComments(I,1)	= LEFT( laLines(I), lnPos - 1 )
+					taPropsAndComments(I,1)	= LOWER( LEFT( laLines(I), lnPos - 1 ) )
 					taPropsAndComments(I,2)	= SUBSTR( laLines(I), lnPos + 1 )
 				ENDIF
 			ENDFOR
@@ -9349,7 +9357,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							*-- Propiedad normal
 							lnPosEQ					= AT( '=', laItems(I) )
 							taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
-							taPropsAndValues(X,2)	=  .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
+							taPropsAndValues(X,2)	= .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
 						ENDIF
 					ENDFOR
 
@@ -9417,7 +9425,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			FOR I = tnProtected_Count TO 1 STEP -1
 				*-- El ASCAN es para evitar valores repetidos, que se eliminarán. v1.19.29
-				IF ASCAN( taProtected, taProtected(I), 1, -1, 0,1+2+4 ) = I
+				taProtected(I)	= LOWER( taProtected(I) )
+				IF ASCAN( taProtected, taProtected(I), 1, -1, 0, 1+2+4 ) = I
 					tcSortedMemo	= tcSortedMemo + LOWER(taProtected(I)) + CR_LF
 				ELSE
 					ADEL( taProtected, I )
@@ -9920,10 +9929,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			*-- Agrego metainformación para objetos OLE
 			IF toRegObj.BASECLASS == 'olecontrol'
 				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-					<<>> Nombre="<<IIF(EMPTY(toRegObj.Parent),'',toRegObj.Parent+'.') + toRegObj.objName>>"
-					Parent="<<toRegObj.Parent>>"
-					ObjName="<<toRegObj.objname>>"
-					OLEObject="<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
+					OLEObject="<<LOWER( STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2) )>>"
 					Value="<<STRCONV(toRegObj.ole,13)>>" <<>>
 				ENDTEXT
 			ENDIF
@@ -10021,7 +10027,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
 						ENDTEXT
 
-						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+8)
+						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+2+4+8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
 							TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -10124,7 +10130,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		LOCAL lcOF_Classlib, llOleObject
 		lcOF_Classlib	= ''
-		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+8) > 0 )
+		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+2+4+8) > 0 )
 
 		IF NOT EMPTY(toRegClass.CLASSLOC)
 			lcOF_Classlib	= 'OF "' + LOWER(ALLTRIM(toRegClass.CLASSLOC)) + '" '
@@ -10132,7 +10138,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
 		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<'DEFINE CLASS'>> <<LOWER(ALLTRIM(toRegClass.ObjName))>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
 		ENDTEXT
 
 		RETURN
@@ -10854,7 +10860,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				, lnClassCount, lcOutputFile, lcExternalHeader
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount
-			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses(1,2), lcOutputFile ;
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
 
@@ -10899,6 +10905,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
 
+					*-- Normalización de capitalización y de datos según parametrización
+					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
+					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
+					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
+
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
 					ENDIF
@@ -10908,8 +10919,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
-					lcObjName	= LOWER( ALLTRIM( loRegClass.OBJNAME ) )
-					laClasses(lnClassCount,1)	= lcObjName
+					lcObjName	= ALLTRIM( loRegClass.OBJNAME )
+					laClasses(lnClassCount,1)	= LOWER( lcObjName )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -10926,13 +10937,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+
 						laObjs(lnObjCount,1)	= loRegObj
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Alphabetic order
@@ -10989,14 +11006,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnRecno	= RECNO()
-					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 					SCAN REST ;
 							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND NOT PROPER( TABLABIN.RESERVED1 ) == "Class" ;
-							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -11104,7 +11126,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				, lnClassCount, lcOutputFile, lcExternalHeader
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount
-			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses(1,2), lcOutputFile ;
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
 
@@ -11162,6 +11184,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
 
+					*-- Normalización de capitalización y de datos según parametrización
+					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
+					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
+					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
+
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
 					ENDIF
@@ -11171,8 +11198,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
-					lcObjName	= LOWER( ALLTRIM(loRegClass.OBJNAME) )
-					laClasses(lnClassCount,1)	= lcObjName
+					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
+					laClasses(lnClassCount,1)	= LOWER( lcObjName )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -11189,13 +11216,19 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+
 						laObjs(lnObjCount,1)	= loRegObj
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Orden alfabético
@@ -11253,16 +11286,21 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 					SCAN REST ;
 							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
 							AND NOT (EMPTY(TABLABIN.PARENT) ;
 							AND ( INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment' , 'form', 'formset' ) ) ) ;
-							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == lcObjName
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -12350,7 +12388,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
-				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
+				IF ASCAN( laDatabases, laDatabases2(I), 1, 0, 0, 1+2+4 ) = 0
 					SET DATABASE TO (laDatabases2(I))
 					CLOSE DATABASES
 					EXIT
