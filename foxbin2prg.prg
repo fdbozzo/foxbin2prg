@@ -10300,6 +10300,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LPARAMETERS toFoxBin2Prg
 
+		LOCAL laOLE(1)
 		*!*			LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
 
 		*!*			#IF .F.
@@ -10339,10 +10340,21 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*!*				ENDSCAN
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<>>
-			*
-		ENDTEXT
+		SELECT COUNT(*) FROM TABLABIN WHERE TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS == 'olecontrol' INTO ARRAY laOLE
+		
+		IF laOLE(1) > 0 THEN
+			*-- Lo del <<>> para crear una línea vacía es solamente por compatibilidad con lo antiguo,
+			*-- donde se creaba esta línea cuando el form o clase tenía al menos un objeto OLE.
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				*
+			ENDTEXT
+		ELSE
+
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*
+			ENDTEXT
+		ENDIF
 
 		*!*			CATCH TO loEx
 		*!*				IF THIS.l_Debug AND _VFP.STARTMODE = 0
