@@ -8947,8 +8947,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="classify_pam_hidden_protected" display="Classify_PAM_Hidden_Protected"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_add_object_methods" display="get_ADD_OBJECT_METHODS"/>] ;
 		+ [<memberdata name="get_class_methods" display="get_CLASS_METHODS"/>] ;
@@ -9008,6 +9010,54 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
+	ENDPROC
+
+
+	PROCEDURE Classify_PAM_Hidden_Protected
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnPropsAndValues_Count	(@! IN    ) 
+		* taPropsAndValues			(@! IN    ) 
+		* tnProtected_Count			(@! IN    ) 
+		* taProtected				(@! IN    ) 
+		* tnPropsAndComments_Count	(@! IN    ) 
+		* taPropsAndComments		(@! IN    ) 
+		* tcHiddenProp				(@!    OUT) Lista de propiedades Hidden
+		* tcProtectedProp			(@!    OUT) Lista de propiedades Protected
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tnPropsAndValues_Count, taPropsAndValues, tnProtected_Count, taProtected ;
+			, tnPropsAndComments_Count, taPropsAndComments, tcHiddenProp, tcProtectedProp
+
+		IF tnPropsAndValues_Count > 0 THEN
+			*-- Recorro las propiedades (campo Properties) para ir conformando
+			*-- las definiciones HIDDEN y PROTECTED
+			LOCAL lcProp, I
+
+			STORE '' TO tcHiddenProp, tcProtectedProp
+
+			FOR I = 1 TO tnProtected_Count
+				DO CASE
+				CASE EMPTY( taProtected(I) )
+					LOOP
+					
+				CASE RIGHT( taProtected(I), 1 ) == '^'
+					*-- Hidden Property or method
+					lcProp	= CHRTRAN( taProtected(I), '^', '' )
+					IF ASCAN(taPropsAndComments, '*' + lcProp, 1, 0, 1, 1+2+4) > 0
+						LOOP	&& method
+					ENDIF
+					tcHiddenProp	= tcHiddenProp + ',' + lcProp
+
+				OTHERWISE
+					*-- Protected Property or method
+					IF ASCAN(taPropsAndComments, '*' + taProtected(I), 1, 0, 1, 1+2+4) > 0
+						LOOP	&& method
+					ENDIF
+					tcProtectedProp	= tcProtectedProp + ',' + taProtected(I)
+				ENDCASE
+			ENDFOR
+
+		ENDIF
 	ENDPROC
 
 
@@ -9959,58 +10009,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @tnProtected_Count, '' )
 
 				IF tnPropsAndValues_Count > 0 THEN
-					*-- Recorro las propiedades (campo Properties) para ir conformando
-					*-- las definiciones HIDDEN y PROTECTED
-					FOR I = 1 TO tnPropsAndValues_Count
-						IF EMPTY(taPropsAndValues(I,1))
-							LOOP
-						ENDIF
-
-						IF tnProtected_Count = 0
-							lnProtectedItem	= 0
-						ELSE
-							lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 1)
-						ENDIF
-
-						DO CASE
-						CASE lnProtectedItem = 0
-							*-- Propiedad común
-
-						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) )
-							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + taPropsAndValues(I,1)
-
-						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) + '^' )
-							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + taPropsAndValues(I,1)
-
-						ENDCASE
-					ENDFOR
-
-					*-- Segunda barrida para las propiedades Hidden/Protected que no estén definidas en Properties
-					FOR I = 1 TO tnProtected_Count
-						*-- La propiedad evaluada no debe ser vacía, debe estar en la lista de PROPERTIES y no debe ser un *Método
-						IF EMPTY(taProtected(I,1)) ;
-								OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0 ;
-								OR ASCAN(taPropsAndComments, '*' + CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0
-							LOOP
-						ENDIF
-
-						IF RIGHT( taProtected(I), 1 ) == '^'
-							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + CHRTRAN( taProtected(I), '^', '' )
-
-						ELSE
-							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + taProtected(I)
-
-						ENDIF
-					ENDFOR
-
+					.Classify_PAM_Hidden_Protected( @tnPropsAndValues_Count, @taPropsAndValues, @tnProtected_Count, @taProtected ;
+						, @tnPropsAndComments_Count, @taPropsAndComments, @lcHiddenProp, @lcProtectedProp )
 					.write_DEFINED_PAM( @taPropsAndComments, tnPropsAndComments_Count, @tcCodigo )
-
 					.write_HIDDEN_Properties( @lcHiddenProp, @tcCodigo )
-
 					.write_PROTECTED_Properties( @lcProtectedProp, @tcCodigo )
 
 					*-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
