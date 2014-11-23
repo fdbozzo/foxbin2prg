@@ -5556,7 +5556,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
-				toClase._Nombre			= ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) )
+				toClase._Nombre			= LOWER( ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) ) )
 				toClase._ObjName		= toClase._Nombre
 				toClase._Definicion		= ALLTRIM( tcLine )
 				IF NOT ' OF ' $ UPPER(tcLine)	&& Puede no tener "OF libreria.vcx"
@@ -12780,7 +12780,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 
 		WITH THIS AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 			FOR X = 1 TO ._Ole_Obj_count
-				IF ._Ole_Objs(X)._Nombre == tcNombre
+				IF LOWER(._Ole_Objs(X)._Nombre) == LOWER(tcNombre)
 					llExiste = .T.
 					EXIT
 				ENDIF
