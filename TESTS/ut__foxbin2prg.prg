@@ -212,7 +212,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				THIS.assertequals( toReg_Esperado.Reserved8, toReg.Reserved8, "Valor de RESERVED8 para " + lcExtraData )
 				THIS.assertequals( LEN(toReg_Esperado.Reserved8), LEN(toReg.Reserved8), "Tamaño de RESERVED8 para " + lcExtraData )
 
-				THIS.assertequals( toReg_Esperado.OLE2, toReg.OLE2, "Valor de OLE2 para " + lcExtraData )
+				THIS.assertequals( LOWER(toReg_Esperado.OLE2), LOWER(toReg.OLE2), "Valor de OLE2 para " + lcExtraData )
 				THIS.assertequals( LEN(toReg_Esperado.OLE2), LEN(toReg.OLE2), "Tamaño de OLE2 para " + lcExtraData )
 
 				THIS.assertequals( SYS(2007, toReg_Esperado.OLE), SYS(2007, toReg.OLE), "Valor de OLE (Checksum) para " + lcExtraData )

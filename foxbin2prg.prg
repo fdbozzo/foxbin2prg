@@ -2830,6 +2830,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		SET SAFETY OFF
 		SET TABLEPROMPT OFF
 		SET BLOCKSIZE TO 0
+		SET EXACT ON
 
 		PUBLIC C_FB2PRG_CODE
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
@@ -5565,7 +5566,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
-				toClase._Nombre			= ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) )
+				toClase._Nombre			= LOWER( ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) ) )
 				toClase._ObjName		= toClase._Nombre
 				toClase._Definicion		= ALLTRIM( tcLine )
 				IF NOT ' OF ' $ UPPER(tcLine)	&& Puede no tener "OF libreria.vcx"
@@ -8963,8 +8964,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="classify_pam_hidden_protected" display="Classify_PAM_Hidden_Protected"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_add_object_methods" display="get_ADD_OBJECT_METHODS"/>] ;
 		+ [<memberdata name="get_class_methods" display="get_CLASS_METHODS"/>] ;
@@ -9024,6 +9027,54 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
+	ENDPROC
+
+
+	PROCEDURE Classify_PAM_Hidden_Protected
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnPropsAndValues_Count	(@! IN    ) 
+		* taPropsAndValues			(@! IN    ) 
+		* tnProtected_Count			(@! IN    ) 
+		* taProtected				(@! IN    ) 
+		* tnPropsAndComments_Count	(@! IN    ) 
+		* taPropsAndComments		(@! IN    ) 
+		* tcHiddenProp				(@!    OUT) Lista de propiedades Hidden
+		* tcProtectedProp			(@!    OUT) Lista de propiedades Protected
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tnPropsAndValues_Count, taPropsAndValues, tnProtected_Count, taProtected ;
+			, tnPropsAndComments_Count, taPropsAndComments, tcHiddenProp, tcProtectedProp
+
+		IF tnPropsAndValues_Count > 0 THEN
+			*-- Recorro las propiedades (campo Properties) para ir conformando
+			*-- las definiciones HIDDEN y PROTECTED
+			LOCAL lcProp, I
+
+			STORE '' TO tcHiddenProp, tcProtectedProp
+
+			FOR I = 1 TO tnProtected_Count
+				DO CASE
+				CASE EMPTY( taProtected(I) )
+					LOOP
+					
+				CASE RIGHT( taProtected(I), 1 ) == '^'
+					*-- Hidden Property or method
+					lcProp	= CHRTRAN( taProtected(I), '^', '' )
+					IF ASCAN(taPropsAndComments, '*' + lcProp, 1, 0, 1, 1+2+4) > 0
+						LOOP	&& method
+					ENDIF
+					tcHiddenProp	= tcHiddenProp + ',' + lcProp
+
+				OTHERWISE
+					*-- Protected Property or method
+					IF ASCAN(taPropsAndComments, '*' + taProtected(I), 1, 0, 1, 1+2+4) > 0
+						LOOP	&& method
+					ENDIF
+					tcProtectedProp	= tcProtectedProp + ',' + taProtected(I)
+				ENDCASE
+			ENDFOR
+
+		ENDIF
 	ENDPROC
 
 
@@ -9171,11 +9222,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE get_NombresObjetosOLEPublic
 		LPARAMETERS ta_NombresObjsOle
 		*-- Obtengo los objetos "OLEPublic"
+		LOCAL I
+
 		SELECT PADR(OBJNAME,100) OBJNAME ;
 			FROM TABLABIN ;
 			WHERE TABLABIN.PLATFORM = "COMMENT" AND TABLABIN.RESERVED2 == "OLEPublic" ;
 			ORDER BY 1 ;
 			INTO ARRAY ta_NombresObjsOle
+		
+		FOR I = 1 TO _TALLY
+			ta_NombresObjsOle(I)	= ALLTRIM( ta_NombresObjsOle(I) )
+		ENDFOR
+
+		RETURN
 	ENDPROC
 
 
@@ -9210,10 +9269,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				lnPos			= AT(' ', laLines(I))	&& Un espacio separa la propiedad de su comentario (si tiene)
 
 				IF lnPos = 0
-					taPropsAndComments(I,1)	= laLines(I)
+					taPropsAndComments(I,1)	= LOWER( laLines(I) )
 					taPropsAndComments(I,2)	= ''
 				ELSE
-					taPropsAndComments(I,1)	= LEFT( laLines(I), lnPos - 1 )
+					taPropsAndComments(I,1)	= LOWER( LEFT( laLines(I), lnPos - 1 ) )
 					taPropsAndComments(I,2)	= SUBSTR( laLines(I), lnPos + 1 )
 				ENDIF
 			ENDFOR
@@ -9315,7 +9374,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							*-- Propiedad normal
 							lnPosEQ					= AT( '=', laItems(I) )
 							taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
-							taPropsAndValues(X,2)	=  .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
+							taPropsAndValues(X,2)	= .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
 						ENDIF
 					ENDFOR
 
@@ -9383,7 +9442,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			FOR I = tnProtected_Count TO 1 STEP -1
 				*-- El ASCAN es para evitar valores repetidos, que se eliminarán. v1.19.29
-				IF ASCAN( taProtected, taProtected(I), 1, -1, 0,1+2+4 ) = I
+				taProtected(I)	= LOWER( taProtected(I) )
+				IF ASCAN( taProtected, taProtected(I), 1, -1, 0, 1+2+4 ) = I
 					tcSortedMemo	= tcSortedMemo + LOWER(taProtected(I)) + CR_LF
 				ELSE
 					ADEL( taProtected, I )
@@ -9886,10 +9946,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			*-- Agrego metainformación para objetos OLE
 			IF toRegObj.BASECLASS == 'olecontrol'
 				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-					<<>> Nombre="<<IIF(EMPTY(toRegObj.Parent),'',toRegObj.Parent+'.') + toRegObj.objName>>"
-					Parent="<<toRegObj.Parent>>"
-					ObjName="<<toRegObj.objname>>"
-					OLEObject="<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
+					OLEObject="<<LOWER( STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2) )>>"
 					Value="<<STRCONV(toRegObj.ole,13)>>" <<>>
 				ENDTEXT
 			ENDIF
@@ -9975,72 +10032,26 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @tnProtected_Count, '' )
 
 				IF tnPropsAndValues_Count > 0 THEN
-					*-- Recorro las propiedades (campo Properties) para ir conformando
-					*-- las definiciones HIDDEN y PROTECTED
-					FOR I = 1 TO tnPropsAndValues_Count
-						IF EMPTY(taPropsAndValues(I,1))
-							LOOP
-						ENDIF
-
-						IF tnProtected_Count = 0
-							lnProtectedItem	= 0
-						ELSE
-							lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 1)
-						ENDIF
-
-						DO CASE
-						CASE lnProtectedItem = 0
-							*-- Propiedad común
-
-						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) )
-							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + taPropsAndValues(I,1)
-
-						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) + '^' )
-							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + taPropsAndValues(I,1)
-
-						ENDCASE
-					ENDFOR
-
-					*-- Segunda barrida para las propiedades Hidden/Protected que no estén definidas en Properties
-					FOR I = 1 TO tnProtected_Count
-						*-- La propiedad evaluada no debe ser vacía, debe estar en la lista de PROPERTIES y no debe ser un *Método
-						IF EMPTY(taProtected(I,1)) ;
-								OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0 ;
-								OR ASCAN(taPropsAndComments, '*' + CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0
-							LOOP
-						ENDIF
-
-						IF RIGHT( taProtected(I), 1 ) == '^'
-							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + CHRTRAN( taProtected(I), '^', '' )
-
-						ELSE
-							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + taProtected(I)
-
-						ENDIF
-					ENDFOR
-
+					.Classify_PAM_Hidden_Protected( @tnPropsAndValues_Count, @taPropsAndValues, @tnProtected_Count, @taProtected ;
+						, @tnPropsAndComments_Count, @taPropsAndComments, @lcHiddenProp, @lcProtectedProp )
 					.write_DEFINED_PAM( @taPropsAndComments, tnPropsAndComments_Count, @tcCodigo )
-
 					.write_HIDDEN_Properties( @lcHiddenProp, @tcCodigo )
-
 					.write_PROTECTED_Properties( @lcProtectedProp, @tcCodigo )
 
 					*-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
-					FOR I = 1 TO ALEN(taPropsAndValues, 1)
+					FOR I = 1 TO tnPropsAndValues_Count
 						TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
 						ENDTEXT
 
-						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+8)
+						IF tnPropsAndComments_Count > 0 THEN
+							lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+2+4+8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
 							TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 								<<>>		&& <<taPropsAndComments(lnComment,2)>>
 							ENDTEXT
+						ENDIF
 						ENDIF
 					ENDFOR
 
@@ -10138,7 +10149,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		LOCAL lcOF_Classlib, llOleObject
 		lcOF_Classlib	= ''
-		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+8) > 0 )
+		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+2+4+8) > 0 )
 
 		IF NOT EMPTY(toRegClass.CLASSLOC)
 			lcOF_Classlib	= 'OF "' + LOWER(ALLTRIM(toRegClass.CLASSLOC)) + '" '
@@ -10146,7 +10157,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
 		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<'DEFINE CLASS'>> <<LOWER(ALLTRIM(toRegClass.ObjName))>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
 		ENDTEXT
 
 		RETURN
@@ -10679,6 +10690,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LPARAMETERS toFoxBin2Prg
 
+		LOCAL laOLE(1)
 		*!*			LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
 
 		*!*			#IF .F.
@@ -10718,9 +10730,21 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*!*				ENDSCAN
 
+		SELECT COUNT(*) FROM TABLABIN WHERE TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS == 'olecontrol' INTO ARRAY laOLE
+		
+		IF laOLE(1) > 0 THEN
+			*-- Lo del <<>> para crear una línea vacía es solamente por compatibilidad con lo antiguo,
+			*-- donde se creaba esta línea cuando el form o clase tenía al menos un objeto OLE.
+			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>>
+				*
+			ENDTEXT
+		ELSE
+
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				*
 			ENDTEXT
+		ENDIF
 
 		*!*			CATCH TO loEx
 		*!*				IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -10868,7 +10892,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				, lnClassCount, lcOutputFile, lcExternalHeader
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount
-			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses(1,2), lcOutputFile ;
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
 
@@ -10905,7 +10929,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 
-				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
+				SCAN ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class"
 					STORE 0 TO lnMethodCount
 					STORE '' TO laMethods, laCode, lcCodigo
 					lnClassCount	= lnClassCount + 1
@@ -10913,6 +10937,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
+
+					*-- Normalización de capitalización y de datos según parametrización
+					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
+					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
+					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
@@ -10923,8 +10952,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
-					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
-					laClasses(lnClassCount,1)	= LOWER(lcObjName)
+					lcObjName	= ALLTRIM( loRegClass.OBJNAME )
+					laClasses(lnClassCount,1)	= LOWER( lcObjName )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -10941,13 +10970,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+
 						laObjs(lnObjCount,1)	= loRegObj
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Alphabetic order
@@ -11004,14 +11039,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 					SCAN REST ;
-							FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT TABLABIN.RESERVED1=="Class" ;
-							WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND NOT PROPER( TABLABIN.RESERVED1 ) == "Class" ;
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -11119,7 +11159,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				, lnClassCount, lcOutputFile, lcExternalHeader
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount
-			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses(1,2), lcOutputFile ;
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
 
@@ -11167,8 +11207,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
-						AND (EMPTY(TABLABIN.PARENT) ;
-						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
+						AND ( EMPTY( TABLABIN.PARENT ) ;
+						AND INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment', 'form', 'formset' ) )
 
 					STORE 0 TO lnMethodCount
 					STORE '' TO laMethods, laCode, lcCodigo
@@ -11177,6 +11217,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
+
+					*-- Normalización de capitalización y de datos según parametrización
+					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
+					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
+					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
@@ -11188,7 +11233,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ENDIF
 
 					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
-					laClasses(lnClassCount,1)	= LOWER(lcObjName)
+					laClasses(lnClassCount,1)	= LOWER( lcObjName )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -11205,13 +11250,19 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+
 						laObjs(lnObjCount,1)	= loRegObj
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Orden alfabético
@@ -11269,16 +11320,21 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 					SCAN REST ;
-							FOR TABLABIN.PLATFORM = "WINDOWS" ;
+							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
 							AND NOT (EMPTY(TABLABIN.PARENT) ;
-							AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
-							WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+							AND ( INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment' , 'form', 'formset' ) ) ) ;
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -12368,7 +12424,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
-				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
+				IF ASCAN( laDatabases, laDatabases2(I), 1, 0, 0, 1+2+4 ) = 0
 					SET DATABASE TO (laDatabases2(I))
 					CLOSE DATABASES
 					EXIT
@@ -12759,7 +12815,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 
 		WITH THIS AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 			FOR X = 1 TO ._Ole_Obj_count
-				IF ._Ole_Objs(X)._Nombre == tcNombre
+				IF LOWER(._Ole_Objs(X)._Nombre) == LOWER(tcNombre)
 					llExiste = .T.
 					EXIT
 				ENDIF
