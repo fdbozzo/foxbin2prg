@@ -10902,21 +10902,24 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		*!*				ENDSCAN
 
-		SELECT COUNT(*) FROM TABLABIN WHERE TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS == 'olecontrol' INTO ARRAY laOLE
+		*-- LO QUE SIGUE LO COMENTÉ PORQUE POR CADA OBJETO OLE SE AGREGABA UNA LÍNEA VACÍA QUE QUEDA MUY MAL Y ES INNECESARIA.
+		*-- COMO CONSECUENCIA, LOS FORMS O CLASES CON OBJETOS OLE DARÁN DIFERENCIA POR ÚNICA VEZ EN LA CABECERA. - fdbozzo. 29/11/2014 (v1.19.37)
+		*
+		*SELECT COUNT(*) FROM TABLABIN WHERE TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS == 'olecontrol' INTO ARRAY laOLE
 		
-		IF laOLE(1) > 0 THEN
-			*-- Lo del <<>> para crear una línea vacía es solamente por compatibilidad con lo antiguo,
-			*-- donde se creaba esta línea cuando el form o clase tenía al menos un objeto OLE.
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>
-				*
-			ENDTEXT
-		ELSE
+		*IF laOLE(1) > 0 THEN
+		*	*-- Lo del <<>> para crear una línea vacía es solamente por compatibilidad con lo antiguo,
+		*	*-- donde se creaba esta línea cuando el form o clase tenía al menos un objeto OLE.
+		*	TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+		*		<<>>
+		*		*
+		*	ENDTEXT
+		*ELSE
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				*
 			ENDTEXT
-		ENDIF
+		*ENDIF
 
 		*!*			CATCH TO loEx
 		*!*				IF THIS.l_Debug AND _VFP.STARTMODE = 0
