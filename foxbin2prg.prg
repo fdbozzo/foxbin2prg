@@ -487,6 +487,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="c_fb2prg_exe_version" display="c_FB2PRG_EXE_Version"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
@@ -665,6 +666,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET TABLEPROMPT OFF
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
+		ON ESCAPE ERROR 1799
+		SET ESCAPE ON
+		
 
 		lcSys16 = SYS(16)
 		IF LEFT(lcSys16,10) == 'PROCEDURE '
@@ -699,11 +703,21 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		CATCH
 
 		FINALLY
+			ON ESCAPE
 			THIS.o_FSO	= NULL
 			THIS.o_FNC	= NULL
 		ENDTRY
 
 		RETURN
+	ENDPROC
+
+
+	PROCEDURE AvanceDelProceso
+		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
+
+		IF THIS.l_ShowProgress AND PEMSTATUS(THIS, 'o_Frm_Avance', 5) THEN
+			THIS.o_Frm_Avance.AvanceDelProceso( tcTexto, tnValor, tnTotal, tnTipo )
+		ENDIF
 	ENDPROC
 
 
@@ -1223,6 +1237,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROCEDURE cargar_frm_avance
 		THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance")
+		THIS.o_Frm_Avance.Show()
 	ENDPROC
 
 
@@ -1834,18 +1849,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
 
-						IF .l_ShowProgress
-							.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-						ENDIF
+						*IF .l_ShowProgress
+						*	.o_Frm_Avance.nMAX_VALUE	= lnFileCount
+						*ENDIF
 
 						FOR I = 1 TO lnFileCount
 							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-							.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-							.o_Frm_Avance.nVALUE = I
+							*.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
+							*.o_Frm_Avance.nVALUE = I
+							.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
-							IF .l_ShowProgress
-								.o_Frm_Avance.SHOW()
-							ENDIF
+							*IF .l_ShowProgress
+							*	.o_Frm_Avance.SHOW()
+							*ENDIF
 
 							IF FILE( lcFile )
 								lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -1922,9 +1938,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 								USE IN (SELECT("TABLABIN"))
 
-								IF .l_ShowProgress
-									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-								ENDIF
+								*IF .l_ShowProgress
+								*	.o_Frm_Avance.nMAX_VALUE	= lnFileCount
+								*ENDIF
 
 								*-- Primero convierto el proyecto
 								*IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(tc_InputFile)) )
@@ -1934,12 +1950,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I,1)
-									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-									.o_Frm_Avance.nVALUE = I
+									*.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
+									*.o_Frm_Avance.nVALUE = I
+									.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
-									IF .l_ShowProgress
-										.o_Frm_Avance.SHOW()
-									ENDIF
+									*IF .l_ShowProgress
+									*	.o_Frm_Avance.SHOW()
+									*ENDIF
 
 									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -1978,9 +1995,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									ENDIF
 								ENDFOR
 
-								IF .l_ShowProgress
-									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-								ENDIF
+								*IF .l_ShowProgress
+								*	.o_Frm_Avance.nMAX_VALUE	= lnFileCount
+								*ENDIF
 
 								*-- Primero convierto el proyecto
 								*IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(tc_InputFile)) )
@@ -1990,12 +2007,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I)
-									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-									.o_Frm_Avance.nVALUE = I
+									*.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
+									*.o_Frm_Avance.nVALUE = I
+									.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
-									IF .l_ShowProgress
-										.o_Frm_Avance.SHOW()
-									ENDIF
+									*IF .l_ShowProgress
+									*	.o_Frm_Avance.SHOW()
+									*ENDIF
 
 									IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -2017,6 +2035,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							ENDCASE
 
 							IF FILE(tc_InputFile)
+								tc_InputFile	= LOCFILE(tc_InputFile)
 								ERASE ( tc_InputFile + '.ERR' )
 
 								DO CASE
@@ -2101,7 +2120,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
-				, ltFilestamp, lcExtA, lcExtB ;
+				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1) ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -2353,6 +2372,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.o_Conversor.c_OriginalFileName		= .c_OriginalFileName
 					.o_Conversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
 					*--
+					.AvanceDelProceso( C_PROCESSING_LOC + ' ' + .c_InputFile + '...', 1, 1, 0 )
+					BINDEVENT( .o_Conversor, 'AvanceDelProceso', THIS, 'AvanceDelProceso' )
+
 					.o_Conversor.Convertir( @toModulo, .F., THIS )
 					.c_TextLog	= .c_TextLog + CR_LF + .o_Conversor.c_TextLog	&& Recojo el LOG que haya generado el conversor
 				ELSE
@@ -2379,6 +2401,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
+			IF AEVENTS( laEvents, THIS.o_Conversor ) > 0 THEN
+				UNBINDEVENTS( THIS.o_Conversor )
+			ENDIF
 			loFSO				= NULL
 			THIS.o_Conversor	= NULL
 
@@ -2671,62 +2696,143 @@ ENDDEFINE
 
 *******************************************************************************************************************
 DEFINE CLASS frm_avance AS FORM
-	HEIGHT = 79
-	WIDTH = 628
-	SHOWWINDOW = 2
-	DOCREATE = .T.
-	AUTOCENTER = .T.
-	BORDERSTYLE = 2
+	Height = 100
+	Width = 628
+	ShowWindow = 2
+	DoCreate = .T.
+	AutoCenter = .T.
+	BorderStyle = 2
 	CAPTION = C_PROCESS_PROGRESS_LOC + ' '
-	CONTROLBOX = .F.
-	BACKCOLOR = RGB(255,255,255)
-	nMAX_VALUE = 100
-	nVALUE = 0
-	NAME = "FRM_AVANCE"
+	ControlBox = .F.
+	BackColor = RGB(255,255,255)
+	nmax_value = 100
+	nmax_value2 = 100
+	nvalue = 0
+	nvalue2 = 0
+	Name = "frm_avance"
+	_memberdata = [<VFPData>] ;
+		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
+		+ [<memberdata name="width" display="Width"/>] ;
+		+ [<memberdata name="height" display="Height"/>] ;
+		+ [<memberdata name="nvalue2" display="nValue2"/>] ;
+		+ [<memberdata name="nvalue2_assign" display="nValue2_Assign"/>] ;
+		+ [<memberdata name="nvalue" display="nValue"/>] ;
+		+ [<memberdata name="nvalue_assign" display="nValue_assign"/>] ;
+		+ [<memberdata name="nmax_value" display="nMax_Value"/>] ;
+		+ [<memberdata name="nmax_value2" display="nMax_Value2"/>] ;
+		+ [</VFPData>]
 
 
-	ADD OBJECT shp_base AS SHAPE WITH ;
-		TOP = 50, ;
-		LEFT = 12, ;
-		HEIGHT = 13, ;
-		WIDTH = 601, ;
-		CURVATURE = 15, ;
-		NAME = "shp_base"
+	ADD OBJECT shp_base AS shape WITH ;
+		Top = 32, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 604, ;
+		Curvature = 15, ;
+		Name = "shp_base"
 
 
-	ADD OBJECT shp_avance AS SHAPE WITH ;
-		TOP = 50, ;
-		LEFT = 12, ;
-		HEIGHT = 13, ;
-		WIDTH = 36, ;
-		CURVATURE = 15, ;
-		BACKCOLOR = RGB(255,255,128), ;
-		BORDERCOLOR = RGB(255,0,0), ;
-		NAME = "shp_Avance"
+	ADD OBJECT shp_avance AS shape WITH ;
+		Top = 32, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 36, ;
+		Curvature = 15, ;
+		BackColor = RGB(255,255,128), ;
+		BorderColor = RGB(255,0,0), ;
+		Name = "shp_Avance"
 
 
-	ADD OBJECT lbl_TAREA AS LABEL WITH ;
-		BACKSTYLE = 0, ;
-		CAPTION = ".", ;
-		HEIGHT = 17, ;
-		LEFT = 12, ;
-		TOP = 20, ;
-		WIDTH = 604, ;
-		NAME = "lbl_Tarea"
+	ADD OBJECT lbl_tarea AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 12, ;
+		Width = 604, ;
+		Name = "lbl_Tarea"
+
+
+	ADD OBJECT shp_base2 AS shape WITH ;
+		Top = 68, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 604, ;
+		Curvature = 15, ;
+		Name = "shp_base2"
+
+
+	ADD OBJECT shp_avance2 AS shape WITH ;
+		Top = 68, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 36, ;
+		Curvature = 15, ;
+		BackColor = RGB(255,255,128), ;
+		BorderColor = RGB(255,0,0), ;
+		Name = "shp_Avance2"
+
+
+	ADD OBJECT lbl_tarea2 AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 48, ;
+		Width = 604, ;
+		Name = "lbl_Tarea2"
+
+
+	PROCEDURE AvanceDelProceso
+		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
+		
+		WITH THIS AS frm_avance OF foxbin2prg.prg
+			DO CASE
+			CASE tnTipo = 0
+				.lbl_tarea.Caption		= tcTexto
+				.nMax_Value				= tnTotal
+				.nValue					= tnValor
+
+			CASE tnTipo = 1
+				.lbl_tarea2.Caption		= tcTexto
+				.nMax_Value2			= tnTotal
+				.nValue2				= tnValor
+
+			CASE tnTipo = 2
+				.lbl_tarea2.Caption		= tcTexto
+				.nMax_Value2			= tnTotal
+				.nValue2				= tnValor
+
+			ENDCASE
+		ENDWITH && THIS
+
+		RETURN
+	ENDPROC
 
 
 	PROCEDURE nvalue_assign
 		LPARAMETERS vNewVal
 
 		WITH THIS
-			.nVALUE = m.vNewVal
-			.shp_avance.WIDTH = m.vNewVal * .shp_base.WIDTH / .nMAX_VALUE
+			.nValue = m.vNewVal
+			.shp_avance.WIDTH = m.vNewVal * .shp_base.WIDTH / .nMax_Value
 		ENDWITH
 	ENDPROC
 
 
-	PROCEDURE INIT
-		THIS.nVALUE = 0
+	PROCEDURE Init
+		THIS.nValue = 0
+		THIS.nValue2 = 0
+	ENDPROC
+
+
+	PROCEDURE nvalue2_assign
+		LPARAMETERS vNewVal
+
+		WITH THIS
+			.nValue2 = m.vNewVal
+			.shp_avance2.WIDTH = m.vNewVal * .shp_base2.WIDTH / .nMax_Value2
+		ENDWITH
 	ENDPROC
 
 
@@ -2954,7 +3060,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 
 	PROCEDURE AvanceDelProceso
-		LPARAMETERS tcTexto, tnValor, tnTotal
+		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 	ENDPROC
 
 
@@ -3181,9 +3287,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcValue	= ''
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
-				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
-				ENDTEXT
+				*TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
+				*ENDTEXT
+				lcValue = lcValue + CHR(13) + CHR(10) + CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )
 			ENDFOR
 
 			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -3697,9 +3804,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcValue	= ''
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
-				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
-				ENDTEXT
+				*TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<>>		<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
+				*ENDTEXT
+				lcValue = lcValue + CHR(13) + CHR(10) + CHR(9) + CHR(9) + CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )
 			ENDFOR
 
 			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -4733,6 +4841,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
+				THIS.AvanceDelProceso( 'Generating Props for Class ' + toClase._Nombre + '...', 0, 1, 2 )
 				THIS.c_ClaseActual	= LOWER(toClase._BaseClass)
 				DIMENSION laPropsAndValues( toClase._Prop_Count, 3 )
 				ACOPY( toClase._Props, laPropsAndValues )
@@ -4812,44 +4921,53 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lcMemo	= ''
 
 		*-- Recorrer los métodos
-		FOR I = 1 TO toClase._Procedure_Count
-			loProcedure	= NULL
-			loProcedure	= toClase._Procedures(I)
+		WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
+			FOR I = 1 TO toClase._Procedure_Count
+				loProcedure	= NULL
+				loProcedure	= toClase._Procedures(I)
 
-			IF loProcedure._ProcLine_Count > 0 THEN
-				IF '.' $ loProcedure._Nombre
-					*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
-					*-- cntDatos.txtEdad.Valid		==> Debe acortarse si cntDatos es un objeto existente
-					lcNombreObjeto	= LEFT( loProcedure._Nombre, AT('.', loProcedure._Nombre) - 1 )
+				IF loProcedure._ProcLine_Count > 0 THEN
+					.AvanceDelProceso( 'Generating Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
 
-					IF THIS.buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase ) = 0
+					IF '.' $ loProcedure._Nombre
+						*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
+						*-- cntDatos.txtEdad.Valid		==> Debe acortarse si cntDatos es un objeto existente
+						lcNombreObjeto	= LEFT( loProcedure._Nombre, AT('.', loProcedure._Nombre) - 1 )
+
+						IF .buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase ) = 0
+							TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+								<<C_PROCEDURE>> <<loProcedure._Nombre>>
+							ENDTEXT
+							*lcMemo = lcMemo + C_PROCEDURE + ' ' + loProcedure._Nombre
+						ELSE
+							TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+								<<C_PROCEDURE>> <<SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )>>
+							ENDTEXT
+							*lcMemo = lcMemo + C_PROCEDURE + ' ' + SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )
+						ENDIF
+					ELSE
 						TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 							<<C_PROCEDURE>> <<loProcedure._Nombre>>
 						ENDTEXT
-					ELSE
-						TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-							<<C_PROCEDURE>> <<SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )>>
-						ENDTEXT
+						*lcMemo = lcMemo + C_PROCEDURE + ' ' + loProcedure._Nombre
 					ENDIF
-				ELSE
-					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<C_PROCEDURE>> <<loProcedure._Nombre>>
+
+					*-- Incluir las líneas del método
+					*.AvanceDelProceso( 'Generating Lines of Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
+					FOR X = 1 TO loProcedure._ProcLine_Count
+						*TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<loProcedure._ProcLines(X)>>
+						*ENDTEXT
+						lcMemo = lcMemo + CHR(13) + CHR(10) + loProcedure._ProcLines(X)
+					ENDFOR
+
+					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<C_ENDPROC>>
+						<<>>
 					ENDTEXT
 				ENDIF
-
-				*-- Incluir las líneas del método
-				FOR X = 1 TO loProcedure._ProcLine_Count
-					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<loProcedure._ProcLines(X)>>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_ENDPROC>>
-					<<>>
-				ENDTEXT
-			ENDIF
-		ENDFOR
+			ENDFOR
+		ENDWITH
 
 		loProcedure	= NULL
 		RELEASE toClase, I, X, lcNombreObjeto, loProcedure
@@ -4871,6 +4989,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lcMemo	= ''
 
 		*-- Recorrer los métodos
+		THIS.AvanceDelProceso( 'Generating Object Methods for ' + toClase._Nombre + '.' + toObjeto._ObjName + '...', 0, 1, 2 )
 		FOR I = 1 TO toObjeto._Procedure_Count
 			loProcedure	= NULL
 			loProcedure	= toObjeto._Procedures(I)
@@ -4881,9 +5000,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			*-- Incluir las líneas del método
 			FOR X = 1 TO loProcedure._ProcLine_Count
-				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<loProcedure._ProcLines(X)>>
-				ENDTEXT
+				*TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<loProcedure._ProcLines(X)>>
+				*ENDTEXT
+				lcMemo = lcMemo + CHR(13) + CHR(10) + loProcedure._ProcLines(X)
 			ENDFOR
 
 			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -5325,54 +5445,55 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			IF LEFT( tcLine, 11 ) == 'ADD OBJECT '
 				*-- Estructura a reconocer: ADD OBJECT 'frm_a.Check1' AS check [WITH]
-				llBloqueEncontrado	= .T.
-				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
-				tcLine		= CHRTRAN( tcLine, ['], ["] )
+				WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
+					llBloqueEncontrado	= .T.
+					LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
+					tcLine		= CHRTRAN( tcLine, ['], ["] )
 
-				IF EMPTY(toClase._Fin_Cab)
-					toClase._Fin_Cab	= I-1
-					toClase._Ini_Cuerpo	= I
-				ENDIF
+					IF EMPTY(toClase._Fin_Cab)
+						toClase._Fin_Cab	= I-1
+						toClase._Ini_Cuerpo	= I
+					ENDIF
 
-				toObjeto	= NULL
-				lcNombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
-				lcObjName	= JUSTEXT( '.' + lcNombre )
+					toObjeto	= NULL
+					lcNombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
+					lcObjName	= JUSTEXT( '.' + lcNombre )
+					.AvanceDelProceso( 'Analyzing Block Add Object ' + toClase._Nombre + '.' + lcObjName + '...', I, tnCodeLines, 1 )
 
-				IF toClase.l_ObjectMetadataInHeader
-					FOR Z = 1 TO toClase._AddObject_Count
-						IF LOWER(toClase._AddObjects(Z)._Nombre) == LOWER(lcNombre) THEN
-							toObjeto	= toClase._AddObjects(Z)
-							EXIT
-						ENDIF
-					ENDFOR
-				ENDIF
+					IF toClase.l_ObjectMetadataInHeader
+						FOR Z = 1 TO toClase._AddObject_Count
+							IF LOWER(toClase._AddObjects(Z)._Nombre) == LOWER(lcNombre) THEN
+								toObjeto	= toClase._AddObjects(Z)
+								EXIT
+							ENDIF
+						ENDFOR
+					ENDIF
 
-				IF ISNULL(toObjeto)
-					toObjeto	= CREATEOBJECT('CL_OBJETO')
-					*-- Luego se reasigna el ZOrder, pero si no lo hace, se pone último como si se acabara de agregar.
-					*-- Puede pasar si se agrega manualmente al TX2 y se olvida agregar la metadata OBJECTDATA.
-					toObjeto._ZOrder	= 9999
-					toObjeto._Nombre	= lcNombre
-				ENDIF
+					IF ISNULL(toObjeto)
+						toObjeto	= CREATEOBJECT('CL_OBJETO')
+						*-- Luego se reasigna el ZOrder, pero si no lo hace, se pone último como si se acabara de agregar.
+						*-- Puede pasar si se agrega manualmente al TX2 y se olvida agregar la metadata OBJECTDATA.
+						toObjeto._ZOrder	= 9999
+						toObjeto._Nombre	= lcNombre
+					ENDIF
 
-				toObjeto._ObjName	= lcObjName
+					toObjeto._ObjName	= lcObjName
 
-				IF '.' $ toObjeto._Nombre
-					toObjeto._Parent	= toClase._ObjName + '.' + JUSTSTEM( toObjeto._Nombre )
-				ELSE
-					toObjeto._Parent	= toClase._ObjName
-				ENDIF
+					IF '.' $ toObjeto._Nombre
+						toObjeto._Parent	= toClase._ObjName + '.' + JUSTSTEM( toObjeto._Nombre )
+					ELSE
+						toObjeto._Parent	= toClase._ObjName
+					ENDIF
 
-				toObjeto._Nombre	= toObjeto._Parent + '.' + toObjeto._ObjName
-				toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
+					toObjeto._Nombre	= toObjeto._Parent + '.' + toObjeto._ObjName
+					toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
 
-				IF NOT toClase.l_ObjectMetadataInHeader
-					toClase.add_Object( toObjeto )
-				ENDIF
+					IF NOT toClase.l_ObjectMetadataInHeader
+						toClase.add_Object( toObjeto )
+					ENDIF
 
 
-				*-- Propiedades del ADD OBJECT
-				WITH THIS
+					*-- Propiedades del ADD OBJECT
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -6043,6 +6164,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		IF llBloqueEncontrado
 			*-- Evalúo todo el contenido del PROCEDURE
+			THIS.AvanceDelProceso( 'Analyzing Procedure ' + toClase._Nombre + '.' + tcProcedureAbierto + '...', I, tnCodeLines, 1 )
 			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, @tcProcedureAbierto ;
 				, @tc_Comentario, @taLineasExclusion, @tnBloquesExclusion )
 		ENDIF
@@ -6452,8 +6574,10 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
+				.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 				.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
+				.AvanceDelProceso( 'Loading Code...', 2, lnCodeLines, 1 )
 				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
 					lcInputFile			= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
@@ -6477,11 +6601,13 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				.n_Avance_Maximo	= lnCodeLines
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+				.AvanceDelProceso( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
 				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
+				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 				.createClasslib()
@@ -6785,7 +6911,10 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
+				.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 				.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+
+				.AvanceDelProceso( 'Loading Code...', 2, lnCodeLines, 1 )
 
 				IF toFoxBin2Prg.l_UseClassPerFile
 					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
@@ -6810,10 +6939,13 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				.n_Avance_Maximo	= lnCodeLines
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+				.AvanceDelProceso( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
 				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+
+				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -7131,8 +7263,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				*.identificarBloquesDeExclusion( @laCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
 
+				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toProject, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -7925,8 +8059,10 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				.createReport()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
 
+				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toReport, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -8652,8 +8788,10 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				*.createTable()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase )
 
+				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toDatabase, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -8831,8 +8969,10 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				.createMenu()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
 
+				.AvanceDelProceso( 'Generating Binary...', 1, 2, 1 )
 				.escribirArchivoBin( @toMenu )
 			ENDWITH && THIS
 
@@ -10040,17 +10180,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					*-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
 					FOR I = 1 TO tnPropsAndValues_Count
-						TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
-						ENDTEXT
+						*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
+						*ENDTEXT
+						tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + taPropsAndValues(I,1) + ' = ' + taPropsAndValues(I,2)
 
 						IF tnPropsAndComments_Count > 0 THEN
 							lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+2+4+8)
 
 						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
-							TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-								<<>>		&& <<taPropsAndComments(lnComment,2)>>
-							ENDTEXT
+							*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							*	<<>>		&& <<taPropsAndComments(lnComment,2)>>
+							*ENDTEXT
+							tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + CHR(9) + '&' + '& ' + taPropsAndComments(lnComment,2)
 						ENDIF
 						ENDIF
 					ENDFOR
@@ -10113,19 +10255,22 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					, 'p' )
 
 				IF lcType == 'p' THEN
-					TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
-					ENDTEXT
+					*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*	<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
+					*ENDTEXT
+					tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + CHR(9) + '*' + lcType + ': ' + taPropsAndComments(I,1)
 				ELSE
-					TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		*<<lcType>>: <<SUBSTR( taPropsAndComments(I,1), 2)>>
-					ENDTEXT
+					*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*	<<>>		*<<lcType>>: <<SUBSTR( taPropsAndComments(I,1), 2)>>
+					*ENDTEXT
+					tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + CHR(9) + '*' + lcType + ': ' + SUBSTR( taPropsAndComments(I,1), 2)
 				ENDIF
 
 				IF NOT EMPTY(taPropsAndComments(I,2))
-					TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<>>		<<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
-					ENDTEXT
+					*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+					*	<<>>		<<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
+					*ENDTEXT
+					tcCodigo = tcCodigo + CHR(9) + CHR(9) + '&' + '& ' + taPropsAndComments(I,2)
 				ENDIF
 			ENDFOR
 
@@ -10889,7 +11034,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
 				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
-				, lnClassCount, lcOutputFile, lcExternalHeader
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
@@ -10928,6 +11073,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ENDTEXT
 				ENDIF
 
+				COUNT ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class" TO lnClassTotal
 
 				SCAN ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class"
 					STORE 0 TO lnMethodCount
@@ -10954,6 +11100,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					lcObjName	= ALLTRIM( loRegClass.OBJNAME )
 					laClasses(lnClassCount,1)	= LOWER( lcObjName )
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + '...', lnClassCount, lnClassTotal, 1 )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -11079,6 +11226,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 				*-- Genero el VC2
+				.AvanceDelProceso( 'Writing VC2...', 2, 2, 1 )
 				lcOutputFile	= .c_OutputFile
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
@@ -11156,7 +11304,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
 				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
-				, lnClassCount, lcOutputFile, lcExternalHeader
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
@@ -11206,6 +11354,10 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 
+				COUNT ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
+						AND ( EMPTY( TABLABIN.PARENT ) ;
+						AND INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment', 'form', 'formset' ) ) TO lnClassTotal
+
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
 						AND ( EMPTY( TABLABIN.PARENT ) ;
 						AND INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment', 'form', 'formset' ) )
@@ -11234,6 +11386,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
 					laClasses(lnClassCount,1)	= LOWER( lcObjName )
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + '...', lnClassCount, lnClassTotal, 1 )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -11362,6 +11515,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 				*-- Genero el SC2
+				.AvanceDelProceso( 'Writing SC2...', 2, 2, 1 )
 				lcOutputFile	= .c_OutputFile
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
@@ -11449,6 +11603,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				USE IN (SELECT("_TABLAORIG"))
 
 				loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
+				.AvanceDelProceso( 'Processing Project ' + '...', 1, 2, 1 )
 
 
 				*-- Obtengo los archivos del proyecto
@@ -11614,9 +11769,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF NOT EMPTY(loReg.COMMENTS)
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Description = '" + loReg.COMMENTS + "'"
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -11633,9 +11789,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF loReg.EXCLUDE
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Exclude = .T."
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -11652,9 +11809,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Type = 'T'"
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -11711,6 +11869,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
+				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
@@ -11778,6 +11937,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 			lcStrPJM		= FILETOSTR( THIS.c_InputFile )
 			loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
+			THIS.AvanceDelProceso( 'Scanning PJM...', 1, 2, 1 )
 
 
 			*-- Obtengo los archivos del proyecto
@@ -11988,9 +12148,10 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF NOT EMPTY(loReg.COMMENTS)
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Description = '" + loReg.COMMENTS + "'"
 					ENDIF
 				ENDFOR
 
@@ -12006,9 +12167,10 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF loReg.EXCLUDE
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Exclude = .T."
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -12025,9 +12187,10 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Type = 'T'"
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -12083,6 +12246,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
+				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
@@ -12156,6 +12320,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
 				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
+				THIS.AvanceDelProceso( 'Scanning FRX...', 1, 2, 1 )
 
 				*-- Header
 				LOCATE FOR ObjType = 1
@@ -12250,6 +12415,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el FR2
+				.AvanceDelProceso( 'Writing FR2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
@@ -12311,6 +12477,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			WITH THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
+				.AvanceDelProceso( 'Scanning DBF Structure...', 1, 2, 1 )
 
 				*-- Include
 				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Included) AND NOT toFoxBin2Prg.DBF_Conversion_Included == '*' ;
@@ -12353,6 +12520,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 					
 					*-- Genero el DB2, renombrando el TMP
+					.AvanceDelProceso( 'Writing DB2...', 2, 2, 1 )
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
@@ -12374,6 +12542,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Genero el DB2
+					.AvanceDelProceso( 'Writing DB2...', 2, 2, 1 )
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
@@ -12475,6 +12644,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 				OPEN DATABASE (.c_InputFile) SHARED NOUPDATE
+				.AvanceDelProceso( 'Analyzing DBC metadata...', 1, 2, 1 )
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -12484,6 +12654,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el DC2
+				.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
@@ -12542,6 +12713,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 				.n_Avance_Maximo	= _TALLY
 				USE IN (SELECT("_TABLAORIG"))
+				.AvanceDelProceso( 'Analyzing MNX...', 2, 2, 1 )
 
 				*-- Verificación de menú VFP 9
 				IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
@@ -12558,6 +12730,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el MN2
+				.AvanceDelProceso( 'Writing MN2...', 2, 2, 1 )
 				IF .l_Test
 					toMenu	= C_FB2PRG_CODE
 				ELSE
