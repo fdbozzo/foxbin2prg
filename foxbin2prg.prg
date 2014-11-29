@@ -9601,9 +9601,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			FOR I = tnProtected_Count TO 1 STEP -1
 				*-- El ASCAN es para evitar valores repetidos, que se eliminarán. v1.19.29
-				taProtected(I)	= LOWER( taProtected(I) )
+				taProtected(I)	= taProtected(I)
 				IF ASCAN( taProtected, taProtected(I), 1, -1, 0, 1+2+4 ) = I
-					tcSortedMemo	= tcSortedMemo + LOWER(taProtected(I)) + CR_LF
+					tcSortedMemo	= tcSortedMemo + taProtected(I) + CR_LF
 				ELSE
 					ADEL( taProtected, I )
 					tnProtected_Count	= tnProtected_Count - 1
