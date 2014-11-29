@@ -5301,7 +5301,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						FOR EACH loObjeto IN toClase._AddObjects FOXOBJECT
 							*-- Verifico que sea el objeto que corresponde
-							IF loObjeto._WriteOrder = 0 AND loObjeto._Nombre == lcObjName
+							IF loObjeto._WriteOrder = 0 AND LOWER(loObjeto._Nombre) == LOWER(lcObjName)
 								N	= N + 1
 								loObjeto._WriteOrder	= N
 								.insert_Object( toClase, loObjeto, toFoxBin2Prg )
@@ -5688,7 +5688,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
 				toClase._Nombre			= LOWER( ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) ) )
-				toClase._ObjName		= toClase._Nombre
+				toClase._ObjName		= LOWER( toClase._Nombre )
 				toClase._Definicion		= ALLTRIM( tcLine )
 				IF NOT ' OF ' $ UPPER(tcLine)	&& Puede no tener "OF libreria.vcx"
 					toClase._Class			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine + ' OLEPUBLIC', ' AS ', ' OLEPUBLIC', 1, 1 ), ["'], [] ) )
@@ -9254,7 +9254,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							CASE '.' $ toRegObj.PARENT
 								lcMethodName	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT) + 1) + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
 
-							CASE LEFT(toRegObj.PARENT + '.', LEN( toRegClass.OBJNAME + '.' ) ) == toRegClass.OBJNAME + '.'
+							CASE LOWER( LEFT(toRegObj.PARENT + '.', LEN( toRegClass.OBJNAME + '.' ) ) ) == LOWER( toRegClass.OBJNAME + '.' )
 								lcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 							OTHERWISE
@@ -11096,6 +11096,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
 					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
 					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
+					loRegClass.OBJNAME		= LOWER( loRegClass.OBJNAME )
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
@@ -11382,6 +11383,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
 					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
 					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
+					loRegClass.OBJNAME		= LOWER( loRegClass.OBJNAME )
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
