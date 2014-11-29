@@ -9952,6 +9952,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
 						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDPROC '
 							*-- Es el final de estructura ENDPROC
+							IF NOT llProcOpen
+								*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
+								LOOP
+							ENDIF
 						ELSE
 							*-- Es otra cosa (variable, etc)
 							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
@@ -9965,6 +9969,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
 						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDFUNC '
 							*-- Es el final de estructura ENDPROC
+							IF NOT llProcOpen
+								*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
+								LOOP
+							ENDIF
 							laLine(I)	= STRTRAN( laLine(I), 'ENDFUNC', 'ENDPROC' )
 						ELSE
 							*-- Es otra cosa (variable, etc)
@@ -10192,7 +10200,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 							*	<<>>		&& <<taPropsAndComments(lnComment,2)>>
 							*ENDTEXT
-							tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + CHR(9) + '&' + '& ' + taPropsAndComments(lnComment,2)
+							tcCodigo = tcCodigo + CHR(9) + CHR(9) + '&' + '& ' + taPropsAndComments(lnComment,2)
 						ENDIF
 						ENDIF
 					ENDFOR
