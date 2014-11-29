@@ -9458,8 +9458,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
-			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
-			tcSortedMemo			= ''
+			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods, lcLastIncompletePropName
+			STORE '' TO tcSortedMemo, lcLastIncompletePropName
 			tnPropsAndValues_Count	= 0
 
 			IF NOT EMPTY(m.tcMemo)
@@ -9480,14 +9480,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							LOOP
 						ENDIF
 
-						X	= X + 1
-						DIMENSION taPropsAndValues(X,2)
-
 						IF C_MPROPHEADER $ laItems(I)
 							*-- Solo entrará por aquí cuando se evalúe una propiedad de PROPERTIES con un valor especial (largo)
 							lnLenAcum	= 0
 							lnPosEQ		= AT( '=', laItems(I) )
-							lcPropName	= LEFT( laItems(I), lnPosEQ - 2 )
+							lcPropName	= lcLastIncompletePropName + LEFT( laItems(I), lnPosEQ - 2 )
 							lnLenVal	= INT( VAL( SUBSTR( laItems(I), lnPosEQ + 2 + 517, 8) ) )
 							lcValue		= SUBSTR( laItems(I), lnPosEQ + 2 + 517 + 8 )
 
@@ -9507,15 +9504,37 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							ENDIF
 
 							*-- Es un valor especial, por lo que se encapsula en un marcador especial
+							X	= X + 1
+							DIMENSION taPropsAndValues(X,2)
 							taPropsAndValues(X,1)	= lcPropName
 							taPropsAndValues(X,2)	= .normalizarValorPropiedad( lcPropName, lcValue, '' )
 
 						ELSE
 							*-- Propiedad normal
 							lnPosEQ					= AT( '=', laItems(I) )
-							taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
+
+							IF lnPosEQ = 0 THEN
+								*-- AUTOFIX DE PROPIEDAD PARTIDA:
+								*-- Esto solo puede ocurrir cuando en el memo de Propiedades hay alguna propiedad
+								*-- partida debido a una edición manual con un Enter erróneo, algo como esto:
+								* comm
+								* AND2.Caption = "Command2"
+								*
+								*-- En el caso anterior, las 2 líneas son realmente una:
+								* command2.Caption = "Command2"
+								*
+								*-- Solución: Guardar esta parte del nombre y agregarlo a la próxima propiedad.
+								lcLastIncompletePropName	= laItems(I)
+								LOOP
+							ENDIF
+
+							X	= X + 1
+							DIMENSION taPropsAndValues(X,2)
+							taPropsAndValues(X,1)	= lcLastIncompletePropName + LEFT( laItems(I), lnPosEQ - 2 )
 							taPropsAndValues(X,2)	= .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
 						ENDIF
+
+						lcLastIncompletePropName	= ''
 					ENDFOR
 
 
