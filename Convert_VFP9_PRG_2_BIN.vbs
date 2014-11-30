@@ -60,6 +60,7 @@ Else
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
 	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
+	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress" )
 	
 	For i = 0 To WScript.Arguments.Count-1
 		scanDirs( WScript.Arguments(i) )
@@ -89,6 +90,8 @@ Else
 		cFlagNoTimestamps	= "'1'"
 	End If
 
+	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
+	
 	For i = 1 To nFile_Count
 		oVFP9.DoCmd( "oFoxBin2Prg.AvanceDelProceso(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
 		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"

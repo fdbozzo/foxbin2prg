@@ -62,6 +62,7 @@ Else
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
 	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
+	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress" )
 	
 	cFlagGenerateLog		= "'0'"
 	cFlagDontShowErrMsg		= "'0'"
@@ -83,6 +84,8 @@ Else
 	
 	cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( WScript.Arguments(0) ) & "'"
 
+	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
+	
 	If nDebug = 0 Or nDebug = 2 Then
 		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
 	Else
@@ -98,7 +101,14 @@ Else
 	End If
 
 	If GetBit(nDebug, 4) Then
-		If oVFP9.Eval("oFoxBin2prg.l_Error") Then
+		'If oVFP9.Eval("oFoxBin2prg.l_Error") Then
+		If nExitCode = 1799 Then
+			MsgBox "Conversion Cancelled by User!", 48, WScript.ScriptName
+			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
+			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
+			WSHShell.run cErrFile
+
+		ElseIf nExitCode > 0 Then
 			MsgBox "End of Process! (with errors)", 48, WScript.ScriptName
 			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
 			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")

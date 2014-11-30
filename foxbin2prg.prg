@@ -592,6 +592,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_FB2PRG_Version				= 1.19
 	*-- Localized properties
 	c_loc_processing_file			= C_PROCESSING_LOC
+	c_loc_process_progress			= C_PROCESS_PROGRESS_LOC
 	*--
 	c_Language						= 'ES'
 	c_FB2PRG_EXE_Version			= 0
@@ -710,7 +711,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			ON ESCAPE
-			THIS.o_Frm_Avance	= NULL
 			THIS.o_FSO	= NULL
 			THIS.o_FNC	= NULL
 		ENDTRY
@@ -722,10 +722,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE AvanceDelProceso
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
-		*-- Si o_Frm_Avance se habilitó de forma externa, l_ShowProgress podría ser .F. para controlarlo desde fuera.
-		IF VARTYPE(THIS.o_Frm_Avance) = "O" THEN
-			THIS.o_Frm_Avance.AvanceDelProceso( tcTexto, tnValor, tnTotal, tnTipo )
-		ENDIF
+		TRY
+			*-- Si o_Frm_Avance se habilitó de forma externa, l_ShowProgress podría ser .F. para controlarlo desde fuera.
+			IF VARTYPE(THIS.o_Frm_Avance) = "O" THEN
+				*-- Cuando esta rutina se invoca desde el script, este método es el #1 y no puede cancelarse todavía
+				IF THIS.o_Frm_Avance.l_Cancelled AND PROGRAM(-1) > 1 THEN
+					ERROR 1799
+				ENDIF
+				THIS.o_Frm_Avance.AvanceDelProceso( tcTexto, tnValor, tnTotal, tnTipo )
+			ENDIF
+
+		CATCH
+			THROW
+		ENDTRY
 	ENDPROC
 
 
@@ -2670,19 +2679,20 @@ ENDDEFINE
 
 *******************************************************************************************************************
 DEFINE CLASS frm_avance AS FORM
-	Height = 100
+	Height = 110
 	Width = 628
 	ShowWindow = 2
 	DoCreate = .T.
 	AutoCenter = .T.
 	BorderStyle = 2
-	CAPTION = C_PROCESS_PROGRESS_LOC + '  (Press Esc to Cancel)'
+	CAPTION = 'FoxBin2Prg - ' + C_PROCESS_PROGRESS_LOC + '  (Press Esc to Cancel)'
 	ControlBox = .F.
 	BackColor = RGB(255,255,255)
 	nmax_value = 100
 	nmax_value2 = 100
 	nvalue = 0
 	nvalue2 = 0
+	l_Cancelled = .F.
 	Name = "frm_avance"
 	_memberdata = [<VFPData>] ;
 		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
@@ -2694,11 +2704,12 @@ DEFINE CLASS frm_avance AS FORM
 		+ [<memberdata name="nvalue_assign" display="nValue_assign"/>] ;
 		+ [<memberdata name="nmax_value" display="nMax_Value"/>] ;
 		+ [<memberdata name="nmax_value2" display="nMax_Value2"/>] ;
+		+ [<memberdata name="l_cancelled" display="l_Cancelled"/>] ;
 		+ [</VFPData>]
 
 
 	ADD OBJECT shp_base AS shape WITH ;
-		Top = 32, ;
+		Top = 28, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 604, ;
@@ -2707,7 +2718,7 @@ DEFINE CLASS frm_avance AS FORM
 
 
 	ADD OBJECT shp_avance AS shape WITH ;
-		Top = 32, ;
+		Top = 28, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 36, ;
@@ -2722,13 +2733,13 @@ DEFINE CLASS frm_avance AS FORM
 		Caption = ".", ;
 		Height = 17, ;
 		Left = 12, ;
-		Top = 12, ;
+		Top = 8, ;
 		Width = 604, ;
 		Name = "lbl_Tarea"
 
 
 	ADD OBJECT shp_base2 AS shape WITH ;
-		Top = 68, ;
+		Top = 64, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 604, ;
@@ -2737,7 +2748,7 @@ DEFINE CLASS frm_avance AS FORM
 
 
 	ADD OBJECT shp_avance2 AS shape WITH ;
-		Top = 68, ;
+		Top = 64, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 36, ;
@@ -2752,15 +2763,33 @@ DEFINE CLASS frm_avance AS FORM
 		Caption = ".", ;
 		Height = 17, ;
 		Left = 12, ;
-		Top = 48, ;
+		Top = 44, ;
 		Width = 604, ;
 		Name = "lbl_Tarea2"
+
+
+	ADD OBJECT cmdcancel AS commandbutton WITH ;
+		Top = 84, ;
+		Left = 252, ;
+		Height = 21, ;
+		Width = 100, ;
+		Caption = "Cancel", ;
+		Enabled = .F., ;
+		Name = "cmdCancel"
 
 
 	PROCEDURE AvanceDelProceso
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
 		WITH THIS AS frm_avance OF foxbin2prg.prg
+			*-- Habilita el botón de cancelar una vez que se comienzan a pasar valores
+			IF NOT EMPTY(tnValor) THEN
+				IF NOT .cmdCancel.Enabled THEN
+					.cmdCancel.Enabled = .T.
+				ENDIF
+				DOEVENTS
+			ENDIF
+			
 			DO CASE
 			CASE tnTipo = 0
 				IF NOT EMPTY(tcTexto) THEN
@@ -2822,6 +2851,11 @@ DEFINE CLASS frm_avance AS FORM
 			.nvalue2 = m.vNewVal
 			.shp_avance2.WIDTH = m.vNewVal * .shp_base2.WIDTH / .nmax_value2
 		ENDWITH
+	ENDPROC
+
+
+	PROCEDURE cmdcancel.Click
+		THISFORM.l_Cancelled = .T.
 	ENDPROC
 
 
