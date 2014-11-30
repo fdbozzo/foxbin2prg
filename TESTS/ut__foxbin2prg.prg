@@ -212,7 +212,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				THIS.assertequals( toReg_Esperado.Reserved8, toReg.Reserved8, "Valor de RESERVED8 para " + lcExtraData )
 				THIS.assertequals( LEN(toReg_Esperado.Reserved8), LEN(toReg.Reserved8), "Tamaño de RESERVED8 para " + lcExtraData )
 
-				THIS.assertequals( toReg_Esperado.OLE2, toReg.OLE2, "Valor de OLE2 para " + lcExtraData )
+				THIS.assertequals( LOWER(toReg_Esperado.OLE2), LOWER(toReg.OLE2), "Valor de OLE2 para " + lcExtraData )
 				THIS.assertequals( LEN(toReg_Esperado.OLE2), LEN(toReg.OLE2), "Tamaño de OLE2 para " + lcExtraData )
 
 				THIS.assertequals( SYS(2007, toReg_Esperado.OLE), SYS(2007, toReg.OLE), "Valor de OLE (Checksum) para " + lcExtraData )
@@ -314,8 +314,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -555,8 +555,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			SELECT 0
 			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
@@ -640,8 +640,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			SELECT 0
 			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
@@ -735,8 +735,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -819,8 +819,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -903,8 +903,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			*loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			*loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			*-- Comparo resultados
 			lcTXT0		= FORCEPATH( FORCEEXT(lc_File,'VC2'), ADDBS( oFXU_LIB.cPathDatosReadOnly ) )
@@ -961,8 +961,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.Convertir( lc_OutputFile, .F., .F., .T. )
-			loCnv.Convertir( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), .F., .F., .T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '0', '0', '0', '', '', .T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '0', '0', '0', '', '', .T. )
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN

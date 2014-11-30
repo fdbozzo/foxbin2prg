@@ -106,6 +106,17 @@
 * 29/08/2014	FDBOZZO		v1.19.33	Arreglo bug mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (Peter Hipp)
 * 19/09/2014	FDBOZZO		v1.19.34	Arreglo bug: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error al intentar capitalizar el archivo de entrada (Jim Nelson)
 * 26/09/2014	FDBOZZO		v1.19.35	Mejora: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Marcio Gomez G.)
+* 08/10/2014	FDBOZZO		v1.19.36	Arreglo bug: Al generar el mn2 el identificador queda vacío (bug introducido en v1.19.35)
+* 19/11/2014	FDBOZZO		v1.19.37	Mejora: Las configuraciones de foxbin2prg.cfg no permiten comentarios && al final (edyshor)
+* 19/11/2014	FDBOZZO		v1.19.37	Arreglo bug: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (edyshor)
+* 19/11/2014	FDBOZZO		v1.19.37	Mejora dbf: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (edyshor)
+* 21/10/2014    FDBOZZO     v1.19.37    Mejora: Permitir generar una clase por archivo (Ryan Harris/Lutz Scheffler)
+* 29/11/2014	FDBOZZO		v1.19.37	Arreglo bug scx/vcx: Algunas propiedades a veces tomaban la descripción de otras propiedades similares
+* 29/11/2014	FDBOZZO		v1.19.37	Arreglo bug scx/vcx: Las propiedades "Protected" y "Hidden" no siempre estaban ordenadas alfabéticamente
+* 30/10/2014	FDBOZZO		v1.19.37	Mejora: Optimizaciones en velocidad de proceso para scx/vcx/dbf
+* 30/11/2014	FDBOZZO		v1.19.37	Mejora: Indicador de avance de proceso más informativo
+* 30/11/2014	FDBOZZO		v1.19.37	Mejora: Se puede cancelar el proceso con la tecla Esc
+* 30/11/2014	FDBOZZO		v1.19.37	Mejora: Agregado control para detectar reportes no compatibles con VFP 9
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -152,6 +163,11 @@
 * 28/08/2014	Peter Hipp			REPORTE BUG mnx v1.19.32: Si una opción tiene asociado un Procedure de 1 línea, no se mantiene como Procedure y se convierte a Command (solucionado en v1.19.33)
 * 19/09/2014	Jim  Nelson			REPORTE BUG v1.19.33: Si se ejecuta FoxBin2Prg desde ventana de comandos FoxPro para un proyecto y hay algún archivo abierto o cacheado, se produce un error (solucionado en v1.19.34)
 * 26/09/2014	Marcio Gomez G.		MEJORA v1.19.34: Generar siempre el mismo Timestamp y UniqueID para los binarios minimizaría los cambios al regenerarlos (Agregado en v1.19.35)
+* 19/11/2014	edyshor				MEJORA cfg v1.19.36: DBF_Conversion_Excluded no permite comentarios && al final (Agregado en v1.19.37)
+* 19/11/2014	edyshor				REPORTE BUG dbf v1.19.36: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (Agregado en v1.19.37)
+* 19/11/2014	edyshor				MEJORA dbf v1.19.36: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (Agregado en v1.19.37)
+* 14/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta)
+* 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -193,6 +209,9 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_CLASSDATA_I				'*< CLASSDATA:'
 #DEFINE C_CLASSDATA_F				'/>'
 #DEFINE C_LEN_CLASSDATA_I			LEN(C_CLASSDATA_I)
+#DEFINE C_EXTERNAL_CLASS_I			'*< EXTERNAL_CLASS:'
+#DEFINE C_EXTERNAL_CLASS_F			'/>'
+#DEFINE C_LEN_EXTERNAL_CLASS_I		LEN(C_EXTERNAL_CLASS_I)
 #DEFINE C_OBJECTDATA_I				'*< OBJECTDATA:'
 #DEFINE C_OBJECTDATA_F				'/>'
 #DEFINE C_LEN_OBJECTDATA_I			LEN(C_OBJECTDATA_I)
@@ -385,11 +404,13 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_DUPLICATED_FILE_LOC								"Archivo duplicado"
 	#DEFINE C_ENDDEFINE_MARKER_NOT_FOUND_LOC					"No se ha encontrado el marcador de fin [ENDDEFINE] de la línea <<TRANSFORM( toClase._Inicio )>> para el identificador [<<toClase._Nombre>>]"
 	#DEFINE C_END_MARKER_NOT_FOUND_LOC							"No se ha encontrado el marcador de fin [<<ta_ID_Bloques(lnPrimerID,2)>>] que cierra al marcador de inicio [<<ta_ID_Bloques(lnPrimerID,1)>>] de la línea <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
+	#DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Reconfiguración de extensión:"
+	#DEFINE C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES	"El conteo de clases externas (<<toModulo._ExternalClasses_Count>>) no coincide con la cantidad encontrada (<<toModulo._Clases_Count>>) para el archivo [<<toFoxBin2Prg.c_InputFile>>]"
+	#DEFINE C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND				"No se ha encontrado la clase externa [<<toModulo._ExternalClasses(I)>>] del archivo [<<toFoxBin2Prg.c_InputFile>>]"
 	#DEFINE C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				"No se encontró el campo [<<laProps(I)>>] en la estructura del archivo <<DBF('TABLABIN')>>"
 	#DEFINE C_FILE_DOESNT_EXIST_LOC								"El archivo no existe:"
 	#DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					"El archivo [<<.c_InputFile>>] no está soportado"
 	#DEFINE C_FILE_NOT_FOUND_LOC								"No se encontró el archivo"
-	#DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Reconfiguración de extensión:"
 	#DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						"FOXBIN2PRG: ERROR!!"
 	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						"FOXBIN2PRG: INFORMACIÓN DE SINTAXIS"
 	#DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				"FOXBIN2PRG <cEspecArchivo.Ext> [,cType ,cTextName ,cGenText ,cNoMostrarErrores ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -399,7 +420,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 		+ "   FOXBIN2PRG 'c:\desa\clases\*.vc2'  '0'  '0'  '0'  '1'  '0'"
 	#DEFINE C_FOXBIN2PRG_JUST_VFP_9_LOC							"¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
 	#DEFINE C_FOXBIN2PRG_WARN_CAPTION_LOC						"FOXBIN2PRG: ¡ATENCIÓN!"
-	#DEFINE C_MENU_NOT_IN_VFP9_FORMAT_LOC						"El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU <<JUSTFNAME((THIS.c_InputFile))>>"
+	#DEFINE C_MENU_NOT_IN_VFP9_FORMAT_LOC						"El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU '<<THIS.c_InputFile>>'"
 	#DEFINE C_LANGUAGE_LOC										"ES"
 	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC			"* Se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 	#DEFINE C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC		"* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
@@ -411,6 +432,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 	#DEFINE C_PROCESSING_LOC									"Procesando archivo"
 	#DEFINE C_PROCESS_PROGRESS_LOC								"Avance del proceso:"
 	#DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					"Propiedad [<<TRANSFORM(tnPropertyID)>>] no reconocida."
+	#DEFINE C_REPORT_NOT_IN_VFP9_FORMAT_LOC						"El Reporte [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY REPORT '<<THIS.c_InputFile>>'"
 	#DEFINE C_REQUESTING_CAPITALIZATION_OF_FILE_LOC				"- Solicitado capitalizar el archivo [<<tcFileName>>]"
 	#DEFINE C_SOURCEFILE_LOC									"Archivo origen: "
 	#DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC		"Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
@@ -435,7 +457,7 @@ loCnv	= CREATEOBJECT("c_foxbin2prg")
 
 loEx	= NULL
 lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-	, '', NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps )
+	, tcDontShowProgress, NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps )
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *IF _VFP.STARTMODE <= 1
@@ -471,6 +493,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="c_fb2prg_exe_version" display="c_FB2PRG_EXE_Version"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
@@ -499,38 +522,46 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filenamefoundinfilter" display="FilenameFoundInFilter"/>] ;
+		+ [<memberdata name="filescomparedareequal" display="FilesComparedAreEqual"/>] ;
 		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="get_l_configevaluated" display="get_l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
 		+ [<memberdata name="get_program_header" display="get_PROGRAM_HEADER"/>] ;
+		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="getnext_bak" display="getNext_BAK"/>] ;
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
 		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
-		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="l_allowmulticonfig" display="l_AllowMultiConfig"/>] ;
-		+ [<memberdata name="l_dropnullcharsfromcode" display="l_DropNullCharsFromCode"/>] ;
+		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
+		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
+		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
-		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
+		+ [<memberdata name="l_dropnullcharsfromcode" display="l_DropNullCharsFromCode"/>] ;
 		+ [<memberdata name="l_error" display="l_Error"/>] ;
+		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
+		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
-		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
-		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
-		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
+		+ [<memberdata name="l_test" display="l_Test"/>] ;
+		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
 		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="n_filehandle" display="n_FileHandle"/>] ;
+		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
+		+ [<memberdata name="o_fnc" display="o_FNC"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
 		+ [<memberdata name="o_configuration" display="o_Configuration"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
@@ -544,6 +575,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
+		+ [<memberdata name="renametmpfile2tx2file" display="RenameTmpFile2Tx2File"/>] ;
+		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="tienesoporte_bin2prg" display="TieneSoporte_Bin2Prg"/>] ;
 		+ [<memberdata name="tienesoporte_prg2bin" display="TieneSoporte_Prg2Bin"/>] ;
 		+ [<memberdata name="t_inputfile_timestamp" display="t_InputFile_TimeStamp"/>] ;
@@ -556,71 +589,78 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 	PROTECTED l_ConfigEvaluated, n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
-	n_FB2PRG_Version		= 1.19
+	n_FB2PRG_Version				= 1.19
 	*-- Localized properties
-	c_loc_processing_file	= C_PROCESSING_LOC
+	c_loc_processing_file			= C_PROCESSING_LOC
+	c_loc_process_progress			= C_PROCESS_PROGRESS_LOC
 	*--
-	c_Language				= 'ES'
-	c_FB2PRG_EXE_Version	= 0
-	c_Foxbin2prg_FullPath	= ''
-	c_Foxbin2prg_ConfigFile	= ''
-	c_CurDir				= ''
-	c_InputFile				= ''
-	c_OriginalFileName		= ''
-	c_LogFile				= ''
-	c_TextLog				= ''
-	c_OutputFile			= ''
-	c_Type					= ''
-	t_InputFile_TimeStamp	= {//::}
-	t_OutputFile_TimeStamp	= {//::}
-	lFileMode				= .F.
-	n_ExisteCapitalizacion	= -1
-	l_CFG_CachedAccess		= .F.
-	l_ConfigEvaluated		= .F.
-	l_Debug					= .F.
-	l_Error					= .F.
-	c_ErrorLog				= ''
-	l_Test					= .F.
-	l_ShowErrors			= .T.
-	l_ShowProgress			= .T.
-	l_AllowMultiConfig		= .T.
-	l_DropNullCharsFromCode	= .T.
-	l_Recompile				= .T.
-	l_NoTimestamps			= .T.
-	l_ClearUniqueID			= .T.
-	l_OptimizeByFilestamp	= .F.
-	l_MethodSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_PropSort_Enabled		= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_ReportSort_Enabled	= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_Main_CFG_Loaded		= .F.
-	n_ExtraBackupLevels		= 1
-	n_ClassTimeStamp		= 1130668032	&& 2013/11/04 20:00:00
-	n_CFG_Actual			= 0
-	n_ID					= 0
-	o_Conversor				= NULL
-	o_Frm_Avance			= NULL
-	o_FSO					= NULL
-	o_Configuration			= NULL
-	run_AfterCreateTable	= ''
-	run_AfterCreate_DB2		= ''
-	c_VC2					= 'VC2'	&& VCX
-	c_SC2					= 'SC2'	&& SCX
-	c_PJ2					= 'PJ2'	&& PJX
-	c_FR2					= 'FR2'	&& FRX
-	c_LB2					= 'LB2'	&& LBX
-	c_DB2					= 'DB2'	&& DBF
-	c_DC2					= 'DC2'	&& DBC
-	c_MN2					= 'MN2'	&& MNX
-	PJX_Conversion_Support	= 2
-	VCX_Conversion_Support	= 2
-	SCX_Conversion_Support	= 2
-	FRX_Conversion_Support	= 2
-	LBX_Conversion_Support	= 2
-	MNX_Conversion_Support	= 2
-	DBF_Conversion_Support	= 1
-	DBC_Conversion_Support	= 2
-	DBF_Conversion_Included	= ''
-	DBF_Conversion_Excluded	= ''
+	c_Language						= 'ES'
+	c_FB2PRG_EXE_Version			= 0
+	c_Foxbin2prg_FullPath			= ''
+	c_Foxbin2prg_ConfigFile			= ''
+	c_CurDir						= ''
+	c_InputFile						= ''
+	c_OriginalFileName				= ''
+	c_LogFile						= ''
+	c_TextLog						= ''
+	c_OutputFile					= ''
+	c_Type							= ''
+	t_InputFile_TimeStamp			= {//::}
+	t_OutputFile_TimeStamp			= {//::}
+	lFileMode						= .F.
+	n_ExisteCapitalizacion			= -1
+	l_CFG_CachedAccess				= .F.
+	l_ConfigEvaluated				= .F.
+	l_Debug							= .F.
+	l_Error							= .F.
+	c_ErrorLog						= ''
+	l_Test							= .F.
+	l_ShowErrors					= .T.
+	l_ShowProgress					= .T.
+	l_AllowMultiConfig				= .T.
+	l_DropNullCharsFromCode			= .T.
+	l_Recompile						= .T.
+	l_UseClassPerFile				= .F.
+	l_ClassPerFileCheck				= .F.
+	l_RedirectClassPerFileToMain	= .F.
+	l_NoTimestamps					= .T.
+	l_ClearUniqueID                 = .T.
+	l_ClearDBFLastUpdate        	= .T.
+	l_OptimizeByFilestamp           = .F.
+	l_MethodSort_Enabled			= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_PropSort_Enabled				= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_ReportSort_Enabled			= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_Main_CFG_Loaded				= .F.
+	n_ExtraBackupLevels				= 1
+	n_ClassTimeStamp				= 1130668032	&& 2013/11/04 20:00:00
+	n_CFG_Actual					= 0
+	n_ID							= 0
+	n_FileHandle                	= 0
+	o_Conversor                     = NULL
+	o_Frm_Avance					= NULL
+	o_FSO							= NULL
+	o_FNC							= NULL	&& Filename_caps object
+	o_Configuration					= NULL
+	run_AfterCreateTable			= ''
+	run_AfterCreate_DB2				= ''
+	c_VC2							= 'VC2'	&& VCX
+	c_SC2							= 'SC2'	&& SCX
+	c_PJ2							= 'PJ2'	&& PJX
+	c_FR2							= 'FR2'	&& FRX
+	c_LB2							= 'LB2'	&& LBX
+	c_DB2							= 'DB2'	&& DBF
+	c_DC2							= 'DC2'	&& DBC
+	c_MN2							= 'MN2'	&& MNX
+	PJX_Conversion_Support			= 2
+	VCX_Conversion_Support			= 2
+	SCX_Conversion_Support			= 2
+	FRX_Conversion_Support			= 2
+	LBX_Conversion_Support			= 2
+	MNX_Conversion_Support			= 2
+	DBF_Conversion_Support			= 1
+	DBC_Conversion_Support			= 2
+	DBF_Conversion_Included			= ''
+	DBF_Conversion_Excluded			= ''
 
 
 	PROCEDURE INIT
@@ -633,6 +673,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET TABLEPROMPT OFF
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
+		ON ESCAPE ERROR 1799
+		SET ESCAPE ON
+
 
 		lcSys16 = SYS(16)
 		IF LEFT(lcSys16,10) == 'PROCEDURE '
@@ -650,6 +693,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
 		THIS.c_FB2PRG_EXE_Version		= IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
+		RELEASE lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues
 		RETURN
 	ENDPROC
 
@@ -662,14 +706,35 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ERASE ( lcFileCDX )
 
 			THIS.writeLog_Flush()
-
+			THIS.descargar_frm_avance()
 		CATCH
 
 		FINALLY
+			ON ESCAPE
 			THIS.o_FSO	= NULL
+			THIS.o_FNC	= NULL
 		ENDTRY
 
 		RETURN
+	ENDPROC
+
+
+	PROCEDURE AvanceDelProceso
+		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
+
+		TRY
+			*-- Si o_Frm_Avance se habilitó de forma externa, l_ShowProgress podría ser .F. para controlarlo desde fuera.
+			IF VARTYPE(THIS.o_Frm_Avance) = "O" THEN
+				*-- Cuando esta rutina se invoca desde el script, este método es el #1 y no puede cancelarse todavía
+				IF THIS.o_Frm_Avance.l_Cancelled AND PROGRAM(-1) > 1 THEN
+					ERROR 1799
+				ENDIF
+				THIS.o_Frm_Avance.AvanceDelProceso( tcTexto, tnValor, tnTotal, tnTipo )
+			ENDIF
+
+		CATCH
+			THROW
+		ENDTRY
 	ENDPROC
 
 
@@ -728,11 +793,47 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE l_UseClassPerFile_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_UseClassPerFile
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_UseClassPerFile, THIS.l_UseClassPerFile )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_RedirectClassPerFileToMain_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_RedirectClassPerFileToMain
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_RedirectClassPerFileToMain, THIS.l_RedirectClassPerFileToMain )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_ClassPerFileCheck_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_ClassPerFileCheck
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ClassPerFileCheck, THIS.l_ClassPerFileCheck )
+		ENDIF
+	ENDPROC
+
+
 	PROCEDURE l_ClearUniqueID_ACCESS
 		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
 			RETURN THIS.l_ClearUniqueID
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ClearUniqueID, THIS.l_ClearUniqueID )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_ClearDBFLastUpdate_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_ClearDBFLastUpdate
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ClearDBFLastUpdate, THIS.l_ClearDBFLastUpdate )
 		ENDIF
 	ENDPROC
 
@@ -1006,6 +1107,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			CLEAR DLLS fb2p_SetFileAttributes, fb2p_GetFileAttributes
+			RELEASE tcFileName, tcAttrib, dwFileAttributes
 		ENDTRY
 
 		RETURN
@@ -1035,6 +1137,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			COMPILE DATABASE (tcFileName)
 
 		ENDCASE
+
+		RELEASE tcFileName, lcType
+		RETURN
 	ENDPROC
 
 
@@ -1045,23 +1150,26 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* tlRelanzarError			(v? IN    ) Indica si se debe relanzar el error
 		* tcBakFile_1				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,frx,lbx,dbf,dbc,mnx,vc2,sc2,pj2,etc)
 		* tcBakFile_2				(@?    OUT) Nombre del archivo backup 2 (vct,sct,pjt,frt,lbt,fpt,dct,mnt,etc)
-		* tcBakFile_3				(@?    OUT) Nombre del archivo backup 1 (vcx,scx,pjx,cdx,dcx,etc)
+		* tcBakFile_3				(@?    OUT) Nombre del archivo backup 3 (cdx,dcx,etc)
+		* tcOutputFile				(v? IN    ) Nombre del archivo de salida. Si no se indica se asume .c_OutputFile
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3
+		LPARAMETERS toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3, tcOutputFile
 
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
-			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3
-			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3
+			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3
+			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3, lcExt_1, lcExt_2, lcExt_3 ;
+				, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				IF .n_ExtraBackupLevels > 0 THEN
-					lcNext_Bak	= .getNext_BAK( .c_OutputFile )
-					lcExt_1		= JUSTEXT( .c_OutputFile )
-					tcBakFile_1	= FORCEEXT(.c_OutputFile, lcExt_1 + lcNext_Bak)
+					tcOutputFile	= EVL( tcOutputFile, .c_OutputFile )
+					lcNext_Bak		= .getNext_BAK( tcOutputFile )
+					lcExt_1			= JUSTEXT( tcOutputFile )
+					tcBakFile_1		= FORCEEXT(tcOutputFile, lcExt_1 + lcNext_Bak)
 
 					DO CASE
 					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, 'PJM' )
@@ -1071,43 +1179,55 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						*-- DBF
 						lcExt_2		= 'FPT'
 						lcExt_3		= 'CDX'
-						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-						tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
+						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_3	= FORCEEXT(tcOutputFile, lcExt_3 + lcNext_Bak)
 
 					CASE lcExt_1 = 'DBC'
 						*-- DBC
 						lcExt_2		= 'DCT'
 						lcExt_3		= 'DCX'
-						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
-						tcBakFile_3	= FORCEEXT(.c_OutputFile, lcExt_3 + lcNext_Bak)
+						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_3	= FORCEEXT(tcOutputFile, lcExt_3 + lcNext_Bak)
 
 					OTHERWISE
 						*-- PJX, VCX, SCX, FRX, LBX, MNX
 						lcExt_2		= LEFT(lcExt_1,2) + 'T'
-						tcBakFile_2	= FORCEEXT(.c_OutputFile, lcExt_2 + lcNext_Bak)
+						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
 
 					ENDCASE
 
-					IF NOT EMPTY(lcExt_1) AND FILE( FORCEEXT(.c_OutputFile, lcExt_1) )
-						*-- LOG
-						DO CASE
-						CASE EMPTY(lcExt_2)
-							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) )
-						CASE EMPTY(lcExt_3)
-							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 )
-						OTHERWISE
-							.writeLog( C_BACKUP_OF_LOC + FORCEEXT(.c_OutputFile,lcExt_1) + '/' + lcExt_2 + '/' + lcExt_3 )
-						ENDCASE
+					IF NOT EMPTY(lcExt_1)
+						tcOutputFile_Ext1	= FORCEEXT(tcOutputFile, lcExt_1)
 
-						*-- COPIA BACKUP
-						COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_1) ) TO ( tcBakFile_1 )
+						IF FILE( tcOutputFile_Ext1 )
+							*-- LOG
+							DO CASE
+							CASE EMPTY(lcExt_2)
+								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 )
+							CASE EMPTY(lcExt_3)
+								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 + '/' + lcExt_2 )
+							OTHERWISE
+								.writeLog( C_BACKUP_OF_LOC + tcOutputFile_Ext1 + '/' + lcExt_2 + '/' + lcExt_3 )
+							ENDCASE
 
-						IF NOT EMPTY(lcExt_2) AND FILE( FORCEEXT(.c_OutputFile, lcExt_2) )
-							COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_2) ) TO ( tcBakFile_2 )
-						ENDIF
+							*-- COPIA BACKUP
+							COPY FILE ( tcOutputFile_Ext1 ) TO ( tcBakFile_1 )
 
-						IF NOT EMPTY(lcExt_3) AND FILE( FORCEEXT(.c_OutputFile, lcExt_3) )
-							COPY FILE ( FORCEEXT(.c_OutputFile, lcExt_3) ) TO ( tcBakFile_3 )
+							IF NOT EMPTY(lcExt_2)
+								tcOutputFile_Ext2	= FORCEEXT(tcOutputFile, lcExt_2)
+
+								IF FILE( tcOutputFile_Ext2 )
+									COPY FILE ( tcOutputFile_Ext2 ) TO ( tcBakFile_2 )
+								ENDIF
+							ENDIF
+
+							IF NOT EMPTY(lcExt_3)
+								tcOutputFile_Ext3	= FORCEEXT(tcOutputFile, lcExt_3)
+
+								IF FILE( tcOutputFile_Ext3 )
+									COPY FILE ( tcOutputFile_Ext3 ) TO ( tcBakFile_3 )
+								ENDIF
+							ENDIF
 						ENDIF
 					ENDIF
 				ENDIF
@@ -1122,6 +1242,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				THROW
 			ENDIF
 
+		FINALLY
+			RELEASE toEx, tlRelanzarError, tcBakFile_1, tcBakFile_2, tcBakFile_3 ;
+				, lcNext_Bak, lcExt_1, lcExt_2, lcExt_3, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3 ;
+				, tcOutputFile
 		ENDTRY
 
 		RETURN
@@ -1129,7 +1253,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE cargar_frm_avance
-		THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance")
+		IF VARTYPE(THIS.o_Frm_Avance) <> "O" THEN
+			THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance")
+			THIS.o_Frm_Avance.Show()
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE descargar_frm_avance
+		IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O" THEN
+			THIS.o_Frm_Avance.Hide()
+			THIS.o_Frm_Avance.Release()
+			THIS.o_Frm_Avance = NULL
+		ENDIF
 	ENDPROC
 
 
@@ -1137,7 +1273,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
 
-		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path ;
+		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration AS Collection ;
 			, loEx as Exception
@@ -1166,7 +1302,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.l_CFG_CachedAccess	= (.n_CFG_Actual > 0)
 				ENDIF
 
-				*IF NOT .l_ConfigEvaluated
 				lo_CFG			= THIS
 
 				IF .n_CFG_Actual = 0 THEN
@@ -1184,10 +1319,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-						laConfig(I)	= LOWER( laConfig(I) )
+						*laConfig(I)	= LOWER( laConfig(I) )
+						.set_Line( @lcConfigLine, @laConfig, I )
+						.get_SeparatedLineAndComment( @lcConfigLine )
+						laConfig(I)		= LOWER( lcConfigLine )
 
 						DO CASE
-						CASE INLIST( LEFT( laConfig(I), 1 ), '*', '#', '/', "'" )
+						CASE EMPTY( laConfig(I) ) OR INLIST( LEFT( laConfig(I), 1 ), '*', '#', '/', "'" )
 							LOOP
 
 						CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
@@ -1203,7 +1341,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
 							IF NOT INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcDontShowProgress	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:      ' + TRANSFORM(tcDontShowProgress) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:         ' + TRANSFORM(tcDontShowProgress) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
@@ -1212,126 +1350,154 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
 							IF NOT INLIST( TRANSFORM(tcDontShowErrors), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcDontShowErrors	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:        ' + TRANSFORM(tcDontShowErrors) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:           ' + TRANSFORM(tcDontShowErrors) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
 							IF NOT INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcNoTimestamps	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:          ' + TRANSFORM(tcNoTimestamps) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:             ' + TRANSFORM(tcNoTimestamps) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
 							IF NOT INLIST( TRANSFORM(tcDebug), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcDebug	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                 ' + TRANSFORM(tcDebug) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                    ' + TRANSFORM(tcDebug) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
 							IF NOT ISDIGIT( TRANSFORM(tcExtraBackupLevels) ) AND ISDIGIT( lcValue ) THEN
 								tcExtraBackupLevels	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:     ' + TRANSFORM(tcExtraBackupLevels) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:        ' + TRANSFORM(tcExtraBackupLevels) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 15 ) )
 							IF NOT INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcClearUniqueID	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:           ' + TRANSFORM(lcValue) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:              ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 19 ) == LOWER('ClearDBFLastUpdate:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 20 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.l_ClearDBFLastUpdate	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearDBFLastUpdate:      ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 21 ) )
 							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcOptimizeByFilestamp	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:     ' + TRANSFORM(lcValue) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:        ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:        ' + TRANSFORM(lcValue) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:           ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 16 ) == LOWER('UseClassPerFile:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								.l_UseClassPerFile	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > UseClassPerFile:            ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 18 ) == LOWER('ClassPerFileCheck:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								.l_ClassPerFileCheck	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClassPerFileCheck:          ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 27 ) == LOWER('RedirectClassPerFileToMain:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 28 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								.l_RedirectClassPerFileToMain	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 22 ) == LOWER('DropNullCharsFromCode:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 23 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_DropNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:   ' + TRANSFORM(lcValue) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:      ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.PJX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support:  ' + TRANSFORM(lo_CFG.PJX_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support:     ' + TRANSFORM(lo_CFG.PJX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.VCX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support:  ' + TRANSFORM(lo_CFG.VCX_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support:     ' + TRANSFORM(lo_CFG.VCX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.SCX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support:  ' + TRANSFORM(lo_CFG.SCX_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support:     ' + TRANSFORM(lo_CFG.SCX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.FRX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support:  ' + TRANSFORM(lo_CFG.FRX_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support:     ' + TRANSFORM(lo_CFG.FRX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.LBX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support:  ' + TRANSFORM(lo_CFG.LBX_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support:     ' + TRANSFORM(lo_CFG.LBX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.MNX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support:  ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support:     ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2', '4' ) THEN
 								lo_CFG.DBF_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support:  ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 24 ) == LOWER('DBF_Conversion_Included:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 25 ) )
 							IF NOT EMPTY(lcValue) THEN
 								lo_CFG.DBF_Conversion_Included	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Included: ' + TRANSFORM(lo_CFG.DBF_Conversion_Included) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Included:    ' + TRANSFORM(lo_CFG.DBF_Conversion_Included) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 24 ) == LOWER('DBF_Conversion_Excluded:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 25 ) )
 							IF NOT EMPTY(lcValue) THEN
 								lo_CFG.DBF_Conversion_Excluded	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Excluded: ' + TRANSFORM(lo_CFG.DBF_Conversion_Excluded) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + TRANSFORM(lo_CFG.DBF_Conversion_Excluded) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.DBC_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support:  ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
+								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
 							ENDIF
 
 						ENDCASE
@@ -1369,15 +1535,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 
 				.writeLog( '---' )
-				.writeLog( '> l_ShowProgress:          ' + TRANSFORM(.l_ShowProgress) )
-				.writeLog( '> l_ShowErrors:            ' + TRANSFORM(.l_ShowErrors) )
-				.writeLog( '> l_Recompile:             ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
-				.writeLog( '> l_NoTimestamps:          ' + TRANSFORM(.l_NoTimestamps) )
-				.writeLog( '> l_ClearUniqueID:         ' + TRANSFORM(.l_ClearUniqueID) )
-				.writeLog( '> l_Debug:                 ' + TRANSFORM(.l_Debug) )
-				.writeLog( '> n_ExtraBackupLevels:     ' + TRANSFORM(.n_ExtraBackupLevels) )
-				.writeLog( '> l_OptimizeByFilestamp:   ' + TRANSFORM(.l_OptimizeByFilestamp) )
-				.writeLog( '> l_DropNullCharsFromCode: ' + TRANSFORM(.l_DropNullCharsFromCode) )
+				.writeLog( '> l_ShowProgress:               ' + TRANSFORM(.l_ShowProgress) )
+				.writeLog( '> l_ShowErrors:                 ' + TRANSFORM(.l_ShowErrors) )
+				.writeLog( '> l_Recompile:                  ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
+				.writeLog( '> l_NoTimestamps:               ' + TRANSFORM(.l_NoTimestamps) )
+				.writeLog( '> l_ClearUniqueID:              ' + TRANSFORM(.l_ClearUniqueID) )
+				.writeLog( '> l_UseClassPerFile:            ' + TRANSFORM(.l_UseClassPerFile) )
+				.writeLog( '> l_ClassPerFileCheck:          ' + TRANSFORM(.l_ClassPerFileCheck) )
+				.writeLog( '> l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
+				.writeLog( '> l_Debug:                      ' + TRANSFORM(.l_Debug) )
+				.writeLog( '> n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
+				.writeLog( '> l_OptimizeByFilestamp:        ' + TRANSFORM(.l_OptimizeByFilestamp) )
+				.writeLog( '> l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
+				.writeLog( '> l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
 
 				lo_CFG	= NULL
 				RELEASE lo_CFG
@@ -1388,7 +1558,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.n_CFG_Actual = 0
 				ENDIF
 
-				.writeLog( '> l_CFG_CachedAccess:     ' + TRANSFORM(.l_CFG_CachedAccess) + ' ( InputFile=' + tc_InputFile + ', CFG=' + FORCEPATH( 'foxbin2prg.cfg', lc_CFG_Path ) + ' )' )
+				.writeLog( '> l_CFG_CachedAccess:          ' + TRANSFORM(.l_CFG_CachedAccess) + ' ( InputFile=' + tc_InputFile + ', CFG=' + FORCEPATH( 'foxbin2prg.cfg', lc_CFG_Path ) + ' )' )
 
 				IF NOT llExisteConfig OR .n_CFG_Actual = 0 THEN
 					.l_CFG_CachedAccess	= .T.	&& Es acceso cacheado porque usa config.por defecto sin archivo CFG
@@ -1410,13 +1580,94 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			THROW
 
 		FINALLY
-			STORE NULL TO lo_Configuration, lo_CFG
-			RELEASE lo_Configuration, lo_CFG
+			STORE NULL TO lo_Configuration, lo_CFG, loEx
+			RELEASE tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
+				, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile ;
+				, lcConfigFile, llExisteConfig, laConfig, I, lcConfData, lcExt, lcValue, lc_CFG_Path ;
+				, lo_CFG, lo_Configuration, loEx
 
 		ENDTRY
 
 		RETURN
 	ENDPROC
+
+
+	FUNCTION FilesComparedAreEqual
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcFilename1				(v! IN    ) Nombre del archivo1 a comparar
+		* tcFilename2				(v! IN    ) Nombre del archivo2 a comparar
+		* tcStrFileName2			(v! IN    ) ***NO IMPLEMENTADO*** Contenido del archivo2 a comparar
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcFilename1, tcFilename2, tcStrFileName2
+
+		LOCAL lnComparacion, lnLen1, lnLen2, lnHandle1, lnHandle2, lnTipoComp, lnChunkSize ;
+			, loEx as Exception
+
+		TRY
+			STORE -1 TO lnComparacion, lnHandle1, lnHandle2
+			lnTipoComp		= 0
+			lnChunkSize		= 65535
+
+			DO CASE
+			CASE NOT EMPTY(tcFilename1) AND NOT EMPTY(tcFilename2)
+				lnTipoComp	= 1
+				lnHandle1	= FOPEN( tcFilename1 )
+
+				IF lnHandle1 = -1
+					EXIT
+				ENDIF
+
+				lnHandle2	= FOPEN( tcFilename2 )
+
+				IF lnHandle2 = -1
+					EXIT
+				ENDIF
+
+				lnLen1		= FSEEK( lnHandle1, 0, 2 )
+				lnLen2		= FSEEK( lnHandle2, 0, 2 )
+
+				*-- Comparación de tamaño
+				IF lnLen1 <> lnLen2 THEN
+					lnComparacion	= 0	&& Son distintos
+					EXIT
+				ENDIF
+
+				*-- Comparación de contenido
+				FSEEK( lnHandle1, 0, 0 )
+				FSEEK( lnHandle2, 0, 0 )
+
+				DO WHILE NOT ( FEOF(lnHandle1) OR FEOF(lnHandle2) )
+					IF NOT SYS( 2007, FREAD( lnHandle1, lnChunkSize ), -1, 1 ) == SYS( 2007, FREAD( lnHandle2, lnChunkSize ), -1, 1 ) THEN
+						lnComparacion	= 0	&& Son distintos
+						EXIT
+					ENDIF
+				ENDDO
+
+				IF lnComparacion = 0 THEN
+					EXIT
+				ENDIF
+
+				lnComparacion	= 1	&& Son iguales
+
+			ENDCASE
+
+		CATCH TO loEx
+			lnComparacion	= -1	&& Error
+			THROW
+
+		FINALLY
+			DO CASE
+			CASE lnTipoComp = 1
+				FCLOSE( lnHandle1 )
+				FCLOSE( lnHandle2 )
+
+			ENDCASE
+
+		ENDTRY
+
+		RETURN lnComparacion
+	ENDFUNC
 
 
 	FUNCTION FilenameFoundInFilter
@@ -1437,6 +1688,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 		ENDFOR
 
+		RELEASE tcFileName, tcFilters, laFiltros
 		RETURN llFound
 	ENDFUNC
 
@@ -1458,6 +1710,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, 'XXX' )
 		ENDWITH && THIS
 
+		RELEASE tcExt
 		RETURN lcExt2
 	ENDPROC
 
@@ -1465,6 +1718,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE TieneSoporte_Bin2Prg
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
+
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			llTieneSoporte	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support >= 1 ;
 				, tcExt == 'VCX', .VCX_Conversion_Support >= 1 ;
@@ -1476,6 +1730,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, tcExt == 'DBC', .DBC_Conversion_Support >= 1 ;
 				, .F. )
 		ENDWITH && THIS
+
+		RELEASE tcExt
 		RETURN llTieneSoporte
 	ENDPROC
 
@@ -1483,6 +1739,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE TieneSoporte_Prg2Bin
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
+
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			llTieneSoporte	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
 				, tcExt == .c_VC2, .VCX_Conversion_Support = 2 ;
@@ -1494,6 +1751,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				, tcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
+
+		RELEASE tcExt
 		RETURN llTieneSoporte
 	ENDPROC
 
@@ -1501,8 +1760,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE ejecutar
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada
-		* tcType					(v? IN    ) Tipo de archivo de entrada. SIN USO. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
+		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada, o Tipo de archivo cuando SourceSafe consulta por tipo de Soporte habilitado
+		* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG // Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
 		* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
 		* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
 		* tcDontShowErrors			(v? IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
@@ -1574,10 +1833,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					lnCodError	= 1
 
 				OTHERWISE
-					*-- Ejecución normal
+					*-- EJECUCIÓN NORMAL
 
 					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
-					IF NOT THIS.l_ConfigEvaluated THEN
+					IF NOT .l_ConfigEvaluated THEN
 						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 							, @tcClearUniqueID, @tcOptimizeByFilestamp )
 					ENDIF
@@ -1617,18 +1876,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
 
-						IF .l_ShowProgress
-							.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-						ENDIF
-
 						FOR I = 1 TO lnFileCount
 							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-							.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-							.o_Frm_Avance.nVALUE = I
-
-							IF .l_ShowProgress
-								.o_Frm_Avance.SHOW()
-							ENDIF
+							.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
 							IF FILE( lcFile )
 								lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -1705,24 +1955,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 								USE IN (SELECT("TABLABIN"))
 
-								IF .l_ShowProgress
-									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-								ENDIF
-
-								*-- Primero convierto el proyecto
-								*IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(tc_InputFile)) )
-								*	lnCodError = .Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
-								*ENDIF
-
 								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I,1)
-									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-									.o_Frm_Avance.nVALUE = I
-
-									IF .l_ShowProgress
-										.o_Frm_Avance.SHOW()
-									ENDIF
+									.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
 									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -1761,24 +1997,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									ENDIF
 								ENDFOR
 
-								IF .l_ShowProgress
-									.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-								ENDIF
-
-								*-- Primero convierto el proyecto
-								*IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(tc_InputFile)) )
-								*	lnCodError = .Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
-								*ENDIF
-
 								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I)
-									.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-									.o_Frm_Avance.nVALUE = I
-
-									IF .l_ShowProgress
-										.o_Frm_Avance.SHOW()
-									ENDIF
+									.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
 									IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -1800,6 +2022,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							ENDCASE
 
 							IF FILE(tc_InputFile)
+								tc_InputFile	= LOCFILE(tc_InputFile)
 								ERASE ( tc_InputFile + '.ERR' )
 
 								DO CASE
@@ -1833,7 +2056,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			*-- Escribo la información de error en el archivo log de errores
 			TRY
-				STRTOFILE( lcErrorInfo, EVL(tc_InputFile,'foxbin2prg') + '.ERR' )
+				STRTOFILE( STRCONV(lcErrorInfo,9), EVL(tc_InputFile,'foxbin2prg') + '.ERR' )
 			CATCH TO loEx2
 			ENDTRY
 
@@ -1853,14 +2076,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			THIS.writeLog_Flush()
-			IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O"
-				THIS.o_Frm_Avance.HIDE()
-				THIS.o_Frm_Avance.RELEASE()
-				STORE NULL TO THIS.o_Frm_Avance
-			ENDIF
+			*THIS.descargar_frm_avance()
 			CD (JUSTPATH(THIS.c_CurDir))
 			STORE NULL TO loFSO
-			RELEASE loFSO
+			RELEASE tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
+				, toModulo, toEx, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+				, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp ;
+				, I, lcPath, lcFileSpec, lcFile, laFiles, lnFileCount, lcErrorInfo, loEx, loFSO
 		ENDTRY
 
 		RETURN lnCodError
@@ -1881,7 +2103,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
-				, ltFilestamp, lcExtA, lcExtB ;
+				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1) ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -1898,6 +2120,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				*-- ARCHIVO DE CONFIGURACIÓN SECUNDARIO
 				.EvaluarConfiguracion()
+
+				IF .l_UseClassPerFile
+					*-- Verifico si se debe forzar la redirección al archivo principal
+					IF .l_RedirectClassPerFileToMain AND '.' $ JUSTSTEM(.c_InputFile)
+						.c_InputFile	= FORCEPATH( FORCEEXT( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTEXT(.c_InputFile) ) , JUSTPATH(.c_InputFile) )
+					ENDIF
+				ENDIF
 
 				IF NOT EMPTY(tcOriginalFileName)
 					tcOriginalFileName	= loFSO.GetAbsolutePathName( tcOriginalFileName )
@@ -2126,6 +2355,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.o_Conversor.c_OriginalFileName		= .c_OriginalFileName
 					.o_Conversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
 					*--
+					.AvanceDelProceso( C_PROCESSING_LOC + ' ' + .c_InputFile + '...', 0, 0, 0 )
+					BINDEVENT( .o_Conversor, 'AvanceDelProceso', THIS, 'AvanceDelProceso' )
+
 					.o_Conversor.Convertir( @toModulo, .F., THIS )
 					.c_TextLog	= .c_TextLog + CR_LF + .o_Conversor.c_TextLog	&& Recojo el LOG que haya generado el conversor
 				ELSE
@@ -2152,6 +2384,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
+			IF AEVENTS( laEvents, THIS.o_Conversor ) > 0 THEN
+				UNBINDEVENTS( THIS.o_Conversor )
+			ENDIF
 			loFSO				= NULL
 			THIS.o_Conversor	= NULL
 
@@ -2160,6 +2395,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*THIS.writeLog_Flush()
 			ENDIF
 
+			RELEASE tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName ;
+				, lcErrorInfo, laDirFile, lcExtension, lnFileCount, laFiles, I ;
+				, ltFilestamp, lcExtA, lcExtB ;
+				, loFSO
 		ENDTRY
 
 		RETURN lnCodError
@@ -2211,18 +2450,48 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE get_SeparatedLineAndComment
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Línea a separar del comentario
+		* tcComment					(@?    OUT) Comentario
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, tcComment
+		LOCAL ln_AT_Cmt
+		tcComment	= ''
+		ln_AT_Cmt	= AT( '&'+'&', tcLine)
+
+		IF ln_AT_Cmt > 0
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ENDIF
+
+		RETURN (ln_AT_Cmt > 0)
+	ENDPROC
+
+
 	*******************************************************************************************************************
 	PROCEDURE normalizarCapitalizacionArchivos
-		LPARAMETERS tl_NormalizeInputFile
+		LPARAMETERS tl_NormalizeInputFile, tcFileName
 
 		TRY
-			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, loEx AS EXCEPTION ;
-				, loFSO AS Scripting.FileSystemObject, lcType
+			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType ;
+				, loEx AS EXCEPTION ;
+				, loFSO AS Scripting.FileSystemObject
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				lcPath		= JUSTPATH(.c_Foxbin2prg_FullPath)
-				lcEXE_CAPS	= FORCEPATH( 'filename_caps.exe', lcPath )
-				loFSO		= .o_FSO
+				lcPath			= JUSTPATH(.c_Foxbin2prg_FullPath)
+				lcEXE_CAPS		= FORCEPATH( 'filename_caps.exe', lcPath )
+				loFSO			= .o_FSO
+				llRelanzarError	= NOT tl_NormalizeInputFile
+
+				IF tl_NormalizeInputFile
+					tcFileName	= EVL( tcFileName, .c_InputFile )
+					lcType		= UPPER( JUSTEXT( tcFileName ) )
+				ELSE
+					tcFileName	= EVL( tcFileName, .c_OutputFile )
+					lcType		= .c_Type
+				ENDIF
 
 				DO CASE
 				CASE .n_ExisteCapitalizacion = -1
@@ -2230,6 +2499,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					IF FILE(lcEXE_CAPS)
 						*.writeLog( '* Se ha encontrado el programa de capitalización de nombres [' + lcEXE_CAPS + ']' )
 						.writeLog( TEXTMERGE(C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC) )
+						SET PROCEDURE TO (lcEXE_CAPS) ADDITIVE
+						.o_FNC	= CREATEOBJECT( 'cl_FileName_Caps' )
+						RELEASE PROCEDURE (lcEXE_CAPS)
+
 						.n_ExisteCapitalizacion	= 1
 					ELSE
 						*-- No existe el programa de capitalización, así que no se capitalizan los nombres.
@@ -2248,82 +2521,42 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-				IF tl_NormalizeInputFile
-					lcType	= UPPER( JUSTEXT( .c_InputFile ) )
+				*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
+				.RenameFile( tcFileName, lcEXE_CAPS, loFSO, llRelanzarError )
 
-					*-- Normalizar archivo(s) de entrada. El primero siempre se normaliza (??2, ??X, DBF, DBC)
-					.RenameFile( .c_InputFile, lcEXE_CAPS, loFSO, .F. )
+				DO CASE
+				CASE lcType = 'PJX'
+					.RenameFile( FORCEEXT(tcFileName,'PJT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					DO CASE
-					CASE lcType = 'PJX'
-						.RenameFile( FORCEEXT(.c_InputFile,'PJT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'VCX'
+					.RenameFile( FORCEEXT(tcFileName,'VCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'VCX'
-						.RenameFile( FORCEEXT(.c_InputFile,'VCT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'SCX'
+					.RenameFile( FORCEEXT(tcFileName,'SCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'SCX'
-						.RenameFile( FORCEEXT(.c_InputFile,'SCT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'FRX'
+					.RenameFile( FORCEEXT(tcFileName,'FRT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'FRX'
-						.RenameFile( FORCEEXT(.c_InputFile,'FRT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'LBX'
+					.RenameFile( FORCEEXT(tcFileName,'LBT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'LBX'
-						.RenameFile( FORCEEXT(.c_InputFile,'LBT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'DBF'
+					IF FILE( FORCEEXT(tcFileName,'FPT') )
+						.RenameFile( FORCEEXT(tcFileName,'FPT'), lcEXE_CAPS, loFSO, llRelanzarError )
+					ENDIF
+					IF FILE( FORCEEXT(tcFileName,'CDX') )
+						.RenameFile( FORCEEXT(tcFileName,'CDX'), lcEXE_CAPS, loFSO, llRelanzarError )
+					ENDIF
 
-					CASE lcType = 'DBF'
-						IF FILE( FORCEEXT(.c_InputFile,'FPT') )
-							.RenameFile( FORCEEXT(.c_InputFile,'FPT'), lcEXE_CAPS, loFSO, .F. )
-						ENDIF
-						IF FILE( FORCEEXT(.c_InputFile,'CDX') )
-							.RenameFile( FORCEEXT(.c_InputFile,'CDX'), lcEXE_CAPS, loFSO, .F. )
-						ENDIF
+				CASE lcType = 'DBC'
+					.RenameFile( FORCEEXT(tcFileName,'DCX'), lcEXE_CAPS, loFSO, llRelanzarError )
+					.RenameFile( FORCEEXT(tcFileName,'DCT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'DBC'
-						.RenameFile( FORCEEXT(.c_InputFile,'DCX'), lcEXE_CAPS, loFSO, .F. )
-						.RenameFile( FORCEEXT(.c_InputFile,'DCT'), lcEXE_CAPS, loFSO, .F. )
+				CASE lcType = 'MNX'
+					.RenameFile( FORCEEXT(tcFileName,'MNT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
-					CASE lcType = 'MNX'
-						.RenameFile( FORCEEXT(.c_InputFile,'MNT'), lcEXE_CAPS, loFSO, .F. )
+				ENDCASE
 
-					ENDCASE
-
-				ELSE
-					*-- Normalizar archivo(s) de salida. El primero siempre se normaliza (??2, ??X, DBF, DBC)
-					.RenameFile( .c_OutputFile, lcEXE_CAPS, loFSO, .T. )
-
-					DO CASE
-					CASE .c_Type = 'PJX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'PJT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'VCX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'VCT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'SCX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'SCT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'FRX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'FRT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'LBX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'LBT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'DBF'
-						IF FILE( FORCEEXT(.c_OutputFile,'FPT') )
-							.RenameFile( FORCEEXT(.c_OutputFile,'FPT'), lcEXE_CAPS, loFSO, .T. )
-						ENDIF
-						IF FILE( FORCEEXT(.c_OutputFile,'CDX') )
-							.RenameFile( FORCEEXT(.c_OutputFile,'CDX'), lcEXE_CAPS, loFSO, .T. )
-						ENDIF
-
-					CASE .c_Type = 'DBC'
-						.RenameFile( FORCEEXT(.c_OutputFile,'DCX'), lcEXE_CAPS, loFSO, .T. )
-						.RenameFile( FORCEEXT(.c_OutputFile,'DCT'), lcEXE_CAPS, loFSO, .T. )
-
-					CASE .c_Type = 'MNX'
-						.RenameFile( FORCEEXT(.c_OutputFile,'MNT'), lcEXE_CAPS, loFSO, .T. )
-
-					ENDCASE
-				ENDIF
 			ENDWITH && THIS
 
 		CATCH TO loEx
@@ -2331,6 +2564,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		FINALLY
 			loFSO	= NULL
+			RELEASE lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType, loFSO
 
 		ENDTRY
 
@@ -2347,8 +2581,39 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.writeLog( TEXTMERGE(C_REQUESTING_CAPITALIZATION_OF_FILE_LOC) )
 		THIS.ChangeFileAttribute( tcFileName, '+N' )
 		lcLog	= ''
-		DO (tcEXE_CAPS) WITH tcFileName, '', 'F', lcLog, tlRelanzarError, '1'
+		THIS.o_FNC.Capitalize( tcFileName, '', 'F', lcLog, tlRelanzarError, '1' )
 		THIS.writeLog( lcLog )
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE RenameTmpFile2Tx2File
+		LPARAMETERS tcFileName
+
+		LOCAL lcTmpFile, loFSO AS Scripting.FileSystemObject, loEx as Exception
+
+		TRY
+			*loFSO		= THIS.o_FSO
+			lcTmpFile	= tcFileName + '.TMP'
+			THIS.ChangeFileAttribute( tcFileName, '+N' )
+			ERASE (tcFileName)
+			RENAME (lcTmpFile) TO (tcFileName)
+
+		CATCH TO loEx
+			THROW
+
+		FINALLY
+			*loFSO	= NULL
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
+	PROCEDURE set_Line
+		LPARAMETERS tcLine, taCodeLines, I
+		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
 	ENDPROC
 
 
@@ -2377,7 +2642,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	*******************************************************************************************************************
 	PROCEDURE writeLog_Flush
 		IF THIS.l_Debug AND NOT EMPTY(THIS.c_TextLog)
-			STRTOFILE( THIS.c_TextLog + CR_LF, THIS.c_LogFile, 1 )
+			STRTOFILE( STRCONV(THIS.c_TextLog + CR_LF,9), THIS.c_LogFile, 1 )
 			THIS.c_TextLog	= ''
 		ENDIF
 	ENDPROC
@@ -2414,62 +2679,183 @@ ENDDEFINE
 
 *******************************************************************************************************************
 DEFINE CLASS frm_avance AS FORM
-	HEIGHT = 79
-	WIDTH = 628
-	SHOWWINDOW = 2
-	DOCREATE = .T.
-	AUTOCENTER = .T.
-	BORDERSTYLE = 2
-	CAPTION = C_PROCESS_PROGRESS_LOC + ' '
-	CONTROLBOX = .F.
-	BACKCOLOR = RGB(255,255,255)
-	nMAX_VALUE = 100
-	nVALUE = 0
-	NAME = "FRM_AVANCE"
+	Height = 110
+	Width = 628
+	ShowWindow = 2
+	DoCreate = .T.
+	AutoCenter = .T.
+	BorderStyle = 2
+	CAPTION = 'FoxBin2Prg - ' + C_PROCESS_PROGRESS_LOC + '  (Press Esc to Cancel)'
+	ControlBox = .F.
+	BackColor = RGB(255,255,255)
+	nmax_value = 100
+	nmax_value2 = 100
+	nvalue = 0
+	nvalue2 = 0
+	l_Cancelled = .F.
+	Name = "frm_avance"
+	_memberdata = [<VFPData>] ;
+		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
+		+ [<memberdata name="width" display="Width"/>] ;
+		+ [<memberdata name="height" display="Height"/>] ;
+		+ [<memberdata name="nvalue2" display="nValue2"/>] ;
+		+ [<memberdata name="nvalue2_assign" display="nValue2_Assign"/>] ;
+		+ [<memberdata name="nvalue" display="nValue"/>] ;
+		+ [<memberdata name="nvalue_assign" display="nValue_assign"/>] ;
+		+ [<memberdata name="nmax_value" display="nMax_Value"/>] ;
+		+ [<memberdata name="nmax_value2" display="nMax_Value2"/>] ;
+		+ [<memberdata name="l_cancelled" display="l_Cancelled"/>] ;
+		+ [</VFPData>]
 
 
-	ADD OBJECT shp_base AS SHAPE WITH ;
-		TOP = 50, ;
-		LEFT = 12, ;
-		HEIGHT = 13, ;
-		WIDTH = 601, ;
-		CURVATURE = 15, ;
-		NAME = "shp_base"
+	ADD OBJECT shp_base AS shape WITH ;
+		Top = 28, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 604, ;
+		Curvature = 15, ;
+		Name = "shp_base"
 
 
-	ADD OBJECT shp_avance AS SHAPE WITH ;
-		TOP = 50, ;
-		LEFT = 12, ;
-		HEIGHT = 13, ;
-		WIDTH = 36, ;
-		CURVATURE = 15, ;
-		BACKCOLOR = RGB(255,255,128), ;
-		BORDERCOLOR = RGB(255,0,0), ;
-		NAME = "shp_Avance"
+	ADD OBJECT shp_avance AS shape WITH ;
+		Top = 28, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 36, ;
+		Curvature = 15, ;
+		BackColor = RGB(255,255,128), ;
+		BorderColor = RGB(255,0,0), ;
+		Name = "shp_Avance"
 
 
-	ADD OBJECT lbl_TAREA AS LABEL WITH ;
-		BACKSTYLE = 0, ;
-		CAPTION = ".", ;
-		HEIGHT = 17, ;
-		LEFT = 12, ;
-		TOP = 20, ;
-		WIDTH = 604, ;
-		NAME = "lbl_Tarea"
+	ADD OBJECT lbl_tarea AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 8, ;
+		Width = 604, ;
+		Name = "lbl_Tarea"
+
+
+	ADD OBJECT shp_base2 AS shape WITH ;
+		Top = 64, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 604, ;
+		Curvature = 15, ;
+		Name = "shp_base2"
+
+
+	ADD OBJECT shp_avance2 AS shape WITH ;
+		Top = 64, ;
+		Left = 12, ;
+		Height = 13, ;
+		Width = 36, ;
+		Curvature = 15, ;
+		BackColor = RGB(255,255,128), ;
+		BorderColor = RGB(255,0,0), ;
+		Name = "shp_Avance2"
+
+
+	ADD OBJECT lbl_tarea2 AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 44, ;
+		Width = 604, ;
+		Name = "lbl_Tarea2"
+
+
+	ADD OBJECT cmdcancel AS commandbutton WITH ;
+		Top = 84, ;
+		Left = 252, ;
+		Height = 21, ;
+		Width = 100, ;
+		Caption = "Cancel", ;
+		Enabled = .F., ;
+		Name = "cmdCancel"
+
+
+	PROCEDURE AvanceDelProceso
+		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
+
+		WITH THIS AS frm_avance OF foxbin2prg.prg
+			*-- Habilita el botón de cancelar una vez que se comienzan a pasar valores
+			IF NOT EMPTY(tnValor) THEN
+				IF NOT .cmdCancel.Enabled THEN
+					.cmdCancel.Enabled = .T.
+				ENDIF
+				DOEVENTS
+			ENDIF
+			
+			DO CASE
+			CASE tnTipo = 0
+				IF NOT EMPTY(tcTexto) THEN
+					.lbl_tarea.Caption		= tcTexto
+				ENDIF
+
+				IF tnTotal > 0 THEN
+					.nmax_value				= tnTotal
+					.nvalue					= tnValor
+				ENDIF
+
+			CASE tnTipo = 1
+				IF NOT EMPTY(tcTexto) THEN
+					.lbl_tarea2.Caption		= tcTexto
+				ENDIF
+
+				IF tnTotal > 0 THEN
+					.nmax_value2			= tnTotal
+					.nvalue2				= tnValor
+				ENDIF
+
+			CASE tnTipo = 2
+				IF NOT EMPTY(tcTexto) THEN
+					.lbl_tarea2.Caption		= tcTexto
+				ENDIF
+
+				IF tnTotal > 0 THEN
+					.nmax_value2			= tnTotal
+					.nvalue2				= tnValor
+				ENDIF
+
+			ENDCASE
+		ENDWITH && THIS
+
+		RETURN
+	ENDPROC
 
 
 	PROCEDURE nvalue_assign
 		LPARAMETERS vNewVal
 
 		WITH THIS
-			.nVALUE = m.vNewVal
-			.shp_avance.WIDTH = m.vNewVal * .shp_base.WIDTH / .nMAX_VALUE
+			.nvalue = m.vNewVal
+			.shp_avance.WIDTH = m.vNewVal * .shp_base.WIDTH / .nmax_value
 		ENDWITH
 	ENDPROC
 
 
-	PROCEDURE INIT
-		THIS.nVALUE = 0
+	PROCEDURE Init
+		THIS.nvalue = 0
+		THIS.nvalue2 = 0
+	ENDPROC
+
+
+	PROCEDURE nvalue2_assign
+		LPARAMETERS vNewVal
+
+		WITH THIS
+			.nvalue2 = m.vNewVal
+			.shp_avance2.WIDTH = m.vNewVal * .shp_base2.WIDTH / .nmax_value2
+		ENDWITH
+	ENDPROC
+
+
+	PROCEDURE cmdcancel.Click
+		THISFORM.l_Cancelled = .T.
 	ENDPROC
 
 
@@ -2483,6 +2869,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarasignacion_tag_indicado" display="analizarAsignacion_TAG_Indicado"/>] ;
+		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
 		+ [<memberdata name="a_specialprops" display="a_SpecialProps"/>] ;
 		+ [<memberdata name="buscarobjetodelmetodopornombre" display="buscarObjetoDelMetodoPorNombre"/>] ;
 		+ [<memberdata name="comprobarexpresionvalida" display="comprobarExpresionValida"/>] ;
@@ -2568,6 +2955,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		SET SAFETY OFF
 		SET TABLEPROMPT OFF
 		SET BLOCKSIZE TO 0
+		SET EXACT ON
+		IF NOT EMPTY( ON("ESCAPE") ) THEN
+			SET ESCAPE ON
+		ENDIF
 
 		PUBLIC C_FB2PRG_CODE
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
@@ -2583,6 +2974,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.SortSpecialProps()
+		RELEASE lcSys16, lnPosProg
+		RETURN
 	ENDPROC
 
 
@@ -2618,7 +3011,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tnLEN_TAG_F				(v! IN    ) Longitud del tag de fin
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F
+
 		EXTERNAL ARRAY taProps
+
 		LOCAL llBloqueEncontrado, loEx AS EXCEPTION
 
 		TRY
@@ -2678,9 +3073,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE tcPropName, tcValue, taProps, tnProp_Count, I, tcTAG_I, tcTAG_F, tnLEN_TAG_I, tnLEN_TAG_F, loEx
 		ENDTRY
 
 		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE AvanceDelProceso
+		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 	ENDPROC
 
 
@@ -2734,6 +3136,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE tcNombreObjeto, toClase, I, X, N, lcRutaDelNombre, loObjeto
 		ENDTRY
 
 		RETURN lnObjeto
@@ -2751,6 +3155,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		CATCH TO loEx
 			llError		= .T.
 			tnCodError	= loEx.ERRORNO
+
+		FINALLY
+			RELEASE tcAsignacion, tnCodError, tcExpNormalizada, loEx
 		ENDTRY
 
 		RETURN NOT llError
@@ -2770,6 +3177,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 		#ENDIF
 		THIS.writeLog( '' )
 		THIS.writeLog( C_CONVERTING_FILE_LOC + ' ' + THIS.c_OutputFile + '...' )
+		RELEASE toModulo, toEx, toFoxBin2Prg
+		RETURN
 	ENDPROC
 
 
@@ -2777,23 +3186,29 @@ DEFINE CLASS c_conversor_base AS SESSION
 		LPARAMETERS taCodeLines, I
 
 		LOCAL lcPrevLine, llIsContinuation
+
 		*-- Analizo la línea anterior para saber si termina con ";" o "," y la actual es continuación
 		IF I > 1
 			lcPrevLine	= taCodeLines(I-1)
 		ELSE
 			lcPrevLine	= ''
 		ENDIF
-		.get_SeparatedLineAndComment( @lcPrevLine )
+
+		THIS.get_SeparatedLineAndComment( @lcPrevLine )
+
 		IF INLIST( RIGHT( lcPrevLine,1 ), ';', ',' )	&& Esta línea es continuación de la anterior
 			llIsContinuation	= .T.
 		ENDIF
+
+		RELEASE taCodeLines, I, lcPrevLine
+
 		RETURN llIsContinuation
 	ENDPROC
 
 
 	PROCEDURE elTextoEvaluadoEsElTokenIndicado
 		LPARAMETERS tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin
-		LOCAL llEncontrado, lcWord
+		LOCAL llEncontrado, lcWord, lcLine
 
 		TRY
 			*-- Pre-normalización
@@ -2837,6 +3252,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 					llEncontrado	= .T.
 				ENDIF
 			ENDIF
+
+		FINALLY
+			RELEASE tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin, lcLine
 		ENDTRY
 
 		RETURN llEncontrado
@@ -2853,6 +3271,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		FOR I = 0 TO 31
 			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
 		ENDFOR
+		RELEASE I
 		RETURN tcText
 	ENDPROC
 
@@ -2865,7 +3284,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		lcComentario	= ''
 		THIS.desnormalizarValorPropiedad( @lcPropName, @lcValor, @lcComentario )
 		tcAsignacion	= lcPropName + ' = ' + lcValor
-
+		RELEASE lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
 		RETURN tcAsignacion
 	ENDPROC
 
@@ -2890,9 +3309,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcValue	= ''
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
-				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
-				ENDTEXT
+				*TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
+				*ENDTEXT
+				lcValue = lcValue + CHR(13) + CHR(10) + CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )
 			ENDFOR
 
 			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -2914,6 +3334,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		ENDCASE
 
+		RELEASE tcProp, tcComentario, lnCodError, lnPos, lcValue
 		RETURN tcValue
 	ENDPROC
 
@@ -2951,6 +3372,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			tcValor	= STUFF(tcValor, lnPos, lnPos2 - lnPos + 1, CHR(lnAscii))		&&	ASCII
 		ENDDO
 
+		RELEASE lnPos, lnPos2, lnAscii
 		RETURN tcValor
 	ENDPROC
 
@@ -2962,6 +3384,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		FOR I = 0 TO 31
 			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
 		ENDFOR
+		RELEASE I
 		RETURN tcText
 	ENDPROC
 
@@ -2973,6 +3396,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CHR(13) + CHR(13) ;
 			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CHR(13) + CHR(13) ;
 			+ toEx.LINECONTENTS
+		RELEASE toEx
 		RETURN lcError
 	ENDPROC
 
@@ -3087,9 +3511,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 		* tcRightTag				(v! IN    ) TAG de fin de los metadatos
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag
+
 		EXTERNAL ARRAY taPropsAndValues
 
-		LOCAL lcMetadatos, I, lnEqualSigns, lcNextVar, lcStr, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+		LOCAL lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
 		STORE '' TO lcVirtualMeta
 		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
 
@@ -3126,6 +3551,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lnLastPos = lnPos2 + 1
 		ENDFOR
 
+		RELEASE tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag ;
+			, lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
 		RETURN
 	ENDPROC
 
@@ -3138,14 +3565,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
-		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
+		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -3194,6 +3623,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			ENDIF
 		ENDIF
 
+		RELEASE tcAsignacion, tcPropName, tcValue, toClase, taCodeLines, tnCodeLines, I, ln_AT_Cmt
 		RETURN
 	ENDPROC
 
@@ -3208,6 +3638,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		ELSE
 			lcValue		= CHRTRAN( LEFT( tcNullTerminatedValue, lnNullPos - 1 ), ['], ["] )
 		ENDIF
+		RELEASE tcNullTerminatedValue, lnNullPos
 		RETURN lcValue
 	ENDPROC
 
@@ -3254,6 +3685,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 						lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
 
 						IF .lineIsOnlyCommentAndNoMetadata( @lcLine )
+							*-- Optimización: Excluyo las líneas que solo son comentarios
+							taLineasExclusion(I)	= .T.
+							*--
 							LOOP
 						ENDIF
 
@@ -3262,7 +3696,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 						FOR X = 1 TO lnID_Bloques_Count
 							lnLen_IDFinBQ	= LEN( ta_ID_Bloques(X,2) )
 							IF .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-									AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+									AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
 								lnPrimerID		= X
 								lnAnidamientos	= 1
 								EXIT
@@ -3288,7 +3722,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 								DO CASE
 								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
-										AND NOT THIS.currentLineIsPreviousLineContinuation( @taCodeLines, I )
+										AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
 									*-- Busca el primer marcador (#IF o TEXT)
 									lnAnidamientos	= lnAnidamientos + 1
 
@@ -3322,6 +3756,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, ta_ID_Bloques, taLineasExclusion, tnBloquesExclusion, taBloquesExclusion ;
+				, lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
 		ENDTRY
 
 		RETURN
@@ -3332,17 +3769,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 	PROCEDURE lineaExcluida
 		LPARAMETERS tn_Linea, tnBloquesExclusion, taLineasExclusion
 
-		EXTERNAL ARRAY taLineasExclusion
-		*LOCAL X, llExcluida
-
-		*FOR X = 1 TO tnBloquesExclusion
-		*	IF BETWEEN( tn_Linea, taBloquesExclusion(X,1), taBloquesExclusion(X,2) )
-		*		llExcluida	= .T.
-		*		EXIT
-		*	ENDIF
-		*ENDFOR
-
-		*RETURN llExcluida
 		RETURN taLineasExclusion(tn_Linea)
 	ENDPROC
 
@@ -3363,6 +3789,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		ENDCASE
 
+		RELEASE tcLine, tcComment, ln_AT_Cmt
 		RETURN lllineIsOnlyCommentAndNoMetadata
 	ENDPROC
 
@@ -3375,6 +3802,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		tcComentario	= ''
 		THIS.normalizarValorPropiedad( @lcPropName, @lcValor, @tcComentario )
 		tcAsignacion	= lcPropName + ' = ' + lcValor
+		RELEASE tcComentario, lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
 		RETURN tcAsignacion
 	ENDPROC
 
@@ -3398,9 +3826,10 @@ DEFINE CLASS c_conversor_base AS SESSION
 			lcValue	= ''
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
-				TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
-				ENDTEXT
+				*TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<>>		<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
+				*ENDTEXT
+				lcValue = lcValue + CHR(13) + CHR(10) + CHR(9) + CHR(9) + CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )
 			ENDFOR
 
 			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -3420,6 +3849,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		ENDCASE
 
+		RELEASE tcProp, lcValue, I, tcComentario
 		RETURN tcValue
 	ENDPROC
 
@@ -3628,6 +4058,8 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE tcOperation, tcPropName, lnPos, loEx
 		ENDTRY
 
 		RETURN lcPropName
@@ -3650,6 +4082,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*											2=Sort completo de propiedades con "Name" al final (para la versión BIN)
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taPropsAndValues, tnPropsAndValues_Count, tnSortType
+
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
@@ -3755,6 +4188,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			THROW
 
+		FINALLY
+			RELEASE taPropsAndValues, tnPropsAndValues_Count, tnSortType ;
+				, I, X, lnArrayCols, laPropsAndValues, lcPropName, lcSortedMemo, lcMethods
 		ENDTRY
 
 		RETURN
@@ -3954,7 +4390,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		+ [<memberdata name="objectmethods2memo" display="objectMethods2Memo"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="strip_dimensions" display="strip_Dimensions"/>] ;
+		+ [<memberdata name="verificar_clases_externas" display="verificar_CLASES_EXTERNAS"/>] ;
 		+ [</VFPData>]
+
 
 
 	*******************************************************************************************************************
@@ -3971,6 +4409,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4009,8 +4448,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		ENDCASE
 
+		RELEASE tcPropName, tcValueType, taPropsAndValues, lnPos
 		RETURN luPropValue
 	ENDFUNC
+
 
 
 	*******************************************************************************************************************
@@ -4031,11 +4472,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toModulo._SourceFile	= THIS.get_ValueByName_FromListNamesWithValues( 'SourceFile', 'C', @laPropsAndValues )
 		ENDIF
 
+		RELEASE toModulo, tcLine, taCodeLines, I, tnCodeLines
 		RETURN llBloqueEncontrado
 	ENDPROC
 
 
 
+	*******************************************************************************************************************
 	PROCEDURE analizarBloque_LIBCOMMENT
 		*------------------------------------------------------
 		*-- Analiza el bloque *<LIBCOMMENT: Comentarios />
@@ -4051,8 +4494,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toModulo._Comment		= ALLTRIM( STREXTRACT( tcLine, C_LIBCOMMENT_I, C_LIBCOMMENT_F ) )
 		ENDIF
 
+		RELEASE toModulo, tcLine, taCodeLines, I, tnCodeLines, laPropsAndValues, lnPropsAndValues_Count
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4414,11 +4859,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		*-- Fin: ESTRUCTURA A ANALIZAR:
 
 		TRY
-			LOCAL lcDefinedPAM, lnPos, lnPos2, laProps(1,2), lcLine, lcPropName, lcValue, I, lcAsignacion, lcMemo ;
-				, laPropsAndValues(1,2), lnPropsAndValues_Count
+			LOCAL I, lcMemo, laPropsAndValues(1,2), lnPropsAndValues_Count
 			lcMemo	= ''
 
 			IF toClase._Prop_Count > 0
+				THIS.AvanceDelProceso( 'Generating Props for Class ' + toClase._Nombre + '...', 0, 1, 2 )
 				THIS.c_ClaseActual	= LOWER(toClase._BaseClass)
 				DIMENSION laPropsAndValues( toClase._Prop_Count, 3 )
 				ACOPY( toClase._Props, laPropsAndValues )
@@ -4433,7 +4878,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
 				ENDFOR
 
-			ENDIF && laProps > 0
+			ENDIF && toClase._Prop_Count > 0
 
 		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -4442,6 +4887,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toClase, I, laPropsAndValues, lnPropsAndValues_Count
 		ENDTRY
 
 		RETURN lcMemo
@@ -4458,7 +4905,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				, toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcMemo, I, laPropsAndValues(1,2), lcPropName, lcValue
+		LOCAL lcMemo, I, laPropsAndValues(1,2)
 		lcMemo	= ''
 
 		IF toObjeto._Prop_Count > 0
@@ -4478,6 +4925,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		ENDIF
 
+		RELEASE toObjeto, toClase, I, laPropsAndValues
 		RETURN lcMemo
 	ENDPROC
 
@@ -4495,47 +4943,56 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lcMemo	= ''
 
 		*-- Recorrer los métodos
-		FOR I = 1 TO toClase._Procedure_Count
-			loProcedure	= NULL
-			loProcedure	= toClase._Procedures(I)
+		WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
+			FOR I = 1 TO toClase._Procedure_Count
+				loProcedure	= NULL
+				loProcedure	= toClase._Procedures(I)
 
-			IF loProcedure._ProcLine_Count > 0 THEN
-				IF '.' $ loProcedure._Nombre
-					*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
-					*-- cntDatos.txtEdad.Valid		==> Debe acortarse si cntDatos es un objeto existente
-					lcNombreObjeto	= LEFT( loProcedure._Nombre, AT('.', loProcedure._Nombre) - 1 )
+				IF loProcedure._ProcLine_Count > 0 THEN
+					.AvanceDelProceso( 'Generating Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
 
-					IF THIS.buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase ) = 0
+					IF '.' $ loProcedure._Nombre
+						*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
+						*-- cntDatos.txtEdad.Valid		==> Debe acortarse si cntDatos es un objeto existente
+						lcNombreObjeto	= LEFT( loProcedure._Nombre, AT('.', loProcedure._Nombre) - 1 )
+
+						IF .buscarObjetoDelMetodoPorNombre( lcNombreObjeto, toClase ) = 0
+							TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+								<<C_PROCEDURE>> <<loProcedure._Nombre>>
+							ENDTEXT
+							*lcMemo = lcMemo + C_PROCEDURE + ' ' + loProcedure._Nombre
+						ELSE
+							TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+								<<C_PROCEDURE>> <<SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )>>
+							ENDTEXT
+							*lcMemo = lcMemo + C_PROCEDURE + ' ' + SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )
+						ENDIF
+					ELSE
 						TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 							<<C_PROCEDURE>> <<loProcedure._Nombre>>
 						ENDTEXT
-					ELSE
-						TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-							<<C_PROCEDURE>> <<SUBSTR( loProcedure._Nombre, AT('.', loProcedure._Nombre) + 1 )>>
-						ENDTEXT
+						*lcMemo = lcMemo + C_PROCEDURE + ' ' + loProcedure._Nombre
 					ENDIF
-				ELSE
-					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<C_PROCEDURE>> <<loProcedure._Nombre>>
+
+					*-- Incluir las líneas del método
+					*.AvanceDelProceso( 'Generating Lines of Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
+					FOR X = 1 TO loProcedure._ProcLine_Count
+						*TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<loProcedure._ProcLines(X)>>
+						*ENDTEXT
+						lcMemo = lcMemo + CHR(13) + CHR(10) + loProcedure._ProcLines(X)
+					ENDFOR
+
+					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						<<C_ENDPROC>>
+						<<>>
 					ENDTEXT
 				ENDIF
-
-				*-- Incluir las líneas del método
-				FOR X = 1 TO loProcedure._ProcLine_Count
-					TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<loProcedure._ProcLines(X)>>
-					ENDTEXT
-				ENDFOR
-
-				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<C_ENDPROC>>
-					<<>>
-				ENDTEXT
-			ENDIF
-		ENDFOR
+			ENDFOR
+		ENDWITH
 
 		loProcedure	= NULL
-		RELEASE loProcedure
+		RELEASE toClase, I, X, lcNombreObjeto, loProcedure
 		RETURN lcMemo
 	ENDPROC
 
@@ -4554,6 +5011,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lcMemo	= ''
 
 		*-- Recorrer los métodos
+		THIS.AvanceDelProceso( 'Generating Object Methods for ' + toClase._Nombre + '.' + toObjeto._ObjName + '...', 0, 1, 2 )
 		FOR I = 1 TO toObjeto._Procedure_Count
 			loProcedure	= NULL
 			loProcedure	= toObjeto._Procedures(I)
@@ -4564,9 +5022,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			*-- Incluir las líneas del método
 			FOR X = 1 TO loProcedure._ProcLine_Count
-				TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<loProcedure._ProcLines(X)>>
-				ENDTEXT
+				*TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*	<<loProcedure._ProcLines(X)>>
+				*ENDTEXT
+				lcMemo = lcMemo + CHR(13) + CHR(10) + loProcedure._ProcLines(X)
 			ENDFOR
 
 			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -4576,7 +5035,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDFOR
 
 		loProcedure	= NULL
-		RELEASE loProcedure
+		RELEASE toObjeto, toClase, I, X, lcNombreObjeto, loProcedure
 		RETURN lcMemo
 	ENDPROC
 
@@ -4601,6 +5060,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 		ENDFOR
 
+		RELEASE tcPropName, toClase, I
 		RETURN lcComentario
 	ENDPROC
 
@@ -4628,7 +5088,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		ENDFOR
 
 		loProcedure	= NULL
-		RELEASE loProcedure
+		RELEASE tcMethodName, toClase, loProcedure, I
 
 		RETURN lcComentario
 	ENDPROC
@@ -4656,6 +5116,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
+
 	*******************************************************************************************************************
 	PROCEDURE defined_PAM2Memo
 		*--------------------------------------------------------------------------------------------------------------
@@ -4665,6 +5126,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		LPARAMETERS toClase
 		RETURN toClase._Defined_PAM
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4677,7 +5139,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lnPos2	= AT( ']', tcSeparatedCommaVars, I )
 			tcSeparatedCommaVars	= STUFF( tcSeparatedCommaVars, lnPos1, lnPos2 - lnPos1 + 1, '' )
 		ENDFOR
+
+		RELEASE tcSeparatedCommaVars, lnPos1, lnPos2, I
+		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4698,8 +5164,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			.Evaluate_PAM( @lcMemo, toClase._HiddenMethods, 'method', 'hidden' )
 		ENDWITH && THIS
 
+		RELEASE toClase, I, lcPAM, lcComentario
 		RETURN lcMemo
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4722,7 +5190,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDTEXT
 			ENDIF
 		ENDFOR
+
+		RELEASE tcMemo, tcPAM, tcPAM_Type, tcPAM_Visibility, lcPAM, I
+		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4742,7 +5214,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				lcMethodsMemo	= .objectMethods2Memo( toObjeto, toClase )
 
 				IF EMPTY(toObjeto._TimeStamp)
-					toObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					toObjeto._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toObjeto._UniqueID)
 					toObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -4797,7 +5269,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, toObjeto._User )
 			ENDIF
 		ENDWITH && THIS
+
+		RELEASE toClase, toObjeto, toFoxBin2Prg, lcPropsMemo, lcMethodsMemo
+		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4827,7 +5303,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						loObjeto			= toClase._AddObjects( X )
 
 						IF EMPTY(loObjeto._TimeStamp)
-							loObjeto._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loObjeto._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loObjeto._UniqueID)
 							loObjeto._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -4847,10 +5323,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						FOR EACH loObjeto IN toClase._AddObjects FOXOBJECT
 							*-- Verifico que sea el objeto que corresponde
-							IF loObjeto._WriteOrder = 0 AND loObjeto._Nombre == lcObjName
+							IF loObjeto._WriteOrder = 0 AND LOWER(loObjeto._Nombre) == LOWER(lcObjName)
 								N	= N + 1
 								loObjeto._WriteOrder	= N
-								.insert_Object( toClase, loObjeto, toFoxBin2Prg )
+								.insert_Object( @toClase, @loObjeto, @toFoxBin2Prg )
 								EXIT
 							ENDIF
 						ENDFOR
@@ -4860,7 +5336,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					*-- Recorro los objetos Desconocidos
 					FOR EACH loObjeto IN toClase._AddObjects FOXOBJECT
 						IF loObjeto._WriteOrder = 0
-							.insert_Object( toClase, loObjeto, toFoxBin2Prg )
+							.insert_Object( @toClase, @loObjeto, @toFoxBin2Prg )
 						ENDIF
 					ENDFOR
 
@@ -4876,12 +5352,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			loObjeto	= NULL
-			RELEASE loObjeto
+			RELEASE toClase, toFoxBin2Prg, N, X, lcObjName, loObjeto
 
 		ENDTRY
 
 		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4891,10 +5368,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
+
 	*******************************************************************************************************************
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 			, taLineasExclusion, tnBloquesExclusion
+
 		EXTERNAL ARRAY taCodeLines
 
 		#IF .F.
@@ -4961,12 +5440,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			loProcedure	= NULL
-			RELEASE loProcedure
+			RELEASE toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
+				, taLineasExclusion, tnBloquesExclusion, llEsProcedureDeClase, loProcedure
 
 		ENDTRY
 
 		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -4986,54 +5467,55 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			IF LEFT( tcLine, 11 ) == 'ADD OBJECT '
 				*-- Estructura a reconocer: ADD OBJECT 'frm_a.Check1' AS check [WITH]
-				llBloqueEncontrado	= .T.
-				LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
-				tcLine		= CHRTRAN( tcLine, ['], ["] )
+				WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
+					llBloqueEncontrado	= .T.
+					LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
+					tcLine		= CHRTRAN( tcLine, ['], ["] )
 
-				IF EMPTY(toClase._Fin_Cab)
-					toClase._Fin_Cab	= I-1
-					toClase._Ini_Cuerpo	= I
-				ENDIF
+					IF EMPTY(toClase._Fin_Cab)
+						toClase._Fin_Cab	= I-1
+						toClase._Ini_Cuerpo	= I
+					ENDIF
 
-				toObjeto	= NULL
-				lcNombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
-				lcObjName	= JUSTEXT( '.' + lcNombre )
+					toObjeto	= NULL
+					lcNombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
+					lcObjName	= JUSTEXT( '.' + lcNombre )
+					.AvanceDelProceso( 'Analyzing Block Add Object ' + toClase._Nombre + '.' + lcObjName + '...', I, tnCodeLines, 1 )
 
-				IF toClase.l_ObjectMetadataInHeader
-					FOR Z = 1 TO toClase._AddObject_Count
-						IF LOWER(toClase._AddObjects(Z)._Nombre) == LOWER(lcNombre) THEN
-							toObjeto	= toClase._AddObjects(Z)
-							EXIT
-						ENDIF
-					ENDFOR
-				ENDIF
+					IF toClase.l_ObjectMetadataInHeader
+						FOR Z = 1 TO toClase._AddObject_Count
+							IF LOWER(toClase._AddObjects(Z)._Nombre) == LOWER(lcNombre) THEN
+								toObjeto	= toClase._AddObjects(Z)
+								EXIT
+							ENDIF
+						ENDFOR
+					ENDIF
 
-				IF ISNULL(toObjeto)
-					toObjeto	= CREATEOBJECT('CL_OBJETO')
-					*-- Luego se reasigna el ZOrder, pero si no lo hace, se pone último como si se acabara de agregar.
-					*-- Puede pasar si se agrega manualmente al TX2 y se olvida agregar la metadata OBJECTDATA.
-					toObjeto._ZOrder	= 9999
-					toObjeto._Nombre	= lcNombre
-				ENDIF
+					IF ISNULL(toObjeto)
+						toObjeto	= CREATEOBJECT('CL_OBJETO')
+						*-- Luego se reasigna el ZOrder, pero si no lo hace, se pone último como si se acabara de agregar.
+						*-- Puede pasar si se agrega manualmente al TX2 y se olvida agregar la metadata OBJECTDATA.
+						toObjeto._ZOrder	= 9999
+						toObjeto._Nombre	= lcNombre
+					ENDIF
 
-				toObjeto._ObjName	= lcObjName
+					toObjeto._ObjName	= lcObjName
 
-				IF '.' $ toObjeto._Nombre
-					toObjeto._Parent	= toClase._ObjName + '.' + JUSTSTEM( toObjeto._Nombre )
-				ELSE
-					toObjeto._Parent	= toClase._ObjName
-				ENDIF
+					IF '.' $ toObjeto._Nombre
+						toObjeto._Parent	= toClase._ObjName + '.' + JUSTSTEM( toObjeto._Nombre )
+					ELSE
+						toObjeto._Parent	= toClase._ObjName
+					ENDIF
 
-				toObjeto._Nombre	= toObjeto._Parent + '.' + toObjeto._ObjName
-				toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
+					toObjeto._Nombre	= toObjeto._Parent + '.' + toObjeto._ObjName
+					toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
 
-				IF NOT toClase.l_ObjectMetadataInHeader
-					toClase.add_Object( toObjeto )
-				ENDIF
+					IF NOT toClase.l_ObjectMetadataInHeader
+						toClase.add_Object( toObjeto )
+					ENDIF
 
 
-				*-- Propiedades del ADD OBJECT
-				WITH THIS
+					*-- Propiedades del ADD OBJECT
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -5088,10 +5570,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toModulo, toClase, tcLine, I, taCodeLines, tnCodeLines ;
+				, laPropsAndValues, lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
 		ENDTRY
 
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5188,10 +5674,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toClase, tcLine, taCodeLines, tnCodeLines, I ;
+				, lcDefinedPAM, lnPos, lnPos2, lcPAM_Name, lcItem, lcMethods, lcPAM_Type
 		ENDTRY
 
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5219,8 +5709,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
-				toClase._Nombre			= ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) )
-				toClase._ObjName		= toClase._Nombre
+				toClase._Nombre			= LOWER( ALLTRIM( STREXTRACT( tcLine, 'DEFINE CLASS ', ' AS ', 1, 1 ) ) )
+				toClase._ObjName		= LOWER( toClase._Nombre )
 				toClase._Definicion		= ALLTRIM( tcLine )
 				IF NOT ' OF ' $ UPPER(tcLine)	&& Puede no tener "OF libreria.vcx"
 					toClase._Class			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine + ' OLEPUBLIC', ' AS ', ' OLEPUBLIC', 1, 1 ), ["'], [] ) )
@@ -5353,11 +5843,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 				THROW
 
+			FINALLY
+				RELEASE toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
+					, taLineasExclusion, tnBloquesExclusion, tc_Comentario, Z, lcProp, lcValue, loEx ;
+					, llCLASSMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
+					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed, llOBJECTMETADATA_Completed ;
+					, llCLASSCOMMENTS_Completed, loObjeto
 			ENDTRY
 		ENDIF
 
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5387,8 +5884,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			STORE '' TO tcProcedureAbierto
 		ENDIF
 
+		RELEASE toClase, tcLine, I, tcProcedureAbierto
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5406,8 +5905,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toClase._HiddenProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 8 ) ) )
 		ENDIF
 
+		RELEASE toClase, tcLine
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5429,10 +5930,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 		ENDIF
 
+		RELEASE toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		RETURN llBloqueEncontrado
 	ENDPROC
 
 
+
+	*******************************************************************************************************************
 	PROCEDURE analizarBloque_CLASSCOMMENTS
 		LPARAMETERS toClase, tcLine ,taCodeLines, tnCodeLines, I
 
@@ -5478,12 +5982,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			THROW
 
+		FINALLY
+			RELEASE toClase, tcLine ,taCodeLines, tnCodeLines, I
 		ENDTRY
 
 		RETURN llBloqueEncontrado
 	ENDPROC
 
 
+
+	*******************************************************************************************************************
 	PROCEDURE analizarBloque_CLASSMETADATA
 		LPARAMETERS toClase, tcLine
 
@@ -5517,10 +6025,44 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 		ENDIF
 
+		RELEASE toClase, tcLine, laPropsAndValues, lnPropsAndValues_Count
 		RETURN llBloqueEncontrado
 	ENDPROC
 
 
+
+	*******************************************************************************************************************
+	PROCEDURE analizarBloque_EXTERNAL_CLASS
+		*------------------------------------------------------
+		*-- Analiza el bloque *< EXTERNAL_CLASS: Name="nombre-clase" Baseclass="clase-base" />
+		*------------------------------------------------------
+		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL llBloqueEncontrado
+
+		IF LEFT(tcLine, C_LEN_EXTERNAL_CLASS_I) == C_EXTERNAL_CLASS_I
+			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
+			llBloqueEncontrado	= .T.
+
+			WITH THIS
+				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_EXTERNAL_CLASS_I, C_EXTERNAL_CLASS_F )
+
+				toModulo._ExternalClasses_Count		= toModulo._ExternalClasses_Count + 1
+				DIMENSION toModulo._ExternalClasses( toModulo._ExternalClasses_Count )
+				toModulo._ExternalClasses( toModulo._ExternalClasses_Count )	= .get_ValueByName_FromListNamesWithValues( 'Name', 'C', @laPropsAndValues )
+			ENDWITH && THIS
+		ENDIF
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+
+	*******************************************************************************************************************
 	PROCEDURE analizarBloque_OBJECTMETADATA
 		LPARAMETERS toClase, tcLine
 
@@ -5548,11 +6090,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDWITH && THIS
 
 			loObjeto	= NULL
-			RELEASE laPropsAndValues, lnPropsAndValues_Count, loObjeto
+			RELEASE toClase, tcLine, laPropsAndValues, lnPropsAndValues_Count, loObjeto
 		ENDIF
 
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5600,8 +6143,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			RELEASE loOle, laPropsAndValues, lnPropsAndValues_Count
 		ENDIF
 
+		RELEASE toModulo, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5641,12 +6186,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		IF llBloqueEncontrado
 			*-- Evalúo todo el contenido del PROCEDURE
+			THIS.AvanceDelProceso( 'Analyzing Procedure ' + toClase._Nombre + '.' + tcProcedureAbierto + '...', I, tnCodeLines, 1 )
 			THIS.analizarLineasDeProcedure( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, @tcProcedureAbierto ;
 				, @tc_Comentario, @taLineasExclusion, @tnBloquesExclusion )
 		ENDIF
 
+		RELEASE toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
+			, tc_Comentario, taLineasExclusion, tnBloquesExclusion
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5664,8 +6213,10 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			toClase._ProtectedProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 11 ) ) )
 		ENDIF
 
+		RELEASE toClase, tcLine
 		RETURN llBloqueEncontrado
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5733,12 +6284,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		FINALLY
 			STORE NULL TO loProcedure
-			RELEASE loProcedure, I, lcNombreObjeto, lnObjProc
-
+			RELEASE loProcedure, I, lcNombreObjeto, lnObjProc ;
+				, toClase, tnX, tc_Comentario, tcProcName, tcProcType, toObjeto
 		ENDTRY
 
 		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5750,21 +6302,23 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
 		* tnBloquesExclusion		(@! IN    ) Cantidad de bloques de exclusión
 		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
+		* toFoxBin2Prg				(@? IN    ) Referencia al objeto principal
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo, toFoxBin2Prg
 
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
 			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
 			LOCAL I, loEx AS EXCEPTION ;
-				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
+				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed, llEXTERNAL_CLASS_Completed ;
 				, lc_Comentario, lcProcedureAbierto, lcLine ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 
@@ -5776,8 +6330,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				IF tnCodeLines > 1
 
 					*-- Defino el objeto de módulo y sus propiedades
-					toModulo	= NULL
-					toModulo	= CREATEOBJECT('CL_MODULO')
+					*toModulo	= NULL
+					*toModulo	= CREATEOBJECT('CL_MODULO')
+
+					*IF NOT (toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain)
+					*	llEXTERNAL_CLASS_Completed	= .T.
+					*ENDIF
 
 					*-- Búsqueda del ID de inicio de bloque (DEFINE CLASS / PROCEDURE)
 					FOR I = 1 TO tnCodeLines
@@ -5788,28 +6346,36 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						CASE .lineaExcluida( I, tnBloquesExclusion, @taLineasExclusion ) ;
 								OR .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
 
-						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
-							llFoxBin2Prg_Completed	= .T.
+							*CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( @toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							*	llFoxBin2Prg_Completed	= .T.
 
-						CASE NOT llLIBCOMMENT_Completed AND .analizarBloque_LIBCOMMENT( toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
-							llLIBCOMMENT_Completed	= .T.
+							*CASE NOT llEXTERNAL_CLASS_Completed AND .analizarBloque_EXTERNAL_CLASS( @toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							*-- Puede haber varias clases externas
 
-						CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @lcLine, @taCodeLines ;
-								, @I, tnCodeLines, @lcProcedureAbierto )
-							*-- Puede haber varios
+							*CASE NOT llLIBCOMMENT_Completed AND .analizarBloque_LIBCOMMENT( @toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							*	llLIBCOMMENT_Completed	= .T.
+							*	llEXTERNAL_CLASS_Completed	= .T.
 
-						CASE NOT llINCLUDE_SCX_Completed AND .c_Type = 'SCX' AND .analizarBloque_INCLUDE( @toModulo, @loClase, @lcLine ;
-								, @taCodeLines, @I, tnCodeLines, @lcProcedureAbierto )
+							*CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @lcLine, @taCodeLines ;
+							, @I, tnCodeLines, @lcProcedureAbierto )
+							*-- Puede haber varios objetos OLE
+
+							*CASE NOT llINCLUDE_SCX_Completed AND .c_Type = 'SCX' AND .analizarBloque_INCLUDE( @toModulo, @loClase, @lcLine ;
+							, @taCodeLines, @I, tnCodeLines, @lcProcedureAbierto )
 							* Específico para SCX que lo tiene al inicio
-							llINCLUDE_SCX_Completed	= .T.
+							*	llINCLUDE_SCX_Completed	= .T.
+							*	llEXTERNAL_CLASS_Completed	= .T.
 
 						CASE .analizarBloque_DEFINE_CLASS( @toModulo, @loClase, @lcLine, @taCodeLines, @I, tnCodeLines ;
 								, @lcProcedureAbierto, @taLineasExclusion, @tnBloquesExclusion, @lc_Comentario )
-							*-- Puede haber varias
+							*-- Puede haber varias clases definidas
+							*	llEXTERNAL_CLASS_Completed	= .T.
 
 						ENDCASE
 
 					ENDFOR
+
+					.verificar_CLASES_EXTERNAS( @toModulo, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH	&& THIS
 
@@ -5831,7 +6397,165 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
+	*******************************************************************************************************************
+	PROCEDURE identificarBloquesDeCabecera
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* taCodeLines				(@! IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(@! IN    ) Cantidad de líneas de código
+		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
+		* tnBloquesExclusion		(@! IN    ) Cantidad de bloques de exclusión
+		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
+		* toFoxBin2Prg				(@? IN    ) Referencia al objeto principal
+		*
+		* NOTA:
+		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo, toFoxBin2Prg
+
+		EXTERNAL ARRAY taCodeLines, taLineasExclusion
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL I, loEx AS EXCEPTION ;
+				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed, llEXTERNAL_CLASS_Completed ;
+				, lc_Comentario, lcProcedureAbierto, lcLine ;
+				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+
+			WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
+				STORE '' TO lcProcedureAbierto
+
+				.c_Type	= UPPER(JUSTEXT(.c_OutputFile))
+
+				IF tnCodeLines > 1
+
+					*-- Defino el objeto de módulo y sus propiedades
+					*toModulo	= NULL
+					*toModulo	= CREATEOBJECT('CL_MODULO')
+
+					IF NOT (toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain)
+						llEXTERNAL_CLASS_Completed	= .T.
+					ENDIF
+
+					*-- Búsqueda del ID de inicio de bloque (DEFINE CLASS / PROCEDURE)
+					FOR I = 1 TO tnCodeLines
+						STORE '' TO lc_Comentario
+						.set_Line( @lcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
+
+						CASE NOT llFoxBin2Prg_Completed AND .analizarBloque_FoxBin2Prg( @toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							llFoxBin2Prg_Completed	= .T.
+
+						CASE NOT llEXTERNAL_CLASS_Completed AND .analizarBloque_EXTERNAL_CLASS( @toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							*-- Puede haber varias clases externas
+
+						CASE NOT llLIBCOMMENT_Completed AND .analizarBloque_LIBCOMMENT( @toModulo, @lcLine, @taCodeLines, @I, tnCodeLines )
+							llLIBCOMMENT_Completed	= .T.
+							llEXTERNAL_CLASS_Completed	= .T.
+
+						CASE NOT llOLE_DEF_Completed AND .analizarBloque_OLE_DEF( @toModulo, @lcLine, @taCodeLines ;
+								, @I, tnCodeLines, @lcProcedureAbierto )
+							*-- Puede haber varios objetos OLE
+
+						CASE NOT llINCLUDE_SCX_Completed AND .c_Type = 'SCX' AND .analizarBloque_INCLUDE( @toModulo, @loClase, @lcLine ;
+								, @taCodeLines, @I, tnCodeLines, @lcProcedureAbierto )
+							* Específico para SCX que lo tiene al inicio
+							llINCLUDE_SCX_Completed	= .T.
+							llEXTERNAL_CLASS_Completed	= .T.
+
+							*CASE .analizarBloque_DEFINE_CLASS( @toModulo, @loClase, @lcLine, @taCodeLines, @I, tnCodeLines ;
+							, @lcProcedureAbierto, @taLineasExclusion, @tnBloquesExclusion, @lc_Comentario )
+							*-- Puede haber varias clases definidas
+							*	llEXTERNAL_CLASS_Completed	= .T.
+
+						ENDCASE
+
+					ENDFOR
+
+				ENDIF
+			ENDWITH	&& THIS
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loClase
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo, loClase, I ;
+				, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
+				, lc_Comentario, lcProcedureAbierto, lcLine
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+
+	*******************************************************************************************************************
+	PROCEDURE verificar_CLASES_EXTERNAS
+		*--------------------------------------------------------------------------------
+		*-- Compara las clases definidas en la cabecera con las clases encontradas luego
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(@?    OUT) Objeto con toda la información del módulo analizado
+		* toFoxBin2Prg				(@? IN    ) Referencia al objeto principal
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS toModulo, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnItem, I, X
+
+		*-- Verificación de las Clases, si son Externas y se indicó chequearlas
+		IF toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_ClassPerFileCheck
+			DO CASE
+			CASE toModulo._ExternalClasses_Count = 0 AND toModulo._ExternalClasses_Count <> toModulo._Clases_Count
+				*ERROR 'El conteo de clases externas (' + TRANSFORM(toModulo._ExternalClasses_Count) + ') no coincide con la cantidad encontrada (' + TRANSFORM(toModulo._Clases_Count) + ') en el archivo [' + toFoxBin2Prg.c_InputFile + ']'
+				ERROR (TEXTMERGE(C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES))
+
+			CASE toModulo._Clases_Count =0 AND toModulo._ExternalClasses_Count <> toModulo._Clases_Count
+				*ERROR 'El conteo de clases externas (' + TRANSFORM(toModulo._ExternalClasses_Count) + ') no coincide con la cantidad encontrada (' + TRANSFORM(toModulo._Clases_Count) + ') en el archivo [' + toFoxBin2Prg.c_InputFile + ']'
+				ERROR (TEXTMERGE(C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES))
+
+				*CASE toModulo._ExternalClasses_Count <> toModulo._Clases_Count THEN
+			ENDCASE
+
+			FOR I = 1 TO toModulo._ExternalClasses_Count
+				lnItem	= 0
+
+				FOR X = 1 TO toModulo._Clases_Count
+					IF LOWER( toModulo._Clases(X)._ObjName ) == LOWER( toModulo._ExternalClasses(I) )
+						lnItem	= X
+						EXIT
+					ENDIF
+				ENDFOR
+
+				IF lnItem = 0 THEN
+					*ERROR 'No se ha encontrado la clase externa [' + toModulo._ExternalClasses(I) + '] en el archivo [' + toFoxBin2Prg.c_InputFile + ']'
+					ERROR (TEXTMERGE(C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND))
+				ENDIF
+
+				toModulo._Clases(lnItem)._Checked = .T.
+			ENDFOR
+		ENDIF
+	ENDPROC
+
+
+
 ENDDEFINE
+
 
 
 *******************************************************************************************************************
@@ -5847,38 +6571,67 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* toModulo					(!@    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
-		* toEx						(!@    OUT) Objeto con información del error
-		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		* toFoxBin2Prg				(@? IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, lcLine, laCodeLines(1), lnCodeLines ;
+			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
-				STORE '' TO lcLine
+				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
+				toModulo			= CREATEOBJECT('CL_MODULO')
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
+
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+				.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+				.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
-				*-- Creo la librería
-				.createClasslib()
+				.AvanceDelProceso( 'Loading Code...', 2, lnCodeLines, 1 )
+				IF toFoxBin2Prg.l_UseClassPerFile
+					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
+					lcInputFile			= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
+					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
+					ASORT( laFiles, 1, 0, 0, 1)
+
+					FOR I = 1 TO lnFileCount
+						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
+
+						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , JUSTEXT( JUSTSTEM( lcInputFile_Class ) ), 1, 0, 1, 1+2+4 ) = 0
+							LOOP	&& Salteo esta clase
+						ENDIF
+
+						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+					ENDFOR
+				ENDIF
+
+				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+				.AvanceDelProceso( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
 				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+
+				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+
+				.createClasslib()
 
 				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
 			ENDWITH && THIS
@@ -5893,11 +6646,13 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			RELEASE lnCodError, lcLine, laCodeLines, lnCodeLines, laLineasExclusion, lnBloquesExclusion, I
+			RELEASE lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
+				, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
 
 		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -5999,7 +6754,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loClase._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
 							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6138,6 +6893,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 ENDDEFINE
 
 
+
 *******************************************************************************************************************
 DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 	#IF .F.
@@ -6151,37 +6907,69 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* toModulo					(!@    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
-		* toEx						(!@    OUT) Objeto con información del error
-		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		* toModulo					(@!    OUT) Objeto generado de clase CL_MODULO con la información leida del texto
+		* toEx						(@!    OUT) Objeto con información del error
+		* toFoxBin2Prg				(@! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
+			LOCAL toModulo AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lnFB2P_Version ;
+			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
-				STORE 0 TO lnCodError, lnCodeLines, lnFB2P_Version
+				STORE 0 TO lnCodError, lnCodeLines
+				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
+				toModulo			= CREATEOBJECT('CL_MODULO')
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
+
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+				.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+				.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
-				*-- Creo el form
-				.createForm()
+				.AvanceDelProceso( 'Loading Code...', 2, lnCodeLines, 1 )
+
+				IF toFoxBin2Prg.l_UseClassPerFile
+					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
+					lcInputFile			= FORCEPATH( JUSTSTEM( .c_InputFile ), JUSTPATH( .c_InputFile ) ) + '.*.' + JUSTEXT( .c_InputFile )
+					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
+					ASORT( laFiles, 1, 0, 0, 1)
+
+					FOR I = 1 TO lnFileCount
+						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
+
+						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , JUSTEXT( JUSTSTEM( lcInputFile_Class ) ), 1, 0, 1, 1+2+4 ) = 0
+							LOOP	&& Salteo esta clase
+						ENDIF
+
+						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+					ENDFOR
+				ENDIF
+
+				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+				.AvanceDelProceso( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
 				.identificarBloquesDeExclusion( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo )
+				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+
+				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
+
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+
+				.createForm()
 
 				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
 			ENDWITH && THIS
@@ -6196,10 +6984,13 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			RELEASE lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
+				, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
 
 		RETURN
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -6302,7 +7093,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						ENDIF
 
 						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+							loClase._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 						ENDIF
 						IF EMPTY(loClase._UniqueID)
 							loClase._UniqueID	= toFoxBin2Prg.Unique_ID()
@@ -6437,6 +7228,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 ENDDEFINE
 
 
+
 *******************************************************************************************************************
 DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	#IF .F.
@@ -6490,8 +7282,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				*.identificarBloquesDeExclusion( @laCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
 
+				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toProject, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -6541,7 +7335,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				ENDIF
 
 				IF EMPTY(toProject._TimeStamp)
-					toProject._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					toProject._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(toProject._ID)
 					toProject._ID	= toFoxBin2Prg.Unique_ID('N')
@@ -6581,7 +7375,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				FOR EACH loFile IN toProject FOXOBJECT
 
 					IF EMPTY(loFile._TimeStamp)
-						loFile._TimeStamp	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+						loFile._TimeStamp	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 					ENDIF
 					IF EMPTY(loFile._ID)
 						loFile._ID	= toFoxBin2Prg.Unique_ID('N')
@@ -6718,6 +7512,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toProject ;
+				, I, lc_Comentario, lcLine, llBuildProj_Completed, llDevInfo_Completed ;
+				, llServerHead_Completed, llFileComments_Completed, llFoxBin2Prg_Completed ;
+				, llExcludedFiles_Completed, llTextFiles_Completed, llProjectProperties_Completed
 		ENDTRY
 
 		RETURN
@@ -6798,7 +7597,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 		FINALLY
 			STORE NULL TO loFile
-			RELEASE lcComment, lcMetadatos, luValor, laPropsAndValues, lnPropsAndValues_Count, loFile
+			RELEASE toProject, tcLine, taCodeLines, I, tnCodeLines ;
+				, lcComment, lcMetadatos, luValor, laPropsAndValues, lnPropsAndValues_Count, loFile
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -6985,6 +7785,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
 		EXTERNAL ARRAY toProject
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7047,6 +7848,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
 		EXTERNAL ARRAY toProject
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7109,6 +7911,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
 
 		EXTERNAL ARRAY toProject
+
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -7258,7 +8061,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, lnFB2P_Version ;
+			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines ;
 				, laLineasExclusion(1), lnBloquesExclusion, I
 
 			WITH THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
@@ -7274,8 +8077,10 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				.createReport()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
 
+				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toReport, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -7323,7 +8128,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				*	loReg.UNIQUEID	= ''
 				*ENDIF
 				IF EMPTY(loReg.TIMESTAMP)
-					loReg.TIMESTAMP	= THIS.RowTimeStamp( {^2013/11/04 20:00:00} )
+					loReg.TIMESTAMP	= .RowTimeStamp( {^2013/11/04 20:00:00} )
 				ENDIF
 				IF EMPTY(loReg.UNIQUEID) OR ALLTRIM(loReg.UNIQUEID) = '0'
 					loReg.UNIQUEID	= toFoxBin2Prg.Unique_ID()
@@ -7506,6 +8311,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE toReport, tcLine, taCodeLines, I, tnCodeLines, toReg, tcPropName ;
+				, lcValue, loEx
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -7524,9 +8332,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps(1) ;
-				, lcComment, lcMetadatos, luValor ;
-				, laPropsAndValues(1,2), lnPropsAndValues_Count
+			LOCAL llBloqueEncontrado, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps(1)
 
 			IF LOWER( LEFT(tcLine, 10) ) == 'platform="'
 				llBloqueEncontrado	= .T.
@@ -7555,6 +8361,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE toReport, tcLine, taCodeLines, I, tnCodeLines, toReg ;
+				, X, lnPos, lnPos2, lcValue, lnLenPropName, laProps
 		ENDTRY
 
 		RETURN llBloqueEncontrado
@@ -7838,7 +8647,12 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				USE IN (SELECT(JUSTSTEM(.c_OutputFile)))
 
 				*-- La actualización de la fecha sirve para evitar diferencias al regenerar el DBF
-				ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
+				IF toFoxBin2Prg.l_ClearDBFLastUpdate THEN
+					ldLastUpdate	= EVALUATE( '{^2013/11/04}' )
+				ELSE
+					ldLastUpdate	= EVALUATE( '{^' + toTable._LastUpdate + '}' )
+				ENDIF
+
 				loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
 			ENDWITH && THIS
 
@@ -7886,6 +8700,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		* toTable					(@?    OUT) Objeto con toda la información de la tabla analizada
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toTable
+
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
@@ -7929,6 +8744,9 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toTable ;
+				, I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueTable_Completed
 		ENDTRY
 
 		RETURN
@@ -7986,8 +8804,10 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				*.createTable()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase )
 
+				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toDatabase, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -8062,6 +8882,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase
+
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
@@ -8105,6 +8926,9 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase ;
+				, I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueDatabase_Completed
 		ENDTRY
 
 		RETURN
@@ -8160,8 +8984,10 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				.createMenu()
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
 
+				.AvanceDelProceso( 'Generating Binary...', 1, 2, 1 )
 				.escribirArchivoBin( @toMenu )
 			ENDWITH && THIS
 
@@ -8196,6 +9022,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toMenu
+
 		EXTERNAL ARRAY taCodeLines, taLineasExclusion
 
 		#IF .F.
@@ -8239,6 +9066,9 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 			THROW
 
+		FINALLY
+			RELEASE taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toMenu ;
+				, I, lc_Comentario, lcLine, llFoxBin2Prg_Completed, llBloqueMenu_Completed
 		ENDTRY
 
 		RETURN
@@ -8289,8 +9119,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
+		+ [<memberdata name="classify_pam_hidden_protected" display="Classify_PAM_Hidden_Protected"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="get_add_object_methods" display="get_ADD_OBJECT_METHODS"/>] ;
 		+ [<memberdata name="get_class_methods" display="get_CLASS_METHODS"/>] ;
@@ -8328,9 +9160,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_define_class_comments" display="write_Define_Class_COMMENTS"/>] ;
 		+ [<memberdata name="write_definicionobjetosole" display="write_DefinicionObjetosOLE"/>] ;
 		+ [<memberdata name="write_enddefine_sicorresponde" display="write_ENDDEFINE_SiCorresponde"/>] ;
+		+ [<memberdata name="write_external_class_header" display="write_EXTERNAL_CLASS_HEADER"/>] ;
 		+ [<memberdata name="write_hidden_properties" display="write_HIDDEN_Properties"/>] ;
 		+ [<memberdata name="write_include" display="write_INCLUDE"/>] ;
 		+ [<memberdata name="write_objectmetadata" display="write_OBJECTMETADATA"/>] ;
+		+ [<memberdata name="write_outputfile" display="write_OutputFile"/>] ;
 		+ [<memberdata name="write_protected_properties" display="write_PROTECTED_Properties"/>] ;
 		+ [</VFPData>]
 
@@ -8351,6 +9185,54 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
+	PROCEDURE Classify_PAM_Hidden_Protected
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnPropsAndValues_Count	(@! IN    )
+		* taPropsAndValues			(@! IN    )
+		* tnProtected_Count			(@! IN    )
+		* taProtected				(@! IN    )
+		* tnPropsAndComments_Count	(@! IN    )
+		* taPropsAndComments		(@! IN    )
+		* tcHiddenProp				(@!    OUT) Lista de propiedades Hidden
+		* tcProtectedProp			(@!    OUT) Lista de propiedades Protected
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tnPropsAndValues_Count, taPropsAndValues, tnProtected_Count, taProtected ;
+			, tnPropsAndComments_Count, taPropsAndComments, tcHiddenProp, tcProtectedProp
+
+		IF tnPropsAndValues_Count > 0 THEN
+			*-- Recorro las propiedades (campo Properties) para ir conformando
+			*-- las definiciones HIDDEN y PROTECTED
+			LOCAL lcProp, I
+
+			STORE '' TO tcHiddenProp, tcProtectedProp
+
+			FOR I = 1 TO tnProtected_Count
+				DO CASE
+				CASE EMPTY( taProtected(I) )
+					LOOP
+
+				CASE RIGHT( taProtected(I), 1 ) == '^'
+					*-- Hidden Property or method
+					lcProp	= CHRTRAN( taProtected(I), '^', '' )
+					IF ASCAN(taPropsAndComments, '*' + lcProp, 1, 0, 1, 1+2+4) > 0
+						LOOP	&& method
+					ENDIF
+					tcHiddenProp	= tcHiddenProp + ',' + lcProp
+
+				OTHERWISE
+					*-- Protected Property or method
+					IF ASCAN(taPropsAndComments, '*' + taProtected(I), 1, 0, 1, 1+2+4) > 0
+						LOOP	&& method
+					ENDIF
+					tcProtectedProp	= tcProtectedProp + ',' + taProtected(I)
+				ENDCASE
+			ENDFOR
+
+		ENDIF
+	ENDPROC
+
+
 	*******************************************************************************************************************
 	PROCEDURE get_ADD_OBJECT_METHODS
 		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount ;
@@ -8358,6 +9240,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			, toFoxBin2Prg
 
 		EXTERNAL ARRAY taPropsAndComments, taProtected
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -8386,7 +9269,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							CASE '.' $ toRegObj.PARENT
 								lcMethodName	= SUBSTR(toRegObj.PARENT, AT('.', toRegObj.PARENT) + 1) + '.' + toRegObj.OBJNAME + '.' + taMethods(I,1)
 
-							CASE LEFT(toRegObj.PARENT + '.', LEN( toRegClass.OBJNAME + '.' ) ) == toRegClass.OBJNAME + '.'
+							CASE LOWER( LEFT(toRegObj.PARENT + '.', LEN( toRegClass.OBJNAME + '.' ) ) ) == LOWER( toRegClass.OBJNAME + '.' )
 								lcMethodName	= toRegObj.OBJNAME + '.' + taMethods(I,1)
 
 							OTHERWISE
@@ -8408,6 +9291,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount ;
+				, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count ;
+				, toFoxBin2Prg, lcMethodName, lnMethodCount
 		ENDTRY
 
 		RETURN
@@ -8475,6 +9363,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tnMethodCount, taMethods, taCode, taProtected, taPropsAndComments ;
+				, lcMethod, lcMethodName, lnProtectedItem, lnCommentRow, lcProcDef, lcMethods, lnLen
 		ENDTRY
 
 		RETURN
@@ -8485,11 +9377,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	PROCEDURE get_NombresObjetosOLEPublic
 		LPARAMETERS ta_NombresObjsOle
 		*-- Obtengo los objetos "OLEPublic"
+		LOCAL I
+
 		SELECT PADR(OBJNAME,100) OBJNAME ;
 			FROM TABLABIN ;
 			WHERE TABLABIN.PLATFORM = "COMMENT" AND TABLABIN.RESERVED2 == "OLEPublic" ;
 			ORDER BY 1 ;
 			INTO ARRAY ta_NombresObjsOle
+
+		FOR I = 1 TO _TALLY
+			ta_NombresObjsOle(I)	= ALLTRIM( ta_NombresObjsOle(I) )
+		ENDFOR
+
+		RETURN
 	ENDPROC
 
 
@@ -8505,6 +9405,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo
+
 		EXTERNAL ARRAY taPropsAndComments
 
 		TRY
@@ -8523,10 +9424,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				lnPos			= AT(' ', laLines(I))	&& Un espacio separa la propiedad de su comentario (si tiene)
 
 				IF lnPos = 0
-					taPropsAndComments(I,1)	= laLines(I)
+					taPropsAndComments(I,1)	= LOWER( laLines(I) )
 					taPropsAndComments(I,2)	= ''
 				ELSE
-					taPropsAndComments(I,1)	= LEFT( laLines(I), lnPos - 1 )
+					taPropsAndComments(I,1)	= LOWER( LEFT( laLines(I), lnPos - 1 ) )
 					taPropsAndComments(I,2)	= SUBSTR( laLines(I), lnPos + 1 )
 				ENDIF
 			ENDFOR
@@ -8541,6 +9442,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tcMemo, tlSort, taPropsAndComments, tnPropsAndComments_Count, tcSortedMemo ;
+				, laLines, I, lnPos, loEx
 		ENDTRY
 
 		RETURN
@@ -8564,10 +9469,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
+
 		EXTERNAL ARRAY taPropsAndValues
+
 		TRY
-			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
-			tcSortedMemo			= ''
+			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods, lcLastIncompletePropName
+			STORE '' TO tcSortedMemo, lcLastIncompletePropName
 			tnPropsAndValues_Count	= 0
 
 			IF NOT EMPTY(m.tcMemo)
@@ -8588,14 +9495,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							LOOP
 						ENDIF
 
-						X	= X + 1
-						DIMENSION taPropsAndValues(X,2)
-
 						IF C_MPROPHEADER $ laItems(I)
 							*-- Solo entrará por aquí cuando se evalúe una propiedad de PROPERTIES con un valor especial (largo)
 							lnLenAcum	= 0
 							lnPosEQ		= AT( '=', laItems(I) )
-							lcPropName	= LEFT( laItems(I), lnPosEQ - 2 )
+							lcPropName	= lcLastIncompletePropName + LEFT( laItems(I), lnPosEQ - 2 )
 							lnLenVal	= INT( VAL( SUBSTR( laItems(I), lnPosEQ + 2 + 517, 8) ) )
 							lcValue		= SUBSTR( laItems(I), lnPosEQ + 2 + 517 + 8 )
 
@@ -8615,15 +9519,37 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 							ENDIF
 
 							*-- Es un valor especial, por lo que se encapsula en un marcador especial
+							X	= X + 1
+							DIMENSION taPropsAndValues(X,2)
 							taPropsAndValues(X,1)	= lcPropName
 							taPropsAndValues(X,2)	= .normalizarValorPropiedad( lcPropName, lcValue, '' )
 
 						ELSE
 							*-- Propiedad normal
 							lnPosEQ					= AT( '=', laItems(I) )
-							taPropsAndValues(X,1)	= LEFT( laItems(I), lnPosEQ - 2 )
-							taPropsAndValues(X,2)	=  .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
+
+							IF lnPosEQ = 0 THEN
+								*-- AUTOFIX DE PROPIEDAD PARTIDA:
+								*-- Esto solo puede ocurrir cuando en el memo de Propiedades hay alguna propiedad
+								*-- partida debido a una edición manual con un Enter erróneo, algo como esto:
+								* comm
+								* AND2.Caption = "Command2"
+								*
+								*-- En el caso anterior, las 2 líneas son realmente una:
+								* command2.Caption = "Command2"
+								*
+								*-- Solución: Guardar esta parte del nombre y agregarlo a la próxima propiedad.
+								lcLastIncompletePropName	= laItems(I)
+								LOOP
+							ENDIF
+
+							X	= X + 1
+							DIMENSION taPropsAndValues(X,2)
+							taPropsAndValues(X,1)	= lcLastIncompletePropName + LEFT( laItems(I), lnPosEQ - 2 )
+							taPropsAndValues(X,2)	= .normalizarValorPropiedad( taPropsAndValues(X,1), LTRIM( SUBSTR( laItems(I), lnPosEQ + 2 ) ), '' )
 						ENDIF
+
+						lcLastIncompletePropName	= ''
 					ENDFOR
 
 
@@ -8652,6 +9578,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo ;
+				, laItems, I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods
 		ENDTRY
 
 		RETURN
@@ -8670,8 +9600,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo
+
 		EXTERNAL ARRAY taProtected
 
+		LOCAL I
 		tcSortedMemo		= ''
 		tnProtected_Count	= ALINES(taProtected, tcMemo, 1+4)
 
@@ -8684,8 +9616,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			FOR I = tnProtected_Count TO 1 STEP -1
 				*-- El ASCAN es para evitar valores repetidos, que se eliminarán. v1.19.29
-				IF ASCAN( taProtected, taProtected(I), 1, -1, 0,1+2+4 ) = I
-					tcSortedMemo	= tcSortedMemo + LOWER(taProtected(I)) + CR_LF
+				taProtected(I)	= taProtected(I)
+				IF ASCAN( taProtected, taProtected(I), 1, -1, 0, 1+2+4 ) = I
+					tcSortedMemo	= tcSortedMemo + taProtected(I) + CR_LF
 				ELSE
 					ADEL( taProtected, I )
 					tnProtected_Count	= tnProtected_Count - 1
@@ -8695,6 +9628,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			DIMENSION taProtected(tnProtected_Count)
 		ENDIF
 
+		RELEASE tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo, I
 		RETURN
 	ENDPROC
 
@@ -8760,6 +9694,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tcMethod, tcIndentation, tlKeepProcHeader ;
+				, I, X, llProcedure, lnInicio, lnFin, laLineas, lnOffset
 		ENDTRY
 
 		RETURN lcMethod
@@ -8767,7 +9705,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE MemoInOneLine( tcMethod )
+	PROCEDURE MemoInOneLine
+		LPARAMETERS tcMethod
+
 		TRY
 			LOCAL lcLine, I
 			lcLine	= ''
@@ -8786,6 +9726,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tcMethod, I
 		ENDTRY
 
 		RETURN lcLine
@@ -8795,6 +9738,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE set_MultilineMemoWithAddObjectProperties
 		LPARAMETERS taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine
+
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
@@ -8821,6 +9765,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine ;
+				, I, lcComentarios, laLines, lcFinDeLinea
 		ENDTRY
 
 		RETURN lcLine
@@ -8833,6 +9781,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			, taProtected, tnProtected_Count, toFoxBin2Prg
 
 		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -8884,6 +9833,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+				, taProtected, tnProtected_Count, toFoxBin2Prg ;
+				, I, I2, laMethods, lnDeleted, lcMethodName, lnMethodPos, lcMethodType, loEx
 		ENDTRY
 
 		RETURN
@@ -8898,6 +9852,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
 		EXTERNAL ARRAY taMethods, taCode, taPropsAndComments, taProtected
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -9031,6 +9986,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
 						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDPROC '
 							*-- Es el final de estructura ENDPROC
+							IF NOT llProcOpen
+								*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
+								LOOP
+							ENDIF
 						ELSE
 							*-- Es otra cosa (variable, etc)
 							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
@@ -9044,6 +10003,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
 						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDFUNC '
 							*-- Es el final de estructura ENDPROC
+							IF NOT llProcOpen
+								*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
+								LOOP
+							ENDIF
 							laLine(I)	= STRTRAN( laLine(I), 'ENDFUNC', 'ENDPROC' )
 						ELSE
 							*-- Es otra cosa (variable, etc)
@@ -9101,6 +10064,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+				, taProtected, tnProtected_Count, toFoxBin2Prg ;
+				, lnLineCount, laLine, I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
+				, laLineasExclusion, lnBloquesExclusion ;
+				, loEx
 		ENDTRY
 
 		RETURN
@@ -9109,7 +10079,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ADD_OBJECTS_WithProperties
-		LPARAMETERS toRegObj
+		LPARAMETERS toRegObj, tcCodigo
 
 		#IF .F.
 			LOCAL toRegObj AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
@@ -9124,49 +10094,46 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			IF '.' $ toRegObj.PARENT
 				*-- Este caso: clase.objeto.objeto ==> se quita clase
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>	ADD OBJECT '<<SUBSTR(toRegObj.Parent, AT('.', toRegObj.Parent)+1)>>.<<toRegObj.objName>>' AS <<LOWER(ALLTRIM(toRegObj.Class))>> <<>>
 				ENDTEXT
 			ELSE
 				*-- Este caso: objeto
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>	ADD OBJECT '<<toRegObj.objName>>' AS <<LOWER(ALLTRIM(toRegObj.Class))>> <<>>
 				ENDTEXT
 			ENDIF
 
 			IF NOT EMPTY(lcMemo)
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 					<<C_WITH>> ;
 					<<lcMemo>>
 				ENDTEXT
 			ENDIF
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TAB + C_TAB>><<C_END_OBJECT_I>> <<>>
 			ENDTEXT
 
 			IF NOT EMPTY(toRegObj.CLASSLOC)
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 					ClassLib="<<toRegObj.ClassLoc>>" <<>>
 				ENDTEXT
 			ENDIF
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
 				BaseClass="<<toRegObj.Baseclass>>" <<>>
 			ENDTEXT
 
 			*-- Agrego metainformación para objetos OLE
 			IF toRegObj.BASECLASS == 'olecontrol'
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-					<<>> Nombre="<<IIF(EMPTY(toRegObj.Parent),'',toRegObj.Parent+'.') + toRegObj.objName>>"
-					Parent="<<toRegObj.Parent>>"
-					ObjName="<<toRegObj.objname>>"
-					OLEObject="<<STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2)>>"
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+					OLEObject="<<LOWER( STREXTRACT(toRegObj.ole2, 'OLEObject = ', CHR(13)+CHR(10), 1, 1+2) )>>"
 					Value="<<STRCONV(toRegObj.ole,13)>>" <<>>
 				ENDTEXT
 			ENDIF
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<<C_END_OBJECT_F>>
 				<<>>
 			ENDTEXT
@@ -9177,6 +10144,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE toRegObj, lcMemo, laPropsAndValues, lnPropsAndValues_Count
 		ENDTRY
 
 		RETURN
@@ -9185,7 +10155,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ALL_OBJECT_METHODS
-		LPARAMETERS tcMethods, taMethods, taCode, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count, toFoxBin2Prg
+		LPARAMETERS tcMethods, taMethods, taCode, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
+			, taProtected, tnProtected_Count, toFoxBin2Prg, tcCodigo
 
 		*-- Finalmente, todos los métodos los ordeno y escribo juntos
 		LOCAL laMethods(1), laCode(1), lnMethodCount, I, lcMethods
@@ -9212,9 +10183,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				ENDFOR
 			ENDWITH && THIS
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + lcMethods
+			tcCodigo	= tcCodigo + lcMethods
 		ENDIF
 
+		RELEASE tcMethods, taMethods, taCode, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count, toFoxBin2Prg ;
+			, laMethods, laCode, lnMethodCount, I, lcMethods
 		RETURN
 	ENDPROC
 
@@ -9222,13 +10195,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_CLASS_PROPERTIES
 		LPARAMETERS toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
-			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count
+			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count, tcCodigo
 
 		EXTERNAL ARRAY taPropsAndValues, taPropsAndComments
 
 		TRY
 			LOCAL lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, I ;
-				, lcPropName, lnProtectedItem, lcComentarios
+				, lcPropName, lnProtectedItem, lcComentarios ;
+				, loEx as Exception
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- DEFINIR PROPIEDADES ( HIDDEN, PROTECTED, *DEFINED_PAM )
@@ -9240,76 +10214,32 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @tnProtected_Count, '' )
 
 				IF tnPropsAndValues_Count > 0 THEN
-					*-- Recorro las propiedades (campo Properties) para ir conformando
-					*-- las definiciones HIDDEN y PROTECTED
-					FOR I = 1 TO tnPropsAndValues_Count
-						IF EMPTY(taPropsAndValues(I,1))
-							LOOP
-						ENDIF
-
-						IF tnProtected_Count = 0
-							lnProtectedItem	= 0
-						ELSE
-							lnProtectedItem	= ASCAN(taProtected, taPropsAndValues(I,1), 1, 0, 0, 1)
-						ENDIF
-
-						DO CASE
-						CASE lnProtectedItem = 0
-							*-- Propiedad común
-
-						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) )
-							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + taPropsAndValues(I,1)
-
-						CASE LOWER( taProtected(lnProtectedItem) ) == LOWER( taPropsAndValues(I,1) + '^' )
-							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + taPropsAndValues(I,1)
-
-						ENDCASE
-					ENDFOR
-
-					*-- Segunda barrida para las propiedades Hidden/Protected que no estén definidas en Properties
-					FOR I = 1 TO tnProtected_Count
-						*-- La propiedad evaluada no debe ser vacía, debe estar en la lista de PROPERTIES y no debe ser un *Método
-						IF EMPTY(taProtected(I,1)) ;
-								OR ASCAN(taPropsAndValues, CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0 ;
-								OR ASCAN(taPropsAndComments, '*' + CHRTRAN( taProtected(I), '^', '' ), 1, 0, 1, 1) > 0
-							LOOP
-						ENDIF
-
-						IF RIGHT( taProtected(I), 1 ) == '^'
-							*-- Propiedad oculta
-							lcHiddenProp	= lcHiddenProp + ',' + CHRTRAN( taProtected(I), '^', '' )
-
-						ELSE
-							*-- Propiedad protegida
-							lcProtectedProp	= lcProtectedProp + ',' + taProtected(I)
-
-						ENDIF
-					ENDFOR
-
-					.write_DEFINED_PAM( @taPropsAndComments, tnPropsAndComments_Count )
-
-					.write_HIDDEN_Properties( @lcHiddenProp )
-
-					.write_PROTECTED_Properties( @lcProtectedProp )
+					.Classify_PAM_Hidden_Protected( @tnPropsAndValues_Count, @taPropsAndValues, @tnProtected_Count, @taProtected ;
+						, @tnPropsAndComments_Count, @taPropsAndComments, @lcHiddenProp, @lcProtectedProp )
+					.write_DEFINED_PAM( @taPropsAndComments, tnPropsAndComments_Count, @tcCodigo )
+					.write_HIDDEN_Properties( @lcHiddenProp, @tcCodigo )
+					.write_PROTECTED_Properties( @lcProtectedProp, @tcCodigo )
 
 					*-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
-					FOR I = 1 TO ALEN(taPropsAndValues, 1)
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
-						ENDTEXT
+					FOR I = 1 TO tnPropsAndValues_Count
+						*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	<<taPropsAndValues(I,1)>> = <<taPropsAndValues(I,2)>>
+						*ENDTEXT
+						tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + taPropsAndValues(I,1) + ' = ' + taPropsAndValues(I,2)
 
-						lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+8)
+						IF tnPropsAndComments_Count > 0 THEN
+							lnComment	= ASCAN( taPropsAndComments, taPropsAndValues(I,1), 1, 0, 1, 1+2+4+8)
 
-						IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
-							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-								<<>>		&& <<taPropsAndComments(lnComment,2)>>
-							ENDTEXT
+							IF lnComment > 0 AND NOT EMPTY(taPropsAndComments(lnComment,2))
+								*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+								*	<<>>		&& <<taPropsAndComments(lnComment,2)>>
+								*ENDTEXT
+								tcCodigo = tcCodigo + CHR(9) + CHR(9) + '&' + '& ' + taPropsAndComments(lnComment,2)
+							ENDIF
 						ENDIF
 					ENDFOR
 
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
 					ENDTEXT
 				ENDIF
@@ -9321,6 +10251,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			THROW
+
+		FINALLY
+			RELEASE toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
+				, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count ;
+				, lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd, I ;
+				, lcPropName, lnProtectedItem, lcComentarios, loEx
 		ENDTRY
 
 		RETURN
@@ -9330,7 +10266,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_DEFINED_PAM
 		*-- Escribo propiedades DEFINED (Reserved3) en este formato:
-		LPARAMETERS taPropsAndComments, tnPropsAndComments_Count
+		LPARAMETERS taPropsAndComments, tnPropsAndComments_Count, tcCodigo
 
 		*<DefinedPropArrayMethod>
 		*m: *metodovacio_con_comentarios		&& Este método no tiene código, pero tiene comentarios. A ver que pasa!
@@ -9346,7 +10282,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL I, lcPropsMethodsDefd, lcType
 			lcPropsMethodsDefd	= ''
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	<<C_DEFINED_PAM_I>>
 			ENDTEXT
 
@@ -9361,49 +10297,54 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 					, 'p' )
 
 				IF lcType == 'p' THEN
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
-					ENDTEXT
+					*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*	<<>>		*<<lcType>>: <<taPropsAndComments(I,1)>>
+					*ENDTEXT
+					tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + CHR(9) + '*' + lcType + ': ' + taPropsAndComments(I,1)
 				ELSE
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>		*<<lcType>>: <<SUBSTR( taPropsAndComments(I,1), 2)>>
-					ENDTEXT
+					*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					*	<<>>		*<<lcType>>: <<SUBSTR( taPropsAndComments(I,1), 2)>>
+					*ENDTEXT
+					tcCodigo = tcCodigo + CHR(13) + CHR(10) + CHR(9) + CHR(9) + '*' + lcType + ': ' + SUBSTR( taPropsAndComments(I,1), 2)
 				ENDIF
 
 				IF NOT EMPTY(taPropsAndComments(I,2))
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<>>		<<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
-					ENDTEXT
+					*TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+					*	<<>>		<<'&'>><<'&'>> <<taPropsAndComments(I,2)>>
+					*ENDTEXT
+					tcCodigo = tcCodigo + CHR(9) + CHR(9) + '&' + '& ' + taPropsAndComments(I,2)
 				ENDIF
 			ENDFOR
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	<<C_DEFINED_PAM_F>>
 			ENDTEXT
 
-			C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+			tcCodigo	= tcCodigo + CR_LF
 
+			RELEASE I, lcPropsMethodsDefd, lcType
 		ENDIF
 
+		RELEASE taPropsAndComments, tnPropsAndComments_Count
 		RETURN
 	ENDPROC
 
 
 	*******************************************************************************************************************
 	PROCEDURE write_DEFINE_CLASS
-		LPARAMETERS ta_NombresObjsOle, toRegClass
+		LPARAMETERS ta_NombresObjsOle, toRegClass, tcCodigo
 
 		LOCAL lcOF_Classlib, llOleObject
 		lcOF_Classlib	= ''
-		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+8) > 0 )
+		llOleObject		= ( ASCAN( ta_NombresObjsOle, toRegClass.OBJNAME, 1, 0, 1, 1+2+4+8) > 0 )
 
 		IF NOT EMPTY(toRegClass.CLASSLOC)
 			lcOF_Classlib	= 'OF "' + LOWER(ALLTRIM(toRegClass.CLASSLOC)) + '" '
 		ENDIF
 
 		*-- DEFINICIÓN DE LA CLASE ( DEFINE CLASS 'className' AS 'classType' [OF 'classLib'] [OLEPUBLIC] )
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-			<<'DEFINE CLASS'>> <<LOWER(ALLTRIM(toRegClass.ObjName))>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<'DEFINE CLASS'>> <<ALLTRIM(toRegClass.ObjName)>> AS <<LOWER(ALLTRIM(toRegClass.Class))>> <<lcOF_Classlib + IIF(llOleObject, 'OLEPUBLIC', '')>>
 		ENDTEXT
 
 		RETURN
@@ -9412,18 +10353,18 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_DEFINE_CLASS_COMMENTS
-		LPARAMETERS toRegClass
+		LPARAMETERS toRegClass, tcCodigo
 		*-- Comentario de la clase
 		IF NOT EMPTY(toRegClass.RESERVED7) THEN
 			*-- Si es multilínea, debe ir en un tag <ClassComments> aparte
 			IF OCCURS( CHR(13), toRegClass.RESERVED7 ) > 0 THEN
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>	<<C_CLASSCOMMENTS_I>>
 					<<THIS.IndentarMemo( toRegClass.Reserved7, C_TAB + C_TAB + '*' )>>
 					<<>>	<<C_CLASSCOMMENTS_F>>
 				ENDTEXT
 			ELSE	&& Comentario in-line
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+				TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 					<<>>		<<'&'+'&'>> <<toRegClass.Reserved7>>
 				ENDTEXT
 			ENDIF
@@ -9435,9 +10376,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_ENDDEFINE_SiCorresponde
-		LPARAMETERS tnLastClass
+		LPARAMETERS tnLastClass, tcCodigo
 		IF tnLastClass = 1
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<'ENDDEFINE'>>
 				<<>>
 			ENDTEXT
@@ -9448,11 +10389,33 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
+	PROCEDURE write_EXTERNAL_CLASS_HEADER
+		LPARAMETERS toRegClass, toFoxBin2Prg, tcCodigo
+		*-- < EXTERNAL_CLASS Name = "class-name" Baseclass="base-class" />
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		IF EMPTY(tcCodigo) THEN
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*-- EXTERNAL_CLASS identify external member Class names / EXTERNAL_CLASS identifica los nombres de las Clases externas
+			ENDTEXT
+		ENDIF
+
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			<<C_EXTERNAL_CLASS_I>> Name="<<toRegClass.objname>>" Baseclass="<<toRegClass.Baseclass>>" <<C_EXTERNAL_CLASS_F>>
+		ENDTEXT
+
+		RETURN
+	ENDPROC
+
+
+	*******************************************************************************************************************
 	PROCEDURE write_INCLUDE
-		LPARAMETERS toReg
+		LPARAMETERS toReg, tcCodigo
 		*-- #INCLUDE
 		IF NOT EMPTY(toReg.RESERVED8) THEN
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	#INCLUDE "<<toReg.Reserved8>>"
 			ENDTEXT
 		ENDIF
@@ -9463,14 +10426,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_CLASSMETADATA
-		LPARAMETERS toRegClass
+		LPARAMETERS toRegClass, tcCodigo
 
 		*-- Agrego Metadatos de la clase (Baseclass, Timestamp, Scale, Uniqueid)
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 			<<>>
 		ENDTEXT
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<>>	<<C_CLASSDATA_I>>
 			Baseclass="<<toRegClass.Baseclass>>"
 			Timestamp="<<ALLTRIM(THIS.getTimeStamp(toRegClass.Timestamp))>>"
@@ -9479,7 +10442,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDTEXT
 
 		IF NOT EMPTY(toRegClass.OLE2)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
 				<<>> Nombre="<<IIF(EMPTY(toRegClass.Parent),'',toRegClass.Parent+'.') + toRegClass.objName>>"
 				Parent="<<toRegClass.Parent>>"
 				ObjName="<<toRegClass.objname>>"
@@ -9489,22 +10452,22 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDIF
 
 		IF NOT EMPTY(toRegClass.RESERVED5)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 				ProjectClassIcon="<<toRegClass.Reserved5>>"
 			ENDTEXT
 		ENDIF
 
 		IF NOT EMPTY(toRegClass.RESERVED4)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 				ClassIcon="<<toRegClass.Reserved4>>"
 			ENDTEXT
 		ENDIF
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<C_CLASSDATA_F>>
 		ENDTEXT
 
-		C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+		tcCodigo	= tcCodigo + CR_LF
 
 		RETURN
 	ENDPROC
@@ -9512,11 +10475,11 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE write_OBJECTMETADATA
-		LPARAMETERS toRegObj
+		LPARAMETERS toRegObj, tcCodigo
 		LOCAL lcNombre
 
 		*-- Agrego Metadatos de los objetos (Timestamp, UniqueID)
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 			<<>>
 		ENDTEXT
 
@@ -9528,14 +10491,14 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			lcNombre	= toRegObj.OBJNAME
 		ENDIF
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
 			<<>>	<<C_OBJECTDATA_I>>
 			ObjPath="<<lcNombre>>"
 			UniqueID="<<toRegObj.Uniqueid>>"
 			Timestamp="<<ALLTRIM(THIS.getTimeStamp(toRegObj.Timestamp))>>"
 		ENDTEXT
 
-		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
+		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4+8
 			<<C_OBJECTDATA_F>>
 		ENDTEXT
 
@@ -9546,10 +10509,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_HIDDEN_Properties
 		*-- Escribo la definición HIDDEN de propiedades
-		LPARAMETERS tcHiddenProp
+		LPARAMETERS tcHiddenProp, tcCodigo
 
 		IF NOT EMPTY(tcHiddenProp)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	HIDDEN <<SUBSTR(tcHiddenProp,2)>>
 			ENDTEXT
 		ENDIF
@@ -9561,10 +10524,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	*******************************************************************************************************************
 	PROCEDURE write_PROTECTED_Properties
 		*-- Escribo la definición PROTECTED de propiedades
-		LPARAMETERS tcProtectedProp
+		LPARAMETERS tcProtectedProp, tcCodigo
 
 		IF NOT EMPTY(tcProtectedProp)
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	PROTECTED <<SUBSTR(tcProtectedProp,2)>>
 			ENDTEXT
 		ENDIF
@@ -9914,64 +10877,113 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LPARAMETERS toFoxBin2Prg
 
-		LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
+		LOCAL laOLE(1)
+		*!*			LOCAL lnOLECount, lcOLEChecksum, llOleExistente, loReg
+
+		*!*			#IF .F.
+		*!*				LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		*!*			#ENDIF
+
+		*!*			TRY
+		*!*				SELECT TABLABIN
+		*!*				SET ORDER TO PARENT_OBJ
+		*!*				lnOLECount	= 0
+
+		*!*				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
+		*!*					loReg	= NULL
+		*!*					SCATTER MEMO NAME loReg
+
+		*!*					IF toFoxBin2Prg.l_NoTimestamps
+		*!*						loReg.TIMESTAMP	= 0
+		*!*					ENDIF
+		*!*					IF toFoxBin2Prg.l_ClearUniqueID
+		*!*						loReg.UNIQUEID	= ''
+		*!*					ENDIF
+
+		*!*					lcOLEChecksum	= SYS(2007, loReg.OLE, 0, 1)
+		*!*					llOleExistente	= .F.
+
+		*!*					IF lnOLECount > 0 AND ASCAN(laOLE, lcOLEChecksum, 1, 0, 0, 0) > 0
+		*!*						llOleExistente	= .T.
+		*!*					ENDIF
+
+		*!*					lnOLECount	= lnOLECount + 1
+		*!*					DIMENSION laOLE( lnOLECount )
+		*!*					laOLE( lnOLECount )	= lcOLEChecksum
+
+		*!*					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+		*!*						<<>>
+		*!*					ENDTEXT
+
+		*!*				ENDSCAN
+
+		*-- LO QUE SIGUE LO COMENTÉ PORQUE POR CADA OBJETO OLE SE AGREGABA UNA LÍNEA VACÍA QUE QUEDA MUY MAL Y ES INNECESARIA.
+		*-- COMO CONSECUENCIA, LOS FORMS O CLASES CON OBJETOS OLE DARÁN DIFERENCIA POR ÚNICA VEZ EN LA CABECERA. - fdbozzo. 29/11/2014 (v1.19.37)
+		*
+		*SELECT COUNT(*) FROM TABLABIN WHERE TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS == 'olecontrol' INTO ARRAY laOLE
+
+		*IF laOLE(1) > 0 THEN
+		*	*-- Lo del <<>> para crear una línea vacía es solamente por compatibilidad con lo antiguo,
+		*	*-- donde se creaba esta línea cuando el form o clase tenía al menos un objeto OLE.
+		*	TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+		*		<<>>
+		*		*
+		*	ENDTEXT
+		*ELSE
+
+		TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*
+		ENDTEXT
+		*ENDIF
+
+		*!*			CATCH TO loEx
+		*!*				IF THIS.l_Debug AND _VFP.STARTMODE = 0
+		*!*					SET STEP ON
+		*!*				ENDIF
+
+		*!*				THROW
+
+		*!*			FINALLY
+		*!*				loReg	= NULL
+		*!*				RELEASE loReg
+
+		*!*			ENDTRY
+
+		*!*			RETURN
+	ENDPROC
+
+
+
+	PROCEDURE write_OutputFile
+		LPARAMETERS tcCodigo, tcOutputFile, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		TRY
-			SELECT TABLABIN
-			SET ORDER TO PARENT_OBJ
-			lnOLECount	= 0
+		LOCAL llFileExists
 
-			SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
-				loReg	= NULL
-				SCATTER MEMO NAME loReg
+		llFileExists	= FILE(tcOutputFile)
 
-				IF toFoxBin2Prg.l_NoTimestamps
-					loReg.TIMESTAMP	= 0
-				ENDIF
-				IF toFoxBin2Prg.l_ClearUniqueID
-					loReg.UNIQUEID	= ''
-				ENDIF
+		IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
+			*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+			THIS.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 
-				lcOLEChecksum	= SYS(2007, loReg.OLE, 0, 1)
-				llOleExistente	= .F.
-
-				IF lnOLECount > 0 AND ASCAN(laOLE, lcOLEChecksum, 1, 0, 0, 0) > 0
-					llOleExistente	= .T.
-				ENDIF
-
-				lnOLECount	= lnOLECount + 1
-				DIMENSION laOLE( lnOLECount )
-				laOLE( lnOLECount )	= lcOLEChecksum
-
-				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-				ENDTEXT
-
-			ENDSCAN
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				*
-			ENDTEXT
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
+		ELSE
+			IF llFileExists THEN
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '', tcOutputFile )
+				toFoxBin2Prg.ChangeFileAttribute( tcOutputFile, '-R' )
 			ENDIF
 
-			THROW
+			IF STRTOFILE( tcCodigo, tcOutputFile ) = 0
+				*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+				ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+			ENDIF
+		ENDIF
 
-		FINALLY
-			loReg	= NULL
-			RELEASE loReg
-
-		ENDTRY
-
-		RETURN
+		toFoxBin2Prg.normalizarCapitalizacionArchivos( .F., tcOutputFile )
 	ENDPROC
+
 
 
 	*******************************************************************************************************************
@@ -10066,21 +11078,22 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
-				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
+				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
-				, lnMethodCount
-			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs
+				, lnMethodCount, lnClassCount, lnStepCount, lnStep
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
+				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				lnStepCount	= 7
 				USE IN (SELECT("_TABLAORIG"))
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 				SET ORDER TO 0 IN TABLABIN
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 				.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
@@ -10105,13 +11118,22 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ENDTEXT
 				ENDIF
 
+				COUNT ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class" TO lnClassTotal
 
-				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND TABLABIN.RESERVED1=="Class"
+				SCAN ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class"
 					STORE 0 TO lnMethodCount
-					STORE '' TO laMethods, laCode
+					STORE '' TO laMethods, laCode, lcCodigo
+					lnClassCount	= lnClassCount + 1
+					DIMENSION laClasses(lnClassCount,2)
 
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
+
+					*-- Normalización de capitalización y de datos según parametrización
+					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
+					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
+					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
+					loRegClass.OBJNAME		= LOWER( loRegClass.OBJNAME )
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
@@ -10122,28 +11144,40 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						loRegClass.UNIQUEID	= ALLTRIM(loRegClass.UNIQUEID)
 					ENDIF
 
-					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
+					lcObjName	= ALLTRIM( loRegClass.OBJNAME )
+					laClasses(lnClassCount,1)	= LOWER( lcObjName )
 
-					.write_ENDDEFINE_SiCorresponde( lnLastClass )
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 
-					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
+					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
-					.write_DEFINE_CLASS_COMMENTS( @loRegClass )
+					.write_DEFINE_CLASS_COMMENTS( @loRegClass, @lcCodigo )
 
-					.write_CLASSMETADATA( @loRegClass )
+					.write_CLASSMETADATA( @loRegClass, @lcCodigo )
+
+					IF toFoxBin2Prg.l_UseClassPerFile
+						.write_EXTERNAL_CLASS_HEADER( @loRegClass, @toFoxBin2Prg, @lcExternalHeader )
+					ENDIF
 
 					*-------------------------------------------------------------------------------
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+
 						laObjs(lnObjCount,1)	= loRegObj
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Alphabetic order
@@ -10164,28 +11198,37 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ASORT(laObjs, 2, -1, 0, 0)	&& Orden por ZOrder
 
 					IF lnObjCount > 0
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
+						lcCodigo	= lcCodigo + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
 
 						FOR I = 1 TO lnObjCount
-							.write_OBJECTMETADATA( laObjs(I,1) )
+							.write_OBJECTMETADATA( laObjs(I,1), @lcCodigo )
 						ENDFOR
 
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+						lcCodigo	= lcCodigo + CR_LF
 					ENDIF
 
-					.write_INCLUDE( @loRegClass )
+					.write_INCLUDE( @loRegClass, @lcCodigo )
+
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
-						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count )
+						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo )
 
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
 
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					FOR I = 1 TO lnObjCount
-						.write_ADD_OBJECTS_WithProperties( laObjs(I,1) )
+						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo )
 					ENDFOR
 
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					DIMENSION laMethods(1,3), laCode(1)
 					STORE '' TO laMethods, laCode
 					lnMethodCount	= 0
@@ -10199,15 +11242,23 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					lcMethods		= ''
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 					SCAN REST ;
-							FOR TABLABIN.PLATFORM = "WINDOWS" AND NOT TABLABIN.RESERVED1=="Class" ;
-							WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND NOT PROPER( TABLABIN.RESERVED1 ) == "Class" ;
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -10222,29 +11273,49 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 					ENDSCAN
 
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
-						, lnProtected_Count, @toFoxBin2Prg )
+						, lnProtected_Count, @toFoxBin2Prg, @lcCodigo )
 
 					GOTO RECORD (lnRecno)
+					.write_ENDDEFINE_SiCorresponde( lnLastClass, @lcCodigo )
+					laClasses(lnClassCount,2)	= lcCodigo
 				ENDSCAN
 
-				.write_ENDDEFINE_SiCorresponde( lnLastClass )
+				IF toFoxBin2Prg.l_UseClassPerFile
+					lcExternalHeader	= lcExternalHeader + CR_LF
+				ENDIF
 
 				*-- Genero el VC2
+				lnStep			= lnStep + 1
+				.AvanceDelProceso( 'Writing VC2...', lnStep, lnClassTotal*lnStepCount, 1 )
+
+				lcOutputFile	= .c_OutputFile
+				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
+
 				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
+					FOR I = 1 TO lnClassCount
+						lcCodigo	= lcCodigo + laClasses(I,2)
+					ENDFOR
+					toModulo	= lcCodigo
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					IF toFoxBin2Prg.l_UseClassPerFile
+						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+
+						FOR I = 1 TO lnClassCount
+							lcOutputFile	= FORCEPATH( JUSTSTEM( .c_OutputFile ), JUSTPATH( .c_OutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
+							lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + laClasses(I,2)
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						ENDFOR
+					ELSE
+						FOR I = 1 TO lnClassCount
+							lcCodigo	= lcCodigo + laClasses(I,2)
+						ENDFOR
+
+						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+					ENDIF
 				ENDIF
 			ENDWITH && THIS
 
@@ -10259,9 +11330,11 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loRegClass, loRegObj
-			RELEASE lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
 				, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle ;
-				, laObjs, I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
+				, laObjs, I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
+				, lcCodigo, laClasses, lnClassCount, lcOutputFile
 
 		ENDTRY
 
@@ -10295,10 +11368,12 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
-				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
+				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
-				, lnMethodCount
-			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs
+				, lnMethodCount, lnClassCount, lnStepCount, lnStep
+			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
+				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
 
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -10308,8 +11383,6 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
 				SET ORDER TO 0 IN TABLABIN
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 				.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
@@ -10345,15 +11418,27 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 
+				COUNT ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
+					AND ( EMPTY( TABLABIN.PARENT ) ;
+					AND INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment', 'form', 'formset' ) ) TO lnClassTotal
+
 				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" ;
-						AND (EMPTY(TABLABIN.PARENT) ;
-						AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) )
+						AND ( EMPTY( TABLABIN.PARENT ) ;
+						AND INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment', 'form', 'formset' ) )
 
 					STORE 0 TO lnMethodCount
-					STORE '' TO laMethods, laCode
+					STORE '' TO laMethods, laCode, lcCodigo
+					lnClassCount	= lnClassCount + 1
+					DIMENSION laClasses(lnClassCount,2)
 
 					loRegClass	= NULL
 					SCATTER MEMO NAME loRegClass
+
+					*-- Normalización de capitalización y de datos según parametrización
+					loRegClass.BASECLASS	= LOWER( loRegClass.BASECLASS )
+					loRegClass.CLASSLOC		= LOWER( loRegClass.CLASSLOC )
+					loRegClass.CLASS		= LOWER( loRegClass.CLASS )
+					loRegClass.OBJNAME		= LOWER( loRegClass.OBJNAME )
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loRegClass.TIMESTAMP	= 0
@@ -10365,27 +11450,39 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ENDIF
 
 					lcObjName	= ALLTRIM(loRegClass.OBJNAME)
+					laClasses(lnClassCount,1)	= LOWER( lcObjName )
 
-					.write_ENDDEFINE_SiCorresponde( lnLastClass )
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 
-					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass )
+					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
-					.write_DEFINE_CLASS_COMMENTS( @loRegClass )
+					.write_DEFINE_CLASS_COMMENTS( @loRegClass, @lcCodigo )
 
-					.write_CLASSMETADATA( @loRegClass )
+					.write_CLASSMETADATA( @loRegClass, @lcCodigo )
+
+					IF toFoxBin2Prg.l_UseClassPerFile
+						.write_EXTERNAL_CLASS_HEADER( @loRegClass, @toFoxBin2Prg, @lcExternalHeader )
+					ENDIF
 
 					*-------------------------------------------------------------------------------
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA EXPORTAR SU DEFINICIÓN
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
 						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+
 						laObjs(lnObjCount,1)	= loRegObj
 						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount	&& Orden alfabético
@@ -10406,29 +11503,37 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ASORT(laObjs, 2, -1, 0, 0)	&& Orden por ZOrder
 
 					IF lnObjCount > 0
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
+						lcCodigo	= lcCodigo + CR_LF + '	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder '
 
 						FOR I = 1 TO lnObjCount
-							.write_OBJECTMETADATA( laObjs(I,1) )
+							.write_OBJECTMETADATA( laObjs(I,1), @lcCodigo )
 						ENDFOR
 
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF
+						lcCodigo	= lcCodigo + CR_LF
 					ENDIF
 
-					.write_INCLUDE( @loRegClass )
+					.write_INCLUDE( @loRegClass, @lcCodigo )
+
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
-						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count )
-
+						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo )
 
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
 
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					FOR I = 1 TO lnObjCount
-						.write_ADD_OBJECTS_WithProperties( laObjs(I,1) )
+						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo )
 					ENDFOR
 
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					DIMENSION laMethods(1,3), laCode(1)
 					STORE '' TO laMethods, laCode
 					lnMethodCount	= 0
@@ -10442,17 +11547,25 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					lcMethods		= ''
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					lnRecno	= RECNO()
-					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 					SCAN REST ;
-							FOR TABLABIN.PLATFORM = "WINDOWS" ;
+							FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
 							AND NOT (EMPTY(TABLABIN.PARENT) ;
-							AND (TABLABIN.BASECLASS == 'dataenvironment' OR TABLABIN.BASECLASS == 'form' OR TABLABIN.BASECLASS == 'formset' ) ) ;
-							WHILE ALLTRIM(GETWORDNUM(TABLABIN.PARENT, 1, '.')) == lcObjName
+							AND ( INLIST( LOWER( TABLABIN.BASECLASS ), 'dataenvironment' , 'form', 'formset' ) ) ) ;
+							WHILE LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
+
+						*-- Normalización de capitalización y de datos según parametrización
+						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -10467,29 +11580,49 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 							, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
 					ENDSCAN
 
+					lnStep			= lnStep + 1
+					.AvanceDelProceso( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+
 					.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
-						, lnProtected_Count, @toFoxBin2Prg )
+						, lnProtected_Count, @toFoxBin2Prg, @lcCodigo )
 
 					GOTO RECORD (lnRecno)
+					.write_ENDDEFINE_SiCorresponde( lnLastClass, @lcCodigo )
+					laClasses(lnClassCount,2)	= lcCodigo
 				ENDSCAN
 
-				.write_ENDDEFINE_SiCorresponde( lnLastClass )
+				IF toFoxBin2Prg.l_UseClassPerFile
+					lcExternalHeader	= lcExternalHeader + CR_LF
+				ENDIF
 
 				*-- Genero el SC2
+				lnStep			= lnStep + 1
+				.AvanceDelProceso( 'Writing SC2...', lnStep, lnClassTotal*lnStepCount, 1 )
+
+				lcOutputFile	= .c_OutputFile
+				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
+
 				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
+					FOR I = 1 TO lnClassCount
+						lcCodigo	= lcCodigo + laClasses(I,2)
+					ENDFOR
+					toModulo	= lcCodigo
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					IF toFoxBin2Prg.l_UseClassPerFile
+						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+
+						FOR I = 1 TO lnClassCount
+							lcOutputFile	= FORCEPATH( JUSTSTEM( .c_OutputFile ), JUSTPATH( .c_OutputFile ) ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
+							lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + laClasses(I,2)
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						ENDFOR
+					ELSE
+						FOR I = 1 TO lnClassCount
+							lcCodigo	= lcCodigo + laClasses(I,2)
+						ENDFOR
+
+						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+					ENDIF
 				ENDIF
 			ENDWITH && THIS
 
@@ -10504,9 +11637,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loRegClass, loRegObj
-			RELEASE lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
 				, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle ;
-				, laObjs, I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count
+				, laObjs, I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
+				, lcCodigo, laClasses, lnClassCount, lcOutputFile
 
 		ENDTRY
 
@@ -10550,6 +11685,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				USE IN (SELECT("_TABLAORIG"))
 
 				loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
+				.AvanceDelProceso( 'Processing Project ' + '...', 1, 2, 1 )
 
 
 				*-- Obtengo los archivos del proyecto
@@ -10715,9 +11851,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF NOT EMPTY(loReg.COMMENTS)
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Description = '" + loReg.COMMENTS + "'"
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -10734,9 +11871,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF loReg.EXCLUDE
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Exclude = .T."
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -10753,9 +11891,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Type = 'T'"
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -10812,20 +11951,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
+				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -10848,7 +11978,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
-			RELEASE lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
 				, loProject, loServerHead, loServerData
 
 		ENDTRY
@@ -10888,6 +12019,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 			lcStrPJM		= FILETOSTR( THIS.c_InputFile )
 			loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
+			THIS.AvanceDelProceso( 'Scanning PJM...', 1, 2, 1 )
 
 
 			*-- Obtengo los archivos del proyecto
@@ -11098,9 +12230,10 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF NOT EMPTY(loReg.COMMENTS)
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Description = '" + loReg.COMMENTS + "'"
 					ENDIF
 				ENDFOR
 
@@ -11116,9 +12249,10 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF loReg.EXCLUDE
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Exclude = .T.
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Exclude = .T."
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -11135,9 +12269,10 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 				FOR EACH loReg IN loProject &&FOXOBJECT
 					IF INLIST( UPPER( JUSTEXT( loReg.NAME ) ), 'H','FPW' )
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
-						ENDTEXT
+						*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+						*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Type = 'T'
+						*ENDTEXT
+						C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Type = 'T'"
 					ENDIF
 					loReg	= NULL
 				ENDFOR
@@ -11193,20 +12328,11 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
+				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11229,7 +12355,8 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			*USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
-			RELEASE lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
 				, lcStrPJM, laLines, laProps, loProject, loServerHead, loServerData
 
 		ENDTRY
@@ -11272,6 +12399,14 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 			WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
+				THIS.AvanceDelProceso( 'Scanning FRX...', 1, 2, 1 )
+
+				*-- Verificación de REPORTE VFP 9
+				IF FCOUNT() < 75 OR EMPTY(FIELD("USER"))
+					*ERROR 'Report [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY REPORT ' + JUSTFNAME((.c_InputFile))
+					ERROR (TEXTMERGE(C_REPORT_NOT_IN_VFP9_FORMAT_LOC))
+				ENDIF
+
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -11368,20 +12503,11 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el FR2
+				.AvanceDelProceso( 'Writing FR2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11397,7 +12523,8 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			USE IN (SELECT("TABLABIN"))
 			USE IN (SELECT("TABLABIN_0"))
 			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
-			RELEASE lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen ;
 				, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle
 
 		ENDTRY
@@ -11438,6 +12565,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			WITH THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
+				.AvanceDelProceso( 'Scanning DBF Structure...', 1, 3, 1 )
 
 				*-- Include
 				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Included) AND NOT toFoxBin2Prg.DBF_Conversion_Included == '*' ;
@@ -11464,24 +12592,51 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				*-- Header
 				loTable			= CREATEOBJECT('CL_DBF_TABLE')
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+
+				IF toFoxBin2Prg.DBF_Conversion_Support = 4
+					*-- Exportación de estructura y datos (para Diff solamente)
+					ERASE (.c_OutputFile + '.TMP' )
+					toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+
+					IF toFoxBin2Prg.n_FileHandle = -1 THEN
+						ERROR 102, (.c_OutputFile)
+					ENDIF
+
+					FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+					FCLOSE( toFoxBin2Prg.n_FileHandle )
 
 
-				*-- Genero el DB2
-				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
+					*-- Genero el DB2, renombrando el TMP
+					.AvanceDelProceso( 'Writing DB2...', 3, 3, 1 )
+					IF .l_Test
+						toModulo	= C_FB2PRG_CODE
+					ELSE
+						DO CASE
+						CASE FILE(.c_OutputFile) AND toFoxBin2Prg.FilesComparedAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
+							ERASE (.c_OutputFile + '.TMP')
+							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+							.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
+								AND NOT toFoxBin2Prg.RenameTmpFile2Tx2File( .c_OutputFile )
+							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+							ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+						ENDCASE
+					ENDIF
+
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+
+
+					*-- Genero el DB2
+					.AvanceDelProceso( 'Writing DB2...', 3, 3, 1 )
+					IF .l_Test
+						toModulo	= C_FB2PRG_CODE
+					ELSE
+						.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+					ENDIF
+
 				ENDIF
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
@@ -11526,7 +12681,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
-				IF ASCAN( laDatabases, laDatabases2(I) ) = 0
+				IF ASCAN( laDatabases, laDatabases2(I), 1, 0, 0, 1+2+4 ) = 0
 					SET DATABASE TO (laDatabases2(I))
 					CLOSE DATABASES
 					EXIT
@@ -11534,7 +12689,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 			ENDFOR
 
 			STORE NULL TO loTable, loDBFUtils
-			RELEASE lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable, loDBFUtils
 		ENDTRY
@@ -11576,6 +12732,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 				OPEN DATABASE (.c_InputFile) SHARED NOUPDATE
+				.AvanceDelProceso( 'Analyzing DBC metadata...', 1, 2, 1 )
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -11585,20 +12742,11 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el DC2
+				.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11613,7 +12761,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			CLOSE DATABASES
-
+			RELEASE toDatabase, toEx, toFoxBin2Prg ;
+				, lnCodError, laDatabases, lnDatabases_Count, lnLen
 		ENDTRY
 
 		RETURN
@@ -11651,6 +12800,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 				USE IN (SELECT("_TABLAORIG"))
+				.AvanceDelProceso( 'Analyzing MNX...', 1, 2, 1 )
 
 				*-- Verificación de menú VFP 9
 				IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
@@ -11667,20 +12817,11 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el MN2
+				.AvanceDelProceso( 'Writing MN2...', 2, 2, 1 )
 				IF .l_Test
 					toMenu	= C_FB2PRG_CODE
 				ELSE
-					lnLen = 1	&&LEN( toFoxBin2Prg.get_PROGRAM_HEADER() )
-					DO CASE
-					CASE FILE(.c_OutputFile) AND SUBSTR( FILETOSTR( .c_OutputFile ), lnLen ) == SUBSTR( C_FB2PRG_CODE, lnLen )
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						.writeLog( TEXTMERGE(C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
-							AND STRTOFILE( C_FB2PRG_CODE, .c_OutputFile ) = 0
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
 			ENDWITH && THIS
 
@@ -11694,7 +12835,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-
+			RELEASE toMenu, toEx, toFoxBin2Prg, lnCodError, lnLen
 		ENDTRY
 
 		RETURN
@@ -11762,15 +12903,16 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
-		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			*tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, ' ', CHR(9) )	&& Quito espacios y TABS
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
+		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -11841,8 +12983,11 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+		ELSE
+			tcComment	= ''
 		ENDIF
 
+		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -11869,6 +13014,8 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 		+ [<memberdata name="existeobjetoole" display="existeObjetoOLE"/>] ;
 		+ [<memberdata name="_clases" display="_Clases"/>] ;
 		+ [<memberdata name="_clases_count" display="_Clases_Count"/>] ;
+		+ [<memberdata name="_externalclasses" display="_ExternalClasses"/>] ;
+		+ [<memberdata name="_externalclasses_count" display="_ExternalClasses_Count"/>] ;
 		+ [<memberdata name="_includefile" display="_IncludeFile"/>] ;
 		+ [<memberdata name="_comment" display="_Comment"/>] ;
 		+ [<memberdata name="_ole_objs" display="_Ole_Objs"/>] ;
@@ -11878,13 +13025,14 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 		+ [</VFPData>]
 
 
-	DIMENSION _Ole_Objs[1], _Clases[1]
-	_Version			= 0
-	_SourceFile			= ''
-	_Ole_Obj_count		= 0
-	_Clases_Count		= 0
-	_includeFile		= ''
-	_Comment			= ''
+	DIMENSION _Ole_Objs[1], _Clases[1], _ExternalClasses(1)
+	_Version				= 0
+	_SourceFile				= ''
+	_ExternalClasses_Count	= 0
+	_Ole_Obj_count			= 0
+	_Clases_Count			= 0
+	_includeFile			= ''
+	_Comment				= ''
 
 
 	************************************************************************************************
@@ -11927,7 +13075,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 
 		WITH THIS AS CL_MODULO OF 'FOXBIN2PRG.PRG'
 			FOR X = 1 TO ._Ole_Obj_count
-				IF ._Ole_Objs(X)._Nombre == tcNombre
+				IF LOWER(._Ole_Objs(X)._Nombre) == LOWER(tcNombre)
 					llExiste = .T.
 					EXIT
 				ENDIF
@@ -11977,6 +13125,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [<memberdata name="_addobject_count" display="_AddObject_Count"/>] ;
 		+ [<memberdata name="_addobjects" display="_AddObjects"/>] ;
 		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
+		+ [<memberdata name="_checked" display="_Checked"/>] ;
 		+ [<memberdata name="_class" display="_Class"/>] ;
 		+ [<memberdata name="_classicon" display="_ClassIcon"/>] ;
 		+ [<memberdata name="_classloc" display="_ClassLoc"/>] ;
@@ -12029,6 +13178,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	_Nombre				= ''
 	_ObjName			= ''
 	_Parent				= ''
+	_Checked			= .F.	&& Solo para Clases Externas: Permite saber si la clase fue checkeada contra la Clase Externa.
 	_Definicion			= ''
 	_Class				= ''
 	_ClassLoc			= ''
@@ -13639,12 +14789,14 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 			LOCAL loTables AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG' ;
 				, loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG' ;
 				, loViews AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
+			LOCAL lcStoredProcedures
 			STORE NULL TO loTables, loConnections, loViews
 
-			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
-				loTables		= ._Tables
-				loConnections	= ._Connections
-				loViews			= ._Views
+			WITH THIS AS CL_DBC OF 'FOXBIN2PRG.PRG'
+				loTables			= ._Tables
+				loConnections		= ._Connections
+				loViews				= ._Views
+				lcStoredProcedures	= ._StoredProcedures
 
 				ERASE (tc_OutputFile)
 				CREATE DATABASE (tc_OutputFile)
@@ -13660,9 +14812,9 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 					SET Property = lcMemoWithProperties ;
 					WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
 
-				IF NOT EMPTY(._StoredProcedures)
+				IF NOT EMPTY(lcStoredProcedures)
 					UPDATE TABLABIN ;
-						SET CODE = THIS._StoredProcedures ;
+						SET CODE = lcStoredProcedures ;
 						WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
 				ENDIF
 
@@ -16230,7 +17382,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<C_TABLE_I>>
 				<<>>	<MemoFile><<IIF( tl_FileHasMemo, FORCEEXT(tc_InputFile, 'FPT'), '' )>></MemoFile>
 				<<>>	<CodePage><<CPDBF('TABLABIN')>></CodePage>
-				<<>>	<LastUpdate><<LUPDATE('TABLABIN')>></LastUpdate>
+				<<>>	<LastUpdate><<IIF( toFoxBin2Prg.l_ClearDBFLastUpdate, '', LUPDATE('TABLABIN') )>></LastUpdate>
 				<<>>	<Database><<tc_DBC_Name>></Database>
 				<<>>	<FileType><<TRANSFORM(tn_HexFileType, '@0')>></FileType>
 				<<>>	<FileType_Descrip><<tc_FileTypeDesc>></FileType_Descrip>
@@ -16283,14 +17435,21 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 				*** DH 06/02/2014: added _Records
 				loRecords	= THIS._Records
-				lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
-
+				*lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
+				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
+				lcText	= ''
 			ENDIF
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<C_TABLE_F>>
 				<<>>
 			ENDTEXT
+
+			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
+				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				lcText	= ''
+			ENDIF
 
 
 		CATCH TO loEx
@@ -16886,21 +18045,30 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 		* taFields						(@! IN    ) Array de información de campos
 		* tnField_Count					(v! IN    ) Cantidad de campos
 		* tc_DBF_Conversion_Condition	(v? IN    ) Condición de filtro para la conversión. Solo se exporta lo que la cumpla.
+		* toFoxBin2Prg					(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taFields, tnField_Count, tc_DBF_Conversion_Condition
+		LPARAMETERS taFields, tnField_Count, tc_DBF_Conversion_Condition, toFoxBin2Prg
 
 		EXTERNAL ARRAY taFields
 
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
 		TRY
-			LOCAL lcText, loEx AS EXCEPTION ;
+			LOCAL lcText, loEx AS EXCEPTION, I, lnReccount ;
 				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
-			lcText = ''
+			lcText		= ''
+			I			= 0
+			lnReccount	= RECCOUNT()	&& Realmente no es muy exacto, pero al menos muestra el avance.
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
 				<<>>	<<C_RECORDS_I>>
 			ENDTEXT
 
+			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			lcText	= ''
 			loRecord = CREATEOBJECT('CL_DBF_RECORD')
 
 			IF EMPTY(tc_DBF_Conversion_Condition)
@@ -16908,13 +18076,27 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			ENDIF
 
 			SCAN FOR &tc_DBF_Conversion_Condition.
-				lcText	= lcText + loRecord.toText(@taFields, tnField_Count)
+				I	= I + 1
+				lcText	= loRecord.toText(@taFields, tnField_Count)
+				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				IF MOD(I,1000) = 0 THEN
+					toFoxBin2Prg.AvanceDelProceso( 'Exporting DBF Data...', 1+(I/lnReccount), 3, 2 )
+
+					IF MOD(I,10000) = 0 THEN
+						FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
+					ENDIF
+				ENDIF
 			ENDSCAN
+
+			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>	<<C_RECORDS_F>>
 				<<>>
 			ENDTEXT
+
+			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			lcText	= ''
 
 
 		CATCH TO loEx
@@ -18911,7 +20093,8 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 
 		FINALLY
 			STORE NULL TO loReg
-			RELEASE lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, lnNegContainer, lnNegObject
+			RELEASE tcLine, taCodeLines, I, tnCodeLines, toConversor ;
+				, lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, lnNegContainer, lnNegObject
 
 		ENDTRY
 
@@ -19492,7 +20675,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 				, loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loField
 			tn_HexFileType	= 0
-			tcDBC_Name		= ''
+			STORE '' TO tcDBC_Name, lcStr
 			lnHandle		= FOPEN(tc_FileName,0)
 
 			IF lnHandle = -1
@@ -19573,6 +20756,10 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 			ENDWITH
 
 		CATCH TO loEx
+			loEx.UserValue = loEx.UserValue + 'lcStr = [' + TRANSFORM(lcStr) + '] / LenStr = ' + TRANSFORM(LEN(TRANSFORM(lcStr))) + CR_LF
+			IF loEx.ErrorNo = 11 THEN	&& Function argument value, type, or count is invalid
+				loEx.UserValue = loEx.UserValue + '> POSSIBLE CORRUPTED TABLE' + CR_LF
+			ENDIF
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -19979,18 +21166,22 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
+		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
+		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
+		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
-		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
+		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
 		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
@@ -20009,35 +21200,39 @@ DEFINE CLASS CL_CFG AS CUSTOM
 
 
 	*-- Configuration class. By default asumes master value, except when overriding one.
-	c_Foxbin2prg_FullPath	= ''
-	c_Foxbin2prg_ConfigFile	= ''
-	c_CurDir				= ''
-	l_Debug					= NULL
-	l_ShowErrors			= NULL
-	l_ShowProgress			= NULL
-	l_Recompile				= NULL
-	l_NoTimestamps			= NULL
-	l_ClearUniqueID			= NULL
-	l_OptimizeByFilestamp	= NULL
-	n_ExtraBackupLevels		= NULL
-	c_VC2					= NULL
-	c_SC2					= NULL
-	c_PJ2					= NULL
-	c_FR2					= NULL
-	c_LB2					= NULL
-	c_DB2					= NULL
-	c_DC2					= NULL
-	c_MN2					= NULL
-	PJX_Conversion_Support	= NULL
-	VCX_Conversion_Support	= NULL
-	SCX_Conversion_Support	= NULL
-	FRX_Conversion_Support	= NULL
-	LBX_Conversion_Support	= NULL
-	MNX_Conversion_Support	= NULL
-	DBF_Conversion_Support	= NULL
-	DBF_Conversion_Included	= NULL
-	DBF_Conversion_Excluded	= NULL
-	DBC_Conversion_Support	= NULL
+	c_Foxbin2prg_FullPath			= ''
+	c_Foxbin2prg_ConfigFile			= ''
+	c_CurDir						= ''
+	l_Debug							= NULL
+	l_ShowErrors					= NULL
+	l_ShowProgress					= NULL
+	l_Recompile						= NULL
+	l_NoTimestamps					= NULL
+	l_ClearUniqueID					= NULL
+	l_ClearDBFLastUpdate        	= NULL
+	l_OptimizeByFilestamp           = NULL
+	l_RedirectClassPerFileToMain	= NULL
+	l_UseClassPerFile				= NULL
+	l_ClassPerFileCheck				= NULL
+	n_ExtraBackupLevels				= NULL
+	c_VC2							= NULL
+	c_SC2							= NULL
+	c_PJ2							= NULL
+	c_FR2							= NULL
+	c_LB2							= NULL
+	c_DB2							= NULL
+	c_DC2							= NULL
+	c_MN2							= NULL
+	PJX_Conversion_Support			= NULL
+	VCX_Conversion_Support			= NULL
+	SCX_Conversion_Support			= NULL
+	FRX_Conversion_Support			= NULL
+	LBX_Conversion_Support			= NULL
+	MNX_Conversion_Support			= NULL
+	DBF_Conversion_Support			= NULL
+	DBF_Conversion_Included			= NULL
+	DBF_Conversion_Excluded			= NULL
+	DBC_Conversion_Support			= NULL
 
 
 ENDDEFINE
