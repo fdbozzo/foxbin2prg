@@ -61,7 +61,7 @@ Else
 	oVFP9.DoCmd( "SET PROCEDURE TO '" & cEXETool & "'" )
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
-	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1' )" )
+	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
 	
 	cFlagGenerateLog		= "'0'"
 	cFlagDontShowErrMsg		= "'0'"
@@ -87,7 +87,7 @@ Else
 		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
 	Else
 		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','0','0','0'," _
-			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
+			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'0','','',.F.,''," _
 			& cFlagRecompile & "," & cNoTimestamps & " )"
 	End If
 	If cFlagJustShowCall = "1" Then
@@ -113,7 +113,7 @@ Else
 	Set oVFP9 = Nothing
 End If
 
-WScript.Quit(nExitCode)
+WScript.Quit nExitCode
 
 
 Function GetBit(lngValue, BitNum)
