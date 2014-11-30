@@ -722,7 +722,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE AvanceDelProceso
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
-		*IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O" THEN
 		*-- Si o_Frm_Avance se habilitó de forma externa, l_ShowProgress podría ser .F. para controlarlo desde fuera.
 		IF VARTYPE(THIS.o_Frm_Avance) = "O" THEN
 			THIS.o_Frm_Avance.AvanceDelProceso( tcTexto, tnValor, tnTotal, tnTipo )
@@ -1868,19 +1867,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
 
-						*IF .l_ShowProgress
-						*	.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-						*ENDIF
-
 						FOR I = 1 TO lnFileCount
 							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-							*.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-							*.o_Frm_Avance.nVALUE = I
 							.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-							*IF .l_ShowProgress
-							*	.o_Frm_Avance.SHOW()
-							*ENDIF
 
 							IF FILE( lcFile )
 								lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -1957,25 +1946,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 								USE IN (SELECT("TABLABIN"))
 
-								*IF .l_ShowProgress
-								*	.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-								*ENDIF
-
-								*-- Primero convierto el proyecto
-								*IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(tc_InputFile)) )
-								*	lnCodError = .Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
-								*ENDIF
-
 								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I,1)
-									*.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-									*.o_Frm_Avance.nVALUE = I
 									.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-									*IF .l_ShowProgress
-									*	.o_Frm_Avance.SHOW()
-									*ENDIF
 
 									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -2014,25 +1988,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 									ENDIF
 								ENDFOR
 
-								*IF .l_ShowProgress
-								*	.o_Frm_Avance.nMAX_VALUE	= lnFileCount
-								*ENDIF
-
-								*-- Primero convierto el proyecto
-								*IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(tc_InputFile)) )
-								*	lnCodError = .Convertir( tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName )
-								*ENDIF
-
 								*-- Luego convierto los archivos incluidos
 								FOR I = 1 TO lnFileCount
 									lcFile	= laFiles(I)
-									*.o_Frm_Avance.lbl_TAREA.CAPTION = C_PROCESSING_LOC + ' ' + lcFile + '...'
-									*.o_Frm_Avance.nVALUE = I
 									.AvanceDelProceso( C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-									*IF .l_ShowProgress
-									*	.o_Frm_Avance.SHOW()
-									*ENDIF
 
 									IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
@@ -2967,8 +2926,9 @@ DEFINE CLASS c_conversor_base AS SESSION
 		SET TABLEPROMPT OFF
 		SET BLOCKSIZE TO 0
 		SET EXACT ON
-		*ON ESCAPE ERROR 1799
-		SET ESCAPE ON
+		IF NOT EMPTY( ON("ESCAPE") ) THEN
+			SET ESCAPE ON
+		ENDIF
 
 		PUBLIC C_FB2PRG_CODE
 		C_FB2PRG_CODE	= ''	&& Contendrá todo el código generado
@@ -5336,7 +5296,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							IF loObjeto._WriteOrder = 0 AND LOWER(loObjeto._Nombre) == LOWER(lcObjName)
 								N	= N + 1
 								loObjeto._WriteOrder	= N
-								.insert_Object( toClase, loObjeto, toFoxBin2Prg )
+								.insert_Object( @toClase, @loObjeto, @toFoxBin2Prg )
 								EXIT
 							ENDIF
 						ENDFOR
@@ -5346,7 +5306,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					*-- Recorro los objetos Desconocidos
 					FOR EACH loObjeto IN toClase._AddObjects FOXOBJECT
 						IF loObjeto._WriteOrder = 0
-							.insert_Object( toClase, loObjeto, toFoxBin2Prg )
+							.insert_Object( @toClase, @loObjeto, @toFoxBin2Prg )
 						ENDIF
 					ENDFOR
 
@@ -20779,7 +20739,7 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 		CATCH TO loEx
 			loEx.UserValue = loEx.UserValue + 'lcStr = [' + TRANSFORM(lcStr) + '] / LenStr = ' + TRANSFORM(LEN(TRANSFORM(lcStr))) + CR_LF
-			IF loEx.ErrorNo = 11 THEN && 
+			IF loEx.ErrorNo = 11 THEN	&& Function argument value, type, or count is invalid
 				loEx.UserValue = loEx.UserValue + '> POSSIBLE CORRUPTED TABLE' + CR_LF
 			ENDIF
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
