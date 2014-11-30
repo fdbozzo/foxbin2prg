@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.36'
-    .VersionDate          = Date(2014,10,08)
+    .VersionNumber        = 'v1.19.37'
+    .VersionDate          = Date(2014,11,30)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,20 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/11/30	v1.19.37
+- Feature: Added Class per file support, configurable with UseClassPerFile:1 (Ryan Harris/Lutz Scheffler)
+- Feature: foxbin2prg.cfg configuration options can now have "&&" comments at the right of the values (edyshor)
+- Feature: Added support for the new "ClearDBFLastUpdate" setting in FoxBin2Prg.cfg, activated by default to minimize DB2 differences (edyshor)
+- Feature: Enhanced progressbar indication, with more detailed information
+- Feature: vcx/scx broken properties autofix because an erroneous manual user edition on the vcx/scx
+- Feature: vcx/scx autofix por Hidden and Protected duplicated properties (some type of corruption or bad manual user edit)
+- Feature: Added a validation for FRX to notify the user if it is not a VFP 9 REPORT
+- Feature: Batch convertions can now be interrupted with the Esc key
+- Bug Fix dbf: "Error 1903, String is too long to fit" when converting long DBF files with "DBF_Conversion_Support:4" to text (edyshor)
+- Bug Fix vcx/scx: Sometimes some properties get the description of a similarly named property
+- Bug Fix vcx/scx: Hidden and Protected properties are not ordered alphabetically
+- Various Code Optimizations for enhancing processing performance
 
 2014/10/08	v1.19.36
 - Bug fix mnx: When generating mn2 text view, menu all pad IDs are generated as _000000000 (bug introduced in v1.19.36)

@@ -15,7 +15,7 @@
 Const ForReading = 1 
 Dim WSHShell, FileSystemObject
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, lcExt, foxbin2prg_cfg, aFiles(), nFile_Count
-Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cNoTimestamps, cErrFile
+Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cFlagNoTimestamps, cErrFile
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
@@ -59,9 +59,8 @@ Else
 	oVFP9.DoCmd( "SET PROCEDURE TO '" & cEXETool & "'" )
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
-	'.o_FoxBin2Prg.EvaluarConfiguracion( tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels )
-	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1' )" )
 	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
+	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress" )
 	
 	For i = 0 To WScript.Arguments.Count-1
 		scanDirs( WScript.Arguments(i) )
@@ -82,17 +81,13 @@ Else
 		cFlagDontShowErrMsg	= "'1'"
 	End If
 	If GetBit(nDebug, 5) Then
-		cNoTimestamps	= "'1'"
+		cFlagNoTimestamps	= "'1'"
 	End If
 	
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nMAX_VALUE = " & nFile_Count )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & 0 )
-	'oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.AlwaysOnTop = .T." )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.SHOW()" )
+	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
 
 	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.lbl_TAREA.CAPTION = oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...'" )
-		oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.nVALUE = " & i )
+		oVFP9.DoCmd( "oFoxBin2Prg.AvanceDelProceso(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
 		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
 
 		If nDebug = 0 Or nDebug = 2 Then
@@ -100,22 +95,30 @@ Else
 		Else
 			cCMD	= "oFoxBin2prg.ejecutar(  '" & aFiles(i) & "','0','0','0'," _
 				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
-				& cFlagRecompile & "," & cNoTimestamps & " )"
+				& cFlagRecompile & "," & cFlagNoTimestamps & " )"
 		End If
+		
 		If cFlagJustShowCall = "1" Then
 			MsgBox cCMD, 64, "PARAMETERS"
 		Else
 			oVFP9.DoCmd( cCMD )
 			nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
 		End If
-
+		
+		If nExitCode = 1799 Then 'Conversion cancelled by user
+			Exit For
+		End If
 	Next
 
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance.HIDE()" )
-	oVFP9.DoCmd( "oFoxBin2prg.o_Frm_Avance = NULL" )
-
 	If GetBit(nDebug, 4) Then
-		If oVFP9.Eval("oFoxBin2prg.l_Error") Then
+		'If oVFP9.Eval("oFoxBin2prg.l_Error") Then
+		If nExitCode = 1799 Then
+			MsgBox "Conversion Cancelled by User!", 48, WScript.ScriptName
+			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
+			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
+			WSHShell.run cErrFile
+
+		ElseIf nExitCode > 0 Then
 			MsgBox "End of Process! (with errors)", 48, WScript.ScriptName
 			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
 			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
@@ -126,15 +129,18 @@ Else
 	End If
 
 	oVFP9.DoCmd( "oFoxBin2prg = NULL" )
+	oVFP9.DoCmd( "CLEAR ALL" )
+	Set oVFP9 = Nothing
 End If
 
-WScript.Quit(nExitCode)
+WScript.Quit nExitCode
 
 
 Private Sub scanDirs( tcArgument )
 	Dim omFolder, oFolder
 	If FileSystemObject.FolderExists( tcArgument ) Then
 		'-- Es un directorio
+		oVFP9.DoCmd( "oFoxBin2Prg.AvanceDelProceso('Scanning file and directory information on " & tcArgument & "...', 0, 0, 0)" )
 		Set omFolder = FileSystemObject.GetFolder( tcArgument )
 		For Each oFile IN omFolder.Files
 			evaluateFile( oFile.Path )
@@ -152,7 +158,11 @@ End Sub
 Private Sub evaluateFile( tcFile )
 	lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
 	oVFP9.SetVar "gc_Ext", lcExt
-	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '', '', '', '', '', '', '', '', '" & tcFile & "' )" )
+	oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1', '', '', '', '', '', '', '" & tcFile & "' )" )
+	
+	'PROCEDURE EvaluarConfiguracion
+	'	LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcFlagNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
+	'		, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
 	If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Bin2Prg(gc_Ext)") Then
 		nFile_Count = nFile_Count + 1
 		ReDim Preserve aFiles(nFile_Count)
