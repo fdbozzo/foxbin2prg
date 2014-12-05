@@ -8,6 +8,7 @@
 #DEFINE C_BACKUP_OF_LOC										"Doing Backup of: "
 #DEFINE C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		"Cannot generate file [<<THIS.c_OutputFile>>] because it is ReadOnly"
 #DEFINE C_CONFIGFILE_LOC									"Using configuration file:"
+#DEFINE C_CONVERSION_CANCELLED_BY_USER						"Conversion Cancelled by the user"
 #DEFINE C_CONVERTER_UNLOAD_LOC								"Converter unload"
 #DEFINE C_CONVERTING_FILE_LOC								"Converting file"
 #DEFINE C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	"Data Error: Can't parse because of unpaired double-quotes on line <<lcMetadatos>>"
@@ -51,3 +52,4 @@
 #DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC	"Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
 #DEFINE C_UNKNOWN_CLASS_NAME_LOC							"Unknown class [<<THIS.CLASS>>]"
 #DEFINE C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC			"WARNING!!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
+#DEFINE C_WITH_ERRORS										"with errors"

@@ -8,6 +8,7 @@
 #DEFINE C_BACKUP_OF_LOC										"Mache Backup von: "
 #DEFINE C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		"Kann Datei [<<THIS.c_OutputFile>>] nicht generieren da sie Schreibgeschützt ist"
 #DEFINE C_CONFIGFILE_LOC									"Benutze Konfigurationsdatei:"
+#DEFINE C_CONVERSION_CANCELLED_BY_USER						"Konvertierung durch den Benutzer abgebrochen"
 #DEFINE C_CONVERTER_UNLOAD_LOC								"Konverter wird entladen"
 #DEFINE C_CONVERTING_FILE_LOC								"Konvertiere Datei"
 #DEFINE C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	"Datenfehler: Keine Analyse möglich da ungepaarte Anführungszeichen in Zeile <<lcMetadatos>>"
@@ -51,3 +52,4 @@
 #DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC	"Fehler in Verschachtelungsstruktur. ENDPROC wurde erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 #DEFINE C_UNKNOWN_CLASS_NAME_LOC							"Unbekannte Klasse [<<THIS.CLASS>>]"
 #DEFINE C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC			"WARNUNG!!" + CR_LF+ "SICHERSTELLEN DAS KEIN TABELLENALIAS IN DEM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
+#DEFINE C_WITH_ERRORS										"mit Fehlern"
