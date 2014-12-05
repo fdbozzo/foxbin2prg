@@ -21474,9 +21474,13 @@ DEFINE CLASS CL_LANG AS Custom
 
 
 	PROCEDURE INIT
+		LPARAMETERS tcLanguage
+		
+		tcLanguage	= EVL(tcLanguage, VERSION(3))
+
 		WITH THIS AS CL_LANG OF 'FOXBIN2PRG.PRG'
 			DO CASE
-			CASE VERSION(3) == '00' && English (Inglés)
+			CASE tcLanguage == '00' && English (Inglés)
 				*-------------------------------------------------------------------------------------------------------------------------------------------
 				*-- NOTE: MUST USE DOUBLE QUOTES, OR SYNTAX ERRORS HAPPEN WHEN COMPILING. STRANGE :(
 				*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -21533,7 +21537,7 @@ DEFINE CLASS CL_LANG AS Custom
 				.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC				= "WARNING!!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 				.C_WITH_ERRORS											= "with errors"
 
-			CASE VERSION(3) == '49' && German (Alemán)
+			CASE tcLanguage == '49' && German (Alemán)
 				*-------------------------------------------------------------------------------------------------------------------------------------------
 				*-- NOTE: ES MÜSSEN ANFÜHRUNGSZEICHEN BENUTZT WERDEN, ODER SYNTAX ERRORS PASSIEREN BEIM COMPILE. SELTSAM :(
 				*-------------------------------------------------------------------------------------------------------------------------------------------
@@ -21590,62 +21594,62 @@ DEFINE CLASS CL_LANG AS Custom
 				.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC				= "WARNUNG!!" + CR_LF+ "SICHERSTELLEN DAS KEIN TABELLENALIAS IN DEM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 				.C_WITH_ERRORS											= "mit Fehlern"
 
-			CASE VERSION(3) == '33' && French (Francés)
+			CASE tcLanguage == '33' && French (Francés)
 				*-------------------------------------------------------------------------------------------------------------------------------------------
 				*-- NOTE: MUST USE DOUBLE QUOTES, OR SYNTAX ERRORS HAPPEN WHEN COMPILING. STRANGE :(
 				*-------------------------------------------------------------------------------------------------------------------------------------------
-				.C_ASTERISK_EXT_NOT_ALLOWED_LOC							= "* and ? extensions are not allowed because it's dangerous (binaries can be overwritten with xx2 empty files)"
-				.C_BACKLINK_CANT_UPDATE_BL_LOC							= "Could not update backlink"
-				.C_BACKLINK_OF_TABLE_LOC								= "of table"
-				.C_BACKUP_OF_LOC										= "Doing Backup of: "
-				.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		= "Cannot generate file [<<THIS.c_OutputFile>>] because it is ReadOnly"
-				.C_CONFIGFILE_LOC										= "Using configuration file:"
-				.C_CONVERSION_CANCELLED_BY_USER							= "Conversion Cancelled by the user"
-				.C_CONVERTER_UNLOAD_LOC									= "Converter unload"
-				.C_CONVERTING_FILE_LOC									= "Converting file"
-				.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	= "Data Error: Can't parse because of unpaired double-quotes on line <<lcMetadatos>>"
-				.C_DUPLICATED_FILE_LOC									= "Duplicated file"
-				.C_ENDDEFINE_MARKER_NOT_FOUND_LOC						= "Cannot find end marker [ENDDEFINE] of line <<TRANSFORM( toClase._Inicio )>> for ID [<<toClase._Nombre>>]"
-				.C_END_MARKER_NOT_FOUND_LOC								= "Cannot find end marker [<<ta_ID_Bloques(lnPrimerID,2)>>] that closes start marker [<<ta_ID_Bloques(lnPrimerID,1)>>] on line <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
-				.C_END_OF_PROCESS_LOC									= "End of Process"
+				.C_ASTERISK_EXT_NOT_ALLOWED_LOC							= "* Et ? extensions ne sont pas autorisées car il est dangereux (binaires peuvent être remplacés par des fichiers vides de XX2)"
+				.C_BACKLINK_CANT_UPDATE_BL_LOC							= "Impossible de mettre à jour backlink"
+				.C_BACKLINK_OF_TABLE_LOC								= "de la table"
+				.C_BACKUP_OF_LOC										= "Faire de sauvegarde des: "
+				.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		= "Vous ne pouvez pas générer un fichier [<<THIS.c_OutputFile>>] car il est en lecture seule"
+				.C_CONFIGFILE_LOC										= "Utilisation du fichier de configuration:"
+				.C_CONVERSION_CANCELLED_BY_USER							= "Conversion Annulé par l'utilisateur"
+				.C_CONVERTER_UNLOAD_LOC									= "Convertisseur déchargement"
+				.C_CONVERTING_FILE_LOC									= "Conversion de fichiers"
+				.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	= "Erreur de données: ne peut pas analyser en raison de guillemets non appariés en ligne <<lcMetadatos>>"
+				.C_DUPLICATED_FILE_LOC									= "fichier dupliqué"
+				.C_ENDDEFINE_MARKER_NOT_FOUND_LOC						= "Vous ne trouvez pas marqueur de fin [ENDDEFINE] de la ligne <<TRANSFORM(toClase._Inicio)>> ID [<<toClase._Nombre>>]"
+				.C_END_MARKER_NOT_FOUND_LOC								= "Vous ne trouvez pas fin marqueur [<<ta_ID_Bloques(lnPrimerID, 2)>>] qui ferme marqueur de début [<<ta_ID_Bloques(lnPrimerID, 1) >>] en ligne <<TRANSFORM(taBloquesExclusion (tnBloquesExclusion, 1))>>"
+				.C_END_OF_PROCESS_LOC									= "Fin du processus"
 				.C_EXTENSION_RECONFIGURATION_LOC						= "Extension Reconfiguration:"
-				.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES	= "External class count (<<toModulo._ExternalClasses_Count>>) does not match found classes (<<toModulo._Clases_Count>>) for file [<<toFoxBin2Prg.c_InputFile>>]"
-				.C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND					= "External class [<<toModulo._ExternalClasses(I)>>] is not found in file [<<toFoxBin2Prg.c_InputFile>>]"
-				.C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				= "Field [<<laProps(I)>>] not found in structure of file <<DBF('TABLABIN')>>"
-				.C_FILE_DOESNT_EXIST_LOC								= "File does not exist:"
-				.C_FILE_NAME_IS_NOT_SUPPORTED_LOC						= "File [<<.c_InputFile>>] is not supported"
-				.C_FILE_NOT_FOUND_LOC									= "File not found"
-				.C_FOXBIN2PRG_ERROR_CAPTION_LOC							= "FOXBIN2PRG: ERROR!!"
+				.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES	= "Nombre de classe externe (<<toModulo._ExternalClasses_Count>>) ne correspond pas classes trouvées (<<toModulo._Clases_Count>>) pour le fichier [<<toFoxBin2Prg.c_InputFile>>]"
+				.C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND					= "Classe externe [<<toModulo._ExternalClasses (I)>>] est introuvable dans le fichier [<<toFoxBin2Prg.c_InputFile>>]"
+				.C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC				= "Champ [<< laProps (I) >>] ne trouve pas dans la structure du fichier DBF <<('TABLABIN')>>"
+				.C_FILE_DOESNT_EXIST_LOC								= "Fichier ne existe pas:"
+				.C_FILE_NAME_IS_NOT_SUPPORTED_LOC						= "File [<<.c_InputFile>>] ne est pas supporté"
+				.C_FILE_NOT_FOUND_LOC									= "Fichier introuvable"
+				.C_FOXBIN2PRG_ERROR_CAPTION_LOC							= "FOXBIN2PRG: ERREUR!!"
 				.C_FOXBIN2PRG_INFO_SINTAX_LOC							= "FOXBIN2PRG: SYNTAX INFO"
 				.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC					= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
-					+ "Example of generating TXT from all VCX in 'c:\development\classes', without showing error window and generating LOG file: " + CR_LF ;
+					+ "Exemple pour générer TXT de tous VCX dans 'c:\development\classes', sans montrer la fenêtre d'erreur et générer fichier LOG: " + CR_LF ;
 					+ "   FOXBIN2PRG 'c:\development\classes\*.vcx'  '0'  '0'  '0'  '1'  '1'" + CR_LF + CR_LF ;
-					+ "Example of generating TXT from all VCX is 'c:\development\classes', without showing error window and without LOG file: " + CR_LF ;
+					+ "Exemple pour générer TXT de tous VCX est 'c:\development\classes', sans montrant fenêtre d'erreur et sans fichier LOG: " + CR_LF ;
 					+ "   FOXBIN2PRG 'c:\development\classes\*.vc2'  '0'  '0'  '0'  '1'  '0'"
-				.C_FOXBIN2PRG_JUST_VFP_9_LOC							= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
-				.C_FOXBIN2PRG_WARN_CAPTION_LOC							= "FOXBIN2PRG: WARNING!"
-				.C_LANGUAGE_LOC											= "EN"
-				.C_MENU_NOT_IN_VFP9_FORMAT_LOC							= "Menu [<<THIS.c_InputFile>>] is NOT in VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU '<<THIS.c_InputFile>>'"
-				.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC				= "* Names capitalization program [<<lcEXE_CAPS>>] found"
-				.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC			= "* Names capitalization program [<<lcEXE_CAPS>>] not found"
-				.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC					= "Object [<<toObj.CLASS>>] does not contain oReg object (level <<TRANSFORM(tnNivel)>>)"
-				.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC				= "Operation not recognized. Only SETNAME and GETNAME allowed."
-				.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					= "Optimization: Output file [<<THIS.c_OutputFile>>] was not overwritten because it is the same as was generated."
-				.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC					= "Optimization: Output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
-				.C_PRESS_ESC_TO_CANCEL									= "Press Esc to Cancel"
-				.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC						= "Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
-				.C_PROCESSING_LOC										= "Processing file"
-				.C_PROCESS_PROGRESS_LOC									= "Process Progress:"
-				.C_PROPERTY_NAME_NOT_RECOGNIZED_LOC						= "Property [<<TRANSFORM(tnPropertyID)>>] is not recognized."
-				.C_REPORT_NOT_IN_VFP9_FORMAT_LOC						= "Report [<<THIS.c_InputFile>>] is NOT in VFP 9 Format! - Please convert to VFP 9 with MODIFY REPORT '<<THIS.c_InputFile>>'"
-				.C_REQUESTING_CAPITALIZATION_OF_FILE_LOC				= "- Requesting capitalization of file [<<tcFileName>>]"
-				.C_SCANNING_FILE_AND_DIR_INFO							= "Scanning file and directory information for"
-				.C_SOURCEFILE_LOC										= "Source file: "
-				.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC			= "Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
-				.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC		= "Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
-				.C_UNKNOWN_CLASS_NAME_LOC								= "Unknown class [<<THIS.CLASS>>]"
-				.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC				= "WARNING!!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
-				.C_WITH_ERRORS											= "with errors"
+				.C_FOXBIN2PRG_JUST_VFP_9_LOC							= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
+				.C_FOXBIN2PRG_WARN_CAPTION_LOC							= "FOXBIN2PRG: AVERTISSEMENT!"
+				.C_LANGUAGE_LOC											= "FR"
+				.C_MENU_NOT_IN_VFP9_FORMAT_LOC							= "Menu [<<THIS.c_InputFile>>] ne est pas dans VFP 9 Format! - Se il vous plaît se convertir à VFP 9 avec MODIFY MENU '<<THIS.c_InputFile>>'"
+				.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC				= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] trouvé"
+				.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC			= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] introuvables"
+				.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC					= "Object [<<toObj.CLASS>>] ne contient pas l'objet oReg (niveau <<TRANSFORM(tnNivel)>>)"
+				.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC				= "Opération non reconnu. Seulement SETNAME et GETNAME permis."
+				.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					= "Optimisation: fichier de sortie [<< THIS.c_OutputFile >>] ne était pas écrasé parce que ce est la même que celle générée."
+				.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC					= "Optimisation: fichier de sortie [<< THIS.c_OutputFile >>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
+				.C_PRESS_ESC_TO_CANCEL									= "Appuyez sur Esc pour Annuler"
+				.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC						= "Procédure pas fermé. Dernière ligne de code doit être ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
+				.C_PROCESSING_LOC										= "Traitement du fichier"
+				.C_PROCESS_PROGRESS_LOC									= "Processus Progrès:"
+				.C_PROPERTY_NAME_NOT_RECOGNIZED_LOC						= "Propriété [<<TRANSFORM(tnPropertyID)>>] ne est pas reconnu."
+				.C_REPORT_NOT_IN_VFP9_FORMAT_LOC						= "Rapport [<<THIS.c_InputFile>>] ne est pas dans VFP 9 Format! - Se il vous plaît se convertir à VFP 9 avec MODIFY REPORT '<<THIS.c_InputFile>>'"
+				.C_REQUESTING_CAPITALIZATION_OF_FILE_LOC				= "- Demande de capitalisation de fichier [<<tcFileName>>]"
+				.C_SCANNING_FILE_AND_DIR_INFO							= "Fichier de numérisation et de l'information de répertoire pour"
+				.C_SOURCEFILE_LOC										= "Fichier source: "
+				.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC			= "Nesting erreur de structure. ENDPROC prévu, mais a trouvé ENDDEFINE sur la classe <<toClase._Nombre>> (<<loProcedure._Nombre>>), ligne <<TRANSFORM(I)>> du fichier <<THIS.c_InputFile>>"
+				.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC		= "Nesting erreur de structure. ENDPROC attendue, mais ENDDEFINE sur la classe <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), ligne <<TRANSFORM(I)>> du fichier <<THIS.c_InputFile>>"
+				.C_UNKNOWN_CLASS_NAME_LOC								= "Classe inconnue[<<THIS.CLASS>>]"
+				.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC				= "AVERTISSEMENT!!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
+				.C_WITH_ERRORS											= "avec des erreurs"
 
 			ENDCASE
 		ENDWITH && THIS AS CL_LANG OF 'FOXBIN2PRG.PRG'
