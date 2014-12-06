@@ -118,6 +118,7 @@
 * 30/11/2014	FDBOZZO		v1.19.37	Mejora: Se puede cancelar el proceso con la tecla Esc
 * 30/11/2014	FDBOZZO		v1.19.37	Mejora: Agregado control para detectar reportes no compatibles con VFP 9
 * 04/12/2014	FDBOZZO		v1.19.38	Mejora: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs (Francisco Prieto)
+* 06/12/2014	FDBOZZO		v1.19.38	Mejora: Rediseño de la Internacionalización. Ahora la selección es automática al cargar y no requiere recompilar.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -478,6 +479,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filenamefoundinfilter" display="FilenameFoundInFilter"/>] ;
 		+ [<memberdata name="filescomparedareequal" display="FilesComparedAreEqual"/>] ;
+		+ [<memberdata name="changelanguage" display="ChangeLanguage"/>] ;
 		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="get_l_configevaluated" display="get_l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="get_ext2fromext" display="Get_Ext2FromExt"/>] ;
@@ -633,7 +635,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		ON ESCAPE ERROR 1799
 		SET ESCAPE ON
 
-		_SCREEN.AddProperty( "o_FoxBin2Prg_Lang", CREATEOBJECT("CL_LANG") )
+		THIS.ChangeLanguage()
 
 		lcSys16 = SYS(16)
 		IF LEFT(lcSys16,10) == 'PROCEDURE '
@@ -642,9 +644,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			lnPosProg	= 1
 		ENDIF
 
+		*-- Localized properties
 		THIS.c_Language					= _SCREEN.o_FoxBin2Prg_Lang.C_LANGUAGE_LOC
 		THIS.c_loc_processing_file		= _SCREEN.o_FoxBin2Prg_Lang.C_PROCESSING_LOC
 		THIS.c_loc_process_progress		= _SCREEN.o_FoxBin2Prg_Lang.C_PROCESS_PROGRESS_LOC
+		*--
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
 		THIS.c_CurDir					= SYS(5) + CURDIR()
@@ -1658,6 +1662,16 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		RELEASE tcFileName, tcFilters, laFiltros
 		RETURN llFound
 	ENDFUNC
+
+
+	PROCEDURE ChangeLanguage
+		LPARAMETERS tcLanguageId
+		_SCREEN.AddProperty( "o_FoxBin2Prg_Lang", CREATEOBJECT("CL_LANG", tcLanguageId) )
+		*-- Localized properties
+		THIS.c_Language					= _SCREEN.o_FoxBin2Prg_Lang.C_LANGUAGE_LOC
+		THIS.c_loc_processing_file		= _SCREEN.o_FoxBin2Prg_Lang.C_PROCESSING_LOC
+		THIS.c_loc_process_progress		= _SCREEN.o_FoxBin2Prg_Lang.C_PROCESS_PROGRESS_LOC
+	ENDPROC
 
 
 	PROCEDURE Get_Ext2FromExt
