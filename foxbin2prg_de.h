@@ -1,6 +1,7 @@
 *-------------------------------------------------------------------------------------------------------------------------------------------
 *-- DEUTSCHE ÜBERSETZUNG => UMBENENNEN DIESER DATEI IN [foxbin2prg.h] UND NEUKOMPILIEREN DER FOXBIN2PRG.PRG - Jeder ist frei die Strings anzupassen und zu übersetzen.
 *-- NOTE: ES MÜSSEN ANFÜHRUNGSZEICHEN BENUTZT WERDEN, ODER SYNTAX ERRORS PASSIEREN BEIM COMPILE. SELTSAM :(
+*-- FoxBin2Prg v1.19.38
 *-------------------------------------------------------------------------------------------------------------------------------------------
 #DEFINE C_ASTERISK_EXT_NOT_ALLOWED_LOC						"* und ? Erweiterungen sind nicht erlaubt, da es gefährlich ist (binaries könnten überschrieben werden mit xx2 leeren Dateien)"
 #DEFINE C_BACKLINK_CANT_UPDATE_BL_LOC						"Backlink kann nicht geupdated werden"
@@ -8,7 +9,7 @@
 #DEFINE C_BACKUP_OF_LOC										"Mache Backup von: "
 #DEFINE C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC		"Kann Datei [<<THIS.c_OutputFile>>] nicht generieren da sie Schreibgeschützt ist"
 #DEFINE C_CONFIGFILE_LOC									"Benutze Konfigurationsdatei:"
-#DEFINE C_CONVERSION_CANCELLED_BY_USER						"Konvertierung durch den Benutzer abgebrochen"
+#DEFINE C_CONVERSION_CANCELLED_BY_USER_LOC						"Konvertierung durch den Benutzer abgebrochen"
 #DEFINE C_CONVERTER_UNLOAD_LOC								"Konverter wird entladen"
 #DEFINE C_CONVERTING_FILE_LOC								"Konvertiere Datei"
 #DEFINE C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC	"Datenfehler: Keine Analyse möglich da ungepaarte Anführungszeichen in Zeile <<lcMetadatos>>"
@@ -21,8 +22,8 @@
 #DEFINE C_FILE_NAME_IS_NOT_SUPPORTED_LOC					"Datei [<<.c_InputFile>>] wird nicht unterstützt"
 #DEFINE C_FILE_NOT_FOUND_LOC								"Datei nicht gefunden"
 #DEFINE C_EXTENSION_RECONFIGURATION_LOC						"Erweiterungsneukonfiguration:"
-#DEFINE C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES	"Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
-#DEFINE C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND				"Externe Klasse (<<toModulo._ExternalClasses(I)>>) nicht in der Datei [<<toFoxBin2Prg.c_InputFile>>] gefunden"
+#DEFINE C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC	"Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
+#DEFINE C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND_LOC				"Externe Klasse (<<toModulo._ExternalClasses(I)>>) nicht in der Datei [<<toFoxBin2Prg.c_InputFile>>] gefunden"
 #DEFINE C_FOXBIN2PRG_ERROR_CAPTION_LOC						"FOXBIN2PRG: FEHLER!!"
 #DEFINE C_FOXBIN2PRG_INFO_SINTAX_LOC						"FOXBIN2PRG: SYNTAX INFO"
 #DEFINE C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC				"FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -46,10 +47,10 @@
 #DEFINE C_PROPERTY_NAME_NOT_RECOGNIZED_LOC					"Eigenschaft [<<TRANSFORM(tnPropertyID)>>] nicht erkannt."
 #DEFINE C_REPORT_NOT_IN_VFP9_FORMAT_LOC						"Report [<<THIS.c_InputFile>>] ist NICHT in VFP 9 Format! - Bitte zuerst nach VFP 9 konvertieren mit MODIFY REPORT '<<THIS.c_InputFile>>'"
 #DEFINE C_REQUESTING_CAPITALIZATION_OF_FILE_LOC				"- Forder Großschreibung für Datei [<<tcFileName>>] an"
-#DEFINE C_SCANNING_FILE_AND_DIR_INFO						"Scannen Datei- und Verzeichnisinformationen für"
+#DEFINE C_SCANNING_FILE_AND_DIR_INFO_LOC					"Scannen Datei- und Verzeichnisinformationen für"
 #DEFINE C_SOURCEFILE_LOC									"Source Datei: "
 #DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC		"Fehler in Verschachtelungsstruktur. ENDPROC erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 #DEFINE C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC	"Fehler in Verschachtelungsstruktur. ENDPROC wurde erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 #DEFINE C_UNKNOWN_CLASS_NAME_LOC							"Unbekannte Klasse [<<THIS.CLASS>>]"
 #DEFINE C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC			"WARNUNG!!" + CR_LF+ "SICHERSTELLEN DAS KEIN TABELLENALIAS IN DEM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
-#DEFINE C_WITH_ERRORS										"mit Fehlern"
+#DEFINE C_WITH_ERRORS_LOC									"mit Fehlern"
