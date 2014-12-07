@@ -635,6 +635,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		ON ESCAPE ERROR 1799
 		SET ESCAPE ON
 
+		THIS.writeLog( REPLICATE( '*', 100 ) )
+		THIS.writeLog( 'FoxBin2Prg INIT' )
+		THIS.writeLog( REPLICATE( '*', 100 ) )
 		THIS.ChangeLanguage()
 
 		lcSys16 = SYS(16)
@@ -644,11 +647,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			lnPosProg	= 1
 		ENDIF
 
-		*-- Localized properties
-		THIS.c_Language					= _SCREEN.o_FoxBin2Prg_Lang.C_LANGUAGE_LOC
-		THIS.c_loc_processing_file		= _SCREEN.o_FoxBin2Prg_Lang.C_PROCESSING_LOC
-		THIS.c_loc_process_progress		= _SCREEN.o_FoxBin2Prg_Lang.C_PROCESS_PROGRESS_LOC
-		*--
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
 		THIS.c_CurDir					= SYS(5) + CURDIR()
@@ -658,6 +656,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
 		THIS.c_FB2PRG_EXE_Version		= IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
+		THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' )
+		THIS.EvaluarConfiguracion()
 		RELEASE lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues
 		RETURN
 	ENDPROC
@@ -670,6 +670,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			ERASE ( lcFileCDX )
 
+			THIS.writeLog( 'FoxBin2Prg UNLOAD' )
+			THIS.writeLog( REPLICATE( '*', 100 ) )
+			THIS.writeLog( )
 			THIS.writeLog_Flush()
 			THIS.descargar_frm_avance()
 		CATCH
@@ -1251,7 +1254,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
 
-		LOCAL lcConfigFile, llExisteConfig, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine ;
+		LOCAL lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDir(1,5) ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration AS Collection ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -1266,10 +1269,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				tc_InputFile		= EVL(tc_InputFile, .c_InputFile)
 				.c_InputFile		= tc_InputFile
 
-				IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded
-					IF EMPTY(tc_InputFile)
-						ERROR loLang.C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + tc_InputFile + '"'
-					ENDIF
+				IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) THEN
+					*IF EMPTY(tc_InputFile)
+					*	ERROR loLang.C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + tc_InputFile + '"'
+					*ENDIF
 					lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(tc_InputFile) )
 				ENDIF
 
@@ -1279,25 +1282,46 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				lc_CFG_Path			= UPPER( JUSTPATH( lcConfigFile ) )
 
 				IF .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
-					.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )
+					.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0=No hay CFG cacheada, +1=Hay CFG cacheada
 					.l_CFG_CachedAccess	= (.n_CFG_Actual > 0)
 				ENDIF
 
 				lo_CFG			= THIS
 
-				IF .n_CFG_Actual = 0 THEN
-					llExisteConfig	= FILE( lcConfigFile )
-				ENDIF
+				DO CASE
+				CASE .n_CFG_Actual = 0
+					*-- Si no se encontró un CFG cacheado, se busca si existe un archivo CFG en disco
+					llExiste_CFG_EnDisco	= ( ADIR( laDir, lcConfigFile ) = 1 )
 
-				IF llExisteConfig AND .n_CFG_Actual = 0
-					.writeLog( loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
+					IF NOT llExiste_CFG_EnDisco
+						.l_CFG_CachedAccess	= .T.	&& Es cacheado porque sin archivo CFG usa config.interna
+					ENDIF
+				
+				CASE ISNULL( .o_Configuration( .n_CFG_Actual ) )
+					*-- Si existe una configuración y es NULL, se usa la predeterminada
+					*.n_CFG_Actual = 0
+
+				ENDCASE
+
+				*-- NOTA: SOLO LOS QUE NO VENGAN DE PARÁMETROS EXTERNOS DEBEN ASIGNARSE A lo_CFG AQUÍ.
+				IF llExiste_CFG_EnDisco
+					.writeLog( )
+					.writeLog( '> READING CFG VALUES FROM DISK' )
+					.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
 					IF .l_AllowMultiConfig AND .l_ConfigEvaluated AND .l_Main_CFG_Loaded
 						lo_CFG	= CREATEOBJECT('CL_CFG')
 						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
+						.n_CFG_Actual   = lo_Configuration.Count
 					ELSE
-						lo_Configuration.Add( NULL, lc_CFG_Path )
+						lo_Configuration.Add( NULL, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
+						*.n_CFG_Actual   = 0
+						.n_CFG_Actual   = lo_Configuration.Count
 					ENDIF
+
+					*lo_CFG.c_Foxbin2prg_FullPath		= ''
+					lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
+					*lo_CFG.c_CurDir						= ''
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
 						*laConfig(I)	= LOWER( laConfig(I) )
@@ -1315,14 +1339,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							IF PEMSTATUS( THIS, lcExt, 5 )
 								.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
 							IF NOT INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcDontShowProgress	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:         ' + TRANSFORM(tcDontShowProgress) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:         ' + TRANSFORM(tcDontShowProgress) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
@@ -1331,233 +1355,238 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 16 ) )
 							IF NOT INLIST( TRANSFORM(tcDontShowErrors), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcDontShowErrors	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:           ' + TRANSFORM(tcDontShowErrors) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > tcDontShowErrors:           ' + TRANSFORM(tcDontShowErrors) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 13 ) == LOWER('NoTimestamps:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 14 ) )
 							IF NOT INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcNoTimestamps	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:             ' + TRANSFORM(tcNoTimestamps) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > tcNoTimestamps:             ' + TRANSFORM(tcNoTimestamps) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 6 ) == LOWER('Debug:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 7 ) )
 							IF NOT INLIST( TRANSFORM(tcDebug), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcDebug	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcDebug:                    ' + TRANSFORM(tcDebug) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > tcDebug:                    ' + TRANSFORM(tcDebug) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 18 ) == LOWER('ExtraBackupLevels:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
 							IF NOT ISDIGIT( TRANSFORM(tcExtraBackupLevels) ) AND ISDIGIT( lcValue ) THEN
 								tcExtraBackupLevels	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:        ' + TRANSFORM(tcExtraBackupLevels) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > tcExtraBackupLevels:        ' + TRANSFORM(tcExtraBackupLevels) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 14 ) == LOWER('ClearUniqueID:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 15 ) )
 							IF NOT INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcClearUniqueID	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:              ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ClearUniqueID:              ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 19 ) == LOWER('ClearDBFLastUpdate:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 20 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								lo_CFG.l_ClearDBFLastUpdate	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClearDBFLastUpdate:      ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ClearDBFLastUpdate:      ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 21 ) )
 							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcOptimizeByFilestamp	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:        ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:        ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:           ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:           ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 16 ) == LOWER('UseClassPerFile:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_UseClassPerFile	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > UseClassPerFile:            ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > UseClassPerFile:            ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 18 ) == LOWER('ClassPerFileCheck:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_ClassPerFileCheck	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > ClassPerFileCheck:          ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ClassPerFileCheck:          ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 27 ) == LOWER('RedirectClassPerFileToMain:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 28 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_RedirectClassPerFileToMain	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 22 ) == LOWER('DropNullCharsFromCode:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 23 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
 								.l_DropNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:      ' + TRANSFORM(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:      ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 9 ) == LOWER('Language:')
+							*-- CASO ESPECIAL: El lenguaje no se guarda en lo_CFG, porque es un seteo Global.
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 10 ) )
 							IF .T.
 								.ChangeLanguage(lcValue)
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > Language:                   ' + TRANSFORM(lcValue) + ' (' + .c_Language + ')' )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > Language:                   ' + TRANSFORM(lcValue) + ' (' + .c_Language + ')' )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('PJX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.PJX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support:     ' + TRANSFORM(lo_CFG.PJX_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > PJX_Conversion_Support:     ' + TRANSFORM(lo_CFG.PJX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('VCX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.VCX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support:     ' + TRANSFORM(lo_CFG.VCX_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > VCX_Conversion_Support:     ' + TRANSFORM(lo_CFG.VCX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('SCX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.SCX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support:     ' + TRANSFORM(lo_CFG.SCX_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > SCX_Conversion_Support:     ' + TRANSFORM(lo_CFG.SCX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('FRX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.FRX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support:     ' + TRANSFORM(lo_CFG.FRX_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > FRX_Conversion_Support:     ' + TRANSFORM(lo_CFG.FRX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('LBX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.LBX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support:     ' + TRANSFORM(lo_CFG.LBX_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > LBX_Conversion_Support:     ' + TRANSFORM(lo_CFG.LBX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('MNX_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.MNX_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support:     ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support:     ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2', '4' ) THEN
 								lo_CFG.DBF_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 24 ) == LOWER('DBF_Conversion_Included:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 25 ) )
 							IF NOT EMPTY(lcValue) THEN
 								lo_CFG.DBF_Conversion_Included	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Included:    ' + TRANSFORM(lo_CFG.DBF_Conversion_Included) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Included:    ' + TRANSFORM(lo_CFG.DBF_Conversion_Included) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 24 ) == LOWER('DBF_Conversion_Excluded:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 25 ) )
 							IF NOT EMPTY(lcValue) THEN
 								lo_CFG.DBF_Conversion_Excluded	= lcValue
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + TRANSFORM(lo_CFG.DBF_Conversion_Excluded) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + TRANSFORM(lo_CFG.DBF_Conversion_Excluded) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBC_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.DBC_Conversion_Support	= INT( VAL( lcValue ) )
-								.writeLog( JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
 							ENDIF
 
 						ENDCASE
 					ENDFOR
 
-					IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
-						.n_CFG_Actual   = lo_Configuration.Count    &&lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
-					ENDIF
-				ENDIF && llExisteConfig
+					*IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
+					*	.n_CFG_Actual   = lo_Configuration.Count    &&lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
+					*ENDIF
+					.writeLog( )
+				ENDIF && llExiste_CFG_EnDisco
 
+				*-- ESTOS SE EVALÚAN FUERA DEL IF PORQUE NO DEPENDEN DEL CFG
+				*-- Y PUEDEN VENIR TAMBIÉN DE PARÁMETROS EXTERNOS.
 				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) THEN
 					lo_CFG.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
 				ENDIF
 				IF NOT EMPTY(tcDontShowErrors)
-					lo_CFG.l_ShowErrors			= NOT (TRANSFORM(tcDontShowErrors) == '1')
+					lo_CFG.l_ShowErrors				= NOT (TRANSFORM(tcDontShowErrors) == '1')
 				ENDIF
 				IF NOT .l_Main_CFG_Loaded
-					lo_CFG.l_Recompile			= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
+					lo_CFG.l_Recompile				= (EMPTY(tcRecompile) OR TRANSFORM(tcRecompile) == '1' OR DIRECTORY(tcRecompile))
 				ENDIF
 				IF INLIST( TRANSFORM(tcNoTimestamps), '0', '1' ) THEN
 					lo_CFG.l_NoTimestamps			= NOT (TRANSFORM(tcNoTimestamps) == '0')
 				ENDIF
 				IF INLIST( TRANSFORM(tcClearUniqueID), '0', '1' ) THEN
-					lo_CFG.l_ClearUniqueID		= NOT (TRANSFORM(tcClearUniqueID) == '0')
+					lo_CFG.l_ClearUniqueID			= NOT (TRANSFORM(tcClearUniqueID) == '0')
 				ENDIF
 				IF INLIST( TRANSFORM(tcDebug), '0', '1' ) THEN
-					lo_CFG.l_Debug				= (TRANSFORM(tcDebug)=='1')
+					lo_CFG.l_Debug					= (TRANSFORM(tcDebug)=='1')
 				ENDIF
 				tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
 				IF ISDIGIT(tcExtraBackupLevels)
-					lo_CFG.n_ExtraBackupLevels	= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
+					lo_CFG.n_ExtraBackupLevels		= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 				ENDIF
 				IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
 					lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
 				ENDIF
 
-				.writeLog( '---' )
-				.writeLog( '> l_ShowProgress:               ' + TRANSFORM(.l_ShowProgress) )
-				.writeLog( '> l_ShowErrors:                 ' + TRANSFORM(.l_ShowErrors) )
-				.writeLog( '> l_Recompile:                  ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
-				.writeLog( '> l_NoTimestamps:               ' + TRANSFORM(.l_NoTimestamps) )
-				.writeLog( '> l_ClearUniqueID:              ' + TRANSFORM(.l_ClearUniqueID) )
-				.writeLog( '> l_UseClassPerFile:            ' + TRANSFORM(.l_UseClassPerFile) )
-				.writeLog( '> l_ClassPerFileCheck:          ' + TRANSFORM(.l_ClassPerFileCheck) )
-				.writeLog( '> l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
-				.writeLog( '> l_Debug:                      ' + TRANSFORM(.l_Debug) )
-				.writeLog( '> n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
-				.writeLog( '> l_OptimizeByFilestamp:        ' + TRANSFORM(.l_OptimizeByFilestamp) )
-				.writeLog( '> l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
-				.writeLog( '> l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
-				.writeLog( '> c_Language:                   ' + TRANSFORM(.c_Language) )
-
-				lo_CFG	= NULL
-				RELEASE lo_CFG
+				.writeLog( '> USING THIS CONFIG:' )
+				.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + TRANSFORM(.l_CFG_CachedAccess) ;
+					+ ' ( InputFile=[' + EVL(tc_InputFile,'') + '], CFG=[' + EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') + '] )' )
+				.writeLog( C_TAB + 'l_ShowProgress:               ' + TRANSFORM(.l_ShowProgress) )
+				.writeLog( C_TAB + 'l_ShowErrors:                 ' + TRANSFORM(.l_ShowErrors) )
+				.writeLog( C_TAB + 'l_Recompile:                  ' + TRANSFORM(.l_Recompile) + ' (' + EVL(tcRecompile,'') + ')' )
+				.writeLog( C_TAB + 'l_NoTimestamps:               ' + TRANSFORM(.l_NoTimestamps) )
+				.writeLog( C_TAB + 'l_ClearUniqueID:              ' + TRANSFORM(.l_ClearUniqueID) )
+				.writeLog( C_TAB + 'l_UseClassPerFile:            ' + TRANSFORM(.l_UseClassPerFile) )
+				.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + TRANSFORM(.l_ClassPerFileCheck) )
+				.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
+				.writeLog( C_TAB + 'l_Debug:                      ' + TRANSFORM(.l_Debug) )
+				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
+				.writeLog( C_TAB + 'l_OptimizeByFilestamp:        ' + TRANSFORM(.l_OptimizeByFilestamp) )
+				.writeLog( C_TAB + 'l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
+				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
+				.writeLog( C_TAB + 'c_Language:                   ' + TRANSFORM(.c_Language) )
+				.writeLog( C_TAB + 'n_CFG_Actual:                 ' + TRANSFORM(.n_CFG_Actual) )
 
 				*-- Si existe una configuración y es NULL, se usa la predeterminada
-				*IF .l_AllowMultiConfig AND .n_CFG_Actual > 0 AND ISNULL( .o_Configuration( .n_CFG_Actual ) ) THEN
-				IF .n_CFG_Actual > 0 AND ISNULL( .o_Configuration( .n_CFG_Actual ) ) THEN
-					.n_CFG_Actual = 0
-				ENDIF
+				*IF .n_CFG_Actual > 0 AND ISNULL( .o_Configuration( .n_CFG_Actual ) ) THEN
+				*	.n_CFG_Actual = 0
+				*ENDIF
 
-				.writeLog( '> l_CFG_CachedAccess:          ' + TRANSFORM(.l_CFG_CachedAccess) + ' ( InputFile=' + tc_InputFile + ', CFG=' + FORCEPATH( 'foxbin2prg.cfg', lc_CFG_Path ) + ' )' )
+				*IF NOT llExiste_CFG_EnDisco OR .n_CFG_Actual = 0 THEN
+				*	.l_CFG_CachedAccess	= .T.	&& Es acceso cacheado porque usa config.por defecto sin archivo CFG
+				*ENDIF
 
-				IF NOT llExisteConfig OR .n_CFG_Actual = 0 THEN
-					.l_CFG_CachedAccess	= .T.	&& Es acceso cacheado porque usa config.por defecto sin archivo CFG
-				ENDIF
+				*.writeLog( '> l_CFG_CachedAccess:          ' + TRANSFORM(.l_CFG_CachedAccess) ;
+					+ ' ( InputFile=' + EVL(tc_InputFile,'(no)') + ', CFG=' + EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') + ' )' )
 
 				IF NOT .l_Main_CFG_Loaded THEN
 					.l_Main_CFG_Loaded	= .T.
 				ENDIF
 
 				.l_ConfigEvaluated = .T.
+				.writeLog( )
 				*ENDIF && .l_ConfigEvaluated
 			ENDWITH && THIS
 
@@ -1572,7 +1601,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			STORE NULL TO lo_Configuration, lo_CFG, loEx
 			RELEASE tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 				, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile ;
-				, lcConfigFile, llExisteConfig, laConfig, I, lcConfData, lcExt, lcValue, lc_CFG_Path ;
+				, lcConfigFile, llExiste_CFG_EnDisco, laConfig, I, lcConfData, lcExt, lcValue, lc_CFG_Path ;
 				, lo_CFG, lo_Configuration, loEx
 
 		ENDTRY
@@ -1781,7 +1810,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp
 
 		TRY
-			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5) ;
+			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5) ;
 				, lnFileCount, lcErrorInfo, lcErrorFile ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
@@ -1790,55 +1819,61 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				lnCodError		= 0
-				loLang			= _SCREEN.o_FoxBin2Prg_Lang
-
-				.writeLog( '---' )
-				.writeLog( .c_Foxbin2prg_FullPath + ' (EXE Version: ' + .c_FB2PRG_EXE_Version + ')' + CR_LF ;
-					+ C_TAB + 'tc_InputFile:          ' + TRANSFORM(tc_InputFile) + CR_LF ;
-					+ C_TAB + 'tcType:                ' + TRANSFORM(tcType) + CR_LF;
-					+ C_TAB + 'tcTextName:            ' + TRANSFORM(tcTextName) + CR_LF ;
-					+ C_TAB + 'tlGenText:             ' + TRANSFORM(tlGenText) + CR_LF ;
-					+ C_TAB + 'tcDontShowErrors:      ' + TRANSFORM(tcDontShowErrors) + CR_LF ;
-					+ C_TAB + 'tcDebug:               ' + TRANSFORM(tcDebug) + CR_LF ;
-					+ C_TAB + 'tcDontShowProgress:    ' + TRANSFORM(tcDontShowProgress) + CR_LF ;
-					+ C_TAB + 'toModulo:              ' + TRANSFORM(toModulo) + CR_LF ;
-					+ C_TAB + 'toEx:                  ' + TRANSFORM(toEx) + CR_LF ;
-					+ C_TAB + 'tlRelanzarError:       ' + TRANSFORM(tlRelanzarError) + CR_LF ;
-					+ C_TAB + 'tcOriginalFileName:    ' + TRANSFORM(tcOriginalFileName) + CR_LF ;
-					+ C_TAB + 'tcRecompile:           ' + TRANSFORM(tcRecompile) + CR_LF ;
-					+ C_TAB + 'tcNoTimestamps:        ' + TRANSFORM(tcNoTimestamps) + CR_LF ;
-					+ C_TAB + 'tcBackupLevels:        ' + TRANSFORM(tcBackupLevels) + CR_LF ;
-					+ C_TAB + 'tcClearUniqueID:       ' + TRANSFORM(tcClearUniqueID) + CR_LF ;
-					+ C_TAB + 'tcOptimizeByFilestamp: ' + TRANSFORM(tcOptimizeByFilestamp) + CR_LF )
-
-				IF _VFP.STARTMODE > 0
-					SET ESCAPE OFF
-				ENDIF
-
 				loFSO			= .o_FSO
 				loWSH			= .o_WSH
+				
+				IF EMPTY(tcRecompile) AND NOT EMPTY(tc_InputFile) AND ADIR(laDirInfo, tc_InputFile, "D")=1 THEN
+					IF SUBSTR( laDirInfo(1,5), 5, 1 ) = "D"
+						tcRecompile	= tc_InputFile
+					ELSE
+						tcRecompile	= JUSTPATH( tc_InputFile )
+					ENDIF
+				ENDIF
+
 				tcRecompile		= EVL(tcRecompile,'1')
 				tcType			= UPPER( EVL(tcType,'') )
+
+				.writeLog( REPLICATE( '*', 100 ) )
+				.writeLog( 'MAIN EXECUTION' )
+				.writeLog( REPLICATE( '*', 100 ) )
+				.writeLog( '> EXTERNAL PARAMETERS' )
+				.writeLog( C_TAB + 'tc_InputFile:                 ' + TRANSFORM( EVL(tc_InputFile, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcType:                       ' + TRANSFORM( EVL(tcType, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcTextName:                   ' + TRANSFORM( EVL(tcTextName, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tlGenText:                    ' + TRANSFORM( EVL(tlGenText, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcDontShowErrors:             ' + TRANSFORM( EVL(tcDontShowErrors, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcDebug:                      ' + TRANSFORM( EVL(tcDebug, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcDontShowProgress:           ' + TRANSFORM( EVL(tcDontShowProgress, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tlRelanzarError:              ' + TRANSFORM( EVL(tlRelanzarError, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcOriginalFileName:           ' + TRANSFORM( EVL(tcOriginalFileName, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcRecompile:                  ' + TRANSFORM( EVL(tcRecompile, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcNoTimestamps:               ' + TRANSFORM( EVL(tcNoTimestamps, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcBackupLevels:               ' + TRANSFORM( EVL(tcBackupLevels, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcClearUniqueID:              ' + TRANSFORM( EVL(tcClearUniqueID, '(empty)  -> Will use Default' ) ) )
+				.writeLog( C_TAB + 'tcOptimizeByFilestamp:        ' + TRANSFORM( EVL(tcOptimizeByFilestamp, '(empty)  -> Will use Default' ) ) )
+				.writeLog( )
+
+				*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
+				*IF NOT .l_ConfigEvaluated THEN
+					.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
+						, @tcClearUniqueID, @tcOptimizeByFilestamp )
+				*ENDIF
+
+				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
 				DO CASE
 				CASE VERSION(5) < 900
 					*-- '¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
-					MESSAGEBOX( loLang.C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, loLang.C_FOXBIN2PRG_WARN_CAPTION_LOC, 60000 )
+					MESSAGEBOX( loLang.C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, loLang.C_FOXBIN2PRG_WARN_CAPTION_LOC + ' (' + .c_Language + ')', 60000 )
 					lnCodError	= 1
 
 				CASE EMPTY(tc_InputFile)
 					*-- (Ejemplo de sintaxis y uso)
-					MESSAGEBOX( loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC, 0+64+4096, loLang.C_FOXBIN2PRG_INFO_SINTAX_LOC, 60000 )
+					MESSAGEBOX( loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC, 0+64+4096, loLang.C_FOXBIN2PRG_INFO_SINTAX_LOC + ' (' + .c_Language + ')', 60000 )
 					lnCodError	= 1
 
 				OTHERWISE
 					*-- EJECUCIÓN NORMAL
-
-					*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
-					IF NOT .l_ConfigEvaluated THEN
-						.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-							, @tcClearUniqueID, @tcOptimizeByFilestamp )
-					ENDIF
 
 					IF .l_ShowProgress
 						.cargar_frm_avance()
@@ -1918,7 +1953,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 							DO CASE
 							CASE lnCodError = 1799	&& Conversion Cancelled
-								THROW
+								ERROR 1799
 
 							CASE lnCodError > 0
 								.l_Error = .T.
@@ -2166,6 +2201,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				OTHERWISE
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC, 0+64+4096, 'FoxBin2Prg', 60000 )
+					STRTOFILE( THIS.c_ErrorLog, lcErrorFile )
 
 				ENDCASE
 			ENDIF
@@ -2227,6 +2263,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loFSO			= .o_FSO
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				.c_InputFile	= FULLPATH( tc_InputFile )
+				.writeLog( REPLICATE( '*', 100 ) )
+				.writeLog( 'CONVERSION PROCESS' )
+				.writeLog( REPLICATE( '*', 100 ) )
 
 				IF ADIR( laDirFile, .c_InputFile, '', 1 ) = 0
 					*ERROR 'No se encontró el archivo [' + .c_InputFile + ']'
@@ -2255,7 +2294,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.c_OriginalFileName	= FORCEEXT(.c_OriginalFileName,'pjx')
 				ENDIF
 
-				.writeLog( '> c_OriginalFileName:  ' + .c_OriginalFileName )
+				.writeLog( C_TAB + 'c_OriginalFileName:           ' + .c_OriginalFileName )
+				.writeLog( )
 				.o_Conversor	= NULL
 
 				IF NOT FILE(.c_InputFile)
@@ -2510,10 +2550,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			loFSO				= NULL
 			THIS.o_Conversor	= NULL
 
-			IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
-				THIS.writeLog( REPLICATE('-',80) )
-				*THIS.writeLog_Flush()
-			ENDIF
+			*IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
+			*	THIS.writeLog( REPLICATE('-',100) )
+			*ENDIF
 
 			RELEASE tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName ;
 				, lcErrorInfo, laDirFile, lcExtension, lnFileCount, laFiles, I ;
@@ -11164,7 +11203,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDIF
 
 			lnBytes	= STRTOFILE( tcCodigo, tcOutputFile )
-			THIS.writeLog( 'Generated file size: ' + TRANSFORM(lnBytes/1024) + ' KiB' )
+			THIS.writeLog( C_FILENAME_LOC + ': ' + tcOutputFile )
+			THIS.writeLog( '- ' + loLang.C_GENERATED_FILE_SIZE_LOC + ': ' + TRANSFORM(lnBytes/1024,'######.##') + ' / ' + TRANSFORM(LEN(tcCodigo)/1024,'######.##') + ' KiB' )
 
 			IF lnBytes = 0
 				*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
@@ -21358,7 +21398,6 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_foxbin2prg_configfile" display="c_Foxbin2prg_ConfigFile"/>] ;
-		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
 		+ [<memberdata name="c_db2" display="c_DB2"/>] ;
 		+ [<memberdata name="c_dc2" display="c_DC2"/>] ;
 		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
@@ -21370,16 +21409,11 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
-		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
-		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
-		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
-		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
-		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
 		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
@@ -21475,6 +21509,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_FILE_DOESNT_EXIST_LOC											= "File does not exist:"
 	C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "File [<<.c_InputFile>>] is not supported"
 	C_FILE_NOT_FOUND_LOC											= "File not found"
+	C_FILENAME_LOC													= "File"
 	C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: ERROR!!"
 	C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
 	C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -21491,7 +21526,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Names capitalization program [<<lcEXE_CAPS>>] not found"
 	C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Object [<<toObj.CLASS>>] does not contain oReg object (level <<TRANSFORM(tnNivel)>>)"
 	C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operation not recognized. Only SETNAME and GETNAME allowed."
-	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= "Optimization: Output file [<<THIS.c_OutputFile>>] was not overwritten because it is the same as was generated."
+	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= "Optimization: Output file [<<tcOutputFile>>] was not overwritten because it is the same as was generated."
 	C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimization: Output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
 	C_PRESS_ESC_TO_CANCEL											= "Press Esc to Cancel"
 	C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
@@ -21565,7 +21600,7 @@ DEFINE CLASS CL_LANG AS Custom
 					ENDTRY
 				ENDIF
 				
-				tcLanguage	= EVL(tcLanguage, VERSION(3))
+				tcLanguage	= UPPER( EVL(tcLanguage, VERSION(3)) )
 
 				DO CASE
 				CASE llLangFileExists
@@ -21597,6 +21632,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_DOESNT_EXIST_LOC										= "Fichier ne existe pas:"
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "File [<<.c_InputFile>>] ne est pas supporté"
 					.C_FILE_NOT_FOUND_LOC											= "Fichier introuvable"
+					.C_FILENAME_LOC													= "Fichier"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: ERREUR!!"
 					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
 					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -21613,8 +21649,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] introuvables"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Object [<<toObj.CLASS>>] ne contient pas l'objet oReg (niveau <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Opération non reconnu. Seulement SETNAME et GETNAME permis."
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<< THIS.c_OutputFile >>] ne était pas écrasé parce que ce est la même que celle générée."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimisation: fichier de sortie [<< THIS.c_OutputFile >>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<<tcOutputFile>>] ne était pas écrasé parce que ce est la même que celle générée."
+					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimisation: fichier de sortie [<<THIS.c_OutputFile>>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
 					.C_PRESS_ESC_TO_CANCEL											= "Appuyez sur Esc pour Annuler"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procédure pas fermé. Dernière ligne de code doit être ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Traitement du fichier"
@@ -21655,6 +21691,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_DOESNT_EXIST_LOC										= "El archivo no existe:"
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "El archivo [<<.c_InputFile>>] no está soportado"
 					.C_FILE_NOT_FOUND_LOC											= "No se encontró el archivo"
+					.C_FILENAME_LOC													= "Archivo"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: ERROR!!"
 					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: INFORMACIÓN DE SINTAXIS"
 					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cEspecArchivo.Ext> [,cType ,cTextName ,cGenText ,cNoMostrarErrores ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -21671,7 +21708,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se sobreescribe por ser igual al generado."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: El archivo de salida [<<tcOutputFile>>] no se sobreescribe por ser igual al generado."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
 					.C_PRESS_ESC_TO_CANCEL											= "Pulse Esc para Cancelar"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
@@ -21710,6 +21747,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_DOESNT_EXIST_LOC										= "Datei existiert nicht:"
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "Datei [<<.c_InputFile>>] wird nicht unterstützt"
 					.C_FILE_NOT_FOUND_LOC											= "Datei nicht gefunden"
+					.C_FILENAME_LOC													= "Datei"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Erweiterungsneukonfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
 					.C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND_LOC						= "Externe Klasse (<<toModulo._ExternalClasses(I)>>) nicht in der Datei [<<toFoxBin2Prg.c_InputFile>>] gefunden"
@@ -21729,7 +21767,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Programm für Großschreibungssetzung [<<lcEXE_CAPS>>] nicht gefunden"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objekt [<<toObj.CLASS>>] enthält nicht oReg Objekt (level <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Befehl nicht erkannt. Nur SETNAME und GETNAME erlaubt."
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht überschrieben da sie dieselbe ist wie die neu generierte."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedur nicht geschlossen. Letzte Zeile des Codes muss ENDPROC sein. [<<laLineas(1)>>, Recno:<<RECNO()>>]"

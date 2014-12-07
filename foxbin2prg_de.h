@@ -39,7 +39,7 @@
 #DEFINE C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC		"* Programm für Großschreibungssetzung [<<lcEXE_CAPS>>] nicht gefunden"
 #DEFINE C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC				"Objekt [<<toObj.CLASS>>] enthält nicht oReg Objekt (level <<TRANSFORM(tnNivel)>>)"
 #DEFINE C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC			"Befehl nicht erkannt. Nur SETNAME und GETNAME erlaubt."
-#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht überschrieben da sie dieselbe ist wie die neu generierte."
+#DEFINE C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC					"Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben da sie dieselbe ist wie die neu generierte."
 #DEFINE C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC				"Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert da sie neuer ist als die Ursprungsdatei."
 #DEFINE C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC					"Procedur nicht geschlossen. Letzte Zeile des Codes muss ENDPROC sein. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 #DEFINE C_PROCESSING_LOC									"Bearbeite Datei"
