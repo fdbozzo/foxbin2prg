@@ -536,6 +536,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="obtenerarchivosdeldirectorio" display="ObtenerArchivosDelDirectorio"/>] ;
+		+ [<memberdata name="readinputvfpparams" display="ReadInputVFPParams"/>] ;
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
 		+ [<memberdata name="renametmpfile2tx2file" display="RenameTmpFile2Tx2File"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
@@ -563,7 +564,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_CurDir						= ''
 	c_InputFile						= ''
 	c_OriginalFileName				= ''
-	c_LogFile						= ''
+	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg.LOG'
 	c_TextLog						= ''
 	c_OutputFile					= ''
 	c_Recompile						= '1'
@@ -1808,7 +1809,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5) ;
-				, lnFileCount, lcErrorInfo, lcErrorFile ;
+				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1) ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -1820,6 +1821,18 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loWSH				= .o_WSH
 				DIMENSION .a_ProcessedFiles(1)
 				.n_ProcessedFiles	= 0
+				lnPCount			= 0
+
+				*-- Funciona y lee los parámetros, pero no le veo un caso de uso claro. 12/12/2014
+				*.ReadInputVFPParams( @laParams, @lnPCount )
+				
+				*IF lnPCount > 0 THEN
+				*	.writeLog( 'Params.Externos: ' + TRANSFORM(lnPCount,'@L ##') )
+				*	FOR I = 1 TO lnPCount
+				*		.writeLog( 'Param.' + TRANSFORM(I,'@L ##') + ' [' + laParams(I) + ']' )
+				*	ENDFOR
+				*	EXIT
+				*ENDIF
 
 				IF EMPTY(tcRecompile) AND NOT EMPTY(tc_InputFile) AND ADIR(laDirInfo, tc_InputFile, "D")=1 THEN
 					IF SUBSTR( laDirInfo(1,5), 5, 1 ) = "D"
@@ -1903,9 +1916,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
 						IF .l_Debug
-							IF FILE( .c_LogFile )
-								ERASE ( .c_LogFile )
-							ENDIF
+							ERASE ( .c_LogFile )
 						ENDIF
 
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
@@ -1913,10 +1924,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						FOR I = 1 TO lnFileCount
 							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
 							.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-							IF FILE( lcFile )
-								lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
-							ENDIF
+							lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
+							.writeLog_Flush()
 						ENDFOR
 
 
@@ -1936,20 +1945,21 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.c_LogFile	= ADDBS(tc_InputFile) + tcType + '.LOG'
 
 						IF .l_Debug
-							IF FILE( .c_LogFile )
-								ERASE ( .c_LogFile )
-							ENDIF
+							ERASE ( .c_LogFile )
 						ENDIF
 
 						.ObtenerArchivosDelDirectorio( tc_InputFile, @laFiles, @lnFileCount )
 
 						FOR I = 1 TO lnFileCount
 							lcFile	= laFiles(I)
+
 							IF NOT .TieneSoporte_Bin2Prg( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
 								LOOP
 							ENDIF
+
 							.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 							lnCodError = .Convertir( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
+							.writeLog_Flush()
 
 							DO CASE
 							CASE lnCodError = 1799	&& Conversion Cancelled
@@ -1976,20 +1986,21 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.c_LogFile	= ADDBS(tc_InputFile) + tcType + '.LOG'
 
 						IF .l_Debug
-							IF FILE( .c_LogFile )
-								ERASE ( .c_LogFile )
-							ENDIF
+							ERASE ( .c_LogFile )
 						ENDIF
 
 						.ObtenerArchivosDelDirectorio( tc_InputFile, @laFiles, @lnFileCount )
 
 						FOR I = 1 TO lnFileCount
 							lcFile	= laFiles(I)
+
 							IF NOT .TieneSoporte_Prg2Bin( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
 								LOOP
 							ENDIF
+
 							.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 							lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
+							.writeLog_Flush()
 
 							DO CASE
 							CASE lnCodError = 1799	&& Conversion Cancelled
@@ -2057,9 +2068,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
 								IF .l_Debug
-									IF FILE( .c_LogFile )
-										ERASE ( .c_LogFile )
-									ENDIF
+									ERASE ( .c_LogFile )
 								ENDIF
 
 								SELECT 0
@@ -2081,6 +2090,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+										.writeLog_Flush()
 									ENDIF
 								ENDFOR
 
@@ -2098,9 +2108,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
 
 								IF .l_Debug
-									IF FILE( .c_LogFile )
-										ERASE ( .c_LogFile )
-									ENDIF
+									ERASE ( .c_LogFile )
 								ENDIF
 
 								lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
@@ -2123,6 +2131,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 									IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+										.writeLog_Flush()
 									ENDIF
 								ENDFOR
 
@@ -2166,6 +2175,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		CATCH TO toEx
 			lnCodError		= toEx.ERRORNO
 			THIS.l_Error	= .T.
+			
+			IF VARTYPE(loLang) <> 'O' THEN
+				loLang		= CREATEOBJECT("CL_LANG","EN")
+			ENDIF
 
 			IF '-INTERACTIVE' $ ('-' + tcType) THEN
 				toEx.UserValue = 'tc_InputDir = [' + TRANSFORM(tc_InputFile) + ']'
@@ -2189,6 +2202,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
+			lcErrorFile	= FORCEPATH('FoxBin2Prg_Error.LOG', SYS(2023) )
+
+			IF VARTYPE(loLang) <> 'O' THEN
+				loLang		= CREATEOBJECT("CL_LANG","EN")
+			ENDIF
+
 			USE IN (SELECT("TABLABIN"))
 			THIS.writeLog_Flush()
 			*THIS.descargar_frm_avance()
@@ -2196,7 +2215,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			DO CASE
 			CASE '-INTERACTIVE' $ ('-' + tcType)
-				lcErrorFile	= FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
@@ -2211,12 +2229,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				OTHERWISE
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC, 0+64+4096, 'FoxBin2Prg', 60000 )
-					STRTOFILE( THIS.c_ErrorLog, lcErrorFile )
 
 				ENDCASE
 
 			CASE THIS.l_Debug
-				lcErrorFile	= FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )
 				STRTOFILE( THIS.c_ErrorLog, lcErrorFile )
 
 			ENDCASE
@@ -2295,9 +2311,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 				*-- OPTIMIZACIÓN VC2/SC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
-				*IF 'aclx0010' $ LOWER(.c_InputFile)
-				*	SET STEP ON
-				*ENDIF
 				IF INLIST(lcExtension,'VC2','SC2') AND .l_UseClassPerFile AND .l_RedirectClassPerFileToMain
 					IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
 						lc_BaseFile	= .c_InputFile
@@ -2558,7 +2571,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 
 					.o_Conversor.Convertir( @toModulo, .F., THIS )
-					.c_TextLog	= .c_TextLog + CR_LF + .o_Conversor.c_TextLog	&& Recojo el LOG que haya generado el conversor
+					.writeLog()
+					.writeLog(.o_Conversor.c_TextLog)	&& Recojo el LOG que haya generado el conversor
 				ELSE
 					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
 					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada.' )
@@ -2812,6 +2826,44 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE ReadInputVFPParams
+		LPARAMETERS taParams, tnPCount
+		EXTERNAL ARRAY taParams
+		*-----------------------------------------------------------------------------
+		* Obtengo la linea completa de comandos
+		* Adaptado de http://www.news2news.com/vfp/?example=51&function=78
+		* Facilitado por Mario Lopez en el foro FoxPro de Google Español - 23/12/2013
+		* https://groups.google.com/d/msg/publicesvfoxpro/llS-kTNrG9M/LA4D3fd152IJ
+		*-----------------------------------------------------------------------------
+		DECLARE INTEGER GetCommandLine IN kernel32
+		DECLARE INTEGER GlobalSize IN kernel32 INTEGER HMEM
+		DECLARE RtlMoveMemory IN kernel32 AS CopyMemory STRING @Destination, INTEGER SOURCE, INTEGER nLength
+
+		LOCAL lnAddress, lnBufsize, lsBuffer
+		lnAddress = GetCommandLine()  && returns an address in memory
+		lnBufsize = GlobalSize(lnAddress)
+
+		* allocating and filling a buffer
+		IF lnBufsize <> 0
+			lsBuffer = REPLICATE(CHR(0), lnBufsize)
+			= CopyMemory(@lsBuffer, lnAddress, lnBufsize)
+		ENDIF
+
+		lsBuffer	= STRTRAN(lsBuffer, '"'+CHR(0), '"'+CHR(13)+CHR(10))
+		lsBuffer	= STRTRAN(lsBuffer, '" ', '"'+CHR(13)+CHR(10), 1, 1)
+		lsBuffer	= STRTRAN(lsBuffer, CHR(0), ' ')
+		tnPCount	= ALINES( taParams, lsBuffer, 4 )
+		
+		IF tnPCount > 1 THEN
+			ADEL( taParams, 1 )
+			tnPCount = tnPCount - 1
+			DIMENSION taParams(tnPCount)
+		ENDIF
+
+		RETURN
+	ENDPROC
+
+
 	*******************************************************************************************************************
 	PROCEDURE RenameFile
 		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS Scripting.FileSystemObject, tlRelanzarError
@@ -2885,8 +2937,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	PROCEDURE writeLog_Flush
 		IF THIS.l_Debug AND NOT EMPTY(THIS.c_TextLog)
 			STRTOFILE( STRCONV(THIS.c_TextLog + CR_LF,9), THIS.c_LogFile, 1 )
-			THIS.c_TextLog	= ''
 		ENDIF
+		THIS.c_TextLog	= ''
 	ENDPROC
 
 
