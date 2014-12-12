@@ -401,7 +401,7 @@ LOCAL lnResp, loEx AS EXCEPTION
 *ENDIF
 
 *-- En el caso de recibir "BIN2PRG" o "PRG2BIN" en el primer parámetro, los invierto.
-IF INLIST(UPPER(TRANSFORM(tc_InputFile)), 'BIN2PRG', 'PRG2BIN', 'INTERACTIVE') THEN
+IF INLIST(UPPER(TRANSFORM(tc_InputFile)), 'BIN2PRG', 'PRG2BIN', 'BIN2PRG-INTERACTIVE', 'PRG2BIN-INTERACTIVE', 'INTERACTIVE') THEN
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
@@ -453,7 +453,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="c_fb2prg_exe_version" display="c_FB2PRG_EXE_Version"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
-		+ [<memberdata name="c_errorlog" display="c_ErrorLog"/>] ;
+		+ [<memberdata name="c_texterr" display="c_TextErr"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
 		+ [<memberdata name="c_foxbin2prg_configfile" display="c_Foxbin2prg_ConfigFile"/>] ;
 		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
@@ -461,6 +461,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
+		+ [<memberdata name="c_errorlogfile" display="c_ErrorLogFile"/>] ;
 		+ [<memberdata name="c_logfile" display="c_LogFile"/>] ;
 		+ [<memberdata name="c_recompile" display="c_Recompile"/>] ;
 		+ [<memberdata name="c_textlog" display="c_TextLog"/>] ;
@@ -545,6 +546,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="t_inputfile_timestamp" display="t_InputFile_TimeStamp"/>] ;
 		+ [<memberdata name="t_outputfile_timestamp" display="t_OutputFile_TimeStamp"/>] ;
 		+ [<memberdata name="writeerrorlog" display="writeErrorLog"/>] ;
+		+ [<memberdata name="writeerrorlog_flush" display="writeErrorLog_Flush"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
 		+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
 		+ [</VFPData>]
@@ -564,7 +566,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_CurDir						= ''
 	c_InputFile						= ''
 	c_OriginalFileName				= ''
-	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg.LOG'
+	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Debug.LOG'
+	c_ErrorLogFile					= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Error.LOG'
 	c_TextLog						= ''
 	c_OutputFile					= ''
 	c_Recompile						= '1'
@@ -577,7 +580,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_ConfigEvaluated				= .F.
 	l_Debug							= .F.
 	l_Error							= .F.
-	c_ErrorLog						= ''
+	c_TextErr						= ''
 	l_Test							= .F.
 	l_ShowErrors					= .T.
 	l_ShowProgress					= .T.
@@ -641,6 +644,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		SET SEPARATOR TO ','
 		ON ESCAPE ERROR 1799
 		SET ESCAPE ON
+
+		ERASE (THIS.c_ErrorLogFile)
+		ERASE (THIS.c_LogFile)
 
 		THIS.writeLog( REPLICATE( '*', 100 ) )
 		THIS.writeLog( 'FoxBin2Prg INIT' )
@@ -1966,7 +1972,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								ERROR 1799
 
 							CASE lnCodError > 0
-								.l_Error = .T.
 								.ejecutar_WriteErrorLog( @toEx )
 							ENDCASE
 						ENDFOR
@@ -2007,7 +2012,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								ERROR 1799
 
 							CASE lnCodError > 0
-								.l_Error = .T.
 								.ejecutar_WriteErrorLog( @toEx )
 							ENDCASE
 						ENDFOR
@@ -2174,7 +2178,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		CATCH TO toEx
 			lnCodError		= toEx.ERRORNO
-			THIS.l_Error	= .T.
 			
 			IF VARTYPE(loLang) <> 'O' THEN
 				loLang		= CREATEOBJECT("CL_LANG","EN")
@@ -2202,8 +2205,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
-			lcErrorFile	= FORCEPATH('FoxBin2Prg_Error.LOG', SYS(2023) )
-
 			IF VARTYPE(loLang) <> 'O' THEN
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
@@ -2219,13 +2220,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+48+4096, 'FoxBin2Prg', 60000 )
-					STRTOFILE( THIS.c_ErrorLog, lcErrorFile )
-					loWSH.Run( lcErrorFile, 1, .F. )
+					THIS.writeErrorLog_Flush( )
+					loWSH.Run( THIS.c_ErrorLogFile, 1, .F. )
 
 				CASE THIS.l_Error
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg', 60000 )
-					STRTOFILE( THIS.c_ErrorLog, lcErrorFile )
-					loWSH.Run( lcErrorFile, 1, .F. )
+					THIS.writeErrorLog_Flush( )
+					loWSH.Run( THIS.c_ErrorLogFile, 1, .F. )
 
 				OTHERWISE
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC, 0+64+4096, 'FoxBin2Prg', 60000 )
@@ -2233,7 +2234,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDCASE
 
 			CASE THIS.l_Debug
-				STRTOFILE( THIS.c_ErrorLog, lcErrorFile )
+				THIS.writeErrorLog_Flush( )
 
 			ENDCASE
 
@@ -2287,6 +2288,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
 				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
+				, loConversor as C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG' ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -2552,17 +2554,18 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				IF NOT .l_OptimizeByFilestamp OR .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
 					.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
-					.o_Conversor.c_InputFile			= .c_InputFile
-					.o_Conversor.c_OutputFile			= .c_OutputFile
-					.o_Conversor.c_LogFile				= .c_LogFile
-					.o_Conversor.l_Debug				= .l_Debug
-					.o_Conversor.l_Test					= .l_Test
-					.o_Conversor.n_FB2PRG_Version		= .n_FB2PRG_Version
-					.o_Conversor.l_MethodSort_Enabled	= .l_MethodSort_Enabled
-					.o_Conversor.l_PropSort_Enabled		= .l_PropSort_Enabled
-					.o_Conversor.l_ReportSort_Enabled	= .l_ReportSort_Enabled
-					.o_Conversor.c_OriginalFileName		= .c_OriginalFileName
-					.o_Conversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
+					loConversor							= .o_Conversor
+					loConversor.c_InputFile				= .c_InputFile
+					loConversor.c_OutputFile			= .c_OutputFile
+					loConversor.c_LogFile				= .c_LogFile
+					loConversor.l_Debug					= .l_Debug
+					loConversor.l_Test					= .l_Test
+					loConversor.n_FB2PRG_Version		= .n_FB2PRG_Version
+					loConversor.l_MethodSort_Enabled	= .l_MethodSort_Enabled
+					loConversor.l_PropSort_Enabled		= .l_PropSort_Enabled
+					loConversor.l_ReportSort_Enabled	= .l_ReportSort_Enabled
+					loConversor.c_OriginalFileName		= .c_OriginalFileName
+					loConversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
 					*--
 					.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + .c_InputFile + '...', 0, 0, 0 )
 
@@ -2570,9 +2573,16 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						BINDEVENT( .o_Conversor, 'AvanceDelProceso', THIS, 'AvanceDelProceso' )
 					ENDIF
 
-					.o_Conversor.Convertir( @toModulo, .F., THIS )
+					loConversor.Convertir( @toModulo, .F., THIS )
 					.writeLog()
 					.writeLog(.o_Conversor.c_TextLog)	&& Recojo el LOG que haya generado el conversor
+
+					*-- Logueo los errores
+					IF NOT EMPTY(loConversor.c_TextErr) THEN
+						.writeErrorLog( PADR( 'ERRORS FOUND IN FILE [' + .c_InputFile + '] ', 100, '-' ) )
+						.writeErrorLog( loConversor.c_TextErr )
+						.writeErrorLog( )
+					ENDIF
 				ELSE
 					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
 					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada.' )
@@ -2600,8 +2610,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			IF AEVENTS( laEvents, THIS.o_Conversor ) > 0 THEN
 				UNBINDEVENTS( THIS.o_Conversor )
 			ENDIF
-			loFSO				= NULL
-			THIS.o_Conversor	= NULL
+
+			STORE NULL TO loConversor, THIS.o_Conversor, loFSO
 
 			*IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
 			*	THIS.writeLog( REPLICATE('-',100) )
@@ -2610,7 +2620,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			RELEASE tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName ;
 				, lcErrorInfo, laDirFile, lcExtension, lnFileCount, laFiles, I ;
 				, ltFilestamp, lcExtA, lcExtB ;
-				, loFSO
+				, loConversor, loFSO
 		ENDTRY
 
 		RETURN lnCodError
@@ -2916,9 +2926,18 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tcText
 
 		TRY
-			THIS.c_ErrorLog	= THIS.c_ErrorLog + EVL(tcText,'') + CR_LF
+			THIS.c_TextErr	= THIS.c_TextErr + TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF
+			THIS.l_Error	= .T.
 		CATCH
 		ENDTRY
+	ENDPROC
+
+
+	PROCEDURE writeErrorLog_Flush
+		IF NOT EMPTY(THIS.c_TextErr)
+			STRTOFILE( STRCONV(THIS.c_TextErr + CR_LF,9), THIS.c_ErrorLogFile, 1 )
+		ENDIF
+		THIS.c_TextErr	= ''
 	ENDPROC
 
 
@@ -2933,7 +2952,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE writeLog_Flush
 		IF THIS.l_Debug AND NOT EMPTY(THIS.c_TextLog)
 			STRTOFILE( STRCONV(THIS.c_TextLog + CR_LF,9), THIS.c_LogFile, 1 )
@@ -3192,6 +3210,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="sortspecialprops" display="SortSpecialProps"/>] ;
 		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
 		+ [<memberdata name="writelog" display="writeLog"/>] ;
+		+ [<memberdata name="writeerrorlog" display="writeErrorLog"/>] ;
 		+ [<memberdata name="c_claseactual" display="c_ClaseActual"/>] ;
 		+ [<memberdata name="c_curdir" display="c_CurDir"/>] ;
 		+ [<memberdata name="c_foxbin2prg_fullpath" display="c_Foxbin2prg_FullPath"/>] ;
@@ -3200,6 +3219,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="c_originalfilename" display="c_OriginalFileName"/>] ;
 		+ [<memberdata name="c_outputfile" display="c_OutputFile"/>] ;
 		+ [<memberdata name="c_textlog" display="c_TextLog"/>] ;
+		+ [<memberdata name="c_texterr" display="c_TextErr"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
@@ -3233,6 +3253,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	c_CurDir				= ''
 	c_LogFile				= ''
 	c_TextLog				= ''
+	c_TextErr				= ''
 	l_MethodSort_Enabled	= .T.
 	l_PropSort_Enabled		= .T.
 	l_ReportSort_Enabled	= .T.
@@ -4641,6 +4662,16 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		TRY
 			THIS.c_TextLog	= THIS.c_TextLog + TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF
+		CATCH
+		ENDTRY
+	ENDPROC
+
+
+	PROCEDURE writeErrorLog
+		LPARAMETERS tcText
+
+		TRY
+			THIS.c_TextErr	= THIS.c_TextErr + EVL(tcText,'') + CR_LF
 		CATCH
 		ENDTRY
 	ENDPROC
@@ -6531,7 +6562,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE evaluarDefinicionDeProcedure
-		LPARAMETERS toClase, tnX, tc_Comentario, tcProcName, tcProcType, toObjeto
+		LPARAMETERS toClase, I, tc_Comentario, tcProcName, tcProcType, toObjeto
 		*--------------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
@@ -6539,12 +6570,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL I, lcNombreObjeto, lnObjProc ;
+			LOCAL lcNombreObjeto, lnObjProc ;
 				, loProcedure AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
 
 			IF EMPTY(toClase._Fin_Cab)
-				toClase._Fin_Cab	= tnX-1
-				toClase._Ini_Cuerpo	= tnX
+				toClase._Fin_Cab	= I-1
+				toClase._Ini_Cuerpo	= I
 			ENDIF
 
 			loProcedure		= NULL
@@ -6552,6 +6583,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			loProcedure._Nombre			= tcProcName
 			loProcedure._ProcType		= tcProcType
 			loProcedure._Comentario		= tc_Comentario
+			loProcedure._Inicio			= I
 
 			*-- Anoto en HiddenMethods y ProtectedMethods según corresponda
 			DO CASE
@@ -6595,7 +6627,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		FINALLY
 			STORE NULL TO loProcedure
 			RELEASE loProcedure, I, lcNombreObjeto, lnObjProc ;
-				, toClase, tnX, tc_Comentario, tcProcName, tcProcType, toObjeto
+				, toClase, tc_Comentario, tcProcName, tcProcType, toObjeto
 		ENDTRY
 
 		RETURN
@@ -6681,11 +6713,16 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							*-- Puede haber varias clases definidas
 							*	llEXTERNAL_CLASS_Completed	= .T.
 
+							*-- Logueo los errores
+							IF NOT EMPTY(loClase.c_TextErr) THEN
+								.writeErrorLog( loClase.c_TextErr )
+							ENDIF
 						ENDCASE
 
 					ENDFOR
 
 					.verificar_CLASES_EXTERNAS( @toModulo, @toFoxBin2Prg )
+					
 				ENDIF
 			ENDWITH	&& THIS
 
@@ -13206,15 +13243,17 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	, RESETTODEFAULT, SAVEASCLASS, SHOWWHATSTHIS, WRITEEXPRESSION, WRITEMETHOD
 
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_texterr" display="c_TextErr"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
 		+ [<memberdata name="analizarbloque" display="analizarBloque"/>] ;
 		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [<memberdata name="writeerrorlog" display="writeErrorLog"/>] ;
 		+ [</VFPData>]
 
-
+	c_TextErr			= ''
 	l_Debug				= .F.
 
 
@@ -13265,6 +13304,16 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 
 		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
+	ENDPROC
+
+
+	PROCEDURE writeErrorLog
+		LPARAMETERS tcText
+
+		TRY
+			THIS.c_TextErr	= THIS.c_TextErr + EVL(tcText,'') + CR_LF
+		CATCH
+		ENDTRY
 	ENDPROC
 
 
@@ -13472,9 +13521,11 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [<memberdata name="add_procedure" display="add_Procedure"/>] ;
 		+ [<memberdata name="add_property" display="add_Property"/>] ;
 		+ [<memberdata name="add_object" display="add_Object"/>] ;
+		+ [<memberdata name="c_texterr" display="c_TextErr"/>] ;
 		+ [<memberdata name="l_objectmetadatainheader" display="l_ObjectMetadataInHeader"/>] ;
 		+ [<memberdata name="_addobject_count" display="_AddObject_Count"/>] ;
 		+ [<memberdata name="_addobjects" display="_AddObjects"/>] ;
+		+ [<memberdata name="_aprocnames" display="_aProcNames"/>] ;
 		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
 		+ [<memberdata name="_checked" display="_Checked"/>] ;
 		+ [<memberdata name="_class" display="_Class"/>] ;
@@ -13524,8 +13575,9 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [</VFPData>]
 
 
-	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1]
+	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1], _aProcNames[1]
 	l_ObjectMetadataInHeader	= .F.
+	c_TextErr			= ''
 	_Nombre				= ''
 	_ObjName			= ''
 	_Parent				= ''
@@ -13582,9 +13634,17 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		#ENDIF
 
 		WITH THIS AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+			*-- Verificación de Procedure repetido
+			IF ._Procedure_Count > 0 AND ASCAN( ._aProcNames, toProcedure._Nombre, 1, 0, 0, 1+2+4 ) > 0 THEN
+				.writeErrorLog( '* Duplicated Method "' + toProcedure._Nombre + '" of class "' ;
+					+ ._Nombre + '" in line ' + TRANSFORM(toProcedure._Inicio) )
+			ENDIF
+
 			._Procedure_Count	= ._Procedure_Count + 1
 			DIMENSION ._Procedures( ._Procedure_Count )
+			DIMENSION ._aProcNames( ._Procedure_Count )
 			._Procedures( ._Procedure_Count )	= toProcedure
+			._aProcNames( ._Procedure_Count )	= toProcedure._Nombre
 		ENDWITH && THIS
 	ENDPROC
 
@@ -13631,6 +13691,7 @@ DEFINE CLASS CL_PROCEDURE AS CL_CUS_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="add_line" display="add_Line"/>] ;
 		+ [<memberdata name="_comentario" display="_Comentario"/>] ;
+		+ [<memberdata name="_inicio" display="_Inicio"/>] ;
 		+ [<memberdata name="_nombre" display="_Nombre"/>] ;
 		+ [<memberdata name="_procline_count" display="_ProcLine_Count"/>] ;
 		+ [<memberdata name="_proclines" display="_ProcLines"/>] ;
@@ -13642,6 +13703,7 @@ DEFINE CLASS CL_PROCEDURE AS CL_CUS_BASE
 	_ProcType		= ''
 	_Comentario		= ''
 	_ProcLine_Count	= 0
+	_Inicio			= 0
 
 
 	************************************************************************************************
