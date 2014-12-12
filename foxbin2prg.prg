@@ -1829,7 +1829,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.n_ProcessedFiles	= 0
 				lnPCount			= 0
 
-				*-- Funciona y lee los parámetros, pero no le veo un caso de uso claro. 12/12/2014
+				*-- Funciona y lee los parámetros, pero no le veo un caso de uso claro, ya que si se eligen
+				*-- varios directorios de proyecto, la compilación será errónea. 12/12/2014
 				*.ReadInputVFPParams( @laParams, @lnPCount )
 				
 				*IF lnPCount > 0 THEN
@@ -2165,7 +2166,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								ENDCASE
 
 								.c_LogFile	= tc_InputFile + '.LOG'
-								ERASE ( .c_LogFile )
+
+								IF .l_Debug
+									ERASE ( .c_LogFile )
+								ENDIF
 
 								lnCodError = .Convertir( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
 								.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, 1, 1, 0 )
@@ -3222,6 +3226,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		+ [<memberdata name="c_texterr" display="c_TextErr"/>] ;
 		+ [<memberdata name="c_type" display="c_Type"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
+		+ [<memberdata name="l_error" display="l_Error"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
@@ -3242,6 +3247,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 		, a_SpecialProps_XMLAda(1), a_SpecialProps_XMLFld(1), a_SpecialProps_XMLTbl(1)
 
 	l_Debug					= .F.
+	l_Error					= .F.
 	l_Test					= .F.
 	c_InputFile				= ''
 	c_OutputFile			= ''
@@ -4672,6 +4678,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 		TRY
 			THIS.c_TextErr	= THIS.c_TextErr + EVL(tcText,'') + CR_LF
+			THIS.l_Error	= .T.
 		CATCH
 		ENDTRY
 	ENDPROC
@@ -6611,6 +6618,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					*-- Procedimiento de objeto
 					toObjeto	= toClase._AddObjects( lnObjProc )
 					toObjeto.add_Procedure( loProcedure )
+			
+					*-- Paso el log de errores
+					IF NOT EMPTY(toObjeto.c_TextErr) THEN
+						toClase.writeErrorLog(toObjeto.c_TextErr)
+						toObjeto.c_TextErr	= ''
+					ENDIF
 				ENDIF
 			ELSE
 				*-- Procedimiento de clase
@@ -6988,6 +7001,11 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
@@ -7335,6 +7353,11 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
@@ -7654,6 +7677,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toProject, toFoxBin2Prg )
@@ -8450,6 +8478,11 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toReport, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -8879,6 +8912,11 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toTable )
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 				.escribirArchivoBin( @toTable, @toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -9179,6 +9217,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase )
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
 				.escribirArchivoBin( @toDatabase, toFoxBin2Prg )
 			ENDWITH && THIS
@@ -9358,6 +9401,11 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 1, 2, 1 )
 				.escribirArchivoBin( @toMenu )
@@ -11668,6 +11716,12 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					lcExternalHeader	= lcExternalHeader + CR_LF
 				ENDIF
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+
 				*-- Genero el VC2
 				lnStep			= lnStep + 1
 				.AvanceDelProceso( 'Writing VC2...', lnStep, lnClassTotal*lnStepCount, 1 )
@@ -11974,6 +12028,12 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				IF toFoxBin2Prg.l_UseClassPerFile
 					lcExternalHeader	= lcExternalHeader + CR_LF
 				ENDIF
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 
 				*-- Genero el SC2
 				lnStep			= lnStep + 1
@@ -12329,6 +12389,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 					CD (lcCurdir)
 					RETURN
 				ENDTEXT
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
 
 
 				*-- Genero el PJ2
@@ -12708,6 +12773,11 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 					RETURN
 				ENDTEXT
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 
 				*-- Genero el PJ2
 				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
@@ -12885,6 +12955,11 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					.write_DETALLE_REPORTE( @loRegCur )
 				ENDIF
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 
 				*-- Genero el FR2
 				.AvanceDelProceso( 'Writing FR2...', 2, 2, 1 )
@@ -12992,6 +13067,11 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 					FCLOSE( toFoxBin2Prg.n_FileHandle )
 
+					IF .l_Error
+						.writeLog( '*** ERRORS found - Generation Cancelled' )
+						EXIT
+					ENDIF
+
 
 					*-- Genero el DB2, renombrando el TMP
 					.AvanceDelProceso( 'Writing DB2...', 3, 3, 1 )
@@ -13013,6 +13093,11 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				ELSE
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+
+					IF .l_Error
+						.writeLog( '*** ERRORS found - Generation Cancelled' )
+						EXIT
+					ENDIF
 
 
 					*-- Genero el DB2
@@ -13126,6 +13211,11 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				toDatabase		= CREATEOBJECT('CL_DBC')
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
 
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
 
 				*-- Genero el DC2
 				.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
@@ -13202,6 +13292,11 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				toMenu			= CREATEOBJECT('CL_MENU')
 				toMenu.get_DataFromTablabin()
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toMenu.toText()
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
 
 
 				*-- Genero el MN2
@@ -13730,6 +13825,8 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="add_procedure" display="add_Procedure"/>] ;
 		+ [<memberdata name="add_property" display="add_Property"/>] ;
+		+ [<memberdata name="c_texterr" display="c_TextErr"/>] ;
+		+ [<memberdata name="_aprocnames" display="_aProcNames"/>] ;
 		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
 		+ [<memberdata name="_class" display="_Class"/>] ;
 		+ [<memberdata name="_classlib" display="_ClassLib"/>] ;
@@ -13749,7 +13846,8 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 		+ [<memberdata name="_zorder" display="_ZOrder"/>] ;
 		+ [</VFPData>]
 
-	DIMENSION _Props[1,1], _Procedures[1]
+	DIMENSION _Props[1,1], _Procedures[1], _aProcNames[1]
+	c_TextErr			= ''
 	_Nombre				= ''
 	_ObjName			= ''
 	_Parent				= ''
@@ -13780,9 +13878,17 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 				toProcedure._Nombre	= SUBSTR( toProcedure._Nombre, AT( '.', toProcedure._Nombre, OCCURS( '.', ._Nombre) ) + 1 )
 			ENDIF
 
+			*-- Verificación de Procedure repetido
+			IF ._Procedure_Count > 0 AND ASCAN( ._aProcNames, toProcedure._Nombre, 1, 0, 0, 1+2+4 ) > 0 THEN
+				.writeErrorLog( '* Duplicated Method "' + toProcedure._Nombre + '" of object "' ;
+					+ ._Nombre + '" of class "' + ._Parent + '" in line ' + TRANSFORM(toProcedure._Inicio) )
+			ENDIF
+
 			._Procedure_Count	= ._Procedure_Count + 1
 			DIMENSION ._Procedures( ._Procedure_Count )
+			DIMENSION ._aProcNames( ._Procedure_Count )
 			._Procedures( ._Procedure_Count )	= toProcedure
+			._aProcNames( ._Procedure_Count )	= toProcedure._Nombre
 		ENDWITH && THIS
 	ENDPROC
 
