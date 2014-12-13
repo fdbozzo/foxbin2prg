@@ -13859,8 +13859,8 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 
 			*-- Verificación de Procedure repetido
 			IF ._Procedure_Count > 0 AND ASCAN( ._aProcNames, toProcedure._Nombre, 1, 0, 0, 1+2+4 ) > 0 THEN
-				.writeErrorLog( '* Duplicated Method "' + toProcedure._Nombre + '" of object "' ;
-					+ ._Nombre + '" of class "' + ._Parent + '" in line ' + TRANSFORM(toProcedure._Inicio) )
+				.writeErrorLog( '* Duplicated Method "' + toProcedure._Nombre + '" of class.object "' ;
+					+ ._Nombre + '" in line ' + TRANSFORM(toProcedure._Inicio) )
 			ENDIF
 
 			._Procedure_Count	= ._Procedure_Count + 1
