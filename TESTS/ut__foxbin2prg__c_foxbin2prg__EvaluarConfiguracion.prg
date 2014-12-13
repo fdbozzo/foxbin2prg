@@ -292,7 +292,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'DBC_Conversion_Support', 1 )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ShowProgress', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ShowErrors', .T. )
-			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .T. )
@@ -2427,7 +2427,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			STORE 0 TO lnCodError
 			lcSeteo			= 'LBX_Conversion_Support:'
 			leValorEsperado	= 1
-			laCFG_CachedAccess_Esperado(1)	= .F.
+			laCFG_CachedAccess_Esperado(1)	= .T.
 			laCFG_CachedAccess_Esperado(2)	= .T.
 			laCFG_CachedAccess_Esperado(3)	= .T.
 
@@ -2489,7 +2489,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			STORE 0 TO lnCodError
 			lcSeteo			= 'LBX_Conversion_Support:'
 			leValorEsperado	= 0
-			laCFG_CachedAccess_Esperado(1)	= .F.
+			laCFG_CachedAccess_Esperado(1)	= .T.
 			laCFG_CachedAccess_Esperado(2)	= .T.
 			laCFG_CachedAccess_Esperado(3)	= .T.
 
