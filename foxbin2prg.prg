@@ -4846,8 +4846,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createProject
+		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
-		CREATE TABLE (THIS.c_OutputFile) ;
+		LOCAL lcCursorName
+		tcTableOrCursor	= EVL( tcTableOrCursor, 'TABLE' )
+		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
+
+		CREATE &tcTableOrCursor. (lcCursorName) ;
 			( NAME			M ;
 			, TYPE			C(1) ;
 			, ID			N(10) ;
@@ -4877,7 +4882,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, KEY			C(32) ;
 			, USER			M )
 
-		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		IF tcTableOrCursor = 'TABLE' THEN
+			USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		ENDIF
 
 	ENDPROC
 
@@ -4934,8 +4941,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createClasslib
+		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
-		CREATE TABLE (THIS.c_OutputFile) ;
+		LOCAL lcCursorName
+		tcTableOrCursor	= EVL( tcTableOrCursor, 'TABLE' )
+		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
+
+		CREATE &tcTableOrCursor. (lcCursorName) ;
 			( PLATFORM		C(8) ;
 			, UNIQUEID		C(10) ;
 			, TIMESTAMP		N(10) ;
@@ -4960,7 +4972,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, RESERVED8		M ;
 			, USER			M )
 
-		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		IF tcTableOrCursor = 'TABLE' THEN
+			USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		ENDIF
 
 	ENDPROC
 
@@ -4989,8 +5003,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createForm
+		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
-		CREATE TABLE (THIS.c_OutputFile) ;
+		LOCAL lcCursorName
+		tcTableOrCursor	= EVL( tcTableOrCursor, 'TABLE' )
+		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
+
+		CREATE &tcTableOrCursor. (lcCursorName) ;
 			( PLATFORM		C(8) ;
 			, UNIQUEID		C(10) ;
 			, TIMESTAMP		N(10) ;
@@ -5015,7 +5034,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, RESERVED8		M ;
 			, USER			M )
 
-		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		IF tcTableOrCursor = 'TABLE' THEN
+			USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		ENDIF
 
 	ENDPROC
 
@@ -5044,8 +5065,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 	*******************************************************************************************************************
 	PROCEDURE createReport
+		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
-		CREATE TABLE (THIS.c_OutputFile) ;
+		LOCAL lcCursorName
+		tcTableOrCursor	= EVL( tcTableOrCursor, 'TABLE' )
+		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
+
+		CREATE &tcTableOrCursor. (lcCursorName) ;
 			( 'PLATFORM'	C(8) ;
 			, 'UNIQUEID'	C(10) ;
 			, 'TIMESTAMP'	N(10) ;
@@ -5122,15 +5148,22 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, 'SUPEXPR'		M ;
 			, 'USER'		M )
 
-		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		IF tcTableOrCursor = 'TABLE' THEN
+			USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		ENDIF
 
 	ENDPROC
 
 
 	*******************************************************************************************************************
 	PROCEDURE createMenu
+		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
-		CREATE TABLE (THIS.c_OutputFile) ;
+		LOCAL lcCursorName
+		tcTableOrCursor	= EVL( tcTableOrCursor, 'TABLE' )
+		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
+
+		CREATE &tcTableOrCursor. (lcCursorName) ;
 			( 'OBJTYPE'		Numeric(2) ;
 			, 'OBJCODE'		Numeric(2) ;
 			, 'NAME'		MEMO ;
@@ -5157,7 +5190,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, 'SYSRES'		Numeric(1) ;
 			, 'RESNAME'		MEMORY(4) )
 
-		USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		IF tcTableOrCursor = 'TABLE' THEN
+			USE (THIS.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+		ENDIF
 
 	ENDPROC
 
@@ -7008,9 +7043,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-
 				.createClasslib()
-
 				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -7359,11 +7392,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
-
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-
 				.createForm()
-
 				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -7666,11 +7696,6 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-
-				*-- Creo solo la cabecera del proyecto
-				.createProject()
-
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
 				*.identificarBloquesDeExclusion( @laCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
@@ -7684,6 +7709,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+				.createProject()
 				.escribirArchivoBin( @toProject, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -8469,14 +8496,12 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-
-				*-- Creo el reporte
-				.createReport()
+				.createReport('CURSOR')
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
+				USE IN (SELECT('TABLABIN'))
 
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
@@ -8484,6 +8509,8 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+				.createReport()
 				.escribirArchivoBin( @toReport, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -9208,11 +9235,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-
-				*-- Creo la tabla
-				*.createTable()
-
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase )
@@ -9223,6 +9245,8 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 2, 2, 1 )
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+				*.createTable()
 				.escribirArchivoBin( @toDatabase, toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -9393,14 +9417,12 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-
-				*-- Creo la tabla
-				.createMenu()
+				.createMenu('CURSOR')
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.AvanceDelProceso( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identificarBloquesDeCodigo( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
+				USE IN (SELECT('TABLABIN'))
 
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
@@ -9408,6 +9430,8 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				ENDIF
 
 				.AvanceDelProceso( 'Generating Binary...', 1, 2, 1 )
+				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+				.createMenu()
 				.escribirArchivoBin( @toMenu )
 			ENDWITH && THIS
 
