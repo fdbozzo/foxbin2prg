@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.37'
-    .VersionDate          = Date(2014,11,30)
+    .VersionNumber        = 'v1.19.38'
+    .VersionDate          = Date(2014,12,13)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,11 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2014/12/13	v1.19.38
+- Feature: Now is possible to use FoxBin2Prg for batch conversions directly from the File Explorer (see README.txt), without the need of vbs scripts, that sometimes can make trouble or are not permitted by IT department (Francisco Prieto)
+- Feature: Enhanced Multilanguage support by 3 ways: 1-Automatic [DEFAULT] (depending on VERSION(3)); 2-By parameter, using the new method ChangeLanguage(); 3-Using the new setting "Language" in foxbin2prg.cfg
+- Feature: Detection of duplicated methods on vc2/sc2 files to notify those cases of vcx/scx file corruption (Álvaro Castrillón)
 
 2014/11/30	v1.19.37
 - Feature: Added Class per file support, configurable with UseClassPerFile:1 (Ryan Harris/Lutz Scheffler)

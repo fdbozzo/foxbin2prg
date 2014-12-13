@@ -1,4 +1,4 @@
-﻿26/01/2014		FOXBIN2PRG v1.19 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
+﻿13/12/2014		FOXBIN2PRG v1.19 FOR VISUAL FOXPRO 9 BINARIES		Fernando D. Bozzo (fdbozzo@gmail.com)
 Blog: http://fdbozzo.blogspot.com.es/
 Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
 
@@ -34,15 +34,21 @@ USE:
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Generates the TEXT version sc2 extension
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenerates the binary version with scx extension
 
-USEFUL TRICK:
-You can create shortcuts for all vbs scripts in the "SendTo" folder on your user Windows Profile, so you can "send"
-the selected file (pjx,pj2,etc) to the selected script, and make on-the-fly conversions.
-In example: Select a file, right-click, SendTo -> VFP9_FoxBin2Prg.vbs
+USEFUL SETUP:
+You can create 3 shortcuts of FoxBin2Prg.exe and move them to "SendTo" folder on your Windows profile,
+so you can "send" the selected file (pjx,pj2,etc) to the selected option, and make on-the-fly conversions,
+then rename them as this (make sure you can see system file extensions):
+
+Name------------------------	Right-click/Properties/destination-----------	What you can do with this option---------
+FoxBin2Prg - Binary2Text.lnk	<path>\foxbin2prg.exe "BIN2PRG-INTERACTIVE"		Process directories or individual files
+FoxBin2Prg - Text2Binary.lnk	<path>\foxbin2prg.exe "PRG2BIN-INTERACTIVE"		Process directories or individual files
+FoxBin2Prg.lnk					<path>\foxbin2prg.exe "INTERACTIVE"				Process individual files
+
+In example: Select a file, right-click, SendTo -> FoxBin2Prg
+
 
 LOCALIZATION:
-If file [foxbin2prg.h] is created, texts to other languages can be translated. En example
-file [foxbin2prg_en.h] is attached with english translation.
-Recompiling is necesary to update the strings from the include file.
+Is automatic starting at v1.19.38 (Languages: EN,ES,FR,DE)
 
 
 FINAL NOTE:
@@ -87,15 +93,21 @@ USO:
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Genera la versión TEXTO con extensión sc2
 DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenera la versión binaria con extensión scx
 
-TRUCO UTIL:
-Se puede crear accesos directos de todos los scripts vbs en la carpeta "SendTo" del perfil del usuario, para poder "enviar"
-el archivo elegido (pjx,pj2,etc) al script seleccionado, y así hacer conversiones al vuelo.
-Por ejemplo: Seleccionar un archivo, click-derecho, Enviar A -> VFP9_FoxBin2Prg.vbs
+CONFIGURACIÓN UTIL:
+Se puede crear 3 accesos directos de FoxBin2Prg.exe y moverlos a la carpeta "SendTo" de su perfil de usuario Windows,
+para poder "enviar" el archivo elegido (pjx,pj2,etc) a la opción seleccionada, y así hacer conversiones al vuelo,
+luego puede renombrar y modificar esos accesos directos como sigue (asegúrese de que puede ver las extensiones del sistema):
+
+Nombre------------------------	Click-Derecho/Propiedades/destino------------	Qué puede hacer con esta opción----------
+FoxBin2Prg - Binary2Text.lnk	<path>\foxbin2prg.exe "BIN2PRG-INTERACTIVE"		Procesar directorios o archivos individuales
+FoxBin2Prg - Text2Binary.lnk	<path>\foxbin2prg.exe "PRG2BIN-INTERACTIVE"		Procesar directorios o archivos individuales
+FoxBin2Prg.lnk					<path>\foxbin2prg.exe "INTERACTIVE"				Procesar archivos individuales
+
+Por ejemplo: Seleccionar un archivo, click-derecho, Enviar A -> FoxBin2Prg
+
 
 LOCALIZACIÓN:
-Si se crea un archivo [foxbin2prg.h], se pueden trasladar los textos a otros idiomas. Se adjunta
-un archivo de ejemplo [foxbin2prg_en.h] con la traslación al inglés.
-Es necesario recompilar el programa para que se actualicen los textos con el archivo include.
+Es automática desde la v1.19.38 (Lenguajes: EN,ES,FR,DE)
 
 
 NOTA FINAL:
