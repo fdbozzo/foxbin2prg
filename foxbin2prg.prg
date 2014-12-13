@@ -11716,11 +11716,6 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					lcExternalHeader	= lcExternalHeader + CR_LF
 				ENDIF
 
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
-				ENDIF
-
 
 				*-- Genero el VC2
 				lnStep			= lnStep + 1
@@ -12027,11 +12022,6 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				IF toFoxBin2Prg.l_UseClassPerFile
 					lcExternalHeader	= lcExternalHeader + CR_LF
-				ENDIF
-
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
 				ENDIF
 
 
@@ -12389,11 +12379,6 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 					CD (lcCurdir)
 					RETURN
 				ENDTEXT
-
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
-				ENDIF
 
 
 				*-- Genero el PJ2
@@ -12773,11 +12758,6 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 					RETURN
 				ENDTEXT
 
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
-				ENDIF
-
 
 				*-- Genero el PJ2
 				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
@@ -12955,11 +12935,6 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					.write_DETALLE_REPORTE( @loRegCur )
 				ENDIF
 
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
-				ENDIF
-
 
 				*-- Genero el FR2
 				.AvanceDelProceso( 'Writing FR2...', 2, 2, 1 )
@@ -13067,11 +13042,6 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 					FCLOSE( toFoxBin2Prg.n_FileHandle )
 
-					IF .l_Error
-						.writeLog( '*** ERRORS found - Generation Cancelled' )
-						EXIT
-					ENDIF
-
 
 					*-- Genero el DB2, renombrando el TMP
 					.AvanceDelProceso( 'Writing DB2...', 3, 3, 1 )
@@ -13093,11 +13063,6 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				ELSE
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-
-					IF .l_Error
-						.writeLog( '*** ERRORS found - Generation Cancelled' )
-						EXIT
-					ENDIF
 
 
 					*-- Genero el DB2
@@ -13211,11 +13176,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				toDatabase		= CREATEOBJECT('CL_DBC')
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
 
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
-				ENDIF
-
 
 				*-- Genero el DC2
 				.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
@@ -13292,11 +13252,6 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 				toMenu			= CREATEOBJECT('CL_MENU')
 				toMenu.get_DataFromTablabin()
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toMenu.toText()
-
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
-				ENDIF
 
 
 				*-- Genero el MN2
