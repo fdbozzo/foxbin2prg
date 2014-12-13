@@ -4,13 +4,13 @@
 * Project info...: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
 * Fecha creación.: 04/11/2013
 *
-* LICENCIA:
-* Esta obra está sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons.
-* Para ver una copia de esta licencia, visite http://creativecommons.org/licenses/by-sa/4.0/deed.es_ES.
-*
 * LICENCE:
 * This work is licensed under the Creative Commons Attribution 4.0 International License.
 * To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
+*
+* LICENCIA:
+* Esta obra está sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons.
+* Para ver una copia de esta licencia, visite http://creativecommons.org/licenses/by-sa/4.0/deed.es_ES.
 *
 *---------------------------------------------------------------------------------------------------
 * DESCRIPCIÓN....: CONVIERTE EL ARCHIVO VCX/SCX/PJX INDICADO A UN "PRG HÍBRIDO" PARA POSTERIOR RECONVERSIÓN.
@@ -119,6 +119,7 @@
 * 30/11/2014	FDBOZZO		v1.19.37	Mejora: Agregado control para detectar reportes no compatibles con VFP 9
 * 04/12/2014	FDBOZZO		v1.19.38	Mejora: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs (Francisco Prieto)
 * 06/12/2014	FDBOZZO		v1.19.38	Mejora: Rediseño de la Internacionalización. Ahora la selección es automática al cargar y no requiere recompilar.
+* 12/12/2014	FDBOZZO		v1.19.38	Mejora: Detección de métodos duplicados para notificar casos de corrupción (Álvaro Castrillón)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -171,6 +172,7 @@
 * 14/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta)
 * 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia)
 * 04/12/2014	Francisco Prieto	MEJORA v1.19.36: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs
+* 12/12/2014	Álvaro Castrillón	MEJORA v1.19.36: Detección de métodos duplicados para notificar casos de corrupción
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
