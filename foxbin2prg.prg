@@ -3256,6 +3256,7 @@ DEFINE CLASS frm_interactive AS form
 		Left = 12, ;
 		Top = 16, ;
 		Width = 356, ;
+		KeyPreview = .T., ;
 		Name = "lbl_Title"
 
 
@@ -3298,7 +3299,18 @@ DEFINE CLASS frm_interactive AS form
 	ENDPROC
 
 
-	PROCEDURE opg_conversiontype.InteractiveChange
+	PROCEDURE KeyPress
+		LPARAMETERS nKeyCode, nShiftAltCtrl
+
+		IF nKeyCode = 27 THEN
+			THISFORM.opg_ConversionType.Value = 3
+			THISFORM.Hide()
+			CLEAR EVENTS
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE opg_conversiontype.Click
 		*-- Selección
 		THISFORM.Hide()
 		CLEAR EVENTS
