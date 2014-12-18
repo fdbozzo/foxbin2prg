@@ -403,7 +403,7 @@ LOCAL lnResp, loEx AS EXCEPTION
 *ENDIF
 
 *-- En el caso de recibir "BIN2PRG" o "PRG2BIN" en el primer parámetro, los invierto.
-IF INLIST(UPPER(TRANSFORM(tc_InputFile)), 'BIN2PRG', 'PRG2BIN', 'BIN2PRG-INTERACTIVE', 'PRG2BIN-INTERACTIVE', 'INTERACTIVE') THEN
+IF INLIST(UPPER(TRANSFORM(tc_InputFile)), 'BIN2PRG', 'PRG2BIN', 'BIN2PRG-SHOWMSG', 'PRG2BIN-SHOWMSG', 'SHOWMSG', 'INTERACTIVE') THEN
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
@@ -521,6 +521,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="n_filehandle" display="n_FileHandle"/>] ;
 		+ [<memberdata name="n_processedfiles" display="n_ProcessedFiles"/>] ;
+		+ [<memberdata name="n_processedfilescount" display="n_ProcessedFilesCount"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
@@ -562,7 +563,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_Language						= ''	&& EN, FR, ES, DE
 	c_loc_processing_file			= ''
 	c_loc_process_progress			= ''
-	c_FB2PRG_EXE_Version			= 0
+	c_FB2PRG_EXE_Version			= ''
 	c_Foxbin2prg_FullPath			= ''
 	c_Foxbin2prg_ConfigFile			= ''
 	c_CurDir						= ''
@@ -605,7 +606,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_CFG_Actual					= 0
 	n_ID							= 0
 	n_FileHandle                	= 0
-	n_ProcessedFiles				= 0
+	n_ProcessedFiles				= 0		&& Contador usado para los archivos file.class.ext
+	n_ProcessedFilesCount			= 0		&& Contador genérico de procesados
 	o_Conversor                     = NULL
 	o_Frm_Avance					= NULL
 	o_WSH							= NULL
@@ -669,7 +671,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
 		THIS.o_Configuration			= CREATEOBJECT("COLLECTION")
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
-		THIS.c_FB2PRG_EXE_Version		= IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
+		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
+		ADDPROPERTY(_SCREEN, 'c_FB2PRG_EXE_Version', THIS.c_FB2PRG_EXE_Version)
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 		THIS.writeLog( THIS.c_Foxbin2prg_FullPath + ' (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' )
 		THIS.EvaluarConfiguracion()
@@ -1817,10 +1820,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5) ;
-				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1) ;
+				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
-				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
+				, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG' ;
+				, loFrm_Interactive	AS frm_interactive OF 'FOXBIN2PRG.PRG' ;
 				, loWSH AS WScript.Shell
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -1876,9 +1880,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( )
 
 				*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
+				IF INLIST( LOWER(tc_InputFile), LOWER([C:\DESA\foxbin2prg\pruebas varias\v1.19.36\FB2P_Ideas__RyanHarris\New (Option On)\myClasslib.frmbase.vc2]) )
+					*fdb*
+					SET STEP ON
+				ENDIF
+
 				*IF NOT .l_ConfigEvaluated THEN
 				.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-					, @tcClearUniqueID, @tcOptimizeByFilestamp )
+					, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile )
 				*ENDIF
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
@@ -1897,9 +1906,33 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				OTHERWISE
 					*-- EJECUCIÓN NORMAL
 
+					
+					IF '-SHOWMSG' $ ('-' + tcType) AND NOT '-BIN2PRG' $ ('-' + tcType) AND NOT '-PRG2BIN' $ ('-' + tcType) AND DIRECTORY(tc_InputFile)
+						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
+						loFrm_Interactive	= CREATEOBJECT('frm_interactive')
+						loFrm_Interactive.Show()
+						READ EVENTS
+						lnConversionOption	= loFrm_Interactive.opg_conversiontype.Value
+						loFrm_Interactive.Release()
+						loFrm_Interactive = NULL
+						
+						DO CASE
+						CASE lnConversionOption = 1		&& Bin2Txt
+							tcType	= tcType + '-BIN2PRG'
+
+						CASE lnConversionOption = 2		&& Txt2Bin
+							tcType	= tcType + '-PRG2BIN'
+
+						OTHERWISE	&& None
+							EXIT
+						ENDCASE
+					ENDIF
+
+
 					IF .l_ShowProgress
 						.cargar_frm_avance()
 					ENDIF
+
 
 					*-- Evaluación de FileSpec de entrada
 					DO CASE
@@ -1907,9 +1940,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						IF .l_ShowErrors
 							*MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).', 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
+							EXIT
 						ELSE
 							ERROR loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC
 						ENDIF
+
 
 					CASE '*' $ JUSTSTEM( tc_InputFile )
 						*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
@@ -1937,247 +1972,261 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							.writeLog_Flush()
 						ENDFOR
 
+						EXIT
 
-					CASE LEFT( tcType,7 ) == 'BIN2PRG'
-						IF NOT DIRECTORY(tc_InputFile)
-							ERROR 1963, (tc_InputFile)	&& Directoty is not found
-						ENDIF
 
-						*-- CONVERSION BIN2PRG DE UN DIRECTORIO Y SUBDIRECTORIOS
+					CASE '-BIN2PRG' $ ('-' + tcType)
 						DO CASE
-						CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-							CD (tcRecompile)
-						CASE .l_Recompile
-							CD (tc_InputFile)
+						CASE DIRECTORY(tc_InputFile)
+							*-- CONVERSION BIN2PRG DE UN DIRECTORIO Y SUBDIRECTORIOS
+							DO CASE
+							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							CASE .l_Recompile
+								CD (tc_InputFile)
+							ENDCASE
+
+							.c_LogFile	= ADDBS(tc_InputFile) + tcType + '.LOG'
+
+							IF .l_Debug
+								ERASE ( .c_LogFile )
+							ENDIF
+
+							.ObtenerArchivosDelDirectorio( tc_InputFile, @laFiles, @lnFileCount )
+
+							FOR I = 1 TO lnFileCount
+								lcFile	= laFiles(I)
+
+								IF NOT .TieneSoporte_Bin2Prg( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
+									LOOP
+								ENDIF
+
+								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+								lnCodError = .Convertir( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
+								.writeLog_Flush()
+
+								DO CASE
+								CASE lnCodError = 1799	&& Conversion Cancelled
+									ERROR 1799
+
+								CASE lnCodError > 0
+									.ejecutar_WriteErrorLog( @toEx )
+								ENDCASE
+							ENDFOR
+
+							.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
+							EXIT
+
+						CASE NOT .TieneSoporte_Bin2Prg( JUSTEXT(lcFile) ) OR NOT FILE(lcFile)
+							EXIT
+
 						ENDCASE
 
-						.c_LogFile	= ADDBS(tc_InputFile) + tcType + '.LOG'
 
-						IF .l_Debug
-							ERASE ( .c_LogFile )
-						ENDIF
+					CASE '-PRG2BIN' $ ('-' + tcType)
+						DO CASE
+						CASE DIRECTORY(tc_InputFile)
+							*-- CONVERSION PRG2BIN DE UN DIRECTORIO Y SUBDIRECTORIOS
+							DO CASE
+							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							CASE .l_Recompile
+								CD (tc_InputFile)
+							ENDCASE
 
-						.ObtenerArchivosDelDirectorio( tc_InputFile, @laFiles, @lnFileCount )
+							.c_LogFile	= ADDBS(tc_InputFile) + tcType + '.LOG'
 
-						FOR I = 1 TO lnFileCount
-							lcFile	= laFiles(I)
-
-							IF NOT .TieneSoporte_Bin2Prg( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
-								LOOP
+							IF .l_Debug
+								ERASE ( .c_LogFile )
 							ENDIF
 
-							.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-							lnCodError = .Convertir( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-							.writeLog_Flush()
+							.ObtenerArchivosDelDirectorio( tc_InputFile, @laFiles, @lnFileCount )
 
-							DO CASE
-							CASE lnCodError = 1799	&& Conversion Cancelled
-								ERROR 1799
+							FOR I = 1 TO lnFileCount
+								lcFile	= laFiles(I)
 
-							CASE lnCodError > 0
-								.ejecutar_WriteErrorLog( @toEx )
-							ENDCASE
-						ENDFOR
+								IF NOT .TieneSoporte_Prg2Bin( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
+									LOOP
+								ENDIF
 
-						.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
+								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+								lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
+								.writeLog_Flush()
 
+								DO CASE
+								CASE lnCodError = 1799	&& Conversion Cancelled
+									ERROR 1799
 
-					CASE LEFT( tcType,7 ) == 'PRG2BIN' AND DIRECTORY(tc_InputFile)
-						*-- CONVERSION PRG2BIN DE UN DIRECTORIO Y SUBDIRECTORIOS
-						DO CASE
-						CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-							CD (tcRecompile)
-						CASE .l_Recompile
-							CD (tc_InputFile)
+								CASE lnCodError > 0
+									.ejecutar_WriteErrorLog( @toEx )
+								ENDCASE
+							ENDFOR
+
+							.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
+							EXIT
+
+						CASE NOT .TieneSoporte_Prg2Bin( JUSTEXT(lcFile) ) OR NOT FILE(lcFile)
+							EXIT
+
 						ENDCASE
 
-						.c_LogFile	= ADDBS(tc_InputFile) + tcType + '.LOG'
 
-						IF .l_Debug
-							ERASE ( .c_LogFile )
-						ENDIF
-
-						.ObtenerArchivosDelDirectorio( tc_InputFile, @laFiles, @lnFileCount )
-
-						FOR I = 1 TO lnFileCount
-							lcFile	= laFiles(I)
-
-							IF NOT .TieneSoporte_Prg2Bin( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
-								LOOP
-							ENDIF
-
-							.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-							lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
-							.writeLog_Flush()
-
-							DO CASE
-							CASE lnCodError = 1799	&& Conversion Cancelled
-								ERROR 1799
-
-							CASE lnCodError > 0
-								.ejecutar_WriteErrorLog( @toEx )
-							ENDCASE
-						ENDFOR
-
-						.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
-
-
-					OTHERWISE
-						*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
-						IF LEN(EVL(tc_InputFile,'')) = 1
-							*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
-							*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
-							*-- para saber si se puede hacer Diff y Merge.
-							*-- Para los códigos de tipo de archivo ver ayuda de "Type Property"
-							DO CASE
-							CASE tc_InputFile == FILETYPE_DATABASE
-								lnCodError	= .DBC_Conversion_Support
-
-							CASE tc_InputFile == FILETYPE_FREETABLE
-								lnCodError	= .DBF_Conversion_Support
-
-							CASE tc_InputFile == FILETYPE_FORM
-								lnCodError	= .SCX_Conversion_Support
-
-							CASE tc_InputFile == FILETYPE_LABEL
-								lnCodError	= .LBX_Conversion_Support
-
-							CASE tc_InputFile == FILETYPE_MENU
-								lnCodError	= .MNX_Conversion_Support
-
-							CASE tc_InputFile == FILETYPE_REPORT
-								lnCodError	= .FRX_Conversion_Support
-
-							CASE tc_InputFile == FILETYPE_CLASSLIB
-								lnCodError	= .VCX_Conversion_Support
-
-							CASE tc_InputFile $ FILETYPE_PROJECT	&& PJX (J no exite en FoxPro, es un valor inventado para evitar conflicto con los tipos existentes)
-								lnCodError	= .PJX_Conversion_Support
-
-							OTHERWISE
-								lnCodError	= -1
-							ENDCASE
-
-						ELSE
-
-							DO CASE
-							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
-								*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
-								lcFileSpec	= FULLPATH( tc_InputFile )
-
-								DO CASE
-								CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-									CD (tcRecompile)
-								CASE tcRecompile == '1'
-									CD (JUSTPATH(lcFileSpec))
-								ENDCASE
-
-								.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-								IF .l_Debug
-									ERASE ( .c_LogFile )
-								ENDIF
-
-								SELECT 0
-								USE (tc_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
-								lnFileCount	= 0
-
-								SCAN FOR NOT DELETED()
-									lnFileCount	= lnFileCount + 1
-									DIMENSION laFiles(lnFileCount,1)
-									laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
-								ENDSCAN
-
-								USE IN (SELECT("TABLABIN"))
-
-								*-- Luego convierto los archivos incluidos
-								FOR I = 1 TO lnFileCount
-									lcFile	= laFiles(I,1)
-									.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-									IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-										.writeLog_Flush()
-									ENDIF
-								ENDFOR
-
-							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
-								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
-								lcFileSpec	= FULLPATH( tc_InputFile )
-
-								DO CASE
-								CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-									CD (tcRecompile)
-								CASE tcRecompile == '1'
-									CD (JUSTPATH(lcFileSpec))
-								ENDCASE
-
-								.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-								IF .l_Debug
-									ERASE ( .c_LogFile )
-								ENDIF
-
-								lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
-
-								FOR I = lnFileCount TO 1 STEP -1
-									IF '.ADD(' $ laFiles(I)
-										laFiles(I)	= ADDBS( JUSTPATH( lcFileSpec ) ) + STREXTRACT( laFiles(I), ".ADD('", "')" )
-										laFiles(I)	= FORCEEXT( laFiles(I), .Get_Ext2FromExt( UPPER(JUSTEXT(laFiles(I))) ) )
-									ELSE
-										lnFileCount	= lnFileCount - 1
-										ADEL( laFiles, I )
-										DIMENSION laFiles(lnFileCount)
-									ENDIF
-								ENDFOR
-
-								*-- Luego convierto los archivos incluidos
-								FOR I = 1 TO lnFileCount
-									lcFile	= laFiles(I)
-									.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-									IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-										lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-										.writeLog_Flush()
-									ENDIF
-								ENDFOR
-
-							CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
-								*-- Compatibilidad con SourceSafe
-
-								IF NOT tlGenText
-									*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
-									*-- Create BINARIO desde versión TEXTO
-									*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
-									*-- para regenerar el binario (tlGenText=.F.) se debe usar como
-									*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
-									tc_InputFile		= tcTextName
-									.l_Recompile	= .T.
-								ENDIF
-							ENDCASE
-
-							IF FILE(tc_InputFile)
-								tc_InputFile	= LOCFILE(tc_InputFile)
-								ERASE ( tc_InputFile + '.ERR' )
-
-								DO CASE
-								CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-									CD (tcRecompile)
-								CASE tcRecompile == '1'
-									CD (JUSTPATH(tc_InputFile))
-								ENDCASE
-
-								.c_LogFile	= tc_InputFile + '.LOG'
-
-								IF .l_Debug
-									ERASE ( .c_LogFile )
-								ENDIF
-
-								lnCodError = .Convertir( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
-								.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, 1, 1, 0 )
-							ENDIF
-						ENDIF
 					ENDCASE
+
+					*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
+					IF LEN(EVL(tc_InputFile,'')) = 1
+						*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
+						*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
+						*-- para saber si se puede hacer Diff y Merge.
+						*-- Para los códigos de tipo de archivo ver ayuda de "Type Property"
+						DO CASE
+						CASE tc_InputFile == FILETYPE_DATABASE
+							lnCodError	= .DBC_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_FREETABLE
+							lnCodError	= .DBF_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_FORM
+							lnCodError	= .SCX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_LABEL
+							lnCodError	= .LBX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_MENU
+							lnCodError	= .MNX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_REPORT
+							lnCodError	= .FRX_Conversion_Support
+
+						CASE tc_InputFile == FILETYPE_CLASSLIB
+							lnCodError	= .VCX_Conversion_Support
+
+						CASE tc_InputFile $ FILETYPE_PROJECT	&& PJX (J no exite en FoxPro, es un valor inventado para evitar conflicto con los tipos existentes)
+							lnCodError	= .PJX_Conversion_Support
+
+						OTHERWISE
+							lnCodError	= -1
+						ENDCASE
+
+					ELSE
+
+						DO CASE
+						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
+							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
+							lcFileSpec	= FULLPATH( tc_InputFile )
+
+							DO CASE
+							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							CASE tcRecompile == '1'
+								CD (JUSTPATH(lcFileSpec))
+							ENDCASE
+
+							.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+							IF .l_Debug
+								ERASE ( .c_LogFile )
+							ENDIF
+
+							SELECT 0
+							USE (tc_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+							lnFileCount	= 0
+
+							SCAN FOR NOT DELETED()
+								lnFileCount	= lnFileCount + 1
+								DIMENSION laFiles(lnFileCount,1)
+								laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
+							ENDSCAN
+
+							USE IN (SELECT("TABLABIN"))
+
+							*-- Luego convierto los archivos incluidos
+							FOR I = 1 TO lnFileCount
+								lcFile	= laFiles(I,1)
+								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+
+								IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+									lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+									.writeLog_Flush()
+								ENDIF
+							ENDFOR
+
+						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
+							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
+							lcFileSpec	= FULLPATH( tc_InputFile )
+
+							DO CASE
+							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							CASE tcRecompile == '1'
+								CD (JUSTPATH(lcFileSpec))
+							ENDCASE
+
+							.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+							IF .l_Debug
+								ERASE ( .c_LogFile )
+							ENDIF
+
+							lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
+
+							FOR I = lnFileCount TO 1 STEP -1
+								IF '.ADD(' $ laFiles(I)
+									laFiles(I)	= ADDBS( JUSTPATH( lcFileSpec ) ) + STREXTRACT( laFiles(I), ".ADD('", "')" )
+									laFiles(I)	= FORCEEXT( laFiles(I), .Get_Ext2FromExt( UPPER(JUSTEXT(laFiles(I))) ) )
+								ELSE
+									lnFileCount	= lnFileCount - 1
+									ADEL( laFiles, I )
+									DIMENSION laFiles(lnFileCount)
+								ENDIF
+							ENDFOR
+
+							*-- Luego convierto los archivos incluidos
+							FOR I = 1 TO lnFileCount
+								lcFile	= laFiles(I)
+								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+
+								IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+									lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+									.writeLog_Flush()
+								ENDIF
+							ENDFOR
+
+						CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
+							*-- Compatibilidad con SourceSafe
+
+							IF NOT tlGenText
+								*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
+								*-- Create BINARIO desde versión TEXTO
+								*-- Como el archivo de entrada siempre es el binario cuando se usa SCCAPI,
+								*-- para regenerar el binario (tlGenText=.F.) se debe usar como
+								*-- archivo de entrada tcTextName en su lugar. Aquí los intercambio.
+								tc_InputFile		= tcTextName
+								.l_Recompile	= .T.
+							ENDIF
+						ENDCASE
+
+						IF FILE(tc_InputFile)
+							tc_InputFile	= LOCFILE(tc_InputFile)
+							ERASE ( tc_InputFile + '.ERR' )
+
+							DO CASE
+							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							CASE tcRecompile == '1'
+								CD (JUSTPATH(tc_InputFile))
+							ENDCASE
+
+							.c_LogFile	= tc_InputFile + '.LOG'
+
+							IF .l_Debug
+								ERASE ( .c_LogFile )
+							ENDIF
+
+							lnCodError = .Convertir( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
+							*.AvanceDelProceso( loLang.C_END_OF_PROCESS_LOC, 1, 1, 0 )
+						ENDIF
+					ENDIF
 
 				ENDCASE
 			ENDWITH && THIS
@@ -2189,9 +2238,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
 
-			IF '-INTERACTIVE' $ ('-' + tcType) THEN
+			IF '-SHOWMSG' $ ('-' + tcType) THEN
 				toEx.UserValue = 'tc_InputDir = [' + TRANSFORM(tc_InputFile) + ']'
-				THIS.l_ShowErrors	= .F.	&& La opción "INTERACTIVE" muestra su propio mensaje
+				THIS.l_ShowErrors	= .F.	&& La opción "SHOWMSG" muestra su propio mensaje
 			ENDIF
 
 			THIS.ejecutar_WriteErrorLog( @toEx, @lcErrorInfo )
@@ -2221,26 +2270,26 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
-			CASE '-INTERACTIVE' $ ('-' + tcType)
+			CASE '-SHOWMSG' $ ('-' + tcType)
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
-					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+48+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '! [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+48+4096, 'FoxBin2Prg', 60000 )
 					THIS.writeErrorLog_Flush( )
 					loWSH.Run( THIS.c_ErrorLogFile, 1, .F. )
 
 				CASE THIS.l_Error
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ') [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+48+4096, 'FoxBin2Prg', 60000 )
 					THIS.writeErrorLog_Flush( )
 					loWSH.Run( THIS.c_ErrorLogFile, 1, .F. )
 
 				OTHERWISE
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC, 0+64+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + ' [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+64+4096, 'FoxBin2Prg', 60000 )
 
 				ENDCASE
 
-			CASE THIS.l_Debug
-				THIS.writeErrorLog_Flush( )
+			*CASE THIS.l_Debug
+			*	THIS.writeErrorLog_Flush( )
 
 			ENDCASE
 
@@ -2580,6 +2629,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 
 					loConversor.Convertir( @toModulo, .F., THIS )
+					.n_ProcessedFilesCount	= .n_ProcessedFilesCount + 1
 					.writeLog()
 					.writeLog(.o_Conversor.c_TextLog)	&& Recojo el LOG que haya generado el conversor
 
@@ -3158,7 +3208,7 @@ DEFINE CLASS frm_avance AS FORM
 	PROCEDURE Init
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		THIS.CAPTION = 'FoxBin2Prg - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
+		THIS.CAPTION = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
 		THIS.nValue = 0
 		THIS.nValue2 = 0
 	ENDPROC
@@ -3176,6 +3226,82 @@ DEFINE CLASS frm_avance AS FORM
 
 	PROCEDURE cmdCancel.Click
 		THISFORM.l_Cancelled = .T.
+	ENDPROC
+
+
+ENDDEFINE
+
+
+*******************************************************************************************************************
+DEFINE CLASS frm_interactive AS form
+	Height = 102
+	Width = 380
+	ShowWindow = 2
+	DoCreate = .T.
+	AutoCenter = .T.
+	BorderStyle = 2
+	Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_LOC
+	ControlBox = .F.
+	AlwaysOnTop = .T.
+	BackColor = RGB(255,255,255)
+	Name = "frm_interactive"
+
+
+	ADD OBJECT lbl_title AS label WITH ;
+		WordWrap = .T., ;
+		Alignment = 2, ;
+		BackStyle = 0, ;
+		Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_QUESTION_LOC, ;
+		Height = 36, ;
+		Left = 12, ;
+		Top = 16, ;
+		Width = 356, ;
+		Name = "lbl_Title"
+
+
+	ADD OBJECT opg_conversiontype AS optiongroup WITH ;
+		ButtonCount = 3, ;
+		BackStyle = 0, ;
+		BorderStyle = 0, ;
+		Value = 3, ;
+		Height = 28, ;
+		Left = 40, ;
+		Top = 64, ;
+		Width = 300, ;
+		Name = "opg_ConversionType", ;
+		Option1.Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_BIN2PRG_LOC, ;
+		Option1.Value = 1, ;
+		Option1.Height = 27, ;
+		Option1.Left = 0, ;
+		Option1.Style = 1, ;
+		Option1.Top = 0, ;
+		Option1.Width = 92, ;
+		Option1.Name = "opt_Bin2Prg", ;
+		Option2.Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_PRG2BIN_LOC, ;
+		Option2.Height = 27, ;
+		Option2.Left = 104, ;
+		Option2.Style = 1, ;
+		Option2.Top = 0, ;
+		Option2.Width = 92, ;
+		Option2.Name = "opt_Prg2Bin", ;
+		Option3.Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_NONE_LOC, ;
+		Option3.Height = 27, ;
+		Option3.Left = 208, ;
+		Option3.Style = 1, ;
+		Option3.Top = 0, ;
+		Option3.Width = 92, ;
+		Option3.Name = "opt_None"
+
+	PROCEDURE Init
+		*LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		*loLang			= _SCREEN.o_FoxBin2Prg_Lang
+	ENDPROC
+
+
+	PROCEDURE opg_conversiontype.InteractiveChange
+		*-- Selección
+		THISFORM.Hide()
+		CLEAR EVENTS
 	ENDPROC
 
 
@@ -6983,13 +7109,15 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
 				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
+				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				toModulo			= CREATEOBJECT('CL_MODULO')
 
 				IF toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain
@@ -7012,9 +7140,12 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
 						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , JUSTEXT( JUSTSTEM( lcInputFile_Class ) ), 1, 0, 1, 1+2+4 ) = 0
+							.writeLog( C_TAB + '- ' + loLang.C_EXCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
+							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_EXCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
 							LOOP	&& Salteo esta clase
 						ENDIF
 
+						.writeLog( C_TAB + '+ ' + loLang.C_INCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
 						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
 					ENDFOR
@@ -7333,13 +7464,15 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
 				STORE '' TO C_FB2PRG_CODE
 				STORE NULL TO toModulo
 
+				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				toModulo			= CREATEOBJECT('CL_MODULO')
 
 				IF toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain
@@ -7362,9 +7495,12 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
 						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , JUSTEXT( JUSTSTEM( lcInputFile_Class ) ), 1, 0, 1, 1+2+4 ) = 0
+							.writeLog( C_TAB + '- ' + loLang.C_EXCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
+							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_EXCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
 							LOOP	&& Salteo esta clase
 						ENDIF
 
+						.writeLog( C_TAB + '+ ' + loLang.C_INCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
 						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
 					ENDFOR
@@ -21756,6 +21892,11 @@ DEFINE CLASS CL_LANG AS Custom
 	C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC					= "Cannot generate file [<<THIS.c_OutputFile>>] because it is ReadOnly"
 	C_CONFIGFILE_LOC												= "Using configuration file:"
 	C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversion Cancelled by the user"
+	C_CONVERT_FOLDER_LOC											= "Convert Folder"
+	C_CONVERT_FOLDER_BIN2PRG_LOC									= "Binary to Text"
+	C_CONVERT_FOLDER_PRG2BIN_LOC									= "Text to Binary"
+	C_CONVERT_FOLDER_NONE_LOC										= "None"
+	C_CONVERT_FOLDER_QUESTION_LOC									= "What conversion should be performed on the files of this folder?"
 	C_CONVERTER_UNLOAD_LOC											= "Converter unload"
 	C_CONVERTING_FILE_LOC											= "Converting file"
 	C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC				= "Data Error: Can't parse because of unpaired double-quotes on line <<lcMetadatos>>"
@@ -21763,6 +21904,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Cannot find end marker [ENDDEFINE] of line <<TRANSFORM( toClase._Inicio )>> for ID [<<toClase._Nombre>>]"
 	C_END_MARKER_NOT_FOUND_LOC										= "Cannot find end marker [<<ta_ID_Bloques(lnPrimerID,2)>>] that closes start marker [<<ta_ID_Bloques(lnPrimerID,1)>>] on line <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
 	C_END_OF_PROCESS_LOC											= "End of Process"
+	C_EXCLUDING_CLASS_LOC											= "Excluding class"
 	C_EXTENSION_RECONFIGURATION_LOC									= "Extension Reconfiguration:"
 	C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC			= "External class count (<<toModulo._ExternalClasses_Count>>) does not match found classes (<<toModulo._Clases_Count>>) for file [<<toFoxBin2Prg.c_InputFile>>]"
 	C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND_LOC						= "External class [<<toModulo._ExternalClasses(I)>>] is not found in file [<<toFoxBin2Prg.c_InputFile>>]"
@@ -21781,6 +21923,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_FOXBIN2PRG_JUST_VFP_9_LOC										= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
 	C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: WARNING!"
 	C_GENERATED_FILE_SIZE_LOC										= "Generated file size"
+	C_INCLUDING_CLASS_LOC											= "Including class"
 	C_LANGUAGE_LOC													= "EN"
 	C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "Menu [<<THIS.c_InputFile>>] is NOT in VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU '<<THIS.c_InputFile>>'"
 	C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Names capitalization program [<<lcEXE_CAPS>>] found"
@@ -21801,7 +21944,8 @@ DEFINE CLASS CL_LANG AS Custom
 	C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
 	C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
 	C_UNKNOWN_CLASS_NAME_LOC										= "Unknown class [<<THIS.CLASS>>]"
-	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
+	C_WARNING_LOC													= "WARNING!"
+	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 	C_WITH_ERRORS_LOC												= "with errors"
 
 
@@ -21879,6 +22023,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "Vous ne pouvez pas générer un fichier [<<THIS.c_OutputFile>>] car il est en lecture seule"
 					.C_CONFIGFILE_LOC												= "Utilisation du fichier de configuration:"
 					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversion Annulé par l'utilisateur"
+					.C_CONVERT_FOLDER_LOC											= "Convertir un Dossier"
+					.C_CONVERT_FOLDER_BIN2PRG_LOC									= "Binaire en Texte"
+					.C_CONVERT_FOLDER_PRG2BIN_LOC									= "Texte à Binaire"
+					.C_CONVERT_FOLDER_NONE_LOC										= "Aucun"
+					.C_CONVERT_FOLDER_QUESTION_LOC									= "Que la conversion doit être effectuée sur les fichiers de ce dossier?"
 					.C_CONVERTER_UNLOAD_LOC											= "Convertisseur déchargement"
 					.C_CONVERTING_FILE_LOC											= "Conversion de fichiers"
 					.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC			= "Erreur de données: ne peut pas analyser en raison de guillemets non appariés en ligne <<lcMetadatos>>"
@@ -21886,6 +22035,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Vous ne trouvez pas marqueur de fin [ENDDEFINE] de la ligne <<TRANSFORM(toClase._Inicio)>> ID [<<toClase._Nombre>>]"
 					.C_END_MARKER_NOT_FOUND_LOC										= "Vous ne trouvez pas fin marqueur [<<ta_ID_Bloques(lnPrimerID, 2)>>] qui ferme marqueur de début [<<ta_ID_Bloques(lnPrimerID, 1) >>] en ligne <<TRANSFORM(taBloquesExclusion (tnBloquesExclusion, 1))>>"
 					.C_END_OF_PROCESS_LOC											= "Fin du processus"
+					.C_EXCLUDING_CLASS_LOC											= "Exclusing class"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Extension Reconfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Nombre de classe externe (<<toModulo._ExternalClasses_Count>>) ne correspond pas classes trouvées (<<toModulo._Clases_Count>>) pour le fichier [<<toFoxBin2Prg.c_InputFile>>]"
 					.C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND_LOC						= "Classe externe [<<toModulo._ExternalClasses (I)>>] est introuvable dans le fichier [<<toFoxBin2Prg.c_InputFile>>]"
@@ -21904,6 +22054,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: AVERTISSEMENT!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Taille du fichier généré"
+					.C_INCLUDING_CLASS_LOC											= "Including class"
 					.C_LANGUAGE_LOC													= "FR"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "Menu [<<THIS.c_InputFile>>] ne est pas dans VFP 9 Format! - Se il vous plaît se convertir à VFP 9 avec MODIFY MENU '<<THIS.c_InputFile>>'"
 					.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] trouvé"
@@ -21924,7 +22075,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Nesting erreur de structure. ENDPROC prévu, mais a trouvé ENDDEFINE sur la classe <<toClase._Nombre>> (<<loProcedure._Nombre>>), ligne <<TRANSFORM(I)>> du fichier <<THIS.c_InputFile>>"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Nesting erreur de structure. ENDPROC attendue, mais ENDDEFINE sur la classe <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), ligne <<TRANSFORM(I)>> du fichier <<THIS.c_InputFile>>"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Classe inconnue[<<THIS.CLASS>>]"
-					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
+					.C_WARNING_LOC													= "AVERTISSEMENT!"
+					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 					.C_WITH_ERRORS_LOC												= "avec des erreurs"
 
 				CASE INLIST(tcLanguage, '34', 'ES') && Spanish (Español)
@@ -21937,14 +22089,20 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_BACKUP_OF_LOC												= "Haciendo Backup de: "
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "No se puede generar el archivo [<<THIS.c_OutputFile>>] porque es ReadOnly"
 					.C_CONFIGFILE_LOC												= "Usando archivo de configuración:"
+					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversión Cancelada por el usuario"
+					.C_CONVERT_FOLDER_LOC											= "Convertir Carpeta"
+					.C_CONVERT_FOLDER_BIN2PRG_LOC									= "Binario a Texto"
+					.C_CONVERT_FOLDER_PRG2BIN_LOC									= "Texto a Binario"
+					.C_CONVERT_FOLDER_NONE_LOC										= "Ninguna"
+					.C_CONVERT_FOLDER_QUESTION_LOC									= "¿Qué tipo de conversión se debe hacer en esta carpeta?"
 					.C_CONVERTER_UNLOAD_LOC											= "Descarga del conversor"
 					.C_CONVERTING_FILE_LOC											= "Convirtiendo archivo"
-					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversión Cancelada por el usuario"
 					.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC			= "Error de datos: No se puede parsear porque las comillas no son pares en la línea <<lcMetadatos>>"
 					.C_DUPLICATED_FILE_LOC											= "Archivo duplicado"
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "No se ha encontrado el marcador de fin [ENDDEFINE] de la línea <<TRANSFORM( toClase._Inicio )>> para el identificador [<<toClase._Nombre>>]"
 					.C_END_MARKER_NOT_FOUND_LOC										= "No se ha encontrado el marcador de fin [<<ta_ID_Bloques(lnPrimerID,2)>>] que cierra al marcador de inicio [<<ta_ID_Bloques(lnPrimerID,1)>>] de la línea <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
 					.C_END_OF_PROCESS_LOC											= "Fin del Proceso"
+					.C_EXCLUDING_CLASS_LOC											= "Excluyendo clase"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Reconfiguración de extensión:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "El conteo de clases externas (<<toModulo._ExternalClasses_Count>>) no coincide con la cantidad encontrada (<<toModulo._Clases_Count>>) para el archivo [<<toFoxBin2Prg.c_InputFile>>]"
 					.C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND_LOC						= "No se ha encontrado la clase externa [<<toModulo._ExternalClasses(I)>>] del archivo [<<toFoxBin2Prg.c_InputFile>>]"
@@ -21964,6 +22122,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: ¡ATENCIÓN!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Tamaño del archivo generado"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU '<<THIS.c_InputFile>>'"
+					.C_INCLUDING_CLASS_LOC											= "Incluyendo clase"
 					.C_LANGUAGE_LOC													= "ES"
 					.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
@@ -21983,7 +22142,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Clase [<<THIS.CLASS>>] desconocida"
-					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡¡ATENCIÓN!!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
+					.C_WARNING_LOC													= "¡ATENCIÓN!"
+					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡ATENCIÓN!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
 					.C_WITH_ERRORS_LOC												= "con errores"
 
 				CASE INLIST(tcLanguage, '49', 'DE') && German (Alemán)
@@ -21997,6 +22157,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "Kann Datei [<<THIS.c_OutputFile>>] nicht generieren da sie Schreibgeschützt ist"
 					.C_CONFIGFILE_LOC												= "Benutze Konfigurationsdatei:"
 					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Konvertierung durch den Benutzer abgebrochen"
+					.C_CONVERT_FOLDER_LOC											= "Konvertieren Verzeichnis"
+					.C_CONVERT_FOLDER_BIN2PRG_LOC									= "Binär zu Text"
+					.C_CONVERT_FOLDER_PRG2BIN_LOC									= "Text zu Binär"
+					.C_CONVERT_FOLDER_NONE_LOC										= "Nichts"
+					.C_CONVERT_FOLDER_QUESTION_LOC									= "Welche Umwandlung sollte sich auf die Dateien dieses Verzeichnis durchgeführt werden?"
 					.C_CONVERTER_UNLOAD_LOC											= "Konverter wird entladen"
 					.C_CONVERTING_FILE_LOC											= "Konvertiere Datei"
 					.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC			= "Datenfehler: Keine Analyse möglich da ungepaarte Anführungszeichen in Zeile <<lcMetadatos>>"
@@ -22009,6 +22174,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "Datei [<<.c_InputFile>>] wird nicht unterstützt"
 					.C_FILE_NOT_FOUND_LOC											= "Datei nicht gefunden"
 					.C_FILENAME_LOC													= "Datei"
+					.C_EXCLUDING_CLASS_LOC											= "ohne Klasse"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Erweiterungsneukonfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
 					.C_EXTERNAL_CLASS_NAME_DOES_NOT_FOUND_LOC						= "Externe Klasse (<<toModulo._ExternalClasses(I)>>) nicht in der Datei [<<toFoxBin2Prg.c_InputFile>>] gefunden"
@@ -22022,6 +22188,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG ist nur für Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: WARNUNG!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Generierte Dateigröße"
+					.C_INCLUDING_CLASS_LOC											= "einschließlich Klasse"
 					.C_LANGUAGE_LOC													= "DE"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "Menu [<<THIS.c_InputFile>>] ist NICHT in VFP 9 Format! - Bitte zuerst nach VFP 9 konvertieren mit MODIFY MENU '<<THIS.c_InputFile>>'"
 					.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Programm für Großschreibungssetzung [<<lcEXE_CAPS>>] gefunden"
@@ -22042,7 +22209,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Fehler in Verschachtelungsstruktur. ENDPROC erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Fehler in Verschachtelungsstruktur. ENDPROC wurde erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Unbekannte Klasse [<<THIS.CLASS>>]"
-					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!!" + CR_LF+ "SICHERSTELLEN DAS KEIN TABELLENALIAS IN DEM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
+					.C_WARNING_LOC													= "WARNUNG!"
+					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!" + CR_LF+ "SICHERSTELLEN DAS KEIN TABELLENALIAS IN DEM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 					.C_WITH_ERRORS_LOC												= "mit Fehlern"
 
 				OTHERWISE	&& Si no existe, se queda el por defecto
