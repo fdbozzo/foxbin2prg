@@ -1867,9 +1867,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				tcType			= UPPER( EVL(tcType,'') )
 
 				.writeLog( REPLICATE( '*', 100 ) )
-				.writeLog( 'MAIN EXECUTION' )
+				.writeLog( loLang.C_MAIN_EXECUTION_LOC )
 				.writeLog( REPLICATE( '*', 100 ) )
-				.writeLog( '> EXTERNAL PARAMETERS' )
+				.writeLog( '> ' + loLang.C_EXTERNAL_PARAMETERS_LOC + ':' )
 				.writeLog( C_TAB + 'tc_InputFile:                 ' + TRANSFORM( EVL(tc_InputFile, '(empty)  -> Will use Default' ) ) )
 				.writeLog( C_TAB + 'tcType:                       ' + TRANSFORM( EVL(tcType, '(empty)  -> Will use Default' ) ) )
 				.writeLog( C_TAB + 'tcTextName:                   ' + TRANSFORM( EVL(tcTextName, '(empty)  -> Will use Default' ) ) )
@@ -21930,6 +21930,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_EXTENSION_RECONFIGURATION_LOC									= "Extension Reconfiguration:"
 	C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC			= "External class count (<<toModulo._ExternalClasses_Count>>) does not match found classes (<<toModulo._Clases_Count>>) for file [<<toFoxBin2Prg.c_InputFile>>]"
 	C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC							= "External class was not found"
+	C_EXTERNAL_PARAMETERS_LOC										= "EXTERNAL PARAMETERS"
 	C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC							= "Field [<<laProps(I)>>] not found in structure of file <<DBF('TABLABIN')>>"
 	C_FILE_DOESNT_EXIST_LOC											= "File does not exist:"
 	C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "File [<<.c_InputFile>>] is not supported"
@@ -21951,6 +21952,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_IS_A_DIRECTORY_LOC											= "is a DIRECTORY"
 	C_IS_UNSUPPORTED_LOC											= "is unsupported"
 	C_LANGUAGE_LOC													= "EN"
+	C_MAIN_EXECUTION_LOC											= "MAIN EXECUTION"
 	C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "Menu [<<THIS.c_InputFile>>] is NOT in VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU '<<THIS.c_InputFile>>'"
 	C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Names capitalization program [<<lcEXE_CAPS>>] found"
 	C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Names capitalization program [<<lcEXE_CAPS>>] not found"
@@ -22070,6 +22072,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Extension Reconfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Nombre de classe externe (<<toModulo._ExternalClasses_Count>>) ne correspond pas classes trouvées (<<toModulo._Clases_Count>>) pour le fichier [<<toFoxBin2Prg.c_InputFile>>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Aucune classe externe est trouvé"
+					.C_EXTERNAL_PARAMETERS_LOC										= "PARAMÈTRES EXTERNES"
 					.C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC						= "Champ [<< laProps (I) >>] ne trouve pas dans la structure du fichier DBF <<('TABLABIN')>>"
 					.C_FILE_DOESNT_EXIST_LOC										= "Fichier ne existe pas:"
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "File [<<.c_InputFile>>] ne est pas supporté"
@@ -22091,6 +22094,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_IS_A_DIRECTORY_LOC											= "est un RÉPERTOIRE"
 					.C_IS_UNSUPPORTED_LOC											= "ne est pas supporté"
 					.C_LANGUAGE_LOC													= "FR"
+					.C_MAIN_EXECUTION_LOC											= "EXÉCUTION PRINCIPALE"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "Menu [<<THIS.c_InputFile>>] ne est pas dans VFP 9 Format! - Se il vous plaît se convertir à VFP 9 avec MODIFY MENU '<<THIS.c_InputFile>>'"
 					.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] trouvé"
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] introuvables"
@@ -22145,6 +22149,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Reconfiguración de extensión:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "El conteo de clases externas (<<toModulo._ExternalClasses_Count>>) no coincide con la cantidad encontrada (<<toModulo._Clases_Count>>) para el archivo [<<toFoxBin2Prg.c_InputFile>>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "No se encontró la clase externa"
+					.C_EXTERNAL_PARAMETERS_LOC										= "PARÁMETROS EXTERNOS"
 					.C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC						= "No se encontró el campo [<<laProps(I)>>] en la estructura del archivo <<DBF('TABLABIN')>>"
 					.C_FILE_DOESNT_EXIST_LOC										= "El archivo no existe:"
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "El archivo [<<.c_InputFile>>] no está soportado"
@@ -22167,6 +22172,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_IS_A_DIRECTORY_LOC											= "es un DIRECTORIO"
 					.C_IS_UNSUPPORTED_LOC											= "no está soportado"
 					.C_LANGUAGE_LOC													= "ES"
+					.C_MAIN_EXECUTION_LOC											= "EJECUCIÓN PRINCIPAL"
 					.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
@@ -22225,6 +22231,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Erweiterungsneukonfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Keine externe Klasse gefunden"
+					.C_EXTERNAL_PARAMETERS_LOC										= "EXTERNE PARAMETER"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: FEHLER!!"
 					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
 					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -22241,6 +22248,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_IS_A_DIRECTORY_LOC											= "ist ein VERZEICHNIS"
 					.C_IS_UNSUPPORTED_LOC											= "wird nicht unterstützt"
 					.C_LANGUAGE_LOC													= "DE"
+					.C_MAIN_EXECUTION_LOC											= "HAUPTAUSFÜHRUNGS"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "Menu [<<THIS.c_InputFile>>] ist NICHT in VFP 9 Format! - Bitte zuerst nach VFP 9 konvertieren mit MODIFY MENU '<<THIS.c_InputFile>>'"
 					.C_NAMES_CAPITALIZATION_PROGRAM_FOUND_LOC						= "* Programm für Großschreibungssetzung [<<lcEXE_CAPS>>] gefunden"
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Programm für Großschreibungssetzung [<<lcEXE_CAPS>>] nicht gefunden"
