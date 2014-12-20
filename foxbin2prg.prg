@@ -389,6 +389,10 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE SERVERINSTANCE_SINGLEUSE     1  && Single use server
 #DEFINE SERVERINSTANCE_NOTCREATABLE  2  && Instances creatable only inside Visual FoxPro
 #DEFINE SERVERINSTANCE_MULTIUSE      3  && Multi-use server
+
+*-- FileTypes for ADIR()
+#DEFINE C_FILETYPE_DIRECTORY		"D"
+#DEFINE C_FILETYPE_FILE				"F"
 *-- Fin / End
 
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -1261,10 +1265,27 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE EvaluarConfiguracion
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcDontShowProgress		(v? IN    ) '1' para inhabilitar la barra de progreso
+		* tcDontShowErrors			(v? IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
+		* tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
+		* tcDebug					(v? IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
+		* tcRecompile				(v? IN    ) Indica recompilar ('1') el binario una vez regenerado. [Cambio de funcionamiento por defecto]
+		*										Este cambio es para ganar tiempo, velocidad y seguridad. Además la recompilación que hace FoxBin2Prg
+		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
+		*										generar errores de compilación, típicamente los #include.
+		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
+		* tcExtraBackupLevels		(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
+		* tcClearUniqueID			(v? IN    ) Indica si se debe limpiar el UniqueID ('1') o no ('0' ó vacío)
+		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp ('1') o no ('0' ó vacío)
+		* tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
+		* tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory o (F)ile
+		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
+			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type
 
-		LOCAL lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDir(1,5) ;
+		LOCAL lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDirInfo(1,5) ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration AS Collection ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -1278,12 +1299,26 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				lcConfigFile		= .c_Foxbin2prg_ConfigFile
 				tc_InputFile		= EVL(tc_InputFile, .c_InputFile)
 				.c_InputFile		= tc_InputFile
+				tcInputFile_Type	= EVL(tcInputFile_Type,'')
+
+				*-- Determino el tipo de InputFile (Archivo o Directorio)
+				IF EMPTY(tcInputFile_Type) AND NOT EMPTY(tc_InputFile)
+					IF ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D" THEN
+						tcInputFile_Type	= C_FILETYPE_DIRECTORY
+					ELSE
+						tcInputFile_Type	= C_FILETYPE_FILE
+					ENDIF
+				ENDIF
 
 				IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) THEN
 					*IF EMPTY(tc_InputFile)
 					*	ERROR loLang.C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + tc_InputFile + '"'
 					*ENDIF
-					lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(tc_InputFile) )
+					IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
+						lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', tc_InputFile )
+					ELSE
+						lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(tc_InputFile) )
+					ENDIF
 				ENDIF
 
 				lo_Configuration	= .o_Configuration
@@ -1306,7 +1341,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				DO CASE
 				CASE .n_CFG_Actual = 0
 					*-- Si no se encontró un CFG cacheado, se busca si existe un archivo CFG en disco
-					llExiste_CFG_EnDisco	= ( ADIR( laDir, lcConfigFile ) = 1 )
+					llExiste_CFG_EnDisco	= ( ADIR( laDirInfo, lcConfigFile ) = 1 )
 
 					IF NOT llExiste_CFG_EnDisco
 						.l_CFG_CachedAccess	= .T.	&& Es cacheado porque sin archivo CFG usa config.interna
@@ -1327,16 +1362,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					IF .l_AllowMultiConfig AND .l_ConfigEvaluated AND .l_Main_CFG_Loaded
 						lo_CFG	= CREATEOBJECT('CL_CFG')
 						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
-						.n_CFG_Actual   = lo_Configuration.Count
 					ELSE
 						lo_Configuration.Add( NULL, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
-						*.n_CFG_Actual   = 0
-						.n_CFG_Actual   = lo_Configuration.Count
 					ENDIF
 
+					.n_CFG_Actual  						 = lo_Configuration.Count
 					*lo_CFG.c_Foxbin2prg_FullPath		= ''
 					lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
-					*lo_CFG.c_CurDir						= ''
+					*lo_CFG.c_CurDir					= ''
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
 						*laConfig(I)	= LOWER( laConfig(I) )
@@ -1568,8 +1601,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				.writeLog( '> ' + UPPER(loLang.C_USING_THIS_SETTINGS_LOC) + ':' )
 				.writeLog( C_TAB + 'n_CFG_Actual:                 ' + TRANSFORM(.n_CFG_Actual) + ICASE(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
-				.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + TRANSFORM(.l_CFG_CachedAccess) ;
-					+ ' ( InputFile=[' + EVL(tc_InputFile,'') + '], CFG=[' + EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') + '] )' )
+				.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + TRANSFORM(.l_CFG_CachedAccess) )
+				.writeLog( C_TAB + 'c_Foxbin2prg_ConfigFile:      ' + TRANSFORM(EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') ) )
+				.writeLog( C_TAB + 'tc_InputFile:                 ' + TRANSFORM(EVL(tc_InputFile,'') ) )
 				.writeLog( C_TAB + 'l_ShowProgress:               ' + TRANSFORM(.l_ShowProgress) )
 				.writeLog( C_TAB + 'l_ShowErrors:                 ' + TRANSFORM(.l_ShowErrors) )
 				.writeLog( C_TAB + 'l_Recompile:                  ' + TRANSFORM(.l_Recompile) + ' (' + tcRecompile + ')' )
@@ -1826,7 +1860,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp
 
 		TRY
-			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5) ;
+			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type ;
 				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
@@ -1836,11 +1870,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				lnCodError			= 0
+				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				loFSO				= .o_FSO
 				loWSH				= .o_WSH
 				DIMENSION .a_ProcessedFiles(1)
 				.n_ProcessedFiles	= 0
 				lnPCount			= 0
+				lcInputFile_Type	= ''
 
 				*-- Funciona y lee los parámetros, pero no le veo un caso de uso claro, ya que si se eligen
 				*-- varios directorios de proyecto, la compilación será errónea. 12/12/2014
@@ -1853,9 +1889,20 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*	ENDFOR
 				*	EXIT
 				*ENDIF
+				
+				*-- Determino el tipo de InputFile (Archivo o Directorio)
+				IF EMPTY(lcInputFile_Type) AND NOT EMPTY(tc_InputFile)
+					IF ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D" THEN
+						*-- Ejemplo: "c:\desa\"
+						lcInputFile_Type	= C_FILETYPE_DIRECTORY
+					ELSE
+						*-- Ejemplo: "c:\desa\*.scx", "c:\desa\file.ext", (lista de archivos)
+						lcInputFile_Type	= C_FILETYPE_FILE
+					ENDIF
+				ENDIF
 
-				IF EMPTY(tcRecompile) AND NOT EMPTY(tc_InputFile) AND ADIR(laDirInfo, tc_InputFile, "D")=1 THEN
-					IF SUBSTR( laDirInfo(1,5), 5, 1 ) = "D"
+				IF EMPTY(tcRecompile) AND NOT EMPTY(lcInputFile_Type) THEN
+					IF lcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						tcRecompile	= tc_InputFile
 					ELSE
 						tcRecompile	= JUSTPATH( tc_InputFile )
@@ -1887,11 +1934,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( )
 
 				*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
-
-				*IF NOT .l_ConfigEvaluated THEN
 				.EvaluarConfiguracion( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-					, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile )
-				*ENDIF
+					, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type )
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
@@ -1910,7 +1954,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- EJECUCIÓN NORMAL
 
 					
-					IF '-SHOWMSG' $ ('-' + tcType) AND NOT '-BIN2PRG' $ ('-' + tcType) AND NOT '-PRG2BIN' $ ('-' + tcType) AND DIRECTORY(tc_InputFile)
+					IF '-SHOWMSG' $ ('-' + tcType) AND NOT '-BIN2PRG' $ ('-' + tcType) AND NOT '-PRG2BIN' $ ('-' + tcType) ;
+							AND lcInputFile_Type == C_FILETYPE_DIRECTORY
 						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
 						.writeLog( loLang.C_INTERACTIVE_DIRECTORY_SELECTION_LOC )
 						loFrm_Interactive	= CREATEOBJECT('frm_interactive')
@@ -1929,7 +1974,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						OTHERWISE	&& None
 							ERROR 1799	&& Conversion Cancelled
-							EXIT
 						ENDCASE
 					ENDIF
 
@@ -1941,7 +1985,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					*-- Evaluación de FileSpec de entrada
 					DO CASE
-					CASE '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
+					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
 						IF .l_ShowErrors
 							*MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).', 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
@@ -1951,7 +1995,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDIF
 
 
-					CASE '*' $ JUSTSTEM( tc_InputFile )
+					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTSTEM( tc_InputFile )
 						*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
 						lcFileSpec	= FULLPATH( tc_InputFile )
 
@@ -1984,7 +2028,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
 
 						DO CASE
-						CASE DIRECTORY(tc_InputFile)
+						CASE lcInputFile_Type == C_FILETYPE_DIRECTORY
 							*-- CONVERSION BIN2PRG DE UN DIRECTORIO Y SUBDIRECTORIOS
 							.writeLog( '> InputFile ' + loLang.C_IS_A_DIRECTORY_LOC )
 
@@ -2037,7 +2081,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
 
 						DO CASE
-						CASE DIRECTORY(tc_InputFile)
+						CASE lcInputFile_Type == C_FILETYPE_DIRECTORY
 							*-- CONVERSION PRG2BIN DE UN DIRECTORIO Y SUBDIRECTORIOS
 							.writeLog( '> InputFile ' + loLang.C_IS_A_DIRECTORY_LOC )
 
@@ -2286,7 +2330,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			USE IN (SELECT("TABLABIN"))
 			THIS.writeLog_Flush()
-			*THIS.descargar_frm_avance()
+			IF NOT THIS.l_ShowProgress
+				THIS.descargar_frm_avance()
+				*fdb*
+			ENDIF
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
@@ -2656,7 +2703,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					*-- Logueo los errores
 					IF NOT EMPTY(loConversor.c_TextErr) THEN
-						.writeErrorLog( PADR( 'ERRORS FOUND IN FILE [' + .c_InputFile + '] ', 100, '-' ) )
+						.writeErrorLog( PADR( loLang.C_ERRORS_FOUND_IN_FILE_LOC + ' [' + .c_InputFile + '] ', 100, '-' ) )
 						.writeErrorLog( loConversor.c_TextErr )
 						.writeErrorLog( )
 					ENDIF
@@ -3920,17 +3967,17 @@ DEFINE CLASS c_conversor_base AS SESSION
 		*-- CONVIERTE UN DATO TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc. EN TIPO DATETIME
 		TRY
 			LOCAL lcTimeStamp,lnYear,lnMonth,lnDay,lnHour,lnMinutes,lnSeconds,lcTime,lnHour,ltTimeStamp,lnResto ;
-				,lcTimeStamp_Ret, laDir[1,5], loEx AS EXCEPTION
+				,lcTimeStamp_Ret, laDirInfo[1,5], loEx AS EXCEPTION
 
 			lcTimeStamp_Ret	= ''
 
 			IF EMPTY(tnTimeStamp)
 				IF THIS.lFileMode
-					IF ADIR(laDir,THIS.c_InputFile)=0
+					IF ADIR(laDirInfo,THIS.c_InputFile)=0
 						EXIT
 					ENDIF
 
-					ltTimeStamp	= EVALUATE( '{^' + DTOC(laDir(1,3)) + ' ' + TRANSFORM(laDir(1,4)) + '}' )
+					ltTimeStamp	= EVALUATE( '{^' + DTOC(laDirInfo(1,3)) + ' ' + TRANSFORM(laDirInfo(1,4)) + '}' )
 
 					*-- En mi arreglo, si la hora pasada tiene 32 segundos o más, redondeo al siguiente minuto, ya que
 					*-- la descodificación posterior de GetTimeStamp tiene ese margen de error.
@@ -7195,7 +7242,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.AvanceDelProceso( 'Generating Binary...', 0, lnCodeLines, 1 )
+				.AvanceDelProceso( loLang.C_GENERATING_BINARY_LOC + '...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createClasslib()
 				.escribirArchivoBin( @toModulo, @toFoxBin2Prg )
@@ -21927,6 +21974,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Cannot find end marker [ENDDEFINE] of line <<TRANSFORM( toClase._Inicio )>> for ID [<<toClase._Nombre>>]"
 	C_END_MARKER_NOT_FOUND_LOC										= "Cannot find end marker [<<ta_ID_Bloques(lnPrimerID,2)>>] that closes start marker [<<ta_ID_Bloques(lnPrimerID,1)>>] on line <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
 	C_END_OF_PROCESS_LOC											= "End of Process"
+	C_ERRORS_FOUND_IN_FILE_LOC										= "ERRORS FOUND IN FILE"
 	C_EXTENSION_RECONFIGURATION_LOC									= "Extension Reconfiguration:"
 	C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC			= "External class count (<<toModulo._ExternalClasses_Count>>) does not match found classes (<<toModulo._Clases_Count>>) for file [<<toFoxBin2Prg.c_InputFile>>]"
 	C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC							= "External class was not found"
@@ -21946,6 +21994,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_FOXBIN2PRG_JUST_VFP_9_LOC										= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
 	C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: WARNING!"
 	C_GENERATED_FILE_SIZE_LOC										= "Generated file size"
+	C_GENERATING_BINARY_LOC											= "Generating Binary"
 	C_INCLUDING_CLASS_LOC											= "Including class"
 	C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Interactive Directory Selection"
 	C_IS_A_FILE_LOC													= "is a FILE"
@@ -21986,7 +22035,7 @@ DEFINE CLASS CL_LANG AS Custom
 		LPARAMETERS tcLanguage
 
 		TRY
-			LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_FullPath, lc_Foxbin2prg_LangFile, laDir(1,5) ;
+			LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_FullPath, lc_Foxbin2prg_LangFile, laDirInfo(1,5) ;
 				, llLangFileExists, lcLangStr ;
 				, loEx as Exception
 
@@ -22005,7 +22054,7 @@ DEFINE CLASS CL_LANG AS Custom
 
 					lc_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 					lc_Foxbin2prg_LangFile		= FORCEEXT( lc_Foxbin2prg_FullPath, 'H' )
-					llLangFileExists			= ( ADIR( laDir, lc_Foxbin2prg_LangFile ) = 1 )
+					llLangFileExists			= ( ADIR( laDirInfo, lc_Foxbin2prg_LangFile ) = 1 )
 				ELSE
 					.n_LanguageSelectedMethod	= 1	&& 1=Assigned by Parameter
 				ENDIF
@@ -22069,6 +22118,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Vous ne trouvez pas marqueur de fin [ENDDEFINE] de la ligne <<TRANSFORM(toClase._Inicio)>> ID [<<toClase._Nombre>>]"
 					.C_END_MARKER_NOT_FOUND_LOC										= "Vous ne trouvez pas fin marqueur [<<ta_ID_Bloques(lnPrimerID, 2)>>] qui ferme marqueur de début [<<ta_ID_Bloques(lnPrimerID, 1) >>] en ligne <<TRANSFORM(taBloquesExclusion (tnBloquesExclusion, 1))>>"
 					.C_END_OF_PROCESS_LOC											= "Fin du processus"
+					.C_ERRORS_FOUND_IN_FILE_LOC										= "ERREURS TROUVÉ DANS LE FICHIER"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Extension Reconfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Nombre de classe externe (<<toModulo._ExternalClasses_Count>>) ne correspond pas classes trouvées (<<toModulo._Clases_Count>>) pour le fichier [<<toFoxBin2Prg.c_InputFile>>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Aucune classe externe est trouvé"
@@ -22088,6 +22138,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: AVERTISSEMENT!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Taille du fichier généré"
+					.C_GENERATING_BINARY_LOC										= "Génération Binaire"
 					.C_INCLUDING_CLASS_LOC											= "Including class"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Sélection répertoire interactive"
 					.C_IS_A_FILE_LOC												= "est un FICHIER"
@@ -22146,6 +22197,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "No se ha encontrado el marcador de fin [ENDDEFINE] de la línea <<TRANSFORM( toClase._Inicio )>> para el identificador [<<toClase._Nombre>>]"
 					.C_END_MARKER_NOT_FOUND_LOC										= "No se ha encontrado el marcador de fin [<<ta_ID_Bloques(lnPrimerID,2)>>] que cierra al marcador de inicio [<<ta_ID_Bloques(lnPrimerID,1)>>] de la línea <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
 					.C_END_OF_PROCESS_LOC											= "Fin del Proceso"
+					.C_ERRORS_FOUND_IN_FILE_LOC										= "SE HAN ENCONTRADOS ERRORES EN EL ARCHIVO"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Reconfiguración de extensión:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "El conteo de clases externas (<<toModulo._ExternalClasses_Count>>) no coincide con la cantidad encontrada (<<toModulo._Clases_Count>>) para el archivo [<<toFoxBin2Prg.c_InputFile>>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "No se encontró la clase externa"
@@ -22165,6 +22217,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: ¡ATENCIÓN!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Tamaño del archivo generado"
+					.C_GENERATING_BINARY_LOC										= "Generando Binario"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU '<<THIS.c_InputFile>>'"
 					.C_INCLUDING_CLASS_LOC											= "Incluyendo clase"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Selección Interactiva de Directorio"
@@ -22223,15 +22276,16 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Kann keinen Ende Marker [ENDDEFINE] in Zeile <<TRANSFORM( toClase._Inicio )>> für die ID [<<toClase._Nombre>>] finden"
 					.C_END_MARKER_NOT_FOUND_LOC										= "Kann keinen Ende Marker [<<ta_ID_Bloques(lnPrimerID,2)>>] welcher den Start Marker [<<ta_ID_Bloques(lnPrimerID,1)>>] in Zeile <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>> schließt"
 					.C_END_OF_PROCESS_LOC											= "Ende der Prozess"
+					.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
+					.C_EXTENSION_RECONFIGURATION_LOC								= "Erweiterungsneukonfiguration:"
+					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
+					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Keine externe Klasse gefunden"
+					.C_EXTERNAL_PARAMETERS_LOC										= "EXTERNE PARAMETER"
 					.C_FIELD_NOT_FOUND_ON_FILE_STRUCTURE_LOC						= "Feld [<<laProps(I)>>] nicht in der Struktur von Datei <<DBF('TABLABIN')>> gefunden"
 					.C_FILE_DOESNT_EXIST_LOC										= "Datei existiert nicht:"
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "Datei [<<.c_InputFile>>] wird nicht unterstützt"
 					.C_FILE_NOT_FOUND_LOC											= "Datei nicht gefunden"
 					.C_FILENAME_LOC													= "Datei"
-					.C_EXTENSION_RECONFIGURATION_LOC								= "Erweiterungsneukonfiguration:"
-					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
-					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Keine externe Klasse gefunden"
-					.C_EXTERNAL_PARAMETERS_LOC										= "EXTERNE PARAMETER"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: FEHLER!!"
 					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
 					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
@@ -22242,6 +22296,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG ist nur für Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: WARNUNG!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Generierte Dateigröße"
+					.C_GENERATING_BINARY_LOC										= "Gene Binary"
 					.C_INCLUDING_CLASS_LOC											= "einschließlich Klasse"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Auswählen interaktive Verzeichnis"
 					.C_IS_A_FILE_LOC												= "ist eine DATEI"
