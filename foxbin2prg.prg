@@ -2354,9 +2354,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-				*CASE THIS.l_Debug
-				*	THIS.writeErrorLog_Flush( )
-
 			ENDCASE
 
 			STORE NULL TO loFSO, loWSH
