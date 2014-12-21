@@ -90,7 +90,7 @@ Else
 		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
 	Else
 		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','0','0','0'," _
-			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'0','','',.F.,''," _
+			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 			& cFlagRecompile & "," & cNoTimestamps & " )"
 	End If
 	If cFlagJustShowCall = "1" Then
