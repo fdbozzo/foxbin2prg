@@ -1349,7 +1349,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				CASE ISNULL( .o_Configuration( .n_CFG_Actual ) )
 					*-- Si existe una configuración y es NULL, se usa la predeterminada
-					*.n_CFG_Actual = 0
+					.n_CFG_Actual	= 0
+					lo_CFG			= THIS
 
 				ENDCASE
 
@@ -1366,13 +1367,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						lo_Configuration.Add( NULL, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
 					ENDIF
 
-					.n_CFG_Actual  						 = lo_Configuration.Count
+					.n_CFG_Actual  						= lo_Configuration.Count
 					*lo_CFG.c_Foxbin2prg_FullPath		= ''
 					lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
 					*lo_CFG.c_CurDir					= ''
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
-						*laConfig(I)	= LOWER( laConfig(I) )
 						.set_Line( @lcConfigLine, @laConfig, I )
 						.get_SeparatedLineAndComment( @lcConfigLine )
 						laConfig(I)		= LOWER( lcConfigLine )
@@ -1591,7 +1591,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				IF INLIST( TRANSFORM(tcDebug), '0', '1' ) THEN
 					lo_CFG.l_Debug					= (TRANSFORM(tcDebug)=='1')
 				ENDIF
-				tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( lo_CFG.n_ExtraBackupLevels ) )
+				tcExtraBackupLevels		= EVL( tcExtraBackupLevels, TRANSFORM( .n_ExtraBackupLevels ) )
 				IF ISDIGIT(tcExtraBackupLevels)
 					lo_CFG.n_ExtraBackupLevels		= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 				ENDIF
