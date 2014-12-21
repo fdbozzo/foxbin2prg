@@ -1451,35 +1451,35 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
+								lo_CFG.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:           ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 16 ) == LOWER('UseClassPerFile:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								.l_UseClassPerFile	= ( TRANSFORM(lcValue) == '1' )
+								lo_CFG.l_UseClassPerFile	= ( TRANSFORM(lcValue) == '1' )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > UseClassPerFile:            ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 18 ) == LOWER('ClassPerFileCheck:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								.l_ClassPerFileCheck	= ( TRANSFORM(lcValue) == '1' )
+								lo_CFG.l_ClassPerFileCheck	= ( TRANSFORM(lcValue) == '1' )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ClassPerFileCheck:          ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 27 ) == LOWER('RedirectClassPerFileToMain:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 28 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								.l_RedirectClassPerFileToMain	= ( TRANSFORM(lcValue) == '1' )
+								lo_CFG.l_RedirectClassPerFileToMain	= ( TRANSFORM(lcValue) == '1' )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 22 ) == LOWER('DropNullCharsFromCode:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 23 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								.l_DropNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
+								lo_CFG.l_DropNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:      ' + TRANSFORM(lcValue) )
 							ENDIF
 
@@ -1873,15 +1873,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				loFSO				= .o_FSO
 				loWSH				= .o_WSH
-				DIMENSION .a_ProcessedFiles(1)
-				.n_ProcessedFiles	= 0
+				*DIMENSION .a_ProcessedFiles(1)
+				*.n_ProcessedFiles	= 0
 				lnPCount			= 0
 				lcInputFile_Type	= ''
 
 				*-- Funciona y lee los parámetros, pero no le veo un caso de uso claro, ya que si se eligen
 				*-- varios directorios de proyecto, la compilación será errónea. 12/12/2014
 				*.ReadInputVFPParams( @laParams, @lnPCount )
-				
+
 				*IF lnPCount > 0 THEN
 				*	.writeLog( 'Params.Externos: ' + TRANSFORM(lnPCount,'@L ##') )
 				*	FOR I = 1 TO lnPCount
@@ -1889,7 +1889,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*	ENDFOR
 				*	EXIT
 				*ENDIF
-				
+
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
 				IF EMPTY(lcInputFile_Type) AND NOT EMPTY(tc_InputFile)
 					IF ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D" THEN
@@ -1953,7 +1953,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				OTHERWISE
 					*-- EJECUCIÓN NORMAL
 
-					
+
 					IF '-SHOWMSG' $ ('-' + tcType) AND NOT '-BIN2PRG' $ ('-' + tcType) AND NOT '-PRG2BIN' $ ('-' + tcType) ;
 							AND lcInputFile_Type == C_FILETYPE_DIRECTORY
 						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
@@ -1964,7 +1964,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						lnConversionOption	= loFrm_Interactive.n_ConversionType
 						loFrm_Interactive.Release()
 						loFrm_Interactive = NULL
-						
+
 						DO CASE
 						CASE lnConversionOption = 1		&& Bin2Txt
 							tcType	= tcType + '-BIN2PRG'
@@ -2295,7 +2295,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		CATCH TO toEx
 			lnCodError		= toEx.ERRORNO
-			
+
 			IF VARTYPE(loLang) <> 'O' THEN
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
@@ -2304,8 +2304,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				toEx.UserValue = toEx.UserValue + 'tc_InputDir = [' + TRANSFORM(tc_InputFile) + ']' + CR_LF
 				THIS.l_ShowErrors	= .F.	&& La opción "SHOWMSG" muestra su propio mensaje
 			ENDIF
-			
-			toEx.UserValue = toEx.UserValue + 'tc_InputFile = ' + TRANSFORM(tc_InputFile) + CR_LF
+
+			toEx.USERVALUE = toEx.USERVALUE + 'tc_InputFile = ' + TRANSFORM(tc_InputFile) + CR_LF
 
 			THIS.ejecutar_WriteErrorLog( @toEx, @lcErrorInfo )
 
@@ -2330,9 +2330,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			USE IN (SELECT("TABLABIN"))
 			THIS.writeLog_Flush()
-			IF NOT THIS.l_ShowProgress
+			IF THIS.l_ShowProgress
 				THIS.descargar_frm_avance()
-				*fdb*
 			ENDIF
 			CD (JUSTPATH(THIS.c_CurDir))
 
@@ -2355,8 +2354,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				ENDCASE
 
-			*CASE THIS.l_Debug
-			*	THIS.writeErrorLog_Flush( )
+				*CASE THIS.l_Debug
+				*	THIS.writeErrorLog_Flush( )
 
 			ENDCASE
 
@@ -2441,7 +2440,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ELSE
 						lc_BaseFile	= FORCEPATH( FORCEEXT( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTEXT(.c_InputFile)) , JUSTPATH(.c_InputFile) )
 					ENDIF
-					
+
 					IF .n_ProcessedFiles > 0 THEN
 						*-- Buscar si fue procesado antes
 						IF ASCAN( .a_ProcessedFiles, lc_BaseFile, 1, 0, 0, 1+2+4 ) > 0 THEN
@@ -2450,7 +2449,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							EXIT
 						ENDIF
 					ENDIF
-					
+
 					.n_ProcessedFiles	= .n_ProcessedFiles + 1
 					DIMENSION .a_ProcessedFiles(.n_ProcessedFiles)
 					.a_ProcessedFiles(.n_ProcessedFiles)	= lc_BaseFile
@@ -2987,7 +2986,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lsBuffer	= STRTRAN(lsBuffer, '" ', '"'+CHR(13)+CHR(10), 1, 1)
 		lsBuffer	= STRTRAN(lsBuffer, CHR(0), ' ')
 		tnPCount	= ALINES( taParams, lsBuffer, 4 )
-		
+
 		IF tnPCount > 1 THEN
 			ADEL( taParams, 1 )
 			tnPCount = tnPCount - 1
@@ -6860,7 +6859,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					*-- Procedimiento de objeto
 					toObjeto	= toClase._AddObjects( lnObjProc )
 					toObjeto.add_Procedure( loProcedure )
-			
+
 					*-- Paso el log de errores
 					IF NOT EMPTY(toObjeto.c_TextErr) THEN
 						toClase.writeErrorLog(toObjeto.c_TextErr)
@@ -6977,7 +6976,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					ENDFOR
 
 					.verificar_CLASES_EXTERNAS( @toModulo, @toFoxBin2Prg )
-					
+
 				ENDIF
 			ENDWITH	&& THIS
 
@@ -7202,7 +7201,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					lcInputFile			= FORCEPATH( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTPATH(.c_InputFile) ) + '.*.' + JUSTEXT(.c_InputFile)
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 					ASORT( laFiles, 1, 0, 0, 1)
-					
+
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
 
