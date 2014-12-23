@@ -2337,7 +2337,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
-			CASE ATC('-SHOWMSG', ('-' + tcType)) = 1 OR ATC('-INTERACTIVE', ('-' + tcType)) = 1
+			CASE ATC('-SHOWMSG', ('-' + tcType)) = 1 &&OR ATC('-INTERACTIVE', ('-' + tcType)) = 1
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled

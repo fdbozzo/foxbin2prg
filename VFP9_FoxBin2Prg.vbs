@@ -89,7 +89,7 @@ Else
 	If nDebug = 0 Or nDebug = 2 Then
 		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
 	Else
-		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','0','0','0'," _
+		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','INTERACTIVE','0','0'," _
 			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 			& cFlagRecompile & "," & cNoTimestamps & " )"
 	End If
