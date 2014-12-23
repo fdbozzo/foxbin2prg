@@ -1954,8 +1954,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- EJECUCIÓN NORMAL
 
 
-					IF '-SHOWMSG' $ ('-' + tcType) AND NOT '-BIN2PRG' $ ('-' + tcType) AND NOT '-PRG2BIN' $ ('-' + tcType) ;
-							AND lcInputFile_Type == C_FILETYPE_DIRECTORY
+					IF ( ATC('-SHOWMSG', ('-' + tcType)) = 1 OR ATC('-INTERACTIVE', ('-' + tcType)) = 1 ) ;
+							AND ATC('-BIN2PRG', ('-' + tcType)) = 0 AND ATC('-PRG2BIN', ('-' + tcType)) = 0 ;
+							AND lcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
 						.writeLog( loLang.C_INTERACTIVE_DIRECTORY_SELECTION_LOC )
 						loFrm_Interactive	= CREATEOBJECT('frm_interactive')
@@ -2024,7 +2025,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						EXIT
 
 
-					CASE '-BIN2PRG' $ ('-' + tcType)
+					CASE ATC('-BIN2PRG', ('-' + tcType)) = 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
 
 						DO CASE
@@ -2077,7 +2078,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDCASE
 
 
-					CASE '-PRG2BIN' $ ('-' + tcType)
+					CASE ATC('-PRG2BIN', ('-' + tcType)) = 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
 
 						DO CASE
@@ -2300,7 +2301,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
 
-			IF '-SHOWMSG' $ ('-' + tcType) OR '-INTERACTIVE' $ ('-' + tcType) THEN
+			IF ATC('-SHOWMSG', ('-' + tcType)) = 1 OR ATC('-INTERACTIVE', ('-' + tcType)) = 1 THEN
 				toEx.UserValue = toEx.UserValue + 'tc_InputDir = [' + TRANSFORM(tc_InputFile) + ']' + CR_LF
 				THIS.l_ShowErrors	= .F.	&& La opción "SHOWMSG" muestra su propio mensaje
 			ENDIF
@@ -2336,7 +2337,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
-			CASE '-SHOWMSG' $ ('-' + tcType) OR '-INTERACTIVE' $ ('-' + tcType)
+			CASE ATC('-SHOWMSG', ('-' + tcType)) = 1 OR ATC('-INTERACTIVE', ('-' + tcType)) = 1
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
