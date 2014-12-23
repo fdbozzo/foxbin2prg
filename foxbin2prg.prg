@@ -120,6 +120,11 @@
 * 04/12/2014	FDBOZZO		v1.19.38	Mejora: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs (Francisco Prieto)
 * 06/12/2014	FDBOZZO		v1.19.38	Mejora: Rediseño de la Internacionalización. Ahora la selección es automática al cargar y no requiere recompilar.
 * 12/12/2014	FDBOZZO		v1.19.38	Mejora: Detección de métodos duplicados para notificar casos de corrupción (Álvaro Castrillón)
+* 18/12/2014	FDBOZZO		v1.19.39	Mejora: Cuando se usan las claves BIN2PRG o PRG2BIN permitir procesar un archivo solo (Mike Potjer)
+* 18/12/2014	FDBOZZO		v1.19.39	Mejora: Agregar la clave SHOWMSG y dejar INTERACTIVE para un diálogo interactivo (Mike Potjer)
+* 18/12/2014	FDBOZZO		v1.19.39	Mejora: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar (Mike Potjer)
+* 18/12/2014	FDBOZZO		v1.19.39	Bug fix vbs: Los scripts vbs no muestren los errores del proceso de FoxBin2Prg
+* 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -173,6 +178,9 @@
 * 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia)
 * 04/12/2014	Francisco Prieto	MEJORA v1.19.36: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs
 * 12/12/2014	Álvaro Castrillón	MEJORA v1.19.36: Detección de métodos duplicados para notificar casos de corrupción
+* 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se usan las claves BIN2PRG o PRG2BIN permitir procesar un archivo solo
+* 16/12/2014	Mike Potjer			Mejora v1.19.38: Agregar la clave SHOWMSG y dejar INTERACTIVE para un diálogo interactivo
+* 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -407,7 +415,11 @@ LOCAL lnResp, loEx AS EXCEPTION
 *ENDIF
 
 *-- En el caso de recibir "BIN2PRG" o "PRG2BIN" en el primer parámetro, los invierto.
-IF INLIST(UPPER(TRANSFORM(tc_InputFile)), 'BIN2PRG', 'PRG2BIN', 'BIN2PRG-SHOWMSG', 'PRG2BIN-SHOWMSG', 'SHOWMSG', 'INTERACTIVE') THEN
+tc_InputFile	= EVL(tc_InputFile,'')
+tcType			= EVL(tcType,'')
+
+IF ATC('-BIN2PRG','-'+tc_InputFile) >= 1 OR ATC('-PRG2BIN','-'+tc_InputFile) >= 1 ;
+		OR ATC('-SHOWMSG','-'+tc_InputFile) >= 1 OR ATC('-INTERACTIVE','-'+tc_InputFile) >= 1 THEN
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
@@ -1954,7 +1966,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*-- EJECUCIÓN NORMAL
 
 
-					IF ( ATC('-SHOWMSG', ('-' + tcType)) = 1 OR ATC('-INTERACTIVE', ('-' + tcType)) = 1 ) ;
+					IF ATC('-INTERACTIVE', ('-' + tcType)) >= 1 ;
 							AND ATC('-BIN2PRG', ('-' + tcType)) = 0 AND ATC('-PRG2BIN', ('-' + tcType)) = 0 ;
 							AND lcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
@@ -2025,7 +2037,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						EXIT
 
 
-					CASE ATC('-BIN2PRG', ('-' + tcType)) = 1
+					CASE ATC('-BIN2PRG', ('-' + tcType)) >= 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
 
 						DO CASE
@@ -2078,7 +2090,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDCASE
 
 
-					CASE ATC('-PRG2BIN', ('-' + tcType)) = 1
+					CASE ATC('-PRG2BIN', ('-' + tcType)) >= 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
 
 						DO CASE
@@ -2301,7 +2313,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
 
-			IF ATC('-SHOWMSG', ('-' + tcType)) = 1 OR ATC('-INTERACTIVE', ('-' + tcType)) = 1 THEN
+			IF ATC('-SHOWMSG', ('-' + tcType)) >= 1 THEN
 				toEx.UserValue = toEx.UserValue + 'tc_InputDir = [' + TRANSFORM(tc_InputFile) + ']' + CR_LF
 				THIS.l_ShowErrors	= .F.	&& La opción "SHOWMSG" muestra su propio mensaje
 			ENDIF
@@ -2337,7 +2349,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
-			CASE ATC('-SHOWMSG', ('-' + tcType)) = 1 &&OR ATC('-INTERACTIVE', ('-' + tcType)) = 1
+			CASE ATC('-SHOWMSG', ('-' + tcType)) >= 1
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
