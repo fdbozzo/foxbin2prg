@@ -609,17 +609,17 @@
 			<FIELDS>
 				<FIELD>
 					<Name>dummy</Name>
-					<Caption></Caption>
-					<Comment></Comment>
+					<Caption>Dummy</Caption>
+					<Comment>Dummy_field_comment</Comment>
 					<DataType>C(1)</DataType>
-					<DefaultValue></DefaultValue>
-					<DisplayClass></DisplayClass>
-					<DisplayClassLibrary></DisplayClassLibrary>
-					<Format></Format>
-					<InputMask></InputMask>
+					<DefaultValue>Depto.</DefaultValue>
+					<DisplayClass>cl_optiongroup</DisplayClass>
+					<DisplayClassLibrary>fb2p_test.vcx</DisplayClassLibrary>
+					<Format>!</Format>
+					<InputMask>XXXXXXXXXX</InputMask>
 					<KeyField>.F.</KeyField>
-					<RuleExpression></RuleExpression>
-					<RuleText></RuleText>
+					<RuleExpression>dummy_field_validation_rule()</RuleExpression>
+					<RuleText>dummy_field_validation_message</RuleText>
 					<Updatable>.T.</Updatable>
 					<UpdateName>DUAL.DUMMY</UpdateName>
 				</FIELD>
