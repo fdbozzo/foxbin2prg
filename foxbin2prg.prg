@@ -686,9 +686,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 
 		THIS.writeLog( REPLICATE( '*', 100 ) )
-		THIS.writeLog( 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ' INIT' )
+		THIS.writeLog( 'FoxBin2Prg INIT' )
 		THIS.writeLog( REPLICATE( '*', 100 ) )
-		THIS.writeLog( 'Executing: ' + THIS.c_Foxbin2prg_FullPath + ' (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' )
+		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' )
 		THIS.ChangeLanguage()
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
@@ -2314,13 +2314,15 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			IF VARTYPE(loLang) <> 'O' THEN
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
+			
+			toEx.UserValue	= toEx.UserValue + 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' + CR_LF
 
 			IF ATC('-SHOWMSG', ('-' + tcType)) >= 1 THEN
-				toEx.UserValue = toEx.UserValue + 'tc_InputDir = [' + TRANSFORM(tc_InputFile) + ']' + CR_LF
+				toEx.UserValue = toEx.UserValue + 'lcInputFile_Type  = [' + TRANSFORM(lcInputFile_Type) + ']' + CR_LF
 				THIS.l_ShowErrors	= .F.	&& La opción "SHOWMSG" muestra su propio mensaje
 			ENDIF
 
-			toEx.USERVALUE = toEx.USERVALUE + 'tc_InputFile = ' + TRANSFORM(tc_InputFile) + CR_LF
+			toEx.USERVALUE = toEx.USERVALUE + 'tc_InputFile = [' + TRANSFORM(tc_InputFile) + ']' + CR_LF
 
 			THIS.ejecutar_WriteErrorLog( @toEx, @lcErrorInfo )
 
