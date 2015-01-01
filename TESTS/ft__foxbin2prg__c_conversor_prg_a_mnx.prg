@@ -111,17 +111,17 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
-			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN2') ), lnLenHeader )
-			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN3') ), lnLenHeader )
+			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
+			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
 			
 			
 			*-- Visualización de valores
@@ -171,17 +171,17 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
-			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN2') ), lnLenHeader )
-			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN3') ), lnLenHeader )
+			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
+			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
 			
 			
 			*-- Visualización de valores
@@ -231,17 +231,17 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
-			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN2') ), lnLenHeader )
-			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN3') ), lnLenHeader )
+			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
+			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
 			
 			
 			*-- Visualización de valores
@@ -291,17 +291,17 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
-			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN2') ), lnLenHeader )
-			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN3') ), lnLenHeader )
+			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
+			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
 			
 			
 			*-- Visualización de valores
@@ -351,17 +351,17 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.Ejecutar( FORCEEXT(lc_File,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
-			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN2') ), lnLenHeader )
-			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_File,'MN3') ), lnLenHeader )
+			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
+			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
 			
 			
 			*-- Visualización de valores

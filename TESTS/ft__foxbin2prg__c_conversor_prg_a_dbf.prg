@@ -113,7 +113,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( lc_File )
 
-			loCnv.Ejecutar( lc_File, '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -185,7 +185,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( lc_File )
 
-			loCnv.Ejecutar( lc_File, '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( lc_OutputFile, '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -258,8 +258,8 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -331,8 +331,8 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
-			loCnv.Ejecutar( FORCEEXT(lc_File,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
