@@ -119,13 +119,13 @@ Else
 			MsgBox cConvCancelByUserMsg & "! [p:" & nProcessedFilesCount & "]", 48+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
 			oVFP9.DoCmd("oFoxBin2prg.writeErrorLog_Flush()")
 			cErrFile = oVFP9.Eval("oFoxBin2prg.c_ErrorLogFile")
-			WSHShell.run cErrFile
+			WSHShell.run cErrFile,3
 
 		ElseIf oVFP9.Eval("oFoxBin2prg.l_Error") Then
 			MsgBox cEndOfProcessMsg & "! (" & cWithErrorsMsg & ") [p:" & nProcessedFilesCount & "]", 48+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
 			oVFP9.DoCmd("oFoxBin2prg.writeErrorLog_Flush()")
 			cErrFile = oVFP9.Eval("oFoxBin2prg.c_ErrorLogFile")
-			WSHShell.run cErrFile
+			WSHShell.run cErrFile,3
 		Else
 			MsgBox cEndOfProcessMsg & "! [p:" & nProcessedFilesCount & "]", 64+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
 		End If

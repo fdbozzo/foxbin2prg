@@ -2357,12 +2357,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				CASE lnCodError = 1799	&& Conversion Cancelled
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '! [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+48+4096, 'FoxBin2Prg', 60000 )
 					THIS.writeErrorLog_Flush( )
-					loWSH.Run( THIS.c_ErrorLogFile, 1, .F. )
+					loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				CASE THIS.l_Error
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ') [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+48+4096, 'FoxBin2Prg', 60000 )
 					THIS.writeErrorLog_Flush( )
-					loWSH.Run( THIS.c_ErrorLogFile, 1, .F. )
+					loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				OTHERWISE
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + ' [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+64+4096, 'FoxBin2Prg', 60000 )
