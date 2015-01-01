@@ -13,7 +13,7 @@
 '		en la carpeta "SendTo" del usuario
 '		- Ahora puede seleccionar archivos o directorios, pulsar click derecho y "Enviar a" FoxBin2prg para conversiones batch
 '---------------------------------------------------------------------------------------------------
-Dim WSHShell, FileSystemObject
+Dim WSHShell, FileSystemObject, cEndOfProcessMsg, cWithErrorsMsg, cConvCancelByUserMsg, nProcessedFilesCount
 Dim nExitCode, cEXETool, cEXETool2, nDebug
 Set wshShell = CreateObject( "WScript.Shell" )
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
@@ -89,8 +89,8 @@ Else
 	If nDebug = 0 Or nDebug = 2 Then
 		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
 	Else
-		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','0','0','0'," _
-			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'0','','',.F.,''," _
+		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','INTERACTIVE','0','0'," _
+			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 			& cFlagRecompile & "," & cNoTimestamps & " )"
 	End If
 	If cFlagJustShowCall = "1" Then
@@ -101,20 +101,24 @@ Else
 	End If
 
 	If GetBit(nDebug, 4) Then
-		'If oVFP9.Eval("oFoxBin2prg.l_Error") Then
-		If nExitCode = 1799 Then
-			MsgBox "Conversion Cancelled by User!", 48, WScript.ScriptName
-			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
-			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
-			WSHShell.run cErrFile
+		cEndOfProcessMsg		= oVFP9.Eval("_SCREEN.o_FoxBin2Prg_Lang.C_END_OF_PROCESS_LOC")
+		cWithErrorsMsg			= oVFP9.Eval("_SCREEN.o_FoxBin2Prg_Lang.C_WITH_ERRORS_LOC")
+		cConvCancelByUserMsg	= oVFP9.Eval("_SCREEN.o_FoxBin2Prg_Lang.C_CONVERSION_CANCELLED_BY_USER_LOC")
+		nProcessedFilesCount	= oVFP9.Eval("oFoxBin2prg.n_ProcessedFilesCount")
 
-		ElseIf nExitCode > 0 Then
-			MsgBox "End of Process! (with errors)", 48, WScript.ScriptName
-			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
-			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
-			WSHShell.run cErrFile
+		If nExitCode = 1799 Then
+			MsgBox cConvCancelByUserMsg & "! [p:" & nProcessedFilesCount & "]", 48+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
+			oVFP9.DoCmd("oFoxBin2prg.writeErrorLog_Flush()")
+			cErrFile = oVFP9.Eval("oFoxBin2prg.c_ErrorLogFile")
+			WSHShell.run cErrFile,3
+
+		ElseIf oVFP9.Eval("oFoxBin2prg.l_Error") Then
+			MsgBox cEndOfProcessMsg & "! (" & cWithErrorsMsg & ") [p:" & nProcessedFilesCount & "]", 48+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
+			oVFP9.DoCmd("oFoxBin2prg.writeErrorLog_Flush()")
+			cErrFile = oVFP9.Eval("oFoxBin2prg.c_ErrorLogFile")
+			WSHShell.run cErrFile,3
 		Else
-			MsgBox "End of Process!", 64, WScript.ScriptName
+			MsgBox cEndOfProcessMsg & "! [p:" & nProcessedFilesCount & "]", 64+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
 		End If
 	End If
 

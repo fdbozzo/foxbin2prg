@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.38'
-    .VersionDate          = Date(2014,12,13)
+    .VersionNumber        = 'v1.19.39'
+    .VersionDate          = Date(2015,01,01)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,14 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/01/01	v1.19.39
+- Bug fix vbs: vbs scripts does not show FoxBin2Prg process errors correctly
+- When using BIN2PRG or PRG2BIN keywords with FoxBin2Prg command line, allow processing one file (Mike Potjer)
+- Add keyword SHOWMSG and use INTERACTIVE keyword for an interactive dialog (Mike Potjer)
+- When processing a directory from commandline with foxbin2prg alone and the INTERACTIVE keyword, show a dialog to ask what to process (Mike Potjer)
+- Bug fix dc2: DisplayClass and DisplayClassLibrary values got the wrong value "Default" and not the corresponding own values (Christopher Kurth/Ryan Harris)
+- Deleted recompilation scripts for language, because it is an automatic selection now
 
 2014/12/13	v1.19.38
 - Feature: Now is possible to use FoxBin2Prg for batch conversions directly from the File Explorer (see README.txt), without the need of vbs scripts, that sometimes can make trouble or are not permitted by IT department (Francisco Prieto)
