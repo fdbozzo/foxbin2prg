@@ -13,7 +13,7 @@
 '		- Ahora puede seleccionar archivos o directorios, pulsar click derecho y "Enviar a" FoxBin2prg para conversiones batch
 '---------------------------------------------------------------------------------------------------
 Const ForReading = 1 
-Dim WSHShell, FileSystemObject
+Dim WSHShell, FileSystemObject, cEndOfProcessMsg, cWithErrorsMsg, cConvCancelByUserMsg, nProcessedFilesCount
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, lcExt, foxbin2prg_cfg, aFiles(), nFile_Count
 Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cFlagNoTimestamps, cErrFile
 Set WSHShell = WScript.CreateObject("WScript.Shell")
@@ -99,7 +99,7 @@ Else
 		If nDebug = 0 Or nDebug = 2 Then
 			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "' )"
 		Else
-			cCMD	= "oFoxBin2prg.ejecutar(  '" & aFiles(i) & "','0','0','0'," _
+			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "','PRG2BIN','0','0'," _
 				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 				& cFlagRecompile & "," & cFlagNoTimestamps & " )"
 		End If
@@ -107,8 +107,7 @@ Else
 		If cFlagJustShowCall = "1" Then
 			MsgBox cCMD, 64, "PARAMETERS"
 		Else
-			oVFP9.DoCmd( cCMD )
-			nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
+			nExitCode = oVFP9.Eval(cCMD)
 		End If
 		
 		If nExitCode = 1799 Then 'Conversion cancelled by user
@@ -117,20 +116,24 @@ Else
 	Next
 
 	If GetBit(nDebug, 4) Then
-		'If oVFP9.Eval("oFoxBin2prg.l_Error") Then
-		If nExitCode = 1799 Then
-			MsgBox "Conversion Cancelled by User!", 48, WScript.ScriptName
-			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
-			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
-			WSHShell.run cErrFile
+		cEndOfProcessMsg		= oVFP9.Eval("_SCREEN.o_FoxBin2Prg_Lang.C_END_OF_PROCESS_LOC")
+		cWithErrorsMsg			= oVFP9.Eval("_SCREEN.o_FoxBin2Prg_Lang.C_WITH_ERRORS_LOC")
+		cConvCancelByUserMsg	= oVFP9.Eval("_SCREEN.o_FoxBin2Prg_Lang.C_CONVERSION_CANCELLED_BY_USER_LOC")
+		nProcessedFilesCount	= oVFP9.Eval("oFoxBin2prg.n_ProcessedFilesCount")
 
-		ElseIf nExitCode > 0 Then
-			MsgBox "End of Process! (with errors)", 48, WScript.ScriptName
-			cErrFile = oVFP9.Eval("FORCEPATH('FoxBin2Prg.LOG',GETENV('TEMP') )")
-			oVFP9.DoCmd("STRTOFILE( oFoxBin2prg.c_ErrorLog, '" & cErrFile & "' )")
-			WSHShell.run cErrFile
+		If nExitCode = 1799 Then
+			MsgBox cConvCancelByUserMsg & "! [p:" & nProcessedFilesCount & "]", 48+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
+			oVFP9.DoCmd("oFoxBin2prg.writeErrorLog_Flush()")
+			cErrFile = oVFP9.Eval("oFoxBin2prg.c_ErrorLogFile")
+			WSHShell.run cErrFile,3
+
+		ElseIf oVFP9.Eval("oFoxBin2prg.l_Error") Then
+			MsgBox cEndOfProcessMsg & "! (" & cWithErrorsMsg & ") [p:" & nProcessedFilesCount & "]", 48+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
+			oVFP9.DoCmd("oFoxBin2prg.writeErrorLog_Flush()")
+			cErrFile = oVFP9.Eval("oFoxBin2prg.c_ErrorLogFile")
+			WSHShell.run cErrFile,3
 		Else
-			MsgBox "End of Process!", 64, WScript.ScriptName
+			MsgBox cEndOfProcessMsg & "! [p:" & nProcessedFilesCount & "]", 64+4096, WScript.ScriptName & " (" & oVFP9.Eval("oFoxBin2prg.c_FB2PRG_EXE_Version") & ")"
 		End If
 	End If
 
@@ -162,24 +165,22 @@ End Sub
 
 
 Private Sub evaluateFile( tcFile )
-	lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
-	lcFileName = FileSystemObject.GetFileName( tcFile )
-	laPoints = Split( lcFileName, "." )
-	lnPoints = UBound(laPoints)
+	'lcExt = UCase( FileSystemObject.GetExtensionName( tcFile ) )
+	'lcFileName = FileSystemObject.GetFileName( tcFile )
+	'laPoints = Split( lcFileName, "." )
+	'lnPoints = UBound(laPoints)
 	'-- No proceso los archivos con más de un punto (clases en archivos individuales) por performance
-	If lnPoints = 1 Then
-		oVFP9.SetVar "gc_Ext", lcExt
-		
+	'If lnPoints = 1 Then
 		'PROCEDURE EvaluarConfiguracion
 		'	LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcFlagNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 		'		, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
-		oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1', '', '', '', '', '', '', '" & tcFile & "' )" )
-		If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Prg2Bin(gc_Ext)") Then
+		'oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1', '', '', '', '', '', '', '" & tcFile & "' )" )
+		'If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Prg2Bin('" & lcExt & "')") Then
 			nFile_Count = nFile_Count + 1
 			ReDim Preserve aFiles(nFile_Count)
 			aFiles(nFile_Count) = tcFile
-		End If
-	End If
+		'End If
+	'End If
 End Sub
 
 
