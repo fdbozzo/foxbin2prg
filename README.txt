@@ -39,10 +39,10 @@ You can create 3 shortcuts of FoxBin2Prg.exe and move them to "SendTo" folder on
 so you can "send" the selected file (pjx,pj2,etc) to the selected option, and make on-the-fly conversions,
 then rename them as this (make sure you can see system file extensions):
 
-Name------------------------	Right-click/Properties/destination-----------	What you can do with this option---------
-FoxBin2Prg - Binary2Text.lnk	<path>\foxbin2prg.exe "BIN2PRG-INTERACTIVE"		Process directories or individual files
-FoxBin2Prg - Text2Binary.lnk	<path>\foxbin2prg.exe "PRG2BIN-INTERACTIVE"		Process directories or individual files
-FoxBin2Prg.lnk					<path>\foxbin2prg.exe "INTERACTIVE"				Process individual files
+Name------------------------    Right-click/Properties/destination-----------	What you can do with this option---------
+FoxBin2Prg - Binary2Text.lnk    <path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"         Process directories or individual files
+FoxBin2Prg - Text2Binary.lnk    <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"         Process directories or individual files
+FoxBin2Prg.lnk                  <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"     Process individual files or directories asking what to convert
 
 In example: Select a file, right-click, SendTo -> FoxBin2Prg
 
@@ -99,9 +99,9 @@ para poder "enviar" el archivo elegido (pjx,pj2,etc) a la opción seleccionada, 
 luego puede renombrar y modificar esos accesos directos como sigue (asegúrese de que puede ver las extensiones del sistema):
 
 Nombre------------------------	Click-Derecho/Propiedades/destino------------	Qué puede hacer con esta opción----------
-FoxBin2Prg - Binary2Text.lnk	<path>\foxbin2prg.exe "BIN2PRG-INTERACTIVE"		Procesar directorios o archivos individuales
-FoxBin2Prg - Text2Binary.lnk	<path>\foxbin2prg.exe "PRG2BIN-INTERACTIVE"		Procesar directorios o archivos individuales
-FoxBin2Prg.lnk					<path>\foxbin2prg.exe "INTERACTIVE"				Procesar archivos individuales
+FoxBin2Prg - Binary2Text.lnk    <ruta>\foxbin2prg.exe "BIN2PRG-SHOWMSG"         Procesar directorios o archivos individuales
+FoxBin2Prg - Text2Binary.lnk    <ruta>\foxbin2prg.exe "PRG2BIN-SHOWMSG"         Procesar directorios o archivos individuales
+FoxBin2Prg.lnk                  <ruta>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"     Procesar archivos individuales o directorios preguntando qué convertir
 
 Por ejemplo: Seleccionar un archivo, click-derecho, Enviar A -> FoxBin2Prg
 
