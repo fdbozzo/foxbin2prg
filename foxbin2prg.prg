@@ -125,7 +125,6 @@
 * 18/12/2014	FDBOZZO		v1.19.39	Mejora: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar (Mike Potjer)
 * 18/12/2014	FDBOZZO		v1.19.39	Bug fix vbs: Los scripts vbs no muestren los errores del proceso de FoxBin2Prg
 * 30/12/2014	FDBOZZO		v1.19.39	Bug fix dc2: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Christopher Kurth/Ryan Harris)
-* 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
