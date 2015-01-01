@@ -1654,6 +1654,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDWITH && THIS
 
 		CATCH TO loEx
+			loEx.UserValue	= loEx.UserValue + 'lcConfigFile = [' + TRANSFORM(lcConfigFile) + ']' + CR_LF
+			loEx.UserValue	= loEx.UserValue + 'lc_CFG_Path = [' + TRANSFORM(lc_CFG_Path) + ']' + CR_LF
+			loEx.UserValue	= loEx.UserValue + 'lcValue = [' + TRANSFORM(lcValue) + ']' + CR_LF
+			
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
