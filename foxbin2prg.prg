@@ -9068,7 +9068,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 							DO CASE
 							CASE loReg.ObjType == "1"
 								loReg.TAG	= .decode_SpecialCodes_1_31( loReg.TAG )
-							CASE loReg.ObjType == "25"
+							CASE INLIST(loReg.ObjType, "25", "26")	&& Dataenvironment, cursors and relations
 								loReg.TAG	= SUBSTR(loReg.TAG,3)	&& Quito el ENTER agregado antes
 							OTHERWISE
 								loReg.TAG	= .decode_SpecialCodes_1_31( loReg.TAG )
@@ -9804,10 +9804,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="sortmethod" display="SortMethod"/>] ;
 		+ [<memberdata name="write_add_objects_withproperties" display="write_ADD_OBJECTS_WithProperties"/>] ;
 		+ [<memberdata name="write_all_object_methods" display="write_ALL_OBJECT_METHODS"/>] ;
-		+ [<memberdata name="write_cabecera_reporte" display="write_CABECERA_REPORTE"/>] ;
 		+ [<memberdata name="write_classmetadata" display="write_CLASSMETADATA"/>] ;
 		+ [<memberdata name="write_class_properties" display="write_CLASS_PROPERTIES"/>] ;
-		+ [<memberdata name="write_dataenvironment_reporte" display="write_DATAENVIRONMENT_REPORTE"/>] ;
 		+ [<memberdata name="write_dbc_header" display="write_DBC_HEADER"/>] ;
 		+ [<memberdata name="write_dbc_connections" display="write_DBC_CONNECTIONS"/>] ;
 		+ [<memberdata name="write_dbc_tables" display="write_DBC_TABLES"/>] ;
@@ -9820,7 +9818,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_dbf_header" display="write_DBF_HEADER"/>] ;
 		+ [<memberdata name="write_dbf_fields" display="write_DBF_FIELDS"/>] ;
 		+ [<memberdata name="write_dbf_indexes" display="write_DBF_INDEXES"/>] ;
-		+ [<memberdata name="write_detalle_reporte" display="write_DETALLE_REPORTE"/>] ;
 		+ [<memberdata name="write_defined_pam" display="write_DEFINED_PAM"/>] ;
 		+ [<memberdata name="write_define_class" display="write_DEFINE_CLASS"/>] ;
 		+ [<memberdata name="write_define_class_comments" display="write_Define_Class_COMMENTS"/>] ;
@@ -9832,6 +9829,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="write_objectmetadata" display="write_OBJECTMETADATA"/>] ;
 		+ [<memberdata name="write_outputfile" display="write_OutputFile"/>] ;
 		+ [<memberdata name="write_protected_properties" display="write_PROTECTED_Properties"/>] ;
+		+ [<memberdata name="write_txt_reporte" display="write_TXT_REPORTE"/>] ;
 		+ [</VFPData>]
 
 
@@ -11205,7 +11203,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	*******************************************************************************************************************
-	PROCEDURE write_CABECERA_REPORTE
+	PROCEDURE write_TXT_REPORTE
 		LPARAMETERS toReg
 
 		TRY
@@ -11290,235 +11288,24 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.TAG ) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.TAG2, STRCONV( toReg.TAG2,13 ) ) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.STYLE + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.COMMENT + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.USER + "]]>"
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<lc_TAG_REPORTE_F>>
-			ENDTEXT
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
+			
+			IF INLIST(toReg.ObjType, 25, 26) && Dataenvironment, cursors and relations
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.TAG + "]]>"
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
+			ELSE
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.TAG ) + "]]>"
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.TAG2, STRCONV( toReg.TAG2,13 ) ) + "]]>"
 			ENDIF
 
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DETALLE_REPORTE
-		LPARAMETERS toReg
-
-		TRY
-			LOCAL lc_TAG_REPORTE_I, lc_TAG_REPORTE_F, loEx AS EXCEPTION
-			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
-			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<lc_TAG_REPORTE_I>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="<<toReg.height>>" width="<<toReg.width>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
-			ENDTEXT
-
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.TAG ) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[" + IIF( INLIST(toReg.ObjType,5,6,8), toReg.TAG2, STRCONV( toReg.TAG2,13 ) ) + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.STYLE + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.COMMENT + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.USER + "]]>"
 
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<lc_TAG_REPORTE_F>>
-			ENDTEXT
-
-		CATCH TO loEx
-			IF THIS.l_Debug AND _VFP.STARTMODE = 0
-				SET STEP ON
+			IF INLIST(toReg.ObjType, 25, 26) && Dataenvironment, cursors and relations
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + CHRTRAN( toReg.EXPR, C_NULL_CHAR, '' ) + "]]>"
+			ELSE
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
 			ENDIF
 
-			THROW
-
-		ENDTRY
-
-		RETURN
-	ENDPROC
-
-
-	*******************************************************************************************************************
-	PROCEDURE write_DATAENVIRONMENT_REPORTE
-		LPARAMETERS toReg
-
-		TRY
-			LOCAL lc_TAG_REPORTE_I, lc_TAG_REPORTE_F, loEx AS EXCEPTION
-			lc_TAG_REPORTE_I	= '<' + C_TAG_REPORTE + ' '
-			lc_TAG_REPORTE_F	= '</' + C_TAG_REPORTE + '>'
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<lc_TAG_REPORTE_I>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>	platform="WINDOWS " uniqueid="<<toReg.UniqueID>>" timestamp="<<toReg.TimeStamp>>" objtype="<<toReg.ObjType>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				vpos="<<toReg.vpos>>" hpos="<<toReg.hpos>>" height="<<toReg.height>>" width="<<toReg.width>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				order="<<toReg.order>>" unique="<<toReg.unique>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				environ="<<toReg.environ>>" boxchar="<<toReg.boxchar>>" fillchar="<<toReg.fillchar>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				pengreen="<<toReg.pengreen>>" penblue="<<toReg.penblue>>" fillred="<<toReg.fillred>>" fillgreen="<<toReg.fillgreen>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fillblue="<<toReg.fillblue>>" pensize="<<toReg.pensize>>" penpat="<<toReg.penpat>>" fillpat="<<toReg.fillpat>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				fontface="<<toReg.fontface>>" fontstyle="<<toReg.fontstyle>>" fontsize="<<toReg.fontsize>>" mode="<<toReg.mode>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				ruler="<<toReg.ruler>>" rulerlines="<<toReg.rulerlines>>" grid="<<toReg.grid>>" gridv="<<toReg.gridv>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				gridh="<<toReg.gridh>>" float="<<toReg.float>>" stretch="<<toReg.stretch>>" stretchtop="<<toReg.stretchtop>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				top="<<toReg.top>>" bottom="<<toReg.bottom>>" suptype="<<toReg.suptype>>" suprest="<<toReg.suprest>>" norepeat="<<toReg.norepeat>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				resetrpt="<<toReg.resetrpt>>" pagebreak="<<toReg.pagebreak>>" colbreak="<<toReg.colbreak>>" resetpage="<<toReg.resetpage>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				general="<<toReg.general>>" spacing="<<toReg.spacing>>" double="<<toReg.double>>" swapheader="<<toReg.swapheader>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				swapfooter="<<toReg.swapfooter>>" ejectbefor="<<toReg.ejectbefor>>" ejectafter="<<toReg.ejectafter>>" plain="<<toReg.plain>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				summary="<<toReg.summary>>" addalias="<<toReg.addalias>>" offset="<<toReg.offset>>" topmargin="<<toReg.topmargin>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				botmargin="<<toReg.botmargin>>" totaltype="<<toReg.totaltype>>" resettotal="<<toReg.resettotal>>" resoid="<<toReg.resoid>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				curpos="<<toReg.curpos>>" supalways="<<toReg.supalways>>" supovflow="<<toReg.supovflow>>" suprpcol="<<toReg.suprpcol>>" <<>>
-			ENDTEXT
-
-			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				supgroup="<<toReg.supgroup>>" supvalchng="<<toReg.supvalchng>>" <<>>
-			ENDTEXT
-
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.TAG + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<penred><![CDATA[" + TRANSFORM(toReg.penred) + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<style><![CDATA[" + toReg.STYLE + "]]>"
-			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<expr><![CDATA[" + toReg.EXPR + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.COMMENT + "]]>"
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.USER + "]]>"
@@ -13087,10 +12874,17 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					ERROR (TEXTMERGE(loLang.C_REPORT_NOT_IN_VFP9_FORMAT_LOC))
 				ENDIF
 
-				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
-				USE IN (SELECT("_TABLAORIG"))
+				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+
+				*SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN_0
+				*USE IN (SELECT("_TABLAORIG"))
+				SELECT * FROM _TABLAORIG ;
+					WHERE ObjType IN (1,25,26) ;
+					ORDER BY ObjType ASC ;
+					INTO CURSOR TABLABIN_0 READWRITE
 
 				*-- Header
+				SELECT TABLABIN_0
 				LOCATE FOR ObjType = 1
 				IF FOUND()
 					loRegCab	= NULL
@@ -13104,60 +12898,28 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					ENDIF
 				ENDIF
 
-				*-- Dataenvironment
-				LOCATE FOR ObjType = 25
-				IF FOUND()
-					loRegDataEnv	= NULL
-					SCATTER MEMO NAME loRegDataEnv
-
-					IF toFoxBin2Prg.l_NoTimestamps
-						loRegDataEnv.TIMESTAMP	= 0
-					ENDIF
-					IF toFoxBin2Prg.l_ClearUniqueID
-						loRegDataEnv.UNIQUEID	= ''
-					ENDIF
-				ENDIF
-
-				*-- Cursor1 (¿puede haber más de 1 cursor?)
-				LOCATE FOR ObjType = 26
-				IF FOUND()
-					loRegCur	= NULL
-					SCATTER MEMO NAME loRegCur
-
-					IF toFoxBin2Prg.l_NoTimestamps
-						loRegCur.TIMESTAMP	= 0
-					ENDIF
-					IF toFoxBin2Prg.l_ClearUniqueID
-						loRegCur.UNIQUEID	= ''
-					ENDIF
-				ENDIF
-
 				IF .l_ReportSort_Enabled
 					*-- ORDENADO
-					SELECT * FROM TABLABIN_0 ;
+					SELECT * FROM _TABLAORIG ;
 						WHERE ObjType NOT IN (1,25,26) ;
-						ORDER BY vpos,hpos ;
+						ORDER BY vpos,hpos ASC ;
 						INTO CURSOR TABLABIN READWRITE
 				ELSE
 					*-- SIN ORDENAR (Sólo para poder comparar con el original)
-					SELECT * FROM TABLABIN_0 ;
+					SELECT * FROM _TABLAORIG ;
 						WHERE ObjType NOT IN (1,25,26) ;
 						INTO CURSOR TABLABIN
 				ENDIF
 
 				loRegObj	= NULL
-				USE IN (SELECT("TABLABIN_0"))
 
-
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 				*-- Recorro los registros y genero el texto
 				IF VARTYPE(loRegCab) = "O"
-					.write_CABECERA_REPORTE( @loRegCab )
+					.write_TXT_REPORTE( @loRegCab )
 				ENDIF
 
 				SELECT TABLABIN
-				GOTO TOP
 
 				SCAN ALL
 					loRegObj	= NULL
@@ -13170,16 +12932,41 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 						loRegObj.UNIQUEID	= ''
 					ENDIF
 
-					.write_DETALLE_REPORTE( @loRegObj )
+					.write_TXT_REPORTE( @loRegObj )
 				ENDSCAN
 
-				IF VARTYPE(loRegDataEnv) = "O"
-					.write_DATAENVIRONMENT_REPORTE( @loRegDataEnv )
+				*-- Dataenvironment
+				SELECT TABLABIN_0
+				LOCATE FOR ObjType = 25
+				IF FOUND()
+					loRegDataEnv	= NULL
+					SCATTER MEMO NAME loRegDataEnv
+
+					IF toFoxBin2Prg.l_NoTimestamps
+						loRegDataEnv.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegDataEnv.UNIQUEID	= ''
+					ENDIF
+
+					.write_TXT_REPORTE( @loRegDataEnv )
 				ENDIF
 
-				IF VARTYPE(loRegCur) = "O"
-					.write_DETALLE_REPORTE( @loRegCur )
-				ENDIF
+				*-- Cursors and Relations
+				SELECT TABLABIN_0
+				SCAN ALL FOR ObjType = 26
+					loRegCur	= NULL
+					SCATTER MEMO NAME loRegCur
+
+					IF toFoxBin2Prg.l_NoTimestamps
+						loRegCur.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loRegCur.UNIQUEID	= ''
+					ENDIF
+
+					.write_TXT_REPORTE( @loRegCur )
+				ENDSCAN
 
 
 				*-- Genero el FR2
@@ -13202,6 +12989,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			USE IN (SELECT("TABLABIN_0"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen ;
