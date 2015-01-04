@@ -18,7 +18,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 Change History -------------------------------------------------------------
 
 2015/01/04	v1.19.40
-
+- Bug fix frx: Clean ASCII 0 from expression field for Cursors and Dataenvironment
 
 2015/01/01	v1.19.39
 - Bug fix vbs: vbs scripts does not show FoxBin2Prg process errors correctly
