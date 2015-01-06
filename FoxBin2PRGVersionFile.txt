@@ -21,6 +21,7 @@ Change History -------------------------------------------------------------
 - Enhancement frx/lbx: Clean ASCII 0 from expression field for Dataenvironment, Cursors and Relations
 - Bug fix frx/lbx: When using Dataenvironment with more than one cursor, remaining cursors are lost
 - Added new configuration "ShowProgressbar:2" to activate the progressbar only when a directory is selected and deactivate it for individual files (Jim Nelson)
+- Bug fix dbf: [Error 12, variable "tcOutputFile" is not found] when DBF_Conversion_Support=4 and output file is the same as existent one (Mike Potjer)
 
 2015/01/01	v1.19.39
 - Bug fix vbs: vbs scripts does not show FoxBin2Prg process errors correctly

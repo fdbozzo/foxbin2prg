@@ -127,6 +127,7 @@
 * 30/12/2014	FDBOZZO		v1.19.39	Bug fix dc2: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Christopher Kurth/Ryan Harris)
 * 04/01/2015	FDBOZZO		v1.19.40	Bug fix frx/lbx: Cuando se usa el entorno de datos, solo se está guardando un cursor, y si hay más se pierden
 * 06/01/2015	FDBOZZO		v1.19.40	Mejora: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Jim Nelson)
+* 07/01/2015	FDBOZZO		v1.19.40	Bug fix db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Mike Potjer)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -185,6 +186,7 @@
 * 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar (Agregado en v1.19.39)
 * 30/12/2014	Ryan Harris			Reporte bug dbc v1.19.38: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Agregado en v1.19.39)
 * 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
+* 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -11436,10 +11438,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL llFileExists, lnBytes
+		LOCAL llFileExists, lnBytes, lcOutputFile
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-
+		lcOutputFile	= tcOutputFile
 		llFileExists	= FILE(tcOutputFile)
 
 		IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
@@ -13043,7 +13045,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx )
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1) ;
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 				, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
@@ -13106,6 +13108,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 						CASE FILE(.c_OutputFile) AND toFoxBin2Prg.FilesComparedAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
 							ERASE (.c_OutputFile + '.TMP')
 							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+							lcOutputFile	= .c_OutputFile
 							.writeLog( TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
 								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
@@ -21833,7 +21836,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operation not recognized. Only SETNAME and GETNAME allowed."
 	C_OPTION_LOC													= "Option"
 	C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "The outer class does not match the inner classes"
-	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= "Optimization: Output file [<<tcOutputFile>>] was not overwritten because it is the same as was generated."
+	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= "Optimization: Output file [<<lcOutputFile>>] was not overwritten because it is the same as was generated."
 	C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimization: Output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
 	C_PRESS_ESC_TO_CANCEL											= "Press Esc to Cancel"
 	C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
@@ -21878,7 +21881,7 @@ DEFINE CLASS CL_LANG AS Custom
 
 					lc_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 					lc_Foxbin2prg_LangFile		= FORCEEXT( lc_Foxbin2prg_FullPath, 'H' )
-					llLangFileExists			= ( ADIR( laDirInfo, lc_Foxbin2prg_LangFile ) = 1 )
+					*llLangFileExists			= ( ADIR( laDirInfo, lc_Foxbin2prg_LangFile ) = 1 )	&& 07/01/2014. Anulado. Ya no tiene sentido el .h externo
 				ELSE
 					.n_LanguageSelectedMethod	= 1	&& 1=Assigned by Parameter
 				ENDIF
@@ -21976,7 +21979,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Object [<<toObj.CLASS>>] ne contient pas l'objet oReg (niveau <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Opération non reconnu. Seulement SETNAME et GETNAME permis."
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La classe externe ne correspond pas à la classe interne"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<<tcOutputFile>>] ne était pas écrasé parce que ce est la même que celle générée."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<<lcOutputFile>>] ne était pas écrasé parce que ce est la même que celle générée."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimisation: fichier de sortie [<<THIS.c_OutputFile>>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
 					.C_PRESS_ESC_TO_CANCEL											= "Appuyez sur Esc pour Annuler"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procédure pas fermé. Dernière ligne de code doit être ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
@@ -22055,7 +22058,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con la clase interna"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: El archivo de salida [<<tcOutputFile>>] no se sobreescribe por ser igual al generado."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: El archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al generado."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
 					.C_PRESS_ESC_TO_CANCEL											= "Pulse Esc para Cancelar"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
@@ -22134,7 +22137,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objekt [<<toObj.CLASS>>] enthält nicht oReg Objekt (level <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Befehl nicht erkannt. Nur SETNAME und GETNAME erlaubt."
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben da sie dieselbe ist wie die neu generierte."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<lcOutputFile>>] wurde nicht überschrieben da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedur nicht geschlossen. Letzte Zeile des Codes muss ENDPROC sein. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
