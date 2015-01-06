@@ -125,6 +125,7 @@
 * 18/12/2014	FDBOZZO		v1.19.39	Mejora: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar (Mike Potjer)
 * 18/12/2014	FDBOZZO		v1.19.39	Bug fix vbs: Los scripts vbs no muestren los errores del proceso de FoxBin2Prg
 * 30/12/2014	FDBOZZO		v1.19.39	Bug fix dc2: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Christopher Kurth/Ryan Harris)
+* 06/01/2015	FDBOZZO		v1.19.40	Mejora: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Jim Nelson)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -174,14 +175,15 @@
 * 19/11/2014	edyshor				MEJORA cfg v1.19.36: DBF_Conversion_Excluded no permite comentarios && al final (Agregado en v1.19.37)
 * 19/11/2014	edyshor				REPORTE BUG dbf v1.19.36: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (Agregado en v1.19.37)
 * 19/11/2014	edyshor				MEJORA dbf v1.19.36: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (Agregado en v1.19.37)
-* 14/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta)
-* 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia)
-* 04/12/2014	Francisco Prieto	MEJORA v1.19.36: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs
-* 12/12/2014	Álvaro Castrillón	MEJORA v1.19.36: Detección de métodos duplicados para notificar casos de corrupción
-* 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se usan las claves BIN2PRG o PRG2BIN permitir procesar un archivo solo
-* 16/12/2014	Mike Potjer			Mejora v1.19.38: Agregar la clave SHOWMSG y dejar INTERACTIVE para un diálogo interactivo
-* 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar
-* 30/12/2014	Ryan Harris			Reporte bug dbc v1.19.38: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio
+* 14/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta) (Agregado en v1.19.37)
+* 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia) (Agregado en v1.19.37)
+* 04/12/2014	Francisco Prieto	MEJORA v1.19.36: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs (Agregado en v1.19.38)
+* 12/12/2014	Álvaro Castrillón	MEJORA v1.19.36: Detección de métodos duplicados para notificar casos de corrupción (Agregado en v1.19.38)
+* 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se usan las claves BIN2PRG o PRG2BIN permitir procesar un archivo solo (Agregado en v1.19.39)
+* 16/12/2014	Mike Potjer			Mejora v1.19.38: Agregar la clave SHOWMSG y dejar INTERACTIVE para un diálogo interactivo (Agregado en v1.19.39)
+* 16/12/2014	Mike Potjer			Mejora v1.19.38: Cuando se procesa un directorio con foxbin2prg.exe solo y la clave INTERACTIVE, mostrar un diálogo para preguntar qué procesar (Agregado en v1.19.39)
+* 30/12/2014	Ryan Harris			Reporte bug dbc v1.19.38: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Agregado en v1.19.39)
+* 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -529,7 +531,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
-		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
+		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
@@ -603,7 +605,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	c_TextErr						= ''
 	l_Test							= .F.
 	l_ShowErrors					= .T.
-	l_ShowProgress					= .T.
+	n_ShowProgressbar				= 1
 	l_AllowMultiConfig				= .T.
 	l_DropNullCharsFromCode			= .T.
 	l_Recompile						= .T.
@@ -728,7 +730,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
 		TRY
-			*-- Si o_Frm_Avance se habilitó de forma externa, l_ShowProgress podría ser .F. para controlarlo desde fuera.
+			*-- Si o_Frm_Avance se habilitó de forma externa, n_ShowProgressbar podría ser 0 para controlarlo desde fuera.
 			IF VARTYPE(THIS.o_Frm_Avance) = "O" THEN
 				*-- Cuando esta rutina se invoca desde el script, este método es el #1 y no puede cancelarse todavía
 				IF THIS.o_Frm_Avance.l_Cancelled AND PROGRAM(-1) > 1 THEN
@@ -781,11 +783,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	PROCEDURE l_ShowProgress_ACCESS
+	PROCEDURE n_ShowProgressbar_ACCESS
 		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
-			RETURN THIS.l_ShowProgress
+			RETURN THIS.n_ShowProgressbar
 		ELSE
-			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ShowProgress, THIS.l_ShowProgress )
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_ShowProgressbar, THIS.n_ShowProgressbar )
 		ENDIF
 	ENDPROC
 
@@ -1269,7 +1271,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE descargar_frm_avance
-		IF THIS.l_ShowProgress AND VARTYPE(THIS.o_Frm_Avance) = "O" THEN
+		IF THIS.n_ShowProgressbar <> 0 AND VARTYPE(THIS.o_Frm_Avance) = "O" THEN
 			THIS.o_Frm_Avance.Hide()
 			THIS.o_Frm_Avance.Release()
 			THIS.o_Frm_Avance = NULL
@@ -1405,9 +1407,18 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
-							IF NOT INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+							IF NOT INLIST( TRANSFORM(tcDontShowProgress), '0', '1', '2' ) AND INLIST( lcValue, '0', '1', '2' ) THEN
 								tcDontShowProgress	= lcValue
+								lo_CFG.n_ShowProgressbar	= ICASE(lcValue=='0',1, lcValue=='1',0, 2)
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > tcDontShowProgress:         ' + TRANSFORM(tcDontShowProgress) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 16 ) == LOWER('ShowProgressbar:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
+							IF INLIST( lcValue, '0', '1', '2' ) THEN
+								lo_CFG.n_ShowProgressbar	= INT( VAL(lcValue) )
+								tcDontShowProgress	= ''
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ShowProgressbar:            ' + lcValue )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 15 ) == LOWER('DontShowErrors:')
@@ -1586,8 +1597,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				*-- ESTOS SE EVALÚAN FUERA DEL IF PORQUE NO DEPENDEN DEL CFG
 				*-- Y PUEDEN VENIR TAMBIÉN DE PARÁMETROS EXTERNOS.
-				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1' ) THEN
-					lo_CFG.l_ShowProgress			= NOT (TRANSFORM(tcDontShowProgress)=='1')
+				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1', '2' ) THEN
+					lo_CFG.n_ShowProgressbar		= ICASE(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
 				ENDIF
 				IF NOT EMPTY(tcDontShowErrors)
 					lo_CFG.l_ShowErrors				= NOT (TRANSFORM(tcDontShowErrors) == '1')
@@ -1617,7 +1628,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + TRANSFORM(.l_CFG_CachedAccess) )
 				.writeLog( C_TAB + 'c_Foxbin2prg_ConfigFile:      ' + TRANSFORM(EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') ) )
 				.writeLog( C_TAB + 'tc_InputFile:                 ' + TRANSFORM(EVL(tc_InputFile,'') ) )
-				.writeLog( C_TAB + 'l_ShowProgress:               ' + TRANSFORM(.l_ShowProgress) )
+				.writeLog( C_TAB + 'n_ShowProgressbar:            ' + TRANSFORM(.n_ShowProgressbar) )
 				.writeLog( C_TAB + 'l_ShowErrors:                 ' + TRANSFORM(.l_ShowErrors) )
 				.writeLog( C_TAB + 'l_Recompile:                  ' + TRANSFORM(.l_Recompile) + ' (' + tcRecompile + ')' )
 				.writeLog( C_TAB + 'l_NoTimestamps:               ' + TRANSFORM(.l_NoTimestamps) )
@@ -1632,25 +1643,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
 				.writeLog( C_TAB + 'c_Language:                   ' + TRANSFORM(.c_Language) )
 
-				*-- Si existe una configuración y es NULL, se usa la predeterminada
-				*IF .n_CFG_Actual > 0 AND ISNULL( .o_Configuration( .n_CFG_Actual ) ) THEN
-				*	.n_CFG_Actual = 0
-				*ENDIF
-
-				*IF NOT llExiste_CFG_EnDisco OR .n_CFG_Actual = 0 THEN
-				*	.l_CFG_CachedAccess	= .T.	&& Es acceso cacheado porque usa config.por defecto sin archivo CFG
-				*ENDIF
-
-				*.writeLog( '> l_CFG_CachedAccess:          ' + TRANSFORM(.l_CFG_CachedAccess) ;
-				+ ' ( InputFile=' + EVL(tc_InputFile,'(no)') + ', CFG=' + EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') + ' )' )
-
 				IF NOT .l_Main_CFG_Loaded THEN
 					.l_Main_CFG_Loaded	= .T.
 				ENDIF
 
 				.l_ConfigEvaluated = .T.
 				.writeLog( )
-				*ENDIF && .l_ConfigEvaluated
 			ENDWITH && THIS
 
 		CATCH TO loEx
@@ -1996,11 +1994,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 
 
-					IF .l_ShowProgress
-						.cargar_frm_avance()
-					ENDIF
-
-
 					*-- Evaluación de FileSpec de entrada
 					DO CASE
 					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
@@ -2015,6 +2008,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTSTEM( tc_InputFile )
 						*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
+						IF .n_ShowProgressbar <> 0 THEN
+							.cargar_frm_avance()
+						ENDIF
+
 						lcFileSpec	= FULLPATH( tc_InputFile )
 
 						DO CASE
@@ -2044,6 +2041,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					CASE ATC('-BIN2PRG', ('-' + tcType)) >= 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
+
+						IF .n_ShowProgressbar <> 0 THEN
+							.cargar_frm_avance()
+						ENDIF
 
 						DO CASE
 						CASE lcInputFile_Type == C_FILETYPE_DIRECTORY
@@ -2097,6 +2098,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					CASE ATC('-PRG2BIN', ('-' + tcType)) >= 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
+
+						IF .n_ShowProgressbar <> 0 THEN
+							.cargar_frm_avance()
+						ENDIF
 
 						DO CASE
 						CASE lcInputFile_Type == C_FILETYPE_DIRECTORY
@@ -2190,6 +2195,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						DO CASE
 						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
 							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
+							IF .n_ShowProgressbar <> 0 THEN
+								.cargar_frm_avance()
+							ENDIF
+
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
 							lcFileSpec	= FULLPATH( tc_InputFile )
 
@@ -2229,8 +2238,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								ENDIF
 							ENDFOR
 
+							EXIT
+
 						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
+							IF .n_ShowProgressbar <> 0 THEN
+								.cargar_frm_avance()
+							ENDIF
+
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
 							lcFileSpec	= FULLPATH( tc_InputFile )
 
@@ -2271,6 +2286,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 								ENDIF
 							ENDFOR
 
+							EXIT
+
 						CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
 							*-- Compatibilidad con SourceSafe
 
@@ -2286,6 +2303,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ENDCASE
 
 						IF FILE(tc_InputFile)
+							IF .n_ShowProgressbar = 1 THEN
+								.cargar_frm_avance()
+							ENDIF
+
 							.writeLog( '> InputFile ' + loLang.C_IS_A_FILE_LOC )
 							tc_InputFile	= LOCFILE(tc_InputFile)
 							ERASE ( tc_InputFile + '.ERR' )
@@ -2350,9 +2371,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			USE IN (SELECT("TABLABIN"))
 			THIS.writeLog_Flush()
-			IF THIS.l_ShowProgress
-				THIS.descargar_frm_avance()
-			ENDIF
+			THIS.descargar_frm_avance()
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
@@ -21896,7 +21915,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
-		+ [<memberdata name="l_showprogress" display="l_ShowProgress"/>] ;
+		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
@@ -21921,7 +21940,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	c_CurDir						= ''
 	l_Debug							= NULL
 	l_ShowErrors					= NULL
-	l_ShowProgress					= NULL
+	n_ShowProgressbar				= NULL
 	l_Recompile						= NULL
 	l_NoTimestamps					= NULL
 	l_ClearUniqueID					= NULL
