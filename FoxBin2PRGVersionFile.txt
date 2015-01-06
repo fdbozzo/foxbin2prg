@@ -18,6 +18,8 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 Change History -------------------------------------------------------------
 
 2015/01/04	v1.19.40
+- Enhancement frx/lbx: Clean ASCII 0 from expression field for Dataenvironment, Cursors and Relations
+- Bug fix frx/lbx: When using Dataenvironment with more than one cursor, remaining cursors are lost
 - Added new configuration "ShowProgressbar:2" to activate the progressbar only when a directory is selected and deactivate it for individual files (Jim Nelson)
 
 2015/01/01	v1.19.39
