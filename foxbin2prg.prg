@@ -128,6 +128,7 @@
 * 04/01/2015	FDBOZZO		v1.19.40	Bug fix frx/lbx: Cuando se usa el entorno de datos, solo se está guardando un cursor, y si hay más se pierden
 * 06/01/2015	FDBOZZO		v1.19.40	Mejora: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Jim Nelson)
 * 07/01/2015	FDBOZZO		v1.19.40	Bug fix db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Mike Potjer)
+* 07/01/2015	FDBOZZO		v1.19.40	Mejora scx/vcx: Detección de nombres de objeto duplicados para notificar casos de corrupción
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2854,7 +2855,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE normalizarCapitalizacionArchivos
 		LPARAMETERS tl_NormalizeInputFile, tcFileName
 
@@ -3036,7 +3037,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE RenameFile
 		LPARAMETERS tcFileName, tcEXE_CAPS, toFSO AS Scripting.FileSystemObject, tlRelanzarError
 
@@ -3052,7 +3053,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE RenameTmpFile2Tx2File
 		LPARAMETERS tcFileName
 
@@ -3076,14 +3077,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE set_Line
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE writeErrorLog
 		LPARAMETERS tcText
 
@@ -3103,7 +3104,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE writeLog
 		LPARAMETERS tcText
 
@@ -3122,7 +3123,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	HIDDEN PROCEDURE Exception2Str
 		LPARAMETERS toEx AS EXCEPTION
 		LOCAL lcError
@@ -3513,7 +3514,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	oFSO					= NULL
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE INIT
 		LOCAL lcSys16, lnPosProg
 		SET DELETED ON
@@ -3547,7 +3548,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE DESTROY
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
@@ -3558,7 +3559,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarAsignacion_TAG_Indicado
 		*-- DETALLES: Este método está pensado para leer los tags FB2P_VALUE y MEMBERDATA, que tienen esta sintaxis:
 		*
@@ -3656,7 +3657,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE buscarObjetoDelMetodoPorNombre
 		LPARAMETERS tcNombreObjeto, toClase
 		*-- Caso 1: Un método de un objeto de la clase
@@ -3714,7 +3715,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	FUNCTION comprobarExpresionValida
 		LPARAMETERS tcAsignacion, tnCodError, tcExpNormalizada
 		LOCAL llError, loEx AS EXCEPTION
@@ -3848,7 +3849,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE desnormalizarAsignacion
 		LPARAMETERS tcAsignacion
 		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
@@ -3861,7 +3862,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE desnormalizarValorPropiedad
 		*-- Este método se ejecuta cuando se regenera el binario desde el tx2
 		LPARAMETERS tcProp, tcValue, tcComentario
@@ -3911,7 +3912,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE desnormalizarValorXML
 		LPARAMETERS tcValor
 		*-- DESNORMALIZA EL TEXTO INDICADO, EXPANDIENDO LOS SÍMBOLOS XML ESPECIALES.
@@ -3949,7 +3950,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE encode_SpecialCodes_1_31
 		LPARAMETERS tcText
 		LOCAL I
@@ -3961,7 +3962,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	HIDDEN PROCEDURE Exception2Str
 		LPARAMETERS toEx AS EXCEPTION
 		LOCAL lcError
@@ -3973,7 +3974,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE fileTypeCode
 		LPARAMETERS tcExtension
 		tcExtension	= UPPER(tcExtension)
@@ -4217,7 +4218,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCodigo
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo
 	ENDPROC
@@ -4341,7 +4342,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE lineaExcluida
 		LPARAMETERS tn_Linea, tnBloquesExclusion, taLineasExclusion
 
@@ -4349,7 +4350,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE lineIsOnlyCommentAndNoMetadata
 		LPARAMETERS tcLine, tcComment
 		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
@@ -4370,7 +4371,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE normalizarAsignacion
 		LPARAMETERS tcAsignacion, tcComentario
 		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
@@ -4383,7 +4384,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE normalizarValorPropiedad
 		*-- Este método se ejecuta cuando se genera el tx2 desde el binario
 		LPARAMETERS tcProp, tcValue, tcComentario
@@ -4430,7 +4431,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE normalizarValorXML
 		LPARAMETERS tcValor
 		*-- NORMALIZA EL TEXTO INDICADO, COMPRIMIENDO LOS SÍMBOLOS XML ESPECIALES.
@@ -4446,7 +4447,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	FUNCTION RowTimeStamp(ltDateTime)
 		* Generate a FoxPro 3.0-style row timestamp
 		*-- CONVIERTE UN DATO TIPO DATETIME EN TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc.
@@ -4474,7 +4475,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDFUNC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE sortPropsAndValues_SetAndGetSCXPropNames
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -4644,7 +4645,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE sortPropsAndValues
 		* KNOWLEDGE BASE:
 		* 02/12/2013	FDBOZZO		Fidel Charny me pasó un ejemplo donde se pierden propiedades físicamente
@@ -4907,7 +4907,6 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	*******************************************************************************************************************
 	PROCEDURE writeLog
 		LPARAMETERS tcText
 
@@ -4984,7 +4983,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -5001,7 +4999,6 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
 	FUNCTION get_ValueByName_FromListNamesWithValues
 		*-- ASIGNO EL VALOR DEL ARRAY DE DATOS Y VALORES PARA LA PROPIEDAD INDICADA
 		LPARAMETERS tcPropName, tcValueType, taPropsAndValues
@@ -5043,7 +5040,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_FoxBin2Prg
 		*------------------------------------------------------
 		*-- Analiza el bloque <FOXBIN2PRG>
@@ -5067,7 +5064,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_LIBCOMMENT
 		*------------------------------------------------------
 		*-- Analiza el bloque *<LIBCOMMENT: Comentarios />
@@ -5089,7 +5086,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createProject
 		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
@@ -5134,7 +5131,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createProject_RecordHeader
 		LPARAMETERS toProject
 
@@ -5184,7 +5181,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createClasslib
 		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
@@ -5224,7 +5221,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createClasslib_RecordHeader
 		LPARAMETERS toModulo
 
@@ -5246,7 +5243,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createForm
 		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
@@ -5286,7 +5283,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createForm_RecordHeader
 		LPARAMETERS toModulo
 
@@ -5308,7 +5305,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createReport
 		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
@@ -5400,7 +5397,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE createMenu
 		LPARAMETERS tcTableOrCursor	&& 'TABLE' or 'CURSOR'
 
@@ -5442,7 +5439,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE emptyRecord
 		LOCAL loReg
 		SCATTER MEMO BLANK NAME loReg
@@ -5450,13 +5447,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toModulo
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE classProps2Memo
 		*-- ARMA EL MEMO DE PROPERTIES CON LAS PROPIEDADES Y SUS VALORES
 		LPARAMETERS toClase
@@ -5519,7 +5516,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE objectProps2Memo
 		*-- ARMA EL MEMO DE PROPERTIES CON LAS PROPIEDADES Y SUS VALORES
 		LPARAMETERS toObjeto, toClase
@@ -5554,7 +5551,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE classMethods2Memo
 		LPARAMETERS toClase
 
@@ -5621,7 +5618,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE objectMethods2Memo
 		LPARAMETERS toObjeto, toClase
 
@@ -5664,7 +5661,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE getClassPropertyComment
 		*-- Devuelve el comentario (columna 2 del array toClase._Props) de la propiedad indicada,
 		*-- buscándola en la columna 2 por su nombre.
@@ -5689,7 +5686,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE getClassMethodComment
 		LPARAMETERS tcMethodName AS STRING, toClase
 
@@ -5718,7 +5715,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE getTextFrom_BIN_FileStructure
 		TRY
 			LOCAL lcStructure, lnSelect
@@ -5741,7 +5738,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE defined_PAM2Memo
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -5753,7 +5750,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE strip_Dimensions
 		LPARAMETERS tcSeparatedCommaVars
 		LOCAL lnPos1, lnPos2, I
@@ -5770,7 +5767,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE hiddenAndProtected_PAM
 		LPARAMETERS toClase
 
@@ -5794,7 +5791,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE Evaluate_PAM
 		LPARAMETERS tcMemo AS STRING, tcPAM AS STRING, tcPAM_Type AS STRING, tcPAM_Visibility AS STRING
 
@@ -5821,7 +5818,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE insert_Object
 		LPARAMETERS toClase, toObjeto, toFoxBin2Prg
 
@@ -5900,7 +5897,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE insert_AllObjects
 		*-- Recorro primero los objetos con ZOrder definido, y luego los demás
 		*-- NOTA: Como consecuencia de una integración de código, puede que se hayan agregado objetos nuevos (desconocidos),
@@ -5985,7 +5982,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE set_Line
 		LPARAMETERS tcLine, taCodeLines, I
 		tcLine 	= LTRIM( taCodeLines(I), 0, ' ', CHR(9) )
@@ -5993,7 +5990,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarLineasDeProcedure
 		LPARAMETERS toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 			, taLineasExclusion, tnBloquesExclusion
@@ -6076,7 +6073,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_ADD_OBJECT
 		LPARAMETERS toModulo, toClase, tcLine, I, taCodeLines, tnCodeLines
 
@@ -6136,10 +6133,20 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toObjeto._Nombre	= toObjeto._Parent + '.' + toObjeto._ObjName
 					toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
 
+					*-- Chequeo de nombre de objeto repetido para el mismo contenedor
+					IF ATC('cmdDeshacer',toObjeto._Nombre) > 0 THEN
+					*	SET STEP ON
+					ENDIF
+					IF NOT EMPTY(toClase._aPathObjNames) AND ASCAN( toClase._aPathObjNames, toObjeto._Nombre, 1, 0, 0, 2+4 ) THEN
+						.writeErrorLog( 'ERROR: Objeto repetido > ' + toObjeto._Class + '.' + toObjeto._Nombre + ' [Line:' + TRANSFORM(I) + ']' )
+					ENDIF
+
 					IF NOT toClase.l_ObjectMetadataInHeader
 						toClase.add_Object( toObjeto )
 					ENDIF
 
+					DIMENSION toClase._aPathObjNames(toClase._AddObject_Count)
+					toClase._aPathObjNames(toClase._AddObject_Count)	= toObjeto._Nombre
 
 					*-- Propiedades del ADD OBJECT
 					FOR I = I + 1 TO tnCodeLines
@@ -6206,7 +6213,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_DEFINED_PAM
 		*--------------------------------------------------------------------------------------------------------------
 		* 07/01/2014	FDBOZZO		Los *métodos deben ir siempre al final, si no los eventos ACCESS no se ejecutan!
@@ -6310,7 +6317,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_DEFINE_CLASS
 		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
 			, taLineasExclusion, tnBloquesExclusion, tc_Comentario
@@ -6485,7 +6492,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_ENDDEFINE
 		LPARAMETERS toClase, tcLine, I, tcProcedureAbierto
 
@@ -6518,7 +6525,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_HIDDEN
 		LPARAMETERS toClase, tcLine
 
@@ -6539,7 +6546,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_INCLUDE
 		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		LOCAL llBloqueEncontrado
@@ -6564,7 +6571,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_CLASSCOMMENTS
 		LPARAMETERS toClase, tcLine ,taCodeLines, tnCodeLines, I
 
@@ -6619,7 +6626,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_CLASSMETADATA
 		LPARAMETERS toClase, tcLine
 
@@ -6659,7 +6666,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_EXTERNAL_CLASS
 		*------------------------------------------------------
 		*-- Analiza el bloque *< EXTERNAL_CLASS: Name="nombre-clase" Baseclass="clase-base" />
@@ -6690,7 +6697,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_OBJECTMETADATA
 		LPARAMETERS toClase, tcLine
 
@@ -6726,7 +6733,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_OLE_DEF
 		LPARAMETERS toModulo, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto
 		LOCAL llBloqueEncontrado
@@ -6777,7 +6784,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_PROCEDURE
 		LPARAMETERS toModulo, toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
 			, tc_Comentario, taLineasExclusion, tnBloquesExclusion
@@ -6826,7 +6833,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_PROTECTED
 		LPARAMETERS toClase, tcLine
 
@@ -6847,7 +6854,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE evaluarDefinicionDeProcedure
 		LPARAMETERS toClase, I, tc_Comentario, tcProcName, tcProcType, toObjeto
 		*--------------------------------------------------------------------------------------------------------------
@@ -6928,7 +6935,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -7037,7 +7044,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCabecera
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -7140,7 +7147,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE verificar_CLASES_EXTERNAS
 		*--------------------------------------------------------------------------------
 		*-- Compara las clases definidas en la cabecera con las clases encontradas luego
@@ -7305,7 +7312,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toModulo, toFoxBin2Prg
 		*-- Estructura del objeto toModulo generado:
@@ -7660,7 +7667,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toModulo, toFoxBin2Prg
 		*-- Estructura del objeto toModulo generado:
@@ -7914,7 +7921,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -7975,7 +7982,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toProject, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
@@ -8100,7 +8107,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCodigo
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toProject
 		*--------------------------------------------------------------------------------------------------------------
@@ -8192,7 +8199,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_BuildProj
 		*------------------------------------------------------
 		*-- Analiza el bloque <BuildProj>
@@ -8274,7 +8281,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_DevInfo
 		*------------------------------------------------------
 		*-- Analiza el bloque <DevInfo>
@@ -8325,7 +8332,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_ServerHead
 		*------------------------------------------------------
 		*-- Analiza el bloque <ServerHead>
@@ -8384,7 +8391,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_ServerData
 		*------------------------------------------------------
 		*-- Analiza el bloque <ServerData>
@@ -8446,7 +8453,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_FileComments
 		*------------------------------------------------------
 		*-- Analiza el bloque <FileComments>
@@ -8509,7 +8516,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_ExcludedFiles
 		*------------------------------------------------------
 		*-- Analiza el bloque <ExcludedFiles>
@@ -8572,7 +8579,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_TextFiles
 		*------------------------------------------------------
 		*-- Analiza el bloque <TextFiles>
@@ -8635,7 +8642,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_ProjectProperties
 		*------------------------------------------------------
 		*-- Analiza el bloque <ProjectProperties>
@@ -8776,7 +8783,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toReport, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
@@ -8872,7 +8879,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCodigo
 		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toReport
 		*--------------------------------------------------------------------------------------------------------------
@@ -8934,7 +8941,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_CDATA_inline
 		*------------------------------------------------------
 		*-- Analiza el bloque <picture>
@@ -8996,7 +9003,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_platform
 		*------------------------------------------------------
 		*-- Analiza el bloque <platform=>
@@ -9046,7 +9053,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque_Reportes
 		*------------------------------------------------------
 		*-- Analiza el bloque <reportes>
@@ -9209,7 +9216,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toTable, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
@@ -9370,7 +9377,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -9512,7 +9519,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE escribirArchivoBin
 		LPARAMETERS toDatabase, toFoxBin2Prg
 		*-- -----------------------------------------------------------------------------------------------------------
@@ -9551,7 +9558,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE identificarBloquesDeCodigo
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -9635,7 +9642,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 	n_MenuType		= 0
 	c_MenuLocation	= ''
 
-	*******************************************************************************************************************
+
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -9855,7 +9862,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [</VFPData>]
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -9919,7 +9926,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE get_ADD_OBJECT_METHODS
 		LPARAMETERS toRegObj, toRegClass, tcMethods, taMethods, taCode, tnMethodCount ;
 			, taPropsAndComments, tnPropsAndComments_Count, taProtected, tnProtected_Count ;
@@ -9988,7 +9995,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE get_CLASS_METHODS
 		LPARAMETERS tnMethodCount, taMethods, taCode, taProtected, taPropsAndComments
 		*-- DEFINIR MÉTODOS DE LA CLASE
@@ -10059,7 +10066,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE get_NombresObjetosOLEPublic
 		LPARAMETERS ta_NombresObjsOle
 		*-- Obtengo los objetos "OLEPublic"
@@ -10079,7 +10086,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE get_PropsAndCommentsFrom_RESERVED3
 		*-- Sirve para el memo RESERVED3
 		*---------------------------------------------------------------------------------------------------
@@ -10138,7 +10145,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE get_PropsAndValuesFrom_PROPERTIES
 		*-- Sirve para el memo PROPERTIES
 		*---------------------------------------------------------------------------------------------------
@@ -10274,7 +10281,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE get_PropsFrom_PROTECTED
 		*-- Sirve para el memo PROTECTED
 		*---------------------------------------------------------------------------------------------------
@@ -10319,7 +10326,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE IndentarMemo
 		LPARAMETERS tcMethod, tcIndentation, tlKeepProcHeader
 		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
@@ -10392,7 +10399,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE MemoInOneLine
 		LPARAMETERS tcMethod
 
@@ -10423,7 +10430,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE set_MultilineMemoWithAddObjectProperties
 		LPARAMETERS taPropsAndValues, tnPropCount, tcLeftIndentation, tlNormalizeLine
 
@@ -10463,7 +10470,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE SortMethod
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
 			, taProtected, tnProtected_Count, toFoxBin2Prg
@@ -10532,7 +10539,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC	&& SordMethod
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE Method2Array
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
 			, taProtected, tnProtected_Count, toFoxBin2Prg
@@ -10765,7 +10772,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC	&& Method2Array
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_ADD_OBJECTS_WithProperties
 		LPARAMETERS toRegObj, tcCodigo
 
@@ -10841,7 +10848,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_ALL_OBJECT_METHODS
 		LPARAMETERS tcMethods, taMethods, taCode, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
 			, taProtected, tnProtected_Count, toFoxBin2Prg, tcCodigo
@@ -10880,7 +10887,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_CLASS_PROPERTIES
 		LPARAMETERS toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
 			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count, tcCodigo
@@ -10951,7 +10958,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_DEFINED_PAM
 		*-- Escribo propiedades DEFINED (Reserved3) en este formato:
 		LPARAMETERS taPropsAndComments, tnPropsAndComments_Count, tcCodigo
@@ -11018,7 +11025,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_DEFINE_CLASS
 		LPARAMETERS ta_NombresObjsOle, toRegClass, tcCodigo
 
@@ -11039,7 +11046,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_DEFINE_CLASS_COMMENTS
 		LPARAMETERS toRegClass, tcCodigo
 		*-- Comentario de la clase
@@ -11062,7 +11069,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_ENDDEFINE_SiCorresponde
 		LPARAMETERS tnLastClass, tcCodigo
 		IF tnLastClass = 1
@@ -11076,7 +11083,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_EXTERNAL_CLASS_HEADER
 		LPARAMETERS toRegClass, toFoxBin2Prg, tcCodigo
 		*-- < EXTERNAL_CLASS Name = "class-name" Baseclass="base-class" />
@@ -11098,7 +11105,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_INCLUDE
 		LPARAMETERS toReg, tcCodigo
 		*-- #INCLUDE
@@ -11112,7 +11119,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_CLASSMETADATA
 		LPARAMETERS toRegClass, tcCodigo
 
@@ -11161,7 +11168,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_OBJECTMETADATA
 		LPARAMETERS toRegObj, tcCodigo
 		LOCAL lcNombre
@@ -11194,7 +11201,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_HIDDEN_Properties
 		*-- Escribo la definición HIDDEN de propiedades
 		LPARAMETERS tcHiddenProp, tcCodigo
@@ -11209,7 +11216,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_PROTECTED_Properties
 		*-- Escribo la definición PROTECTED de propiedades
 		LPARAMETERS tcProtectedProp, tcCodigo
@@ -11224,7 +11231,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_TXT_REPORTE
 		LPARAMETERS toReg
 
@@ -11349,7 +11356,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE write_DefinicionObjetosOLE
 		*-- Crea la definición del tag *< OLE: /> con la información de todos los objetos OLE
 		LPARAMETERS toFoxBin2Prg
@@ -11469,9 +11476,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE FixOle2Fields
-		*******************************************************************************************************************
+	
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* OLE2 contains the physical name of the OCX or DLL when a record refers to an ActiveX
 		* control. On different developer machines these controls can be located in different
@@ -11505,10 +11512,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	FUNCTION OcxOutsideProjDir
 		LPARAMETERS tcOcx, tcProjDir
-		*******************************************************************************************************************
+	
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Returns .T. when the OCX control resides outside the project directory
 
@@ -11523,7 +11530,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		RETURN m.llOutside
 
 
-		*******************************************************************************************************************
+	
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Cambios de un campo OLE2 exclusivamente en el nombre del archivo
 	PROCEDURE TruncateOle2 (tcOcx)
@@ -11561,8 +11568,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
-				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
-				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep
+				, laObjs(1,4), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep, lcObjPathInsideClass
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount, lnStepCount, lnStep
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
@@ -11652,18 +11659,24 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
-						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
 
 						*-- Normalización de capitalización y de datos según parametrización
-						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
-						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
-						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+						loRegObj.BASECLASS		= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC		= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS			= LOWER( loRegObj.CLASS )
+						lcObjPathInsideClass	= LOWER( loRegObj.PARENT ) + '.' + LOWER( loRegObj.OBJNAME )
 
+						IF lnObjCount > 1 AND ASCAN( laObjs, lcObjPathInsideClass, 1, 0, 4, 2+4+8 ) > 0 THEN
+							.writeErrorLog( 'ERROR: Objeto repetido > ' + loRegObj.CLASS + '.' + lcObjPathInsideClass + ' [Recno:' + TRANSFORM(RECNO()) + ']' )
+						ENDIF
+
+						DIMENSION laObjs(lnObjCount,4)
 						laObjs(lnObjCount,1)	= loRegObj
-						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
-						laObjs(lnObjCount,3)	= lnObjCount	&& Alphabetic order
+						laObjs(lnObjCount,2)	= RECNO()				&& ZOrder
+						laObjs(lnObjCount,3)	= lnObjCount			&& Alphabetic order
+						laObjs(lnObjCount,4)	= lcObjPathInsideClass	&& To check duplicates
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -11853,7 +11866,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
 				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
-				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep, lcObjPathInsideClass
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount, lnStepCount, lnStep
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
@@ -11958,7 +11971,6 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 						lnObjCount	= lnObjCount + 1
-						DIMENSION laObjs(lnObjCount,3)
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
 
@@ -11966,10 +11978,17 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
 						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
 						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+						lcObjPathInsideClass	= LOWER( loRegObj.PARENT ) + '.' + LOWER( loRegObj.OBJNAME )
 
+						IF lnObjCount > 1 AND ASCAN( laObjs, lcObjPathInsideClass, 1, 0, 4, 2+4+8 ) > 0 THEN
+							.writeErrorLog( 'ERROR: Objeto repetido > ' + loRegObj.CLASS + '.' + lcObjPathInsideClass + ' [Recno:' + TRANSFORM(RECNO()) + ']' )
+						ENDIF
+
+						DIMENSION laObjs(lnObjCount,4)
 						laObjs(lnObjCount,1)	= loRegObj
-						laObjs(lnObjCount,2)	= RECNO()		&& ZOrder
-						laObjs(lnObjCount,3)	= lnObjCount	&& Orden alfabético
+						laObjs(lnObjCount,2)	= RECNO()				&& ZOrder
+						laObjs(lnObjCount,3)	= lnObjCount			&& Alphabetic order
+						laObjs(lnObjCount,4)	= lcObjPathInsideClass	&& To check duplicates
 
 						IF toFoxBin2Prg.l_NoTimestamps
 							loRegObj.TIMESTAMP	= 0
@@ -12863,7 +12882,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 	+ [</VFPData>]
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -13632,6 +13651,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [<memberdata name="l_objectmetadatainheader" display="l_ObjectMetadataInHeader"/>] ;
 		+ [<memberdata name="_addobject_count" display="_AddObject_Count"/>] ;
 		+ [<memberdata name="_addobjects" display="_AddObjects"/>] ;
+		+ [<memberdata name="_apathobjnames" display="_aPathObjNames"/>] ;
 		+ [<memberdata name="_aprocnames" display="_aProcNames"/>] ;
 		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
 		+ [<memberdata name="_checked" display="_Checked"/>] ;
@@ -13682,7 +13702,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [</VFPData>]
 
 
-	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1], _aProcNames[1]
+	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1], _aProcNames[1], _aPathObjNames[1]
 	l_ObjectMetadataInHeader	= .F.
 	c_TextErr			= ''
 	_Nombre				= ''
@@ -15376,7 +15396,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE toText
 		TRY
 			LOCAL I, lcText, lcDBC, laCode(1,1), loEx AS EXCEPTION ;
@@ -15470,7 +15490,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	#ENDIF
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -15537,7 +15557,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -15787,7 +15807,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	#ENDIF
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -15851,7 +15871,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -17176,7 +17196,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	#ENDIF
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -17241,7 +17261,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -17640,7 +17660,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	_RefIntegrity	= ''
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -18015,7 +18035,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 	#ENDIF
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -18185,7 +18205,7 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 	_AutoInc_Step			= 0		&& 18
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -18558,7 +18578,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 	#ENDIF
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
@@ -18660,7 +18680,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 	#ENDIF
 
 
-	*******************************************************************************************************************
+
 	PROCEDURE analizarBloque
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
