@@ -4203,7 +4203,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE get_ValueFromNullTerminatedValue
 		LPARAMETERS tcNullTerminatedValue
 		LOCAL lcValue, lnNullPos
@@ -6115,6 +6115,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					ENDIF
 
 					IF ISNULL(toObjeto)
+						Z			= 0
 						toObjeto	= CREATEOBJECT('CL_OBJETO')
 						*-- Luego se reasigna el ZOrder, pero si no lo hace, se pone último como si se acabara de agregar.
 						*-- Puede pasar si se agrega manualmente al TX2 y se olvida agregar la metadata OBJECTDATA.
@@ -6134,19 +6135,15 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
 
 					*-- Chequeo de nombre de objeto repetido para el mismo contenedor
-					IF ATC('cmdDeshacer',toObjeto._Nombre) > 0 THEN
-					*	SET STEP ON
-					ENDIF
-					IF NOT EMPTY(toClase._aPathObjNames) AND ASCAN( toClase._aPathObjNames, toObjeto._Nombre, 1, 0, 0, 2+4 ) THEN
-						.writeErrorLog( 'ERROR: Objeto repetido > ' + toObjeto._Class + '.' + toObjeto._Nombre + ' [Line:' + TRANSFORM(I) + ']' )
+					IF toClase._aPathObjName_Count > 0 AND ASCAN( toClase._aPathObjNames, toObjeto._Nombre, 1, 0, 0, 2+4 ) > 0 THEN
+						.writeErrorLog( 'ERROR: Objeto repetido > ' + toClase._Class + '.' + toObjeto._Nombre + ' [Line:' + TRANSFORM(I) + ']' )
 					ENDIF
 
-					IF NOT toClase.l_ObjectMetadataInHeader
+					IF NOT toClase.l_ObjectMetadataInHeader OR Z=0
 						toClase.add_Object( toObjeto )
 					ENDIF
 
-					DIMENSION toClase._aPathObjNames(toClase._AddObject_Count)
-					toClase._aPathObjNames(toClase._AddObject_Count)	= toObjeto._Nombre
+					toClase.add_PathObjName(toObjeto._Nombre)
 
 					*-- Propiedades del ADD OBJECT
 					FOR I = I + 1 TO tnCodeLines
@@ -13561,7 +13558,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	_Comment				= ''
 
 
-	************************************************************************************************
+
 	PROCEDURE add_OLE
 		LPARAMETERS toOle
 
@@ -13577,7 +13574,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE add_Class
 		LPARAMETERS toClase
 
@@ -13593,7 +13590,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE existeObjetoOLE
 		*-- Ubico el objeto ole por su nombre (parent+objname), que no se repite.
 		LPARAMETERS tcNombre, X
@@ -13644,6 +13641,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	#ENDIF
 
 	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="add_pathobjname" display="add_PathObjName"/>] ;
 		+ [<memberdata name="add_procedure" display="add_Procedure"/>] ;
 		+ [<memberdata name="add_property" display="add_Property"/>] ;
 		+ [<memberdata name="add_object" display="add_Object"/>] ;
@@ -13651,6 +13649,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [<memberdata name="l_objectmetadatainheader" display="l_ObjectMetadataInHeader"/>] ;
 		+ [<memberdata name="_addobject_count" display="_AddObject_Count"/>] ;
 		+ [<memberdata name="_addobjects" display="_AddObjects"/>] ;
+		+ [<memberdata name="_apathobjname_count" display="_aPathObjName_Count"/>] ;
 		+ [<memberdata name="_apathobjnames" display="_aPathObjNames"/>] ;
 		+ [<memberdata name="_aprocnames" display="_aProcNames"/>] ;
 		+ [<memberdata name="_baseclass" display="_BaseClass"/>] ;
@@ -13704,55 +13703,68 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 
 	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1], _aProcNames[1], _aPathObjNames[1]
 	l_ObjectMetadataInHeader	= .F.
-	c_TextErr			= ''
-	_Nombre				= ''
-	_ObjName			= ''
-	_Parent				= ''
-	_Checked			= .F.	&& Solo para Clases Externas: Permite saber si la clase fue checkeada contra la Clase Externa.
-	_Definicion			= ''
-	_Class				= ''
-	_ClassLoc			= ''
-	_OlePublic			= ''
-	_Ole				= ''
-	_Ole2				= ''
-	_UniqueID			= ''
-	_Comentario			= ''
-	_ClassIcon			= ''
-	_ProjectClassIcon	= ''
-	_Inicio				= 0
-	_Fin				= 0
-	_Ini_Cab			= 0
-	_Fin_Cab			= 0
-	_Ini_Cuerpo			= 0
-	_Fin_Cuerpo			= 0
-	_Prop_Count			= 0
-	_HiddenProps		= ''
-	_ProtectedProps		= ''
-	_HiddenMethods		= ''
-	_ProtectedMethods	= ''
-	_MetaData			= ''
-	_BaseClass			= ''
-	_TimeStamp			= 0
-	_Scale				= ''
-	_Defined_PAM		= ''
-	_includeFile		= ''
-	_AddObject_Count	= 0
-	_Procedure_Count	= 0
-	_PROPERTIES			= ''
-	_PROTECTED			= ''
-	_METHODS			= ''
-	_RESERVED1			= ''
-	_RESERVED2			= ''
-	_RESERVED3			= ''
-	_RESERVED4			= ''
-	_RESERVED5			= ''
-	_RESERVED6			= ''
-	_RESERVED7			= ''
-	_RESERVED8			= ''
-	_User				= ''
+	c_TextErr					= ''
+	_Nombre						= ''
+	_ObjName					= ''
+	_Parent						= ''
+	_Checked					= .F.	&& Solo para Clases Externas: Permite saber si la clase fue checkeada contra la Clase Externa.
+	_Definicion					= ''
+	_Class						= ''
+	_ClassLoc					= ''
+	_OlePublic					= ''
+	_Ole						= ''
+	_Ole2						= ''
+	_UniqueID					= ''
+	_Comentario					= ''
+	_ClassIcon					= ''
+	_ProjectClassIcon			= ''
+	_Inicio						= 0
+	_Fin						= 0
+	_Ini_Cab					= 0
+	_Fin_Cab					= 0
+	_Ini_Cuerpo					= 0
+	_Fin_Cuerpo					= 0
+	_Prop_Count					= 0
+	_HiddenProps				= ''
+	_ProtectedProps				= ''
+	_HiddenMethods				= ''
+	_ProtectedMethods			= ''
+	_MetaData					= ''
+	_BaseClass					= ''
+	_TimeStamp					= 0
+	_Scale						= ''
+	_Defined_PAM				= ''
+	_includeFile				= ''
+	_AddObject_Count			= 0
+	_aPathObjName_Count			= 0
+	_Procedure_Count			= 0
+	_PROPERTIES					= ''
+	_PROTECTED					= ''
+	_METHODS					= ''
+	_RESERVED1					= ''
+	_RESERVED2					= ''
+	_RESERVED3					= ''
+	_RESERVED4					= ''
+	_RESERVED5					= ''
+	_RESERVED6					= ''
+	_RESERVED7					= ''
+	_RESERVED8					= ''
+	_User						= ''
 
 
-	************************************************************************************************
+	PROCEDURE Add_PathObjName
+		LPARAMETERS tcPathObjName
+
+		WITH THIS AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+			._aPathObjName_Count	= ._aPathObjName_Count + 1
+			DIMENSION ._aPathObjNames(._aPathObjName_Count)
+			._aPathObjNames(._aPathObjName_Count)	= tcPathObjName
+		ENDWITH
+
+		RETURN
+	ENDPROC
+
+
 	PROCEDURE add_Procedure
 		LPARAMETERS toProcedure
 
@@ -13776,7 +13788,6 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
 	PROCEDURE add_Property
 		LPARAMETERS tcProperty AS STRING, tcValue AS STRING, tcComment AS STRING
 
@@ -13790,7 +13801,6 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
 	PROCEDURE add_Object
 		LPARAMETERS toObjeto
 
@@ -13833,7 +13843,7 @@ DEFINE CLASS CL_PROCEDURE AS CL_CUS_BASE
 	_Inicio			= 0
 
 
-	************************************************************************************************
+
 	PROCEDURE add_Line
 		LPARAMETERS tcLine AS STRING
 
@@ -13897,7 +13907,7 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 	_ZOrder				= 0
 
 
-	************************************************************************************************
+
 	PROCEDURE add_Procedure
 		LPARAMETERS toProcedure
 
@@ -13925,7 +13935,7 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE add_Property
 		LPARAMETERS tcProperty AS STRING, tcValue AS STRING
 
@@ -14055,21 +14065,21 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	_AutoIncrement		= ''
 
 
-	************************************************************************************************
+
 	PROCEDURE INIT
 		DODEFAULT()
 		THIS._ServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE setParsedProjInfoLine
 		LPARAMETERS tcProjInfoLine
 		THIS.setParsedInfoLine( THIS, tcProjInfoLine )
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE setParsedInfoLine
 		LPARAMETERS toObject, tcInfoLine
 		LOCAL lcAsignacion, lcCurDir
@@ -14083,7 +14093,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE parseNullTerminatedValue
 		LPARAMETERS tcDevInfo, tnPos, tnLen
 		LOCAL lcValue, lnNullPos
@@ -14098,7 +14108,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE parseDeviceInfo
 		LPARAMETERS tcDevInfo
 
@@ -14137,7 +14147,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE getRowDeviceInfo
 		LPARAMETERS tcDevInfo
 
@@ -14183,7 +14193,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE getFormattedDeviceInfoText
 		TRY
 			LOCAL lcText
@@ -18816,14 +18826,14 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	_TypeLib			= ''
 
 
-	************************************************************************************************
+
 	PROCEDURE setParsedHeadInfoLine
 		LPARAMETERS tcHeadInfoLine
 		THIS.setParsedInfoLine( THIS, tcHeadInfoLine )
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE setParsedInfoLine
 		LPARAMETERS toObject, tcInfoLine
 		LOCAL lcAsignacion, lcCurDir
@@ -18836,7 +18846,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE add_Server
 		LPARAMETERS toServerData
 
@@ -18852,7 +18862,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE getDataFromPair_LenData_Structure
 		LPARAMETERS tcData, tnPos, tnLen
 		LOCAL lcData, lnLen
@@ -18868,7 +18878,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE parseServerInfo
 		LPARAMETERS tcServerInfo
 
@@ -18926,7 +18936,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE getRowServerInfo
 		TRY
 			LOCAL lcStr, lnLenH, lnLen, lnPos ;
@@ -18974,7 +18984,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE getFormattedServerText
 		TRY
 			LOCAL lcText ;
@@ -19051,7 +19061,7 @@ DEFINE CLASS CL_PROJ_SRV_DATA AS CL_CUS_BASE
 	_Interface		= ''
 
 
-	************************************************************************************************
+
 	PROCEDURE getRowServerInfo
 		TRY
 			LOCAL lcStr, lnLen, lnPos
@@ -19089,7 +19099,7 @@ DEFINE CLASS CL_PROJ_SRV_DATA AS CL_CUS_BASE
 	ENDPROC
 
 
-	************************************************************************************************
+
 	PROCEDURE getFormattedServerText
 		TRY
 			LOCAL lcText
