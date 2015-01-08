@@ -1348,7 +1348,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				IF .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
 					.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0=No hay CFG cacheada, +1=Hay CFG cacheada
-					
+
 					IF .n_CFG_Actual > 0 THEN
 						lo_CFG			= lo_Configuration.Item(.n_CFG_Actual)
 						.l_CFG_CachedAccess	= .T.
@@ -1659,7 +1659,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			loEx.UserValue	= loEx.UserValue + 'lcConfigFile = [' + TRANSFORM(lcConfigFile) + ']' + CR_LF
 			loEx.UserValue	= loEx.UserValue + 'lc_CFG_Path = [' + TRANSFORM(lc_CFG_Path) + ']' + CR_LF
 			loEx.UserValue	= loEx.UserValue + 'lcValue = [' + TRANSFORM(lcValue) + ']' + CR_LF
-			
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -2342,7 +2342,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			IF VARTYPE(loLang) <> 'O' THEN
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
-			
+
 			toEx.UserValue	= toEx.UserValue + 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' + CR_LF
 
 			IF ATC('-SHOWMSG', ('-' + tcType)) >= 1 THEN
@@ -3427,9 +3427,9 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS c_conversor_base AS SESSION
+DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 	#IF .F.
-		LOCAL THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
+		LOCAL THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarasignacion_tag_indicado" display="analizarAsignacion_TAG_Indicado"/>] ;
@@ -4179,7 +4179,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 
 			IF PCOUNT() > 3
 				*-- EVALUAR UNA ASIGNACIÓN QUE PUEDE SER MULTILÍNEA (memberdata, fb2p_value, etc)
-				WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
+				WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
 					DO CASE
 					CASE .analizarAsignacion_TAG_Indicado( @tcPropName, @tcValue, @taCodeLines, tnCodeLines, @I ;
 							, C_FB2P_VALUE_I, C_FB2P_VALUE_F, C_LEN_FB2P_VALUE_I, C_LEN_FB2P_VALUE_F )
@@ -4669,7 +4669,7 @@ DEFINE CLASS c_conversor_base AS SESSION
 			DIMENSION laPropsAndValues( tnPropsAndValues_Count, lnArrayCols )
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
-			WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
 				IF m.tnSortType >= 1
 					* CON SORT:
 					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
@@ -4933,7 +4933,7 @@ ENDDEFINE
 
 
 *******************************************************************************************************************
-DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
+DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -6095,7 +6095,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 					llBloqueEncontrado	= .T.
-					loLang		= _SCREEN.o_Foxbin2prg_lang
+					loLang		= _SCREEN.o_FoxBin2Prg_Lang
 					tcLine		= CHRTRAN( tcLine, ['], ["] )
 
 					IF EMPTY(toClase._Fin_Cab)
@@ -9816,7 +9816,7 @@ ENDDEFINE	&& CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 
 *******************************************************************************************************************
-DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
+DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -11323,7 +11323,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
-			
+
 			IF INLIST(toReg.ObjType, 25, 26) && Dataenvironment, cursors and relations
 				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.TAG + "]]>"
 				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
@@ -11484,7 +11484,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	PROCEDURE FixOle2Fields
-	
+
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* OLE2 contains the physical name of the OCX or DLL when a record refers to an ActiveX
 		* control. On different developer machines these controls can be located in different
@@ -11521,7 +11521,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	FUNCTION OcxOutsideProjDir
 		LPARAMETERS tcOcx, tcProjDir
-	
+
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Returns .T. when the OCX control resides outside the project directory
 
@@ -11536,7 +11536,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		RETURN m.llOutside
 
 
-	
+
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Cambios de un campo OLE2 exclusivamente en el nombre del archivo
 	PROCEDURE TruncateOle2 (tcOcx)
@@ -11582,7 +11582,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
-			loLang	= _SCREEN.o_Foxbin2prg_lang
+			loLang	= _SCREEN.o_FoxBin2Prg_Lang
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
@@ -11887,7 +11887,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
-			loLang	= _SCREEN.o_foxbin2prg_lang
+			loLang	= _SCREEN.o_FoxBin2Prg_Lang
 
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
@@ -13777,7 +13777,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	_User						= ''
 
 
-	PROCEDURE Add_PathObjName
+	PROCEDURE add_PathObjName
 		LPARAMETERS tcPathObjName, I
 
 		WITH THIS AS CL_CLASE OF 'FOXBIN2PRG.PRG'
