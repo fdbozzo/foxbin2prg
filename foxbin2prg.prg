@@ -6091,8 +6091,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			IF LEFT( tcLine, 11 ) == 'ADD OBJECT '
 				*-- Estructura a reconocer: ADD OBJECT 'frm_a.Check1' AS check [WITH]
 				WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
+					LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName, lnPos ;
+						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 					llBloqueEncontrado	= .T.
-					LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName
+					loLang		= _SCREEN.o_Foxbin2prg_lang
 					tcLine		= CHRTRAN( tcLine, ['], ["] )
 
 					IF EMPTY(toClase._Fin_Cab)
@@ -6135,15 +6138,21 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toObjeto._Class		= ALLTRIM( STREXTRACT(tcLine + ' WITH', ' AS ', ' WITH', 1, 1) )
 
 					*-- Chequeo de nombre de objeto repetido para el mismo contenedor
-					IF toClase._aPathObjName_Count > 0 AND ASCAN( toClase._aPathObjNames, toObjeto._Nombre, 1, 0, 0, 2+4 ) > 0 THEN
-						.writeErrorLog( 'ERROR: Objeto repetido > ' + toClase._Class + '.' + toObjeto._Nombre + ' [Line:' + TRANSFORM(I) + ']' )
+					IF toClase._aPathObjName_Count > 0
+						lnPos	= ASCAN( toClase._aPathObjNames, toObjeto._Nombre, 1, 0, 1, 1+2+4+8 )
+
+						IF lnPos > 0 THEN
+							*-- ERROR: Objeto Duplicado
+							.writeErrorLog( '* ' + loLang.C_DUPLICATED_OBJECT_LOC + ' "' + toClase._Class + '.' + toObjeto._Nombre ;
+								+ '" @line ' + TRANSFORM(I) + ', (1st.Line:' + TRANSFORM(toClase._aPathObjNames(lnPos,2)) + ')' )
+						ENDIF
 					ENDIF
 
 					IF NOT toClase.l_ObjectMetadataInHeader OR Z=0
 						toClase.add_Object( toObjeto )
 					ENDIF
 
-					toClase.add_PathObjName(toObjeto._Nombre)
+					toClase.add_PathObjName(toObjeto._Nombre, I)
 
 					*-- Propiedades del ADD OBJECT
 					FOR I = I + 1 TO tnCodeLines
@@ -11566,16 +11575,18 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
 				, laObjs(1,4), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
-				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep, lcObjPathInsideClass
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep, lcObjPathInsideClass, lnPos ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount, lnStepCount, lnStep
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
+			loLang	= _SCREEN.o_Foxbin2prg_lang
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
-				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
 				lnStepCount	= 7
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -11665,13 +11676,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						loRegObj.CLASS			= LOWER( loRegObj.CLASS )
 						lcObjPathInsideClass	= LOWER( loRegObj.PARENT ) + '.' + LOWER( loRegObj.OBJNAME )
 
-						IF lnObjCount > 1 AND ASCAN( laObjs, lcObjPathInsideClass, 1, 0, 4, 2+4+8 ) > 0 THEN
-							.writeErrorLog( 'ERROR: Objeto repetido > ' + loRegObj.CLASS + '.' + lcObjPathInsideClass + ' [Recno:' + TRANSFORM(RECNO()) + ']' )
+						IF lnObjCount > 1 THEN
+							lnPos	= ASCAN( laObjs, lcObjPathInsideClass, 1, 0, 4, 1+2+4+8 )
+
+							IF lnPos > 0 THEN
+								*-- ERROR: Objeto Duplicado
+								.writeErrorLog( '* ' + loLang.C_DUPLICATED_OBJECT_LOC + ' "' + loRegObj.CLASS + '.' + lcObjPathInsideClass ;
+									+ '" @Recno ' + TRANSFORM(loRegObj.regnum) + ', (1st.Recno:' + TRANSFORM(laObjs(lnPos,2)) + ')' )
+							ENDIF
 						ENDIF
 
 						DIMENSION laObjs(lnObjCount,4)
 						laObjs(lnObjCount,1)	= loRegObj
-						laObjs(lnObjCount,2)	= RECNO()				&& ZOrder
+						laObjs(lnObjCount,2)	= loRegObj.regnum		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount			&& Alphabetic order
 						laObjs(lnObjCount,4)	= lcObjPathInsideClass	&& To check duplicates
 
@@ -11862,17 +11879,19 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			LOCAL lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen, lnObjCount ;
 				, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
-				, laObjs(1,3), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
-				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep, lcObjPathInsideClass
+				, laObjs(1,4), I, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count, lcCodigo, laClasses(1,2) ;
+				, lnClassCount, lcOutputFile, lcExternalHeader, lnClassTotal, lnStepCount, lnStep, lcObjPathInsideClass, lnPos ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnLastClass, lnObjCount, lnPropsAndValues_Count, lnPropsAndComments_Count, lnProtected_Count ;
 				, lnMethodCount, lnClassCount, lnStepCount, lnStep
 			STORE '' TO laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 				, C_FB2PRG_CODE, lcExternalHeader
 			STORE NULL TO loRegClass, loRegObj
+			loLang	= _SCREEN.o_foxbin2prg_lang
 
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
-				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
 				USE IN (SELECT("_TABLAORIG"))
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ OF TABLABIN ADDITIVE
@@ -11972,18 +11991,24 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 						SCATTER MEMO NAME loRegObj
 
 						*-- Normalización de capitalización y de datos según parametrización
-						loRegObj.BASECLASS	= LOWER( loRegObj.BASECLASS )
-						loRegObj.CLASSLOC	= LOWER( loRegObj.CLASSLOC )
-						loRegObj.CLASS		= LOWER( loRegObj.CLASS )
+						loRegObj.BASECLASS		= LOWER( loRegObj.BASECLASS )
+						loRegObj.CLASSLOC		= LOWER( loRegObj.CLASSLOC )
+						loRegObj.CLASS			= LOWER( loRegObj.CLASS )
 						lcObjPathInsideClass	= LOWER( loRegObj.PARENT ) + '.' + LOWER( loRegObj.OBJNAME )
 
-						IF lnObjCount > 1 AND ASCAN( laObjs, lcObjPathInsideClass, 1, 0, 4, 2+4+8 ) > 0 THEN
-							.writeErrorLog( 'ERROR: Objeto repetido > ' + loRegObj.CLASS + '.' + lcObjPathInsideClass + ' [Recno:' + TRANSFORM(RECNO()) + ']' )
+						IF lnObjCount > 1 THEN
+							lnPos	= ASCAN( laObjs, lcObjPathInsideClass, 1, 0, 4, 1+2+4+8 )
+
+							IF lnPos > 0 THEN
+								*-- ERROR: Objeto Duplicado
+								.writeErrorLog( '* ' + loLang.C_DUPLICATED_OBJECT_LOC + ' "' + loRegObj.CLASS + '.' + lcObjPathInsideClass ;
+									+ '" @Recno ' + TRANSFORM(loRegObj.regnum) + ', (1st.Recno:' + TRANSFORM(laObjs(lnPos,2)) + ')' )
+							ENDIF
 						ENDIF
 
 						DIMENSION laObjs(lnObjCount,4)
 						laObjs(lnObjCount,1)	= loRegObj
-						laObjs(lnObjCount,2)	= RECNO()				&& ZOrder
+						laObjs(lnObjCount,2)	= loRegObj.regnum		&& ZOrder
 						laObjs(lnObjCount,3)	= lnObjCount			&& Alphabetic order
 						laObjs(lnObjCount,4)	= lcObjPathInsideClass	&& To check duplicates
 
@@ -13701,7 +13726,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 		+ [</VFPData>]
 
 
-	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1], _aProcNames[1], _aPathObjNames[1]
+	DIMENSION _Props[1,2], _AddObjects[1], _Procedures[1], _aProcNames[1], _aPathObjNames[1,2]
 	l_ObjectMetadataInHeader	= .F.
 	c_TextErr					= ''
 	_Nombre						= ''
@@ -13753,12 +13778,13 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 
 
 	PROCEDURE Add_PathObjName
-		LPARAMETERS tcPathObjName
+		LPARAMETERS tcPathObjName, I
 
 		WITH THIS AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 			._aPathObjName_Count	= ._aPathObjName_Count + 1
-			DIMENSION ._aPathObjNames(._aPathObjName_Count)
-			._aPathObjNames(._aPathObjName_Count)	= tcPathObjName
+			DIMENSION ._aPathObjNames(._aPathObjName_Count,2)
+			._aPathObjNames(._aPathObjName_Count,1)	= tcPathObjName
+			._aPathObjNames(._aPathObjName_Count,2)	= I
 		ENDWITH
 
 		RETURN
@@ -13776,7 +13802,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 			*-- Verificación de Procedure repetido
 			IF ._Procedure_Count > 0 AND ASCAN( ._aProcNames, toProcedure._Nombre, 1, 0, 0, 1+2+4 ) > 0 THEN
 				.writeErrorLog( '* Duplicated Method "' + toProcedure._Nombre + '" of class "' ;
-					+ ._Nombre + '" in line ' + TRANSFORM(toProcedure._Inicio) )
+					+ ._Nombre + '" @line ' + TRANSFORM(toProcedure._Inicio) )
 			ENDIF
 
 			._Procedure_Count	= ._Procedure_Count + 1
@@ -13923,7 +13949,7 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 			*-- Verificación de Procedure repetido
 			IF ._Procedure_Count > 0 AND ASCAN( ._aProcNames, toProcedure._Nombre, 1, 0, 0, 1+2+4 ) > 0 THEN
 				.writeErrorLog( '* Duplicated Method "' + toProcedure._Nombre + '" of class.object "' ;
-					+ ._Nombre + '" in line ' + TRANSFORM(toProcedure._Inicio) )
+					+ ._Nombre + '" @line ' + TRANSFORM(toProcedure._Inicio) )
 			ENDIF
 
 			._Procedure_Count	= ._Procedure_Count + 1
@@ -21828,9 +21854,11 @@ DEFINE CLASS CL_LANG AS Custom
 	C_CONVERTING_FILE_LOC											= "Converting file"
 	C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC				= "Data Error: Can't parse because of unpaired double-quotes on line <<lcMetadatos>>"
 	C_DUPLICATED_FILE_LOC											= "Duplicated file"
+	C_DUPLICATED_OBJECT_LOC											= "Duplicated Object"
 	C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Cannot find end marker [ENDDEFINE] of line <<TRANSFORM( toClase._Inicio )>> for ID [<<toClase._Nombre>>]"
 	C_END_MARKER_NOT_FOUND_LOC										= "Cannot find end marker [<<ta_ID_Bloques(lnPrimerID,2)>>] that closes start marker [<<ta_ID_Bloques(lnPrimerID,1)>>] on line <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
 	C_END_OF_PROCESS_LOC											= "End of Process"
+	C_ERROR_LOC														= "ERROR"
 	C_ERRORS_FOUND_IN_FILE_LOC										= "ERRORS FOUND IN FILE"
 	C_EXTENSION_RECONFIGURATION_LOC									= "Extension Reconfiguration:"
 	C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC			= "External class count (<<toModulo._ExternalClasses_Count>>) does not match found classes (<<toModulo._Clases_Count>>) for file [<<toFoxBin2Prg.c_InputFile>>]"
@@ -21972,9 +22000,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_CONVERTING_FILE_LOC											= "Conversion de fichiers"
 					.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC			= "Erreur de données: ne peut pas analyser en raison de guillemets non appariés en ligne <<lcMetadatos>>"
 					.C_DUPLICATED_FILE_LOC											= "fichier dupliqué"
+					.C_DUPLICATED_OBJECT_LOC										= "Object dupliqué"
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Vous ne trouvez pas marqueur de fin [ENDDEFINE] de la ligne <<TRANSFORM(toClase._Inicio)>> ID [<<toClase._Nombre>>]"
 					.C_END_MARKER_NOT_FOUND_LOC										= "Vous ne trouvez pas fin marqueur [<<ta_ID_Bloques(lnPrimerID, 2)>>] qui ferme marqueur de début [<<ta_ID_Bloques(lnPrimerID, 1) >>] en ligne <<TRANSFORM(taBloquesExclusion (tnBloquesExclusion, 1))>>"
 					.C_END_OF_PROCESS_LOC											= "Fin du processus"
+					.C_ERROR_LOC													= "ERREUR"
 					.C_ERRORS_FOUND_IN_FILE_LOC										= "ERREURS TROUVÉ DANS LE FICHIER"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Extension Reconfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Nombre de classe externe (<<toModulo._ExternalClasses_Count>>) ne correspond pas classes trouvées (<<toModulo._Clases_Count>>) pour le fichier [<<toFoxBin2Prg.c_InputFile>>]"
@@ -22051,9 +22081,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_CONVERTING_FILE_LOC											= "Convirtiendo archivo"
 					.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC			= "Error de datos: No se puede parsear porque las comillas no son pares en la línea <<lcMetadatos>>"
 					.C_DUPLICATED_FILE_LOC											= "Archivo duplicado"
+					.C_DUPLICATED_OBJECT_LOC										= "Objeto Duplicado"
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "No se ha encontrado el marcador de fin [ENDDEFINE] de la línea <<TRANSFORM( toClase._Inicio )>> para el identificador [<<toClase._Nombre>>]"
 					.C_END_MARKER_NOT_FOUND_LOC										= "No se ha encontrado el marcador de fin [<<ta_ID_Bloques(lnPrimerID,2)>>] que cierra al marcador de inicio [<<ta_ID_Bloques(lnPrimerID,1)>>] de la línea <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>>"
 					.C_END_OF_PROCESS_LOC											= "Fin del Proceso"
+					.C_ERROR_LOC													= "ERROR"
 					.C_ERRORS_FOUND_IN_FILE_LOC										= "SE HAN ENCONTRADOS ERRORES EN EL ARCHIVO"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Reconfiguración de extensión:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "El conteo de clases externas (<<toModulo._ExternalClasses_Count>>) no coincide con la cantidad encontrada (<<toModulo._Clases_Count>>) para el archivo [<<toFoxBin2Prg.c_InputFile>>]"
@@ -22130,9 +22162,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_CONVERTING_FILE_LOC											= "Konvertiere Datei"
 					.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC			= "Datenfehler: Keine Analyse möglich da ungepaarte Anführungszeichen in Zeile <<lcMetadatos>>"
 					.C_DUPLICATED_FILE_LOC											= "Doppelte Datei"
+					.C_DUPLICATED_OBJECT_LOC										= "Doppelte Objekt"
 					.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Kann keinen Ende Marker [ENDDEFINE] in Zeile <<TRANSFORM( toClase._Inicio )>> für die ID [<<toClase._Nombre>>] finden"
 					.C_END_MARKER_NOT_FOUND_LOC										= "Kann keinen Ende Marker [<<ta_ID_Bloques(lnPrimerID,2)>>] welcher den Start Marker [<<ta_ID_Bloques(lnPrimerID,1)>>] in Zeile <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>> schließt"
 					.C_END_OF_PROCESS_LOC											= "Ende der Prozess"
+					.C_ERROR_LOC													= "FEHLER"
 					.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
 					.C_EXTENSION_RECONFIGURATION_LOC								= "Erweiterungsneukonfiguration:"
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Externe Klassenzahl (<< toModulo._ExternalClasses_Count >>) nicht gefunden Klassen entsprechen (<< toModulo._Clases_Count >>) für Datei [<< toFoxBin2Prg.c_InputFile >>]"
