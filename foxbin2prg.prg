@@ -2415,11 +2415,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		tcErrorInfo		= THIS.Exception2Str(@toEx) + CR_LF + CR_LF + loLang.C_SOURCEFILE_LOC + TRANSFORM(THIS.c_InputFile)
+		tcErrorInfo		= THIS.Exception2Str(@toEx) + CR_LF + loLang.C_SOURCEFILE_LOC + TRANSFORM(THIS.c_InputFile) + CR_LF
 		ADDPROPERTY(_SCREEN, 'ExitCode', toEx.ERRORNO)
 
 		*-- Escribo la información de error en la variable log de errores
-		THIS.writeErrorLog( TTOC(DATETIME(),3) + '  ' + REPLICATE('-', 80) )
+		THIS.writeErrorLog( REPLICATE('-', 100), 1 )
 		THIS.writeErrorLog( tcErrorInfo )
 		THIS.writeErrorLog( )
 
@@ -2742,7 +2742,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					*-- Logueo los errores
 					IF NOT EMPTY(loConversor.c_TextErr) THEN
-						.writeErrorLog( PADR( loLang.C_ERRORS_FOUND_IN_FILE_LOC + ' [' + .c_InputFile + '] ', 100, '-' ) )
+						.writeErrorLog( REPLICATE( '-', 100 ), 1 )
+						.writeErrorLog( loLang.C_ERRORS_FOUND_IN_FILE_LOC + ' [' + .c_InputFile + '] ' )
 						.writeErrorLog( loConversor.c_TextErr )
 						.writeErrorLog( )
 					ENDIF
@@ -3086,10 +3087,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE writeErrorLog
-		LPARAMETERS tcText
+		LPARAMETERS tcText, tnTimestamp
 
 		TRY
-			THIS.c_TextErr	= THIS.c_TextErr + TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF
+			IF EVL(tnTimestamp,0) = 1 THEN
+				THIS.c_TextErr	= THIS.c_TextErr + TTOC(DATETIME(),3) + '  '
+			ENDIF
+
+			THIS.c_TextErr	= THIS.c_TextErr + EVL(tcText,'') + CR_LF
 			THIS.l_Error	= .T.
 		CATCH
 		ENDTRY
@@ -3106,10 +3111,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE writeLog
-		LPARAMETERS tcText
+		LPARAMETERS tcText, tnTimestamp
 
 		TRY
-			THIS.c_TextLog	= THIS.c_TextLog + TTOC(DATETIME(),3) + '  ' + EVL(tcText,'') + CR_LF
+			IF EVL(tnTimestamp,0) = 1 THEN
+				THIS.c_TextLog	= THIS.c_TextLog + TTOC(DATETIME(),3) + '  '
+			ENDIF
+
+			THIS.c_TextLog	= THIS.c_TextLog + EVL(tcText,'') + CR_LF
 		CATCH
 		ENDTRY
 	ENDPROC
@@ -3128,9 +3137,16 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		LPARAMETERS toEx AS EXCEPTION
 		LOCAL lcError
 		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
-			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CR_LF ;
-			+ toEx.LINECONTENTS + CR_LF ;
-			+ EVL(toEx.USERVALUE,'')
+			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CR_LF
+
+		IF NOT EMPTY(toEx.LINECONTENTS)
+			lcError	= lcError + toEx.LINECONTENTS + CR_LF
+		ENDIF
+
+		IF NOT EMPTY(toEx.USERVALUE)
+			lcError	= lcError + EVL(toEx.USERVALUE,'')
+		ENDIF
+
 		RETURN lcError
 	ENDPROC
 
@@ -10620,6 +10636,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 					ENDIF
 
 					lnLine_Len	= LEN( laLine(I) )
+					lcLine		= LTRIM( laLine(I), 0, C_TAB, ' ' )
 
 					DO CASE
 					CASE laLineasExclusion(I)
@@ -10629,63 +10646,62 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 							*-- Invalid method code, as outer code added for tools like ReFox or others, is cleaned up
 						ENDIF
 
-					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 10) ) == 'PROCEDURE '
+					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 10) ) == 'PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 11) )
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 11) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= ''
 						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
-					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 10) )
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 10) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= ''
 						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
-					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 17) ) == 'HIDDEN PROCEDURE '
+					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 17) ) == 'HIDDEN PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 18) )
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 18) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'HIDDEN '
 						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
-					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 17) )
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 17) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'HIDDEN '
 						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
-					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 20) ) == 'PROTECTED PROCEDURE '
+					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 20) ) == 'PROTECTED PROCEDURE '
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 21) )
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 21) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'PROTECTED '
 						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
-					CASE lnTextNodes = 0 AND UPPER( LEFT(laLine(I), 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
 						tnMethodCount	= tnMethodCount + 1
 						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(laLine(I), 20) )
+						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 20) )
 						taMethods(tnMethodCount, 2)	= tnMethodCount
 						taMethods(tnMethodCount, 3)	= 'PROTECTED '
 						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
 						llProcOpen					= .T.
 
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDPROC'
-						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
-						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDPROC '
+					CASE lnTextNodes = 0 AND LEFT(lcLine, 7) == 'ENDPROC'
+						IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( lcLine , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDPROC '
 							*-- Es el final de estructura ENDPROC
 							IF NOT llProcOpen
 								*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
@@ -10693,29 +10709,28 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 							ENDIF
 						ELSE
 							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
 							LOOP
 						ENDIF
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) &&+ CR_LF
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
 						llProcOpen				= .F.
 
 					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDFUNC'	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						lcLine		= UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' '
-						IF lnLine_Len >= 7 AND LEFT(lcLine,8) == 'ENDFUNC '
+						IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDFUNC '
 							*-- Es el final de estructura ENDPROC
 							IF NOT llProcOpen
 								*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
 								LOOP
 							ENDIF
-							laLine(I)	= STRTRAN( laLine(I), 'ENDFUNC', 'ENDPROC' )
+							lcLine	= STRTRAN( lcLine, 'ENDFUNC', 'ENDPROC' )
 						ELSE
 							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
 							LOOP
 						ENDIF
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) &&+ CR_LF
+						taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
 						llProcOpen				= .F.
 
 						*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
@@ -21260,12 +21275,14 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 		TRY
 			LOCAL lnHandle, lcStr, lnDataPos, lnFieldCount, lnVal, I, loEx AS EXCEPTION ;
-				, lnCodePage, lcCodePageDesc ;
+				, lnCodePage, lcCodePageDesc, lnFileLength ;
 				, loField AS CL_DBF_UTILS_FIELD OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loField
 			tn_HexFileType	= 0
 			STORE '' TO tcDBC_Name, lcStr
 			lnHandle		= FOPEN(tc_FileName,0)
+			lnFileLength	= FSEEK(lnHandle,0,2)
+			= FSEEK(lnHandle,0)
 
 			IF lnHandle = -1
 				EXIT
@@ -21277,6 +21294,13 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 				.c_FileName					= tc_FileName
 				lcStr						= FREAD(lnHandle,1)		&& 0		File type
 				tn_HexFileType				= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+
+				IF lnFileLength < 328 OR .fileTypeDescription(tn_HexFileType) = 'Unknown'
+					ERROR 15, tc_FileName
+				ELSE
+					MESSAGEBOX( .fileTypeDescription(tn_HexFileType), 0+4096 )
+				ENDIF
+
 				.n_HexFileType				= tn_HexFileType
 				lcStr						= FREAD(lnHandle,3)		&& 1-3		Last update (YYMMDD)
 				.c_LastUpdate				= PADL(ASC(LEFT(lcStr,1)),2,'0') + '/' + PADL(ASC(SUBSTR(lcStr,2,1)),2,'0') + '/' + PADL(ASC(RIGHT(lcStr,1)),2,'0')
