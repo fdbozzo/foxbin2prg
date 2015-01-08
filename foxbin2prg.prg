@@ -21297,8 +21297,6 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 
 				IF lnFileLength < 328 OR .fileTypeDescription(tn_HexFileType) = 'Unknown'
 					ERROR 15, tc_FileName
-				ELSE
-					MESSAGEBOX( .fileTypeDescription(tn_HexFileType), 0+4096 )
 				ENDIF
 
 				.n_HexFileType				= tn_HexFileType
@@ -21399,30 +21397,48 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 		LOCAL lcFileType
 
 		DO CASE
-		CASE tn_HexFileType = 0x02
+		CASE tn_HexFileType = 0x02													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'FoxBASE / dBase II'
-		CASE tn_HexFileType = 0x03
+		CASE tn_HexFileType = 0x03													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'FoxBASE+ / FoxPro /dBase III PLUS / dBase IV, no memo'
-		CASE tn_HexFileType = 0x30
+		CASE tn_HexFileType = 0x05													&& http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
+			lcFileType	= 'dBase V, no memo'
+		CASE tn_HexFileType = 0x2F													&& https://msdn.microsoft.com/en-us/subscriptions/securedownloads/st4a0s68%28v=vs.80%29
+			lcFileType	= 'dBase+/dBase III PLUS, no memo'
+		CASE tn_HexFileType = 0x30													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'Visual FoxPro'
-		CASE tn_HexFileType = 0x31
+		CASE tn_HexFileType = 0x31													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'Visual FoxPro, autoincrement enabled'
-		CASE tn_HexFileType = 0x32
+		CASE tn_HexFileType = 0x32													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'Visual FoxPro, Varchar, Varbinary, or Blob-enabled'
-		CASE tn_HexFileType = 0x43
+		CASE tn_HexFileType = 0x43													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'dBASE IV SQL table files, no memo'
-		CASE tn_HexFileType = 0x63
+		CASE tn_HexFileType = 0x62													&& https://msdn.microsoft.com/en-us/subscriptions/securedownloads/st4a0s68%28v=vs.80%29
+			lcFileType	= 'dBASE IV SQL table files, no memo'
+		CASE tn_HexFileType = 0x63													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'dBASE IV SQL system files, no memo'
-		CASE tn_HexFileType = 0x83
+		CASE tn_HexFileType = 0x7B													&& http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
+			lcFileType	= 'dBASE IV, with memo'
+		CASE tn_HexFileType = 0x82													&& https://msdn.microsoft.com/en-us/subscriptions/securedownloads/st4a0s68%28v=vs.80%29
+			lcFileType	= 'dBASE IV SQL system files, no memo'
+		CASE tn_HexFileType = 0x83													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'FoxBASE+/dBASE III PLUS, with memo'
-		CASE tn_HexFileType = 0x8B
+		CASE tn_HexFileType = 0x8B													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'dBASE IV with memo'
-		CASE tn_HexFileType = 0xCB
+		CASE tn_HexFileType = 0x8E													&& http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
+			lcFileType	= 'dBASE IV with SQL table'
+		CASE tn_HexFileType = 0xCA													&& https://msdn.microsoft.com/en-us/subscriptions/securedownloads/st4a0s68%28v=vs.80%29
+			lcFileType	= 'dBASE IV with memo'
+		CASE tn_HexFileType = 0xCB													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'dBASE IV SQL table files, with memo'
-		CASE tn_HexFileType = 0xF5
+		CASE tn_HexFileType = 0xE5													&& http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
+			lcFileType	= 'Clipper SIX driver, with SMT memo'
+		CASE tn_HexFileType = 0xF5													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
 			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
-		CASE tn_HexFileType = 0xFB
-			lcFileType	= 'FoxBASE (?)'
+		CASE tn_HexFileType = 0xFA													&& https://msdn.microsoft.com/en-us/subscriptions/securedownloads/st4a0s68%28v=vs.80%29
+			lcFileType	= 'FoxPro 2.x (or earlier) with memo'
+		CASE tn_HexFileType = 0xFB													&& VFP 9 SP2 Help file, VFPX Edition v1.07.2 debug (beta) // http://stackoverflow.com/questions/3391525/which-header-format-can-be-assumed-by-reading-an-initial-dbf-byte
+			lcFileType	= 'FoxBASE (with memo?)'
 		OTHERWISE
 			lcFileType	= 'Unknown'
 		ENDCASE
