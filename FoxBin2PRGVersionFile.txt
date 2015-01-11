@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.39'
-    .VersionDate          = Date(2015,01,01)
+    .VersionNumber        = 'v1.19.40'
+    .VersionDate          = Date(2015,01,11)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,14 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/01/11	v1.19.40
+- Enhancement frx/lbx: Clean ASCII 0 from expression field for Dataenvironment, Cursors and Relations
+- Bug fix frx/lbx: When using Dataenvironment with more than one cursor, remaining cursors are lost
+- Feature: Added new configuration "ShowProgressbar:2" to activate the progressbar only when a directory is selected and deactivate it for individual files (Jim Nelson)
+- Bug fix dbf: [Error 12, variable "tcOutputFile" is not found] when DBF_Conversion_Support=4 and output file is the same as existent one (Mike Potjer)
+- Feature scx/vcx/sc2/vc2: Added new code checking to find duplicated object names for the same class and container to notify those cases of file corruption
+- Fix for "Error 2183: Operation requires that SET MULTILOCKS is set to ON" in some DBF convertions
 
 2015/01/01	v1.19.39
 - Bug fix vbs: vbs scripts does not show FoxBin2Prg process errors correctly

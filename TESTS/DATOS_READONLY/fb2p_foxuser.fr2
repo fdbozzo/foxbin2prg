@@ -550,7 +550,7 @@ de Label Properties]]>
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="27708.333" hpos="16979.167" height="1666.667" width="11041.667" order="" unique=".F." environ=".F." boxchar=" " fillchar="N" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".T." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="1" resettotal="6" resoid="1" curpos=".T." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="8" objcode="0" name="" vpos="27708.333" hpos="16979.167" height="1666.667" width="11041.667" order="" unique=".F." environ=".F." boxchar=" " fillchar="N" pengreen="-1" penblue="-1" fillred="-1" fillgreen="-1" fillblue="-1" pensize="0" penpat="0" fillpat="0" fontface="Arial" fontstyle="0" fontsize="8" mode="1" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".T." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".T." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="2" double=".T." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="1" topmargin="0" botmargin="0" totaltype="1" resettotal="6" resoid="1" curpos=".F." supalways=".T." supovflow=".F." suprpcol="3" supgroup="6" supvalchng=".F." 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[]]>
 	<tag2><![CDATA[]]>
@@ -604,19 +604,31 @@ de Label Properties]]>
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
-	platform="WINDOWS " uniqueid="" timestamp="0" objtype="25" objcode="0" name="dataenvironment" vpos="0.000" hpos="0.000" height="0.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="25" objcode="0" name="dataenvironment" vpos="0.000" hpos="0.000" height="0.000" width="0.000" order="" unique=".F." environ=".T." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." 
 	<picture><![CDATA[]]>
 	<tag><![CDATA[
+PROCEDURE Destroy
+*------------------------------------------------------------------------------
+* Code for DESTROY event
+*------------------------------------------------------------------------------
+
+ENDPROC
+PROCEDURE Init
+*------------------------------------------------------------------------------
+* Code for INIT event
+*------------------------------------------------------------------------------
+
+ENDPROC
 ]]>
 	<tag2><![CDATA[]]>
 	<penred><![CDATA[0]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[Comment = 'Y este es el "Comment'
 Tag = 'Y este es el "Tooltip'
-Top = 220
-Left = 1
+Top = 322
+Left = 216
 Width = 520
-Height = 200
+Height = 488
 DataSource = .NULL.
 Name = "Dataenvironment"
 ]]>
@@ -627,16 +639,80 @@ Name = "Dataenvironment"
 <Reportes 
 	platform="WINDOWS " uniqueid="" timestamp="0" objtype="26" objcode="0" name="cursor" vpos="0.000" hpos="0.000" height="0.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." 
 	<picture><![CDATA[]]>
-	<tag><![CDATA[]]>
+	<tag><![CDATA[
+PROCEDURE Init
+*------------------------------------------------------------------------------
+* Cur_foxuser INIT event code
+*------------------------------------------------------------------------------
+
+ENDPROC
+]]>
 	<tag2><![CDATA[]]>
 	<penred><![CDATA[0]]>
 	<style><![CDATA[]]>
 	<expr><![CDATA[Comment = 'Y este es el "Comment'
 Tag = 'Y este es el "Tag'
+Top = 20
+Left = 10
+Height = 224
+Width = 90
 Alias = "foxuser"
 Order = "wizard_1"
-CursorSource = ..\..\..\test\varios\vcx2xml\foxuser_fdbozzo.dbf
-Name = "cursor1"
+CursorSource = foxuser_fdbozzo.dbf
+Name = "cur_foxuser"
+]]>
+	<supexpr><![CDATA[]]>
+	<comment><![CDATA[]]>
+	<user><![CDATA[]]>
+</Reportes>
+<Reportes 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="26" objcode="0" name="cursor" vpos="0.000" hpos="0.000" height="0.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." 
+	<picture><![CDATA[]]>
+	<tag><![CDATA[
+PROCEDURE Init
+*------------------------------------------------------------------------------
+* Cur_fb2p_free INIT event code
+*------------------------------------------------------------------------------
+
+ENDPROC
+]]>
+	<tag2><![CDATA[]]>
+	<penred><![CDATA[0]]>
+	<style><![CDATA[]]>
+	<expr><![CDATA[Comment = "This is fb2p_free table comment"
+Top = 20
+Left = 150
+Height = 363
+Width = 90
+Alias = "fb2p_free"
+CursorSource = fb2p_free.dbf
+Name = "cur_fb2p_free"
+]]>
+	<supexpr><![CDATA[]]>
+	<comment><![CDATA[]]>
+	<user><![CDATA[]]>
+</Reportes>
+<Reportes 
+	platform="WINDOWS " uniqueid="" timestamp="0" objtype="26" objcode="0" name="relation" vpos="0.000" hpos="0.000" height="0.000" width="0.000" order="" unique=".F." environ=".F." boxchar=" " fillchar=" " pengreen="0" penblue="0" fillred="0" fillgreen="0" fillblue="0" pensize="0" penpat="0" fillpat="0" fontface="" fontstyle="0" fontsize="0" mode="0" ruler="0" rulerlines="0" grid=".F." gridv="0" gridh="0" float=".F." stretch=".F." stretchtop=".F." top=".F." bottom=".F." suptype="0" suprest="0" norepeat=".F." resetrpt="0" pagebreak=".F." colbreak=".F." resetpage=".F." general="0" spacing="0" double=".F." swapheader=".F." swapfooter=".F." ejectbefor=".F." ejectafter=".F." plain=".F." summary=".F." addalias=".F." offset="0" topmargin="0" botmargin="0" totaltype="0" resettotal="0" resoid="0" curpos=".F." supalways=".F." supovflow=".F." suprpcol="0" supgroup="0" supvalchng=".F." 
+	<picture><![CDATA[]]>
+	<tag><![CDATA[
+PROCEDURE Init
+*------------------------------------------------------------------------------
+* Relation1 INIT event code
+*------------------------------------------------------------------------------
+
+ENDPROC
+]]>
+	<tag2><![CDATA[]]>
+	<penred><![CDATA[0]]>
+	<style><![CDATA[]]>
+	<expr><![CDATA[Comment = "Relation comments between foxuser and fb2p_free"
+ParentAlias = "foxuser"
+RelationalExpr = "name"
+ChildAlias = "fb2p_free"
+ChildOrder = "caracter"
+OneToMany = .T.
+Name = "Relation1"
 ]]>
 	<supexpr><![CDATA[]]>
 	<comment><![CDATA[]]>
