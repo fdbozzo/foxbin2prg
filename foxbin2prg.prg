@@ -3201,66 +3201,49 @@ DEFINE CLASS frm_avance AS FORM
 		+ [<memberdata name="l_cancelled" display="l_Cancelled"/>] ;
 		+ [</VFPData>]
 
-
 	ADD OBJECT shp_base AS shape WITH ;
 		Top = 28, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 604, ;
-		Curvature = 15, ;
+		Curvature = 8, ;
+		BorderWidth = 8, ;
+		BackColor = 14215910, ;
+		BorderColor = 14215910, ;
 		Name = "shp_base"
-
 
 	ADD OBJECT shp_avance AS shape WITH ;
 		Top = 28, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 36, ;
-		Curvature = 15, ;
-		BackColor = RGB(255,255,128), ;
-		BorderColor = RGB(255,0,0), ;
+		Curvature = 8, ;
+		BackColor = 6734335, ;
+		BorderColor = 10476031, ;
+		BorderWidth = 1, ;
 		Name = "shp_Avance"
-
-
-	ADD OBJECT lbl_tarea AS label WITH ;
-		BackStyle = 0, ;
-		Caption = ".", ;
-		Height = 17, ;
-		Left = 12, ;
-		Top = 8, ;
-		Width = 604, ;
-		Name = "lbl_Tarea"
-
 
 	ADD OBJECT shp_base2 AS shape WITH ;
 		Top = 64, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 604, ;
-		Curvature = 15, ;
+		Curvature = 8, ;
+		BorderWidth = 0, ;
+		BackColor = 14215910, ;
+		BorderColor = 14215910, ;
 		Name = "shp_base2"
-
 
 	ADD OBJECT shp_avance2 AS shape WITH ;
 		Top = 64, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 36, ;
-		Curvature = 15, ;
-		BackColor = RGB(255,255,128), ;
-		BorderColor = RGB(255,0,0), ;
+		Curvature = 8, ;
+		BackColor = 6734335, ;
+		BorderColor = 10476031, ;
+		BorderWidth = 1, ;
 		Name = "shp_Avance2"
-
-
-	ADD OBJECT lbl_tarea2 AS label WITH ;
-		BackStyle = 0, ;
-		Caption = ".", ;
-		Height = 17, ;
-		Left = 12, ;
-		Top = 44, ;
-		Width = 604, ;
-		Name = "lbl_Tarea2"
-
 
 	ADD OBJECT cmdCancel AS commandbutton WITH ;
 		Top = 84, ;
@@ -3271,6 +3254,255 @@ DEFINE CLASS frm_avance AS FORM
 		Enabled = .F., ;
 		Name = "cmdCancel"
 
+	ADD OBJECT lin_1 AS shape WITH ;
+		Top = 28, ;
+		Left = 32, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_1"
+
+	ADD OBJECT lin_2 AS shape WITH ;
+		Top = 28, ;
+		Left = 52, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_2"
+
+	ADD OBJECT lin_3 AS shape WITH ;
+		Top = 28, ;
+		Left = 72, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_3"
+
+	ADD OBJECT lin_4 AS shape WITH ;
+		Top = 28, ;
+		Left = 92, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_4"
+
+	ADD OBJECT lin_5 AS shape WITH ;
+		Top = 28, ;
+		Left = 112, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_5"
+
+	ADD OBJECT lin_6 AS shape WITH ;
+		Top = 28, ;
+		Left = 132, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_6"
+
+	ADD OBJECT lin_7 AS shape WITH ;
+		Top = 28, ;
+		Left = 152, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_7"
+
+	ADD OBJECT lin_8 AS shape WITH ;
+		Top = 28, ;
+		Left = 172, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_8"
+
+	ADD OBJECT lin_9 AS shape WITH ;
+		Top = 28, ;
+		Left = 192, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_9"
+
+	ADD OBJECT lin_10 AS shape WITH ;
+		Top = 28, ;
+		Left = 212, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_10"
+
+	ADD OBJECT lin_11 AS shape WITH ;
+		Top = 28, ;
+		Left = 232, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_11"
+
+	ADD OBJECT lin_12 AS shape WITH ;
+		Top = 28, ;
+		Left = 252, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_12"
+
+	ADD OBJECT lin_13 AS shape WITH ;
+		Top = 28, ;
+		Left = 272, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_13"
+
+	ADD OBJECT lin_14 AS shape WITH ;
+		Top = 28, ;
+		Left = 292, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_14"
+
+	ADD OBJECT lin_15 AS shape WITH ;
+		Top = 28, ;
+		Left = 312, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_15"
+
+	ADD OBJECT lin_16 AS shape WITH ;
+		Top = 28, ;
+		Left = 332, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_16"
+
+	ADD OBJECT lin_17 AS shape WITH ;
+		Top = 28, ;
+		Left = 352, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_17"
+
+	ADD OBJECT lin_18 AS shape WITH ;
+		Top = 28, ;
+		Left = 372, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_18"
+
+	ADD OBJECT lin_19 AS shape WITH ;
+		Top = 28, ;
+		Left = 392, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_19"
+
+	ADD OBJECT lin_20 AS shape WITH ;
+		Top = 28, ;
+		Left = 412, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_20"
+
+	ADD OBJECT lin_21 AS shape WITH ;
+		Top = 28, ;
+		Left = 432, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_21"
+
+	ADD OBJECT lin_22 AS shape WITH ;
+		Top = 28, ;
+		Left = 452, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_22"
+
+	ADD OBJECT lin_23 AS shape WITH ;
+		Top = 28, ;
+		Left = 472, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_23"
+
+	ADD OBJECT lin_24 AS shape WITH ;
+		Top = 28, ;
+		Left = 492, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_24"
+
+	ADD OBJECT lin_25 AS shape WITH ;
+		Top = 28, ;
+		Left = 512, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_25"
+
+	ADD OBJECT lin_26 AS shape WITH ;
+		Top = 28, ;
+		Left = 532, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_26"
+
+	ADD OBJECT lin_27 AS shape WITH ;
+		Top = 28, ;
+		Left = 552, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_27"
+
+	ADD OBJECT lin_28 AS shape WITH ;
+		Top = 28, ;
+		Left = 572, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_28"
+
+	ADD OBJECT lin_29 AS shape WITH ;
+		Top = 28, ;
+		Left = 592, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_29"
+
+	ADD OBJECT lbl_tarea AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 8, ;
+		Width = 604, ;
+		Name = "lbl_Tarea"
+
+	ADD OBJECT lbl_tarea2 AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 44, ;
+		Width = 604, ;
+		Name = "lbl_Tarea2"
 
 	PROCEDURE AvanceDelProceso
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
@@ -3334,10 +3566,10 @@ DEFINE CLASS frm_avance AS FORM
 
 	PROCEDURE Init
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		THIS.CAPTION = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
-		THIS.nValue = 0
-		THIS.nValue2 = 0
+		loLang						= _SCREEN.o_FoxBin2Prg_Lang
+		THIS.CAPTION				= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
+		THIS.nValue					= 0
+		THIS.nValue2				= 0
 	ENDPROC
 
 
@@ -21310,9 +21542,12 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 				lcStr						= FREAD(lnHandle,1)		&& 0		File type
 				tn_HexFileType				= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
 
-				IF lnFileLength < 65 OR .fileTypeDescription(tn_HexFileType) = 'Unknown'
+				DO CASE
+				CASE lnFileLength < 65
 					ERROR 15, tc_FileName + ' (FileLength < 65)'
-				ENDIF
+				CASE .fileTypeDescription(tn_HexFileType) = 'Unknown'
+					ERROR 15, tc_FileName
+				ENDCASE
 
 				.n_HexFileType				= tn_HexFileType
 				lcStr						= FREAD(lnHandle,3)		&& 1-3		Last update (YYMMDD)
