@@ -129,6 +129,8 @@
 * 06/01/2015	FDBOZZO		v1.19.40	Mejora: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Jim Nelson)
 * 07/01/2015	FDBOZZO		v1.19.40	Bug fix db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Mike Potjer)
 * 07/01/2015	FDBOZZO		v1.19.40	Mejora scx/vcx: Detección de nombres de objeto duplicados para notificar casos de corrupción
+* 13/01/2015	FDBOZZO		v1.19.41	Bug Fix scx/vcx: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros en LPARAMETERS (Ryan Harris)
+* 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -188,6 +190,7 @@
 * 30/12/2014	Ryan Harris			Reporte bug dbc v1.19.38: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Agregado en v1.19.39)
 * 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
 * 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
+* 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
