@@ -10585,7 +10585,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 		*--		1.Bloque de código del método en su posición original
 		TRY
 			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
-				, laLineasExclusion(1), lnBloquesExclusion ;
+				, laLineasExclusion(1), lnBloquesExclusion, lcLastLine ;
 				, loEx AS EXCEPTION
 
 			IF NOT EMPTY(m.tcMethod) AND LEFT(m.tcMethod,9) == "ENDPROC"+CHR(13)+CHR(10)
@@ -10593,187 +10593,197 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 			ENDIF
 
 			IF NOT EMPTY(m.tcMethod)
-				DIMENSION laLine(1)
-				STORE '' TO laLine
-				STORE 0 TO lnTextNodes
+				WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
+					DIMENSION laLine(1)
+					STORE '' TO laLine, lcLine, lcLastLine
+					STORE 0 TO lnTextNodes
 
-				lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
+					lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
 
-				*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
-				FOR I = 1 TO lnLineCount
-					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
-						*-- Skip empty and commented lines
-					ELSE
-						IF I > 1
-							FOR X = I-1 TO 1 STEP -1
-								ADEL(laLine, X)
-							ENDFOR
-							lnLineCount	= lnLineCount - I + 1
-							DIMENSION laLine(lnLineCount)
-						ENDIF
-						EXIT
-					ENDIF
-				ENDFOR
-
-				*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
-				FOR I = lnLineCount TO 1 STEP -1
-					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
-						ADEL(laLine, I)
-					ELSE
-						IF I < lnLineCount
-							lnLineCount	= I
-							DIMENSION laLine(lnLineCount)
-						ENDIF
-						EXIT
-					ENDIF
-				ENDFOR
-
-				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				THIS.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laLineasExclusion, @lnBloquesExclusion )
-
-				*-- Analyze and count line methods, get method names and consolidate block code
-				FOR I = 1 TO lnLineCount
-					IF toFoxBin2Prg.l_DropNullCharsFromCode
-						laLine(I)	= CHRTRAN( laLine(I), C_NULL_CHAR, '' )
-					ENDIF
-
-					lnLine_Len	= LEN( laLine(I) )
-					lcLine		= LTRIM( laLine(I), 0, C_TAB, ' ' )
-
-					DO CASE
-					CASE laLineasExclusion(I)
-						IF tnMethodCount > 0 AND llProcOpen
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+					*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
+					FOR I = 1 TO lnLineCount
+						IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
+							*-- Skip empty and commented lines
 						ELSE
-							*-- Invalid method code, as outer code added for tools like ReFox or others, is cleaned up
-						ENDIF
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 10) ) == 'PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 11) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= ''
-						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 10) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= ''
-						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 17) ) == 'HIDDEN PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 18) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'HIDDEN '
-						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 17) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'HIDDEN '
-						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 20) ) == 'PROTECTED PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 21) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'PROTECTED '
-						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 20) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'PROTECTED '
-						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND LEFT(lcLine, 7) == 'ENDPROC'
-						IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( lcLine , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDPROC '
-							*-- Es el final de estructura ENDPROC
-							IF NOT llProcOpen
-								*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
-								LOOP
+							IF I > 1
+								FOR X = I-1 TO 1 STEP -1
+									ADEL(laLine, X)
+								ENDFOR
+								lnLineCount	= lnLineCount - I + 1
+								DIMENSION laLine(lnLineCount)
 							ENDIF
-						ELSE
-							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
-							LOOP
+							EXIT
 						ENDIF
+					ENDFOR
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
-						llProcOpen				= .F.
-
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDFUNC'	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDFUNC '
-							*-- Es el final de estructura ENDPROC
-							IF NOT llProcOpen
-								*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
-								LOOP
+					*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
+					FOR I = lnLineCount TO 1 STEP -1
+						IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
+							ADEL(laLine, I)
+						ELSE
+							IF I < lnLineCount
+								lnLineCount	= I
+								DIMENSION laLine(lnLineCount)
 							ENDIF
-							lcLine	= STRTRAN( lcLine, 'ENDFUNC', 'ENDPROC' )
-						ELSE
-							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
-							LOOP
+							EXIT
+						ENDIF
+					ENDFOR
+
+					*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+					.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laLineasExclusion, @lnBloquesExclusion )
+
+					*-- Analyze and count line methods, get method names and consolidate block code
+					FOR I = 1 TO lnLineCount
+						IF toFoxBin2Prg.l_DropNullCharsFromCode
+							laLine(I)	= CHRTRAN( laLine(I), C_NULL_CHAR, '' )
 						ENDIF
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
-						llProcOpen				= .F.
+						lnLine_Len	= LEN( laLine(I) )
+						lcLastLine	= lcLine
+						lcLine		= laLine(I)
+						.get_SeparatedLineAndComment( @lcLine )
+						lcLine		= LTRIM( lcLine, 0, C_TAB, ' ' )
 
-						*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
-					CASE tnMethodCount = 0 OR NOT llProcOpen
-						*-- Skip empty and commented lines before methods begin
-						*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
-
-					OTHERWISE && Method Code
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					ENDCASE
-				ENDFOR
-
-				*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
-				FOR I = 1 TO tnPropsAndComments_Count
-					lcMethod	= CHRTRAN( taPropsAndComments(I,1), '*', '' )
-					IF LEFT( taPropsAndComments(I,1), 1 ) == '*' AND ASCAN( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= lcMethod
-						taMethods(tnMethodCount, 2)	= 0
-
-						lnProtectedLine	= ASCAN( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
-
-						IF lnProtectedLine = 0 THEN
-							IF tnProtected_Count = 0
-								lnProtectedLine	= 0
+						DO CASE
+						CASE laLineasExclusion(I)
+							IF tnMethodCount > 0 AND llProcOpen
+								taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 							ELSE
-								lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+								*-- Invalid method code, as outer code added for tools like ReFox or others, is cleaned up
 							ENDIF
+
+						CASE RIGHT(lcLastLine,1) == ';'
+							*-- Saltear el análisis de esta línea, que es continuación de la anterior (lcLastLine).
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							LOOP
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 10) ) == 'PROCEDURE '
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 11) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= ''
+							taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 10) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= ''
+							taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 17) ) == 'HIDDEN PROCEDURE '
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 18) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'HIDDEN '
+							taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 17) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'HIDDEN '
+							taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 20) ) == 'PROTECTED PROCEDURE '
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 21) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'PROTECTED '
+							taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 20) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'PROTECTED '
+							taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND LEFT(lcLine, 7) == 'ENDPROC'
+							IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( lcLine , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDPROC '
+								*-- Es el final de estructura ENDPROC
+								IF NOT llProcOpen
+									*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
+									LOOP
+								ENDIF
+							ELSE
+								*-- Es otra cosa (variable, etc)
+								taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
+								LOOP
+							ENDIF
+
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
+							llProcOpen				= .F.
+
+						CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDFUNC'	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDFUNC '
+								*-- Es el final de estructura ENDPROC
+								IF NOT llProcOpen
+									*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
+									LOOP
+								ENDIF
+								lcLine	= STRTRAN( lcLine, 'ENDFUNC', 'ENDPROC' )
+							ELSE
+								*-- Es otra cosa (variable, etc)
+								taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
+								LOOP
+							ENDIF
+
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
+							llProcOpen				= .F.
+
+							*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+						CASE tnMethodCount = 0 OR NOT llProcOpen
+							*-- Skip empty and commented lines before methods begin
+							*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
+
+						OTHERWISE && Method Code
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+
+						ENDCASE
+					ENDFOR
+
+					*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
+					FOR I = 1 TO tnPropsAndComments_Count
+						lcMethod	= CHRTRAN( taPropsAndComments(I,1), '*', '' )
+						IF LEFT( taPropsAndComments(I,1), 1 ) == '*' AND ASCAN( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= lcMethod
+							taMethods(tnMethodCount, 2)	= 0
+
+							lnProtectedLine	= ASCAN( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
 
 							IF lnProtectedLine = 0 THEN
-								taMethods(tnMethodCount, 3)	= ''
+								IF tnProtected_Count = 0
+									lnProtectedLine	= 0
+								ELSE
+									lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+								ENDIF
+
+								IF lnProtectedLine = 0 THEN
+									taMethods(tnMethodCount, 3)	= ''
+								ELSE
+									taMethods(tnMethodCount, 3)	= 'HIDDEN '
+								ENDIF
 							ELSE
-								taMethods(tnMethodCount, 3)	= 'HIDDEN '
+								taMethods(tnMethodCount, 3)	= 'PROTECTED '
 							ENDIF
-						ELSE
-							taMethods(tnMethodCount, 3)	= 'PROTECTED '
 						ENDIF
-					ENDIF
-				ENDFOR
+					ENDFOR
+				ENDWITH && THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 			ENDIF
 
 		CATCH TO loEx
@@ -21297,8 +21307,8 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 				lcStr						= FREAD(lnHandle,1)		&& 0		File type
 				tn_HexFileType				= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
 
-				IF lnFileLength < 328 OR .fileTypeDescription(tn_HexFileType) = 'Unknown'
-					ERROR 15, tc_FileName
+				IF lnFileLength < 65 OR .fileTypeDescription(tn_HexFileType) = 'Unknown'
+					ERROR 15, tc_FileName + ' (FileLength < 65)'
 				ENDIF
 
 				.n_HexFileType				= tn_HexFileType

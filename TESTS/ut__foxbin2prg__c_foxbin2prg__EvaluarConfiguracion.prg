@@ -238,7 +238,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			STRTOFILE( 'MNX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
 			STRTOFILE( 'DBF_Conversion_Support: 2' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
 			STRTOFILE( 'DBC_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
-			STRTOFILE( 'ShowProgressbar: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
+			STRTOFILE( 'DontShowProgress: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
 			STRTOFILE( 'DontShowErrors: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
 			*STRTOFILE( 'Recompile: ' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
 			STRTOFILE( 'NoTimestamps: 0' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
@@ -290,7 +290,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'MNX_Conversion_Support', 1 )
 			ADDPROPERTY( loFB2P_Esperado, 'DBF_Conversion_Support', 2 )
 			ADDPROPERTY( loFB2P_Esperado, 'DBC_Conversion_Support', 1 )
-			ADDPROPERTY( loFB2P_Esperado, 'n_ShowProgressbar', 1 )
+			ADDPROPERTY( loFB2P_Esperado, 'n_ShowProgressbar', 0 )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ShowErrors', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
@@ -999,7 +999,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
 			lcSeteo			= 'n_ShowProgressbar'
-			leValorEsperado	= 1
+			leValorEsperado	= .T.
 
 
 			*-- TEST
