@@ -2052,7 +2052,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						IF .n_ShowProgressbar <> 0 THEN
 							.cargar_frm_avance()
-							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Txt -' )
+							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 						ENDIF
 
 						DO CASE
@@ -2110,7 +2110,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						IF .n_ShowProgressbar <> 0 THEN
 							.cargar_frm_avance()
-							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Bin -' )
+							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 						ENDIF
 
 						DO CASE
@@ -2207,7 +2207,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
 							IF .n_ShowProgressbar <> 0 THEN
 								.cargar_frm_avance()
-								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Txt -' )
+								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 							ENDIF
 
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
@@ -2255,7 +2255,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
 							IF .n_ShowProgressbar <> 0 THEN
 								.cargar_frm_avance()
-								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Bin -' )
+								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 							ENDIF
 
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
@@ -3571,7 +3571,7 @@ DEFINE CLASS frm_avance AS FORM
 	PROCEDURE Init
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang						= _SCREEN.o_FoxBin2Prg_Lang
-		THIS.CAPTION				= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
+		THIS.CAPTION				= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
 		THIS.nValue					= 0
 		THIS.nValue2				= 0
 	ENDPROC
@@ -3603,7 +3603,7 @@ DEFINE CLASS frm_interactive AS form
 	DoCreate = .T.
 	AutoCenter = .T.
 	BorderStyle = 2
-	Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_LOC
+	Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_LOC
 	ControlBox = .F.
 	AlwaysOnTop = .T.
 	BackColor = RGB(255,255,255)
