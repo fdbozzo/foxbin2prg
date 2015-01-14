@@ -2052,6 +2052,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						IF .n_ShowProgressbar <> 0 THEN
 							.cargar_frm_avance()
+							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Txt -' )
 						ENDIF
 
 						DO CASE
@@ -2109,6 +2110,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						IF .n_ShowProgressbar <> 0 THEN
 							.cargar_frm_avance()
+							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Bin -' )
 						ENDIF
 
 						DO CASE
@@ -2205,6 +2207,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
 							IF .n_ShowProgressbar <> 0 THEN
 								.cargar_frm_avance()
+								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Txt -' )
 							ENDIF
 
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
@@ -2252,6 +2255,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
 							IF .n_ShowProgressbar <> 0 THEN
 								.cargar_frm_avance()
+								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '>Bin -' )
 							ENDIF
 
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
@@ -3599,7 +3603,7 @@ DEFINE CLASS frm_interactive AS form
 	DoCreate = .T.
 	AutoCenter = .T.
 	BorderStyle = 2
-	Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_LOC
+	Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_LOC
 	ControlBox = .F.
 	AlwaysOnTop = .T.
 	BackColor = RGB(255,255,255)
