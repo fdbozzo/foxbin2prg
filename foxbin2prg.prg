@@ -129,6 +129,8 @@
 * 06/01/2015	FDBOZZO		v1.19.40	Mejora: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Jim Nelson)
 * 07/01/2015	FDBOZZO		v1.19.40	Bug fix db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Mike Potjer)
 * 07/01/2015	FDBOZZO		v1.19.40	Mejora scx/vcx: Detección de nombres de objeto duplicados para notificar casos de corrupción
+* 13/01/2015	FDBOZZO		v1.19.41	Bug Fix scx/vcx: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros en LPARAMETERS (Ryan Harris)
+* 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -188,6 +190,7 @@
 * 30/12/2014	Ryan Harris			Reporte bug dbc v1.19.38: Los datos de DisplayClass y DisplayClassLibrary tenían el valor de "Default" en vez del propio (Agregado en v1.19.39)
 * 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
 * 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
+* 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2049,6 +2052,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						IF .n_ShowProgressbar <> 0 THEN
 							.cargar_frm_avance()
+							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 						ENDIF
 
 						DO CASE
@@ -2106,6 +2110,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						IF .n_ShowProgressbar <> 0 THEN
 							.cargar_frm_avance()
+							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 						ENDIF
 
 						DO CASE
@@ -2202,6 +2207,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
 							IF .n_ShowProgressbar <> 0 THEN
 								.cargar_frm_avance()
+								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 							ENDIF
 
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
@@ -2249,6 +2255,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
 							IF .n_ShowProgressbar <> 0 THEN
 								.cargar_frm_avance()
+								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 							ENDIF
 
 							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
@@ -2850,7 +2857,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
 		ENDIF
 
 		RETURN (ln_AT_Cmt > 0)
@@ -3198,66 +3205,49 @@ DEFINE CLASS frm_avance AS FORM
 		+ [<memberdata name="l_cancelled" display="l_Cancelled"/>] ;
 		+ [</VFPData>]
 
-
 	ADD OBJECT shp_base AS shape WITH ;
 		Top = 28, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 604, ;
-		Curvature = 15, ;
+		Curvature = 8, ;
+		BorderWidth = 8, ;
+		BackColor = 14215910, ;
+		BorderColor = 14215910, ;
 		Name = "shp_base"
-
 
 	ADD OBJECT shp_avance AS shape WITH ;
 		Top = 28, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 36, ;
-		Curvature = 15, ;
-		BackColor = RGB(255,255,128), ;
-		BorderColor = RGB(255,0,0), ;
+		Curvature = 8, ;
+		BackColor = 6734335, ;
+		BorderColor = 10476031, ;
+		BorderWidth = 1, ;
 		Name = "shp_Avance"
-
-
-	ADD OBJECT lbl_tarea AS label WITH ;
-		BackStyle = 0, ;
-		Caption = ".", ;
-		Height = 17, ;
-		Left = 12, ;
-		Top = 8, ;
-		Width = 604, ;
-		Name = "lbl_Tarea"
-
 
 	ADD OBJECT shp_base2 AS shape WITH ;
 		Top = 64, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 604, ;
-		Curvature = 15, ;
+		Curvature = 8, ;
+		BorderWidth = 0, ;
+		BackColor = 14215910, ;
+		BorderColor = 14215910, ;
 		Name = "shp_base2"
-
 
 	ADD OBJECT shp_avance2 AS shape WITH ;
 		Top = 64, ;
 		Left = 12, ;
 		Height = 13, ;
 		Width = 36, ;
-		Curvature = 15, ;
-		BackColor = RGB(255,255,128), ;
-		BorderColor = RGB(255,0,0), ;
+		Curvature = 8, ;
+		BackColor = 6734335, ;
+		BorderColor = 10476031, ;
+		BorderWidth = 1, ;
 		Name = "shp_Avance2"
-
-
-	ADD OBJECT lbl_tarea2 AS label WITH ;
-		BackStyle = 0, ;
-		Caption = ".", ;
-		Height = 17, ;
-		Left = 12, ;
-		Top = 44, ;
-		Width = 604, ;
-		Name = "lbl_Tarea2"
-
 
 	ADD OBJECT cmdCancel AS commandbutton WITH ;
 		Top = 84, ;
@@ -3268,6 +3258,255 @@ DEFINE CLASS frm_avance AS FORM
 		Enabled = .F., ;
 		Name = "cmdCancel"
 
+	ADD OBJECT lin_1 AS shape WITH ;
+		Top = 28, ;
+		Left = 32, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_1"
+
+	ADD OBJECT lin_2 AS shape WITH ;
+		Top = 28, ;
+		Left = 52, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_2"
+
+	ADD OBJECT lin_3 AS shape WITH ;
+		Top = 28, ;
+		Left = 72, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_3"
+
+	ADD OBJECT lin_4 AS shape WITH ;
+		Top = 28, ;
+		Left = 92, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_4"
+
+	ADD OBJECT lin_5 AS shape WITH ;
+		Top = 28, ;
+		Left = 112, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_5"
+
+	ADD OBJECT lin_6 AS shape WITH ;
+		Top = 28, ;
+		Left = 132, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_6"
+
+	ADD OBJECT lin_7 AS shape WITH ;
+		Top = 28, ;
+		Left = 152, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_7"
+
+	ADD OBJECT lin_8 AS shape WITH ;
+		Top = 28, ;
+		Left = 172, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_8"
+
+	ADD OBJECT lin_9 AS shape WITH ;
+		Top = 28, ;
+		Left = 192, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_9"
+
+	ADD OBJECT lin_10 AS shape WITH ;
+		Top = 28, ;
+		Left = 212, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_10"
+
+	ADD OBJECT lin_11 AS shape WITH ;
+		Top = 28, ;
+		Left = 232, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_11"
+
+	ADD OBJECT lin_12 AS shape WITH ;
+		Top = 28, ;
+		Left = 252, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_12"
+
+	ADD OBJECT lin_13 AS shape WITH ;
+		Top = 28, ;
+		Left = 272, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_13"
+
+	ADD OBJECT lin_14 AS shape WITH ;
+		Top = 28, ;
+		Left = 292, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_14"
+
+	ADD OBJECT lin_15 AS shape WITH ;
+		Top = 28, ;
+		Left = 312, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_15"
+
+	ADD OBJECT lin_16 AS shape WITH ;
+		Top = 28, ;
+		Left = 332, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_16"
+
+	ADD OBJECT lin_17 AS shape WITH ;
+		Top = 28, ;
+		Left = 352, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_17"
+
+	ADD OBJECT lin_18 AS shape WITH ;
+		Top = 28, ;
+		Left = 372, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_18"
+
+	ADD OBJECT lin_19 AS shape WITH ;
+		Top = 28, ;
+		Left = 392, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_19"
+
+	ADD OBJECT lin_20 AS shape WITH ;
+		Top = 28, ;
+		Left = 412, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_20"
+
+	ADD OBJECT lin_21 AS shape WITH ;
+		Top = 28, ;
+		Left = 432, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_21"
+
+	ADD OBJECT lin_22 AS shape WITH ;
+		Top = 28, ;
+		Left = 452, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_22"
+
+	ADD OBJECT lin_23 AS shape WITH ;
+		Top = 28, ;
+		Left = 472, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_23"
+
+	ADD OBJECT lin_24 AS shape WITH ;
+		Top = 28, ;
+		Left = 492, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_24"
+
+	ADD OBJECT lin_25 AS shape WITH ;
+		Top = 28, ;
+		Left = 512, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_25"
+
+	ADD OBJECT lin_26 AS shape WITH ;
+		Top = 28, ;
+		Left = 532, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_26"
+
+	ADD OBJECT lin_27 AS shape WITH ;
+		Top = 28, ;
+		Left = 552, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_27"
+
+	ADD OBJECT lin_28 AS shape WITH ;
+		Top = 28, ;
+		Left = 572, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_28"
+
+	ADD OBJECT lin_29 AS shape WITH ;
+		Top = 28, ;
+		Left = 592, ;
+		Height = 53, ;
+		Width = 0, ;
+		BorderColor = 16777215, ;
+		Name = "lin_29"
+
+	ADD OBJECT lbl_tarea AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 8, ;
+		Width = 604, ;
+		Name = "lbl_Tarea"
+
+	ADD OBJECT lbl_tarea2 AS label WITH ;
+		BackStyle = 0, ;
+		Caption = ".", ;
+		Height = 17, ;
+		Left = 12, ;
+		Top = 44, ;
+		Width = 604, ;
+		Name = "lbl_Tarea2"
 
 	PROCEDURE AvanceDelProceso
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
@@ -3331,10 +3570,10 @@ DEFINE CLASS frm_avance AS FORM
 
 	PROCEDURE Init
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		THIS.CAPTION = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
-		THIS.nValue = 0
-		THIS.nValue2 = 0
+		loLang						= _SCREEN.o_FoxBin2Prg_Lang
+		THIS.CAPTION				= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
+		THIS.nValue					= 0
+		THIS.nValue2				= 0
 	ENDPROC
 
 
@@ -4158,13 +4397,12 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
+		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
-		ELSE
-			tcComment	= ''
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
 		ENDIF
 
 		RELEASE tcLine, tcComment
@@ -10585,7 +10823,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 		*--		1.Bloque de código del método en su posición original
 		TRY
 			LOCAL lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
-				, laLineasExclusion(1), lnBloquesExclusion ;
+				, laLineasExclusion(1), lnBloquesExclusion, lcLastLine ;
 				, loEx AS EXCEPTION
 
 			IF NOT EMPTY(m.tcMethod) AND LEFT(m.tcMethod,9) == "ENDPROC"+CHR(13)+CHR(10)
@@ -10593,187 +10831,197 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 			ENDIF
 
 			IF NOT EMPTY(m.tcMethod)
-				DIMENSION laLine(1)
-				STORE '' TO laLine
-				STORE 0 TO lnTextNodes
+				WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
+					DIMENSION laLine(1)
+					STORE '' TO laLine, lcLine, lcLastLine
+					STORE 0 TO lnTextNodes
 
-				lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
+					lnLineCount	= ALINES(laLine, m.tcMethod)	&& NO aplicar nungún formato ni limpieza, que es el CÓDIGO FUENTE
 
-				*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
-				FOR I = 1 TO lnLineCount
-					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
-						*-- Skip empty and commented lines
-					ELSE
-						IF I > 1
-							FOR X = I-1 TO 1 STEP -1
-								ADEL(laLine, X)
-							ENDFOR
-							lnLineCount	= lnLineCount - I + 1
-							DIMENSION laLine(lnLineCount)
-						ENDIF
-						EXIT
-					ENDIF
-				ENDFOR
-
-				*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
-				FOR I = lnLineCount TO 1 STEP -1
-					IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
-						ADEL(laLine, I)
-					ELSE
-						IF I < lnLineCount
-							lnLineCount	= I
-							DIMENSION laLine(lnLineCount)
-						ENDIF
-						EXIT
-					ENDIF
-				ENDFOR
-
-				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				THIS.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laLineasExclusion, @lnBloquesExclusion )
-
-				*-- Analyze and count line methods, get method names and consolidate block code
-				FOR I = 1 TO lnLineCount
-					IF toFoxBin2Prg.l_DropNullCharsFromCode
-						laLine(I)	= CHRTRAN( laLine(I), C_NULL_CHAR, '' )
-					ENDIF
-
-					lnLine_Len	= LEN( laLine(I) )
-					lcLine		= LTRIM( laLine(I), 0, C_TAB, ' ' )
-
-					DO CASE
-					CASE laLineasExclusion(I)
-						IF tnMethodCount > 0 AND llProcOpen
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+					*-- Delete beginning empty lines before first "PROCEDURE", that is the first not empty line.
+					FOR I = 1 TO lnLineCount
+						IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
+							*-- Skip empty and commented lines
 						ELSE
-							*-- Invalid method code, as outer code added for tools like ReFox or others, is cleaned up
-						ENDIF
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 10) ) == 'PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 11) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= ''
-						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 10) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= ''
-						taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 17) ) == 'HIDDEN PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 18) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'HIDDEN '
-						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 17) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'HIDDEN '
-						taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 20) ) == 'PROTECTED PROCEDURE '
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 21) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'PROTECTED '
-						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 20) )
-						taMethods(tnMethodCount, 2)	= tnMethodCount
-						taMethods(tnMethodCount, 3)	= 'PROTECTED '
-						taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
-						llProcOpen					= .T.
-
-					CASE lnTextNodes = 0 AND LEFT(lcLine, 7) == 'ENDPROC'
-						IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( lcLine , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDPROC '
-							*-- Es el final de estructura ENDPROC
-							IF NOT llProcOpen
-								*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
-								LOOP
+							IF I > 1
+								FOR X = I-1 TO 1 STEP -1
+									ADEL(laLine, X)
+								ENDFOR
+								lnLineCount	= lnLineCount - I + 1
+								DIMENSION laLine(lnLineCount)
 							ENDIF
-						ELSE
-							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
-							LOOP
+							EXIT
 						ENDIF
+					ENDFOR
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
-						llProcOpen				= .F.
-
-					CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDFUNC'	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
-						IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDFUNC '
-							*-- Es el final de estructura ENDPROC
-							IF NOT llProcOpen
-								*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
-								LOOP
+					*-- Delete ending empty lines after last "ENDPROC", that is the last not empty line.
+					FOR I = lnLineCount TO 1 STEP -1
+						IF EMPTY(laLine(I)) OR LEFT( LTRIM(laLine(I)),1 ) = '*'
+							ADEL(laLine, I)
+						ELSE
+							IF I < lnLineCount
+								lnLineCount	= I
+								DIMENSION laLine(lnLineCount)
 							ENDIF
-							lcLine	= STRTRAN( lcLine, 'ENDFUNC', 'ENDPROC' )
-						ELSE
-							*-- Es otra cosa (variable, etc)
-							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
-							LOOP
+							EXIT
+						ENDIF
+					ENDFOR
+
+					*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
+					.identificarBloquesDeExclusion( @laLine, lnLineCount, .F., @laLineasExclusion, @lnBloquesExclusion )
+
+					*-- Analyze and count line methods, get method names and consolidate block code
+					FOR I = 1 TO lnLineCount
+						IF toFoxBin2Prg.l_DropNullCharsFromCode
+							laLine(I)	= CHRTRAN( laLine(I), C_NULL_CHAR, '' )
 						ENDIF
 
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
-						llProcOpen				= .F.
+						lnLine_Len	= LEN( laLine(I) )
+						lcLastLine	= lcLine
+						lcLine		= laLine(I)
+						.get_SeparatedLineAndComment( @lcLine )
+						lcLine		= LTRIM( lcLine, 0, C_TAB, ' ' )
 
-						*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
-					CASE tnMethodCount = 0 OR NOT llProcOpen
-						*-- Skip empty and commented lines before methods begin
-						*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
-
-					OTHERWISE && Method Code
-						taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
-
-					ENDCASE
-				ENDFOR
-
-				*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
-				FOR I = 1 TO tnPropsAndComments_Count
-					lcMethod	= CHRTRAN( taPropsAndComments(I,1), '*', '' )
-					IF LEFT( taPropsAndComments(I,1), 1 ) == '*' AND ASCAN( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
-						tnMethodCount	= tnMethodCount + 1
-						DIMENSION taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
-						taMethods(tnMethodCount, 1)	= lcMethod
-						taMethods(tnMethodCount, 2)	= 0
-
-						lnProtectedLine	= ASCAN( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
-
-						IF lnProtectedLine = 0 THEN
-							IF tnProtected_Count = 0
-								lnProtectedLine	= 0
+						DO CASE
+						CASE laLineasExclusion(I)
+							IF tnMethodCount > 0 AND llProcOpen
+								taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
 							ELSE
-								lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+								*-- Invalid method code, as outer code added for tools like ReFox or others, is cleaned up
 							ENDIF
+
+						CASE RIGHT(lcLastLine,1) == ';'
+							*-- Saltear el análisis de esta línea, que es continuación de la anterior (lcLastLine).
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+							LOOP
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 10) ) == 'PROCEDURE '
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 11) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= ''
+							taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 9) ) == 'FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 10) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= ''
+							taCode(tnMethodCount)		= 'PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 17) ) == 'HIDDEN PROCEDURE '
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 18) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'HIDDEN '
+							taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 16) ) == 'HIDDEN FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 17) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'HIDDEN '
+							taCode(tnMethodCount)		= 'HIDDEN PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 20) ) == 'PROTECTED PROCEDURE '
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 21) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'PROTECTED '
+							taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND UPPER( LEFT(lcLine, 19) ) == 'PROTECTED FUNCTION '	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3), taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= RTRIM( SUBSTR(lcLine, 20) )
+							taMethods(tnMethodCount, 2)	= tnMethodCount
+							taMethods(tnMethodCount, 3)	= 'PROTECTED '
+							taCode(tnMethodCount)		= 'PROTECTED PROCEDURE ' + taMethods(tnMethodCount, 1) + CR_LF && laLine(I) + CR_LF
+							llProcOpen					= .T.
+
+						CASE lnTextNodes = 0 AND LEFT(lcLine, 7) == 'ENDPROC'
+							IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( lcLine , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDPROC '
+								*-- Es el final de estructura ENDPROC
+								IF NOT llProcOpen
+									*-- Esto no es normal, porque hay más de un ENDPROC, por lo que se ignora.
+									LOOP
+								ENDIF
+							ELSE
+								*-- Es otra cosa (variable, etc)
+								taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
+								LOOP
+							ENDIF
+
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
+							llProcOpen				= .F.
+
+						CASE lnTextNodes = 0 AND LEFT(laLine(I), 7) == 'ENDFUNC'	&& NOT VALID WITH VFP IDE, BUT 3rd. PARTY SOFTWARE CAN USE IT
+							IF lnLine_Len >= 7 AND LEFT( UPPER( CHRTRAN( laLine(I) , '&'+CHR(9)+CHR(0), '   ') ) + ' ' ,8) == 'ENDFUNC '
+								*-- Es el final de estructura ENDPROC
+								IF NOT llProcOpen
+									*-- Esto no es normal, porque hay más de un ENDFUNC, por lo que se ignora.
+									LOOP
+								ENDIF
+								lcLine	= STRTRAN( lcLine, 'ENDFUNC', 'ENDPROC' )
+							ELSE
+								*-- Es otra cosa (variable, etc)
+								taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine + CR_LF
+								LOOP
+							ENDIF
+
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + lcLine &&+ CR_LF
+							llProcOpen				= .F.
+
+							*CASE tnMethodCount = 0 OR NOT llProcOpen AND LEFT( LTRIM(laLine(I)),1 ) = '*'
+						CASE tnMethodCount = 0 OR NOT llProcOpen
+							*-- Skip empty and commented lines before methods begin
+							*-- Aquí como condición podría poner: NOT llProcOpen AND LEFT(laLine(I), 7) # 'ENDPROC', pero abarcaría demasiado.
+
+						OTHERWISE && Method Code
+							taCode(tnMethodCount)	= taCode(tnMethodCount) + laLine(I) + CR_LF
+
+						ENDCASE
+					ENDFOR
+
+					*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
+					FOR I = 1 TO tnPropsAndComments_Count
+						lcMethod	= CHRTRAN( taPropsAndComments(I,1), '*', '' )
+						IF LEFT( taPropsAndComments(I,1), 1 ) == '*' AND ASCAN( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
+							tnMethodCount	= tnMethodCount + 1
+							DIMENSION taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= lcMethod
+							taMethods(tnMethodCount, 2)	= 0
+
+							lnProtectedLine	= ASCAN( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
 
 							IF lnProtectedLine = 0 THEN
-								taMethods(tnMethodCount, 3)	= ''
+								IF tnProtected_Count = 0
+									lnProtectedLine	= 0
+								ELSE
+									lnProtectedLine	= ASCAN( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+								ENDIF
+
+								IF lnProtectedLine = 0 THEN
+									taMethods(tnMethodCount, 3)	= ''
+								ELSE
+									taMethods(tnMethodCount, 3)	= 'HIDDEN '
+								ENDIF
 							ELSE
-								taMethods(tnMethodCount, 3)	= 'HIDDEN '
+								taMethods(tnMethodCount, 3)	= 'PROTECTED '
 							ENDIF
-						ELSE
-							taMethods(tnMethodCount, 3)	= 'PROTECTED '
 						ENDIF
-					ENDIF
-				ENDFOR
+					ENDFOR
+				ENDWITH && THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 			ENDIF
 
 		CATCH TO loEx
@@ -13458,13 +13706,12 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
 		LOCAL ln_AT_Cmt
+		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
-		ELSE
-			tcComment	= ''
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
 		ENDIF
 
 		RELEASE tcLine, tcComment
@@ -13547,9 +13794,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 		IF ln_AT_Cmt > 0
 			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9) )	&& Quito TABS
-		ELSE
-			tcComment	= ''
+			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
 		ENDIF
 
 		RELEASE tcLine, tcComment
@@ -21297,9 +21542,12 @@ DEFINE CLASS CL_DBF_UTILS AS SESSION
 				lcStr						= FREAD(lnHandle,1)		&& 0		File type
 				tn_HexFileType				= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
 
-				IF lnFileLength < 328 OR .fileTypeDescription(tn_HexFileType) = 'Unknown'
+				DO CASE
+				CASE lnFileLength < 65
+					ERROR 15, tc_FileName + ' (FileLength < 65)'
+				CASE .fileTypeDescription(tn_HexFileType) = 'Unknown'
 					ERROR 15, tc_FileName
-				ENDIF
+				ENDCASE
 
 				.n_HexFileType				= tn_HexFileType
 				lcStr						= FREAD(lnHandle,3)		&& 1-3		Last update (YYMMDD)

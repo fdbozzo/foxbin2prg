@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.40'
-    .VersionDate          = Date(2015,01,11)
+    .VersionNumber        = 'v1.19.41'
+    .VersionDate          = Date(2015,01,18)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,10 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/01/18	v1.19.41
+- Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
+- Bug Fix vcx/scx: Erroneous detection of PROCEDURE/ENDPROC structures when used as parameters of LPARAMETERS and start in new line (Ryan Harris)
 
 2015/01/11	v1.19.40
 - Enhancement frx/lbx: Clean ASCII 0 from expression field for Dataenvironment, Cursors and Relations
