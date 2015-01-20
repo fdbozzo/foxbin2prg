@@ -131,6 +131,7 @@
 * 07/01/2015	FDBOZZO		v1.19.40	Mejora scx/vcx: Detección de nombres de objeto duplicados para notificar casos de corrupción
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix scx/vcx: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros en LPARAMETERS (Ryan Harris)
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
+* 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro, para evitar problemas ajenos a FoxBin2Prg
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1912,6 +1913,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*	ENDFOR
 				*	EXIT
 				*ENDIF
+
+				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 5815
+				   ERROR "Incorrect VFP 9 version - Missing SP2! (" + VERSION(4) + ")"
+				ENDIF
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
 				IF EMPTY(lcInputFile_Type) AND NOT EMPTY(tc_InputFile)
