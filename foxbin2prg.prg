@@ -412,14 +412,15 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *-- FileTypes for ADIR()
 #DEFINE C_FILETYPE_DIRECTORY		"D"
 #DEFINE C_FILETYPE_FILE				"F"
+#DEFINE C_FILETYPE_QUERYSUPPORT		"Q"
 *-- Fin / End
 
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp, loEx AS EXCEPTION
 
 *SET COVERAGE TO c:\desa\foxbin2prg\foxbin2prg_coverage.log
-*SYS(2030,1)
-*SYS(2335,0)
+*SYS(2030,1)		&& Enable system component debugging
+*SYS(2335,0)	&& Unnatended server mode
 *IF PCOUNT() > 1 && Saltear las querys de SourceSafe sobre soporte de archivos
 *	SET STEP ON
 *	MESSAGEBOX( SYS(5)+CURDIR(),64+4096,PROGRAM(),5000)
@@ -1304,7 +1305,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* tcClearUniqueID			(v? IN    ) Indica si se debe limpiar el UniqueID ('1') o no ('0' ó vacío)
 		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp ('1') o no ('0' ó vacío)
 		* tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
-		* tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory o (F)ile
+		* tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type
@@ -1327,14 +1328,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
 				IF EMPTY(tcInputFile_Type) AND NOT EMPTY(tc_InputFile)
-					IF ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D" THEN
+					DO CASE
+					CASE LEN(tc_InputFile) = 1
+						tcInputFile_Type	= C_FILETYPE_QUERYSUPPORT
+
+					CASE ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D"
 						tcInputFile_Type	= C_FILETYPE_DIRECTORY
-					ELSE
+
+					OTHERWISE
 						tcInputFile_Type	= C_FILETYPE_FILE
-					ENDIF
+					ENDCASE
 				ENDIF
 
-				IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) THEN
+				IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
 					*IF EMPTY(tc_InputFile)
 					*	ERROR loLang.C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + tc_InputFile + '"'
 					*ENDIF
@@ -1920,16 +1926,21 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
 				IF EMPTY(lcInputFile_Type) AND NOT EMPTY(tc_InputFile)
-					IF ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D" THEN
+					DO CASE
+					CASE LEN(tc_InputFile) = 1
+						lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT
+
+					CASE ADIR(laDirInfo, tc_InputFile, "D") = 1 AND SUBSTR( laDirInfo(1,5), 5, 1 ) = "D"
 						*-- Ejemplo: "c:\desa\"
 						lcInputFile_Type	= C_FILETYPE_DIRECTORY
-					ELSE
+
+					OTHERWISE
 						*-- Ejemplo: "c:\desa\*.scx", "c:\desa\file.ext", (lista de archivos)
 						lcInputFile_Type	= C_FILETYPE_FILE
-					ENDIF
+					ENDCASE
 				ENDIF
 
-				IF EMPTY(tcRecompile) AND NOT EMPTY(lcInputFile_Type) THEN
+				IF EMPTY(tcRecompile) AND NOT EMPTY(lcInputFile_Type) AND NOT lcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
 					IF lcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						tcRecompile	= tc_InputFile
 					ELSE
@@ -2171,7 +2182,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDCASE
 
 					*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
-					IF LEN(EVL(tc_InputFile,'')) = 1
+					*IF LEN(EVL(tc_InputFile,'')) = 1
+					IF lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT
 						*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
 						*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
 						*-- para saber si se puede hacer Diff y Merge.
