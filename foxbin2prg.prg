@@ -548,6 +548,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_extrabackuplevels" display="n_ExtraBackupLevels"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="n_filehandle" display="n_FileHandle"/>] ;
+		+ [<memberdata name="n_forcewriteifreadonly" display="n_ForceWriteIfReadOnly"/>] ;
 		+ [<memberdata name="n_processedfiles" display="n_ProcessedFiles"/>] ;
 		+ [<memberdata name="n_processedfilescount" display="n_ProcessedFilesCount"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
@@ -615,6 +616,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	l_Test							= .F.
 	l_ShowErrors					= .T.
 	n_ShowProgressbar				= 1
+	n_ForceWriteIfReadOnly			= 0
 	l_AllowMultiConfig				= .T.
 	l_DropNullCharsFromCode			= .T.
 	l_Recompile						= .T.
@@ -1053,12 +1055,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		#DEFINE FILE_ATTRIBUTE_COMPRESSED	2048
 
 		TRY
-			LOCAL loEx AS EXCEPTION, dwFileAttributes
+			LOCAL loEx AS EXCEPTION, dwFileAttributes, dwFileAttributes_Orig, lnRet
 			DECLARE SHORT 'SetFileAttributes' IN kernel32 AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
 			DECLARE INTEGER 'GetFileAttributes' IN kernel32 AS fb2p_GetFileAttributes STRING tcFileName
 
 			* read current attributes for this file
-			dwFileAttributes = fb2p_GetFileAttributes(tcFileName)
+			dwFileAttributes 		= fb2p_GetFileAttributes(tcFileName)
+			dwFileAttributes_Orig	= dwFileAttributes
 
 			IF dwFileAttributes = -1
 				* the file does not exist
@@ -1117,18 +1120,19 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				ENDIF
 
 				* setting selected attributes
-				=fb2p_SetFileAttributes(tcFileName, dwFileAttributes)
+				lnRet	= fb2p_SetFileAttributes(tcFileName, dwFileAttributes)
 			ENDIF
 
 		CATCH TO loEx
 			THROW
 
 		FINALLY
+			THIS.writeLog( LOWER(PROGRAM()) + ' >> [' + tcFileName + '] lnRet = ' + TRANSFORM(lnRet) + ', dwFileAttributes_Orig = ' + TRANSFORM(dwFileAttributes_Orig) )
 			CLEAR DLLS fb2p_SetFileAttributes, fb2p_GetFileAttributes
 			RELEASE tcFileName, tcAttrib, dwFileAttributes
 		ENDTRY
 
-		RETURN
+		RETURN lnRet
 	ENDPROC
 
 
@@ -2472,7 +2476,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
-				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1) ;
+				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1), lcForceAttribs ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, loConversor as C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG' ;
 				, loFSO AS Scripting.FileSystemObject
@@ -2481,6 +2485,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				loFSO			= .o_FSO
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
+				lcForceAttribs	= '+N'
 				.c_InputFile	= FULLPATH( tc_InputFile )
 				lcExtension		= UPPER( JUSTEXT(.c_InputFile) )
 				.writeLog( REPLICATE( '*', 100 ) )
@@ -2496,6 +2501,10 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				*-- VERIFICO SI HAY ARCHIVO DE CONFIGURACIÓN SECUNDARIO
 				.EvaluarConfiguracion()
+				
+				IF .n_ForceWriteIfReadOnly = 1 THEN
+					lcForceAttribs	= lcForceAttribs + '-R'
+				ENDIF
 
 
 				*-- OPTIMIZACIÓN VC2/SC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
@@ -2553,7 +2562,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_VC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_VC2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_VC2 ), lcForceAttribs )
 
 				CASE lcExtension = 'SCX'
 					IF NOT INLIST(.SCX_Conversion_Support, 1, 2)
@@ -2561,7 +2570,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_SC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_scx_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_SC2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_SC2 ), lcForceAttribs )
 
 				CASE lcExtension = 'PJX'
 					IF NOT INLIST(.PJX_Conversion_Support, 1, 2)
@@ -2569,7 +2578,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), lcForceAttribs )
 
 				CASE lcExtension = 'PJM'
 					IF NOT INLIST(.PJX_Conversion_Support, 1, 2)
@@ -2577,7 +2586,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), lcForceAttribs )
 
 				CASE lcExtension = 'FRX'
 					IF NOT INLIST(.FRX_Conversion_Support, 1, 2)
@@ -2585,7 +2594,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FR2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_FR2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_FR2 ), lcForceAttribs )
 
 				CASE lcExtension = 'LBX'
 					IF NOT INLIST(.LBX_Conversion_Support, 1, 2)
@@ -2593,7 +2602,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_LB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), lcForceAttribs )
 
 				CASE lcExtension = 'DBF'
 					IF NOT INLIST(.DBF_Conversion_Support, 1, 2, 4)
@@ -2601,7 +2610,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DB2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DB2 ), lcForceAttribs )
 
 				CASE lcExtension = 'DBC'
 					IF NOT INLIST(.DBC_Conversion_Support, 1, 2)
@@ -2609,7 +2618,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DC2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DC2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DC2 ), lcForceAttribs )
 
 				CASE lcExtension = 'MNX'
 					IF NOT INLIST(.MNX_Conversion_Support, 1, 2)
@@ -2617,7 +2626,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_MN2 )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), lcForceAttribs )
 
 				CASE lcExtension = .c_VC2
 					IF .VCX_Conversion_Support <> 2
@@ -2625,8 +2634,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_SC2
 					IF .SCX_Conversion_Support <> 2
@@ -2634,8 +2643,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'SCX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_scx' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_PJ2
 					IF .PJX_Conversion_Support <> 2
@@ -2643,8 +2652,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'PJX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_FR2
 					IF .FRX_Conversion_Support <> 2
@@ -2652,8 +2661,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FRX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_LB2
 					IF .LBX_Conversion_Support <> 2
@@ -2661,8 +2670,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'LBX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_DB2
 					IF .DBF_Conversion_Support <> 2
@@ -2670,9 +2679,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBF' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FPT' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBF' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FPT' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), lcForceAttribs )
 
 				CASE lcExtension = .c_DC2
 					IF .DBC_Conversion_Support <> 2
@@ -2680,9 +2689,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBC' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBC' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_MN2
 					IF .MNX_Conversion_Support <> 2
@@ -2690,8 +2699,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MNX' )
 					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), '+N' )
-					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), '+N' )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), lcForceAttribs )
+					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), lcForceAttribs )
 
 				OTHERWISE
 					*ERROR 'El archivo [' + .c_InputFile + '] no está soportado'
@@ -3069,10 +3078,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 		LOCAL lcLog, laFile(1,5) ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-		*THIS.writeLog( '- Se ha solicitado capitalizar el archivo [' + tcFileName + ']' )
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 		THIS.writeLog( TEXTMERGE(loLang.C_REQUESTING_CAPITALIZATION_OF_FILE_LOC) )
-		THIS.ChangeFileAttribute( tcFileName, '+N' )
+		*THIS.ChangeFileAttribute( tcFileName, '+N' )
 		lcLog	= ''
 		THIS.o_FNC.Capitalize( tcFileName, '', 'F', lcLog, tlRelanzarError, '1' )
 		THIS.writeLog( lcLog )
