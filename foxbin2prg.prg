@@ -419,7 +419,7 @@ LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp, loEx AS EXCEPTION
 
 *SET COVERAGE TO c:\desa\foxbin2prg\foxbin2prg_coverage.log
-*SYS(2030,1)		&& Enable system component debugging
+*SYS(2030,1)	&& Enable system component debugging
 *SYS(2335,0)	&& Unnatended server mode
 *IF PCOUNT() > 1 && Saltear las querys de SourceSafe sobre soporte de archivos
 *	SET STEP ON
