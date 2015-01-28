@@ -1924,8 +1924,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*	EXIT
 				*ENDIF
 
-				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 5815
-				   ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP2_LOC
+				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+				   ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
 				ENDIF
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
@@ -22188,7 +22188,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_GENERATED_FILE_SIZE_LOC										= ""
 	C_GENERATING_BINARY_LOC											= ""
 	C_INCLUDING_CLASS_LOC											= ""
-	C_INCORRECT_VFP9_VERSION__MISSING_SP2_LOC						= ""
+	C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= ""
 	C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= ""
 	C_IS_A_FILE_LOC													= ""
 	C_IS_A_DIRECTORY_LOC											= ""
@@ -22336,7 +22336,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_GENERATED_FILE_SIZE_LOC										= "Taille du fichier généré"
 					.C_GENERATING_BINARY_LOC										= "Génération Binaire"
 					.C_INCLUDING_CLASS_LOC											= "Including class"
-					.C_INCORRECT_VFP9_VERSION__MISSING_SP2_LOC						= "SourceSafe Compatibilité ModeIncorrect VFP 9 Version - SP2 manquant! Prévue: 5185 ou plus tard, réelle: " + VERSION(4)
+					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "SourceSafe Compatibilité ModeIncorrect VFP 9 Version - SP1 manquant! Prévue: 3504 ou plus tard, réelle: " + VERSION(4)
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Sélection répertoire interactive"
 					.C_IS_A_FILE_LOC												= "est un FICHIER"
 					.C_IS_A_DIRECTORY_LOC											= "est un RÉPERTOIRE"
@@ -22420,7 +22420,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_GENERATING_BINARY_LOC										= "Generando Binario"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU '<<THIS.c_InputFile>>'"
 					.C_INCLUDING_CLASS_LOC											= "Incluyendo clase"
-					.C_INCORRECT_VFP9_VERSION__MISSING_SP2_LOC						= "Versión Incorrecta de VFP 9 - Falta el SP2! Esperado: 5185 o posterior, actual: " + VERSION(4)
+					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "Versión Incorrecta de VFP 9 - Falta el SP1! Esperado: 3504 o posterior, actual: " + VERSION(4)
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Selección Interactiva de Directorio"
 					.C_IS_A_FILE_LOC												= "es un ARCHIVO"
 					.C_IS_A_DIRECTORY_LOC											= "es un DIRECTORIO"
@@ -22502,7 +22502,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_GENERATED_FILE_SIZE_LOC										= "Generierte Dateigröße"
 					.C_GENERATING_BINARY_LOC										= "Gene Binary"
 					.C_INCLUDING_CLASS_LOC											= "einschließlich Klasse"
-					.C_INCORRECT_VFP9_VERSION__MISSING_SP2_LOC						= "Source Kompatibilität ModeIncorrect VFP 9 Version - Fehlende SP2! Erwartet: 5185 oder später, aktuell:" + VERSION(4)
+					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "Source Kompatibilität ModeIncorrect VFP 9 Version - Fehlende SP1! Erwartet: 3504 oder später, aktuell:" + VERSION(4)
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Auswählen interaktive Verzeichnis"
 					.C_IS_A_FILE_LOC												= "ist eine DATEI"
 					.C_IS_A_DIRECTORY_LOC											= "ist ein VERZEICHNIS"
@@ -22585,7 +22585,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_GENERATED_FILE_SIZE_LOC										= "Generated file size"
 					.C_GENERATING_BINARY_LOC										= "Generating Binary"
 					.C_INCLUDING_CLASS_LOC											= "Including class"
-					.C_INCORRECT_VFP9_VERSION__MISSING_SP2_LOC						= "Incorrect VFP 9 version - Missing SP2! Expected: 5185 or later, actual: " + VERSION(4)
+					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "Incorrect VFP 9 version - Missing SP1! Expected: 3504 or later, actual: " + VERSION(4)
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Interactive Directory Selection"
 					.C_IS_A_FILE_LOC												= "is a FILE"
 					.C_IS_A_DIRECTORY_LOC											= "is a DIRECTORY"
