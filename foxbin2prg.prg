@@ -131,7 +131,8 @@
 * 07/01/2015	FDBOZZO		v1.19.40	Mejora scx/vcx: Detección de nombres de objeto duplicados para notificar casos de corrupción
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix scx/vcx: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros en LPARAMETERS (Ryan Harris)
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
-* 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro, para evitar problemas ajenos a FoxBin2Prg
+* 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro SP1, para evitar problemas ajenos a FoxBin2Prg
+* 04/02/2015	FDBOZZO		v1.19.42	Mejora db2 v1.19.41: Permitir ordenar los campos alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -192,6 +193,7 @@
 * 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
 * 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
 * 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
+* 24/01/2015	Ryan Harris			Mejora db2 v1.19.41: Permitir ordenar los campos alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -549,6 +551,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="n_filehandle" display="n_FileHandle"/>] ;
 		+ [<memberdata name="n_forcewriteifreadonly" display="n_ForceWriteIfReadOnly"/>] ;
+		+ [<memberdata name="n_order_view_fields" display="n_Order_View_Fields"/>] ;
 		+ [<memberdata name="n_processedfiles" display="n_ProcessedFiles"/>] ;
 		+ [<memberdata name="n_processedfilescount" display="n_ProcessedFilesCount"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
@@ -636,6 +639,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_CFG_Actual					= 0
 	n_ID							= 0
 	n_FileHandle                	= 0
+	n_Order_View_Fields				= 1
 	n_ProcessedFiles				= 0		&& Contador usado para los archivos file.class.ext
 	n_ProcessedFilesCount			= 0		&& Contador genérico de procesados
 	o_Conversor                     = NULL
@@ -13562,7 +13566,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				*-- Header
 				toDatabase		= CREATEOBJECT('CL_DBC')
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText()
+				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
 
 				*-- Genero el DC2
@@ -15721,6 +15725,12 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 
 	PROCEDURE toText
+		LPARAMETERS toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
 		TRY
 			LOCAL I, lcText, lcDBC, laCode(1,1), loEx AS EXCEPTION ;
 				, loConnections AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG' ;
@@ -15745,15 +15755,15 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 				*-- Connections
 				loConnections	= ._Connections
-				lcText			= lcText + loConnections.toText()
+				lcText			= lcText + loConnections.toText( .F., .F., @toFoxBin2Prg )
 
 				*-- Tables
 				loTables		= ._Tables
-				lcText			= lcText + loTables.toText()
+				lcText			= lcText + loTables.toText( .F., .F., @toFoxBin2Prg )
 
 				*-- Views
 				loViews			= ._Views
-				lcText			= lcText + loViews.toText()
+				lcText			= lcText + loViews.toText( .F., .F., @toFoxBin2Prg )
 
 				SELECT CODE ;
 					FROM TABLABIN ;
@@ -15886,8 +15896,13 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taConnections				(@?    OUT) Array de conexiones
 		* tnConnection_Count		(@?    OUT) Cantidad de conexiones
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taConnections, tnConnection_Count
+		LPARAMETERS taConnections, tnConnection_Count, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL I, lcText, loEx AS EXCEPTION ;
@@ -16200,8 +16215,13 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taTables					(@?    OUT) Array de conexiones
 		* lnTable_Count				(@?    OUT) Cantidad de conexiones
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taTables, tnTable_Count
+		LPARAMETERS taTables, tnTable_Count, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		EXTERNAL ARRAY taTables
 
@@ -16388,7 +16408,11 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcTable
+		LPARAMETERS tcTable, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL lcText, loEx AS EXCEPTION ;
@@ -16413,13 +16437,13 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 			ENDTEXT
 
 			loFields	= CREATEOBJECT('CL_DBC_FIELDS_DB')
-			lcText		= lcText + loFields.toText( tcTable )
+			lcText		= lcText + loFields.toText( tcTable, @toFoxBin2Prg )
 
 			loIndexes	= CREATEOBJECT('CL_DBC_INDEXES_DB')
-			lcText		= lcText + loIndexes.toText( tcTable )
+			lcText		= lcText + loIndexes.toText( tcTable, @toFoxBin2Prg )
 
 			loRelations	= CREATEOBJECT('CL_DBC_RELATIONS')
-			lcText		= lcText + loRelations.toText( tcTable )
+			lcText		= lcText + loRelations.toText( tcTable, .F., .F., @toFoxBin2Prg )
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>		</TABLE>
@@ -16563,8 +16587,13 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcTable
+		LPARAMETERS tcTable, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL X, lcText, lnField_Count, laFields(1), loEx AS EXCEPTION ;
@@ -16861,8 +16890,13 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcTable
+		LPARAMETERS tcTable, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL X, lcText, lnIndex_Count, laIndexes(1), loEx AS EXCEPTION ;
@@ -17137,8 +17171,13 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taViews					(@?    OUT) Array de vistas
 		* tnView_Count				(@?    OUT) Cantidad de vistas
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taViews, tnView_Count
+		LPARAMETERS taViews, tnView_Count, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		EXTERNAL ARRAY taViews
 
@@ -17364,8 +17403,13 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(v! IN    ) Vista en evaluación
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcView
+		LPARAMETERS tcView, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL I, lcText, lcDBC, lnField_Count, laFields(1), loEx AS EXCEPTION ;
@@ -17589,8 +17633,13 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(v! IN    ) Nombre de la Vista
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcView
+		LPARAMETERS tcView, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		TRY
 			LOCAL X, lcText, lnField_Count, laFields(1), loEx AS EXCEPTION ;
@@ -17902,8 +17951,13 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 		* tcTable					(v! IN    ) Tabla de la que obtener las relaciones
 		* taRelations				(@?    OUT) Array de relaciones
 		* tnRelation_Count			(@?    OUT) Cantidad de relaciones
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcTable, taRelations, tnRelation_Count
+		LPARAMETERS tcTable, taRelations, tnRelation_Count, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		EXTERNAL ARRAY taRelations
 
@@ -18429,8 +18483,13 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taFields					(@?    OUT) Array de información de campos
 		* tnField_Count				(@?    OUT) Cantidad de campos
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taFields, tnField_Count
+		LPARAMETERS taFields, tnField_Count, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		EXTERNAL ARRAY taFields
 
@@ -18716,8 +18775,13 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 		* taTagInfo					(@?    OUT) Array de información de indices
 		* tnTagInfo_Count			(@?    OUT) Cantidad de índices
 		* tc_InputFile				(v! IN    ) Archivo de entrada (el DBF)
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS taTagInfo, tnTagInfo_Count, tc_InputFile
+		LPARAMETERS taTagInfo, tnTagInfo_Count, tc_InputFile, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		EXTERNAL ARRAY taTagInfo
 
