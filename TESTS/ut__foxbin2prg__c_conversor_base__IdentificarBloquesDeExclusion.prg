@@ -11,9 +11,11 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 	#DEFINE C_IF_F		'#IF'
 	#DEFINE C_ENDIF		'#ENDIF'
 	icObj = NULL
+	icFB = NULL
 	
 	*******************************************************************************************************************************************
 	FUNCTION Setup
+		THIS.icFB = NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 		THIS.icObj = NEWOBJECT("c_conversor_prg_a_bin", "FOXBIN2PRG.PRG")
 
 	ENDFUNC
@@ -22,6 +24,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 	*******************************************************************************************************************************************
 	FUNCTION TearDown
 		THIS.icObj = NULL
+		THIS.icFB = NULL
 	ENDFUNC
 
 
@@ -85,7 +88,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 		laLineasExclusion_Esperadas( 3)	= .T.
 		laLineasExclusion_Esperadas( 4)	= .T.
 		laLineasExclusion_Esperadas( 5)	= .T.
-		laLineasExclusion_Esperadas( 7)	= .T.
+		laLineasExclusion_Esperadas( 6)	= .T.
 		laLineasExclusion_Esperadas( 8)	= .T.
 		laLineasExclusion_Esperadas( 9)	= .T.
 		laLineasExclusion_Esperadas(10)	= .T.
@@ -102,6 +105,56 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 				<<C_IF_F>>
 					<<C_ENDTEXT>>
 					value ,
+				<<C_ENDIF>>
+			<<C_ENDPROC>>
+		ENDTEXT
+		
+		lnLineas	= ALINES( laLineas, lcMethod )
+
+		*-- Test
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laLineasExclusion, @lnPos_Count, @laPos )
+		
+		*-- Evaluación de resultados
+		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count, @laLineasExclusion_Esperadas, @laLineasExclusion )
+		
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_ObtenerLaUbicacionDelBloque_IF_ENDIF_externo_CuandoOtros_IF_ENDIF_internos_sonEvaluados
+		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(1,2) ;
+			, laLineasExclusion(14), laLineasExclusion_Esperadas(14)
+		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
+		loObj	= THIS.icObj
+		
+		*-- Input and expected params
+		STORE '' TO lcMethod
+		laExpected_Pos(1,1)	= 3
+		laExpected_Pos(1,2)	= 13
+		laLineasExclusion_Esperadas( 3)	= .T.
+		laLineasExclusion_Esperadas( 4)	= .T.
+		laLineasExclusion_Esperadas( 5)	= .T.
+		laLineasExclusion_Esperadas( 7)	= .T.
+		laLineasExclusion_Esperadas( 8)	= .T.
+		laLineasExclusion_Esperadas( 9)	= .T.
+		laLineasExclusion_Esperadas(10)	= .T.
+		laLineasExclusion_Esperadas(11)	= .T.
+		laLineasExclusion_Esperadas(12)	= .T.
+		laLineasExclusion_Esperadas(13)	= .T.
+
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
+			<<C_PROC>> myMethod_B
+				*-- Code Block
+				<<C_IF_F>>
+					<<C_IF_F>>
+						<<C_TEXT>>
+						value ;
+					<<C_ENDIF>>
+					*-- Code Block
+					<<C_IF_F>>
+						value ,
+						<<C_ENDTEXT>>
+					<<C_ENDIF>>
 				<<C_ENDIF>>
 			<<C_ENDPROC>>
 		ENDTEXT
@@ -193,6 +246,59 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__IdentificarBloquesDeExclusion as 
 				<<C_TEXT>>
 					<<C_ENDIF>>
 					value ,
+				<<C_ENDTEXT>>
+			<<C_ENDPROC>>
+		ENDTEXT
+		
+		lnLineas	= ALINES( laLineas, lcMethod )
+
+		*-- Test
+		loObj.identificarBloquesDeExclusion( @laLineas, lnLineas, , @laLineasExclusion, @lnPos_Count, @laPos )
+		
+		*-- Evaluación de resultados
+		THIS.Evaluate_results( @laExpected_Pos, @laPos, lnPos_Count, @laLineasExclusion_Esperadas, @laLineasExclusion )
+		
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_ObtenerLaUbicacionDelBloque_TEXT_ENDTEXT_CuandoCodigoConteniendo_TEXT_esEvaluado
+		LOCAL lcMethod, laLineas(1), lnLineas, laPos(1,2), lnPos_Count, laExpected_Pos(3,2) ;
+			, laLineasExclusion(14), laLineasExclusion_Esperadas(14)
+		LOCAL loObj AS c_conversor_prg_a_bin OF "FOXBIN2PRG.PRG"
+		loObj	= THIS.icObj
+		
+		*-- Input and expected params
+		STORE '' TO lcMethod
+		laExpected_Pos(1,1)	= 3
+		laExpected_Pos(1,2)	= 5
+		laExpected_Pos(2,1)	= 7
+		laExpected_Pos(2,2)	= 9
+		laExpected_Pos(3,1)	= 11
+		laExpected_Pos(3,2)	= 13
+		laLineasExclusion_Esperadas( 3)	= .T.
+		laLineasExclusion_Esperadas( 4)	= .T.
+		laLineasExclusion_Esperadas( 5)	= .T.
+		laLineasExclusion_Esperadas( 7)	= .T.
+		laLineasExclusion_Esperadas( 8)	= .T.
+		laLineasExclusion_Esperadas( 9)	= .T.
+		laLineasExclusion_Esperadas(11)	= .T.
+		laLineasExclusion_Esperadas(12)	= .T.
+		laLineasExclusion_Esperadas(13)	= .T.
+
+		TEXT TO lcMethod NOSHOW TEXTMERGE FLAGS 1 PRETEXT 1+2
+			<<C_PROC>> myMethod_B
+				*-- Code Block
+				<<C_TEXT>>
+					<<C_TEXT>>
+				<<C_ENDTEXT>>
+				*-- Code Block
+				<<C_TEXT>>
+					<<C_TEXT>> ;
+				<<C_ENDTEXT>>
+				*-- Code Block
+				<<C_TEXT>>
+					<<C_TEXT>> ,
 				<<C_ENDTEXT>>
 			<<C_ENDPROC>>
 		ENDTEXT

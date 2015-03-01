@@ -132,6 +132,7 @@
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix scx/vcx: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros en LPARAMETERS (Ryan Harris)
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
 * 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro, para evitar problemas ajenos a FoxBin2Prg
+* 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -192,6 +193,7 @@
 * 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
 * 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
 * 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
+* 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1925,7 +1927,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				*ENDIF
 
 				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
-				   ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+					ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
 				ENDIF
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
@@ -2501,7 +2503,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				*-- VERIFICO SI HAY ARCHIVO DE CONFIGURACIÓN SECUNDARIO
 				.EvaluarConfiguracion()
-				
+
 				IF .n_ForceWriteIfReadOnly = 1 THEN
 					lcForceAttribs	= lcForceAttribs + '-R'
 				ENDIF
@@ -4075,7 +4077,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 			IF tnIniFin = 1
 				*-- TOKENS DE INICIO
-				IF UPPER( LEFT( lcLine, LEN(ta_ID_Bloques(X,1)) ) ) == ta_ID_Bloques(X,1)
+				IF UPPER( LEFT( lcLine, ta_ID_Bloques(X,3) ) ) == ta_ID_Bloques(X,1)
 					*-- Evaluar casos especiales
 					lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
 
@@ -4096,7 +4098,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				ENDIF
 			ELSE
 				*-- TOKENS DE FIN
-				IF LEFT( UPPER( lcLine ), tnLen_IDFinBQ ) == ta_ID_Bloques(X,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
+				IF LEFT( UPPER( lcLine ), ta_ID_Bloques(X,4) ) == ta_ID_Bloques(X,2)	&& Fin de bloque encontrado (#ENDI, ENDTEXT, etc)
 					*-- Evaluar casos especiales
 					lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
 
@@ -4284,7 +4286,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tnTimeStamp				(v! IN    ) Timestamp en formato numérico
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tnTimeStamp
+		LPARAMETERS tnTimestamp
 		*-- CONVIERTE UN DATO TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc. EN TIPO DATETIME
 		TRY
 			LOCAL lcTimeStamp,lnYear,lnMonth,lnDay,lnHour,lnMinutes,lnSeconds,lcTime,lnHour,ltTimeStamp,lnResto ;
@@ -4292,7 +4294,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 			lcTimeStamp_Ret	= ''
 
-			IF EMPTY(tnTimeStamp)
+			IF EMPTY(tnTimestamp)
 				IF THIS.lFileMode
 					IF ADIR(laDirInfo,THIS.c_InputFile)=0
 						EXIT
@@ -4310,15 +4312,15 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 					EXIT
 				ENDIF
 
-				tnTimeStamp = THIS.n_ClassTimeStamp
+				tnTimestamp = THIS.n_ClassTimeStamp
 
-				IF EMPTY(tnTimeStamp)
+				IF EMPTY(tnTimestamp)
 					EXIT
 				ENDIF
 			ENDIF
 
 			*-- YYYY YYYM MMMD DDDD HHHH HMMM MMMS SSSS
-			lnResto		= tnTimeStamp
+			lnResto		= tnTimestamp
 			lnYear		= INT( lnResto / 2**25 + 1980)
 			lnResto		= lnResto % 2**25
 			lnMonth		= INT( lnResto / 2**21 )
@@ -4524,15 +4526,19 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			DIMENSION taLineasExclusion(tnCodeLines), taBloquesExclusion(1,2)
-			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X, lnLen_IDFinBQ
+			STORE 0 TO tnBloquesExclusion, lnPrimerID, I, X
 
 			IF tnCodeLines > 1
 				IF EMPTY(ta_ID_Bloques)
-					DIMENSION ta_ID_Bloques(2,2)
+					DIMENSION ta_ID_Bloques(2,4)
 					ta_ID_Bloques(1,1)	= '#IF'
 					ta_ID_Bloques(1,2)	= '#ENDI'
+					ta_ID_Bloques(1,3)	= LEN( ta_ID_Bloques(1,1) )
+					ta_ID_Bloques(1,4)	= LEN( ta_ID_Bloques(1,2) )
 					ta_ID_Bloques(2,1)	= 'TEXT'
 					ta_ID_Bloques(2,2)	= 'ENDT'
+					ta_ID_Bloques(2,3)	= LEN( ta_ID_Bloques(2,1) )
+					ta_ID_Bloques(2,4)	= LEN( ta_ID_Bloques(2,2) )
 					lnID_Bloques_Count	= ALEN( ta_ID_Bloques, 1 )
 				ENDIF
 
@@ -4563,7 +4569,6 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 						IF lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
 							tnBloquesExclusion		= tnBloquesExclusion + 1
-							lnLen_IDFinBQ			= LEN( ta_ID_Bloques(lnPrimerID,2) )
 							DIMENSION taBloquesExclusion(tnBloquesExclusion,2)
 							taBloquesExclusion(tnBloquesExclusion,1)	= I
 							taLineasExclusion(I)	= .T.
@@ -4579,12 +4584,12 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 								ENDIF
 
 								DO CASE
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 1 ) ;
+								CASE lnPrimerID = 1 AND .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, 0, X, 1 ) ;
 										AND NOT .currentLineIsPreviousLineContinuation( @taCodeLines, I )
-									*-- Busca el primer marcador (#IF o TEXT)
+									*-- Busca el primer marcador (#IF) NOTA: No busco [TEXT] porque no se pueden anidar.
 									lnAnidamientos	= lnAnidamientos + 1
 
-								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, X, 2 )
+								CASE .elTextoEvaluadoEsElTokenIndicado( @lcLine, @ta_ID_Bloques, 0, X, 2 )
 									*-- Busca el segundo marcador (#ENDIF o ENDTEXT)
 									lnAnidamientos	= lnAnidamientos - 1
 
@@ -4616,7 +4621,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 		FINALLY
 			RELEASE taCodeLines, tnCodeLines, ta_ID_Bloques, taLineasExclusion, tnBloquesExclusion, taBloquesExclusion, loLang ;
-				, lnBloques, I, X, lnPrimerID, lnLen_IDFinBQ, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
+				, lnBloques, I, X, lnPrimerID, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
 		ENDTRY
 
 		RETURN
@@ -4732,11 +4737,11 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 	FUNCTION RowTimeStamp(ltDateTime)
 		* Generate a FoxPro 3.0-style row timestamp
 		*-- CONVIERTE UN DATO TIPO DATETIME EN TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc.
-		LOCAL lcTimeValue, tnTimeStamp
+		LOCAL lcTimeValue, tnTimestamp
 
 		TRY
 			IF EMPTY(ltDateTime)
-				tnTimeStamp = 0
+				tnTimestamp = 0
 				EXIT
 			ENDIF
 
@@ -4744,7 +4749,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				m.ltDateTime		= DATETIME()
 			ENDIF
 
-			tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
+			tnTimestamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
 				+ MONTH(m.ltDateTime) * 2^21 ;
 				+ DAY(m.ltDateTime) * 2^16 ;
 				+ HOUR(m.ltDateTime) * 2^11 ;
@@ -4752,7 +4757,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				+ SEC(m.ltDateTime)
 		ENDTRY
 
-		RETURN INT(tnTimeStamp)
+		RETURN INT(tnTimestamp)
 	ENDFUNC
 
 
