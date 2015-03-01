@@ -2412,6 +2412,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 			DO CASE
 			CASE ATC('-SHOWMSG', ('-' + tcType)) >= 1
+				THIS.writeErrorLog_Flush()
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
@@ -3174,7 +3175,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		lcError		= 'Error ' + TRANSFORM(toEx.ERRORNO) + ', ' + toEx.MESSAGE + CR_LF ;
 			+ toEx.PROCEDURE + ', ' + TRANSFORM(toEx.LINENO) + CR_LF
 
-		IF NOT EMPTY(toEx.LINECONTENTS)
+		IF NOT EMPTY(toEx.LINECONTENTS) AND toEx.ErrorNo <> 1098
 			lcError	= lcError + toEx.LINECONTENTS + CR_LF
 		ENDIF
 
@@ -3739,6 +3740,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		+ [<memberdata name="normalizarasignacion" display="normalizarAsignacion"/>] ;
 		+ [<memberdata name="normalizarvalorpropiedad" display="normalizarValorPropiedad"/>] ;
 		+ [<memberdata name="normalizarvalorxml" display="normalizarValorXML"/>] ;
+		+ [<memberdata name="set_uservalue" display="set_UserValue"/>] ;
 		+ [<memberdata name="sortpropsandvalues" display="sortPropsAndValues"/>] ;
 		+ [<memberdata name="sortspecialprops" display="SortSpecialProps"/>] ;
 		+ [<memberdata name="sortpropsandvalues_setandgetscxpropnames" type="method" display="sortPropsAndValues_SetAndGetSCXPropNames"/>] ;
@@ -3761,6 +3763,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
+		+ [<memberdata name="n_methods_lineno" display="n_Methods_LineNo"/>] ;
 		+ [<memberdata name="ofso" display="oFSO"/>] ;
 		+ [</VFPData>]
 
@@ -3795,6 +3798,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 	c_OriginalFileName		= ''
 	c_ClaseActual			= ''
 	oFSO					= NULL
+	n_Methods_LineNo		= 0			&& Número de línea del error dentro de "Methods"
 
 
 
@@ -4605,6 +4609,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 								*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
 								+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
 								+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
+								.n_Methods_LineNo = taBloquesExclusion(tnBloquesExclusion,1)
 								ERROR (TEXTMERGE(loLang.C_END_MARKER_NOT_FOUND_LOC))
 							ENDIF
 						ENDIF
@@ -4760,6 +4765,10 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		RETURN INT(tnTimestamp)
 	ENDFUNC
 
+
+	PROCEDURE set_UserValue
+		LPARAMETERS toEx as Exception
+	ENDPROC
 
 
 	PROCEDURE sortPropsAndValues_SetAndGetSCXPropNames
@@ -7496,6 +7505,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
 		+ [</VFPData>]
+	c_Type					= 'VC2'
 
 
 	PROCEDURE Convertir
@@ -7851,6 +7861,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
 		+ [</VFPData>]
+	c_Type					= 'SC2'
 
 
 	PROCEDURE Convertir
@@ -8211,6 +8222,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		+ [<memberdata name="analizarbloque_textfiles" display="analizarBloque_TextFiles"/>] ;
 		+ [<memberdata name="analizarbloque_projectproperties" display="analizarBloque_ProjectProperties"/>] ;
 		+ [</VFPData>]
+	c_Type					= 'PJ2'
 
 
 
@@ -9011,6 +9023,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 		+ [<memberdata name="analizarbloque_platform" display="analizarBloque_platform"/>] ;
 		+ [<memberdata name="analizarbloque_reportes" display="analizarBloque_Reportes"/>] ;
 		+ [</VFPData>]
+	c_Type					= 'FR2'
 
 
 	PROCEDURE Convertir
@@ -9452,6 +9465,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		+ [<memberdata name="analizarbloque_fields" display="analizarBloque_FIELDS"/>] ;
 		+ [<memberdata name="analizarbloque_indexes" display="analizarBloque_INDEXES"/>] ;
 		+ [</VFPData>]
+	c_Type					= 'DB2'
 
 
 	PROCEDURE Convertir
@@ -9750,6 +9764,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		+ [<memberdata name="analizarbloque_connections" display="analizarBloque_CONNECTIONS"/>] ;
 		+ [<memberdata name="analizarbloque_database" display="analizarBloque_DATABASE"/>] ;
 		+ [</VFPData>]
+	c_Type					= 'DC2'
 
 
 	PROCEDURE Convertir
@@ -9930,9 +9945,9 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		+ [<memberdata name="n_menutype" display="n_MenuType"/>] ;
 		+ [</VFPData>]
 
-
-	n_MenuType		= 0
-	c_MenuLocation	= ''
+	c_Type					= 'MN2'
+	n_MenuType				= 0
+	c_MenuLocation			= ''
 
 
 	PROCEDURE Convertir
@@ -10154,7 +10169,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 		+ [</VFPData>]
 
 
-
 	PROCEDURE Convertir
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -10236,7 +10250,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				lnMethodCount	= tnMethodCount
 				.Method2Array( toRegObj.METHODS, @taMethods, @taCode, '', @tnMethodCount ;
-					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count, @toFoxBin2Prg )
+					, @taPropsAndComments, tnPropsAndComments_Count, @taProtected, tnProtected_Count, @toFoxBin2Prg, @toRegObj )
 
 				*-- Ubico los métodos protegidos y les cambio la definición.
 				*-- Los métodos se deben generar con la ruta completa, porque si no es imposible saber a que objeto corresponden,
@@ -10762,6 +10776,56 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 	ENDPROC
 
 
+	PROCEDURE set_UserValue
+		LPARAMETERS toEx as Exception
+
+		LOCAL lcMethods, I, lcLine, laCodeLines(1), lcMethod, lcLocation
+		STORE '' TO lcMethods, lcLine, laCodeLines, lcMethod, lcLocation
+
+		toEx.UserValue = toEx.UserValue + CR_LF
+
+		IF INLIST(THIS.c_Type, 'SCX', 'VCX') THEN
+			lcMethods		= Methods
+			toEx.UserValue	= toEx.UserValue + 'Error location ' + '..............................' + CR_LF
+
+			IF NOT EMPTY(Parent)
+				lcLocation	= lcLocation + Parent + '.'
+			ENDIF
+			
+			lcLocation	= lcLocation + ObjName
+			
+			*-- Busco el Procedure si hay un n_Methods_LineNo
+			ALINES(laCodeLines, lcMethods)
+
+			FOR I = THIS.n_Methods_LineNo TO 1 STEP -1
+				lcLine 	= LTRIM( laCodeLines(I), 0, ' ', CHR(9) )
+				
+				DO CASE
+				CASE LEFT(lcLine, 10) == 'PROCEDURE '
+					lcMethod	= ALLTRIM( SUBSTR( lcLine, 11) )
+					EXIT
+					
+				CASE LEFT(lcLine, 9) == 'FUNCTION '
+					lcMethod	= ALLTRIM( SUBSTR( lcLine, 10) )
+					EXIT
+					
+				ENDCASE
+
+			ENDFOR
+
+			IF EMPTY(lcMethod) THEN
+				lcLocation	= 'Class: ' + lcLocation
+			ELSE
+				lcLocation	= 'Method: ' + lcLocation + '.' + lcMethod
+			ENDIF
+
+			toEx.UserValue	= toEx.UserValue + lcLocation + CR_LF
+		ENDIF
+
+		toEx.UserValue = toEx.UserValue + 'Recno: ' + TRANSFORM(RECNO()) + CR_LF
+		toEx.UserValue = toEx.UserValue + '.............................................' + CR_LF
+	ENDPROC
+
 
 	PROCEDURE SortMethod
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
@@ -10834,7 +10898,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 
 	PROCEDURE Method2Array
 		LPARAMETERS tcMethod, taMethods, taCode, tcSorted, tnMethodCount, taPropsAndComments, tnPropsAndComments_Count ;
-			, taProtected, tnProtected_Count, toFoxBin2Prg
+			, taProtected, tnProtected_Count, toFoxBin2Prg, toRegObj
 		*-- 29/10/2013	Fernando D. Bozzo
 		*-- Se tiene en cuenta la posibilidad de que haya un PROC/ENDPROC dentro de un TEXT/ENDTEXT
 		*-- cuando es usado en un generador de código o similar.
@@ -11851,6 +11915,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'VCX'
 
 
 	PROCEDURE Convertir
@@ -12039,7 +12104,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					lnMethodCount	= 0
 
 					.Method2Array( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
-						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
+						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg, @loRegClass )
 
 					.get_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
@@ -12127,6 +12192,8 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -12154,6 +12221,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'SCX'
 
 
 	PROCEDURE Convertir
@@ -12359,7 +12427,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					lnMethodCount	= 0
 
 					.Method2Array( loRegClass.METHODS, @laMethods, @laCode, '', @lnMethodCount ;
-						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg )
+						, @laPropsAndComments, lnPropsAndComments_Count, @laProtected, lnProtected_Count, @toFoxBin2Prg, @loRegClass )
 
 					.get_CLASS_METHODS( @lnMethodCount, @laMethods, @laCode, @laProtected, @laPropsAndComments )
 
@@ -12449,6 +12517,8 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -12476,6 +12546,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'PJX'
 
 
 	PROCEDURE Convertir
@@ -12783,12 +12854,14 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			lnCodError	= toEx.ERRORNO
 
 			DO CASE
 			CASE lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
 				*toEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
-				toEx.USERVALUE	= loLang.C_DUPLICATED_FILE_LOC + ': ' + loReg.NAME
+				toEx.USERVALUE	= toEx.USERVALUE + loLang.C_DUPLICATED_FILE_LOC + ': ' + loReg.NAME
 			ENDCASE
 
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -12815,6 +12888,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'PJM'
 
 
 	PROCEDURE Convertir
@@ -13161,12 +13235,14 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			lnCodError	= toEx.ERRORNO
 
 			DO CASE
 			CASE lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
 				*toEx.USERVALUE	= 'Archivo duplicado: ' + loReg.NAME
-				toEx.USERVALUE	= loLang.C_DUPLICATED_FILE_LOC + ': ' + loReg.NAME
+				toEx.USERVALUE	= toEx.USERVALUE + loLang.C_DUPLICATED_FILE_LOC + ': ' + loReg.NAME
 			ENDCASE
 
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
@@ -13197,6 +13273,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 	*_MEMBERDATA	= [<VFPData>] ;
 	+ [<memberdata name="convertir" display="Convertir"/>] ;
 	+ [</VFPData>]
+	c_Type					= 'FRX'
 
 
 
@@ -13338,6 +13415,8 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -13365,6 +13444,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'DBF'
 
 
 	PROCEDURE Convertir
@@ -13480,6 +13560,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			DO CASE
 			CASE toEx.ERRORNO = 13 && Alias not found
 				*toEx.USERVALUE = 'WARNING!!' + CR_LF ;
@@ -13488,7 +13570,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				+ '¡¡ATENCIÓN!!' + CR_LF ;
 				+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
 				+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
-				toEx.USERVALUE = TEXTMERGE(loLang.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC)
+				toEx.USERVALUE = toEx.USERVALUE + TEXTMERGE(loLang.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC)
 
 				*!*	CASE toEx.ErrorNo = 1976 && Cannot resolve backlink
 				*!*		toEx.UserValue = 'WARNING!!' + CR_LF ;
@@ -13534,6 +13616,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'DBC'
 
 
 	PROCEDURE Convertir
@@ -13581,6 +13664,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -13604,6 +13689,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+	c_Type					= 'MNX'
 
 
 	PROCEDURE Convertir
@@ -13658,6 +13744,8 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 
 		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
