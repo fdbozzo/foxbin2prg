@@ -133,6 +133,7 @@
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
 * 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro, para evitar problemas ajenos a FoxBin2Prg
 * 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Lutz Scheffler)
+* 25/02/2015	FDBOZZO		v1.19.42	Mejora: Hacer algunos mensajes de error más descriptivos (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -194,6 +195,7 @@
 * 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
 * 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
 * 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
+* 25/02/2015	Lutz Scheffler		Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
