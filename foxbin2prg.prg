@@ -10781,8 +10781,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 	PROCEDURE set_UserValue
 		LPARAMETERS toEx as Exception
 
-		LOCAL lcMethods, I, lcLine, laCodeLines(1), lcMethod, lcLocation
+		LOCAL lcMethods, I, lcLine, laCodeLines(1), lcMethod, lcLocation, lnErrorLine
 		STORE '' TO lcMethods, lcLine, laCodeLines, lcMethod, lcLocation
+		STORE 0 TO lnErrorLine, I
 
 		toEx.UserValue = toEx.UserValue + CR_LF
 
@@ -10805,10 +10806,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 				DO CASE
 				CASE LEFT(lcLine, 10) == 'PROCEDURE '
 					lcMethod	= ALLTRIM( SUBSTR( lcLine, 11) )
+					lnErrorLine	= THIS.n_Methods_LineNo - I
 					EXIT
 					
 				CASE LEFT(lcLine, 9) == 'FUNCTION '
 					lcMethod	= ALLTRIM( SUBSTR( lcLine, 10) )
+					lnErrorLine	= THIS.n_Methods_LineNo - I
 					EXIT
 					
 				ENDCASE
@@ -10821,7 +10824,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 				lcLocation	= 'Method: ' + lcLocation + '.' + lcMethod
 			ENDIF
 
+			IF lnErrorLine > 0 THEN
+				lcLocation	= lcLocation + ', Line ' + TRANSFORM(lnErrorLine)
+			ENDIF
+
 			toEx.UserValue	= toEx.UserValue + lcLocation + CR_LF
+			toEx.UserValue	= toEx.UserValue + '> ' + laCodeLines(THIS.n_Methods_LineNo) + CR_LF
 		ENDIF
 
 		toEx.UserValue = toEx.UserValue + 'Recno: ' + TRANSFORM(RECNO()) + CR_LF
