@@ -23,6 +23,7 @@ Change History -------------------------------------------------------------
 - Bug Fix scx/vcx: Process only one TEXT/ENDTEXT nesting level because TEXT/ENDTEXT can't be nested (Lutz Scheffler)
 - Feature: Make some error descriptions more informative and precise (Lutz Scheffler)
 - Feature: Allow specifying inputFile with relative path (Lutz Scheffler)
+- Bug Fix scx: Metadata of Dataenvironment not properly generated when Dataenvironment is renamed
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
