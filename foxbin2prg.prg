@@ -135,6 +135,7 @@
 * 22/01/2015	FDBOZZO		v1.19.42	Bug Fix: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Tuvia Vinitsky)
 * 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Lutz Scheffler)
 * 25/02/2015	FDBOZZO		v1.19.42	Mejora: Hacer algunos mensajes de error más descriptivos (Lutz Scheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir definir el archivo de entrada con un path relativo (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -198,6 +199,7 @@
 * 22/01/2015	Tuvia Vinitsky		Bug Fix v1.19.41: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
+* 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir definir el archivo de entrada con un path relativo (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1932,6 +1934,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
 					ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+				ENDIF
+
+				*-- Ajusto la ruta si no es absoluta
+				IF lcInputFile_Type == C_FILETYPE_FILE ;
+						AND LEFT(LTRIM(tc_InputFile),2) <> '\\' ;
+						AND SUBSTR(LTRIM(tc_InputFile),2,1) <> ':' THEN
+					tc_InputFile	= FULLPATH(tc_InputFile, .c_CurDir)
 				ENDIF
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
@@ -10790,32 +10799,32 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 		toEx.UserValue = toEx.UserValue + CR_LF
 
 		IF INLIST(THIS.c_Type, 'SCX', 'VCX') THEN
-			lcMethods		= Methods
+			lcMethods		= METHODS
 			toEx.UserValue	= toEx.UserValue + 'Error location ' + '..............................' + CR_LF
 
 			IF NOT EMPTY(Parent)
 				lcLocation	= lcLocation + Parent + '.'
 			ENDIF
-			
-			lcLocation	= lcLocation + ObjName
-			
+
+			lcLocation	= lcLocation + OBJNAME
+
 			*-- Busco el Procedure si hay un n_Methods_LineNo
 			ALINES(laCodeLines, lcMethods)
 
 			FOR I = THIS.n_Methods_LineNo TO 1 STEP -1
 				lcLine 	= LTRIM( laCodeLines(I), 0, ' ', CHR(9) )
-				
+
 				DO CASE
 				CASE LEFT(lcLine, 10) == 'PROCEDURE '
 					lcMethod	= ALLTRIM( SUBSTR( lcLine, 11) )
 					lnErrorLine	= THIS.n_Methods_LineNo - I
 					EXIT
-					
+
 				CASE LEFT(lcLine, 9) == 'FUNCTION '
 					lcMethod	= ALLTRIM( SUBSTR( lcLine, 10) )
 					lnErrorLine	= THIS.n_Methods_LineNo - I
 					EXIT
-					
+
 				ENDCASE
 
 			ENDFOR
