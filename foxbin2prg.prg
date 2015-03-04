@@ -490,6 +490,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="a_processedfiles" display="a_ProcessedFiles"/>] ;
+		+ [<memberdata name="a_processedfiles_0" display="a_ProcessedFiles_0"/>] ;
 		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="c_fb2prg_exe_version" display="c_FB2PRG_EXE_Version"/>] ;
@@ -518,6 +519,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
+		+ [<memberdata name="evaluate_full_pjx" display="Evaluate_Full_PJX"/>] ;
+		+ [<memberdata name="evaluate_full_pj2" display="Evaluate_Full_PJ2"/>] ;
 		+ [<memberdata name="ejecutar_writeerrorlog" display="ejecutar_WriteErrorLog"/>] ;
 		+ [<memberdata name="evaluarconfiguracion" display="EvaluarConfiguracion"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
@@ -560,6 +563,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
 		+ [<memberdata name="n_filehandle" display="n_FileHandle"/>] ;
 		+ [<memberdata name="n_forcewriteifreadonly" display="n_ForceWriteIfReadOnly"/>] ;
+		+ [<memberdata name="n_processedfiles_0" display="n_ProcessedFiles_0"/>] ;
 		+ [<memberdata name="n_processedfiles" display="n_ProcessedFiles"/>] ;
 		+ [<memberdata name="n_processedfilescount" display="n_ProcessedFilesCount"/>] ;
 		+ [<memberdata name="normalizarcapitalizacionarchivos" display="normalizarCapitalizacionArchivos"/>] ;
@@ -595,7 +599,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		+ [</VFPData>]
 
 
-	DIMENSION a_ProcessedFiles(1)
+	DIMENSION a_ProcessedFiles(1), a_ProcessedFiles_0(1)
 	PROTECTED l_ConfigEvaluated, n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
 	n_FB2PRG_Version				= 1.19
@@ -649,6 +653,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	n_FileHandle                	= 0
 	n_ProcessedFiles				= 0		&& Contador usado para los archivos file.class.ext
 	n_ProcessedFilesCount			= 0		&& Contador genérico de procesados
+	n_ProcessedFiles_0				= 0		&& Contador usado para los archivos file.ext
 	o_Conversor                     = NULL
 	o_Frm_Avance					= NULL
 	o_WSH							= NULL
@@ -1918,8 +1923,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				loFSO				= .o_FSO
 				loWSH				= .o_WSH
-				*DIMENSION .a_ProcessedFiles(1)
-				*.n_ProcessedFiles	= 0
+				DIMENSION .a_ProcessedFiles_0(1)
+				.n_ProcessedFiles_0	= 0
 				lnPCount			= 0
 				lcInputFile_Type	= ''
 
@@ -2042,7 +2047,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					*-- Evaluación de FileSpec de entrada
 					DO CASE
-					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile )
+					CASE lcInputFile_Type == C_FILETYPE_FILE AND ( '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile ) )
 						IF .l_ShowErrors
 							*MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).', 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
@@ -2054,32 +2059,50 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTSTEM( tc_InputFile )
 						*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
-						IF .n_ShowProgressbar <> 0 THEN
-							.cargar_frm_avance()
-						ENDIF
-
 						lcFileSpec	= FULLPATH( tc_InputFile )
 
-						DO CASE
-						CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-							CD (tcRecompile)
-						CASE tcRecompile == '1'
-							CD (JUSTPATH(lcFileSpec))
-						ENDCASE
+						IF EVL(tcType,'0') <> '*' THEN
+							IF .n_ShowProgressbar <> 0 THEN
+								.cargar_frm_avance()
+							ENDIF
 
-						.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+							DO CASE
+							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+								CD (tcRecompile)
+							CASE tcRecompile == '1'
+								CD (JUSTPATH(lcFileSpec))
+							ENDCASE
 
-						IF .l_Debug
-							ERASE ( .c_LogFile )
+							.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+							IF .l_Debug
+								ERASE ( .c_LogFile )
+							ENDIF
 						ENDIF
 
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
 
 						FOR I = 1 TO lnFileCount
 							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
-							.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-							lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
-							.writeLog_Flush()
+
+							DO CASE
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
+								*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJX
+								*-- Filespec: "*.PJX", "*"
+								.Evaluate_Full_PJX(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName)
+
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
+								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJ2
+								*-- Filespec: "*.PJ2", "*"
+								.Evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName)
+
+							OTHERWISE
+								*-- DEMÁS ARCHIVOS
+								*-- Filespec: "*.EXT"
+								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+								lnCodError = .Convertir( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
+								.writeLog_Flush()
+							ENDCASE
 						ENDFOR
 
 						EXIT
@@ -2243,114 +2266,13 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 						DO CASE
 						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
-							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO
-							IF .n_ShowProgressbar <> 0 THEN
-								.cargar_frm_avance()
-								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
-							ENDIF
-
-							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
-							lcFileSpec	= FULLPATH( tc_InputFile )
-
-							DO CASE
-							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-								CD (tcRecompile)
-							CASE tcRecompile == '1'
-								CD (JUSTPATH(lcFileSpec))
-							ENDCASE
-
-							.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-							IF .l_Debug
-								ERASE ( .c_LogFile )
-							ENDIF
-
-							SELECT 0
-							USE (tc_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
-							lnFileCount	= 0
-
-							SCAN FOR NOT DELETED()
-								lnFileCount	= lnFileCount + 1
-								DIMENSION laFiles(lnFileCount,1)
-								laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
-							ENDSCAN
-
-							USE IN (SELECT("TABLABIN"))
-
-							*-- Convierto primero el proyecto
-							lcFile	= tc_InputFile
-							IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-								lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-								.writeLog_Flush()
-							ENDIF
-
-							*-- Luego convierto los archivos incluidos
-							FOR I = 1 TO lnFileCount
-								lcFile	= laFiles(I,1)
-								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-								IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-									lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-									.writeLog_Flush()
-								ENDIF
-							ENDFOR
-
+							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO PJX
+							.Evaluate_Full_PJX(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName)
 							EXIT
 
 						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
-							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO
-							IF .n_ShowProgressbar <> 0 THEN
-								.cargar_frm_avance()
-								.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
-							ENDIF
-
-							.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
-							lcFileSpec	= FULLPATH( tc_InputFile )
-
-							DO CASE
-							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
-								CD (tcRecompile)
-							CASE tcRecompile == '1'
-								CD (JUSTPATH(lcFileSpec))
-							ENDCASE
-
-							.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-							IF .l_Debug
-								ERASE ( .c_LogFile )
-							ENDIF
-
-							lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
-
-							FOR I = lnFileCount TO 1 STEP -1
-								IF '.ADD(' $ laFiles(I)
-									laFiles(I)	= ADDBS( JUSTPATH( lcFileSpec ) ) + STREXTRACT( laFiles(I), ".ADD('", "')" )
-									laFiles(I)	= FORCEEXT( laFiles(I), .Get_Ext2FromExt( UPPER(JUSTEXT(laFiles(I))) ) )
-								ELSE
-									lnFileCount	= lnFileCount - 1
-									ADEL( laFiles, I )
-									DIMENSION laFiles(lnFileCount)
-								ENDIF
-							ENDFOR
-
-							*-- Convierto primero el proyecto
-							lcFile	= tc_InputFile
-							IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-								lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-								.writeLog_Flush()
-							ENDIF
-
-							*-- Luego convierto los archivos incluidos
-							FOR I = 1 TO lnFileCount
-								lcFile	= laFiles(I)
-								.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
-
-								IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-									lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-									.writeLog_Flush()
-								ENDIF
-							ENDFOR
-
+							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO PJ2
+							.Evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName)
 							EXIT
 
 						CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
@@ -2471,6 +2393,189 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 	ENDPROC
 
 
+	PROCEDURE Evaluate_Full_PJX
+		*--------------------------------------------------------------------------------------------------------------
+		* SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO PJX
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada
+		* tcRecompile				(v? IN    ) Indica recompilar ('1') el binario una vez regenerado. [Cambio de funcionamiento por defecto]
+		*										Este cambio es para ganar tiempo, velocidad y seguridad. Además la recompilación que hace FoxBin2Prg
+		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
+		*										generar errores de compilación, típicamente los #include.
+		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
+		* toModulo					(@?    OUT) Referencia de objeto del módulo generado (para Unit Testing)
+		* toEx						(@?    OUT) Objeto con información del error
+		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
+		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName
+
+		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
+			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
+
+		TRY
+			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				loLang		= _SCREEN.o_FoxBin2Prg_Lang
+				lcFileSpec	= FULLPATH( tc_InputFile )
+
+				IF .n_ShowProgressbar <> 0 THEN
+					.cargar_frm_avance()
+					.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
+				ENDIF
+
+				.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
+
+				DO CASE
+				CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+					CD (tcRecompile)
+				CASE tcRecompile == '1'
+					CD (JUSTPATH(lcFileSpec))
+				ENDCASE
+
+				.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+				IF .l_Debug
+					ERASE ( .c_LogFile )
+				ENDIF
+
+				SELECT 0
+				USE (tc_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+				lnFileCount	= 0
+
+				SCAN FOR NOT DELETED()
+					lnFileCount	= lnFileCount + 1
+					DIMENSION laFiles(lnFileCount,1)
+					laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
+				ENDSCAN
+
+				USE IN (SELECT("TABLABIN"))
+
+				*-- Convierto primero el proyecto
+				lcFile	= tc_InputFile
+				IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+					lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+					.writeLog_Flush()
+				ENDIF
+
+				*-- Luego convierto los archivos incluidos
+				FOR I = 1 TO lnFileCount
+					lcFile		= laFiles(I,1)
+					.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+
+					IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+						IF .n_ProcessedFiles_0 > 0 THEN
+							*-- Buscar si fue procesado antes
+							IF ASCAN( .a_ProcessedFiles_0, lcFile, 1, 0, 0, 1+2+4 ) > 0 THEN
+								*.writeLog( 'OPTIMIZACIÓN: saltando archivo ya procesado [' + (lcFile) + ']' )
+								.writeLog( TEXTMERGE( loLang.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC ) )
+								LOOP
+							ENDIF
+						ENDIF
+
+						lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+						.writeLog_Flush()
+					ENDIF
+				ENDFOR
+
+				.writeLog_Flush()
+			ENDWITH
+		ENDTRY
+	ENDPROC
+
+
+	PROCEDURE Evaluate_Full_PJ2
+		*--------------------------------------------------------------------------------------------------------------
+		* SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO PJ2
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada
+		* tcRecompile				(v? IN    ) Indica recompilar ('1') el binario una vez regenerado. [Cambio de funcionamiento por defecto]
+		*										Este cambio es para ganar tiempo, velocidad y seguridad. Además la recompilación que hace FoxBin2Prg
+		*										se hace desde el directorio del archivo, con lo que las referencias relativas pueden
+		*										generar errores de compilación, típicamente los #include.
+		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
+		* toModulo					(@?    OUT) Referencia de objeto del módulo generado (para Unit Testing)
+		* toEx						(@?    OUT) Objeto con información del error
+		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
+		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName
+
+		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
+			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
+
+		TRY
+			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				loLang		= _SCREEN.o_FoxBin2Prg_Lang
+				lcFileSpec	= FULLPATH( tc_InputFile )
+
+				IF .n_ShowProgressbar <> 0 THEN
+					.cargar_frm_avance()
+					.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
+				ENDIF
+
+				.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
+
+				DO CASE
+				CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
+					CD (tcRecompile)
+				CASE tcRecompile == '1'
+					CD (JUSTPATH(lcFileSpec))
+				ENDCASE
+
+				.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+				IF .l_Debug
+					ERASE ( .c_LogFile )
+				ENDIF
+
+				lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
+
+				FOR I = lnFileCount TO 1 STEP -1
+					IF '.ADD(' $ laFiles(I)
+						laFiles(I)	= ADDBS( JUSTPATH( lcFileSpec ) ) + STREXTRACT( laFiles(I), ".ADD('", "')" )
+						laFiles(I)	= FORCEEXT( laFiles(I), .Get_Ext2FromExt( UPPER(JUSTEXT(laFiles(I))) ) )
+					ELSE
+						lnFileCount	= lnFileCount - 1
+						ADEL( laFiles, I )
+						DIMENSION laFiles(lnFileCount)
+					ENDIF
+				ENDFOR
+
+				*-- Convierto primero el proyecto
+				lcFile	= tc_InputFile
+				IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+					lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+					.writeLog_Flush()
+				ENDIF
+
+				*-- Luego convierto los archivos incluidos
+				FOR I = 1 TO lnFileCount
+					lcFile	= laFiles(I)
+					.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+
+					IF .TieneSoporte_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+						IF .n_ProcessedFiles_0 > 0 THEN
+							*-- Buscar si fue procesado antes
+							IF ASCAN( .a_ProcessedFiles_0, lcFile, 1, 0, 0, 1+2+4 ) > 0 THEN
+								*.writeLog( 'OPTIMIZACIÓN: saltando archivo ya procesado [' + (lcFile) + ']' )
+								.writeLog( TEXTMERGE( loLang.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC ) )
+								LOOP
+							ENDIF
+						ENDIF
+
+						lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+						.writeLog_Flush()
+					ENDIF
+				ENDFOR
+
+				.writeLog_Flush()
+			ENDWITH
+		ENDTRY
+	ENDPROC
+
+
 	HIDDEN PROCEDURE ejecutar_WriteErrorLog
 		LPARAMETERS toEx, tcErrorInfo
 
@@ -2567,7 +2672,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					ENDIF
 				ENDIF
 
-
 				IF NOT EMPTY(tcOriginalFileName)
 					tcOriginalFileName	= loFSO.GetAbsolutePathName( tcOriginalFileName )
 				ENDIF
@@ -2577,6 +2681,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				IF UPPER( JUSTEXT(.c_OriginalFileName) ) = 'PJM'
 					.c_OriginalFileName	= FORCEEXT(.c_OriginalFileName,'pjx')
 				ENDIF
+
+				*-- Conteo de archivos normales procesados
+				.n_ProcessedFiles_0	= .n_ProcessedFiles_0 + 1
+				DIMENSION .a_ProcessedFiles_0(.n_ProcessedFiles_0)
+				.a_ProcessedFiles_0(.n_ProcessedFiles_0)	= .c_InputFile
 
 				.writeLog( C_TAB + 'c_OriginalFileName:           ' + .c_OriginalFileName )
 				.writeLog( )
@@ -22331,6 +22440,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= ""
 	C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= ""
 	C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= ""
+	C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= ""
 	C_OPTION_LOC													= ""
 	C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= ""
 	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= ""
@@ -22479,6 +22589,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Programme des noms de capitalisation [<<lcEXE_CAPS>>] introuvables"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Object [<<toObj.CLASS>>] ne contient pas l'objet oReg (niveau <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Opération non reconnu. Seulement SETNAME et GETNAME permis."
+					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimisation: sauter fichier déjà traité [<<(lcFile)>>]"
+					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La classe externe ne correspond pas à la classe interne"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<<lcOutputFile>>] ne était pas écrasé parce que ce est la même que celle générée."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimisation: fichier de sortie [<<THIS.c_OutputFile>>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
@@ -22562,9 +22674,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
+					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimización: saltando el archivo ya procesado [<<(lcFile)>>]"
+					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con la clase interna"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: El archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al generado."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimización: El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: el archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al generado."
+					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
 					.C_PRESS_ESC_TO_CANCEL											= "Pulse Esc para Cancelar"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Procesando archivo"
@@ -22645,6 +22759,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Programm für Großschreibungssetzung [<<lcEXE_CAPS>>] nicht gefunden"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objekt [<<toObj.CLASS>>] enthält nicht das oReg Objekt (level <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Befehl nicht erkannt. Nur SETNAME und GETNAME erlaubt."
+					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimierung: Überspringen von bereits bearbeiteten Datei [<<(lcFile)>>]"
+					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
@@ -22676,7 +22792,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_BACKLINK_OF_TABLE_LOC										= "of table"
 					.C_BACKUP_OF_LOC												= "Doing Backup of: "
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "Cannot generate file [<<THIS.c_OutputFile>>] because it is ReadOnly"
-					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "OPTIMIZATION: Base File [<<JUSTFNAME(lc_BaseFile)>>] already processed, skipping processing of file [<<JUSTFNAME(.c_InputFile)>>]"
+					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "Optimization: Base File [<<JUSTFNAME(lc_BaseFile)>>] already processed, skipping processing of file [<<JUSTFNAME(.c_InputFile)>>]"
 					.C_CONFIGFILE_LOC												= "Using configuration file:"
 					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversion Cancelled by the user"
 					.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC							= "Convert all files in a Project"
@@ -22728,10 +22844,11 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* Names capitalization program [<<lcEXE_CAPS>>] not found"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Object [<<toObj.CLASS>>] does not contain oReg object (level <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operation not recognized. Only SETNAME and GETNAME allowed."
+					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimization: skipping already processed file [<<(lcFile)>>]"
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "The outer class does not match the inner classes"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimization: Output file [<<lcOutputFile>>] was not overwritten because it is the same as was generated."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimization: Output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimization: output file [<<lcOutputFile>>] was not overwritten because it is the same as was generated."
+					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
 					.C_PRESS_ESC_TO_CANCEL											= "Press Esc to Cancel"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Processing file"
