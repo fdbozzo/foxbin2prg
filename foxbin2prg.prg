@@ -2060,6 +2060,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTSTEM( tc_InputFile )
 						*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
 						lcFileSpec	= FULLPATH( tc_InputFile )
+						.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+						IF .l_Debug
+							ERASE ( .c_LogFile )
+						ENDIF
 
 						IF EVL(tcType,'0') <> '*' THEN
 							IF .n_ShowProgressbar <> 0 THEN
@@ -2072,12 +2077,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							CASE tcRecompile == '1'
 								CD (JUSTPATH(lcFileSpec))
 							ENDCASE
-
-							.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-							IF .l_Debug
-								ERASE ( .c_LogFile )
-							ENDIF
 						ENDIF
 
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
@@ -2089,12 +2088,12 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
 								*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJX
 								*-- Filespec: "*.PJX", "*"
-								.Evaluate_Full_PJX(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName)
+								.Evaluate_Full_PJX(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile)
 
 							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
 								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJ2
 								*-- Filespec: "*.PJ2", "*"
-								.Evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName)
+								.Evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile)
 
 							OTHERWISE
 								*-- DEMÁS ARCHIVOS
@@ -2408,8 +2407,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* toEx						(@?    OUT) Objeto con información del error
 		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
 		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
+		* tcLogFile					(v? IN    ) Nombre del log a usar
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName
+		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile
 
 		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
@@ -2424,6 +2424,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 				ENDIF
 
+				IF EMPTY(tcLogFile)
+					.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+					IF .l_Debug
+						ERASE ( .c_LogFile )
+					ENDIF
+				ENDIF
+
 				.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
 
 				DO CASE
@@ -2432,12 +2440,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				CASE tcRecompile == '1'
 					CD (JUSTPATH(lcFileSpec))
 				ENDCASE
-
-				.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-				IF .l_Debug
-					ERASE ( .c_LogFile )
-				ENDIF
 
 				SELECT 0
 				USE (tc_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
@@ -2477,8 +2479,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.writeLog_Flush()
 					ENDIF
 				ENDFOR
-
-				.writeLog_Flush()
 			ENDWITH
 		ENDTRY
 	ENDPROC
@@ -2499,8 +2499,9 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		* toEx						(@?    OUT) Objeto con información del error
 		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
 		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
+		* tcLogFile					(v? IN    ) Nombre del log a usar
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName
+		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile
 
 		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
@@ -2515,6 +2516,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 				ENDIF
 
+				IF EMPTY(tcLogFile)
+					.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
+
+					IF .l_Debug
+						ERASE ( .c_LogFile )
+					ENDIF
+				ENDIF
+
 				.writeLog( '> ' + loLang.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC + ': ' + loLang.C_TEXT_TO_BINARY_LOC )
 
 				DO CASE
@@ -2523,12 +2532,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 				CASE tcRecompile == '1'
 					CD (JUSTPATH(lcFileSpec))
 				ENDCASE
-
-				.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
-
-				IF .l_Debug
-					ERASE ( .c_LogFile )
-				ENDIF
 
 				lnFileCount	= ALINES( laFiles, STREXTRACT( FILETOSTR(tc_InputFile), C_BUILDPROJ_I, C_BUILDPROJ_F ), 1+4 )
 
@@ -2569,8 +2572,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						.writeLog_Flush()
 					ENDIF
 				ENDFOR
-
-				.writeLog_Flush()
 			ENDWITH
 		ENDTRY
 	ENDPROC
