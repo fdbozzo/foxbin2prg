@@ -135,9 +135,13 @@
 * 22/01/2015	FDBOZZO		v1.19.42	Bug Fix: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Tuvia Vinitsky)
 * 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Lutz Scheffler)
 * 25/02/2015	FDBOZZO		v1.19.42	Mejora: Hacer algunos mensajes de error más descriptivos (Lutz Scheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Mejoras en la traducción al alemán (Lutz Scheffler)
 * 03/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir definir el archivo de entrada con un path relativo (Lutz Scheffler)
 * 03/03/2015	FDBOZZO		v1.19.42	Bug Fix scx: Metadato del Dataenvironment no se genera bien cuando el Dataenvironment es renombrado
-* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir usar máscaras "*" para procesar múltiples proyectos a la vez (Lutz Scheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Bug Fix scx: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Lutz Scheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Lutz Scheffler)
+* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (Lutz Scheffler)
+* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -201,8 +205,12 @@
 * 22/01/2015	Tuvia Vinitsky		Bug Fix v1.19.41: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
+* 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Mejoras en la traducción al alemán (Agregado en v1.19.42)
 * 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir definir el archivo de entrada con un path relativo (Agregado en v1.19.42)
-* 28/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir usar máscaras "*" para procesar múltiples proyectos a la vez (Agregado en v1.19.42)
+* 03/03/2015	Lutz Scheffler		Bug Fix scx v1.19.41: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Agregado en v1.19.42)
+* 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir proceso multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Agregado en v1.19.42)
+* 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Cambiar clase de base de FoxBin2Prg de custom a session (Agregado en v1.19.42)
+* 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2267,14 +2275,14 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 					ELSE
 
 						DO CASE
-						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
+						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND LEFT(EVL(tcType,'0'),1) == '*'
 							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO PJX
-							.Evaluate_Full_PJX(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName)
+							.Evaluate_Full_PJX(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, tcType)
 							EXIT
 
-						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
+						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND LEFT(EVL(tcType,'0'),1) == '*'
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO PJ2
-							.Evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName)
+							.Evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, tcType)
 							EXIT
 
 						CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
