@@ -484,7 +484,7 @@ QUIT
 
 
 *******************************************************************************************************************
-DEFINE CLASS c_foxbin2prg AS CUSTOM
+DEFINE CLASS c_foxbin2prg AS SESSION
 	#IF .F.
 		LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -683,6 +683,8 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 
 	PROCEDURE INIT
+		LPARAMETERS tcCFG_File
+
 		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5)
 		SET DELETED ON
 		SET DATE YMD
@@ -707,7 +709,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 		ENDIF
 
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
-		THIS.c_Foxbin2prg_ConfigFile	= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' )
+		THIS.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' ) )
 		THIS.c_CurDir					= SYS(5) + CURDIR()
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
 		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
@@ -2690,7 +2692,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				.writeLog( C_TAB + 'c_OriginalFileName:           ' + .c_OriginalFileName )
 				.writeLog( )
-				.o_Conversor	= NULL
 
 				IF NOT FILE(.c_InputFile)
 					ERROR loLang.C_FILE_DOESNT_EXIST_LOC + ' [' + .c_InputFile + ']'
@@ -2704,7 +2705,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_VC2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_vcx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_VC2 ), lcForceAttribs )
 
 				CASE lcExtension = 'SCX'
@@ -2712,7 +2713,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_SC2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_scx_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_scx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_SC2 ), lcForceAttribs )
 
 				CASE lcExtension = 'PJX'
@@ -2720,7 +2721,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), lcForceAttribs )
 
 				CASE lcExtension = 'PJM'
@@ -2728,7 +2729,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_PJ2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), lcForceAttribs )
 
 				CASE lcExtension = 'FRX'
@@ -2736,7 +2737,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FR2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_FR2 ), lcForceAttribs )
 
 				CASE lcExtension = 'LBX'
@@ -2744,7 +2745,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_LB2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_frx_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_frx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), lcForceAttribs )
 
 				CASE lcExtension = 'DBF'
@@ -2752,7 +2753,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_dbf_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DB2 ), lcForceAttribs )
 
 				CASE lcExtension = 'DBC'
@@ -2760,7 +2761,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DC2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_dbc_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_DC2 ), lcForceAttribs )
 
 				CASE lcExtension = 'MNX'
@@ -2768,7 +2769,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_MN2 )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
+					loConversor		= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), lcForceAttribs )
 
 				CASE lcExtension = .c_VC2
@@ -2776,7 +2777,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), lcForceAttribs )
 
@@ -2785,7 +2786,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'SCX' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_scx' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_scx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'SCT' ), lcForceAttribs )
 
@@ -2794,7 +2795,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'PJX' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_pjx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'PJT' ), lcForceAttribs )
 
@@ -2803,7 +2804,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FRX' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FRT' ), lcForceAttribs )
 
@@ -2812,7 +2813,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'LBX' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_frx' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_frx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), lcForceAttribs )
 
@@ -2821,7 +2822,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_dbf' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBF' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'FPT' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'CDX' ), lcForceAttribs )
@@ -2831,7 +2832,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBC' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_dbc' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DBC' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'DCT' ), lcForceAttribs )
@@ -2841,7 +2842,7 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MNX' )
-					.o_Conversor	= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), lcForceAttribs )
 					.ChangeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), lcForceAttribs )
 
@@ -2893,7 +2894,6 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 
 				IF NOT .l_OptimizeByFilestamp OR .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
 					.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
-					loConversor							= .o_Conversor
 					loConversor.c_InputFile				= .c_InputFile
 					loConversor.c_OutputFile			= .c_OutputFile
 					loConversor.c_LogFile				= .c_LogFile
@@ -2908,14 +2908,14 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 					*--
 					.AvanceDelProceso( loLang.C_PROCESSING_LOC + ' ' + .c_InputFile + '...', 0, 0, 0 )
 
-					IF AEVENTS( laEvents, .o_Conversor ) = 0 THEN
-						BINDEVENT( .o_Conversor, 'AvanceDelProceso', THIS, 'AvanceDelProceso' )
+					IF AEVENTS( laEvents, loConversor ) = 0 THEN
+						BINDEVENT( loConversor, 'AvanceDelProceso', THIS, 'AvanceDelProceso' )
 					ENDIF
 
 					loConversor.Convertir( @toModulo, .F., THIS )
 					.n_ProcessedFilesCount	= .n_ProcessedFilesCount + 1
 					.writeLog()
-					.writeLog(.o_Conversor.c_TextLog)	&& Recojo el LOG que haya generado el conversor
+					.writeLog(loConversor.c_TextLog)	&& Recojo el LOG que haya generado el conversor
 
 					*-- Logueo los errores
 					IF NOT EMPTY(loConversor.c_TextErr) THEN
@@ -2948,11 +2948,11 @@ DEFINE CLASS c_foxbin2prg AS CUSTOM
 			ENDIF
 
 		FINALLY
-			IF AEVENTS( laEvents, THIS.o_Conversor ) > 0 THEN
-				UNBINDEVENTS( THIS.o_Conversor )
+			IF AEVENTS( laEvents, loConversor ) > 0 THEN
+				UNBINDEVENTS( loConversor )
 			ENDIF
 
-			STORE NULL TO loConversor, THIS.o_Conversor, loFSO
+			STORE NULL TO loConversor, loFSO
 
 			*IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
 			*	THIS.writeLog( REPLICATE('-',100) )

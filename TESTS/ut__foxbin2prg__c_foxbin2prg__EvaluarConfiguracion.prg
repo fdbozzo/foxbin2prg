@@ -150,10 +150,11 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 		#ENDIF
 
 		TRY
-			loEx		= NULL
+			loEx			= NULL
 			loFB2P_Esperado	= CREATEOBJECT("EMPTY")
-			loFB2P		= THIS.ioFB2P
-			loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
+			THIS.ioFB2P		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG", "", FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest ) )
+			loFB2P			= THIS.ioFB2P
+			*loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
 
 
 			*-- DATOS DE ENTRADA
@@ -651,9 +652,10 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 		#ENDIF
 
 		TRY
-			loEx		= NULL
-			loFB2P		= THIS.ioFB2P
-			loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
+			loEx			= NULL
+			THIS.ioFB2P		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG", "", FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest ) )
+			loFB2P			= THIS.ioFB2P
+			*loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
 			loFB2P.l_ShowErrors	= .F.
 
 
