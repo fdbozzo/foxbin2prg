@@ -1884,7 +1884,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 		* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG
-		*										- Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
+		*										- Si se indica "*" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto y el PJX/2
+		*										- Si se indica "*-" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto sin el PJX/2
 		*										- Si se indica "BIN2PRG", se procesa el directorio indicado en tc_InputFile para generar los TX2
 		*										- Si se indica "PRG2BIN", se procesa el directorio indicado en tc_InputFile para generar los BIN
 		* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
@@ -2087,15 +2088,15 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
 
 							DO CASE
-							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND EVL(tcType,'0') == '*'
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND LEFT(EVL(tcType,'0'),1) == '*'
 								*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJX
 								*-- Filespec: "*.PJX", "*"
-								.Evaluate_Full_PJX(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile)
+								.Evaluate_Full_PJX(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile, tcType)
 
-							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND EVL(tcType,'0') == '*'
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND LEFT(EVL(tcType,'0'),1) == '*'
 								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJ2
 								*-- Filespec: "*.PJ2", "*"
-								.Evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile)
+								.Evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile, tcType)
 
 							OTHERWISE
 								*-- DEMÁS ARCHIVOS
@@ -2410,8 +2411,11 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
 		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 		* tcLogFile					(v? IN    ) Nombre del log a usar
+		* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG
+		*										- Si se indica "*" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto y el PJX/2
+		*										- Si se indica "*-" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto sin el PJX/2
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile
+		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile, tcType
 
 		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
@@ -2456,10 +2460,12 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				USE IN (SELECT("TABLABIN"))
 
 				*-- Convierto primero el proyecto
-				lcFile	= tc_InputFile
-				IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-					lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-					.writeLog_Flush()
+				IF tcType <> '*-' THEN
+					lcFile	= tc_InputFile
+					IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+						lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+						.writeLog_Flush()
+					ENDIF
 				ENDIF
 
 				*-- Luego convierto los archivos incluidos
@@ -2502,8 +2508,11 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		* tcOriginalFileName		(v? IN    ) Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar
 		*							            el nombre correcto dentro de la versión texto (por ej: en los PJ2 y las cabeceras)
 		* tcLogFile					(v? IN    ) Nombre del log a usar
+		* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG
+		*										- Si se indica "*" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto y el PJX/2
+		*										- Si se indica "*-" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto sin el PJX/2
 		*--------------------------------------------------------------------------------------------------------------
-		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile
+		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile, tcType
 
 		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
@@ -2549,10 +2558,12 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ENDFOR
 
 				*-- Convierto primero el proyecto
-				lcFile	= tc_InputFile
-				IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
-					lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
-					.writeLog_Flush()
+				IF tcType <> '*-' THEN
+					lcFile	= tc_InputFile
+					IF .TieneSoporte_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+						lnCodError = .Convertir( lcFile, toModulo, @toEx, .T., tcOriginalFileName )
+						.writeLog_Flush()
+					ENDIF
 				ENDIF
 
 				*-- Luego convierto los archivos incluidos
