@@ -27,6 +27,7 @@ Change History -------------------------------------------------------------
 - Bug Fix: Added PJX/PJ2 generation when specifying "file.pjx", "*" (Lutz Scheffler)
 - Some enhancements in german translations (Lutz Scheffler)
 - Feature: Added multiprocessing of projects (*.pjx, *.pj2) when specifying "file.pjx", "*" (Lutz Scheffler)
+- Change FoxBin2Prg base class from custom to session (Lutz Scheffler)
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
