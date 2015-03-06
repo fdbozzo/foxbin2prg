@@ -21,6 +21,7 @@ Change History -------------------------------------------------------------
 - Added VFP 9 SP1 runtime validation
 - Bug Fix: Broken SourceSafe compatibility because an error is thrown when querying for file support (Tuvia Vinitsky)
 - Bug Fix scx/vcx: Process only one TEXT/ENDTEXT nesting level because TEXT/ENDTEXT can't be nested (Lutz Scheffler)
+- Bug Fix pjx/pj2: If end of line (CR+LF) is used on pjx's "Build" properties data, generated pj2 is malformed
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
