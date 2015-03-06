@@ -142,6 +142,7 @@
 * 03/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Lutz Scheffler)
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (Lutz Scheffler)
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Lutz Scheffler)
+* 06/03/2015	FDBOZZO		v1.19.42	Bug Fix pjx: Permitir usar fin de linea (CR/LF) en los atributos de versión del PJX
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -4659,6 +4660,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		ELSE
 			lcValue		= CHRTRAN( LEFT( tcNullTerminatedValue, lnNullPos - 1 ), ['], ["] )
 		ENDIF
+		lcValue	= THIS.encode_SpecialCodes_1_31(lcValue)
 		RELEASE tcNullTerminatedValue, lnNullPos
 		RETURN lcValue
 	ENDPROC
@@ -13052,6 +13054,10 @@ ENDDEFINE
 
 
 DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="strextract_cr" display="strExtract_CR"/>] ;
+		+ [</VFPData>]
+
 	#IF .F.
 		LOCAL THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -13429,6 +13435,15 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 		RETURN
 	ENDPROC
+
+
+	PROCEDURE strExtract_CR
+		LPARAMETERS tcText
+		tcText	= THIS.decode_SpecialCodes_1_31( STREXTRACT( tcText, 'Comments=', CR_LF ) )
+		RETURN tcText
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -14587,6 +14602,8 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		+ [<memberdata name="_revision" display="_Revision"/>] ;
 		+ [<memberdata name="_languageid" display="_LanguageID"/>] ;
 		+ [<memberdata name="_autoincrement" display="_AutoIncrement"/>] ;
+		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="getformatteddeviceinfotext" display="getFormattedDeviceInfoText"/>] ;
 		+ [<memberdata name="parsedeviceinfo" display="parseDeviceInfo"/>] ;
 		+ [<memberdata name="parsenullterminatedvalue" display="parseNullTerminatedValue"/>] ;
@@ -14646,6 +14663,34 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 
 
 
+	PROCEDURE decode_SpecialCodes_1_31
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Decodifica los primeros 31 caracteres ASCII de {nCode} a CHR(nCode)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
+		ENDFOR
+		RELEASE I
+		RETURN tcText
+	ENDPROC
+
+
+
+	PROCEDURE encode_SpecialCodes_1_31
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
+		ENDFOR
+		RELEASE I
+		RETURN tcText
+	ENDPROC
+
+
+
 	PROCEDURE setParsedProjInfoLine
 		LPARAMETERS tcProjInfoLine
 		THIS.setParsedInfoLine( THIS, tcProjInfoLine )
@@ -14655,14 +14700,31 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 
 	PROCEDURE setParsedInfoLine
 		LPARAMETERS toObject, tcInfoLine
-		LOCAL lcAsignacion, lcCurDir
-		lcCurDir	= ADDBS(THIS._HomeDir)
-		IF LEFT(tcInfoLine,1) == '.'
-			lcAsignacion	= 'toObject' + tcInfoLine
-		ELSE
-			lcAsignacion	= 'toObject.' + tcInfoLine
-		ENDIF
-		&lcAsignacion.
+
+		LOCAL lcAsignacion, lcCurDir, lcValue, loEx as Exception
+
+		TRY
+			lcCurDir	= ADDBS(THIS._HomeDir)
+			IF LEFT(tcInfoLine,1) == '.'
+				lcAsignacion	= 'toObject' + tcInfoLine
+			ELSE
+				lcAsignacion	= 'toObject.' + tcInfoLine
+			ENDIF
+
+			lcValue	= GETWORDNUM(lcAsignacion, 2, '=')
+
+			IF TYPE(lcValue) = "C" THEN
+				lcAsignacion	= GETWORDNUM(lcAsignacion, 1, '=') + '= THIS.encode_SpecialCodes_1_31(' + lcValue + ')'
+			ENDIF
+
+			&lcAsignacion.
+
+		CATCH TO loEx
+			loEx.UserValue = loEx.UserValue + 'lcAsignacion = [' + TRANSFORM(lcAsignacion) + ']' + CR_LF
+			THROW
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
@@ -14677,6 +14739,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		ELSE
 			lcValue		= CHRTRAN( LEFT( lcStr, MIN(tnLen, lnNullPos - 1 ) ), ['], ["] )
 		ENDIF
+		lcValue = THIS.encode_SpecialCodes_1_31(lcValue)
 		RETURN lcValue
 	ENDPROC
 
@@ -19377,6 +19440,8 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 		+ [<memberdata name="_typelib" display="_TypeLib"/>] ;
 		+ [<memberdata name="_typelibdesc" display="_TypeLibDesc"/>] ;
 		+ [<memberdata name="add_server" display="add_Server"/>] ;
+		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
 		+ [<memberdata name="getdatafrompair_lendata_structure" display="getDataFromPair_LenData_Structure"/>] ;
 		+ [<memberdata name="getformattedservertext" display="getFormattedServerText"/>] ;
 		+ [<memberdata name="getrowserverinfo" display="getRowServerInfo"/>] ;
@@ -19400,6 +19465,34 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 
 
 
+	PROCEDURE decode_SpecialCodes_1_31
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Decodifica los primeros 31 caracteres ASCII de {nCode} a CHR(nCode)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
+		ENDFOR
+		RELEASE I
+		RETURN tcText
+	ENDPROC
+
+
+
+	PROCEDURE encode_SpecialCodes_1_31
+		LPARAMETERS tcText
+		LOCAL I
+		FOR I = 0 TO 31
+			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
+		ENDFOR
+		RELEASE I
+		RETURN tcText
+	ENDPROC
+
+
+
 	PROCEDURE setParsedHeadInfoLine
 		LPARAMETERS tcHeadInfoLine
 		THIS.setParsedInfoLine( THIS, tcHeadInfoLine )
@@ -19409,13 +19502,30 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 
 	PROCEDURE setParsedInfoLine
 		LPARAMETERS toObject, tcInfoLine
-		LOCAL lcAsignacion, lcCurDir
-		IF LEFT(tcInfoLine,1) == '.'
-			lcAsignacion	= 'toObject' + tcInfoLine
-		ELSE
-			lcAsignacion	= 'toObject.' + tcInfoLine
-		ENDIF
-		&lcAsignacion.
+
+		LOCAL lcAsignacion, lcCurDir, lcValue, loEx as Exception
+
+		TRY
+			IF LEFT(tcInfoLine,1) == '.'
+				lcAsignacion	= 'toObject' + tcInfoLine
+			ELSE
+				lcAsignacion	= 'toObject.' + tcInfoLine
+			ENDIF
+
+			lcValue	= GETWORDNUM(lcAsignacion, 2, '=')
+
+			IF TYPE(lcValue) = "C" THEN
+				lcAsignacion	= GETWORDNUM(lcAsignacion, 1, '=') + '= THIS.encode_SpecialCodes_1_31(' + GETWORDNUM(lcAsignacion, 2, '=') + ')'
+			ENDIF
+
+			&lcAsignacion.
+
+		CATCH TO loEx
+			loEx.UserValue = loEx.UserValue + 'lcAsignacion = [' + TRANSFORM(lcAsignacion) + ']' + CR_LF
+			THROW
+		ENDTRY
+
+		RETURN
 	ENDPROC
 
 
