@@ -2278,12 +2278,12 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 						DO CASE
 						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND LEFT(EVL(tcType,'0'),1) == '*'
 							*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN PROYECTO PJX
-							.Evaluate_Full_PJX(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, tcType)
+							.Evaluate_Full_PJX(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, '', tcType)
 							EXIT
 
 						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND LEFT(EVL(tcType,'0'),1) == '*'
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO PJ2
-							.Evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, tcType)
+							.Evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, '', tcType)
 							EXIT
 
 						CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
