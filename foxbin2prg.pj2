@@ -103,7 +103,6 @@ WITH loProject.FILES
 	.ADD('tests\ut__foxbin2prg__c_conversor_base__dobackup.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_base__get_separatedpropandvalue.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_base__gettimestamp.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
-	.ADD('tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdecodigo.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdeexclusion.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_base__normalizarvalorpropiedad.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('tests\ut__foxbin2prg__c_conversor_base__rowtimestamp.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
@@ -135,7 +134,6 @@ WITH loProject.FILES
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__dobackup.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__get_separatedpropandvalue.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__gettimestamp.prg').Exclude = .T.
-	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdecodigo.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__identificarbloquesdeexclusion.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__normalizarvalorpropiedad.prg').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ut__foxbin2prg__c_conversor_base__rowtimestamp.prg').Exclude = .T.
