@@ -143,6 +143,7 @@
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (Lutz Scheffler)
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Lutz Scheffler)
 * 06/03/2015	FDBOZZO		v1.19.42	Bug Fix pjx: Permitir usar fin de linea (CR/LF) en los atributos de versión del PJX
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Mejorar la API para poder obtener información interna para usar en pre o post-procesos externos (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -212,6 +213,7 @@
 * 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir proceso multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Agregado en v1.19.42)
 * 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Cambiar clase de base de FoxBin2Prg de custom a session (Agregado en v1.19.42)
 * 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Agregado en v1.19.42)
+* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Mejorar la API para poder obtener información interna para usar en pre o post-procesos externos (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -564,6 +566,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="l_reportsort_enabled" display="l_ReportSort_Enabled"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
+		+ [<memberdata name="l_stdouthabilitado" display="l_StdOutHabilitado"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="l_useclassperfile" display="l_UseClassPerFile"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
@@ -597,6 +600,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
 		+ [<memberdata name="renametmpfile2tx2file" display="RenameTmpFile2Tx2File"/>] ;
 		+ [<memberdata name="set_line" display="set_Line"/>] ;
+		+ [<memberdata name="errout" display="errOut"/>] ;
+		+ [<memberdata name="stdout" display="stdOut"/>] ;
 		+ [<memberdata name="tienesoporte_bin2prg" display="TieneSoporte_Bin2Prg"/>] ;
 		+ [<memberdata name="tienesoporte_prg2bin" display="TieneSoporte_Prg2Bin"/>] ;
 		+ [<memberdata name="t_inputfile_timestamp" display="t_InputFile_TimeStamp"/>] ;
@@ -654,6 +659,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	l_MethodSort_Enabled			= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled				= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled			= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_StdOutHabilitado				= .T.
 	l_Main_CFG_Loaded				= .F.
 	n_ExtraBackupLevels				= 1
 	n_ClassTimeStamp				= 1130668032	&& 2013/11/04 20:00:00
@@ -706,6 +712,11 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		SET SEPARATOR TO ','
 		ON ESCAPE ERROR 1799
 		SET ESCAPE ON
+
+		*-- Funciones para escribir en StdOut
+		DECLARE INTEGER GetStdHandle IN Win32API INTEGER nHandleType
+		DECLARE INTEGER WriteFile	 IN Win32API INTEGER hFile, STRING @ cBuffer ;
+				, INTEGER nBytes, INTEGER @ nBytes2, INTEGER @ nBytes3
 
 		ERASE (THIS.c_ErrorLogFile)
 		ERASE (THIS.c_LogFile)
@@ -2069,7 +2080,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 						ENDIF
 
 
-					CASE lcInputFile_Type == C_FILETYPE_FILE AND '*' $ JUSTSTEM( tc_InputFile )
+					CASE lcInputFile_Type == C_FILETYPE_FILE AND ( '*' $ JUSTSTEM( tc_InputFile ) OR '?' $ JUSTSTEM( tc_InputFile ) )
 						*-- SE QUIEREN TODOS LOS ARCHIVOS DE UNA EXTENSIÓN
 						lcFileSpec	= FULLPATH( tc_InputFile )
 						.c_LogFile	= ADDBS( JUSTPATH( lcFileSpec ) ) + STRTRAN( JUSTFNAME( lcFileSpec ), '*', '_ALL' ) + '.LOG'
@@ -3281,6 +3292,51 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	ENDPROC
 
 
+	PROCEDURE errOut
+		*-- DEVOLUCIÓN DE SALIDA A ERROUT (-12)
+		LPARAMETERS tcTexto
+
+		TRY
+			IF THIS.l_StdOutHabilitado
+				LOCAL loException as Exception, lcOutput, lnOutHandle, lnBytesWritten, lnOverlappedIO
+				lcOutput		= EVL(tcTexto,'') + CR_LF
+				lnOutHandle		= GetStdHandle(-12)	&& CAPTURAR ERROR DESDE CONSOLA: FOXBIN2PRG.EXE PARAMS 2>&1 | FIND /V ""
+				lnBytesWritten	= 0
+				lnOverlappedIO	= 0
+				WriteFile(lnOutHandle, @lcOutput, LEN(lcOutput), @lnBytesWritten, @lnOverlappedIO)
+			ENDIF
+
+		CATCH TO loException
+			THIS.l_StdOutHabilitado = .F.
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE stdOut
+		*-- DEVOLUCIÓN DE SALIDA A STDOUT (-11)
+		LPARAMETERS tcTexto
+
+		TRY
+			IF THIS.l_StdOutHabilitado
+				LOCAL loException as Exception, lcOutput, lnOutHandle, lnBytesWritten, lnOverlappedIO
+				lcOutput		= EVL(tcTexto,'') + CR_LF
+				lnOutHandle		= GetStdHandle(-11)	&& CAPTURAR STDOUT DESDE CONSOLA: FOXBIN2PRG.EXE PARAMS | FIND /V ""
+				lnBytesWritten	= 0
+				lnOverlappedIO	= 0
+				WriteFile(lnOutHandle, @lcOutput, LEN(lcOutput), @lnBytesWritten, @lnOverlappedIO)
+			ENDIF
+
+		CATCH TO loException
+			THIS.l_StdOutHabilitado = .F.
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
 
 	PROCEDURE writeErrorLog
 		LPARAMETERS tcText, tnTimestamp
@@ -3291,6 +3347,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			ENDIF
 
 			THIS.c_TextErr	= THIS.c_TextErr + EVL(tcText,'') + CR_LF
+			THIS.errOut(tcText)
 			THIS.l_Error	= .T.
 		CATCH
 		ENDTRY
@@ -3315,6 +3372,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			ENDIF
 
 			THIS.c_TextLog	= THIS.c_TextLog + EVL(tcText,'') + CR_LF
+			THIS.stdOut(tcText)
 		CATCH
 		ENDTRY
 	ENDPROC
