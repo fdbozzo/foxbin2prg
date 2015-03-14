@@ -549,6 +549,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_allowmulticonfig" display="l_AllowMultiConfig"/>] ;
+		+ [<memberdata name="l_autoclearprocessedfiles" display="l_AutoClearProcessedFiles"/>] ;
 		+ [<memberdata name="l_cancelwithesckey" display="l_CancelWithEscKey"/>] ;
 		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
@@ -620,7 +621,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	*--
 	n_FB2PRG_Version				= 1.19
 	*--
-	c_Language						= ''	&& EN, FR, ES, DE
+	c_Language						= ''			&& EN, FR, ES, DE
 	c_loc_processing_file			= ''
 	c_loc_process_progress			= ''
 	c_FB2PRG_EXE_Version			= ''
@@ -649,6 +650,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	n_ShowProgressbar				= 1
 	n_ForceWriteIfReadOnly			= 0
 	l_AllowMultiConfig				= .T.
+	l_AutoClearProcessedFiles		= .T.			&& Por defecto limpia archivos procesados entre ejecución y ejecución
 	l_CancelWithEscKey				= .T.
 	l_DropNullCharsFromCode			= .T.
 	l_Recompile						= .T.
@@ -659,9 +661,9 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	l_ClearUniqueID                 = .T.
 	l_ClearDBFLastUpdate        	= .T.
 	l_OptimizeByFilestamp           = .F.
-	l_MethodSort_Enabled			= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_PropSort_Enabled				= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_ReportSort_Enabled			= .T.	&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_MethodSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_PropSort_Enabled				= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_ReportSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_StdOutHabilitado				= .T.
 	l_Main_CFG_Loaded				= .F.
 	n_ExtraBackupLevels				= 1
@@ -669,24 +671,24 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	n_CFG_Actual					= 0
 	n_ID							= 0
 	n_FileHandle                	= 0
-	n_ProcessedFiles				= 0		&& Contador usado para los archivos file.class.ext
-	n_ProcessedFilesCount			= 0		&& Contador genérico de procesados
+	n_ProcessedFiles				= 0				&& Contador usado para los archivos file.class.ext
+	n_ProcessedFilesCount			= 0				&& Contador genérico de procesados
 	o_Conversor                     = NULL
 	o_Frm_Avance					= NULL
 	o_WSH							= NULL
 	o_FSO							= NULL
-	o_FNC							= NULL	&& Filename_caps object
+	o_FNC							= NULL			&& Filename_caps object
 	o_Configuration					= NULL
 	run_AfterCreateTable			= ''
 	run_AfterCreate_DB2				= ''
-	c_VC2							= 'VC2'	&& VCX
-	c_SC2							= 'SC2'	&& SCX
-	c_PJ2							= 'PJ2'	&& PJX
-	c_FR2							= 'FR2'	&& FRX
-	c_LB2							= 'LB2'	&& LBX
-	c_DB2							= 'DB2'	&& DBF
-	c_DC2							= 'DC2'	&& DBC
-	c_MN2							= 'MN2'	&& MNX
+	c_VC2							= 'VC2'			&& VCX
+	c_SC2							= 'SC2'			&& SCX
+	c_PJ2							= 'PJ2'			&& PJX
+	c_FR2							= 'FR2'			&& FRX
+	c_LB2							= 'LB2'			&& LBX
+	c_DB2							= 'DB2'			&& DBF
+	c_DC2							= 'DC2'			&& DBC
+	c_MN2							= 'MN2'			&& MNX
 	PJX_Conversion_Support			= 2
 	VCX_Conversion_Support			= 2
 	SCX_Conversion_Support			= 2
@@ -849,6 +851,9 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	PROCEDURE ClearProcessedFiles
+		*-- Limpia las estadísticas de archivos procesados que se usan para optimizar
+		*-- el procesamiento y evitar el reproceso de los mismos archivos, por ejemplo,
+		*-- de un mismo VCX compartido por 2 ó más proyectos.
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			.n_ProcessedFilesCount	= 0
 			.n_ProcessedFiles		= 0
@@ -2029,6 +2034,10 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				loWSH				= .o_WSH
 				lnPCount			= 0
 				lcInputFile_Type	= ''
+
+				IF .l_AutoClearProcessedFiles THEN
+					.ClearProcessedFiles()			&& Para evitar acumular procesos anteriores
+				ENDIF
 
 				*-- Funciona y lee los parámetros, pero no le veo un caso de uso claro, ya que si se eligen
 				*-- varios directorios de proyecto, la compilación será errónea. 12/12/2014
