@@ -721,6 +721,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		SET TABLEPROMPT OFF
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
+		SET NOTIFY OFF
 		tcCancelWithEscKey	= EVL(tcCancelWithEscKey, '')
 
 		IF NOT EMPTY(tcCancelWithEscKey)
@@ -892,7 +893,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			tcFileMask	= EVL(tcFileMask, '*')
 	
 			FOR I = 1 TO .n_ProcessedFiles
-				IF LIKE( tcFileMask, .a_ProcessedFiles(I,1) ) THEN
+				IF LIKE( tcFileMask, JUSTFNAME(.a_ProcessedFiles(I,1)) ) THEN
 					lnCount	= lnCount + 1
 					DIMENSION taTargets(lnCount,5)
 					taTargets(lnCount,1)	= .a_ProcessedFiles(I,1)
@@ -4173,6 +4174,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		SET TABLEPROMPT OFF
 		SET BLOCKSIZE TO 0
 		SET EXACT ON
+		SET NOTIFY OFF
 		IF NOT EMPTY( ON("ESCAPE") ) THEN
 			SET ESCAPE ON
 		ENDIF
