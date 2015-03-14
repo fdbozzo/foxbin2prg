@@ -143,7 +143,12 @@
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (Lutz Scheffler)
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Lutz Scheffler)
 * 06/03/2015	FDBOZZO		v1.19.42	Bug Fix pjx: Permitir usar fin de linea (CR/LF) en los atributos de versión del PJX
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Mejorar la API para poder obtener información interna para usar en pre o post-procesos externos (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte de errOut e implementado en writeErrorLog
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte total de comodines *? en nombres de archivo para procesar múltiples archivos de la misma extensión
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nuevo parámetro para permitir un CFG alternativo (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nuevo método API get_Target() para obtener información de los archivos procesados (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva salida de archivos procesados a stdOut (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Bug Fix: Arreglada la cancelación del procesamiento con tecla Esc
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -213,7 +218,9 @@
 * 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir proceso multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Agregado en v1.19.42)
 * 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Cambiar clase de base de FoxBin2Prg de custom a session (Agregado en v1.19.42)
 * 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Agregado en v1.19.42)
-* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Mejorar la API para poder obtener información interna para usar en pre o post-procesos externos (Agregado en v1.19.42)
+* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir configurar un CFG alternativo (Agregado en v1.19.42)
+* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_Target() para obtener información de los archivos procesados (Agregado en v1.19.42)
+* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir salida de archivos procesados a stdOut (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
