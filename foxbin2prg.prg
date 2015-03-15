@@ -16324,6 +16324,8 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 				lcStoredProcedures	= ._StoredProcedures
 
 				ERASE (tc_OutputFile)
+				ERASE (FORCEEXT(tc_OutputFile,'DCX'))
+				ERASE (FORCEEXT(tc_OutputFile,'DCT'))
 				CREATE DATABASE (tc_OutputFile)
 				CLOSE DATABASES
 				OPEN DATABASE (tc_OutputFile) SHARED
@@ -17198,7 +17200,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
-					.n_Campos = 0
+					*.n_Campos = 0	&& Para forzar modo LEGACY
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -18344,7 +18346,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
-					.n_Campos = 0
+					*.n_Campos = 0	&& Para forzar modo LEGACY
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
