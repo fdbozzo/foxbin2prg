@@ -351,6 +351,8 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_VIEW_F					'</VIEW>'
 #DEFINE C_VIEWS_I					'<VIEWS>'
 #DEFINE C_VIEWS_F					'</VIEWS>'
+#DEFINE C_FIELD_ORDER_I				'<FIELD_ORDER>'
+#DEFINE C_FIELD_ORDER_F				'</FIELD_ORDER>'
 #DEFINE C_FIELD_I					'<FIELD>'
 #DEFINE C_FIELD_F					'</FIELD>'
 #DEFINE C_FIELDS_I					'<FIELDS>'
@@ -502,7 +504,7 @@ ExitProcess(1)	&& Esta debe ser de las últimas instrucciones
 QUIT
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_foxbin2prg AS SESSION
 	#IF .F.
 		LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -3569,7 +3571,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS frm_avance AS FORM
 	Height = 110
 	Width = 628
@@ -3988,7 +3990,7 @@ DEFINE CLASS frm_avance AS FORM
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS frm_interactive AS form
 	Height = 102
 	Width = 380
@@ -4075,7 +4077,7 @@ DEFINE CLASS frm_interactive AS form
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 	#IF .F.
 		LOCAL THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
@@ -5594,7 +5596,7 @@ ENDDEFINE
 
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
@@ -7864,7 +7866,7 @@ ENDDEFINE
 
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
@@ -8226,7 +8228,7 @@ ENDDEFINE
 
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
@@ -8585,7 +8587,7 @@ ENDDEFINE
 
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
@@ -9391,7 +9393,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
@@ -9834,7 +9836,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 ENDDEFINE	&& CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
@@ -10129,7 +10131,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 ENDDEFINE	&& CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
@@ -10215,10 +10217,21 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError
+			LOCAL lnCodError, lcEventsFile
 			lnCodError	= 0
 
-			IF NOT EMPTY(toDatabase._DBCEventFilename) AND FILE(toDatabase._DBCEventFilename)
+			IF NOT EMPTY(toDatabase._DBCEventFilename)
+				IF LEFT(toDatabase._DBCEventFilename,1) = '.' THEN
+					lcEventsFile	= ADDBS( JUSTPATH(.c_InputFile) ) + toDatabase._DBCEventFilename
+				ELSE
+					lcEventsFile	= toDatabase._DBCEventFilename
+				ENDIF
+				IF FILE(lcEventsFile) THEN
+					lcEventsFile	= ''
+				ELSE
+					STRTOFILE( '', lcEventsFile )
+				ENDIF
+
 				*-- Si no recompilo el EventFilename.prg, el EXE dará un error (aunque el PRG no)
 				COMPILE ( ADDBS( JUSTPATH( THIS.c_OutputFile ) ) + toDatabase._DBCEventFilename )
 			ENDIF
@@ -10237,6 +10250,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			ENDIF
 
 			THROW
+
+		FINALLY
+			IF NOT EMPTY(lcEventsFile) THEN
+				ERASE (lcEventsFile)
+				ERASE (FORCEEXT(lcEventsFile,'FXP'))
+			ENDIF
 
 		ENDTRY
 
@@ -10314,7 +10333,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 ENDDEFINE	&& CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_mnx OF 'FOXBIN2PRG.PRG'
@@ -10495,7 +10514,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 ENDDEFINE	&& CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
@@ -12297,7 +12316,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -12603,7 +12622,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -12928,7 +12947,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -13665,7 +13684,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_frx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -13839,7 +13858,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
@@ -14011,7 +14030,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
@@ -14107,7 +14126,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 	#IF .F.
 		LOCAL THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
@@ -14185,7 +14204,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT, CLASS)
 	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
@@ -14273,7 +14292,7 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_COL_BASE AS COLLECTION
 	#IF .F.
 		LOCAL THIS AS CL_COL_BASE OF 'FOXBIN2PRG.PRG'
@@ -14353,7 +14372,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_MODULO OF 'FOXBIN2PRG.PRG'
@@ -14440,7 +14459,7 @@ DEFINE CLASS CL_MODULO AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_OLE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_OLE OF 'FOXBIN2PRG.PRG'
@@ -14462,7 +14481,7 @@ DEFINE CLASS CL_OLE AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_CLASE OF 'FOXBIN2PRG.PRG'
@@ -14648,7 +14667,7 @@ DEFINE CLASS CL_CLASE AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_PROCEDURE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROCEDURE OF 'FOXBIN2PRG.PRG'
@@ -14687,7 +14706,7 @@ DEFINE CLASS CL_PROCEDURE AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
@@ -14780,7 +14799,7 @@ DEFINE CLASS CL_OBJETO AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_REPORT AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_REPORT OF 'FOXBIN2PRG.PRG'
@@ -14801,7 +14820,7 @@ DEFINE CLASS CL_REPORT AS CL_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
@@ -15120,7 +15139,7 @@ ENDDEFINE
 
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_COL_BASE OF 'FOXBIN2PRG.PRG'
@@ -15164,7 +15183,7 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
@@ -16121,7 +16140,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC OF 'FOXBIN2PRG.PRG'
@@ -16442,7 +16461,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
@@ -16579,7 +16598,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
@@ -16764,7 +16783,7 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
@@ -16906,7 +16925,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
@@ -16981,6 +17000,10 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 
 						CASE C_TABLE_F $ tcLine	&& Fin
 							EXIT
+
+						CASE C_FIELD_ORDER_I $ tcLine
+							loFields = ._Fields
+							loFields.analizarBloqueOrden( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 						CASE C_FIELDS_I $ tcLine
 							loFields = ._Fields
@@ -17138,11 +17161,21 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
 	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarbloqueorden" display="analizarBloqueOrden"/>] ;
+		+ [<memberdata name="a_campos" display="a_Campos"/>] ;
+		+ [<memberdata name="n_campos" display="n_Campos"/>] ;
+		+ [</VFPData>]
+
+	
+	DIMENSION a_Campos(1,2)	&& col.1=campo, col.2=definición
+	n_Campos		= 0
 
 
 	PROCEDURE analizarBloque
@@ -17156,7 +17189,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
 
 		TRY
-			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION ;
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, lnPos, loEx AS EXCEPTION ;
 				, loField AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
 			STORE NULL TO loField
 			STORE '' TO lcPropName, lcValue
@@ -17179,11 +17212,23 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 							loField = NULL
 							loField = CREATEOBJECT("CL_DBC_FIELD_DB")
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loField, loField._Name )
+
+							IF .n_Campos = 0 THEN
+								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
+								.ADD( loField, loField._Name )
+							ELSE
+								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
+								.a_Campos( lnPos, 2)	= loField
+							ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
 						ENDCASE
+					ENDFOR
+
+					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
+					FOR lnPos = 1 TO .n_Campos
+						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
 					ENDFOR
 				ENDWITH && THIS
 			ENDIF
@@ -17193,6 +17238,63 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
 			ENDIF
 
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loField
+			RELEASE lcPropName, lcValue, loField
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
+
+
+	PROCEDURE analizarBloqueOrden
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION ;
+				, loField AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
+			STORE NULL TO loField
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELD_ORDER_I)) == C_FIELD_ORDER_I
+				llBloqueEncontrado	= .T.
+
+				WITH THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+					FOR I = I + 1 TO tnCodeLines
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE EMPTY( tcLine )
+							LOOP
+
+						CASE C_FIELD_ORDER_F $ tcLine	&& Fin
+							EXIT
+
+						OTHERWISE	&& campo
+							.n_Campos	= .n_Campos + 1
+							DIMENSION .a_Campos(.n_Campos, 2)
+							.a_Campos(.n_Campos, 1)	= tcLine
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
 			IF THIS.l_Debug AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -17302,7 +17404,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
@@ -17460,7 +17562,7 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
@@ -17606,7 +17708,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
@@ -17735,17 +17837,17 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_INDEXES_VW AS CL_DBC_INDEXES_DB
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_INDEX_VW AS CL_DBC_INDEX_DB
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
@@ -17887,7 +17989,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
@@ -17998,6 +18100,10 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 						CASE C_VIEW_F $ tcLine	&& Fin
 							EXIT
+
+						CASE C_FIELD_ORDER_I $ tcLine
+							loFields = ._Fields
+							loFields.analizarBloqueOrden( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 						CASE C_FIELDS_I $ tcLine
 							loFields	= NULL
@@ -18206,12 +18312,20 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="analizarbloqueorden" display="analizarBloqueOrden"/>] ;
+		+ [<memberdata name="a_campos" display="a_Campos"/>] ;
+		+ [<memberdata name="n_campos" display="n_Campos"/>] ;
+		+ [</VFPData>]
+
+	DIMENSION a_Campos(1,2)	&& col.1=campo, col.2=definición
+	n_Campos		= 0
 
 
 	PROCEDURE analizarBloque
@@ -18248,11 +18362,23 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 							loField = NULL
 							loField = CREATEOBJECT("CL_DBC_FIELD_VW")
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loField, loField._Name )
+
+							IF .n_Campos = 0 THEN
+								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
+								.ADD( loField, loField._Name )
+							ELSE
+								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
+								.a_Campos( lnPos, 2)	= loField
+							ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
 						ENDCASE
+					ENDFOR
+
+					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
+					FOR lnPos = 1 TO .n_Campos
+						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
 					ENDFOR
 				ENDWITH && THIS
 			ENDIF
@@ -18277,6 +18403,63 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 		RETURN llBloqueEncontrado
 	ENDPROC
 
+
+
+	PROCEDURE analizarBloqueOrden
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(!@ IN/OUT) Número de línea en análisis
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION ;
+				, loField AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
+			STORE NULL TO loField
+			STORE '' TO lcPropName, lcValue
+
+			IF LEFT(tcLine, LEN(C_FIELD_ORDER_I)) == C_FIELD_ORDER_I
+				llBloqueEncontrado	= .T.
+
+				WITH THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
+					FOR I = I + 1 TO tnCodeLines
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE EMPTY( tcLine )
+							LOOP
+
+						CASE C_FIELD_ORDER_F $ tcLine	&& Fin
+							EXIT
+
+						OTHERWISE	&& campo
+							.n_Campos	= .n_Campos + 1
+							DIMENSION .a_Campos(.n_Campos, 2)
+							.a_Campos(.n_Campos, 1)	= tcLine
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF THIS.l_Debug AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loField
+			RELEASE lcPropName, lcValue, loField
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
+	ENDPROC
 
 
 	PROCEDURE toText
@@ -18372,7 +18555,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
@@ -18547,7 +18730,7 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
@@ -18687,7 +18870,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
@@ -18827,7 +19010,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
@@ -19078,7 +19261,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
@@ -19211,7 +19394,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
@@ -19371,7 +19554,7 @@ DEFINE CLASS CL_DBF_FIELD AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
@@ -19508,7 +19691,7 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG'
@@ -19632,7 +19815,7 @@ ENDDEFINE
 
 *** DH 06/02/2014: added classes CL_DBF_RECORDS and CL_DBF_RECORD
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG'
@@ -19734,7 +19917,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
@@ -19839,7 +20022,7 @@ ENDDEFINE
 *** DH 06/02/2014: end of added classes
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG'
@@ -20128,7 +20311,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_PROJ_SRV_DATA AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
@@ -20234,7 +20417,7 @@ DEFINE CLASS CL_PROJ_SRV_DATA AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 	#IF .F.
 		LOCAL THIS AS CL_PROJ_FILE OF 'FOXBIN2PRG.PRG'
@@ -20263,7 +20446,7 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="oreg" display="oReg"/>] ;
@@ -20494,7 +20677,7 @@ DEFINE CLASS CL_MENU_COL_BASE AS CL_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 	#IF .F.
 		LOCAL THIS AS CL_MENU OF 'FOXBIN2PRG.PRG'
@@ -21210,7 +21393,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 ENDDEFINE
 
 
-*******************************************************************************************************************
+
 DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarbloque_definepopup" display="analizarBloque_DefinePOPUP"/>] ;
