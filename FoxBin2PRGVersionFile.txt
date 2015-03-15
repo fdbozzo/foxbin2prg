@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.41'
-    .VersionDate          = Date(2015,01,18)
+    .VersionNumber        = 'v1.19.42'
+    .VersionDate          = Date(2015,03,01)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,27 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/03/01	v1.19.42
+- Feature: Added VFP 9 SP1 runtime validation
+- Bug Fix: Broken SourceSafe compatibility because an error is thrown when querying for file support (Tuvia Vinitsky)
+- Bug Fix scx/vcx: Process only one TEXT/ENDTEXT nesting level because TEXT/ENDTEXT can't be nested (Lutz Scheffler)
+- Feature: Make some error descriptions more informative and precise (Lutz Scheffler)
+- Feature: Allow specifying inputFile with relative path (Lutz Scheffler)
+- Bug Fix scx: Metadata of Dataenvironment not properly generated when Dataenvironment is renamed
+- Bug Fix: Added PJX/PJ2 generation when specifying "file.pjx", "*" (Lutz Scheffler)
+- Some enhancements in german translations (Lutz Scheffler)
+- Feature: Added multiprocessing of projects (*.pjx, *.pj2) when specifying "file.pjx", "*" (Lutz Scheffler)
+- Change FoxBin2Prg base class from custom to session (Lutz Scheffler)
+- Feature: Allow processing all project files without converting the PJX/2 (Lutz Scheffler)
+- Bug Fix pjx/pj2: If end of line (CR+LF) is used on pjx's "Build" properties data, generated pj2 is malformed
+- Feature: Default foxbin2prg.cfg configuration file renamed to foxbin2prg.cfg.txt to no overwrite user cfg (Lutz Scheffler)
+- Added DOS errOut output support and implemented in writeErrorLog when logging errors
+- Feature: Added full support for *? file masks for multi-processing files of the same extension
+- Feature: Added new parameter to allow alternative main CFG (Lutz Scheffler)
+- Feature: Added new get_Target() API method for obtaining information about processed files (Lutz Scheffler)
+- Feature: Added new file processing output to DOS stdOut (Lutz Scheffler)
+- Bug Fix: Fixed processing cancelation with Esc key
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
