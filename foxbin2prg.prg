@@ -14035,21 +14035,40 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lnLen
+            LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile
 
 			STORE 0 TO lnCodError
 
 			WITH THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
 				lnDatabases_Count	= ADATABASES(laDatabases)
-
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+				toDatabase			= CREATEOBJECT('CL_DBC')
+				toDatabase._DBC		= .c_InputFile
+				toDatabase.read_DBC_Header()
+
+				*-- Verifico si hay archivo de eventos, y si hay uno definido pero no existe el archivo,
+				*-- creo uno temporalmente para poder abrir la BDD y luego lo elimino.
+				IF toDatabase._DBCEvents AND NOT EMPTY(toDatabase._DBCEventFilename) THEN
+					*-- El archivo de eventos puede tener path relativo o absoluto
+					IF LEFT(toDatabase._DBCEventFilename,1) = '.' THEN
+						lcEventsFile	= ADDBS( JUSTPATH(.c_InputFile) ) + toDatabase._DBCEventFilename
+					ELSE
+						lcEventsFile	= toDatabase._DBCEventFilename
+					ENDIF
+					IF FILE(lcEventsFile) THEN
+						lcEventsFile	= ''
+					ELSE
+						STRTOFILE( '', lcEventsFile )
+					ENDIF
+				ENDIF
+
 				OPEN DATABASE (.c_InputFile) SHARED NOUPDATE
+
 				.AvanceDelProceso( 'Analyzing DBC metadata...', 1, 2, 1 )
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 				*-- Header
-				toDatabase		= CREATEOBJECT('CL_DBC')
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
 
@@ -14075,8 +14094,12 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
 			CLOSE DATABASES
+			IF NOT EMPTY(lcEventsFile) THEN
+				ERASE (lcEventsFile)
+				ERASE (FORCEEXT(lcEventsFile,'FXP'))
+			ENDIF
 			RELEASE toDatabase, toEx, toFoxBin2Prg ;
-				, lnCodError, laDatabases, lnDatabases_Count, lnLen
+                , lnCodError, laDatabases, lnDatabases_Count
 		ENDTRY
 
 		RETURN
@@ -15150,6 +15173,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="add_property" display="Add_Property"/>] ;
 		+ [<memberdata name="analizarbloque_comment" display="analizarBloque_Comment"/>] ;
+		+ [<memberdata name="_dbc" display="_DBC"/>] ;
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
 		+ [<memberdata name="dbgetprop" display="DBGETPROP"/>] ;
@@ -15165,12 +15189,15 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		+ [<memberdata name="getbinmemofromproperties" display="getBinMemoFromProperties"/>] ;
 		+ [<memberdata name="getreferentialintegrityinfo" display="getReferentialIntegrityInfo"/>] ;
 		+ [<memberdata name="getusermemo" display="getUserMemo"/>] ;
+		+ [<memberdata name="read_dbc_header" display="read_DBC_Header"/>] ;
+		+ [<memberdata name="readnext_dbc_headerdatarecord" display="readNext_DBC_HeaderDataRecord"/>] ;
 		+ [<memberdata name="setnextid" display="setNextID"/>] ;
 		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
 		+ [</VFPData>]
 
 
 	__ObjectID		= 0
+	_DBC			= ''
 	_Name			= ''
 
 
@@ -15965,6 +15992,68 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		ENDWITH && THIS
 
 		RETURN lcType
+	ENDPROC
+
+
+	PROCEDURE readNext_DBC_HeaderDataRecord
+		LPARAMETERS tcHeader, tnPos, tnLen, tnID, tcDataType, tcPropName, teData
+
+		LOCAL lnOffset, llRetorno
+		
+		TRY
+			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+				tnPos		= EVL(tnPos,1)
+
+				IF tnPos >= LEN(tcHeader) THEN
+					EXIT
+				ENDIF
+
+				tnLen		= CTOBIN( SUBSTR(tcHeader, tnPos, 4), '4RS' )
+				tnID		= ASC( SUBSTR(tcHeader, tnPos + 4 + 2, 1) )
+				tcDataType	= .getDBCPropertyValueTypeByPropertyID(tnID)
+				lnOffset	= IIF(tcDataType = 'C', 1, 0)
+				tcPropName	= .getDBCPropertyNameByID(tnID, .T.)
+				teData		= SUBSTR(tcHeader, tnPos + 4 + 2 + 1, tnLen - 4 - 2 - 1 - lnOffset)
+
+				DO CASE
+				CASE tcDataType = 'B'
+					teData			= ASC(teData)
+
+				CASE tcDataType = 'L'
+					teData			= ( CTOBIN( teData, "1S" ) = 1 )
+
+				CASE tcDataType = 'N'
+					teData			= CTOBIN( teData, "4S" )
+
+				ENDCASE
+
+				tnPos		= tnPos + tnLen
+				llRetorno	= .T.
+			ENDWITH
+		ENDTRY
+
+		RETURN llRetorno
+	ENDPROC
+
+
+	PROCEDURE read_DBC_Header
+		LOCAL lnLen, lnID, leData, lcHeader, lnPos, lcPropName, lcDataType, lnOffset
+		
+		TRY
+			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+				GO TOP IN TABLABIN
+				lcHeader	= TABLABIN.property
+				._Name	= UPPER( JUSTFNAME( DBF("TABLABIN") ) )
+				
+				DO WHILE .T.
+					IF NOT .readNext_DBC_HeaderDataRecord( @lcHeader, @lnPos, @lnLen, @lnID, @lcDataType, @lcPropName, @leData )
+						EXIT
+					ENDIF
+					.AddProperty( '_' + lcPropName, leData )
+				ENDDO
+
+			ENDWITH
+		ENDTRY
 	ENDPROC
 
 
@@ -17149,6 +17238,29 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 			IF lnField_Count > 0
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
+					<<>>			<FIELD_ORDER>
+					<<>>
+				ENDTEXT
+
+				SET TEXTMERGE TO MEMVAR lcText ADDITIVE NOSHOW
+				SET TEXTMERGE ON
+
+				FOR X = 1 TO lnField_Count
+					\				<<laFields(X)>>
+				ENDFOR
+
+				SET TEXTMERGE OFF
+				SET TEXTMERGE TO
+
+				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
+					AND TB2.objectName = PADR(LOWER(tcTable),128) ;
+					ORDER BY 1 ASC ;
+					INTO ARRAY laFields
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>			</FIELD_ORDER>
+					<<>>
 					<<>>			<FIELDS>
 				ENDTEXT
 
@@ -18194,6 +18306,29 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 
 			IF lnField_Count > 0
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>
+					<<>>			<FIELD_ORDER>
+					<<>>
+				ENDTEXT
+
+				SET TEXTMERGE TO MEMVAR lcText ADDITIVE NOSHOW
+				SET TEXTMERGE ON
+
+				FOR X = 1 TO lnField_Count
+					\				<<laFields(X)>>
+				ENDFOR
+
+				SET TEXTMERGE OFF
+				SET TEXTMERGE TO
+
+				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
+					AND TB2.objectName = PADR(LOWER(tcView),128) ;
+					ORDER BY 1 ASC ;
+					INTO ARRAY laFields
+
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>			</FIELD_ORDER>
 					<<>>
 					<<>>			<FIELDS>
 				ENDTEXT
