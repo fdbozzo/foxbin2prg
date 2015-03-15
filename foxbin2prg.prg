@@ -17173,7 +17173,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 		+ [<memberdata name="n_campos" display="n_Campos"/>] ;
 		+ [</VFPData>]
 
-	
+
 	DIMENSION a_Campos(1,2)	&& col.1=campo, col.2=definición
 	n_Campos		= 0
 
@@ -17198,6 +17198,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
+					.n_Campos = 0
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -17353,12 +17354,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 				SET TEXTMERGE OFF
 				SET TEXTMERGE TO
-
-				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-					AND TB2.objectName = PADR(LOWER(tcTable),128) ;
-					ORDER BY 1 ASC ;
-					INTO ARRAY laFields
+				ASORT( laFields, 1, -1, 0, 1 )
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>			</FIELD_ORDER>
@@ -18348,6 +18344,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
+					.n_Campos = 0
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -18504,12 +18501,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 
 				SET TEXTMERGE OFF
 				SET TEXTMERGE TO
-
-				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-					AND TB2.objectName = PADR(LOWER(tcView),128) ;
-					ORDER BY 1 ASC ;
-					INTO ARRAY laFields
+				ASORT( laFields, 1, -1, 0, 1 )
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>			</FIELD_ORDER>
