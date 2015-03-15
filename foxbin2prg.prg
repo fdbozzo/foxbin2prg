@@ -682,7 +682,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	n_ID							= 0
 	n_FileHandle                	= 0
 	n_Order_View_Fields				= 1
-    n_ProcessedFiles                = 0             && Contador usado para los archivos file.class.ext
+	n_ProcessedFiles                = 0             && Contador usado para los archivos file.class.ext
 	n_ProcessedFilesCount			= 0				&& Contador genérico de procesados
 	o_Conversor                     = NULL
 	o_Frm_Avance					= NULL
@@ -892,10 +892,10 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 		LOCAL lnCount, I
 		lnCount	= 0
-		
+
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			tcFileMask	= EVL(tcFileMask, '*')
-	
+
 			FOR I = 1 TO .n_ProcessedFiles
 				IF LIKE( tcFileMask, JUSTFNAME(.a_ProcessedFiles(I,1)) ) THEN
 					lnCount	= lnCount + 1
@@ -908,7 +908,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ENDIF
 			ENDFOR
 		ENDWITH
-		
+
 		RETURN lnCount
 	ENDFUNC
 
@@ -2733,7 +2733,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		
+
 		IF toEx.ErrorNo = 1799 THEN		&& Conversion Cancelled
 			tcErrorInfo		= loLang.C_CONVERSION_CANCELLED_BY_USER_LOC
 		ELSE
@@ -14035,7 +14035,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		#ENDIF
 
 		TRY
-            LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile
 
 			STORE 0 TO lnCodError
 
@@ -14099,7 +14099,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				ERASE (FORCEEXT(lcEventsFile,'FXP'))
 			ENDIF
 			RELEASE toDatabase, toEx, toFoxBin2Prg ;
-                , lnCodError, laDatabases, lnDatabases_Count
+				, lnCodError, laDatabases, lnDatabases_Count
 		ENDTRY
 
 		RETURN
@@ -15999,7 +15999,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		LPARAMETERS tcHeader, tnPos, tnLen, tnID, tcDataType, tcPropName, teData
 
 		LOCAL lnOffset, llRetorno
-		
+
 		TRY
 			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
 				tnPos		= EVL(tnPos,1)
@@ -16038,13 +16038,13 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE read_DBC_Header
 		LOCAL lnLen, lnID, leData, lcHeader, lnPos, lcPropName, lcDataType, lnOffset
-		
+
 		TRY
 			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
 				GO TOP IN TABLABIN
-				lcHeader	= TABLABIN.property
+				lcHeader	= TABLABIN.Property
 				._Name	= UPPER( JUSTFNAME( DBF("TABLABIN") ) )
-				
+
 				DO WHILE .T.
 					IF NOT .readNext_DBC_HeaderDataRecord( @lcHeader, @lnPos, @lnLen, @lnID, @lcDataType, @lcPropName, @leData )
 						EXIT
@@ -17558,6 +17558,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 			SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
 				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
 				AND TB2.objectName = PADR(LOWER(tcTable),128) ;
+				ORDER BY 1 ;
 				INTO ARRAY laIndexes
 			lnIndex_Count	= _TALLY
 
@@ -19473,6 +19474,7 @@ DEFINE CLASS CL_DBF_INDEXES AS CL_COL_BASE
 				ENDTEXT
 
 				tnTagInfo_Count	= ATAGINFO( taTagInfo )
+				ASORT( taTagInfo, 1, -1, 0, 1 )
 				loIndex			= CREATEOBJECT("CL_DBF_INDEX")
 
 				FOR I = 1 TO tnTagInfo_Count
