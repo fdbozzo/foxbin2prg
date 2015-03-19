@@ -10805,6 +10805,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 		+ [<memberdata name="write_definicionobjetosole" display="write_DefinicionObjetosOLE"/>] ;
 		+ [<memberdata name="write_enddefine_sicorresponde" display="write_ENDDEFINE_SiCorresponde"/>] ;
 		+ [<memberdata name="write_external_class_header" display="write_EXTERNAL_CLASS_HEADER"/>] ;
+		+ [<memberdata name="write_external_member_header" display="write_EXTERNAL_MEMBER_HEADER"/>] ;
 		+ [<memberdata name="write_hidden_properties" display="write_HIDDEN_Properties"/>] ;
 		+ [<memberdata name="write_include" display="write_INCLUDE"/>] ;
 		+ [<memberdata name="write_objectmetadata" display="write_OBJECTMETADATA"/>] ;
@@ -12118,6 +12119,30 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 		TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 			<<C_EXTERNAL_CLASS_I>> Name="<<toRegClass.objname>>" Baseclass="<<toRegClass.Baseclass>>" <<C_EXTERNAL_CLASS_F>>
 		ENDTEXT
+
+		RETURN
+	ENDPROC
+
+
+
+	PROCEDURE write_EXTERNAL_MEMBER_HEADER
+		LPARAMETERS toFoxBin2Prg, tcMemberName, tcMemberType, tcCodigo
+		*-- < EXTERNAL_MEMBER Name = "member-name" Type="member-type" />
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		IF EMPTY(tcCodigo) THEN
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				*-- EXTERNAL_MEMBER identify external member names / EXTERNAL_MEMBER identifica los nombres de los miembros externos
+			ENDTEXT
+		ENDIF
+
+		IF NOT EMPTY(tcMemberName) AND NOT EMPTY(tcMemberType) THEN
+			TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<C_EXTERNAL_MEMBER_I>> Name="<<tcMemberName>>" Type="<<tcMemberType>>" <<C_EXTERNAL_MEMBER_F>>
+			ENDTEXT
+		ENDIF
 
 		RETURN
 	ENDPROC
@@ -14301,10 +14326,15 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile, laClasses(1,2), lnClasses_Count
+			LOCAL lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile, lcExternalHeader, lcCodigo ;
+				, lnClassCount, laClasses(1,3) ;
+				, loConnection AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG' ;
+				, loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG' ;
+				, loView AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
 
-			STORE 0 TO lnCodError, lnClasses_Count
-			STORE '' TO laClasses
+			STORE NULL TO loRelation, loView, loTable
+			STORE 0 TO lnCodError, lnDatabases_Count, lnClassCount
+			STORE '' TO laDatabases, lcEventsFile, lcExternalHeader, laClasses, lcCodigo, C_FB2PRG_CODE
 
 			WITH THIS AS c_conversor_dbc_a_prg OF 'FOXBIN2PRG.PRG'
 				lnDatabases_Count	= ADATABASES(laDatabases)
@@ -14333,18 +14363,90 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				.AvanceDelProceso( 'Analyzing DBC metadata...', 1, 2, 1 )
 
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
-
-				*-- Header
+				*C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
+				*-- Header
+				*fdb*
+				IF toFoxBin2Prg.l_UseClassPerFile
+					.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, .F., .F., @lcExternalHeader )
+
+					*-- Connections
+					FOR EACH loConnection IN toDatabase._Connections FOXOBJECT
+						lnClassCount	= lnClassCount + 1
+						DIMENSION laClasses(lnClassCount,3)
+						laClasses(lnClassCount,1)	= LOWER( loConnection._Name )
+						laClasses(lnClassCount,2)	= loConnection._ToText
+						laClasses(lnClassCount,3)	= 'connection'
+						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, laClasses(lnClassCount,1), laClasses(lnClassCount,3), @lcExternalHeader )
+					ENDFOR
+
+					*-- Tables
+					FOR EACH loTable IN toDatabase._Tables FOXOBJECT
+						lnClassCount	= lnClassCount + 1
+						DIMENSION laClasses(lnClassCount,3)
+						laClasses(lnClassCount,1)	= LOWER( loTable._Name )
+						laClasses(lnClassCount,2)	= loTable._ToText
+						laClasses(lnClassCount,3)	= 'table'
+						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, laClasses(lnClassCount,1), laClasses(lnClassCount,3), @lcExternalHeader )
+					ENDFOR
+
+					*-- Views
+					FOR EACH loView IN toDatabase._Views FOXOBJECT
+						lnClassCount	= lnClassCount + 1
+						DIMENSION laClasses(lnClassCount,3)
+						laClasses(lnClassCount,1)	= LOWER( loView._Name )
+						laClasses(lnClassCount,2)	= loView._ToText
+						laClasses(lnClassCount,3)	= 'view'
+						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, laClasses(lnClassCount,1), laClasses(lnClassCount,3), @lcExternalHeader )
+					ENDFOR
+					
+					*-- Stored Procedures
+					IF NOT EMPTY(toDatabase._StoredProcedures) THEN
+						lnClassCount	= lnClassCount + 1
+						DIMENSION laClasses(lnClassCount,3)
+						laClasses(lnClassCount,1)	= LOWER( 'sp' )
+						laClasses(lnClassCount,2)	= toDatabase._StoredProcedures
+						laClasses(lnClassCount,3)	= 'storedprocedures'
+						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, laClasses(lnClassCount,1), laClasses(lnClassCount,3), @lcExternalHeader )
+					ENDIF
+
+					lcExternalHeader	= lcExternalHeader + CR_LF
+				ENDIF
 
 				*-- Genero el DC2
 				.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
+				*IF .l_Test
+				*	toModulo	= C_FB2PRG_CODE
+				*ELSE
+				*	.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+				*ENDIF
+
+				lcOutputFile	= .c_OutputFile
+				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
+
 				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
+					*FOR I = 1 TO lnClassCount
+					*	lcCodigo	= lcCodigo + laClasses(I,2)
+					*ENDFOR
+					*toDatabase	= lcCodigo
 				ELSE
-					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+					IF toFoxBin2Prg.l_UseClassPerFile
+						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+
+						FOR I = 1 TO lnClassCount
+							* lcOutputFile = '<path>DBCName' + '.' + 'MemberType' + '.' + 'MemberName' + '.' + 'dc2'
+							lcOutputFile	= ADDBS( JUSTPATH( .c_OutputFile ) ) + JUSTSTEM( .c_OutputFile ) + '.' + laClasses(I,3) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
+							lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + laClasses(I,2)
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						ENDFOR
+					ELSE
+						FOR I = 1 TO lnClassCount
+							lcCodigo	= lcCodigo + laClasses(I,2)
+						ENDFOR
+
+						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+					ENDIF
 				ENDIF
 			ENDWITH && THIS
 
@@ -16678,17 +16780,19 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 					FROM TABLABIN ;
 					WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128) ;
 					INTO ARRAY laCode
-				._StoredProcedures	= laCode(1,1)
+				TEXT TO ._StoredProcedures TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	<<C_STORED_PROC_I>>
+					<<laCode(1,1)>>
+					<<>>	<<C_STORED_PROC_F>>
+				ENDTEXT
 
 				IF NOT toFoxBin2Prg.l_UseClassPerFile THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>><<lcConnections>>
-						<<>><<lcTables>>
-						<<>><<lcViews>>
+						<<lcConnections>>
+						<<lcTables>>
+						<<lcViews>>
 						<<>>
-						<<>>	<<C_STORED_PROC_I>>
 						<<._StoredProcedures>>
-						<<>>	<<C_STORED_PROC_F>>
 					ENDTEXT
 				ENDIF
 
@@ -17787,7 +17891,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 						<<>>			<FIELDS>
 					ENDTEXT
 
-					*.KeySort = 2	&& Comento para forzar modo LEGACY
+					.KeySort = 2	&& Comento para forzar modo LEGACY
 					FOR EACH loField IN THIS &&FOXOBJECT
 						lcText	= lcText + loField.toText( tcTable, loField._Name )
 					ENDFOR
@@ -18171,7 +18275,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 						<<>>			<INDEXES>
 					ENDTEXT
 
-					*.KeySort = 2	&& Comento para forzar modo LEGACY
+					.KeySort = 2	&& Comento para forzar modo LEGACY
 					FOR EACH loIndex IN THIS &&FOXOBJECT
 						lcText	= lcText + loIndex.toText( tcTable + '.' + loIndex._Name )
 					ENDFOR
@@ -19183,7 +19287,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 						<<>>			<FIELDS>
 					ENDTEXT
 
-					*.KeySort = 2	&& Comento para forzar modo LEGACY
+					.KeySort = 2	&& Comento para forzar modo LEGACY
 					FOR EACH loField IN THIS &&FOXOBJECT
 						lcText	= lcText + loField.toText( tcView, loField._Name )
 					ENDFOR
