@@ -16820,29 +16820,20 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 		#ENDIF
 
 		TRY
-			LOCAL I, lcText, loEx AS EXCEPTION ;
+			LOCAL lcText, loEx AS EXCEPTION ;
 				, loConnection AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
 				loConnection		= NULL
 				lcText				= ''
-				*DIMENSION taConnections(1)
-				*tnConnection_Count	= ADBOBJECTS( taConnections,"CONNECTION" )
 				.read_bindatatoproperties()
 
-				*IF tnConnection_Count > 0
 				IF .Count > 0 THEN
-					*ASORT( taConnections, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>	<CONNECTIONS>
 					ENDTEXT
 
-					*FOR I = 1 TO tnConnection_Count
-					*	loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
-					*	lcText			= lcText + loConnection.toText( taConnections(I) )
-					*	loConnection	= NULL
-					*ENDFOR
 					.KeySort = 2
 					FOR EACH loConnection IN THIS &&FOXOBJECT
 						lcText			= lcText + loConnection.toText( loConnection._Name )
@@ -16865,7 +16856,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 
 		FINALLY
 			loConnection	= NULL
-			RELEASE I, loConnection
+			RELEASE loConnection
 
 		ENDTRY
 
@@ -16898,8 +16889,6 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 				lnConnection_Count	= ADBOBJECTS( laConnections,"CONNECTION" )
 
 				IF lnConnection_Count > 0
-					*ASORT( laConnections, 1, -1, 0, 1 )
-
 					FOR I = 1 TO lnConnection_Count
 						loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
 						loConnection.read_bindatatoproperties( laConnections(I) )
@@ -17233,31 +17222,19 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 		#ENDIF
 
 		TRY
-			LOCAL I, lcText, loEx AS EXCEPTION ;
+			LOCAL lcText, loEx AS EXCEPTION ;
 				, loTable AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loTable
-				STORE 0 TO I, tnTable_Count
 				lcText	= ''
 				.read_bindatatoproperties()
 
-				*DIMENSION taTables(1)
-				*tnTable_Count	= ADBOBJECTS( taTables,"TABLE" )
-
-				*IF tnTable_Count > 0
 				IF .Count > 0 THEN
-					*ASORT( taTables, 1, -1, 0, 1 )
-
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>	<TABLES>
 					ENDTEXT
 
-					*FOR I = 1 TO tnTable_Count
-					*	loTable	= CREATEOBJECT('CL_DBC_TABLE')
-					*	lcText	= lcText + loTable.toText( taTables(I) )
-					*	loTable	= NULL
-					*ENDFOR
 					.KeySort = 2
 					FOR EACH loTable IN THIS &&FOXOBJECT
 						lcText	= lcText + loTable.toText( loTable._Name )
@@ -17286,7 +17263,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 
 		FINALLY
 			STORE NULL TO loTable
-			RELEASE I, loTable
+			RELEASE loTable
 
 		ENDTRY
 
@@ -17320,8 +17297,6 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 				lnTable_Count	= ADBOBJECTS( laTables,"TABLE" )
 
 				IF lnTable_Count > 0
-					*ASORT( laTables, 1, -1, 0, 1 )
-
 					FOR I = 1 TO lnTable_Count
 						loTable = CREATEOBJECT("CL_DBC_TABLE")
 						loTable.read_bindatatoproperties( laTables(I) )
@@ -17668,13 +17643,13 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 							loField = CREATEOBJECT("CL_DBC_FIELD_DB")
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							IF .n_Campos = 0 THEN
+							*IF .n_Campos = 0 THEN
 								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
 								.ADD( loField, loField._Name )
-							ELSE
-								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
-								.a_Campos( lnPos, 2)	= loField
-							ENDIF
+							*ELSE
+							*	lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
+							*	.a_Campos( lnPos, 2)	= loField
+							*ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -17682,9 +17657,9 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 					ENDFOR
 
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
-					FOR lnPos = 1 TO .n_Campos
-						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
-					ENDFOR
+					*FOR lnPos = 1 TO .n_Campos
+					*	.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
+					*ENDFOR
 				ENDWITH && THIS
 			ENDIF
 
@@ -17789,14 +17764,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 				.read_bindatatoproperties( tcTable, @toFoxBin2Prg )
 
-				*_TALLY	= 0
-				*SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-				AND TB2.objectName = PADR(LOWER(tcTable),128) ;
-				INTO ARRAY laFields
-				*lnField_Count	= _TALLY
-
-				*IF lnField_Count > 0
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<FIELD_ORDER>
@@ -17806,9 +17773,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 					SET TEXTMERGE TO MEMVAR lcText ADDITIVE NOSHOW
 					SET TEXTMERGE ON
 
-					*FOR X = 1 TO lnField_Count
-					*	\				<<ALLTRIM(laFields(X))>>
-					*ENDFOR
 					.KeySort = 0
 					FOR EACH loField IN THIS &&FOXOBJECT
 						\				<<loField._Name>>
@@ -17816,7 +17780,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 					SET TEXTMERGE OFF
 					SET TEXTMERGE TO
-					*ASORT( laFields, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			</FIELD_ORDER>
@@ -17824,12 +17787,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 						<<>>			<FIELDS>
 					ENDTEXT
 
-					*FOR X = 1 TO lnField_Count
-					*	loField	= CREATEOBJECT('CL_DBC_FIELD_DB')
-					*	lcText	= lcText + loField.toText( tcTable, laFields(X) )
-					*	loField	= NULL
-					*ENDFOR
-					.KeySort = 2
+					*.KeySort = 2	&& Comento para forzar modo LEGACY
 					FOR EACH loField IN THIS &&FOXOBJECT
 						lcText	= lcText + loField.toText( tcTable, loField._Name )
 					ENDFOR
@@ -17870,7 +17828,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcTable, toFoxBin2Prg
 
-		EXTERNAL ARRAY taFields
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -17895,8 +17852,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				lnField_Count	= _TALLY
 
 				IF lnField_Count > 0
-					*ASORT( laFields, 1, -1, 0, 1 )
-
 					FOR I = 1 TO lnField_Count
 						loField = CREATEOBJECT("CL_DBC_FIELD_DB")
 						loField.read_bindatatoproperties( tcTable, laFields(I) )
@@ -18203,7 +18158,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 		#ENDIF
 
 		TRY
-			LOCAL X, lcText, loEx AS EXCEPTION ;
+			LOCAL lcText, loEx AS EXCEPTION ;
 				, loIndex AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
@@ -18211,26 +18166,12 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				lcText	= ''
 				.read_bindatatoproperties(tcTable, @toFoxBin2Prg)
 
-				*_TALLY	= 0
-				*SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
-				AND TB2.objectName = PADR(LOWER(tcTable),128) ;
-				ORDER BY 1 ;
-				INTO ARRAY laIndexes
-				*lnIndex_Count	= _TALLY
-
-				*IF lnIndex_Count > 0
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<INDEXES>
 					ENDTEXT
 
-					*FOR X = 1 TO lnIndex_Count
-					*	loIndex	= CREATEOBJECT('CL_DBC_INDEX_DB')
-					*	lcText	= lcText + loIndex.toText( tcTable + '.' + laIndexes(X) )
-					*	loIndex	= NULL
-					*ENDFOR
-					*.KeySort	= 2
+					*.KeySort = 2	&& Comento para forzar modo LEGACY
 					FOR EACH loIndex IN THIS &&FOXOBJECT
 						lcText	= lcText + loIndex.toText( tcTable + '.' + loIndex._Name )
 					ENDFOR
@@ -18256,7 +18197,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 
 		FINALLY
 			STORE NULL TO loIndex
-			RELEASE X, lnIndex_Count, laIndexes, loIndex
+			RELEASE loIndex
 
 		ENDTRY
 
@@ -18292,13 +18233,10 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
 					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
 					AND TB2.objectName = PADR(LOWER(tcTable),128) ;
-					ORDER BY 1 ;
 					INTO ARRAY laIndexes
 				lnIndex_Count	= _TALLY
 
 				IF lnIndex_Count > 0
-					*ASORT( laFields, 1, -1, 0, 1 )
-
 					FOR I = 1 TO lnIndex_Count
 						loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
 						loIndex.read_bindatatoproperties( tcTable + '.' + laIndexes(I) )
@@ -18578,25 +18516,13 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 			WITH THIS AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loView
 				lcText	= ''
-				*lcDBC	= JUSTSTEM(DBC())
 				.read_bindatatoproperties()
 
-				*DIMENSION taViews(1)
-				*tnView_Count	= ADBOBJECTS( taViews,"VIEW" )
-
-				*IF tnView_Count > 0
 				IF .Count > 0 THEN
-					*ASORT( taViews, 1, -1, 0, 1 )
-
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>	<VIEWS>
 					ENDTEXT
 
-					loView	= CREATEOBJECT('CL_DBC_VIEW')
-
-					*FOR I = 1 TO tnView_Count
-					*	lcText	= lcText + loView.toText( taViews(I) )
-					*ENDFOR
 					.KeySort	= 2
 					FOR EACH loView IN THIS &&FOXOBJECT
 						lcText	= lcText + loView.toText( loView._Name )
@@ -18625,7 +18551,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 
 		FINALLY
 			STORE NULL TO loView
-			RELEASE I, lcDBC, lnField_Count, laFields, loView
+			RELEASE loView
 
 		ENDTRY
 
@@ -18656,11 +18582,9 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 					EXIT
 				ENDIF
 
-				lnView_Count	= ADBOBJECTS( laViews,"VIEW" )
+				lnView_Count	= ADBOBJECTS( laViews, "VIEW" )
 
 				IF lnView_Count > 0
-					*ASORT( taTables, 1, -1, 0, 1 )
-
 					FOR I = 1 TO lnView_Count
 						loView = CREATEOBJECT("CL_DBC_VIEW")
 						loView.read_bindatatoproperties( laViews(I) )
@@ -18756,8 +18680,9 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	_WhereType				= 0
 
 	*-- Sub-objects
-	*_Fields					= NULL
+	*_Fields				= NULL
 	*_Indexes				= NULL
+	*_Relations				= NULL
 
 
 	PROCEDURE INIT
@@ -18909,9 +18834,8 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 				ENDTEXT
 
 				*-- ALGUNOS VALORES QUE EL DBGETPROP OFICIAL NO DEVUELVE
-				*-- Path
-				*-- OfflineRecordCount
-				*IF NOT EMPTY(._Offline) AND EVALUATE(._Offline)
+				*-- 	Path
+				*-- 	OfflineRecordCount
 				IF ._Offline THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<Path><<._Path>></Path>
@@ -18926,7 +18850,6 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 				loIndexes	= ._Indexes
 				lcIndexes	= loIndexes.toText( tcView )
 
-				*loRelations	= CREATEOBJECT('CL_DBC_RELATIONS')
 				loRelations	= ._Relations
 				lcRelations	= loRelations.toText( tcView )
 
@@ -18952,7 +18875,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 
 		FINALLY
 			STORE NULL TO loRelations, loIndexes, loFields
-			RELEASE I, lcDBC, lnField_Count, laFields, loFields, loIndexes, loRelations
+			RELEASE loFields, loIndexes, loRelations
 
 		ENDTRY
 
@@ -19117,13 +19040,13 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 							loField = CREATEOBJECT("CL_DBC_FIELD_VW")
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							IF .n_Campos = 0 THEN
+							*IF .n_Campos = 0 THEN
 								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
 								.ADD( loField, loField._Name )
-							ELSE
-								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
-								.a_Campos( lnPos, 2)	= loField
-							ENDIF
+							*ELSE
+							*	lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
+							*	.a_Campos( lnPos, 2)	= loField
+							*ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -19131,9 +19054,9 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 					ENDFOR
 
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
-					FOR lnPos = 1 TO .n_Campos
-						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
-					ENDFOR
+					*FOR lnPos = 1 TO .n_Campos
+					*	.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
+					*ENDFOR
 				ENDWITH && THIS
 			ENDIF
 
@@ -19235,15 +19158,8 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 			lcText	= ''
 
 			WITH THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
-				*_TALLY	= 0
-				*SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-				INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-				AND TB2.objectName = PADR(LOWER(tcView),128) ;
-				INTO ARRAY laFields
-				*lnField_Count	= _TALLY
 				.read_bindatatoproperties(tcView, @toFoxBin2Prg)
 
-				*IF lnField_Count > 0
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<FIELD_ORDER>
@@ -19253,9 +19169,6 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 					SET TEXTMERGE TO MEMVAR lcText ADDITIVE NOSHOW
 					SET TEXTMERGE ON
 
-					*FOR X = 1 TO lnField_Count
-					*	\				<<ALLTRIM(laFields(X))>>
-					*ENDFOR
 					.KeySort = 0
 					FOR EACH loField IN THIS &&FOXOBJECT
 						\				<<loField._Name>>
@@ -19263,7 +19176,6 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 
 					SET TEXTMERGE OFF
 					SET TEXTMERGE TO
-					*ASORT( laFields, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			</FIELD_ORDER>
@@ -19271,12 +19183,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 						<<>>			<FIELDS>
 					ENDTEXT
 
-					*loField = CREATEOBJECT("CL_DBC_FIELD_VW")
-
-					*FOR X = 1 TO lnField_Count
-					*	lcText	= lcText + loField.toText( tcView, laFields(X) )
-					*ENDFOR
-					.KeySort = 2
+					*.KeySort = 2	&& Comento para forzar modo LEGACY
 					FOR EACH loField IN THIS &&FOXOBJECT
 						lcText	= lcText + loField.toText( tcView, loField._Name )
 					ENDFOR
@@ -19301,7 +19208,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 
 		FINALLY
 			STORE NULL TO loField
-			RELEASE X, lnField_Count, laFields, loField
+			RELEASE loField
 
 		ENDTRY
 
@@ -19342,8 +19249,6 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				lnField_Count	= _TALLY
 
 				IF lnField_Count > 0
-					*ASORT( taFields, 1, -1, 0, 1 )
-
 					FOR I = 1 TO lnField_Count
 						loField = CREATEOBJECT("CL_DBC_FIELD_VW")
 						loField.read_bindatatoproperties( tcView, laFields(I) )
@@ -19365,7 +19270,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 			USE IN (SELECT("TB"))
 			USE IN (SELECT("TB2"))
 			loField	= NULL
-			RELEASE I, loField
+			RELEASE loField
 
 		ENDTRY
 
@@ -19665,32 +19570,17 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 		TRY
 			WITH THIS AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
-				LOCAL I, lnRelation_Count, laRelations(1,5), lcText, loEx AS EXCEPTION ;
+				LOCAL lcText, loEx AS EXCEPTION ;
 					, loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loRelation
 				lcText	= ''
-				X		= 0
 				.read_bindatatoproperties(tcTable, @toFoxBin2Prg)
 
-				*DIMENSION laRelations(1,5)
-				*lnRelation_Count	= ADBOBJECTS( laRelations,"RELATION" )
-
-				*IF lnRelation_Count > 0
 				IF .Count > 0 THEN
-					*ASORT( laRelations, 2, -1, 0, 1 )
-					*ASORT( laRelations, 1, -1, 0, 1 )
-
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<RELATIONS>
 					ENDTEXT
 
-					*loRelation	= CREATEOBJECT('CL_DBC_RELATION')
-
-					*FOR I = 1 TO lnRelation_Count
-					*	IF laRelations(I,1) == UPPER( RTRIM( tcTable ) )
-					*		lcText	= lcText + loRelation.toText( @laRelations, I )
-					*	ENDIF
-					*ENDFOR
 					FOR EACH loRelation IN THIS &&FOXOBJECT
 						lcText	= lcText + loRelation.toText()
 					ENDFOR
@@ -19733,12 +19623,12 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 		TRY
 			WITH THIS AS CL_DBC_RELATIONS OF 'FOXBIN2PRG.PRG'
-				LOCAL X, lnRelation_Count, laRelations(1,5), lcText, loEx AS EXCEPTION ;
+				LOCAL I, lnRelation_Count, laRelations(1,5), lcText, loEx AS EXCEPTION ;
 					, loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
 
 				STORE NULL TO loRelation
 				lcText	= ''
-				X		= 0
+				I		= 0
 
 				lnRelation_Count	= ADBOBJECTS( laRelations, "RELATION" )
 
@@ -19746,10 +19636,10 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 					ASORT( laRelations, 2, -1, 0, 1 )
 					ASORT( laRelations, 1, -1, 0, 1 )
 
-					FOR X = 1 TO lnRelation_Count
-						IF laRelations(X,1) == UPPER( RTRIM( tcTable ) )
+					FOR I = 1 TO lnRelation_Count
+						IF laRelations(I,1) == UPPER( RTRIM( tcTable ) )
 							loRelation	= CREATEOBJECT('CL_DBC_RELATION')
-							loRelation.read_bindatatoproperties( @laRelations, X )
+							loRelation.read_bindatatoproperties( @laRelations, I )
 							.ADD( loRelation, loRelation._Name )
 						ENDIF
 					ENDFOR
@@ -19767,7 +19657,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 		FINALLY
 			STORE NULL TO loRelation
-			RELEASE X, loRelation
+			RELEASE loRelation
 
 		ENDTRY
 
