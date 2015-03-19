@@ -16835,7 +16835,6 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 					*ASORT( taConnections, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>	<CONNECTIONS>
 					ENDTEXT
 
@@ -17251,7 +17250,6 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 					*ASORT( taTables, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>	<TABLES>
 					ENDTEXT
 
@@ -17801,7 +17799,6 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				*IF lnField_Count > 0
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>			<FIELD_ORDER>
 						<<>>
 					ENDTEXT
@@ -18225,7 +18222,6 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				*IF lnIndex_Count > 0
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>			<INDEXES>
 					ENDTEXT
 
@@ -18593,7 +18589,6 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 					*ASORT( taViews, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>	<VIEWS>
 					ENDTEXT
 
@@ -18885,7 +18880,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 			WITH THIS AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
 				.read_bindatatoproperties(tcView)
 
-				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
 					<<>>		<VIEW>
 					<<>>			<Name><<tcView>></Name>
@@ -18918,7 +18913,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 				*-- OfflineRecordCount
 				*IF NOT EMPTY(._Offline) AND EVALUATE(._Offline)
 				IF ._Offline THEN
-					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<Path><<._Path>></Path>
 						<<>>			<RecordCount><<._RecordCount>></RecordCount>
 					ENDTEXT
@@ -19251,7 +19246,6 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				*IF lnField_Count > 0
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>			<FIELD_ORDER>
 						<<>>
 					ENDTEXT
@@ -19687,7 +19681,6 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 					*ASORT( laRelations, 1, -1, 0, 1 )
 
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>
 						<<>>			<RELATIONS>
 					ENDTEXT
 
@@ -19881,7 +19874,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 				lcText	= ''
 				.read_bindatatoproperties(@taRelations, X)
 
-				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<RELATION>
 					<<>>					<Name><<._Name>></Name>
 					<<>>					<ChildTable><<._ChildTable>></ChildTable>
