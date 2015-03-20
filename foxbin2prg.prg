@@ -2865,7 +2865,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				*-- addProcessedFile( tcInputFile, tcProcessed, tcHasErrors, tcSupported, tcReserved )
 				IF NOT .addProcessedFile( .c_InputFile, 'P1', 'E0', 'S1', 'RR' ) THEN
 					*.writeLog( 'OPTIMIZACIÓN: El archivo Base [' + JUSTFNAME(lc_BaseFile) + '] ya fue procesado, por lo que no se procesará [' + JUSTFNAME(.c_InputFile) + ']' )
-					.writeLog( TEXTMERGE( loLang.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC ) )
+					.writeLog( '> ' + TEXTMERGE( loLang.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC ) )
 					EXIT
 				ENDIF
 
@@ -12496,7 +12496,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 
 		IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
 			*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-			THIS.writeLog( TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+			THIS.writeLog( '> ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 
 		ELSE
 			IF llFileExists THEN
@@ -12505,7 +12505,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 			ENDIF
 
 			lnBytes	= STRTOFILE( tcCodigo, tcOutputFile )
-			THIS.writeLog( loLang.C_FILENAME_LOC + ': ' + tcOutputFile + ' (' + ALLTRIM(TRANSFORM(lnBytes/1024,'######.##')) + '/' + ALLTRIM(TRANSFORM(LEN(tcCodigo)/1024,'######.##')) + ' KiB)' )
+			THIS.writeLog( '> ' + loLang.C_FILENAME_LOC + ': ' + tcOutputFile + ' (' + ALLTRIM(TRANSFORM(lnBytes/1024,'######.##')) + '/' + ALLTRIM(TRANSFORM(LEN(tcCodigo)/1024,'######.##')) + ' KiB)' )
 			*THIS.writeLog( '- ' + loLang.C_GENERATED_FILE_SIZE_LOC )
 
 			IF lnBytes = 0
@@ -14216,7 +14216,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 							ERASE (.c_OutputFile + '.TMP')
 							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 							lcOutputFile	= .c_OutputFile
-							.writeLog( TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+							.writeLog( '> ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
 								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
 								AND NOT toFoxBin2Prg.RenameTmpFile2Tx2File( .c_OutputFile )
