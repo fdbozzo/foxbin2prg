@@ -10240,8 +10240,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			STORE NULL TO loReg, toModulo
 
 			WITH THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
-
-				*-------- *fdb*
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				toModulo			= CREATEOBJECT('CL_MODULO')
 
@@ -10249,7 +10247,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 					C_FB2PRG_CODE		= ''
-					
+
 					*-- Quito la última parte del cierre de </DATABASE> para anexar lo intermedio
 					FOR X = 1 TO lnCodeLines
 						IF C_DATABASE_F $ laCodeLines(X) THEN
@@ -10290,7 +10288,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
 						lcMemberType		= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
-						
+
 						IF NOT lcMemberType == lcLastMemberType THEN
 							IF NOT EMPTY(lcLastMemberType) THEN
 								*-- Cambio de tipo de miembro, fin del anterior (connection, table, view, storedprocedures)
@@ -10335,11 +10333,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
 						lcTempTxt		= FILETOSTR( lcInputFile_Class )
-						
+
 						FOR Y = 7 TO ALINES( laLines, lcTempTxt )
 							C_FB2PRG_CODE	= C_FB2PRG_CODE + laLines(Y) + CR_LF
 						ENDFOR
-						
+
 						lcLastMemberType	= lcMemberType
 					ENDFOR
 
@@ -10361,7 +10359,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					FOR X = X TO lnCodeLines
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + laCodeLines(X) + CR_LF
 					ENDFOR
-			
+
 					STRTOFILE( C_FB2PRG_CODE, .c_InputFile + '.txt' )
 				ELSE
 					*-- No es clase por archivo, o no se quiere redireccionar a Main.
@@ -10374,10 +10372,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 				ENDIF
 
-				*--------
-
-
-				*C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
@@ -14485,7 +14479,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						laClasses(lnClassCount,3)	= 'view'
 						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, laClasses(lnClassCount,1), laClasses(lnClassCount,3), @lcExternalHeader )
 					ENDFOR
-					
+
 					*-- Stored Procedures
 					IF NOT EMPTY(toDatabase._StoredProcedures) THEN
 						lnClassCount	= lnClassCount + 1
@@ -16825,7 +16819,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 
 	PROCEDURE toText
-        LPARAMETERS toFoxBin2Prg
+		LPARAMETERS toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -17837,8 +17831,8 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 							*IF .n_Campos = 0 THEN
-								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
-								.ADD( loField, loField._Name )
+							*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
+							.ADD( loField, loField._Name )
 							*ELSE
 							*	lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
 							*	.a_Campos( lnPos, 2)	= loField
@@ -19234,8 +19228,8 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 							*IF .n_Campos = 0 THEN
-								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
-								.ADD( loField, loField._Name )
+							*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
+							.ADD( loField, loField._Name )
 							*ELSE
 							*	lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
 							*	.a_Campos( lnPos, 2)	= loField
