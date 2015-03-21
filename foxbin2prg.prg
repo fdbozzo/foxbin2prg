@@ -14526,7 +14526,10 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				*-- creo uno temporalmente para poder abrir la BDD y luego lo elimino.
 				IF toDatabase._DBCEvents AND NOT EMPTY(toDatabase._DBCEventFilename) THEN
 					*-- El archivo de eventos puede tener path relativo o absoluto
-					IF LEFT(toDatabase._DBCEventFilename,1) = '.' THEN
+					*-- Ajusto la ruta si no es absoluta
+					IF LEN(toDatabase._DBCEventFilename) > 1 ;
+							AND LEFT(LTRIM(toDatabase._DBCEventFilename),2) <> '\\' ;
+							AND SUBSTR(LTRIM(toDatabase._DBCEventFilename),2,1) <> ':' THEN
 						lcEventsFile	= ADDBS( JUSTPATH(.c_InputFile) ) + toDatabase._DBCEventFilename
 					ELSE
 						lcEventsFile	= toDatabase._DBCEventFilename
@@ -14535,6 +14538,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						lcEventsFile	= ''
 					ELSE
 						STRTOFILE( '', lcEventsFile )
+						COMPILE (lcEventsFile)
 					ENDIF
 				ENDIF
 
