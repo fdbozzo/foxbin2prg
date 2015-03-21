@@ -8,7 +8,7 @@
 <TABLE>
 	<MemoFile></MemoFile>
 	<CodePage>1252</CodePage>
-	<LastUpdate>2014/01/06</LastUpdate>
+	<LastUpdate></LastUpdate>
 	<Database>fb2p_dbc.dbc</Database>
 	<FileType>0x00000030</FileType>
 	<FileType_Descrip>Visual FoxPro</FileType_Descrip>
@@ -68,6 +68,22 @@
 			<Order>ASCENDING</Order>
 			<Collate>MACHINE</Collate>
 		</INDEX>
+		<INDEX>
+			<TagName>DESCRIP</TagName>
+			<TagType>REGULAR</TagType>
+			<Key>DESCRIP</Key>
+			<Filter></Filter>
+			<Order>DESCENDING</Order>
+			<Collate>GENERAL</Collate>
+		</INDEX>
 	</INDEXES>
+
+
+	<RECORDS>
+		<RECORD num="1">
+			<DEPTO>D.1.C</DEPTO>
+			<DESCRIP>la descrip</DESCRIP>
+		</RECORD>
+	</RECORDS>
 
 </TABLE>

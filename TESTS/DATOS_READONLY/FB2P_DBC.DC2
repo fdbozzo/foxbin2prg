@@ -102,7 +102,16 @@
 					<Comment></Comment>
 					<IsUnique>.T.</IsUnique>
 				</INDEX>
+				<INDEX>
+					<Name>descrip</Name>
+					<Comment></Comment>
+					<IsUnique>.F.</IsUnique>
+				</INDEX>
 			</INDEXES>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</TABLE>
 
 		<TABLE>
@@ -216,6 +225,18 @@
 					<IsUnique>.F.</IsUnique>
 				</INDEX>
 			</INDEXES>
+
+			<RELATIONS>
+				<RELATION>
+					<Name>Relation 1</Name>
+					<ChildTable>NOMBRELARGODELDBF</ChildTable>
+					<ParentTable>FB2P_DEPTO</ParentTable>
+					<ChildIndex>DEPTO</ChildIndex>
+					<ParentIndex>DEPTO</ParentIndex>
+					<RefIntegrity></RefIntegrity>
+				</RELATION>
+			</RELATIONS>
+
 		</TABLE>
 	</TABLES>
 
@@ -393,6 +414,10 @@
 					<UpdateName>STROSNC.DB_DEBUG_SETUP.USUARIO</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 
 		<VIEW>
@@ -502,6 +527,10 @@
 					<UpdateName>fb2p_dbc!nombrelargodeldbf.depto</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 
 		<VIEW>
@@ -579,6 +608,10 @@
 					<UpdateName>CONVENIOS.HISTORICO</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 
 		<VIEW>
@@ -624,6 +657,10 @@
 					<UpdateName>DUAL.DUMMY</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 	</VIEWS>
 
