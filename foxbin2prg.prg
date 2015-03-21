@@ -132,7 +132,7 @@
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix scx/vcx: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros en LPARAMETERS (Ryan Harris)
 * 13/01/2015	FDBOZZO		v1.19.41	Bug Fix db2: Detección errónea de tabla inválida cuando el tamaño es inferior a 328 bytes. Límite mínimo cambiado a 65 bytes.
 * 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro SP1, para evitar problemas ajenos a FoxBin2Prg
-* 04/02/2015	FDBOZZO		v1.19.42	Mejora db2 v1.19.41: Permitir ordenar los campos alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
+* 04/02/2015	FDBOZZO		v1.19.42	Mejora dc2: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
 * 22/01/2015    FDBOZZO     v1.19.42    Bug Fix: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Tuvia Vinitsky)
 * 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Lutz Scheffler)
 * 25/02/2015	FDBOZZO		v1.19.42	Mejora: Hacer algunos mensajes de error más descriptivos (Lutz Scheffler)
@@ -210,7 +210,7 @@
 * 06/01/2015	Jim Nelson			Mejora v1.19.39: Permitir configurar la barra de progreso para que solamente aparezca cuando se procesan múltiples archivos y no cuando se procesa solo 1 (Agregado en v1.19.40)
 * 06/01/2015    Mike Potjer         Reporte bug db2: [Error 12, Variable "TCOUTPUTFILE" is not found] cuando DBF_Conversion_Support=4 y el archivo de salida es igual al generado (Agregado en v1.19.40)
 * 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
-* 24/01/2015	Ryan Harris			Mejora db2 v1.19.41: Permitir ordenar los campos alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge
+* 24/01/2015	Ryan Harris			Mejora db2 v1.19.41: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge
 * 22/01/2015	Tuvia Vinitsky		Bug Fix v1.19.41: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
@@ -10231,11 +10231,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines ;
-				, laLineasExclusion(1), lnBloquesExclusion, I ;
+			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lcBaseFilename ;
+				, lcMemberType, lcLastMemberType ;
+				, laLineasExclusion(1), lnBloquesExclusion, I, X, Y, laFiles(1,5), lnFileCount, lcTempTxt, laLines(1) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-			STORE 0 TO lnCodError, lnCodeLines
-			STORE '' TO lcLine
+			STORE 0 TO lnCodError, lnCodeLines, lnFileCount
+			STORE '' TO lcLine, laLines, laCodeLines, lcBaseFilename, lcMemberType, lcLastMemberType
 			STORE NULL TO loReg, toModulo
 
 			WITH THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
@@ -10246,24 +10247,80 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 				IF toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
-
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+					C_FB2PRG_CODE		= ''
+					
+					*-- Quito la última parte del cierre de </DATABASE> para anexar lo intermedio
+					FOR X = 1 TO lnCodeLines
+						IF C_DATABASE_F $ laCodeLines(X) THEN
+							EXIT
+						ENDIF
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + laCodeLines(X) + CR_LF
+					ENDFOR
 
 					.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 					.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
 					.AvanceDelProceso( 'Loading Code...', 2, lnCodeLines, 1 )
 
-					*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
-					lcInputFile			= FORCEPATH( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTPATH(.c_InputFile) ) + '.*.' + JUSTEXT(.c_InputFile)
+					*-- Esto crea la máscara de búsqueda "<path>Database.*.*.ext" para encontrar las partes
+					*-- con la sintaxis "<path>Database.MemberType.MemberName.ext"
+					lcBaseFilename		= JUSTSTEM( JUSTSTEM( JUSTSTEM(.c_InputFile) ) )
+					lcInputFile			= ADDBS( JUSTPATH(.c_InputFile) ) + lcBaseFilename + '.*.*.' + JUSTEXT(.c_InputFile)
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
-					ASORT( laFiles, 1, 0, 0, 1)
+
+					*-- Busco "storedprocedures" y le pongo "z" al inicio
+					FOR I = 1 TO lnFileCount
+						IF LOWER( laFiles(I,1)) == lcBaseFilename + '.storedprocedures.sp.' + JUSTEXT(.c_InputFile) THEN
+							laFiles(I,1)	= lcBaseFilename + '.zstoredprocedures.sp.' + JUSTEXT(.c_InputFile)
+							EXIT
+						ENDIF
+					ENDFOR
+
+					ASORT( laFiles, 1, -1, 0, 1)	&& "zstoredprocedures" quedará al final
+
+					*-- Busco "zstoredprocedures" y le quito la "z" del inicio
+					FOR I = 1 TO lnFileCount
+						IF LOWER( laFiles(I,1)) == lcBaseFilename + '.zstoredprocedures.sp.' + JUSTEXT(.c_InputFile) THEN
+							laFiles(I,1)	= lcBaseFilename + '.storedprocedures.sp.' + JUSTEXT(.c_InputFile)
+							EXIT
+						ENDIF
+					ENDFOR
 
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
+						lcMemberType		= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
+						
+						IF NOT lcMemberType == lcLastMemberType THEN
+							IF NOT EMPTY(lcLastMemberType) THEN
+								*-- Cambio de tipo de miembro, fin del anterior (connection, table, view, storedprocedures)
+								DO CASE
+								CASE lcLastMemberType == 'connection'
+									C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + C_CONNECTIONS_F + CR_LF
+								CASE lcLastMemberType == 'table'
+									C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + C_TABLES_F + CR_LF
+								CASE lcLastMemberType == 'view'
+									C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + C_VIEWS_F + CR_LF
+								CASE lcLastMemberType == 'storedprocedures'
+									*C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF
+								ENDCASE
+							ENDIF
+
+							*-- Cambio de tipo de miembro, inicio del actual (connection, table, view, storedprocedures)
+							DO CASE
+							CASE lcMemberType == 'connection'
+								C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF + C_TAB + C_CONNECTIONS_I + CR_LF
+							CASE lcMemberType == 'table'
+								C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF + C_TAB + C_TABLES_I + CR_LF
+							CASE lcMemberType == 'view'
+								C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF + C_TAB + C_VIEWS_I + CR_LF
+							CASE lcMemberType == 'storedprocedures'
+								C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF
+							ENDCASE
+						ENDIF
 
 						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , JUSTEXT( JUSTSTEM( lcInputFile_Class ) ), 1, 0, 1, 1+2+4 ) = 0
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toDatabase._ExternalClasses , JUSTEXT( JUSTEXT( JUSTSTEM( lcInputFile_Class ) ) ), 1, 0, 1, 1+2+4 ) = 0
 							.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 							LOOP	&& Salteo esta clase porque no concuerda con las anotadas
@@ -10277,8 +10334,35 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 						ENDIF
 
 						toFoxBin2Prg.normalizarCapitalizacionArchivos( .T., lcInputFile_Class )
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+						lcTempTxt		= FILETOSTR( lcInputFile_Class )
+						
+						FOR Y = 7 TO ALINES( laLines, lcTempTxt )
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + laLines(Y) + CR_LF
+						ENDFOR
+						
+						lcLastMemberType	= lcMemberType
 					ENDFOR
+
+					IF NOT EMPTY(lcLastMemberType) THEN
+						*-- Cambio de tipo de miembro, fin del anterior (connection, table, view, storedprocedures)
+						DO CASE
+						CASE lcLastMemberType == 'connection'
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + C_CONNECTIONS_F + CR_LF
+						CASE lcLastMemberType == 'table'
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + C_TABLES_F + CR_LF
+						CASE lcLastMemberType == 'view'
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + C_TAB + C_VIEWS_F + CR_LF
+						CASE lcLastMemberType == 'storedprocedures'
+							*C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF
+						ENDCASE
+					ENDIF
+
+					*-- Agrego la última parte con el cierre de </DATABASE>
+					FOR X = X TO lnCodeLines
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + laCodeLines(X) + CR_LF
+					ENDFOR
+			
+					STRTOFILE( C_FB2PRG_CODE, .c_InputFile + '.txt' )
 				ELSE
 					*-- No es clase por archivo, o no se quiere redireccionar a Main.
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -10289,6 +10373,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
 				ENDIF
+
 				*--------
 
 
@@ -16516,20 +16601,24 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 		+ [<memberdata name="_sourcefile" display="_SourceFile"/>] ;
 		+ [<memberdata name="_storedprocedures" display="_StoredProcedures"/>] ;
 		+ [<memberdata name="_version" display="_Version"/>] ;
+		+ [<memberdata name="_externalclasses" display="_ExternalClasses"/>] ;
+		+ [<memberdata name="_externalclasses_count" display="_ExternalClasses_Count"/>] ;
 		+ [</VFPData>]
 
 
 	*-- Modulo
-	_Version			= 0
-	_SourceFile			= ''
+	DIMENSION _ExternalClasses(1,2)
+	_ExternalClasses_Count	= 0
+	_Version				= 0
+	_SourceFile				= ''
 
 	*-- Database Info
-	_Name				= ''
-	_Comment			= ''
-	_Version			= 0
-	_DBCEvents			= .F.
-	_DBCEventFilename	= ''
-	_StoredProcedures	= ''
+	_Name					= ''
+	_Comment				= ''
+	_Version				= 0
+	_DBCEvents				= .F.
+	_DBCEventFilename		= ''
+	_StoredProcedures		= ''
 
 
 	PROCEDURE INIT
