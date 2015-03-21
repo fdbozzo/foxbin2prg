@@ -2838,18 +2838,35 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ENDIF
 
 
-				*-- OPTIMIZACIÓN VC2/SC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
-				IF INLIST(lcExtension,'VC2','SC2') AND .l_UseClassPerFile AND .l_RedirectClassPerFileToMain
-					IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
-						lc_BaseFile	= .c_InputFile
-					ELSE
-						lc_BaseFile	= FORCEPATH( FORCEEXT( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTEXT(.c_InputFile)) , JUSTPATH(.c_InputFile) )
-					ENDIF
+				*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
+				*fdb*
+				IF .l_UseClassPerFile AND .l_RedirectClassPerFileToMain THEN
+					DO CASE
+					CASE INLIST(lcExtension,'VC2','SC2')
+						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
+							lc_BaseFile	= .c_InputFile
+						ELSE
+							lc_BaseFile	= FORCEPATH( FORCEEXT( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTEXT(.c_InputFile)) , JUSTPATH(.c_InputFile) )
+						ENDIF
 
-					*-- Verifico si se debe forzar la redirección al archivo principal
-					IF '.' $ JUSTSTEM(.c_InputFile)
-						.c_InputFile	= lc_BaseFile
-					ENDIF
+						*-- Verifico si se debe forzar la redirección al archivo principal
+						IF '.' $ JUSTSTEM(.c_InputFile)
+							.c_InputFile	= lc_BaseFile
+						ENDIF
+
+					CASE lcExtension = 'DC2'
+						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
+							lc_BaseFile	= .c_InputFile
+						ELSE
+							lc_BaseFile	= FORCEPATH( FORCEEXT( JUSTSTEM( JUSTSTEM( JUSTSTEM(.c_InputFile) ) ), JUSTEXT(.c_InputFile)) , JUSTPATH(.c_InputFile) )
+						ENDIF
+
+						*-- Verifico si se debe forzar la redirección al archivo principal
+						IF '.' $ JUSTSTEM(.c_InputFile)
+							.c_InputFile	= lc_BaseFile
+						ENDIF
+
+					ENDCASE
 				ENDIF
 
 				IF NOT EMPTY(tcOriginalFileName)
@@ -7394,7 +7411,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 				toModulo._ExternalClasses_Count		= toModulo._ExternalClasses_Count + 1
 				DIMENSION toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 2 )
 				toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 1 )	= .get_ValueByName_FromListNamesWithValues( 'Name', 'C', @laPropsAndValues )
-				*toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 2 )	= .get_ValueByName_FromListNamesWithValues( 'Baseclass', 'C', @laPropsAndValues )
+				toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 2 )	= .get_ValueByName_FromListNamesWithValues( 'Baseclass', 'C', @laPropsAndValues ) ;
+					+ '.' + toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 1 )
 			ENDWITH && THIS
 		ENDIF
 
@@ -7425,8 +7443,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 
 				toModulo._ExternalClasses_Count		= toModulo._ExternalClasses_Count + 1
 				DIMENSION toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 2 )
-				toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 1 )	= .get_ValueByName_FromListNamesWithValues( 'Name', 'C', @laPropsAndValues )
-				toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 2 )	= .get_ValueByName_FromListNamesWithValues( 'Type', 'C', @laPropsAndValues )
+				toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 1 )	= .get_ValueByName_FromListNamesWithValues( 'Type', 'C', @laPropsAndValues ) ;
+					+ '.' + .get_ValueByName_FromListNamesWithValues( 'Name', 'C', @laPropsAndValues )
+				*toModulo._ExternalClasses( toModulo._ExternalClasses_Count, 2 )	= .get_ValueByName_FromListNamesWithValues( 'Type', 'C', @laPropsAndValues )
 			ENDWITH && THIS
 		ENDIF
 
@@ -7961,12 +7980,12 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I ;
+				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
-				STORE '' TO C_FB2PRG_CODE
+				STORE '' TO C_FB2PRG_CODE, lcClassName
 				STORE NULL TO toModulo
 
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
@@ -7989,9 +8008,10 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
+						lcClassName			= JUSTEXT( JUSTSTEM( lcInputFile_Class ) )
 
 						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , JUSTEXT( JUSTSTEM( lcInputFile_Class ) ), 1, 0, 1, 1+2+4 ) = 0
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses, lcClassName, 1, 0, 1, 1+2+4 ) = 0
 							.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 							LOOP	&& Salteo esta clase porque no concuerda con las anotadas
@@ -10232,16 +10252,16 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lcBaseFilename ;
-				, lcMemberType, lcLastMemberType ;
+				, lcMemberType, lcMemberName, lcLastMemberType ;
 				, laLineasExclusion(1), lnBloquesExclusion, I, X, Y, laFiles(1,5), lnFileCount, lcTempTxt, laLines(1) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnCodeLines, lnFileCount
-			STORE '' TO lcLine, laLines, laCodeLines, lcBaseFilename, lcMemberType, lcLastMemberType
-			STORE NULL TO loReg, toModulo
+			STORE '' TO lcLine, laLines, laCodeLines, lcBaseFilename, lcMemberType, lcLastMemberType, lcMemberName
+			STORE NULL TO loReg, toDatabase
 
 			WITH THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
-				toModulo			= CREATEOBJECT('CL_MODULO')
+				toDatabase			= CREATEOBJECT('CL_DBC')
 
 				IF toFoxBin2Prg.l_UseClassPerFile AND toFoxBin2Prg.l_RedirectClassPerFileToMain
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -10257,7 +10277,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					ENDFOR
 
 					.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
-					.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+					.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase, @toFoxBin2Prg )
 
 					.AvanceDelProceso( 'Loading Code...', 2, lnCodeLines, 1 )
 
@@ -10288,6 +10308,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					FOR I = 1 TO lnFileCount
 						lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
 						lcMemberType		= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
+						lcMemberName		= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 3, '.' ) )
 
 						IF NOT lcMemberType == lcLastMemberType THEN
 							IF NOT EMPTY(lcLastMemberType) THEN
@@ -10317,11 +10338,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 							ENDCASE
 						ENDIF
 
-						*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toDatabase._ExternalClasses , JUSTEXT( JUSTEXT( JUSTSTEM( lcInputFile_Class ) ) ), 1, 0, 1, 1+2+4 ) = 0
-							.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
-							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
-							LOOP	&& Salteo esta clase porque no concuerda con las anotadas
+						*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toDatabase._ExternalClasses, lcMemberType + '.' + lcMemberName, 1, 0, 1, 1+2+4 ) = 0
+							.writeLog( C_TAB + '- ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
+							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
+							LOOP	&& Salteo este miembro porque no concuerda con los anotados
 						ENDIF
 
 						.writeLog( C_TAB + '+ ' + loLang.C_INCLUDING_CLASS_LOC + ' ' + JUSTFNAME( lcInputFile_Class ) )
@@ -10367,7 +10388,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 					.AvanceDelProceso( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
-					.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+					.identificarBloquesDeCabecera( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase, @toFoxBin2Prg )
 
 				ENDIF
 
@@ -14442,11 +14463,9 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				.AvanceDelProceso( 'Analyzing DBC metadata...', 1, 2, 1 )
 
-				*C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
 				*-- Header
-				*fdb*
 				IF toFoxBin2Prg.l_UseClassPerFile
 					.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, .F., .F., @lcExternalHeader )
 
@@ -14495,12 +14514,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				*-- Genero el DC2
 				.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
-				*IF .l_Test
-				*	toModulo	= C_FB2PRG_CODE
-				*ELSE
-				*	.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
-				*ENDIF
-
 				lcOutputFile	= .c_OutputFile
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
@@ -24188,6 +24201,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= ""
 	C_OPTION_LOC													= ""
 	C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= ""
+	C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC					= ""
 	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= ""
 	C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= ""
 	C_PRESS_ESC_TO_CANCEL											= ""
@@ -24337,6 +24351,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimisation: sauter fichier déjà traité [<<(lcFile)>>]"
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La classe externe ne correspond pas à la classe interne"
+					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "L'élément extérieur ne correspond pas aux éléments intérieur"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<<lcOutputFile>>] ne était pas écrasé parce que ce est la même que celle générée."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimisation: fichier de sortie [<<THIS.c_OutputFile>>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
 					.C_PRESS_ESC_TO_CANCEL											= "Appuyez sur Esc pour Annuler"
@@ -24421,7 +24436,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
 					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimización: saltando el archivo ya procesado [<<(lcFile)>>]"
 					.C_OPTION_LOC													= "Option"
-					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con la clase interna"
+					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con las clases internas"
+					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "El miembro externo no coincide con los miembros internos"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: el archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al generado."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
 					.C_PRESS_ESC_TO_CANCEL											= "Pulse Esc para Cancelar"
@@ -24507,6 +24523,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimierung: Überspringen von bereits bearbeiteten Datei [<<(lcFile)>>]"
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
+					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "Das äußere Element nicht den inneren Elementen entsprechen"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
@@ -24592,6 +24609,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimization: skipping already processed file [<<(lcFile)>>]"
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "The outer class does not match the inner classes"
+					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "The outer member does not match the inner members"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimization: output file [<<lcOutputFile>>] was not overwritten because it is the same as was generated."
 					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
 					.C_PRESS_ESC_TO_CANCEL											= "Press Esc to Cancel"
