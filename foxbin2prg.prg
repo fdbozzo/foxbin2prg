@@ -10360,7 +10360,6 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + laCodeLines(X) + CR_LF
 					ENDFOR
 
-					STRTOFILE( C_FB2PRG_CODE, .c_InputFile + '.txt' )
 				ELSE
 					*-- No es clase por archivo, o no se quiere redireccionar a Main.
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -10372,6 +10371,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 				ENDIF
 
+				*STRTOFILE( C_FB2PRG_CODE, .c_InputFile + '.txt' )	&& *fdb*
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
@@ -15580,6 +15580,7 @@ DEFINE CLASS CL_DBC_COL_BASE AS CL_COL_BASE
 		+ [<memberdata name="_name" display="_Name"/>] ;
 		+ [<memberdata name="__objectid" display="__ObjectID"/>] ;
 		+ [<memberdata name="updatedbc" display="updateDBC"/>] ;
+		+ [<memberdata name="read_bindatatoproperties" display="read_BinDataToProperties"/>] ;
 		+ [</VFPData>]
 
 	__ObjectID		= 0
@@ -17013,7 +17014,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 			WITH THIS AS CL_DBC_CONNECTIONS OF 'FOXBIN2PRG.PRG'
 				loConnection		= NULL
 				lcText				= ''
-				.read_bindatatoproperties()
+				.read_BinDataToProperties()
 
 				IF .Count > 0 THEN
 
@@ -17051,7 +17052,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
@@ -17078,7 +17079,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 				IF lnConnection_Count > 0
 					FOR I = 1 TO lnConnection_Count
 						loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
-						loConnection.read_bindatatoproperties( laConnections(I) )
+						loConnection.read_BinDataToProperties( laConnections(I) )
 						.ADD( loConnection, loConnection._Name )
 					ENDFOR
 				ENDIF
@@ -17223,7 +17224,7 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 			LOCAL lcText, loEx AS EXCEPTION
 
 			WITH THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
-				.read_bindatatoproperties(tcConnection)
+				.read_BinDataToProperties(tcConnection)
 
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>		<CONNECTION>
@@ -17292,7 +17293,7 @@ DEFINE CLASS CL_DBC_CONNECTION AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		LPARAMETERS tcConnection
 
 		WITH THIS AS CL_DBC_CONNECTION OF 'FOXBIN2PRG.PRG'
@@ -17415,7 +17416,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 			WITH THIS AS CL_DBC_TABLES OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loTable
 				lcText	= ''
-				.read_bindatatoproperties()
+				.read_BinDataToProperties()
 
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -17458,7 +17459,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
@@ -17486,7 +17487,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 				IF lnTable_Count > 0
 					FOR I = 1 TO lnTable_Count
 						loTable = CREATEOBJECT("CL_DBC_TABLE")
-						loTable.read_bindatatoproperties( laTables(I) )
+						loTable.read_BinDataToProperties( laTables(I) )
 						.ADD( loTable, loTable._Name )
 					ENDFOR
 				ENDIF
@@ -17662,7 +17663,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 			WITH THIS AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loRelations, loFields, loIndexes
 				STORE '' TO lcText, lcFields, lcIndexes, lcRelations
-				.read_bindatatoproperties(tcTable)
+				.read_BinDataToProperties(tcTable)
 
 				loFields	= CREATEOBJECT('CL_DBC_FIELDS_DB')
 				lcFields	= loFields.toText( tcTable, @toFoxBin2Prg )
@@ -17754,7 +17755,7 @@ DEFINE CLASS CL_DBC_TABLE AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		LPARAMETERS tcTable
 
 		WITH THIS AS CL_DBC_TABLE OF 'FOXBIN2PRG.PRG'
@@ -17815,7 +17816,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBC_FIELDS_DB OF 'FOXBIN2PRG.PRG'
-					*.n_Campos = 0	&& Para forzar modo LEGACY
+					*.n_Campos = 0	&& Descomentar para forzar modo LEGACY
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -17830,13 +17831,13 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 							loField = CREATEOBJECT("CL_DBC_FIELD_DB")
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							*IF .n_Campos = 0 THEN
-							*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
-							.ADD( loField, loField._Name )
-							*ELSE
-							*	lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
-							*	.a_Campos( lnPos, 2)	= loField
-							*ENDIF
+							IF .n_Campos = 0 THEN
+								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
+								.ADD( loField, loField._Name )
+							ELSE
+								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
+								.a_Campos( lnPos, 2)	= loField
+							ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -17844,9 +17845,9 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 					ENDFOR
 
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
-					*FOR lnPos = 1 TO .n_Campos
-					*	.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
-					*ENDFOR
+					FOR lnPos = 1 TO .n_Campos
+						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
+					ENDFOR
 				ENDWITH && THIS
 			ENDIF
 
@@ -17901,7 +17902,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 						CASE C_FIELD_ORDER_F $ tcLine	&& Fin
 							EXIT
 
-						OTHERWISE	&& campo
+						OTHERWISE	&& nombre del campo en el orden original
 							.n_Campos	= .n_Campos + 1
 							DIMENSION .a_Campos(.n_Campos, 2)
 							.a_Campos(.n_Campos, 1)	= tcLine
@@ -17949,7 +17950,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				STORE 0 TO X, lnField_Count
 				lcText	= ''
 
-				.read_bindatatoproperties( tcTable, @toFoxBin2Prg )
+				.read_BinDataToProperties( tcTable, @toFoxBin2Prg )
 
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -17974,7 +17975,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 						<<>>			<FIELDS>
 					ENDTEXT
 
-					.KeySort = 2	&& Comento para forzar modo LEGACY
+					.KeySort = 2	&& Comentar para forzar modo LEGACY
 					FOR EACH loField IN THIS &&FOXOBJECT
 						lcText	= lcText + loField.toText( tcTable, loField._Name )
 					ENDFOR
@@ -18007,7 +18008,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(@! IN    ) Nombre de la tabla de la que se obtendrán los campos
@@ -18041,7 +18042,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				IF lnField_Count > 0
 					FOR I = 1 TO lnField_Count
 						loField = CREATEOBJECT("CL_DBC_FIELD_DB")
-						loField.read_bindatatoproperties( tcTable, laFields(I) )
+						loField.read_BinDataToProperties( tcTable, laFields(I) )
 						.ADD( loField, loField._Name )
 					ENDFOR
 				ENDIF
@@ -18176,7 +18177,7 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 			lcText	= ''
 
 			WITH THIS AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
-				.read_bindatatoproperties(tcTable, tcField)
+				.read_BinDataToProperties(tcTable, tcField)
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<FIELD>
@@ -18232,7 +18233,7 @@ DEFINE CLASS CL_DBC_FIELD_DB AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		LPARAMETERS tcTable, tcField
 
 		WITH THIS AS CL_DBC_FIELD_DB OF 'FOXBIN2PRG.PRG'
@@ -18351,14 +18352,14 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 			WITH THIS AS CL_DBC_INDEXES_DB OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loIndex
 				lcText	= ''
-				.read_bindatatoproperties(tcTable, @toFoxBin2Prg)
+				.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
 
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<INDEXES>
 					ENDTEXT
 
-					.KeySort = 2	&& Comento para forzar modo LEGACY
+					.KeySort = 2	&& Comentar para forzar modo LEGACY
 					FOR EACH loIndex IN THIS &&FOXOBJECT
 						lcText	= lcText + loIndex.toText( tcTable + '.' + loIndex._Name )
 					ENDFOR
@@ -18392,7 +18393,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Nombre de la Tabla
@@ -18426,7 +18427,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				IF lnIndex_Count > 0
 					FOR I = 1 TO lnIndex_Count
 						loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
-						loIndex.read_bindatatoproperties( tcTable + '.' + laIndexes(I) )
+						loIndex.read_BinDataToProperties( tcTable + '.' + laIndexes(I) )
 						.ADD( loIndex, loIndex._Name )
 					ENDFOR
 				ENDIF
@@ -18546,7 +18547,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 			lcText	= ''
 
 			WITH THIS AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
-				.read_bindatatoproperties(tcIndex)
+				.read_BinDataToProperties(tcIndex)
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<INDEX>
@@ -18586,7 +18587,7 @@ DEFINE CLASS CL_DBC_INDEX_DB AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		LPARAMETERS tcIndex
 
 		WITH THIS AS CL_DBC_INDEX_DB OF 'FOXBIN2PRG.PRG'
@@ -18703,7 +18704,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 			WITH THIS AS CL_DBC_VIEWS OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loView
 				lcText	= ''
-				.read_bindatatoproperties()
+				.read_BinDataToProperties()
 
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -18746,7 +18747,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
@@ -18774,7 +18775,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 				IF lnView_Count > 0
 					FOR I = 1 TO lnView_Count
 						loView = CREATEOBJECT("CL_DBC_VIEW")
-						loView.read_bindatatoproperties( laViews(I) )
+						loView.read_BinDataToProperties( laViews(I) )
 						.ADD( loView, loView._Name )
 					ENDFOR
 				ENDIF
@@ -18990,7 +18991,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 			STORE '' TO lcText, lcFields, lcIndexes, lcRelations
 
 			WITH THIS AS CL_DBC_VIEW OF 'FOXBIN2PRG.PRG'
-				.read_bindatatoproperties(tcView)
+				.read_BinDataToProperties(tcView)
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>
@@ -19130,7 +19131,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(v! IN    ) Vista en evaluación
@@ -19211,7 +19212,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
-					*.n_Campos = 0	&& Para forzar modo LEGACY
+					*.n_Campos = 0	&& Descomentar para forzar modo LEGACY
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
@@ -19227,13 +19228,13 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 							loField = CREATEOBJECT("CL_DBC_FIELD_VW")
 							loField.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							*IF .n_Campos = 0 THEN
-							*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
-							.ADD( loField, loField._Name )
-							*ELSE
-							*	lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
-							*	.a_Campos( lnPos, 2)	= loField
-							*ENDIF
+							IF .n_Campos = 0 THEN
+								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
+								.ADD( loField, loField._Name )
+							ELSE
+								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
+								.a_Campos( lnPos, 2)	= loField
+							ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -19241,9 +19242,9 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 					ENDFOR
 
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
-					*FOR lnPos = 1 TO .n_Campos
-					*	.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
-					*ENDFOR
+					FOR lnPos = 1 TO .n_Campos
+						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
+					ENDFOR
 				ENDWITH && THIS
 			ENDIF
 
@@ -19299,7 +19300,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 						CASE C_FIELD_ORDER_F $ tcLine	&& Fin
 							EXIT
 
-						OTHERWISE	&& campo
+						OTHERWISE	&& nombre del campo en el orden original
 							.n_Campos	= .n_Campos + 1
 							DIMENSION .a_Campos(.n_Campos, 2)
 							.a_Campos(.n_Campos, 1)	= tcLine
@@ -19345,7 +19346,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 			lcText	= ''
 
 			WITH THIS AS CL_DBC_FIELDS_VW OF 'FOXBIN2PRG.PRG'
-				.read_bindatatoproperties(tcView, @toFoxBin2Prg)
+				.read_BinDataToProperties(tcView, @toFoxBin2Prg)
 
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -19370,7 +19371,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 						<<>>			<FIELDS>
 					ENDTEXT
 
-					.KeySort = 2	&& Comento para forzar modo LEGACY
+					.KeySort = 2	&& Comentar para forzar modo LEGACY
 					FOR EACH loField IN THIS &&FOXOBJECT
 						lcText	= lcText + loField.toText( tcView, loField._Name )
 					ENDFOR
@@ -19403,7 +19404,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcView					(@! IN    ) Nombre de la vista de la que se obtendrán los campos
@@ -19438,7 +19439,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				IF lnField_Count > 0
 					FOR I = 1 TO lnField_Count
 						loField = CREATEOBJECT("CL_DBC_FIELD_VW")
-						loField.read_bindatatoproperties( tcView, laFields(I) )
+						loField.read_BinDataToProperties( tcView, laFields(I) )
 						.ADD( loField, loField._Name )
 					ENDFOR
 				ENDIF
@@ -19643,7 +19644,7 @@ DEFINE CLASS CL_DBC_FIELD_VW AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		LPARAMETERS tcView, tcField
 
 		WITH THIS AS CL_DBC_FIELD_VW OF 'FOXBIN2PRG.PRG'
@@ -19761,7 +19762,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 					, loRelation AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loRelation
 				lcText	= ''
-				.read_bindatatoproperties(tcTable, @toFoxBin2Prg)
+				.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
 
 				IF .Count > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -19796,7 +19797,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcTable					(v! IN    ) Tabla de la que obtener las relaciones
@@ -19826,7 +19827,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnRelation_Count
 						IF laRelations(I,1) == UPPER( RTRIM( tcTable ) )
 							loRelation	= CREATEOBJECT('CL_DBC_RELATION')
-							loRelation.read_bindatatoproperties( @laRelations, I )
+							loRelation.read_BinDataToProperties( @laRelations, I )
 							.ADD( loRelation, loRelation._Name )
 						ENDIF
 					ENDFOR
@@ -19949,7 +19950,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 			WITH THIS AS CL_DBC_RELATION OF 'FOXBIN2PRG.PRG'
 				LOCAL lcText, loEx AS EXCEPTION
 				lcText	= ''
-				.read_bindatatoproperties(@taRelations, X)
+				.read_BinDataToProperties(@taRelations, X)
 
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<RELATION>
@@ -19998,7 +19999,7 @@ DEFINE CLASS CL_DBC_RELATION AS CL_DBC_BASE
 	ENDPROC
 
 
-	PROCEDURE read_bindatatoproperties
+	PROCEDURE read_BinDataToProperties
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taRelations				(!@ IN    ) Array de relaciones
