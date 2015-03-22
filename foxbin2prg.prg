@@ -19250,6 +19250,7 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._UseMemoSize, .getDBCPropertyIDByName('UseMemoSize', .T.) )
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Offline, .getDBCPropertyIDByName('Offline', .T.) )	&& Undocumented
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._RecordCount, .getDBCPropertyIDByName('RecordCount', .T.) )	&& Undocumented
+			lcBinData	= lcBinData + .getBinPropertyDataRecord( ._Path, .getDBCPropertyIDByName('Path', .T.) )	&& Undocumented
 			lcBinData	= lcBinData + .getBinPropertyDataRecord( 0, .getDBCPropertyIDByName('undocumented_view_prop_85', .T.) )	&& Undocumented
 		ENDWITH && THIS
 
@@ -19290,8 +19291,8 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 				._UseMemoSize				= DBGETPROP(tcView,"VIEW","UseMemoSize")
 				._WhereType					= DBGETPROP(tcView,"VIEW","WhereType")
 				*--
-				._Path						= .DBGETPROP(tcView,"VIEW","Path")
-				._RecordCount				= .DBGETPROP(tcView,"VIEW","RecordCount")
+				._Path						= .DBGETPROP(tcView,"VIEW","Path")			&& Para las Vistas el DBGETPROP oficial no funciona con Path
+				._RecordCount				= .DBGETPROP(tcView,"VIEW","RecordCount")	&& Para las Vistas el DBGETPROP oficial no funciona con RecordCount
 				*--
 				._Saved		= .T.
 			ENDIF
