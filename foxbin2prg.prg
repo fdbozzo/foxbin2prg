@@ -20919,24 +20919,30 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 	PROCEDURE toText
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* taTagInfo					(@? IN    ) Array de información de indices
-		* I							(@? IN    ) Indice en evaluación
+		* taTagInfo					(@! IN    ) Array de información de indices
+		* I							(@! IN    ) Indice en evaluación
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taTagInfo, I
 
 		EXTERNAL ARRAY taTagInfo
 
 		TRY
-			LOCAL I, lcText, loEx AS EXCEPTION
+			LOCAL X, lcText, loEx AS EXCEPTION
 			lcText	= ''
+			
+			FOR X = 1 TO ALEN(taTagInfo,1)
+				IF TAG('', X) == taTagInfo(I,1) THEN
+					EXIT
+				ENDIF
+			ENDFOR
 
 			TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>		<INDEX>
 				<<>>			<TagName><<taTagInfo(I,1)>></TagName>
-				<<>>			<TagType><<ICASE(LEFT(taTagInfo(I,2),3)='BIN','BINARY',PRIMARY(I),'PRIMARY',CANDIDATE(I),'CANDIDATE',UNIQUE(I),'UNIQUE','REGULAR'))>></TagType>
+				<<>>			<TagType><<ICASE(LEFT(taTagInfo(I,2),3)='BIN','BINARY',PRIMARY(X),'PRIMARY',CANDIDATE(X),'CANDIDATE',UNIQUE(X),'UNIQUE','REGULAR'))>></TagType>
 				<<>>			<Key><<taTagInfo(I,3)>></Key>
 				<<>>			<Filter><<taTagInfo(I,4)>></Filter>
-				<<>>			<Order><<IIF(DESCENDING(I), 'DESCENDING', 'ASCENDING')>></Order>
+				<<>>			<Order><<IIF(DESCENDING(X), 'DESCENDING', 'ASCENDING')>></Order>
 				<<>>			<Collate><<taTagInfo(I,6)>></Collate>
 				<<>>		</INDEX>
 			ENDTEXT
