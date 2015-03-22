@@ -38,6 +38,7 @@ Change History -------------------------------------------------------------
 - Feature: Added new file processing output to DOS stdOut (Lutz Scheffler)
 - Bug Fix: Fixed processing cancelation with Esc key
 - Feature: Sort table/view fields alphabetically to facilitate diffing and merging, while maintaining a list with the original field order for correct DBC regeneration (Ryan Harris)
+- Feature: Apply ClassPerFile to DBC connections, tables, views and SPs (Ryan Harris)
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
