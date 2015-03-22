@@ -51,6 +51,8 @@ loProject = _VFP.Projects('foxbin2prg.pjx')
 
 WITH loProject.FILES
 	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('foxbin2prg.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" />
+	.ADD('foxbin2prg.jpg')		&& *< FileMetadata: Type="x" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('foxbin2prg.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
 	.ADD('props_all.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_checkbox.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
@@ -153,6 +155,7 @@ ENDWITH
 WITH loProject
 	*<ProjectProperties>
 	.SetMain(lcCurdir + 'foxbin2prg.prg')
+	.Icon = lcCurdir + 'foxbin2prg.ico'
 	.Debug = .T.
 	.Encrypted = .F.
 	*<.CmntStyle = 1 />

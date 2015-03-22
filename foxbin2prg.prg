@@ -512,9 +512,6 @@ QUIT
 
 
 DEFINE CLASS c_foxbin2prg AS SESSION
-	#IF .F.
-		LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="addprocessedfile" display="addProcessedFile"/>] ;
 		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
@@ -580,6 +577,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
+		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
 		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
@@ -677,6 +675,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
 	l_NoTimestamps					= .T.
+	c_BackgroundImage				= ''
 	l_ClearUniqueID                 = .T.
 	l_ClearDBFLastUpdate        	= .T.
 	l_OptimizeByFilestamp           = .F.
@@ -724,6 +723,10 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	PROCEDURE INIT
 		LPARAMETERS tcCFG_File, tcCancelWithEscKey
 
+		#IF .F.
+			LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
 		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5)
 		SET DELETED ON
 		SET DATE YMD
@@ -763,6 +766,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' ) )
+		THIS.c_BackgroundImage			= ADDBS(JUSTPATH(THIS.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg'
 		THIS.c_CurDir					= SYS(5) + CURDIR()
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
 		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
@@ -1182,6 +1186,15 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	ENDPROC
 
 
+	PROCEDURE c_BackgroundImage_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_BackgroundImage
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_BackgroundImage, THIS.c_BackgroundImage )
+		ENDIF
+	ENDPROC
+
+
 	PROCEDURE ChangeFileAttribute
 		* Using Win32 Functions in Visual FoxPro
 		* example=103
@@ -1422,7 +1435,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 	PROCEDURE cargar_frm_avance
 		IF VARTYPE(THIS.o_Frm_Avance) <> "O" THEN
-			THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance")
+			THIS.o_Frm_Avance	= CREATEOBJECT("frm_avance", THIS)
 			THIS.o_Frm_Avance.Show()
 		ENDIF
 	ENDPROC
@@ -1748,6 +1761,13 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DBC_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBC_Conversion_Support) )
 							ENDIF
 
+						CASE LEFT( laConfig(I), 16 ) == LOWER('BackgroundImage:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
+							IF EMPTY(lcValue) OR FILE( lcValue ) THEN
+								lo_CFG.c_BackgroundImage	= lcValue
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > BackgroundImage:            ' + TRANSFORM(lo_CFG.c_BackgroundImage) )
+							ENDIF
+
 						ENDCASE
 					ENDFOR
 
@@ -1801,6 +1821,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
 				.writeLog( C_TAB + 'l_Debug:                      ' + TRANSFORM(.l_Debug) )
 				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
+				.writeLog( C_TAB + 'c_BackgroundImage:            ' + TRANSFORM(.c_BackgroundImage) )
 				.writeLog( C_TAB + 'l_OptimizeByFilestamp:        ' + TRANSFORM(.l_OptimizeByFilestamp) )
 				.writeLog( C_TAB + 'l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
 				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
@@ -2188,7 +2209,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 							AND lcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
 						.writeLog( loLang.C_INTERACTIVE_DIRECTORY_SELECTION_LOC )
-						loFrm_Interactive	= CREATEOBJECT('frm_interactive')
+						loFrm_Interactive	= CREATEOBJECT('frm_interactive', THIS)
 						loFrm_Interactive.Show()
 						READ EVENTS
 						lnConversionOption	= loFrm_Interactive.n_ConversionType
@@ -4031,9 +4052,25 @@ DEFINE CLASS frm_avance AS FORM
 	ENDPROC
 
 
-	PROCEDURE Init
+	PROCEDURE INIT
+		LPARAMETERS toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang						= _SCREEN.o_FoxBin2Prg_Lang
+
+		IF VARTYPE(toFoxBin2Prg) = "O" THEN
+			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
+				THIS.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
+			ENDIF
+			IF FILE( toFoxBin2Prg.c_BackgroundImage ) THEN
+				CLEAR RESOURCES
+				THIS.Picture = toFoxBin2Prg.c_BackgroundImage
+			ENDIF
+		ENDIF
+
 		THIS.CAPTION				= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
 		THIS.nValue					= 0
 		THIS.nValue2				= 0
@@ -4113,6 +4150,17 @@ DEFINE CLASS frm_interactive AS form
 		Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_NONE_LOC, ;
 		Cancel = .T., ;
 		Name = "cmd_None"
+
+
+	PROCEDURE INIT
+		LPARAMETERS toFoxBin2Prg
+
+		IF VARTYPE(toFoxBin2Prg) = "O" THEN
+			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
+				THIS.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
+			ENDIF
+		ENDIF
+	ENDPROC
 
 
 	PROCEDURE do_selection
@@ -20932,7 +20980,7 @@ DEFINE CLASS CL_DBF_INDEX AS CL_CUS_BASE
 		TRY
 			LOCAL X, lcText, loEx AS EXCEPTION
 			lcText	= ''
-			
+
 			FOR X = 1 TO ALEN(taTagInfo,1)
 				IF TAG('', X) == taTagInfo(I,1) THEN
 					EXIT
@@ -24211,6 +24259,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="dbf_conversion_included" display="DBF_Conversion_Included"/>] ;
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
+		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
 		+ [</VFPData>]
 
 	#IF .F.
@@ -24252,7 +24301,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	DBF_Conversion_Included			= NULL
 	DBF_Conversion_Excluded			= NULL
 	DBC_Conversion_Support			= NULL
-
+	c_BackgroundImage				= NULL
 
 ENDDEFINE
 
