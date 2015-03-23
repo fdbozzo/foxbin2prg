@@ -39,8 +39,9 @@ Change History -------------------------------------------------------------
 - Bug Fix: Fixed processing cancelation with Esc key
 - Feature: Sort table/view fields alphabetically to facilitate diffing and merging, while maintaining a list with the original field order for correct DBC regeneration (Ryan Harris)
 - Feature: Apply ClassPerFile to DBC connections, tables, views and SPs (Ryan Harris)
-- Bug Fix: Views now save/restore their Path and RecordCount properties
+- Bug Fix vw: Views now save/restore their Path and RecordCount properties
 - Feature: New default FoxBin2Prg App icon and background image, configurable with a new CFG "BackgroundImage" setting
+- Bug Fix mnx: Empty Pad name is not kept when regenerating a menu defined with and empty Pad name (Lutz Scheffler)
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.

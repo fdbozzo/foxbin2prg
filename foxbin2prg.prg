@@ -152,6 +152,7 @@
 * 10/03/2015	FDBOZZO		v1.19.42	Bug Fix: Arreglada la cancelación del procesamiento con tecla Esc
 * 22/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
 * 22/03/2015	FDBOZZO		v1.19.42	Mejora: Aplicar ClassPerFile a las conexiones, tablas, vistas y stored procedures de los DBC (Ryan Harris)
+* 23/03/2015	FDBOZZO		v1.19.42	Bug Fix mnx: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -214,18 +215,19 @@
 * 13/01/2015	Ryan Harris			Reporte bug vcx/scx v1.19.40: Detección errónea de estructuras PROCEDURE/ENDPROC cuando se usan como parámetros LPARAMETERS en línea aparte (Arreglado en v1.19.41)
 * 24/01/2015	Ryan Harris			Mejora dc2 v1.19.41: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Agregado en v1.19.42)
 * 24/01/2015	Ryan Harris			Mejora dc2 v1.19.41: Aplicar ClassPerFile a las conexiones, tablas, vistas y stored procedures de los DBC (Agregado en v1.19.42)
-* 22/01/2015	Tuvia Vinitsky		Bug Fix v1.19.41: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Arreglado en v1.19.42)
+* 22/01/2015	Tuvia Vinitsky		Reporte bug v1.19.41: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
 * 25/02/2015	Lutz Scheffler		Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
 * 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Mejoras en la traducción al alemán (Agregado en v1.19.42)
 * 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir definir el archivo de entrada con un path relativo (Agregado en v1.19.42)
-* 03/03/2015	Lutz Scheffler		Bug Fix scx v1.19.41: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Agregado en v1.19.42)
+* 03/03/2015	Lutz Scheffler		Reporte bug scx v1.19.41: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Agregado en v1.19.42)
 * 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir proceso multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Agregado en v1.19.42)
 * 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Cambiar clase de base de FoxBin2Prg de custom a session (Agregado en v1.19.42)
 * 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Agregado en v1.19.42)
 * 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir configurar un CFG alternativo (Agregado en v1.19.42)
 * 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_Target() para obtener información de los archivos procesados (Agregado en v1.19.42)
 * 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir salida de archivos procesados a stdOut (Agregado en v1.19.42)
+* 23/03/2015	Lutz Scheffler		Reporte bug mnx v1.19.41: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Arreglado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1962,6 +1964,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 	PROCEDURE get_TextFileNames
 		LPARAMETERS tcInputFile, taOutputFiles
+		*fdb*
 
 		EXTERNAL ARRAY taOutputFiles
 		LOCAL I, lnOutputFiles, lcExt, lnCodeLines, lcCode, laCodeLines(1), lnFileCount, laFiles(1), lcInputFile
@@ -22531,7 +22534,8 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 		* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toObj AS COLLECTION, tnNivel, toConversor
-		LOCAL loReg, loEx AS EXCEPTION
+
+		LOCAL loReg, lcTempName, loEx AS EXCEPTION
 		STORE NULL TO loReg
 
 		#IF .F.
@@ -22542,6 +22546,17 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			WITH THIS AS CL_MENU OF 'FOXBIN2PRG.PRG'
 				IF VARTYPE( toObj.oReg ) = 'O'
 					loReg	= toObj.oReg
+					
+					IF loReg.ObjType = C_OBJTYPE_MENUTYPE_OPTION
+						lcTempName	= '_' + PADL( INT( VAL(loReg.itemnum) ), 9, '0')
+						
+						*-- Si el nombre es del tipo "_0000000001" y coincide con el itemNum
+						*-- que uso para darle un nombre temporal, lo vuelvo a quitar en el binario.
+						IF loReg.Name = lcTempName THEN
+							loReg.Name = ''
+						ENDIF
+					ENDIF
+					
 					INSERT INTO TABLABIN FROM NAME loReg
 
 					IF .l_Debug
