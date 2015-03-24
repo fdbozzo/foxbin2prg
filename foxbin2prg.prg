@@ -489,7 +489,7 @@ lnResp	= loCnv.ejecutar( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShow
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 
-SET COVERAGE TO
+*SET COVERAGE TO
 
 IF _VFP.STARTMODE <> 4 && 4 = Visual FoxPro was started as a distributable .app or .exe file.
 	STORE NULL TO loEx, loCnv
@@ -739,7 +739,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		SET TABLEPROMPT OFF
 		SET POINT TO '.'
 		SET SEPARATOR TO ','
-		SET NOTIFY OFF
 		tcCancelWithEscKey	= EVL(tcCancelWithEscKey, '')
 
 		IF NOT EMPTY(tcCancelWithEscKey)
@@ -900,7 +899,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	ENDFUNC
 
 
-	FUNCTION get_Target
+	FUNCTION get_Processed
 		LPARAMETERS taTargets, tcFileMask
 
 		EXTERNAL ARRAY taTargets
@@ -2093,7 +2092,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File
 
 		TRY
-			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type ;
+			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
 				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
@@ -2102,6 +2101,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				, loWSH AS WScript.Shell
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				lc_OldSetNotify	= SET("Notify")
+				SET NOTIFY OFF
 				lnCodError			= 0
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				loFSO				= .o_FSO
@@ -2576,6 +2577,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 			ENDCASE
 
+			SET NOTIFY &lc_OldSetNotify.
 			STORE NULL TO loFSO, loWSH
 			RELEASE tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 				, toModulo, toEx, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
@@ -4210,16 +4212,19 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		+ [<memberdata name="convertir" display="Convertir"/>] ;
 		+ [<memberdata name="currentlineispreviouslinecontinuation" display="currentLineIsPreviousLineContinuation"/>] ;
 		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="decode_specialcodes_cr_lf" display="decode_SpecialCodes_CR_LF"/>] ;
 		+ [<memberdata name="desnormalizarasignacion" display="desnormalizarAsignacion"/>] ;
 		+ [<memberdata name="desnormalizarvalorpropiedad" display="desnormalizarValorPropiedad"/>] ;
 		+ [<memberdata name="desnormalizarvalorxml" display="desnormalizarValorXML"/>] ;
 		+ [<memberdata name="eltextoevaluadoeseltokenindicado" display="elTextoEvaluadoEsElTokenIndicado"/>] ;
 		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="encode_specialcodes_cr_lf" display="encode_SpecialCodes_CR_LF"/>] ;
 		+ [<memberdata name="exception2str" display="Exception2Str"/>] ;
 		+ [<memberdata name="filetypecode" display="fileTypeCode"/>] ;
 		+ [<memberdata name="get_listnameswithvaluesfrom_inline_metadatatag" display="get_ListNamesWithValuesFrom_InLine_MetadataTag"/>] ;
 		+ [<memberdata name="get_separatedlineandcomment" display="get_SeparatedLineAndComment"/>] ;
 		+ [<memberdata name="get_separatedpropandvalue" display="get_SeparatedPropAndValue"/>] ;
+		+ [<memberdata name="get_textfilenames" display="get_TextFileNames"/>] ;
 		+ [<memberdata name="get_valuefromnullterminatedvalue" display="get_ValueFromNullTerminatedValue"/>] ;
 		+ [<memberdata name="identificarbloquesdeexclusion" display="identificarBloquesDeExclusion"/>] ;
 		+ [<memberdata name="lineisonlycommentandnometadata" display="lineIsOnlyCommentAndNoMetadata"/>] ;
@@ -4299,7 +4304,6 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		SET TABLEPROMPT OFF
 		SET BLOCKSIZE TO 0
 		SET EXACT ON
-		SET NOTIFY OFF
 		IF NOT EMPTY( ON("ESCAPE") ) THEN
 			SET ESCAPE ON
 		ENDIF
@@ -4625,6 +4629,18 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 
 
+	PROCEDURE decode_SpecialCodes_CR_LF
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Decodifica los caracteres ASCII 10 y 13 de {nCode} a CHR(nCode)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcText
+		tcText	= STRTRAN( STRTRAN( tcText, '{10}', CHR(10) ), '{13}', CHR(13) )
+		RETURN tcText
+	ENDPROC
+
+
+
 	PROCEDURE desnormalizarAsignacion
 		LPARAMETERS tcAsignacion
 		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
@@ -4727,12 +4743,28 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 
 	PROCEDURE encode_SpecialCodes_1_31
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Decodifica los primeros 31 caracteres ASCII de CHR(nCode) a {nCode}
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcText
 		LOCAL I
 		FOR I = 0 TO 31
 			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
 		ENDFOR
 		RELEASE I
+		RETURN tcText
+	ENDPROC
+
+
+
+	PROCEDURE encode_SpecialCodes_CR_LF
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcText
+		tcText	= STRTRAN( STRTRAN( tcText, CHR(10), '{10}' ), CHR(13), '{13}' )
 		RETURN tcText
 	ENDPROC
 
@@ -4977,6 +5009,11 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 	ENDPROC
 
 
+	PROCEDURE get_TextFileNames
+		LPARAMETERS tcInputFile
+		*fdb*
+	ENDPROC
+
 
 	PROCEDURE get_ValueFromNullTerminatedValue
 		LPARAMETERS tcNullTerminatedValue
@@ -4987,7 +5024,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		ELSE
 			lcValue		= CHRTRAN( LEFT( tcNullTerminatedValue, lnNullPos - 1 ), ['], ["] )
 		ENDIF
-		lcValue	= THIS.encode_SpecialCodes_1_31(lcValue)
+		lcValue	= THIS.encode_SpecialCodes_CR_LF(lcValue)
 		RELEASE tcNullTerminatedValue, lnNullPos
 		RETURN lcValue
 	ENDPROC
@@ -14181,7 +14218,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 	PROCEDURE strExtract_CR
 		LPARAMETERS tcText
-		tcText	= THIS.decode_SpecialCodes_1_31( STREXTRACT( tcText, 'Comments=', CR_LF ) )
+		tcText	= THIS.decode_SpecialCodes_CR_LF( STREXTRACT( tcText, 'Comments=', CR_LF ) )
 		RETURN tcText
 	ENDPROC
 
@@ -15443,8 +15480,8 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		+ [<memberdata name="_revision" display="_Revision"/>] ;
 		+ [<memberdata name="_languageid" display="_LanguageID"/>] ;
 		+ [<memberdata name="_autoincrement" display="_AutoIncrement"/>] ;
-		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
-		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="decode_specialcodes_cr_lf" display="decode_SpecialCodes_CR_LF"/>] ;
+		+ [<memberdata name="encode_specialcodes_cr_lf" display="encode_SpecialCodes_CR_LF"/>] ;
 		+ [<memberdata name="getformatteddeviceinfotext" display="getFormattedDeviceInfoText"/>] ;
 		+ [<memberdata name="parsedeviceinfo" display="parseDeviceInfo"/>] ;
 		+ [<memberdata name="parsenullterminatedvalue" display="parseNullTerminatedValue"/>] ;
@@ -15504,29 +15541,25 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 
 
 
-	PROCEDURE decode_SpecialCodes_1_31
+	PROCEDURE decode_SpecialCodes_CR_LF
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcText					(!@ IN    ) Decodifica los primeros 31 caracteres ASCII de {nCode} a CHR(nCode)
+		* tcText					(!@ IN    ) Decodifica los caracteres ASCII 10 y 13 de {nCode} a CHR(nCode)
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcText
-		LOCAL I
-		FOR I = 0 TO 31
-			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
-		ENDFOR
-		RELEASE I
+		tcText	= STRTRAN( STRTRAN( tcText, '{10}', CHR(10) ), '{13}', CHR(13) )
 		RETURN tcText
 	ENDPROC
 
 
 
-	PROCEDURE encode_SpecialCodes_1_31
+	PROCEDURE encode_SpecialCodes_CR_LF
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcText
-		LOCAL I
-		FOR I = 0 TO 31
-			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
-		ENDFOR
-		RELEASE I
+		tcText	= STRTRAN( STRTRAN( tcText, CHR(10), '{10}' ), CHR(13), '{13}' )
 		RETURN tcText
 	ENDPROC
 
@@ -15555,7 +15588,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 			lcValue	= GETWORDNUM(lcAsignacion, 2, '=')
 
 			IF TYPE(lcValue) = "C" THEN
-				lcAsignacion	= GETWORDNUM(lcAsignacion, 1, '=') + '= THIS.encode_SpecialCodes_1_31(' + lcValue + ')'
+				lcAsignacion	= GETWORDNUM(lcAsignacion, 1, '=') + '= THIS.encode_SpecialCodes_CR_LF(' + lcValue + ')'
 			ENDIF
 
 			&lcAsignacion.
@@ -15580,7 +15613,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		ELSE
 			lcValue		= CHRTRAN( LEFT( lcStr, MIN(tnLen, lnNullPos - 1 ) ), ['], ["] )
 		ENDIF
-		lcValue = THIS.encode_SpecialCodes_1_31(lcValue)
+		lcValue = THIS.encode_SpecialCodes_CR_LF(lcValue)
 		RETURN lcValue
 	ENDPROC
 
@@ -21242,8 +21275,8 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 		+ [<memberdata name="_typelib" display="_TypeLib"/>] ;
 		+ [<memberdata name="_typelibdesc" display="_TypeLibDesc"/>] ;
 		+ [<memberdata name="add_server" display="add_Server"/>] ;
-		+ [<memberdata name="decode_specialcodes_1_31" display="decode_SpecialCodes_1_31"/>] ;
-		+ [<memberdata name="encode_specialcodes_1_31" display="encode_SpecialCodes_1_31"/>] ;
+		+ [<memberdata name="decode_specialcodes_cr_lf" display="decode_SpecialCodes_CR_LF"/>] ;
+		+ [<memberdata name="encode_specialcodes_cr_lf" display="encode_SpecialCodes_CR_LF"/>] ;
 		+ [<memberdata name="getdatafrompair_lendata_structure" display="getDataFromPair_LenData_Structure"/>] ;
 		+ [<memberdata name="getformattedservertext" display="getFormattedServerText"/>] ;
 		+ [<memberdata name="getrowserverinfo" display="getRowServerInfo"/>] ;
@@ -21267,29 +21300,25 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 
 
 
-	PROCEDURE decode_SpecialCodes_1_31
+	PROCEDURE decode_SpecialCodes_CR_LF
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcText					(!@ IN    ) Decodifica los primeros 31 caracteres ASCII de {nCode} a CHR(nCode)
+		* tcText					(!@ IN    ) Decodifica los caracteres ASCII 10 y 13 de {nCode} a CHR(nCode)
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcText
-		LOCAL I
-		FOR I = 0 TO 31
-			tcText	= STRTRAN( tcText, '{' + TRANSFORM(I) + '}', CHR(I) )
-		ENDFOR
-		RELEASE I
+		tcText	= STRTRAN( STRTRAN( tcText, '{10}', CHR(10) ), '{13}', CHR(13) )
 		RETURN tcText
 	ENDPROC
 
 
 
-	PROCEDURE encode_SpecialCodes_1_31
+	PROCEDURE encode_SpecialCodes_CR_LF
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcText
-		LOCAL I
-		FOR I = 0 TO 31
-			tcText	= STRTRAN( tcText, CHR(I), '{' + TRANSFORM(I) + '}' )
-		ENDFOR
-		RELEASE I
+		tcText	= STRTRAN( STRTRAN( tcText, CHR(10), '{10}' ), CHR(13), '{13}' )
 		RETURN tcText
 	ENDPROC
 
@@ -21317,7 +21346,7 @@ DEFINE CLASS CL_PROJ_SRV_HEAD AS CL_CUS_BASE
 			lcValue	= GETWORDNUM(lcAsignacion, 2, '=')
 
 			IF TYPE(lcValue) = "C" THEN
-				lcAsignacion	= GETWORDNUM(lcAsignacion, 1, '=') + '= THIS.encode_SpecialCodes_1_31(' + GETWORDNUM(lcAsignacion, 2, '=') + ')'
+				lcAsignacion	= GETWORDNUM(lcAsignacion, 1, '=') + '= THIS.encode_SpecialCodes_CR_LF(' + GETWORDNUM(lcAsignacion, 2, '=') + ')'
 			ENDIF
 
 			&lcAsignacion.
