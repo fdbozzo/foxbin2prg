@@ -10040,7 +10040,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 							CASE loReg.ObjType == "1"
 								loReg.TAG	= .decode_SpecialCodes_1_31( loReg.TAG )
 							CASE INLIST(loReg.ObjType, "25", "26")	&& Dataenvironment, cursors and relations
-								loReg.TAG	= SUBSTR(loReg.TAG,3)	&& Quito el ENTER agregado antes
+								loReg.TAG	= IIF( EMPTY( CHRTRAN( loReg.TAG, CR_LF+C_TAB, '') ), '', SUBSTR(loReg.TAG,3) )	&& Quito el ENTER agregado antes
 							OTHERWISE
 								loReg.TAG	= .decode_SpecialCodes_1_31( loReg.TAG )
 							ENDCASE
@@ -12667,7 +12667,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 			C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<picture><![CDATA[" + toReg.PICTURE + "]]>"
 
 			IF INLIST(toReg.ObjType, 25, 26) && Dataenvironment, cursors and relations
-				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + CR_LF + toReg.TAG + "]]>"
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + IIF( EMPTY( CHRTRAN( toReg.TAG, CR_LF+C_TAB, '') ), '', CR_LF + toReg.TAG) + "]]>"
 				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag2><![CDATA[]]>"
 			ELSE
 				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<tag><![CDATA[" + THIS.encode_SpecialCodes_1_31( toReg.TAG ) + "]]>"
