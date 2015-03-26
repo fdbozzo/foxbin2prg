@@ -2469,7 +2469,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 							.writeLog( '> InputFile ' + loLang.C_IS_A_FILE_LOC )
 							tc_InputFile	= LOCFILE(tc_InputFile)
-							ERASE ( tc_InputFile + '.ERR' )
 
 							DO CASE
 							CASE .l_Recompile AND LEN(tcRecompile) > 3 AND DIRECTORY(tcRecompile)
@@ -2881,6 +2880,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 					ENDCASE
 				ENDIF
+
+				ERASE ( .c_InputFile + '.ERR' )
 
 				IF NOT EMPTY(tcOriginalFileName)
 					tcOriginalFileName	= loFSO.GetAbsolutePathName( tcOriginalFileName )
