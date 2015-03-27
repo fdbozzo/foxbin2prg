@@ -3672,6 +3672,8 @@ DEFINE CLASS frm_avance AS FORM
 	BackColor = RGB(255,255,255)
 	nMax_value = 100
 	nMax_value2 = 100
+	nSecsAtStart = (SECONDS())
+	nLastSecCount = 0
 	nValue = 0
 	nValue2 = 0
 	l_Cancelled = .F.
@@ -3680,6 +3682,8 @@ DEFINE CLASS frm_avance AS FORM
 		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
 		+ [<memberdata name="width" display="Width"/>] ;
 		+ [<memberdata name="height" display="Height"/>] ;
+		+ [<memberdata name="nlastseccount" display="nLastSecCount"/>] ;
+		+ [<memberdata name="nsecsatstart" display="nSecsAtStart"/>] ;
 		+ [<memberdata name="nvalue2" display="nValue2"/>] ;
 		+ [<memberdata name="nvalue2_assign" display="nValue2_Assign"/>] ;
 		+ [<memberdata name="nvalue" display="nValue"/>] ;
@@ -3992,10 +3996,37 @@ DEFINE CLASS frm_avance AS FORM
 		Width = 604, ;
 		Name = "lbl_Tarea2"
 
+	ADD OBJECT 'lblStartTime' AS label WITH ;
+		BackStyle = 0, ;
+		Caption = "Start time: __/__/____ __:__:__", ;
+		Height = 17, ;
+		Left = 12, ;
+		Name = "lblStartTime", ;
+		Top = 88, ;
+		Width = 176
+
+	ADD OBJECT 'lblElapsedTime' AS label WITH ;
+		BackStyle = 0, ;
+		Caption = "Elapsed Time: __:__:__", ;
+		Height = 17, ;
+		Left = 480, ;
+		Name = "lblElapsedTime", ;
+		Top = 88, ;
+		Width = 136
+
 	PROCEDURE AvanceDelProceso
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
-		WITH THIS AS frm_avance OF foxbin2prg.prg
+		WITH THISFORM AS frm_avance OF foxbin2prg.prg
+			LOCAL lnSecs
+
+			lnSecs	= SECONDS()
+
+			IF lnSecs - .nLastSecCount >= 1 THEN
+				.lblElapsedTime.Caption = 'Elapsed Time: ' + TTOC( {^2000-1-1,00:00:00} + lnSecs - .nSecsAtStart, 2 )
+				.nLastSecCount	= lnSecs
+			ENDIF
+
 			*-- Habilita el botón de cancelar una vez que se comienzan a pasar valores
 			IF NOT EMPTY(tnValor) THEN
 				IF NOT .cmdCancel.Enabled THEN
@@ -4057,6 +4088,7 @@ DEFINE CLASS frm_avance AS FORM
 
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL THISFORM AS frm_avance OF foxbin2prg.prg
 		#ENDIF
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 		loLang						= _SCREEN.o_FoxBin2Prg_Lang
@@ -4071,9 +4103,10 @@ DEFINE CLASS frm_avance AS FORM
 			ENDIF
 		ENDIF
 
-		THIS.CAPTION				= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
-		THIS.nValue					= 0
-		THIS.nValue2				= 0
+		THISFORM.CAPTION		= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
+		THISFORM.nValue			= 0
+		THISFORM.nValue2		= 0
+		THISFORM.nLastSecCount	= SECONDS()
 	ENDPROC
 
 
@@ -4091,6 +4124,10 @@ DEFINE CLASS frm_avance AS FORM
 		THISFORM.l_Cancelled = .T.
 	ENDPROC
 
+
+	PROCEDURE lblStartTime.Init
+		THIS.Caption = "Start Time: " + TTOC(DATETIME())
+	ENDPROC
 
 ENDDEFINE
 
@@ -12957,7 +12994,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 				.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
-				.write_DefinicionObjetosOLE( toFoxBin2Prg )
+				.write_DefinicionObjetosOLE( @toFoxBin2Prg )
 
 				*-- Escribo los métodos ordenados
 				lnLastClass		= 0
@@ -13281,7 +13318,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 				.get_NombresObjetosOLEPublic( @la_NombresObjsOle )
 
-				.write_DefinicionObjetosOLE( toFoxBin2Prg )
+				.write_DefinicionObjetosOLE( @toFoxBin2Prg )
 
 				*-- Escribo los métodos ordenados
 				lnLastObj		= 0
@@ -14712,7 +14749,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 				lnDatabases_Count	= ADATABASES(laDatabases)
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
-				
+
 				IF toFoxBin2Prg.l_ProcessFiles THEN
 					toDatabase			= CREATEOBJECT('CL_DBC')
 					toDatabase._DBC		= .c_InputFile
@@ -16086,13 +16123,13 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 				IF INLIST( tcType, 'Index', 'Field' )
 					SELECT TB.Property FROM C_TABLABIN2 TB ;
-						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
-						AND TB2.objectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
+						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
+						AND TB2.ObjectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
 						INTO ARRAY laProperty
 
 				ELSE
 					SELECT TB.Property FROM C_TABLABIN2 TB ;
-						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
+						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
 						INTO ARRAY laProperty
 
 				ENDIF
@@ -16543,13 +16580,13 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 				IF INLIST( tcType, 'Index', 'Field' )
 					SELECT TB.Property FROM C_TABLABIN2 TB ;
-						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
-						AND TB2.objectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
+						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
+						AND TB2.ObjectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
 						INTO ARRAY laProperty
 
 				ELSE
 					SELECT TB.Property FROM C_TABLABIN2 TB ;
-						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentID)+TB.ObjectType+LOWER(TB.objectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
+						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
 						INTO ARRAY laProperty
 
 				ENDIF
@@ -16850,9 +16887,9 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 				INSERT INTO TABLABIN ;
 					( ObjectID ;
-					, ParentID ;
+					, ParentId ;
 					, ObjectType ;
-					, objectName ;
+					, ObjectName ;
 					, Property ;
 					, CODE ;
 					, RIInfo ;
@@ -17111,12 +17148,12 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 				lcMemoWithProperties	= .getBinMemoFromProperties()
 				UPDATE TABLABIN ;
 					SET Property = lcMemoWithProperties ;
-					WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
+					WHERE STR(ParentId) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('Database'),128)
 
 				IF NOT EMPTY(lcStoredProcedures)
 					UPDATE TABLABIN ;
 						SET CODE = lcStoredProcedures ;
-						WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
+						WHERE STR(ParentId) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128)
 				ENDIF
 
 				loTables.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
@@ -17188,7 +17225,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 
 				SELECT CODE ;
 					FROM TABLABIN ;
-					WHERE STR(ParentID) + ObjectType + LOWER(objectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128) ;
+					WHERE STR(ParentId) + ObjectType + LOWER(ObjectName) = STR(1) + PADR('Database',10) + PADR(LOWER('StoredProceduresSource'),128) ;
 					INTO ARRAY laCode
 				TEXT TO ._StoredProcedures TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>	<<C_STORED_PROC_I>>
@@ -18370,9 +18407,9 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				STORE NULL TO loField
 				STORE 0 TO I, lnField_Count
 				_TALLY	= 0
-				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-					AND TB2.objectName = PADR(LOWER(tcTable),128) ;
+				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
+					AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
 					INTO ARRAY laFields
 				lnField_Count	= _TALLY
 
@@ -18755,9 +18792,9 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				STORE NULL TO loIndex
 				STORE 0 TO I, lnIndex_Count
 				_TALLY	= 0
-				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
-					AND TB2.objectName = PADR(LOWER(tcTable),128) ;
+				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
+					AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
 					INTO ARRAY laIndexes
 				lnIndex_Count	= _TALLY
 
@@ -19768,9 +19805,9 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				ENDIF
 
 				_TALLY	= 0
-				SELECT LOWER(TB.objectName) FROM TABLABIN TB ;
-					INNER JOIN TABLABIN TB2 ON STR(TB.ParentID)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-					AND TB2.objectName = PADR(LOWER(tcView),128) ;
+				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
+					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
+					AND TB2.ObjectName = PADR(LOWER(tcView),128) ;
 					INTO ARRAY laFields
 				lnField_Count	= _TALLY
 
@@ -22699,17 +22736,17 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 			WITH THIS AS CL_MENU OF 'FOXBIN2PRG.PRG'
 				IF VARTYPE( toObj.oReg ) = 'O'
 					loReg	= toObj.oReg
-					
+
 					IF loReg.ObjType = C_OBJTYPE_MENUTYPE_OPTION
-						lcTempName	= '_' + PADL( INT( VAL(loReg.itemnum) ), 9, '0')
-						
+						lcTempName	= '_' + PADL( INT( VAL(loReg.ItemNum) ), 9, '0')
+
 						*-- Si el nombre es del tipo "_0000000001" y coincide con el itemNum
 						*-- que uso para darle un nombre temporal, lo vuelvo a quitar en el binario.
 						IF loReg.Name = lcTempName THEN
 							loReg.Name = ''
 						ENDIF
 					ENDIF
-					
+
 					INSERT INTO TABLABIN FROM NAME loReg
 
 					IF .l_Debug
