@@ -734,7 +734,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5)
+		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -770,10 +770,10 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			lnPosProg	= 1
 		ENDIF
 
+		THIS.c_CurDir					= SYS(5) + CURDIR()		&& Directorio actual, que no necesariamente es donde está FoxBin2Prg
 		THIS.c_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
 		THIS.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' ) )
-		THIS.c_BackgroundImage			= ADDBS(JUSTPATH(THIS.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg'
-		THIS.c_CurDir					= SYS(5) + CURDIR()
+		THIS.c_BackgroundImage			= THIS.get_AbsolutePath( ADDBS(JUSTPATH(THIS.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg' )
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
 		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
 		ADDPROPERTY(_SCREEN, 'c_FB2PRG_EXE_Version', THIS.c_FB2PRG_EXE_Version)
@@ -855,7 +855,12 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	PROCEDURE wasProcessed
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcFileMask				(v! IN    ) Fullpath del archivo del que se desea saber si se procesó
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcFile
+
 		IF THIS.n_ProcessedFiles = 0 OR ASCAN( THIS.a_ProcessedFiles, tcFile, 1, 0, 1, 1+2+4 ) = 0
 			RETURN .F.
 		ELSE
@@ -906,6 +911,30 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	ENDPROC
 
 
+	PROCEDURE get_AbsolutePath
+		LPARAMETERS tc_InputFile, tc_FullPath
+
+		*-- Ajusto la ruta si no es absoluta
+		tc_InputFile	= EVL(tc_InputFile,'')
+		tc_FullPath		= EVL(tc_FullPath, THIS.c_Foxbin2prg_FullPath)
+
+		IF NOT EMPTY( JUSTEXT(tc_FullPath) ) THEN
+			*-- Se indicó PATH+archivo.ext
+			tc_FullPath	= JUSTPATH(tc_FullPath)
+		ENDIF
+
+		tc_FullPath	= ADDBS( tc_FullPath )
+
+		IF LEN(tc_InputFile) > 1 ;
+				AND LEFT(LTRIM(tc_InputFile),2) <> '\\' ;
+				AND SUBSTR(LTRIM(tc_InputFile),2,1) <> ':' THEN
+			tc_InputFile	= FULLPATH(tc_InputFile, tc_FullPath)
+		ENDIF
+
+		RETURN tc_InputFile
+	ENDPROC
+
+
 	FUNCTION get_l_ConfigEvaluated
 		RETURN THIS.l_ConfigEvaluated
 	ENDFUNC
@@ -917,6 +946,19 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	FUNCTION get_Processed
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* taProcessed				(@!    OUT) Array donde se devolverá la información de los archivos de la máscara indicada
+		* tcFileMask				(v? IN    ) Máscara de archivo a buscar (nombre, "*", "?")
+		*---------------------------------------------------------------------------------------------------
+		* ESTRUCTURA DEL ARRAY DEVUELTO:
+		* col(1)	tcFile		- Path del archivo (ej: 'C:\DESA\pruebas varias\lib.vcx')
+		* col(2)	tcInOutType	- Archivo de entrada o de salida ("I"=Input file, "O"=Output file)
+		* col(3)	tcProcessed	- Procesado ("P0"=Not Processed, "P1"=Processed)
+		* col(4)	tcHasErrors	- Tuvo Errores ("E0"=No Errors, "E1"=Has Errors)
+		* col(5)	tcSupported	- Archivo soportado ("S0"=Unsupported, "S1"=Supported)
+		* col(6)	tcExpanded	- Tipo de archivo ("X0"=Normal file, "X1"=Expanded multipart file)
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS taProcessed, tcFileMask
 
 		EXTERNAL ARRAY taProcessed
@@ -1462,7 +1504,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	PROCEDURE descargar_frm_avance
-		IF THIS.n_ShowProgressbar <> 0 AND VARTYPE(THIS.o_Frm_Avance) = "O" THEN
+		LPARAMETERS tlForceUnload
+		IF (tlForceUnload OR THIS.n_ShowProgressbar <> 0) AND VARTYPE(THIS.o_Frm_Avance) = "O" THEN
 			THIS.o_Frm_Avance.Hide()
 			THIS.o_Frm_Avance.Release()
 			THIS.o_Frm_Avance = NULL
@@ -2122,11 +2165,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ENDIF
 
 				*-- Ajusto la ruta si no es absoluta
-				IF LEN(tc_InputFile) > 1 ;
-						AND LEFT(LTRIM(tc_InputFile),2) <> '\\' ;
-						AND SUBSTR(LTRIM(tc_InputFile),2,1) <> ':' THEN
-					tc_InputFile	= FULLPATH(tc_InputFile, .c_CurDir)
-				ENDIF
+				tc_InputFile	= .get_AbsolutePath( tc_InputFile, .c_CurDir )
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
 				IF EMPTY(lcInputFile_Type) AND NOT EMPTY(tc_InputFile)
@@ -14760,13 +14799,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 					IF toDatabase._DBCEvents AND NOT EMPTY(toDatabase._DBCEventFilename) THEN
 						*-- El archivo de eventos puede tener path relativo o absoluto
 						*-- Ajusto la ruta si no es absoluta
-						IF LEN(toDatabase._DBCEventFilename) > 1 ;
-								AND LEFT(LTRIM(toDatabase._DBCEventFilename),2) <> '\\' ;
-								AND SUBSTR(LTRIM(toDatabase._DBCEventFilename),2,1) <> ':' THEN
-							lcEventsFile	= ADDBS( JUSTPATH(.c_InputFile) ) + toDatabase._DBCEventFilename
-						ELSE
-							lcEventsFile	= toDatabase._DBCEventFilename
-						ENDIF
+						lcEventsFile	= toFoxBin2Prg.get_AbsolutePath( toDatabase._DBCEventFilename, .c_InputFile )
 						IF FILE(lcEventsFile) THEN
 							lcEventsFile	= ''
 						ELSE
