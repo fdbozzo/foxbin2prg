@@ -10510,12 +10510,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lcBaseFilename ;
+			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lcBaseFilename, lcInputFile ;
 				, lcMemberType, lcMemberName, lcLastMemberType ;
 				, laLineasExclusion(1), lnBloquesExclusion, I, X, Y, laFiles(1,5), lnFileCount, lcTempTxt, laLines(1) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnCodeLines, lnFileCount
-			STORE '' TO lcLine, laLines, laCodeLines, lcBaseFilename, lcMemberType, lcLastMemberType, lcMemberName
+			STORE '' TO lcLine, laLines, laCodeLines, lcBaseFilename, lcMemberType, lcLastMemberType, lcMemberName, lcInputFile
 			STORE NULL TO loReg, toDatabase
 
 			WITH THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
@@ -20130,11 +20130,6 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 							loRelation.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 							TRY
-								*-- Renombro la relación con un nombre más útil
-								*loRelation._Name	= loRelation._ParentTable + '.' + loRelation._ParentIndex ;
-									+ '->' + loRelation._ChildTable + '.' + loRelation._ChildIndex ;
-									+ ':' + loRelation._RefIntegrity ;
-									+ '.' + loRelation._Name + ''
 								.ADD( loRelation, loRelation._Name )
 							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
 								*-- Saltear este error, porque implica que la relación está duplicada
@@ -20256,11 +20251,6 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 						IF laRelations(I,1) == UPPER( RTRIM( tcTable ) )
 							loRelation	= CREATEOBJECT('CL_DBC_RELATION')
 							loRelation.read_BinDataToProperties( @laRelations, I )
-							*-- Renombro la relación con un nombre más útil
-							*loRelation._Name	= loRelation._ParentTable + '.' + loRelation._ParentIndex ;
-								+ '->' + loRelation._ChildTable + '.' + loRelation._ChildIndex ;
-								+ ':' + loRelation._RefIntegrity
-
 							TRY
 								.ADD( loRelation, loRelation._Name )
 							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
