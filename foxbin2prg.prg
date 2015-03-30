@@ -14819,7 +14819,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, .F., .F., @lcExternalHeader )
 
 						*-- Connections
-						FOR EACH loConnection IN toDatabase._Connections FOXOBJECT
+						toDatabase._Connections.KeySort=2
+						FOR EACH loConnection IN toDatabase._Connections &&FOXOBJECT
 							lnClassCount	= lnClassCount + 1
 							DIMENSION laClasses(lnClassCount,3)
 							laClasses(lnClassCount,1)	= LOWER( loConnection._Name )
@@ -14829,7 +14830,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 						*-- Tables
-						FOR EACH loTable IN toDatabase._Tables FOXOBJECT
+						toDatabase._Tables.KeySort=2
+						FOR EACH loTable IN toDatabase._Tables &&FOXOBJECT
 							lnClassCount	= lnClassCount + 1
 							DIMENSION laClasses(lnClassCount,3)
 							laClasses(lnClassCount,1)	= LOWER( loTable._Name )
@@ -14839,7 +14841,8 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 						*-- Views
-						FOR EACH loView IN toDatabase._Views FOXOBJECT
+						toDatabase._Views.KeySort=2
+						FOR EACH loView IN toDatabase._Views &&FOXOBJECT
 							lnClassCount	= lnClassCount + 1
 							DIMENSION laClasses(lnClassCount,3)
 							laClasses(lnClassCount,1)	= LOWER( loView._Name )
@@ -17054,7 +17057,8 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 							loConnections	= ._Connections
 							loConnections.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							FOR EACH loConnection IN loConnections FOXOBJECT
+							loConnections.KeySort=2
+							FOR EACH loConnection IN loConnections &&FOXOBJECT
 								.add_DBCMember('connection.' + loConnection._Name)
 							ENDFOR
 
@@ -17062,7 +17066,8 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 							loTables	= ._Tables
 							loTables.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							FOR EACH loTable IN loTables FOXOBJECT
+							loTables.KeySort=2
+							FOR EACH loTable IN loTables &&FOXOBJECT
 								.add_DBCMember('table.' + loTable._Name)
 							ENDFOR
 
@@ -17070,7 +17075,8 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 							loViews	= ._Views
 							loViews.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
-							FOR EACH loView IN loViews FOXOBJECT
+							loViews.KeySort=2
+							FOR EACH loView IN loViews &&FOXOBJECT
 								.add_DBCMember('view.' + loView._Name)
 							ENDFOR
 
@@ -20122,7 +20128,17 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 							loRelation = NULL
 							loRelation = CREATEOBJECT("CL_DBC_RELATION")
 							loRelation.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loRelation, loRelation._ChildTable + '.' + loRelation._ChildIndex + '=>' + loRelation._ParentTable + '.' + loRelation._ParentIndex )
+
+							TRY
+								*-- Renombro la relación con un nombre más útil
+								*loRelation._Name	= loRelation._ParentTable + '.' + loRelation._ParentIndex ;
+									+ '->' + loRelation._ChildTable + '.' + loRelation._ChildIndex ;
+									+ ':' + loRelation._RefIntegrity ;
+									+ '.' + loRelation._Name + ''
+								.ADD( loRelation, loRelation._Name )
+							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
+								*-- Saltear este error, porque implica que la relación está duplicada
+							ENDTRY
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -20177,6 +20193,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 						<<>>			<RELATIONS>
 					ENDTEXT
 
+					.KeySort=2	&& Comentar para forzar modo LEGACY
 					FOR EACH loRelation IN THIS &&FOXOBJECT
 						lcText	= lcText + loRelation.toText()
 					ENDFOR
@@ -20229,14 +20246,26 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 				lnRelation_Count	= ADBOBJECTS( laRelations, "RELATION" )
 
 				IF lnRelation_Count > 0
-					ASORT( laRelations, 2, -1, 0, 1 )
+					*-- Ordenamiento: Comentar los ASORT para el orden original
+					ASORT( laRelations, 3, -1, 0, 1 )
 					ASORT( laRelations, 1, -1, 0, 1 )
+					ASORT( laRelations, 4, -1, 0, 1 )
+					ASORT( laRelations, 2, -1, 0, 1 )
 
 					FOR I = 1 TO lnRelation_Count
 						IF laRelations(I,1) == UPPER( RTRIM( tcTable ) )
 							loRelation	= CREATEOBJECT('CL_DBC_RELATION')
 							loRelation.read_BinDataToProperties( @laRelations, I )
-							.ADD( loRelation, loRelation._Name )
+							*-- Renombro la relación con un nombre más útil
+							*loRelation._Name	= loRelation._ParentTable + '.' + loRelation._ParentIndex ;
+								+ '->' + loRelation._ChildTable + '.' + loRelation._ChildIndex ;
+								+ ':' + loRelation._RefIntegrity
+
+							TRY
+								.ADD( loRelation, loRelation._Name )
+							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
+								*-- Saltear este error, porque implica que la relación está duplicada
+							ENDTRY
 						ENDIF
 					ENDFOR
 
