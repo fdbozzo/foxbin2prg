@@ -20122,7 +20122,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 							loRelation = NULL
 							loRelation = CREATEOBJECT("CL_DBC_RELATION")
 							loRelation.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loRelation, loRelation._ChildTable + loRelation._ParentTable )
+							.ADD( loRelation, loRelation._ChildTable + '.' + loRelation._ChildIndex + '=>' + loRelation._ParentTable + '.' + loRelation._ParentIndex )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
