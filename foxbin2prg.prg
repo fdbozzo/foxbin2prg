@@ -775,7 +775,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		THIS.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' ) )
 		THIS.c_BackgroundImage			= THIS.get_AbsolutePath( ADDBS(JUSTPATH(THIS.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg' )
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
-		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(4) )
+		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(11) )
 		ADDPROPERTY(_SCREEN, 'c_FB2PRG_EXE_Version', THIS.c_FB2PRG_EXE_Version)
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 
@@ -1277,6 +1277,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			LOCAL loEx AS EXCEPTION, dwFileAttributes, dwFileAttributes_Orig, lnRet
 			DECLARE SHORT 'SetFileAttributes' IN kernel32 AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
 			DECLARE INTEGER 'GetFileAttributes' IN kernel32 AS fb2p_GetFileAttributes STRING tcFileName
+			lnRet	= 0
 
 			* read current attributes for this file
 			dwFileAttributes 		= fb2p_GetFileAttributes(tcFileName)
@@ -14667,7 +14668,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 							lcOutputFile	= .c_OutputFile
 							.writeLog( '> ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile, '-R' ) ;
+								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
 								AND NOT toFoxBin2Prg.RenameTmpFile2Tx2File( .c_OutputFile )
 							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
 							ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
