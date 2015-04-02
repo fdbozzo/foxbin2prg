@@ -1587,7 +1587,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				lo_Configuration	= .o_Configuration
 				.n_CFG_Actual		= 0
 				.l_CFG_CachedAccess	= .F.
-				lc_CFG_Path			= UPPER( JUSTPATH( FULLPATH( lcConfigFile ) ) )
+				lc_CFG_Path			= UPPER( JUSTPATH( lcConfigFile ) )
 				lo_CFG				= THIS
 
 				*-- Búsqueda del CFG del PATH indicado en la caché
@@ -1630,9 +1630,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 								.EvaluarConfiguracion( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
 							ENDFOR
 
-							IF .n_CFG_Actual > 0 THEN
-								.l_CFG_CachedAccess	= .T.
-							ENDIF
+							.l_CFG_CachedAccess	= .F.
+							.n_CFG_Actual		= 0
 						ENDIF
 					ENDIF
 				ENDIF
@@ -1648,19 +1647,20 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 				CASE ISNULL( .o_Configuration( .n_CFG_Actual ) )
 					*-- Si existe una configuración y es NULL, se usa la predeterminada
-					.n_CFG_Actual	= 0
+					*.n_CFG_Actual	= 0
 					lo_CFG			= THIS
 
 				ENDCASE
 
 				IF .l_Main_CFG_Loaded
-					IF .l_CFG_CachedAccess THEN
+					IF .l_CFG_CachedAccess AND .n_CFG_Actual > 0 THEN
 						toParentCFG	= lo_CFG
 						.writeLog( '> ' + UPPER(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + tc_InputFile + ' => (' + lo_CFG.c_Foxbin2prg_ConfigFile + ')' )
 						.writeLog()
 					ELSE
 						lo_CFG	= CREATEOBJECT('CL_CFG')
 						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
+						.n_CFG_Actual  	= lo_Configuration.Count
 
 						IF NOT ISNULL(toParentCFG)
 							lo_CFG.CopyFrom(toParentCFG)
@@ -1670,6 +1670,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 				ELSE
 					lo_Configuration.Add( NULL, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
+					.n_CFG_Actual  	= lo_Configuration.Count
 				ENDIF
 
 				*-- NOTA: SOLO LOS QUE NO VENGAN DE PARÁMETROS EXTERNOS DEBEN ASIGNARSE A lo_CFG AQUÍ.
@@ -1678,7 +1679,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 					.writeLog( '> ' + loLang.C_READING_CFG_VALUES_FROM_DISK_LOC + ':' )
 					.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
-					.n_CFG_Actual  						= lo_Configuration.Count
 					lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
@@ -1917,8 +1917,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				.writeLog( '> ' + UPPER(loLang.C_USING_THIS_SETTINGS_LOC) + ':' )
 				.writeLog( C_TAB + 'n_CFG_Actual:                 ' + TRANSFORM(.n_CFG_Actual) + ICASE(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
 				.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + TRANSFORM(.l_CFG_CachedAccess) )
-				.writeLog( C_TAB + 'c_Foxbin2prg_ConfigFile:      ' + TRANSFORM(EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') ) )
 				.writeLog( C_TAB + 'tc_InputFile:                 ' + TRANSFORM(EVL(tc_InputFile,'') ) )
+				.writeLog( C_TAB + 'c_Foxbin2prg_ConfigFile:      ' + TRANSFORM(EVL(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') ) )
 				.writeLog( C_TAB + 'n_ShowProgressbar:            ' + TRANSFORM(.n_ShowProgressbar) )
 				.writeLog( C_TAB + 'l_ShowErrors:                 ' + TRANSFORM(.l_ShowErrors) )
 				.writeLog( C_TAB + 'l_Recompile:                  ' + TRANSFORM(.l_Recompile) + ' (' + tcRecompile + ')' )

@@ -1846,6 +1846,49 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 	*******************************************************************************************************************************************
+	FUNCTION Deberia_SetearElSoporte_DBF_Como_2_CuandoExistaElArhivo_foxbin2prg_cfg_EnDirectorio2NivelesInferior
+		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			loFB2P		= THIS.ioFB2P
+			loFB2P.l_ShowErrors	= .F.
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError
+			loFB2P.c_Foxbin2prg_ConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(oFXU_LIB.cPathDatosTest) + '..\' )
+			STRTOFILE( 'DBF_Conversion_Support:2', loFB2P.c_Foxbin2prg_ConfigFile )
+
+			loFB2P.c_InputFile	= ADDBS(oFXU_LIB.cPathDatosTest) + 'OTRO\otro.vcx'
+
+
+			*-- VALORES ESPERADOS
+			lcSeteo			= 'DBF_Conversion_Support:'
+			leValorEsperado	= 2
+
+
+			*-- TEST
+			loFB2P.EvaluarConfiguracion()
+			leValor		= loFB2P.DBF_Conversion_Support
+			
+
+		CATCH TO loEx
+
+		FINALLY
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor )
+			ERASE (loFB2P.c_Foxbin2prg_ConfigFile)
+
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
 	FUNCTION Deberia_SetearElSoporte_DBF_Como_2_CuandoExistaElArhivo_foxbin2prg_cfg_EnDirectorioPadre
 		LOCAL lnCodError, lnCodError_Esperado, lcSeteo, leValorEsperado, leValor ;
 			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
@@ -2561,7 +2604,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', ADDBS(oFXU_LIB.cPathDatosTest) + 'noexiste' )
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', oFXU_LIB.cPathDatosTest )
 			lcCFG_File	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
-			STRTOFILE( 'LBX_Conversion_Support: 1', lcCFG_File )
+			*STRTOFILE( 'LBX_Conversion_Support: 0', lcCFG_File )
 
 
 			*-- DATOS DE ENTRADA
@@ -2574,7 +2617,8 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			*loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			loFB2P.LBX_Conversion_Support = 0
 
 			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
 			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
@@ -2582,7 +2626,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
 			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
 
-			loFB2P.LBX_Conversion_Support = 0
+			*loFB2P.LBX_Conversion_Support = 0
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + 'otro' )
 			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
