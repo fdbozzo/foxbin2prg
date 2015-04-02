@@ -1630,8 +1630,9 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 								.EvaluarConfiguracion( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
 							ENDFOR
 
-							.n_CFG_Actual		= 0
-							.l_CFG_CachedAccess	= .F.
+							IF .n_CFG_Actual > 0 THEN
+								.l_CFG_CachedAccess	= .T.
+							ENDIF
 						ENDIF
 					ENDIF
 				ENDIF
