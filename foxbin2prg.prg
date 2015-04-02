@@ -1657,15 +1657,14 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 						toParentCFG	= lo_CFG
 						.writeLog( '> ' + UPPER(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + tc_InputFile + ' => (' + lo_CFG.c_Foxbin2prg_ConfigFile + ')' )
 						.writeLog()
-						EXIT
-					ENDIF
+					ELSE
+						lo_CFG	= CREATEOBJECT('CL_CFG')
+						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
 
-					lo_CFG	= CREATEOBJECT('CL_CFG')
-					lo_Configuration.Add( lo_CFG, lc_CFG_Path )
-
-					IF NOT ISNULL(toParentCFG)
-						lo_CFG.CopyFrom(toParentCFG)
-						toParentCFG	= lo_CFG
+						IF NOT ISNULL(toParentCFG)
+							lo_CFG.CopyFrom(toParentCFG)
+							toParentCFG	= lo_CFG
+						ENDIF
 					ENDIF
 
 				ELSE
@@ -1673,7 +1672,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ENDIF
 
 				*-- NOTA: SOLO LOS QUE NO VENGAN DE PARÁMETROS EXTERNOS DEBEN ASIGNARSE A lo_CFG AQUÍ.
-				IF llExiste_CFG_EnDisco
+				IF llExiste_CFG_EnDisco AND NOT .l_CFG_CachedAccess THEN
 					.writeLog( )
 					.writeLog( '> ' + loLang.C_READING_CFG_VALUES_FROM_DISK_LOC + ':' )
 					.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
