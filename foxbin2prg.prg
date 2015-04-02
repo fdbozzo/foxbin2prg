@@ -155,6 +155,7 @@
 * 23/03/2015	FDBOZZO		v1.19.42	Bug Fix mnx: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Lutz Scheffler)
 * 25/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva propiedad l_ProcessFiles que permite obtener la lista de archivos a procesar sin procesarlos realmente usando el valor .F.
 * 25/03/2015	FDBOZZO		v1.19.42	Bug Fix frx/lbx: Arreglo de CR,LF,TAB sobrantes en algunos archivos FR2/LB2 agregados en versiones anteriores (Ryan Harris)
+* 02/04/2015	FDBOZZO		v1.19.42	Mejora: Herencia de CFGs entre directorios
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -569,14 +570,12 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
 		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
 		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
-		+ [<memberdata name="l_allowmulticonfig" display="l_AllowMultiConfig"/>] ;
 		+ [<memberdata name="l_autoclearprocessedfiles" display="l_AutoClearProcessedFiles"/>] ;
 		+ [<memberdata name="l_cancelwithesckey" display="l_CancelWithEscKey"/>] ;
 		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
-		+ [<memberdata name="l_configevaluated" display="l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="l_debug" display="l_Debug"/>] ;
 		+ [<memberdata name="l_dropnullcharsfromcode" display="l_DropNullCharsFromCode"/>] ;
 		+ [<memberdata name="l_error" display="l_Error"/>] ;
@@ -640,7 +639,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	DIMENSION a_ProcessedFiles(1, 6)
-	PROTECTED l_ConfigEvaluated, n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
+	PROTECTED n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
 	n_FB2PRG_Version				= 1.19
 	*--
@@ -664,7 +663,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	lFileMode						= .F.
 	n_ExisteCapitalizacion			= -1
 	l_CFG_CachedAccess				= .F.
-	l_ConfigEvaluated				= .F.
 	l_Debug							= .F.
 	l_Error							= .F.
 	c_TextErr						= ''
@@ -672,7 +670,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	l_ShowErrors					= .T.
 	n_ShowProgressbar				= 1
 	n_ForceWriteIfReadOnly			= 0
-	l_AllowMultiConfig				= .T.
 	l_AutoClearProcessedFiles		= .T.			&& Por defecto limpia archivos procesados entre ejecución y ejecución
 	l_ProcessFiles					= .T.			&& Por defecto procesa los archivos. En .F. sirve para obtener sus nombres sin reescribirlos.
 	l_CancelWithEscKey				= .T.
@@ -780,9 +777,9 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 
 		THIS.writeLog( REPLICATE( '*', 100 ) )
-		THIS.writeLog( 'FoxBin2Prg INIT' )
+		THIS.writeLog( 'FoxBin2Prg INIT  -', 2 )
 		THIS.writeLog( REPLICATE( '*', 100 ) )
-		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ')' )
+		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ', FoxPro Version: ' + VERSION(4) + ')' )
 		THIS.ChangeLanguage()
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
@@ -801,7 +798,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 			ERASE ( lcFileCDX )
 
-			THIS.writeLog( 'FoxBin2Prg UNLOAD' )
+			THIS.writeLog( 'FoxBin2Prg UNLOAD  -', 2 )
 			THIS.writeLog( REPLICATE( '*', 100 ) )
 			THIS.writeLog( )
 			THIS.writeLog_Flush()
@@ -936,7 +933,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	FUNCTION get_l_ConfigEvaluated
-		RETURN THIS.l_ConfigEvaluated
+		RETURN THIS.l_Main_CFG_Loaded
 	ENDFUNC
 
 
@@ -1531,11 +1528,17 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp ('1') o no ('0' ó vacío)
 		* tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 		* tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
+		* toParentCFG				(@? IN    ) (Uso interno) Si se pasa un valor, el nuevo CFG copiará primero sus valores de aquí para heredarlos
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type
+			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG
+
+		#IF .F.
+			LOCAL toParentCFG AS CL_CFG OF 'FOXBIN2PRG.PRG'
+		#ENDIF
 
 		LOCAL lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDirInfo(1,5) ;
+			, lnDirs, laDirs(1) ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration AS Collection ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -1545,11 +1548,19 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnKey
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
-				tcRecompile			= EVL(tcRecompile,.c_Recompile)
+				tcRecompile			= EVL(tcRecompile, .c_Recompile)
 				lcConfigFile		= .c_Foxbin2prg_ConfigFile
 				tc_InputFile		= EVL(tc_InputFile, .c_InputFile)
-				.c_InputFile		= tc_InputFile
 				tcInputFile_Type	= EVL(tcInputFile_Type,'')
+				lo_Configuration	= .o_Configuration
+
+				IF VARTYPE(toParentCFG) <> 'O' THEN
+					toParentCFG			= NULL
+				ENDIF
+
+				IF ISNULL(toParentCFG) THEN
+					.c_InputFile		= tc_InputFile
+				ENDIF
 
 				*-- Determino el tipo de InputFile (Archivo o Directorio)
 				IF EMPTY(tcInputFile_Type) AND NOT EMPTY(tc_InputFile)
@@ -1565,31 +1576,63 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 					ENDCASE
 				ENDIF
 
-				IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
-					*IF EMPTY(tc_InputFile)
-					*	ERROR loLang.C_FILE_NOT_FOUND_LOC + ': .c_InputFile = "' + tc_InputFile + '"'
-					*ENDIF
+				IF .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
 					IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
-						lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', tc_InputFile )
+						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
 					ELSE
-						lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(tc_InputFile) )
+						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
 					ENDIF
 				ENDIF
 
 				lo_Configuration	= .o_Configuration
 				.n_CFG_Actual		= 0
 				.l_CFG_CachedAccess	= .F.
-				lc_CFG_Path			= UPPER( JUSTPATH( lcConfigFile ) )
+				lc_CFG_Path			= UPPER( JUSTPATH( FULLPATH( lcConfigFile ) ) )
 				lo_CFG				= THIS
 
-				IF .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
-					.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0=No hay CFG cacheada, +1=Hay CFG cacheada
+				*-- Búsqueda del CFG del PATH indicado en la caché
+				IF .l_Main_CFG_Loaded
 
-					IF .n_CFG_Actual > 0 THEN
-						lo_CFG			= lo_Configuration.Item(.n_CFG_Actual)
-						.l_CFG_CachedAccess	= .T.
-					ELSE
-						.l_CFG_CachedAccess	= .F.
+					IF lo_Configuration.Count > 0 THEN
+						.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0 = No hay CFG cacheada, >0 = Hay CFG cacheada
+
+						IF .n_CFG_Actual > 0 THEN
+							lo_CFG			= lo_Configuration.Item(.n_CFG_Actual)
+							.l_CFG_CachedAccess	= .T.
+						ENDIF
+					ENDIF
+
+					*-- Si no se pasó un CFG padre y no hay CFGs o no encuentra el del PATH indicado, analizo la jararquía
+					IF ISNULL(toParentCFG) AND (lo_Configuration.Count = 0 OR .n_CFG_Actual = 0) THEN
+						toParentCFG	= THIS
+
+						IF LEFT( lc_CFG_Path, 2 ) == '\\' THEN
+							lnDirs	= OCCURS( '\', lc_CFG_Path ) - 3
+						ELSE
+							lnDirs	= OCCURS( '\', lc_CFG_Path )
+						ENDIF
+
+						IF lnDirs > 0 THEN
+							DIMENSION laDirs(lnDirs)
+
+							*-- Creo el array con los PATH intermedios
+							FOR I = lnDirs TO 1 STEP -1
+								IF I = lnDirs THEN
+									laDirs(I)	= JUSTPATH(lc_CFG_Path)
+								ELSE
+									laDirs(I)	= JUSTPATH(laDirs(I+1))
+								ENDIF
+							ENDFOR
+
+							*-- Ahora evalúo las configuraciones de los PATH intermedios desde la raíz en adelante
+							*-- y mantengo la última configuración CFG Padre en toParentCFG para usarla como base.
+							FOR I = 1 TO lnDirs
+								.EvaluarConfiguracion( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
+							ENDFOR
+
+							.n_CFG_Actual		= 0
+							.l_CFG_CachedAccess	= .F.
+						ENDIF
 					ENDIF
 				ENDIF
 
@@ -1609,23 +1652,34 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 				ENDCASE
 
+				IF .l_Main_CFG_Loaded
+					IF .l_CFG_CachedAccess THEN
+						toParentCFG	= lo_CFG
+						.writeLog( '> ' + UPPER(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + tc_InputFile + ' => (' + lo_CFG.c_Foxbin2prg_ConfigFile + ')' )
+						.writeLog()
+						EXIT
+					ENDIF
+
+					lo_CFG	= CREATEOBJECT('CL_CFG')
+					lo_Configuration.Add( lo_CFG, lc_CFG_Path )
+
+					IF NOT ISNULL(toParentCFG)
+						lo_CFG.CopyFrom(toParentCFG)
+						toParentCFG	= lo_CFG
+					ENDIF
+
+				ELSE
+					lo_Configuration.Add( NULL, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
+				ENDIF
+
 				*-- NOTA: SOLO LOS QUE NO VENGAN DE PARÁMETROS EXTERNOS DEBEN ASIGNARSE A lo_CFG AQUÍ.
 				IF llExiste_CFG_EnDisco
 					.writeLog( )
 					.writeLog( '> ' + loLang.C_READING_CFG_VALUES_FROM_DISK_LOC + ':' )
 					.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
-					IF .l_AllowMultiConfig AND .l_ConfigEvaluated AND .l_Main_CFG_Loaded
-						lo_CFG	= CREATEOBJECT('CL_CFG')
-						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
-					ELSE
-						lo_Configuration.Add( NULL, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
-					ENDIF
-
 					.n_CFG_Actual  						= lo_Configuration.Count
-					*lo_CFG.c_Foxbin2prg_FullPath		= ''
 					lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
-					*lo_CFG.c_CurDir					= ''
 
 					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcConfigFile ), 1+4 )
 						.set_Line( @lcConfigLine, @laConfig, I )
@@ -1639,8 +1693,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 						CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
 							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
 							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-							IF PEMSTATUS( THIS, lcExt, 5 )
-								.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+							IF PEMSTATUS( lo_CFG, lcExt, 5 )
+								lo_CFG.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
 							ENDIF
@@ -1710,13 +1764,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
 								tcOptimizeByFilestamp	= lcValue
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:        ' + TRANSFORM(lcValue) )
-							ENDIF
-
-						CASE LEFT( laConfig(I), 17 ) == LOWER('AllowMultiConfig:')
-							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
-							IF INLIST( lcValue, '0', '1' ) THEN
-								lo_CFG.l_AllowMultiConfig	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > AllowMultiConfig:           ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 16 ) == LOWER('UseClassPerFile:')
@@ -1835,9 +1882,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 						ENDCASE
 					ENDFOR
 
-					*IF .l_AllowMultiConfig AND .l_Main_CFG_Loaded AND lo_Configuration.Count > 0
-					*	.n_CFG_Actual   = lo_Configuration.Count    &&lo_Configuration.GetKey( UPPER( JUSTPATH( lcConfigFile ) ) )
-					*ENDIF
 					.writeLog( )
 
 				ENDIF && llExiste_CFG_EnDisco
@@ -1895,7 +1939,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 					.l_Main_CFG_Loaded	= .T.
 				ENDIF
 
-				.l_ConfigEvaluated = .T.
 				.writeLog( )
 			ENDWITH && THIS
 
@@ -3621,13 +3664,24 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		LPARAMETERS tcText, tnTimestamp
 
 		TRY
-			IF EVL(tnTimestamp,0) = 1 THEN
-				THIS.c_TextErr	= THIS.c_TextErr + TTOC(DATETIME(),3) + '  '
-			ENDIF
+			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				IF EVL(tnTimestamp,0) = 1 THEN
+					*-- Format: Timestamp__Text
+					.c_TextErr	= .c_TextErr + TTOC(DATETIME(),3) + '  '
+				ENDIF
 
-			THIS.c_TextErr	= THIS.c_TextErr + EVL(tcText,'') + CR_LF
-			THIS.errOut(tcText)
-			THIS.l_Error	= .T.
+				*-- Format: Text
+				.c_TextErr	= .c_TextErr + EVL(tcText,'')
+
+				IF EVL(tnTimestamp,0) = 2 THEN
+					*-- Format: Text__Timestamp
+					.c_TextErr	= .c_TextErr + '  ' + TTOC(DATETIME(),3)
+				ENDIF
+
+				.c_TextErr	= .c_TextErr + CR_LF
+				.errOut(tcText)
+				.l_Error	= .T.
+			ENDWITH
 		CATCH
 		ENDTRY
 	ENDPROC
@@ -3646,11 +3700,22 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		LPARAMETERS tcText, tnTimestamp
 
 		TRY
-			IF EVL(tnTimestamp,0) = 1 THEN
-				THIS.c_TextLog	= THIS.c_TextLog + TTOC(DATETIME(),3) + '  '
-			ENDIF
+			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				IF EVL(tnTimestamp,0) = 1 THEN
+					*-- Format: Timestamp__Text
+					.c_TextLog	= .c_TextLog + TTOC(DATETIME(),3) + '  '
+				ENDIF
 
-			THIS.c_TextLog	= THIS.c_TextLog + EVL(tcText,'') + CR_LF
+				*-- Format: Text
+				.c_TextLog	= .c_TextLog + EVL(tcText,'')
+
+				IF EVL(tnTimestamp,0) = 2 THEN
+					*-- Format: Text__Timestamp
+					.c_TextLog	= .c_TextLog + '  ' + TTOC(DATETIME(),3)
+				ENDIF
+
+				.c_TextLog	= .c_TextLog + CR_LF
+			ENDWITH
 		CATCH
 		ENDTRY
 	ENDPROC
@@ -24518,6 +24583,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
+		+ [<memberdata name="copyfrom" display="CopyFrom"/>] ;
 		+ [</VFPData>]
 
 	#IF .F.
@@ -24535,8 +24601,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_Recompile						= NULL
 	l_NoTimestamps					= NULL
 	l_ClearUniqueID					= NULL
-	l_ClearDBFLastUpdate        	= NULL
-	l_OptimizeByFilestamp           = NULL
+	l_ClearDBFLastUpdate			= NULL
+	l_OptimizeByFilestamp			= NULL
 	l_RedirectClassPerFileToMain	= NULL
 	n_UseClassPerFile				= NULL
 	l_ClassPerFileCheck				= NULL
@@ -24560,6 +24626,50 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	DBF_Conversion_Excluded			= NULL
 	DBC_Conversion_Support			= NULL
 	c_BackgroundImage				= NULL
+
+
+	PROCEDURE CopyFrom
+		*-- Copia las propiedades del CFG indicado
+		LPARAMETERS toParentCFG
+
+		WITH THIS AS CL_CFG OF 'FOXBIN2PRG.PRG'
+			.c_Foxbin2prg_FullPath			= toParentCFG.c_Foxbin2prg_FullPath
+			.c_Foxbin2prg_ConfigFile		= toParentCFG.c_Foxbin2prg_ConfigFile
+			.c_CurDir						= toParentCFG.c_CurDir
+			.l_Debug						= toParentCFG.l_Debug
+			.l_ShowErrors					= toParentCFG.l_ShowErrors
+			.n_ShowProgressbar				= toParentCFG.n_ShowProgressbar
+			.l_Recompile					= toParentCFG.l_Recompile
+			.l_NoTimestamps					= toParentCFG.l_NoTimestamps
+			.l_ClearUniqueID				= toParentCFG.l_ClearUniqueID
+			.l_ClearDBFLastUpdate			= toParentCFG.l_ClearDBFLastUpdate
+			.l_OptimizeByFilestamp			= toParentCFG.l_OptimizeByFilestamp
+			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
+			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
+			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
+			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
+			.c_VC2							= toParentCFG.c_VC2
+			.c_SC2							= toParentCFG.c_SC2
+			.c_PJ2							= toParentCFG.c_PJ2
+			.c_FR2							= toParentCFG.c_FR2
+			.c_LB2							= toParentCFG.c_LB2
+			.c_DB2							= toParentCFG.c_DB2
+			.c_DC2							= toParentCFG.c_DC2
+			.c_MN2							= toParentCFG.c_MN2
+			.PJX_Conversion_Support			= toParentCFG.PJX_Conversion_Support
+			.VCX_Conversion_Support			= toParentCFG.VCX_Conversion_Support
+			.SCX_Conversion_Support			= toParentCFG.SCX_Conversion_Support
+			.FRX_Conversion_Support			= toParentCFG.FRX_Conversion_Support
+			.LBX_Conversion_Support			= toParentCFG.LBX_Conversion_Support
+			.MNX_Conversion_Support			= toParentCFG.MNX_Conversion_Support
+			.DBF_Conversion_Support			= toParentCFG.DBF_Conversion_Support
+			.DBF_Conversion_Included		= toParentCFG.DBF_Conversion_Included
+			.DBF_Conversion_Excluded		= toParentCFG.DBF_Conversion_Excluded
+			.DBC_Conversion_Support			= toParentCFG.DBC_Conversion_Support
+			.c_BackgroundImage				= toParentCFG.c_BackgroundImage
+		ENDWITH
+	ENDPROC
+
 
 ENDDEFINE
 
