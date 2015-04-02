@@ -1578,16 +1578,16 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 				IF .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
 					IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
-						lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', tc_InputFile )
+						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
 					ELSE
-						lcConfigFile	= FORCEPATH( 'foxbin2prg.cfg', JUSTPATH(tc_InputFile) )
+						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
 					ENDIF
 				ENDIF
 
 				lo_Configuration	= .o_Configuration
 				.n_CFG_Actual		= 0
 				.l_CFG_CachedAccess	= .F.
-				lc_CFG_Path			= UPPER( JUSTPATH( lcConfigFile ) )
+				lc_CFG_Path			= UPPER( JUSTPATH( FULLPATH( lcConfigFile ) ) )
 				lo_CFG				= THIS
 
 				*-- Búsqueda del CFG del PATH indicado en la caché
