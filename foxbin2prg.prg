@@ -2092,7 +2092,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	PROCEDURE TieneSoporte_Bin2Prg
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
-		tcExt	= UPPER(tcExt)
+		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			llTieneSoporte	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support >= 1 ;
@@ -2114,7 +2114,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	PROCEDURE TieneSoporte_Prg2Bin
 		LPARAMETERS tcExt
 		LOCAL llTieneSoporte
-		tcExt	= UPPER(tcExt)
+		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			llTieneSoporte	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
