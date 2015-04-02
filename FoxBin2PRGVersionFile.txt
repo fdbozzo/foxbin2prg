@@ -45,6 +45,7 @@ Change History -------------------------------------------------------------
 - Feature: New property "l_ProcessFiles" that allow setting to .F. when using foxbin2prg as object to get Processing file info with get_Processed method without actual processing
 - Bug Fix frx/lbx: Trimmed some extra CR,LF,TAB from FR2/LB2 tag that where included in previous versions (Ryan Harris)
 - Bug Fix scx/vcx/dbc: Delete ERR files when processing with UseClassPerFile switch (Ryan Harris)
+- Feature: Implemented CFG inheritance between directories
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
