@@ -379,8 +379,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*loCnv.l_ShowErrors	= .F.
 			*loCnv.l_Test		= .T.
 			*loCnv.l_ReportSort_Enabled	= .F.
-			*loCnv.l_NoTimestamps	= .F.
-			*loCnv.l_ClearUniqueID	= .F.
+			loCnv.l_NoTimestamps	= .F.
+			loCnv.l_ClearUniqueID	= .F.
 
 
 			*-- DATOS DE ENTRADA
