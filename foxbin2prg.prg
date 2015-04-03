@@ -5770,8 +5770,8 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				lcPropsFile	= FORCEPATH( "props_formset.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
 				I   = ALINES( .a_SpecialProps_Frs, FILETOSTR( lcPropsFile ), 1+4 )
 
-				lcPropsFile	= FORCEPATH( "props_grid.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Grd, FILETOSTR( lcPropsFile ), 1+4 )
+				*lcPropsFile	= FORCEPATH( "props_grid.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				*I   = ALINES( .a_SpecialProps_Grd, FILETOSTR( lcPropsFile ), 1+4 )
 
 				lcPropsFile	= FORCEPATH( "props_grid_column.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
 				I   = ALINES( .a_SpecialProps_Grc, FILETOSTR( lcPropsFile ), 1+4 )
@@ -5827,8 +5827,8 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				lcPropsFile	= FORCEPATH( "props_timer.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
 				I   = ALINES( .a_SpecialProps_Tmr, FILETOSTR( lcPropsFile ), 1+4 )
 
-				lcPropsFile	= FORCEPATH( "props_toolbar.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Tbr, FILETOSTR( lcPropsFile ), 1+4 )
+				*lcPropsFile	= FORCEPATH( "props_toolbar.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+				*I   = ALINES( .a_SpecialProps_Tbr, FILETOSTR( lcPropsFile ), 1+4 )
 
 				lcPropsFile	= FORCEPATH( "props_xmladapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
 				I   = ALINES( .a_SpecialProps_XMLAda, FILETOSTR( lcPropsFile ), 1+4 )
