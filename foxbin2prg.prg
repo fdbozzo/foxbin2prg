@@ -4471,6 +4471,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 		C_FB2PRG_CODE	= ''
 		USE IN (SELECT("TABLABIN"))
+		USE IN (SELECT("foxbin2prg_keywords"))
 		THIS.writeLog( loLang.C_CONVERTER_UNLOAD_LOC )
 		THIS.oFSO	= NULL
 	ENDPROC
@@ -5437,7 +5438,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		LPARAMETERS tcOperation, tcPropName
 
 		TRY
-			LOCAL lcPropName, lnPos, loEx AS EXCEPTION
+			LOCAL lcPropName, lcClass, lnPos, loEx AS EXCEPTION
 			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			loLang		= _SCREEN.o_FoxBin2Prg_Lang
 			lcPropName	= tcPropName
@@ -5456,127 +5457,144 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 			OTHERWISE
 				*-- Soporte de evaluación de propiedades por clase evaluada
 				WITH THIS
-					DO CASE
-					CASE .c_ClaseActual == 'checkbox'
-						lnPos	= ASCAN( .a_SpecialProps_Chk, lcPropName, 1, 0, 1, 1+2+4 )
+					#IF .T. &&USED("foxbin2prg_keywords") THEN
+						lcClass	= ICASE( .c_ClaseActual == 'grid', 'all' ;
+							, .c_ClaseActual == 'form', 'all' ;
+							, .c_ClaseActual == 'pageframe', 'all' ;
+							, .c_ClaseActual == 'control', 'all' ;
+							, .c_ClaseActual == 'container', 'all' ;
+							, .c_ClaseActual == 'toolbar', 'all' ;
+							, .c_ClaseActual )
 
-					CASE .c_ClaseActual == 'collection'
-						lnPos	= ASCAN( .a_SpecialProps_Coll, lcPropName, 1, 0, 1, 1+2+4 )
+						lnPos	= IIF( SEEK( PADR(lcClass,15) + PADR(lcPropName,30), 'foxbin2prg_keywords' ), foxbin2prg_keywords.i_order, 0 )
 
-					CASE .c_ClaseActual == 'combobox'
-						lnPos	= ASCAN( .a_SpecialProps_Cbo, lcPropName, 1, 0, 1, 1+2+4 )
+					#ELSE
+						DO CASE
+						CASE .c_ClaseActual == 'checkbox'
+							lnPos	= ASCAN( .a_SpecialProps_Chk, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'commandgroup'
-						lnPos	= ASCAN( .a_SpecialProps_Cmg, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'collection'
+							lnPos	= ASCAN( .a_SpecialProps_Coll, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'commandbutton'
-						lnPos	= ASCAN( .a_SpecialProps_Cmd, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'combobox'
+							lnPos	= ASCAN( .a_SpecialProps_Cbo, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'cursor'
-						lnPos	= ASCAN( .a_SpecialProps_Cur, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'commandgroup'
+							lnPos	= ASCAN( .a_SpecialProps_Cmg, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'cursoradapter'
-						lnPos	= ASCAN( .a_SpecialProps_CA, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'commandbutton'
+							lnPos	= ASCAN( .a_SpecialProps_Cmd, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'dataenvironment'
-						lnPos	= ASCAN( .a_SpecialProps_DE, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'cursor'
+							lnPos	= ASCAN( .a_SpecialProps_Cur, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'editbox'
-						lnPos	= ASCAN( .a_SpecialProps_Edt, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'cursoradapter'
+							lnPos	= ASCAN( .a_SpecialProps_CA, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'formset'
-						lnPos	= ASCAN( .a_SpecialProps_Frs, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'dataenvironment'
+							lnPos	= ASCAN( .a_SpecialProps_DE, lcPropName, 1, 0, 1, 1+2+4 )
 
-						*-- Comento la clase grid, porque puede contener a todos los controles, como un form
-						*CASE .c_ClaseActual == 'grid'
-						*    lnPos   = ASCAN( .a_SpecialProps_Grd, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'editbox'
+							lnPos	= ASCAN( .a_SpecialProps_Edt, lcPropName, 1, 0, 1, 1+2+4 )
 
-						*-- Comento la clase form, porque puede contener a todos los controles, como un form
-						*CASE .c_ClaseActual == 'form'
-						*    lnPos   = ASCAN( .a_SpecialProps_Frm, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'formset'
+							lnPos	= ASCAN( .a_SpecialProps_Frs, lcPropName, 1, 0, 1, 1+2+4 )
 
-						*-- Comento la clase pageframe, porque puede contener a todos los controles, como un form
-						*CASE .c_ClaseActual == 'pageframe'
-						*    lnPos   = ASCAN( .a_SpecialProps_Pgf, lcPropName, 1, 0, 1, 1+2+4 )
+							*-- Comento la clase grid, porque puede contener a todos los controles, como un form
+							*CASE .c_ClaseActual == 'grid'
+							*    lnPos   = ASCAN( .a_SpecialProps_Grd, lcPropName, 1, 0, 1, 1+2+4 )
 
-						*-- Comento la clase control, porque puede contener a todos los controles, como un form
-						*CASE .c_ClaseActual == 'control'
-						*    lnPos   = ASCAN( .a_SpecialProps_Ctl, lcPropName, 1, 0, 1, 1+2+4 )
+							*-- Comento la clase form, porque puede contener a todos los controles, como un form
+							*CASE .c_ClaseActual == 'form'
+							*    lnPos   = ASCAN( .a_SpecialProps_Frm, lcPropName, 1, 0, 1, 1+2+4 )
 
-						*-- Comento la clase container, porque puede contener a todos los controles, como un form
-						*CASE .c_ClaseActual == 'container'
-						*    lnPos   = ASCAN( .a_SpecialProps_Cnt, lcPropName, 1, 0, 1, 1+2+4 )
+							*-- Comento la clase pageframe, porque puede contener a todos los controles, como un form
+							*CASE .c_ClaseActual == 'pageframe'
+							*    lnPos   = ASCAN( .a_SpecialProps_Pgf, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'column'
-						lnPos	= ASCAN( .a_SpecialProps_Grc, lcPropName, 1, 0, 1, 1+2+4 )
+							*-- Comento la clase control, porque puede contener a todos los controles, como un form
+							*CASE .c_ClaseActual == 'control'
+							*    lnPos   = ASCAN( .a_SpecialProps_Ctl, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'header'
-						lnPos	= ASCAN( .a_SpecialProps_Grh, lcPropName, 1, 0, 1, 1+2+4 )
+							*-- Comento la clase container, porque puede contener a todos los controles, como un form
+							*CASE .c_ClaseActual == 'container'
+							*    lnPos   = ASCAN( .a_SpecialProps_Cnt, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'hyperlink'
-						lnPos	= ASCAN( .a_SpecialProps_Hlk, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'column'
+							lnPos	= ASCAN( .a_SpecialProps_Grc, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'image'
-						lnPos	= ASCAN( .a_SpecialProps_Img, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'header'
+							lnPos	= ASCAN( .a_SpecialProps_Grh, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'label'
-						lnPos	= ASCAN( .a_SpecialProps_Lbl, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'hyperlink'
+							lnPos	= ASCAN( .a_SpecialProps_Hlk, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'line'
-						lnPos	= ASCAN( .a_SpecialProps_Lin, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'image'
+							lnPos	= ASCAN( .a_SpecialProps_Img, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'listbox'
-						lnPos	= ASCAN( .a_SpecialProps_Lst, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'label'
+							lnPos	= ASCAN( .a_SpecialProps_Lbl, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'olebound'
-						lnPos	= ASCAN( .a_SpecialProps_Ole, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'line'
+							lnPos	= ASCAN( .a_SpecialProps_Lin, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'optiongroup'
-						lnPos	= ASCAN( .a_SpecialProps_Opg, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'listbox'
+							lnPos	= ASCAN( .a_SpecialProps_Lst, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'optionbutton'
-						lnPos	= ASCAN( .a_SpecialProps_Opb, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'olebound'
+							lnPos	= ASCAN( .a_SpecialProps_Ole, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'projecthook'
-						lnPos	= ASCAN( .a_SpecialProps_Phk, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'optiongroup'
+							lnPos	= ASCAN( .a_SpecialProps_Opg, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'relation'
-						lnPos	= ASCAN( .a_SpecialProps_Rel, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'optionbutton'
+							lnPos	= ASCAN( .a_SpecialProps_Opb, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'reportlistener'
-						lnPos	= ASCAN( .a_SpecialProps_Rls, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'projecthook'
+							lnPos	= ASCAN( .a_SpecialProps_Phk, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'separator'
-						lnPos	= ASCAN( .a_SpecialProps_Sep, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'relation'
+							lnPos	= ASCAN( .a_SpecialProps_Rel, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'shape'
-						lnPos	= ASCAN( .a_SpecialProps_Shp, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'reportlistener'
+							lnPos	= ASCAN( .a_SpecialProps_Rls, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'spinner'
-						lnPos	= ASCAN( .a_SpecialProps_Spn, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'separator'
+							lnPos	= ASCAN( .a_SpecialProps_Sep, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'textbox'
-						lnPos	= ASCAN( .a_SpecialProps_Txt, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'shape'
+							lnPos	= ASCAN( .a_SpecialProps_Shp, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'timer'
-						lnPos	= ASCAN( .a_SpecialProps_Tmr, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'spinner'
+							lnPos	= ASCAN( .a_SpecialProps_Spn, lcPropName, 1, 0, 1, 1+2+4 )
 
-						*-- Comento la clase toolbar, porque puede contener a todos los controles, como un form
-						*CASE .c_ClaseActual == 'toolbar'
-						*	lnPos	= ASCAN( .a_SpecialProps_Tbr, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'textbox'
+							lnPos	= ASCAN( .a_SpecialProps_Txt, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'xmladapter'
-						lnPos	= ASCAN( .a_SpecialProps_XMLAda, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'timer'
+							lnPos	= ASCAN( .a_SpecialProps_Tmr, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'xmlfield'
-						lnPos	= ASCAN( .a_SpecialProps_XMLFld, lcPropName, 1, 0, 1, 1+2+4 )
+							*-- Comento la clase toolbar, porque puede contener a todos los controles, como un form
+							*CASE .c_ClaseActual == 'toolbar'
+							*	lnPos	= ASCAN( .a_SpecialProps_Tbr, lcPropName, 1, 0, 1, 1+2+4 )
 
-					CASE .c_ClaseActual == 'xmltable'
-						lnPos	= ASCAN( .a_SpecialProps_XMLTbl, lcPropName, 1, 0, 1, 1+2+4 )
+						CASE .c_ClaseActual == 'xmladapter'
+							lnPos	= ASCAN( .a_SpecialProps_XMLAda, lcPropName, 1, 0, 1, 1+2+4 )
 
-					OTHERWISE
-						lnPos	= ASCAN( .a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
-					ENDCASE
+						CASE .c_ClaseActual == 'xmlfield'
+							lnPos	= ASCAN( .a_SpecialProps_XMLFld, lcPropName, 1, 0, 1, 1+2+4 )
+
+						CASE .c_ClaseActual == 'xmltable'
+							lnPos	= ASCAN( .a_SpecialProps_XMLTbl, lcPropName, 1, 0, 1, 1+2+4 )
+
+						OTHERWISE
+							lnPos	= ASCAN( .a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
+						ENDCASE
+					#ENDIF
+
+					*IF lnPos2 <> lnPos
+					*	ERROR 'lnPos y lnPos2 no coinciden para "' + .c_ClaseActual + '.' + lcPropName + '"!  lnPos=' + TRANSFORM(lnPos) + ', lnPos2=' + TRANSFORM(lnPos2)
+					*ENDIF
 
 					*-- Genera una propiedad con el formato "A nnn Propiedad", donde los valores más altos quedan al final,
 					*-- de modo que primero van las props nativas, luego las del usuario y al final "name", que es especial.
@@ -5738,112 +5756,212 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 			WITH THIS AS conversor_base OF "FOXBIN2PRG.PRG"
 				*-- (TODAS) => Antes era solo FORM
-				I = 0
+				#IF .T.
+					*-- 03/04/2015 FDBOZZO
+					*-- Quise comparar la velocidad de los ASCAN(array) contra un SEEK a una tabla de propiedades con índice, y resulta que para
+					*-- unas 1500 propiedades casi no hay diferencias (10 segundos en unos 1600 archivos) :(
+					USE (FULLPATH( 'foxbin2prg_keywords', .c_Foxbin2prg_FullPath )) SHARED NOUPDATE AGAIN IN 0 ORDER PK  && C_CLASS+C_KEYWORD
+				#ELSE
+					I = 0
 
-				lcPropsFile	= FORCEPATH( "props_all.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_all.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('all', .a_SpecialProps(X), X)
+					*ENDFOR
 
-				lcPropsFile = FORCEPATH( "props_checkbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Chk, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile = FORCEPATH( "props_checkbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Chk, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('checkbox', .a_SpecialProps_Chk(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_collection.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Coll, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_collection.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Coll, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('collection', .a_SpecialProps_Coll(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_combobox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Cbo, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_combobox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Cbo, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('combobox', .a_SpecialProps_Cbo(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_commandgroup.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Cmg, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_commandgroup.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Cmg, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('commandgroup', .a_SpecialProps_Cmg(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_commandbutton.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Cmd, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_commandbutton.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Cmd, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('commandbutton', .a_SpecialProps_Cmd(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_cursor.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Cur, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_cursor.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Cur, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('cursor', .a_SpecialProps_Cur(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_cursoradapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_CA, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_cursoradapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_CA, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('cursoradapter', .a_SpecialProps_CA(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_dataenvironment.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_DE, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_dataenvironment.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_DE, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('dataenvironment', .a_SpecialProps_DE(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_editbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Edt, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_editbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Edt, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('editbox', .a_SpecialProps_Edt(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_formset.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Frs, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_formset.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Frs, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('formset', .a_SpecialProps_Frs(X), X)
+					*ENDFOR
 
-				*lcPropsFile	= FORCEPATH( "props_grid.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				*I   = ALINES( .a_SpecialProps_Grd, FILETOSTR( lcPropsFile ), 1+4 )
+					*lcPropsFile	= FORCEPATH( "props_grid.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					*I   = ALINES( .a_SpecialProps_Grd, FILETOSTR( lcPropsFile ), 1+4 )
 
-				lcPropsFile	= FORCEPATH( "props_grid_column.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Grc, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_grid_column.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Grc, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('column', .a_SpecialProps_Grc(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_grid_header.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Grh, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_grid_header.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Grh, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('header', .a_SpecialProps_Grh(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_hyperlink.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Hlk, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_hyperlink.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Hlk, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('hyperlink', .a_SpecialProps_Hlk(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_image.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Img, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_image.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Img, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('image', .a_SpecialProps_Img(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_label.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Lbl, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_label.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Lbl, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('label', .a_SpecialProps_Lbl(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_line.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Lin, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_line.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Lin, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('line', .a_SpecialProps_Lin(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_listbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Lst, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_listbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Lst, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('listbox', .a_SpecialProps_Lst(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_olebound.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Ole, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_olebound.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Ole, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('olebound', .a_SpecialProps_Ole(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_optiongroup.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Opg, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_optiongroup.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Opg, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('optiongroup', .a_SpecialProps_Opg(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_optiongroup_option.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Opb, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_optiongroup_option.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Opb, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('option', .a_SpecialProps_Opb(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_projecthook.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Phk, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_projecthook.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Phk, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('projecthook', .a_SpecialProps_Phk(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_relation.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Rel, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_relation.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Rel, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('relation', .a_SpecialProps_Rel(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_reportlistener.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Rls, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_reportlistener.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Rls, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('reportlistener', .a_SpecialProps_Rls(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_separator.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Sep, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_separator.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Sep, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('separator', .a_SpecialProps_Sep(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_shape.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Shp, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_shape.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Shp, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('shape', .a_SpecialProps_Shp(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_spinner.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Spn, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_spinner.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Spn, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('spinner', .a_SpecialProps_Spn(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_textbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Txt, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_textbox.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Txt, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('textbox', .a_SpecialProps_Txt(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_timer.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_Tmr, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_timer.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_Tmr, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('timer', .a_SpecialProps_Tmr(X), X)
+					*ENDFOR
 
-				*lcPropsFile	= FORCEPATH( "props_toolbar.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				*I   = ALINES( .a_SpecialProps_Tbr, FILETOSTR( lcPropsFile ), 1+4 )
+					*lcPropsFile	= FORCEPATH( "props_toolbar.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					*I   = ALINES( .a_SpecialProps_Tbr, FILETOSTR( lcPropsFile ), 1+4 )
 
-				lcPropsFile	= FORCEPATH( "props_xmladapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_XMLAda, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_xmladapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_XMLAda, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('xmladapter', .a_SpecialProps_XMLAda(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_xmladapter.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_XMLAda, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_xmlfield.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_XMLFld, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('xmlfield', .a_SpecialProps_XMLFld(X), X)
+					*ENDFOR
 
-				lcPropsFile	= FORCEPATH( "props_xmlfield.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_XMLFld, FILETOSTR( lcPropsFile ), 1+4 )
-
-				lcPropsFile	= FORCEPATH( "props_xmltable.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
-				I   = ALINES( .a_SpecialProps_XMLTbl, FILETOSTR( lcPropsFile ), 1+4 )
+					lcPropsFile	= FORCEPATH( "props_xmltable.txt", JUSTPATH( .c_Foxbin2prg_FullPath ) )
+					I   = ALINES( .a_SpecialProps_XMLTbl, FILETOSTR( lcPropsFile ), 1+4 )
+					*FOR X = 1 TO I
+					*	INSERT INTO foxbin2prg_keywords (c_class, c_keyword, i_order) VALUES ('xmltable', .a_SpecialProps_XMLTbl(X), X)
+					*ENDFOR
+				#ENDIF
 
 			ENDWITH
 
