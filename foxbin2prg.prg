@@ -1646,8 +1646,9 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 					ENDIF
 
 				CASE ISNULL( .o_Configuration( .n_CFG_Actual ) )
-					*-- Si existe una configuración y es NULL, se usa la predeterminada
-					*.n_CFG_Actual	= 0
+					*-- Si existe una configuración y es NULL, es la predeterminada.
+					*-- Este es el primer objeto CFG en cargarse cuando se inicializa FoxBin2Prg,
+					*-- y corresponde a la ruta de instalación del EXE (ej: c:\desa\foxbin2prg\foxbin2prg.cfg)
 					lo_CFG			= THIS
 
 				ENDCASE
@@ -24771,8 +24772,7 @@ DEFINE CLASS CL_LANG AS Custom
 		LPARAMETERS tcLanguage
 
 		TRY
-			LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_FullPath, lc_Foxbin2prg_LangFile, laDirInfo(1,5) ;
-				, llLangFileExists, lcLangStr ;
+			LOCAL lcSys16, lnPosProg, laDirInfo(1,5), lcLangStr ;
 				, loEx as Exception
 
 			WITH THIS AS CL_LANG OF 'FOXBIN2PRG.PRG'
@@ -24780,55 +24780,14 @@ DEFINE CLASS CL_LANG AS Custom
 				tcLanguage	= EVL(tcLanguage,'')
 
 				IF EMPTY(tcLanguage)
-					*-- Reconocer archivo de idioma foxbin2prg.h
-					lcSys16 = SYS(16)
-					IF LEFT(lcSys16,10) == 'PROCEDURE '
-						lnPosProg	= AT(" ", lcSys16, 2) + 1
-					ELSE
-						lnPosProg	= 1
-					ENDIF
-
-					lc_Foxbin2prg_FullPath		= SUBSTR( lcSys16, lnPosProg )
-					lc_Foxbin2prg_LangFile		= FORCEEXT( lc_Foxbin2prg_FullPath, 'H' )
-					*llLangFileExists			= ( ADIR( laDirInfo, lc_Foxbin2prg_LangFile ) = 1 )	&& 07/01/2014. Anulado. Ya no tiene sentido el .h externo
+					.n_LanguageSelectedMethod	= 0	&& 0=Automatic by version(3)
 				ELSE
 					.n_LanguageSelectedMethod	= 1	&& 1=Assigned by Parameter
-				ENDIF
-
-				IF llLangFileExists
-					TRY
-						*-- Language file "foxbin2prg.h" will be loaded (slowest option)
-						lcLangStr	= 'LPARAMETERS toLangObj' + CR_LF + FILETOSTR( lc_Foxbin2prg_LangFile )
-
-						IF ATC( '<FoxBin2Prg v1.19.38>', lcLangStr ) = 0 THEN
-							*-- El archivo es antiguo
-							ERROR "Archivo FoxBin2Prg.h antiguo"	&& Da igual el error
-						ENDIF
-
-						lcLangStr	= STRTRAN( lcLangStr, '#DEFINE ', 'toLangObj.' )
-						lcLangStr	= STRTRAN( lcLangStr, '_LOC', '_LOC =', -1, -1, 2 )
-						lcLangStr	= STRTRAN( lcLangStr, 'CR_LF', 'CHR(13)+CHR(10)' )
-						EXECSCRIPT( lcLangStr, THIS )
-
-					CATCH TO loEx
-						*-- El archivo es antiguo o tiene errores
-						TRY
-							llLangFileExists	= .F.
-							.n_LanguageSelectedMethod	= 0	&& 0=Automatic with VERSION(3)
-							RENAME (lc_Foxbin2prg_LangFile) TO (FORCEEXT(lc_Foxbin2prg_LangFile, 'invalid'))
-						CATCH	&& No quiero errores por RENAME
-						ENDTRY
-
-					ENDTRY
 				ENDIF
 
 				tcLanguage	= UPPER( EVL(tcLanguage, VERSION(3)) )
 
 				DO CASE
-				CASE llLangFileExists
-					*-- Ya se cargó
-					.n_LanguageSelectedMethod	= 2	&& 2=Loaded from foxbin2prg.h
-
 				CASE INLIST(tcLanguage, '33', 'FR') && French (Francés)
 					*-------------------------------------------------------------------------------------------------------------------------------------------
 					*-- NOTE: MUST USE DOUBLE QUOTES, OR SYNTAX ERRORS HAPPEN WHEN COMPILING. STRANGE :(
