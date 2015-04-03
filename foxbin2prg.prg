@@ -5578,6 +5578,9 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 						lnPos	= ASCAN( .a_SpecialProps, lcPropName, 1, 0, 1, 1+2+4 )
 					ENDCASE
 
+					*-- Genera una propiedad con el formato "A nnn Propiedad", donde los valores más altos quedan al final,
+					*-- de modo que primero van las props nativas, luego las del usuario y al final "name", que es especial.
+					*-- Ej: "A004ScaleMode", ..., "A998UserProp", "A999Name"
 					lcPropName	= 'A' + PADL( EVL(lnPos,998), 3, '0' ) + lcPropName
 				ENDWITH && THIS
 			ENDCASE
