@@ -2953,7 +2953,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
 				IF .n_UseClassPerFile > 0 AND .l_RedirectClassPerFileToMain THEN
 					DO CASE
-					CASE .n_UseClassPerFile = 1 AND INLIST(lcExtension,'VC2','SC2')
+					CASE .n_UseClassPerFile = 1 AND INLIST(lcExtension,.c_VC2,.c_SC2)
 						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
 							lc_BaseFile	= .c_InputFile
 						ELSE
@@ -2965,7 +2965,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 							.c_InputFile	= lc_BaseFile
 						ENDIF
 
-					CASE .n_UseClassPerFile = 2 AND INLIST(lcExtension,'VC2','SC2') OR lcExtension = 'DC2'
+					CASE .n_UseClassPerFile = 2 AND INLIST(lcExtension,.c_VC2,.c_SC2) OR lcExtension = .c_DC2
 						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
 							lc_BaseFile	= .c_InputFile
 						ELSE
@@ -13493,7 +13493,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				lnStep			= lnStep + 1
 				lcOutputFile	= .c_OutputFile
 
-				.AvanceDelProceso( 'Writing VC2...', lnStep, lnClassTotal*lnStepCount, 1 )
+				.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_VC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 				IF .l_Test
@@ -13835,7 +13835,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				lnStep			= lnStep + 1
 				lcOutputFile	= .c_OutputFile
 
-				.AvanceDelProceso( 'Writing SC2...', lnStep, lnClassTotal*lnStepCount, 1 )
+				.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_SC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 				IF .l_Test
@@ -14205,7 +14205,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
-				.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
+				.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
 
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
@@ -14595,7 +14595,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			ENDIF
 
 			*-- Genero el PJ2
-			THIS.AvanceDelProceso( 'Writing PJ2...', 2, 2, 1 )
+			THIS.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
 
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
@@ -14785,7 +14785,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 				*-- Genero el FR2
-				.AvanceDelProceso( 'Writing FR2...', 2, 2, 1 )
+				.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_FR2 + '...', 2, 2, 1 )
 
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
@@ -14902,7 +14902,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Genero el DB2, renombrando el TMP
-					.AvanceDelProceso( 'Writing DB2...', 3, 3, 1 )
+					.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
@@ -14925,7 +14925,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Genero el DB2
-					.AvanceDelProceso( 'Writing DB2...', 3, 3, 1 )
+					.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
@@ -15125,7 +15125,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				lcOutputFile	= .c_OutputFile
 
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					.AvanceDelProceso( 'Writing DC2...', 2, 2, 1 )
+					.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_DC2 + '...', 2, 2, 1 )
 					lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 				ENDIF
 
@@ -15233,7 +15233,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 				*-- Genero el MN2
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					.AvanceDelProceso( 'Writing MN2...', 2, 2, 1 )
+					.AvanceDelProceso( 'Writing ' + toFoxBin2Prg.c_MN2 + '...', 2, 2, 1 )
 				ENDIF
 
 				IF .l_Test
