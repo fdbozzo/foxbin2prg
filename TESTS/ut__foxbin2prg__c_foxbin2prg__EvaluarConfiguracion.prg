@@ -87,7 +87,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 				THIS.messageout( 'l_Recompile: ' + TRANSFORM(loFB2P_Esperado.l_Recompile) )
 				THIS.messageout( 'l_NoTimestamps: ' + TRANSFORM(loFB2P_Esperado.l_NoTimestamps) )
 				THIS.messageout( 'l_ClearUniqueID: ' + TRANSFORM(loFB2P_Esperado.l_ClearUniqueID) )
-				THIS.messageout( 'l_Debug: ' + TRANSFORM(loFB2P_Esperado.l_Debug) )
+				THIS.messageout( 'n_Debug: ' + TRANSFORM(loFB2P_Esperado.n_Debug) )
 				THIS.messageout( 'n_ExtraBackupLevels: ' + TRANSFORM(loFB2P_Esperado.n_ExtraBackupLevels) )
 				THIS.messageout( 'l_OptimizeByFilestamp: ' + TRANSFORM(loFB2P_Esperado.l_OptimizeByFilestamp) )
 			
@@ -105,7 +105,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_Recompile), TRANSFORM(loFB2P.l_Recompile), '> l_Recompile' )
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_NoTimestamps), TRANSFORM(loFB2P.l_NoTimestamps), '> l_NoTimestamps' )
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_ClearUniqueID), TRANSFORM(loFB2P.l_ClearUniqueID), '> l_ClearUniqueID' )
-				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_Debug), TRANSFORM(loFB2P.l_Debug), '> l_Debug' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.n_Debug), TRANSFORM(loFB2P.n_Debug), '> n_Debug' )
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.n_ExtraBackupLevels), TRANSFORM(loFB2P.n_ExtraBackupLevels), '> n_ExtraBackupLevels' )
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_OptimizeByFilestamp), TRANSFORM(loFB2P.l_OptimizeByFilestamp), '> l_OptimizeByFilestamp' )
 
@@ -173,7 +173,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
-			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_Debug', 0 )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
 			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .F. )
 			*STRTOFILE('', 'TESTS\DATOS_TEST\foxbin2prg.cfg')
@@ -226,7 +226,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .F. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .F. )
-			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_Debug', 0 )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 0 )
 			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .F. )
 			*--
@@ -296,7 +296,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_Recompile', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_NoTimestamps', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
-			ADDPROPERTY( loFB2P_Esperado, 'l_Debug', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_Debug', 1 )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
 			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .T. )
 			*--
@@ -661,13 +661,13 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lcSeteo			= 'l_Debug'
-			leValorEsperado	= .F.
+			lcSeteo			= 'n_Debug'
+			leValorEsperado	= 0
 
 
 			*-- TEST
 			loFB2P.EvaluarConfiguracion()
-			leValor		= loFB2P.l_Debug
+			leValor		= loFB2P.n_Debug
 			
 
 		CATCH TO loEx
@@ -699,13 +699,13 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lcSeteo			= 'l_Debug'
-			leValorEsperado	= .F.
+			lcSeteo			= 'n_Debug'
+			leValorEsperado	= 0
 
 
 			*-- TEST
 			loFB2P.EvaluarConfiguracion()
-			leValor		= loFB2P.l_Debug
+			leValor		= loFB2P.n_Debug
 			
 
 		CATCH TO loEx
@@ -737,13 +737,13 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 			*-- DATOS DE ENTRADA
 			STORE 0 TO lnCodError
-			lcSeteo			= 'l_Debug'
-			leValorEsperado	= .T.
+			lcSeteo			= 'n_Debug'
+			leValorEsperado	= 1
 
 
 			*-- TEST
 			loFB2P.EvaluarConfiguracion()
-			leValor		= loFB2P.l_Debug
+			leValor		= loFB2P.n_Debug
 			
 
 		CATCH TO loEx

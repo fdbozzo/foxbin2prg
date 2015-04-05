@@ -5113,8 +5113,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			*tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcComment	= SUBSTR( tcLine, ln_AT_Cmt + 2 )
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
 		ENDIF
 
@@ -5340,11 +5339,10 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcLine, tcComment
-		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt, lcStr
+		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
 		WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
 			.get_SeparatedLineAndComment( @tcLine, @tcComment )
-			*lcStr	= LTRIM( tcLine, 0, CHR(9), ' ' )
 
 			DO CASE
 			CASE LEFT(tcLine,2) == '*<'
@@ -5356,7 +5354,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 			ENDCASE
 		ENDWITH
 
-		RELEASE tcLine, tcComment, ln_AT_Cmt, lcStr
+		RELEASE tcLine, tcComment, ln_AT_Cmt
 		RETURN lllineIsOnlyCommentAndNoMetadata
 	ENDPROC
 
@@ -15333,8 +15331,7 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			*tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcComment	= SUBSTR( tcLine, ln_AT_Cmt + 2 )
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
 		ENDIF
 
@@ -15421,8 +15418,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			*tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcComment	= SUBSTR( tcLine, ln_AT_Cmt + 2 )
+			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
 			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
 		ENDIF
 
