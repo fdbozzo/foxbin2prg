@@ -125,6 +125,7 @@ WITH loProject.FILES
 	*</FileComments>
 
 	*<ExcludedFiles>
+	.ITEM(lcCurdir + 'foxbin2prg_keywords.dbf').Exclude = .T.
 	.ITEM(lcCurdir + 'readme.txt').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\foxunit_path.txt').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_bin_a_prg.prg').Exclude = .T.
