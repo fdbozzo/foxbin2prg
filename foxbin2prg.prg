@@ -2904,7 +2904,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 		*-- Escribo la información de error en el archivo log de errores
 		TRY
-			STRTOFILE( STRCONV(tcErrorInfo, 9 ), EVL( THIS.c_InputFile, 'foxbin2prg_errorlog' ) + '.ERR' )
+			STRTOFILE( tcErrorInfo, EVL( THIS.c_InputFile, 'foxbin2prg_errorlog' ) + '.ERR' )
 		CATCH
 		ENDTRY
 
@@ -3002,7 +3002,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
 				IF NOT .addProcessedFile( .c_InputFile, 'I', 'P1', 'E0', 'S1', 'X0' ) THEN
 					*.writeLog( 'OPTIMIZACIÓN: El archivo Base [' + JUSTFNAME(lc_BaseFile) + '] ya fue procesado, por lo que no se procesará [' + JUSTFNAME(.c_InputFile) + ']' )
-					.writeLog( C_TAB + '* ' + TEXTMERGE( loLang.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC ) )
+					.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE( loLang.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC ) )
 					EXIT
 				ENDIF
 
@@ -3244,7 +3244,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ELSE
 					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
 					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada.' )
-					.writeLog( C_TAB + TEXTMERGE(loLang.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC) )
+					.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC) )
 
 				ENDIF
 
@@ -3713,7 +3713,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 	PROCEDURE writeErrorLog_Flush
 		IF NOT EMPTY(THIS.c_TextErr)
-			STRTOFILE( STRCONV(THIS.c_TextErr + CR_LF,9), THIS.c_ErrorLogFile, 1 )
+			STRTOFILE( THIS.c_TextErr + CR_LF, THIS.c_ErrorLogFile, 1 )
 		ENDIF
 		THIS.c_TextErr	= ''
 	ENDPROC
@@ -3747,7 +3747,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 	PROCEDURE writeLog_Flush
 		IF THIS.n_Debug > 0 AND NOT EMPTY(THIS.c_TextLog)
-			STRTOFILE( STRCONV(THIS.c_TextLog + CR_LF,9), THIS.c_LogFile, 1 )
+			STRTOFILE( THIS.c_TextLog + CR_LF, THIS.c_LogFile, 1 )
 		ENDIF
 		THIS.c_TextLog	= ''
 	ENDPROC
@@ -13148,7 +13148,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 
 			IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
 				*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-				THIS.writeLog( '> ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+				THIS.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 
 			ELSE
 				IF llFileExists THEN
@@ -13157,7 +13157,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 				ENDIF
 
 				lnBytes	= STRTOFILE( tcCodigo, tcOutputFile )
-				THIS.writeLog( '> ' + loLang.C_FILENAME_LOC + ': ' + tcOutputFile + ' (' + ALLTRIM(TRANSFORM(lnBytes/1024,'######.##')) + '/' + ALLTRIM(TRANSFORM(LEN(tcCodigo)/1024,'######.##')) + ' KiB)' )
+				THIS.writeLog( C_TAB + C_TAB + '- ' + loLang.C_FILENAME_LOC + ': ' + tcOutputFile + ' (' + ALLTRIM(TRANSFORM(lnBytes/1024,'######.##')) + '/' + ALLTRIM(TRANSFORM(LEN(tcCodigo)/1024,'######.##')) + ' KiB)' )
 				*THIS.writeLog( '- ' + loLang.C_GENERATED_FILE_SIZE_LOC )
 
 				IF lnBytes = 0
@@ -14918,7 +14918,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 							ERASE (.c_OutputFile + '.TMP')
 							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 							lcOutputFile	= .c_OutputFile
-							.writeLog( '> ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+							.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
 						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
 								AND toFoxBin2Prg.ChangeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
 								AND NOT toFoxBin2Prg.RenameTmpFile2Tx2File( .c_OutputFile )
@@ -24990,7 +24990,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_BACKUP_OF_LOC												= "Faire de sauvegarde des: "
 					.C_CACHING_CONFIG_FOR_DIRECTORY_LOC								= "La mise en cache pour le répertoire config"
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "Vous ne pouvez pas générer un fichier [<<THIS.c_OutputFile>>] car il est en lecture seule"
-					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "OPTIMISATION: Fichier de base [<<JUSTFNAME(.c_InputFile)>>] Déjà traitée, en sautant traitement de fichier [<<tc_InputFile>>]"
+					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "Optimisation: Fichier de base [<<JUSTFNAME(.c_InputFile)>>] Déjà traitée, en sautant traitement de fichier [<<tc_InputFile>>]"
 					.C_CONFIGFILE_LOC												= "Utilisation du fichier de configuration:"
 					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversion Annulé par l'utilisateur"
 					.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC							= "Convertir tous les fichiers dans un Projet"
@@ -25080,7 +25080,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_BACKUP_OF_LOC												= "Haciendo Backup de: "
 					.C_CACHING_CONFIG_FOR_DIRECTORY_LOC								= "Cacheando configuración para directorio"
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "No se puede generar el archivo [<<THIS.c_OutputFile>>] porque es ReadOnly"
-					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "OPTIMIZACIÓN: El archivo Base [<<JUSTFNAME(.c_InputFile)>>] ya fue procesado, ignorando el procesamiento del archivo [<<tc_InputFile>>]"
+					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "Optimización: El archivo Base [<<JUSTFNAME(.c_InputFile)>>] ya fue procesado, ignorando el procesamiento del archivo [<<tc_InputFile>>]"
 					.C_CONFIGFILE_LOC												= "Usando archivo de configuración:"
 					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Conversión Cancelada por el usuario"
 					.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC							= "Convertir todos los archivos de un Proyecto"
@@ -25135,7 +25135,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_NAMES_CAPITALIZATION_PROGRAM_NOT_FOUND_LOC					= "* No se ha encontrado el programa de capitalización de nombres [<<lcEXE_CAPS>>]"
 					.C_OBJECT_NAME_WITHOUT_OBJECT_OREG_LOC							= "Objeto [<<toObj.CLASS>>] no contiene el objeto oReg (nivel <<TRANSFORM(tnNivel)>>)"
 					.C_ONLY_SETNAME_AND_GETNAME_RECOGNIZED_LOC						= "Operación no reconocida. Solo re reconoce SETNAME y GETNAME."
-					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "OPTIMIZACIÓN: saltando el archivo ya procesado [<<(lcFile)>>]"
+					.C_OPTIMIZATION_SKIPPING_ALREADY_PROCESSED_FILE_LOC				= "Optimización: saltando el archivo ya procesado [<<(lcFile)>>]"
 					.C_OPTION_LOC													= "Opción"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con las clases internas"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "El miembro externo no coincide con los miembros internos"
