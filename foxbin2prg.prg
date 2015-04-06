@@ -2629,9 +2629,9 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				ENDIF
 			ENDIF
 
-			IF THIS.l_ShowErrors
-				MESSAGEBOX( lcErrorInfo, 0 + lnErrorIcon + 4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
-			ENDIF
+			*IF THIS.l_ShowErrors AND ATC('-SHOWMSG', ('-' + tcType)) >= 1
+			*	MESSAGEBOX( lcErrorInfo, 0 + lnErrorIcon + 4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
+			*ENDIF
 
 			IF tlRelanzarError
 				THROW
@@ -2648,20 +2648,20 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
-			CASE ATC('-SHOWMSG', ('-' + tcType)) >= 1
+			CASE ATC('-SHOWMSG', ('-' + tcType)) >= 1 OR THIS.l_ShowErrors
 				THIS.writeErrorLog_Flush()
 
 				DO CASE
 				CASE lnCodError = 1799	&& Conversion Cancelled
-					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '! [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+48+4096, 'FoxBin2Prg', 60000 )
-					loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg', 60000 )
+					*loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				CASE THIS.l_Error
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ') [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+48+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg', 60000 )
 					loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				OTHERWISE
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + ' [p:' + TRANSFORM( THIS.n_ProcessedFilesCount ) + ']', 0+64+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '', 0+64+4096, 'FoxBin2Prg', 60000 )
 
 				ENDCASE
 
