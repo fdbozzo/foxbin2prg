@@ -757,8 +757,15 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		DECLARE INTEGER WriteFile	 IN Win32API INTEGER hFile, STRING @ cBuffer ;
 			, INTEGER nBytes, INTEGER @ nBytes2, INTEGER @ nBytes3
 
-		ERASE (THIS.c_ErrorLogFile)
-		ERASE (THIS.c_LogFile)
+		IF FILE(THIS.c_ErrorLogFile) THEN
+			ERASE (THIS.c_ErrorLogFile + '.BAK')
+			RENAME (THIS.c_ErrorLogFile) TO (THIS.c_ErrorLogFile + '.BAK')
+		ENDIF
+
+		IF FILE(THIS.c_LogFile) THEN
+			ERASE (THIS.c_LogFile + '.BAK')
+			RENAME (THIS.c_LogFile) TO (THIS.c_LogFile + '.BAK')
+		ENDIF
 
 		lcSys16 = SYS(16)
 		IF LEFT(lcSys16,10) == 'PROCEDURE '
