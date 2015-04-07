@@ -142,18 +142,18 @@
 * 03/03/2015	FDBOZZO		v1.19.42	Bug Fix scx: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Lutz Scheffler)
 * 03/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Lutz Scheffler)
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (Lutz Scheffler)
-* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Lutz Scheffler)
+* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2, usando *- (Lutz Scheffler)
 * 06/03/2015	FDBOZZO		v1.19.42	Bug Fix pjx: Permitir usar fin de linea (CR/LF) en los atributos de versión del PJX
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte de errOut e implementado en writeErrorLog
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Agregado soporte de errOut e implementado en writeErrorLog
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte total de comodines *? en nombres de archivo para procesar múltiples archivos de la misma extensión
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nuevo parámetro para permitir un CFG alternativo (Lutz Scheffler)
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nuevo método API get_Processed() para obtener información de los archivos procesados (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo parámetro para permitir un CFG alternativo (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo método get_Processed() para obtener información de los archivos procesados (Lutz Scheffler)
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva salida de archivos procesados a stdOut (Lutz Scheffler)
 * 10/03/2015	FDBOZZO		v1.19.42	Bug Fix: Arreglada la cancelación del procesamiento con tecla Esc
-* 22/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
+* 22/03/2015	FDBOZZO		v1.19.42	Mejora: Ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
 * 22/03/2015	FDBOZZO		v1.19.42	Mejora: Aplicar ClassPerFile a las conexiones, tablas, vistas y stored procedures de los DBC (Ryan Harris)
 * 23/03/2015	FDBOZZO		v1.19.42	Bug Fix mnx: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Lutz Scheffler)
-* 25/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva propiedad l_ProcessFiles que permite obtener la lista de archivos a procesar sin procesarlos realmente usando el valor .F.
+* 25/03/2015	FDBOZZO		v1.19.42	Mejora API: Nueva propiedad l_ProcessFiles que permite obtener la lista de archivos a procesar sin procesarlos realmente usando el valor .F.
 * 25/03/2015	FDBOZZO		v1.19.42	Bug Fix frx/lbx: Arreglo de CR,LF,TAB sobrantes en algunos archivos FR2/LB2 agregados en versiones anteriores (Ryan Harris)
 * 02/04/2015	FDBOZZO		v1.19.42	Mejora: Herencia de CFGs entre directorios
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -231,8 +231,8 @@
 * 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_Processed() para obtener información de los archivos procesados (Agregado en v1.19.42)
 * 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir salida de archivos procesados a stdOut (Agregado en v1.19.42)
 * 23/03/2015	Lutz Scheffler		Reporte bug mnx v1.19.41: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Arreglado en v1.19.42)
-* 24/03/2015	Ryan Harris			Reporte bug frx/lbx v1.19.41: Hay algunos CR,LF,TAB sobrantes en las etiquetas tag de algunos archivos FR2/LB2
-* 24/03/2015	Ryan Harris			Mejora v1.19.41: Borrar archivos ERR al procesar, cuando se usa UseClassPerFile
+* 24/03/2015	Ryan Harris			Reporte bug frx/lbx v1.19.41: Hay algunos CR,LF,TAB sobrantes en las etiquetas tag de algunos archivos FR2/LB2 (Arreglado en v1.19.42)
+* 24/03/2015	Ryan Harris			Mejora v1.19.41: Borrar archivos ERR al procesar, cuando se usa UseClassPerFile (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -11891,6 +11891,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 
 
 	PROCEDURE get_PropsFrom_PROTECTED
+		*---------------------------------------------------------------------------------------------------
 		*-- Sirve para el memo PROTECTED
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -12076,6 +12077,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
 
 
 	PROCEDURE set_UserValue
+		*---------------------------------------------------------------------------------------------------
+		* Intenta obtener información más precisa sobre el error a reportar dentro de methods
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toEx						(v! IN    ) Objeto Exception
+		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS toEx as Exception
 
 		LOCAL lcMethods, I, lcLine, laCodeLines(1), lcMethod, lcLocation, lnErrorLine
@@ -17160,10 +17167,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 				lcHeader	= TABLABIN.Property
 				._Name	= UPPER( JUSTFNAME( DBF("TABLABIN") ) )
 
-				DO WHILE .T.
-					IF NOT .readNext_DBC_HeaderDataRecord( @lcHeader, @lnPos, @lnLen, @lnID, @lcDataType, @lcPropName, @leData )
-						EXIT
-					ENDIF
+				DO WHILE .readNext_DBC_HeaderDataRecord( @lcHeader, @lnPos, @lnLen, @lnID, @lcDataType, @lcPropName, @leData )
 					.AddProperty( '_' + lcPropName, leData )
 				ENDDO
 
