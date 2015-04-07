@@ -3691,11 +3691,11 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	PROCEDURE writeErrorLog
-		LPARAMETERS tcText, tnTimestamp
+		LPARAMETERS tcText, tnTimeStamp
 
 		TRY
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				IF EVL(tnTimestamp,0) = 1 THEN
+				IF EVL(tnTimeStamp,0) = 1 THEN
 					*-- Format: Timestamp__Text
 					.c_TextErr	= .c_TextErr + TTOC(DATETIME(),3) + '  '
 				ENDIF
@@ -3703,7 +3703,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				*-- Format: Text
 				.c_TextErr	= .c_TextErr + EVL(tcText,'')
 
-				IF EVL(tnTimestamp,0) = 2 THEN
+				IF EVL(tnTimeStamp,0) = 2 THEN
 					*-- Format: Text__Timestamp
 					.c_TextErr	= .c_TextErr + '  ' + TTOC(DATETIME(),3)
 				ENDIF
@@ -3729,11 +3729,11 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 
 	PROCEDURE writeLog
-		LPARAMETERS tcText, tnTimestamp
+		LPARAMETERS tcText, tnTimeStamp
 
 		TRY
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				IF EVL(tnTimestamp,0) = 1 THEN
+				IF EVL(tnTimeStamp,0) = 1 THEN
 					*-- Format: Timestamp__Text
 					.c_TextLog	= .c_TextLog + TTOC(DATETIME(),3) + '  '
 				ENDIF
@@ -3741,7 +3741,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				*-- Format: Text
 				.c_TextLog	= .c_TextLog + EVL(tcText,'')
 
-				IF EVL(tnTimestamp,0) = 2 THEN
+				IF EVL(tnTimeStamp,0) = 2 THEN
 					*-- Format: Text__Timestamp
 					.c_TextLog	= .c_TextLog + '  ' + TTOC(DATETIME(),3)
 				ENDIF
@@ -4986,7 +4986,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tnTimeStamp				(v! IN    ) Timestamp en formato numérico
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tnTimestamp
+		LPARAMETERS tnTimeStamp
 		*-- CONVIERTE UN DATO TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc. EN TIPO DATETIME
 		TRY
 			LOCAL lcTimeStamp,lnYear,lnMonth,lnDay,lnHour,lnMinutes,lnSeconds,lcTime,lnHour,ltTimeStamp,lnResto ;
@@ -4995,7 +4995,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
 				lcTimeStamp_Ret	= ''
 
-				IF EMPTY(tnTimestamp)
+				IF EMPTY(tnTimeStamp)
 					IF .lFileMode
 						IF ADIR(laDirInfo,.c_InputFile)=0
 							EXIT
@@ -5013,15 +5013,15 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 						EXIT
 					ENDIF
 
-					tnTimestamp = .n_ClassTimeStamp
+					tnTimeStamp = .n_ClassTimeStamp
 
-					IF EMPTY(tnTimestamp)
+					IF EMPTY(tnTimeStamp)
 						EXIT
 					ENDIF
 				ENDIF
 
 				*-- YYYY YYYM MMMD DDDD HHHH HMMM MMMS SSSS
-				lnResto		= tnTimestamp
+				lnResto		= tnTimeStamp
 				lnYear		= INT( lnResto / 2**25 + 1980)
 				lnResto		= lnResto % 2**25
 				lnMonth		= INT( lnResto / 2**21 )
@@ -5462,11 +5462,11 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 	FUNCTION RowTimeStamp(ltDateTime)
 		* Generate a FoxPro 3.0-style row timestamp
 		*-- CONVIERTE UN DATO TIPO DATETIME EN TIMESTAMP NUMERICO USADO POR LOS ARCHIVOS SCX/VCX/etc.
-		LOCAL lcTimeValue, tnTimestamp
+		LOCAL lcTimeValue, tnTimeStamp
 
 		TRY
 			IF EMPTY(ltDateTime)
-				tnTimestamp = 0
+				tnTimeStamp = 0
 				EXIT
 			ENDIF
 
@@ -5474,7 +5474,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				m.ltDateTime		= DATETIME()
 			ENDIF
 
-			tnTimestamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
+			tnTimeStamp = ( YEAR(m.ltDateTime) - 1980) * 2^25 ;
 				+ MONTH(m.ltDateTime) * 2^21 ;
 				+ DAY(m.ltDateTime) * 2^16 ;
 				+ HOUR(m.ltDateTime) * 2^11 ;
@@ -5482,7 +5482,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				+ SEC(m.ltDateTime)
 		ENDTRY
 
-		RETURN INT(tnTimestamp)
+		RETURN INT(tnTimeStamp)
 	ENDFUNC
 
 
@@ -6044,11 +6044,11 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 
 	PROCEDURE writeLog
-		LPARAMETERS tcText, tnTimestamp
+		LPARAMETERS tcText, tnTimeStamp
 
 		TRY
 			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
-				IF EVL(tnTimestamp,0) = 1 THEN
+				IF EVL(tnTimeStamp,0) = 1 THEN
 					*-- Format: Timestamp__Text
 					.c_TextLog	= .c_TextLog + TTOC(DATETIME(),3) + '  '
 				ENDIF
@@ -6056,7 +6056,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				*-- Format: Text
 				.c_TextLog	= .c_TextLog + EVL(tcText,'')
 
-				IF EVL(tnTimestamp,0) = 2 THEN
+				IF EVL(tnTimeStamp,0) = 2 THEN
 					*-- Format: Text__Timestamp
 					.c_TextLog	= .c_TextLog + '  ' + TTOC(DATETIME(),3)
 				ENDIF
@@ -6253,7 +6253,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 
 		CREATE &tcTableOrCursor. (lcCursorName) ;
 			( NAME			M ;
-			, TYPE			c(1) ;
+			, TYPE			C(1) ;
 			, ID			N(10) ;
 			, TIMESTAMP		N(10) ;
 			, OUTFILE		M ;
@@ -6271,14 +6271,14 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 			, OBJECT		M ;
 			, CKVAL			N(6) ;
 			, CPID			N(5) ;
-			, OSTYPE		c(4) ;
-			, OSCREATOR		c(4) ;
+			, OSTYPE		C(4) ;
+			, OSCREATOR		C(4) ;
 			, COMMENTS		M ;
 			, RESERVED1		M ;
 			, RESERVED2		M ;
 			, SCCDATA		M ;
 			, LOCAL			L ;
-			, KEY			c(32) ;
+			, KEY			C(32) ;
 			, USER			M )
 
 		IF tcTableOrCursor = 'TABLE' THEN
@@ -6347,8 +6347,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
 
 		CREATE &tcTableOrCursor. (lcCursorName) ;
-			( PLATFORM		c(8) ;
-			, UNIQUEID		c(10) ;
+			( PLATFORM		C(8) ;
+			, UNIQUEID		C(10) ;
 			, TIMESTAMP		N(10) ;
 			, CLASS			M ;
 			, CLASSLOC		M ;
@@ -6409,8 +6409,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
 
 		CREATE &tcTableOrCursor. (lcCursorName) ;
-			( PLATFORM		c(8) ;
-			, UNIQUEID		c(10) ;
+			( PLATFORM		C(8) ;
+			, UNIQUEID		C(10) ;
 			, TIMESTAMP		N(10) ;
 			, CLASS			M ;
 			, CLASSLOC		M ;
@@ -6471,8 +6471,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 		lcCursorName	= ICASE( tcTableOrCursor = 'TABLE', THIS.c_OutputFile, 'TABLABIN' )
 
 		CREATE &tcTableOrCursor. (lcCursorName) ;
-			( 'PLATFORM'	c(8) ;
-			, 'UNIQUEID'	c(10) ;
+			( 'PLATFORM'	C(8) ;
+			, 'UNIQUEID'	C(10) ;
 			, 'TIMESTAMP'	N(10) ;
 			, 'OBJTYPE'		N(2) ;
 			, 'OBJCODE'		N(3) ;
@@ -6488,8 +6488,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
 			, 'UNIQUE'		L ;
 			, 'COMMENT'		M ;
 			, 'ENVIRON'		L ;
-			, 'BOXCHAR'		c(1) ;
-			, 'FILLCHAR'	c(1) ;
+			, 'BOXCHAR'		C(1) ;
+			, 'FILLCHAR'	C(1) ;
 			, 'TAG'			M ;
 			, 'TAG2'		M NOCPTRANS ;
 			, 'PENRED'		N(5) ;
