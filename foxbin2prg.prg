@@ -581,7 +581,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
-		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
@@ -680,7 +680,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	c_BackgroundImage				= ''
 	l_ClearUniqueID                 = .T.
 	l_ClearDBFLastUpdate        	= .T.
-	l_OptimizeByFilestamp           = .F.
+	n_OptimizeByFilestamp           = 2
 	l_MethodSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled				= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -1072,11 +1072,11 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 	ENDPROC
 
 
-	PROCEDURE l_OptimizeByFilestamp_ACCESS
+	PROCEDURE n_OptimizeByFilestamp_ACCESS
 		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
-			RETURN THIS.l_OptimizeByFilestamp
+			RETURN THIS.n_OptimizeByFilestamp
 		ELSE
-			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_OptimizeByFilestamp, THIS.l_OptimizeByFilestamp )
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_OptimizeByFilestamp, THIS.n_OptimizeByFilestamp )
 		ENDIF
 	ENDPROC
 
@@ -1532,7 +1532,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		*										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 		* tcExtraBackupLevels		(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
 		* tcClearUniqueID			(v? IN    ) Indica si se debe limpiar el UniqueID ('1') o no ('0' ó vacío)
-		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp ('1') o no ('0' ó vacío)
+		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp mayor o igual ('1'), solo igual ('2') o no optimizar ('0' ó vacío)
 		* tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 		* tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
 		* toParentCFG				(@? IN    ) (Uso interno) Si se pasa un valor, el nuevo CFG copiará primero sus valores de aquí para heredarlos
@@ -1771,7 +1771,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 						CASE LEFT( laConfig(I), 20 ) == LOWER('OptimizeByFilestamp:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 21 ) )
-							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) AND INLIST( lcValue, '0', '1' ) THEN
+							IF NOT INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1', '2' ) AND INLIST( lcValue, '0', '1', '2' ) THEN
 								tcOptimizeByFilestamp	= lcValue
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > OptimizeByFilestamp:        ' + TRANSFORM(lcValue) )
 							ENDIF
@@ -1918,8 +1918,8 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				IF ISDIGIT(tcExtraBackupLevels)
 					lo_CFG.n_ExtraBackupLevels		= INT( VAL( TRANSFORM(tcExtraBackupLevels) ) )
 				ENDIF
-				IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1' ) THEN
-					lo_CFG.l_OptimizeByFilestamp	= NOT (TRANSFORM(tcOptimizeByFilestamp) == '0')
+				IF INLIST( TRANSFORM(tcOptimizeByFilestamp), '0', '1', '2' ) THEN
+					lo_CFG.n_OptimizeByFilestamp	= INT(VAL(tcOptimizeByFilestamp))
 				ENDIF
 
 				.l_Main_CFG_Loaded	= .T.
@@ -1946,7 +1946,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				.writeLog( C_TAB + 'n_Debug:                      ' + TRANSFORM(.n_Debug) )
 				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( C_TAB + 'c_BackgroundImage:            ' + TRANSFORM(.c_BackgroundImage) )
-				.writeLog( C_TAB + 'l_OptimizeByFilestamp:        ' + TRANSFORM(.l_OptimizeByFilestamp) )
+				.writeLog( C_TAB + 'n_OptimizeByFilestamp:        ' + TRANSFORM(.n_OptimizeByFilestamp) )
 				.writeLog( C_TAB + 'l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
 				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
 				.writeLog( C_TAB + 'c_Language:                   ' + TRANSFORM(.c_Language) )
@@ -2173,7 +2173,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		* tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
 		* tcBackupLevels			(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
 		* tcClearUniqueID			(v? IN    ) Indica si se debe limpiar el UniqueID ('1') o no ('0' ó vacío)
-		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp ('1') o no ('0' ó vacío)
+		* tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp mayor o igual ('1'), solo igual ('2') o no optimizar ('0' ó vacío)
 		* tcCFG_File				(v? IN    ) Indica si se debe usar un archivo de configuración distinto al predeterminado
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
@@ -2269,7 +2269,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				.writeLog( C_TAB + 'tcNoTimestamps:               ' + TRANSFORM( EVL(tcNoTimestamps, '(empty)  -> Will use Default [' + TRANSFORM(.l_NoTimestamps) + ']' ) ) )
 				.writeLog( C_TAB + 'tcBackupLevels:               ' + TRANSFORM( EVL(tcBackupLevels, '(empty)  -> Will use Default [' + TRANSFORM(.n_ExtraBackupLevels) + ']' ) ) )
 				.writeLog( C_TAB + 'tcClearUniqueID:              ' + TRANSFORM( EVL(tcClearUniqueID, '(empty)  -> Will use Default [' + TRANSFORM(.l_ClearUniqueID) + ']' ) ) )
-                .writeLog( C_TAB + 'tcOptimizeByFilestamp:        ' + TRANSFORM( EVL(tcOptimizeByFilestamp, '(empty)  -> Will use Default [' + TRANSFORM(.l_OptimizeByFilestamp) + ']' ) ) )
+				.writeLog( C_TAB + 'tcOptimizeByFilestamp:        ' + TRANSFORM( EVL(tcOptimizeByFilestamp, '(empty)  -> Will use Default [' + TRANSFORM(.n_OptimizeByFilestamp) + ']' ) ) )
 				.writeLog( )
 
 				*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
@@ -3211,7 +3211,18 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 					ENDIF
 				ENDIF
 
-				IF NOT .l_OptimizeByFilestamp OR .t_InputFile_TimeStamp >= .t_OutputFile_TimeStamp THEN
+				DO CASE
+				CASE .n_OptimizeByFilestamp = 1 AND .t_InputFile_TimeStamp < .t_OutputFile_TimeStamp
+					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
+					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es más nuevo que el de entrada.' )
+					.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC) )
+
+				CASE .n_OptimizeByFilestamp = 2 AND .t_InputFile_TimeStamp = .t_OutputFile_TimeStamp
+					*-- Optimizado: El Origen es igual al Destino - No hace falta regenerar
+					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es igual que el de entrada.' )
+					.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC) )
+
+				OTHERWISE
 					.c_Type								= UPPER(JUSTEXT(.c_OutputFile))
 					loConversor.c_InputFile				= .c_InputFile
 					loConversor.c_OutputFile			= .c_OutputFile
@@ -24707,7 +24718,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
-		+ [<memberdata name="l_optimizebyfilestamp" display="l_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
@@ -24743,7 +24754,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_NoTimestamps					= NULL
 	l_ClearUniqueID					= NULL
 	l_ClearDBFLastUpdate			= NULL
-	l_OptimizeByFilestamp			= NULL
+	n_OptimizeByFilestamp			= NULL
 	l_RedirectClassPerFileToMain	= NULL
 	n_UseClassPerFile				= NULL
 	l_ClassPerFileCheck				= NULL
@@ -24784,7 +24795,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.l_NoTimestamps					= toParentCFG.l_NoTimestamps
 			.l_ClearUniqueID				= toParentCFG.l_ClearUniqueID
 			.l_ClearDBFLastUpdate			= toParentCFG.l_ClearDBFLastUpdate
-			.l_OptimizeByFilestamp			= toParentCFG.l_OptimizeByFilestamp
+			.n_OptimizeByFilestamp			= toParentCFG.n_OptimizeByFilestamp
 			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
@@ -24888,7 +24899,8 @@ DEFINE CLASS CL_LANG AS Custom
 	C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= ""
 	C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC					= ""
 	C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC								= ""
-	C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= ""
+	C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= ""
+	C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= ""
 	C_PRESS_ESC_TO_CANCEL											= ""
 	C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= ""
 	C_PROCESSING_LOC												= ""
@@ -25000,7 +25012,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La classe externe ne correspond pas à la classe interne"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "L'élément extérieur ne correspond pas aux éléments intérieur"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimisation: fichier de sortie [<<lcOutputFile>>] ne était pas écrasé parce que ce est la même que celle générée."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimisation: fichier de sortie [<<THIS.c_OutputFile>>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
+					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimisation: le fichier de sortie [<<THIS.c_OutputFile>>] pas régénéré en ayant le même horodatage que l'entrée."
+					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimisation: le fichier de sortie [<<THIS.c_OutputFile>>] n'a pas été régénéré car il est plus récent que le fichier d'entrée."
 					.C_PRESS_ESC_TO_CANCEL											= "Appuyez sur Esc pour Annuler"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procédure pas fermé. Dernière ligne de code doit être ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Traitement du fichier"
@@ -25090,7 +25103,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con las clases internas"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "El miembro externo no coincide con los miembros internos"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: el archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al generado."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por ser más nuevo que el de entrada."
+					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por tener el mismo timestamp que el de entrada."
+					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por tener un timestamp más nuevo que el de entrada."
 					.C_PRESS_ESC_TO_CANCEL											= "Pulse Esc para Cancelar"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Procesando archivo"
@@ -25180,7 +25194,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "Das äußere Element nicht den inneren Elementen entsprechen"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
+					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht verlängert, weil seine Zeitmarke ist die gleiche wie die Quelldatei."
+					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Prozcedur nicht geschlossen. Letzte Zeile des Codes muss ENDPROC sein. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Bearbeite Datei"
@@ -25270,7 +25285,8 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "The outer class does not match the inner classes"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "The outer member does not match the inner members"
 					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimization: output file [<<lcOutputFile>>] was not overwritten because it is the same as was generated."
-					.C_OUTPUTFILE_NEWER_THAN_INPUTFILE_LOC							= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it is newer than the inputfile."
+					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it's filestamp is equal than the inputfile."
+					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it's filestamp is newer than the inputfile."
 					.C_PRESS_ESC_TO_CANCEL											= "Press Esc to Cancel"
 					.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC								= "Procedure not closed. Last line of code must be ENDPROC. [<<laLineas(1)>>, Recno:<<RECNO()>>]"
 					.C_PROCESSING_LOC												= "Processing file"
