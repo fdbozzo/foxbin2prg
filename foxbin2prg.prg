@@ -516,7 +516,7 @@ QUIT
 
 
 
-DEFINE CLASS c_foxbin2prg AS SESSION
+DEFINE CLASS c_foxbin2prg AS Session
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="addprocessedfile" display="addProcessedFile"/>] ;
 		+ [<memberdata name="avancedelproceso" display="AvanceDelProceso"/>] ;
@@ -546,6 +546,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
 		+ [<memberdata name="changefileattribute" display="ChangeFileAttribute"/>] ;
+		+ [<memberdata name="changefiletime" display="ChangeFileTime"/>] ;
 		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
 		+ [<memberdata name="dobackup" display="doBackup"/>] ;
 		+ [<memberdata name="ejecutar" display="Ejecutar"/>] ;
@@ -751,9 +752,20 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 		ENDIF
 
 		*-- Funciones para escribir en StdOut
-		DECLARE INTEGER GetStdHandle IN Win32API INTEGER nHandleType
-		DECLARE INTEGER WriteFile	 IN Win32API INTEGER hFile, STRING @ cBuffer ;
-			, INTEGER nBytes, INTEGER @ nBytes2, INTEGER @ nBytes3
+		DECLARE INTEGER 'GetStdHandle' IN WIN32API AS fb2p_GetStdHandle INTEGER nHandleType
+		DECLARE INTEGER 'WriteFile'	 IN WIN32API AS fb2p_WriteFile INTEGER hFile, STRING @ cBuffer, INTEGER nBytes, INTEGER @ nBytes2, INTEGER @ nBytes3
+		*-- Funciones para ChangeFileTime
+		DECLARE INTEGER 'SetFileTime' IN WIN32API AS fb2p_SetFileTime INTEGER hFile, STRING  lpCreationTime, STRING  lpLastAccessTime, STRING  lpLastWriteTime
+		DECLARE INTEGER 'GetFileAttributesEx' IN Win32API AS fb2p_GetFileAttributesEx STRING  lpFileName, INTEGER fInfoLevelId, STRING  @ lpFileInformation
+		DECLARE INTEGER 'LocalFileTimeToFileTime' IN Win32API AS fb2p_LocalFileTimeToFileTime STRING LOCALFILETIME, STRING @ FILETIME
+		DECLARE INTEGER 'FileTimeToSystemTime' IN Win32API AS fb2p_FileTimeToSystemTime STRING FILETIME, STRING @ SYSTEMTIME
+		DECLARE INTEGER 'SystemTimeToFileTime' IN Win32API AS fb2p_SystemTimeToFileTime STRING  lpSYSTEMTIME, STRING  @ FILETIME
+		DECLARE INTEGER '_lopen' IN Win32API AS fb2p_lopen STRING lpFileName, INTEGER iReadWrite
+		DECLARE INTEGER '_lclose' IN Win32API AS fb2p_lclose INTEGER hFile
+		*-- Funciones para ChangeFileAttributes
+		DECLARE SHORT 'SetFileAttributes' IN Win32API AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
+		DECLARE INTEGER 'GetFileAttributes' IN Win32API AS fb2p_GetFileAttributes STRING tcFileName
+		*--
 
 		IF FILE(THIS.c_ErrorLogFile) THEN
 			ERASE (THIS.c_ErrorLogFile + '.BAK')
@@ -815,6 +827,13 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			THIS.o_FSO	= NULL
 			THIS.o_WSH	= NULL
 			THIS.o_FNC	= NULL
+			*-- Funciones para ChangeFileAttributes
+			CLEAR DLLS fb2p_SetFileAttributes, fb2p_GetFileAttributes
+			*-- Funciones para escribir en StdOut
+			CLEAR DLLS fb2p_GetStdHandle, fb2p_WriteFile
+			*-- Funciones para ChangeFileTime
+			CLEAR DLLS fb2p_SetFileTime, fb2p_GetFileAttributesEx, fb2p_LocalFileTimeToFileTime ;
+				, fb2p_FileTimeToSystemTime, fb2p_SystemTimeToFileTime, fb2p_lopen, fb2p_lclose
 		ENDTRY
 
 		RETURN
@@ -1279,8 +1298,6 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 		TRY
 			LOCAL loEx AS EXCEPTION, dwFileAttributes, dwFileAttributes_Orig, lnRet
-			DECLARE SHORT 'SetFileAttributes' IN kernel32 AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
-			DECLARE INTEGER 'GetFileAttributes' IN kernel32 AS fb2p_GetFileAttributes STRING tcFileName
 			lnRet	= 0
 
 			* read current attributes for this file
@@ -1352,11 +1369,100 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 		FINALLY
 			THIS.writeLog( C_TAB + LOWER(PROGRAM()) + ' >> [' + tcFileName + '] lnRet = ' + TRANSFORM(lnRet) + ', dwFileAttributes_Orig = ' + TRANSFORM(dwFileAttributes_Orig) )
-			CLEAR DLLS fb2p_SetFileAttributes, fb2p_GetFileAttributes
 			RELEASE tcFileName, tcAttrib, dwFileAttributes
 		ENDTRY
 
 		RETURN lnRet
+	ENDPROC
+
+
+	PROCEDURE ChangeFileTime
+		*---------------------------------------------------------------------------------------------------
+		* CAMBIAR LA FECHA/HORA DE UN ARCHIVO
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcFileName				(v! IN    ) Nombre del archivo
+		* tcTimeType				(v? IN    ) C=Creation time, W=Last Write, A=Last Access
+		* tnYear					(v? IN    ) Año (>=1800)
+		* tnMonth					(v? IN    ) Mes (1-12)
+		* tnDay						(v? IN    ) Día (1-31)
+		* tnHour					(v? IN    ) Hora (0-23)
+		* tnMinute					(v? IN    ) Minuto (0-59)
+		* tnSec						(v? IN    ) Segundo (0-59)
+		* tnThou					(v? IN    ) ¿? (0-999)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS m.tcFileName, m.tcTimeType, m.tnYear, m.tnMonth, m.tnDay, m.tnHour, m.tnMinute, m.tnSec, m.tnThou
+
+		#DEFINE OF_READWRITE     2
+
+		LOCAL m.lpFileInformation, m.cS, m.nPar, m.fh, M.lpFileInformation, m.lpSysTime, m.cCreation ;
+			, M.cLastAccess, m.cLastWrite, m.cBuffTime, m.cBuffTime1, M.cTT,m.nYear1, m.nMonth1, m.nDay1, m.nHour1 ;
+			, M.nMinute1, m.nSec1, m.nThou1, llRetorno
+
+		TRY
+			m.nPar		= PCOUNT()
+
+			IF m.nPar < 1
+				EXIT
+			ENDIF
+
+			m.cTT		= IIF( m.nPar >= 2 AND VARTYPE(m.tcTimeType) = "C" AND NOT EMPTY(m.tcTimeType), LOWER(SUBSTR(m.tcTimeType,1,1)), "c" )
+			m.nYear1	= IIF( m.nPar >= 3 AND VARTYPE(m.tnYear) $ "FIN" AND m.tnYear >= 1800, ROUND(m.tnYear,0), -1 )
+			m.nMonth1	= IIF( m.nPar >= 4 AND VARTYPE(m.tnMonth) $ "FIN" AND BETWEEN(m.tnMonth,1,12), ROUND(m.tnMonth,0), -1 )
+			m.nDay1		= IIF( m.nPar >= 5 AND VARTYPE(m.tnDay) $ "FIN" AND BETWEEN(m.tnDay,1,31), ROUND(m.tnDay,0), -1 )
+			m.nHour1	= IIF( m.nPar >= 6 AND VARTYPE(m.tnHour) $ "FIN" AND BETWEEN(m.tnHour,0,23), ROUND(m.tnHour,0), -1 )
+			m.nMinute1	= IIF( m.nPar >= 7 AND VARTYPE(m.tnMinute) $ "FIN" AND BETWEEN(m.tnMinute,0,59), ROUND(m.tnMinute,0), -1 )
+			m.nSec1		= IIF( m.nPar >= 8 AND VARTYPE(m.tnSec) $ "FIN" AND BETWEEN(m.tnSec,0,59), ROUND(m.tnSec,0), -1 )
+			m.nThou1	= IIF( m.nPar >= 9 AND VARTYPE(m.tnThou) $ "FIN" AND BETWEEN(m.tnThou,0,999), ROUND(m.tnThou,0), -1 )
+			m.lpFileInformation = REPLICATE( CHR(0), 53 )	&& just a buffer
+			m.lpSysTime	= REPLICATE( CHR(0), 16 )			&& just a buffer
+
+			IF fb2p_GetFileAttributesEx(m.tcFileName, 0, @lpFileInformation) = 0
+				EXIT
+			ENDIF
+
+			m.cCreation   = SUBSTR(m.lpFileInformation,5,8)
+			m.cLastAccess = SUBSTR(m.lpFileInformation,13,8)
+			m.cLastWrite  = SUBSTR(m.lpFileInformation,21,8)
+			m.cBuffTime   = IIF(m.cTT="w",m.cLastWrite, IIF(m.cTT="a",m.cLastAccess,m.cCreation))
+
+			fb2p_FileTimeToSystemTime(m.cBuffTime, @lpSysTime)
+
+			m.lpSysTime = ;
+				IIF( m.nYear1 >= 0, BINTOC(m.nYear1,"2RS"), SUBSTR(m.lpSysTime,1,2) ) ;
+				+ IIF( m.nMonth1 >= 0, BINTOC(m.nMonth1,"2RS"), SUBSTR(m.lpSysTime,3,2) ) ;
+				+ SUBSTR(m.lpSysTime,5,2) ;
+				+ IIF( m.nDay1 >= 0, BINTOC(m.nDay1,"2RS"), SUBSTR(m.lpSysTime,7,2) ) ;
+				+ IIF( m.nHour1 >= 0, BINTOC(m.nHour1,"2RS"), SUBSTR(m.lpSysTime,9,2) ) ;
+				+ IIF( m.nMinute1 >= 0, BINTOC(m.nMinute1,"2RS"), SUBSTR(m.lpSysTime,11,2) ) ;
+				+ IIF( m.nSec1 >= 0, BINTOC(m.nSec1,"2RS"), SUBSTR(m.lpSysTime,13,2) ) ;
+				+ IIF( m.nThou1 >= 0, BINTOC(m.nThou1,"2RS"), SUBSTR(m.lpSysTime,15,2) )
+
+			fb2p_SystemTimeToFileTime(m.lpSysTime,@cBuffTime)
+			m.cBuffTime1	= m.cBuffTime
+			fb2p_LocalFileTimeToFileTime(m.cBuffTime1,@cBuffTime)
+
+			DO CASE
+			CASE m.cTT = "w"
+				m.cLastWrite=m.cBuffTime
+			CASE m.cTT = "a"
+				m.cLastAccess=m.cBuffTime
+			OTHERWISE && "c"
+				m.cCreation=m.cBuffTime
+			ENDCASE
+
+			m.fh = fb2p_lopen (m.tcFileName, OF_READWRITE)
+
+			IF m.fh < 0
+				EXIT
+			ENDIF
+
+			fb2p_SetFileTime (m.fh,m.cCreation, m.cLastAccess, m.cLastWrite)
+			fb2p_lclose(m.fh)
+			llRetorno = .T.
+		ENDTRY
+
+		RETURN llRetorno
 	ENDPROC
 
 
@@ -2199,6 +2305,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				lnPCount			= 0
 				lcInputFile_Type	= ''
 
+
 				IF .l_AutoClearProcessedFiles THEN
 					.ClearProcessedFiles()			&& Para evitar acumular procesos anteriores
 				ENDIF
@@ -2302,6 +2409,15 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 						loFrm_Interactive.Show()
 						READ EVENTS
 						lnConversionOption	= loFrm_Interactive.n_ConversionType
+
+						IF loFrm_Interactive.l_FileTimeStampOptimization
+							IF .n_OptimizeByFilestamp = 0 THEN
+								.n_OptimizeByFilestamp = 2
+							ENDIF
+						ELSE
+							.n_OptimizeByFilestamp = 0
+						ENDIF
+
 						loFrm_Interactive.Release()
 						loFrm_Interactive = NULL
 
@@ -2929,7 +3045,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
 				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1), lcForceAttribs ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
-				, loConversor as C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG' ;
+				, loConversor as c_conversor_base OF 'FOXBIN2PRG.PRG' ;
 				, loFSO AS Scripting.FileSystemObject
 			lnCodError			= 0
 
@@ -3177,6 +3293,7 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp, ltFilestamp
 
 				IF lnFileCount >= 1 THEN
+					*-- Busca el archivo de entrada original
 					I	= ASCAN( laFiles, JUSTFNAME(.c_InputFile), 1, 0, 1, 1+2+4+8 )
 					IF I > 0 THEN
 						.t_InputFile_TimeStamp	=	DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
@@ -3207,17 +3324,18 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 
 						ENDCASE
 
+						*-- Tomo el máximo timestamp de los archivos de salida (??X/??T)
 						.t_OutputFile_TimeStamp	=	MAX( .t_OutputFile_TimeStamp, ltFilestamp )
 					ENDIF
 				ENDIF
 
 				DO CASE
-				CASE .n_OptimizeByFilestamp = 1 AND .t_InputFile_TimeStamp < .t_OutputFile_TimeStamp
+				CASE .n_UseClassPerFile = 0 AND .n_OptimizeByFilestamp = 1 AND .t_InputFile_TimeStamp < .t_OutputFile_TimeStamp
 					*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
 					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es más nuevo que el de entrada.' )
 					.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC) )
 
-				CASE .n_OptimizeByFilestamp = 2 AND .t_InputFile_TimeStamp = .t_OutputFile_TimeStamp
+				CASE .n_UseClassPerFile = 0 AND .n_OptimizeByFilestamp = 2 AND .t_InputFile_TimeStamp = .t_OutputFile_TimeStamp
 					*-- Optimizado: El Origen es igual al Destino - No hace falta regenerar
 					*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es igual que el de entrada.' )
 					.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC) )
@@ -3606,10 +3724,10 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			IF THIS.l_StdOutHabilitado
 				LOCAL loException as Exception, lcOutput, lnOutHandle, lnBytesWritten, lnOverlappedIO
 				lcOutput		= EVL(tcTexto,'') + CR_LF
-				lnOutHandle		= GetStdHandle(-12)	&& CAPTURAR ERROR DESDE CONSOLA: FOXBIN2PRG.EXE PARAMS 2>&1 | FIND /V ""
+				lnOutHandle		= fb2p_GetStdHandle(-12)	&& CAPTURAR ERROR DESDE CONSOLA: FOXBIN2PRG.EXE PARAMS 2>&1 | FIND /V ""
 				lnBytesWritten	= 0
 				lnOverlappedIO	= 0
-				WriteFile(lnOutHandle, @lcOutput, LEN(lcOutput), @lnBytesWritten, @lnOverlappedIO)
+				fb2p_WriteFile(lnOutHandle, @lcOutput, LEN(lcOutput), @lnBytesWritten, @lnOverlappedIO)
 			ENDIF
 
 		CATCH TO loException
@@ -3629,10 +3747,10 @@ DEFINE CLASS c_foxbin2prg AS SESSION
 			IF THIS.l_StdOutHabilitado
 				LOCAL loException as Exception, lcOutput, lnOutHandle, lnBytesWritten, lnOverlappedIO
 				lcOutput		= EVL(tcTexto,'') + CR_LF
-				lnOutHandle		= GetStdHandle(-11)	&& CAPTURAR STDOUT DESDE CONSOLA: FOXBIN2PRG.EXE PARAMS | FIND /V ""
+				lnOutHandle		= fb2p_GetStdHandle(-11)	&& CAPTURAR STDOUT DESDE CONSOLA: FOXBIN2PRG.EXE PARAMS | FIND /V ""
 				lnBytesWritten	= 0
 				lnOverlappedIO	= 0
-				WriteFile(lnOutHandle, @lcOutput, LEN(lcOutput), @lnBytesWritten, @lnOverlappedIO)
+				fb2p_WriteFile(lnOutHandle, @lcOutput, LEN(lcOutput), @lnBytesWritten, @lnOverlappedIO)
 			ENDIF
 
 		CATCH TO loException
@@ -3797,7 +3915,7 @@ ENDDEFINE
 
 
 
-DEFINE CLASS frm_avance AS FORM
+DEFINE CLASS frm_avance AS Form
 	Height = 110
 	Width = 628
 	ShowWindow = 2
@@ -4226,10 +4344,15 @@ DEFINE CLASS frm_avance AS FORM
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 			LOCAL THISFORM AS frm_avance OF foxbin2prg.prg
 		#ENDIF
+
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-		loLang						= _SCREEN.o_FoxBin2Prg_Lang
 
 		IF VARTYPE(toFoxBin2Prg) = "O" THEN
+			IF TYPE("_SCREEN.o_FoxBin2Prg_Lang") = "O" THEN
+				loLang					= _SCREEN.o_FoxBin2Prg_Lang
+				THISFORM.CAPTION		= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
+			ENDIF
+
 			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
 				THIS.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
@@ -4239,7 +4362,6 @@ DEFINE CLASS frm_avance AS FORM
 			ENDIF
 		ENDIF
 
-		THISFORM.CAPTION		= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
 		THISFORM.nValue			= 0
 		THISFORM.nValue2		= 0
 		THISFORM.nLastSecCount	= SECONDS()
@@ -4269,26 +4391,44 @@ ENDDEFINE
 
 
 
-DEFINE CLASS frm_interactive AS form
-	Height = 102
+DEFINE CLASS frm_interactive AS Form
+	Height = 114
 	Width = 380
 	ShowWindow = 2
 	DoCreate = .T.
 	AutoCenter = .T.
 	BorderStyle = 2
-	Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_LOC
+	Caption = "FoxBin2Prg"
 	ControlBox = .F.
 	AlwaysOnTop = .T.
 	BackColor = RGB(255,255,255)
 	n_ConversionType = 3
+	l_FileTimeStampOptimization = .F.
 	Name = "frm_interactive"
+	_memberdata = [<VFPData>] ;
+		+ [<memberdata name="n_conversiontype" display="n_ConversionType"/>] ;
+		+ [<memberdata name="l_filetimestampoptimization" display="l_FileTimeStampOptimization"/>] ;
+		+ [</VFPData>]
+
+
+	ADD OBJECT 'chk_FileTimeStampOptimization' AS checkbox WITH ;
+		Alignment = 0, ;
+		BackStyle = 0, ;
+		Caption = "chk_FileTimeStampOptimization", ;
+		ControlSource = "THISFORM.l_FileTimeStampOptimization", ;
+		Enabled = .T., ;
+		Height = 17, ;
+		Left = 40, ;
+		Name = "chk_FileTimeStampOptimization", ;
+		Top = 92, ;
+		Width = 300
 
 
 	ADD OBJECT lbl_title AS label WITH ;
 		WordWrap = .T., ;
 		Alignment = 2, ;
 		BackStyle = 0, ;
-		Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_QUESTION_LOC, ;
+		Caption = "lbl_title", ;
 		Height = 36, ;
 		Left = 12, ;
 		Top = 16, ;
@@ -4298,29 +4438,29 @@ DEFINE CLASS frm_interactive AS form
 
 
 	ADD OBJECT cmd_Bin2Prg AS commandbutton WITH ;
-		Top = 64, ;
+		Top = 58, ;
 		Left = 40, ;
 		Height = 27, ;
 		Width = 92, ;
-		Caption = _SCREEN.o_FoxBin2Prg_Lang.C_BINARY_TO_TEXT_LOC, ;
+		Caption = "cmd_Bin2Prg", ;
 		Name = "cmd_Bin2Prg"
 
 
 	ADD OBJECT cmd_Prg2Bin AS commandbutton WITH ;
-		Top = 64, ;
+		Top = 58, ;
 		Left = 144, ;
 		Height = 27, ;
 		Width = 92, ;
-		Caption = _SCREEN.o_FoxBin2Prg_Lang.C_TEXT_TO_BINARY_LOC, ;
+		Caption = "cmd_Prg2Bin", ;
 		Name = "cmd_Prg2Bin"
 
 
 	ADD OBJECT cmd_None AS commandbutton WITH ;
-		Top = 64, ;
+		Top = 58, ;
 		Left = 248, ;
 		Height = 27, ;
 		Width = 92, ;
-		Caption = _SCREEN.o_FoxBin2Prg_Lang.C_CONVERT_FOLDER_NONE_LOC, ;
+		Caption = "cmd_None", ;
 		Cancel = .T., ;
 		Name = "cmd_None"
 
@@ -4328,7 +4468,29 @@ DEFINE CLASS frm_interactive AS form
 	PROCEDURE INIT
 		LPARAMETERS toFoxBin2Prg
 
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 		IF VARTYPE(toFoxBin2Prg) = "O" THEN
+			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
+				loLang			= _SCREEN.o_FoxBin2Prg_Lang
+
+				IF PEMSTATUS(_SCREEN, 'c_FB2PRG_EXE_Version', 5) THEN
+					THISFORM.Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_CONVERT_FOLDER_LOC
+				ENDIF
+
+				THISFORM.chk_FileTimeStampOptimization.Caption	= loLang.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC
+				THISFORM.lbl_title.Caption						= loLang.C_CONVERT_FOLDER_QUESTION_LOC
+				THISFORM.cmd_Bin2Prg.Caption					= loLang.C_BINARY_TO_TEXT_LOC
+				THISFORM.cmd_Prg2Bin.Caption					= loLang.C_TEXT_TO_BINARY_LOC
+				THISFORM.cmd_None.Caption						= loLang.C_CONVERT_FOLDER_NONE_LOC
+			ENDIF
+
+			THISFORM.l_FileTimeStampOptimization = (toFoxBin2Prg.n_OptimizeByFilestamp <> 0)
+
 			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
 				THIS.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
@@ -4367,9 +4529,9 @@ ENDDEFINE
 
 
 
-DEFINE CLASS C_CONVERSOR_BASE AS SESSION
+DEFINE CLASS c_conversor_base AS Session
 	#IF .F.
-		LOCAL THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+		LOCAL THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analizarasignacion_tag_indicado" display="analizarAsignacion_TAG_Indicado"/>] ;
@@ -4545,7 +4707,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				llBloqueEncontrado	= .T.
 				LOCAL lcLine, lnArrayCols
 
-				WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+				WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 
 					*-- Propiedad especial
 					IF tcTAG_F $ tcValue		&& El fin de tag está "inline"
@@ -4819,7 +4981,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		LPARAMETERS tcAsignacion
 		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos, lcComentario
 
-		WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+		WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 			.get_SeparatedPropAndValue( @tcAsignacion, @lcPropName, @lcValor )
 			lcComentario	= ''
 			.desnormalizarValorPropiedad( @lcPropName, @lcValor, @lcComentario )
@@ -4993,7 +5155,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 			LOCAL lcTimeStamp,lnYear,lnMonth,lnDay,lnHour,lnMinutes,lnSeconds,lcTime,lnHour,ltTimeStamp,lnResto ;
 				,lcTimeStamp_Ret, laDirInfo[1,5], loEx AS EXCEPTION
 
-			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 				lcTimeStamp_Ret	= ''
 
 				IF EMPTY(tnTimeStamp)
@@ -5167,7 +5329,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 
 			IF PCOUNT() > 3
 				*-- EVALUAR UNA ASIGNACIÓN QUE PUEDE SER MULTILÍNEA (memberdata, fb2p_value, etc)
-				WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+				WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 					DO CASE
 					CASE .analizarAsignacion_TAG_Indicado( @tcPropName, @tcValue, @taCodeLines, tnCodeLines, @I ;
 							, C_FB2P_VALUE_I, C_FB2P_VALUE_F, C_LEN_FB2P_VALUE_I, C_LEN_FB2P_VALUE_F )
@@ -5248,7 +5410,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 				ENDIF
 
 				*-- Búsqueda del ID de inicio de bloque
-				WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+				WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 					FOR I = 1 TO tnCodeLines
 						* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
 						*lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
@@ -5360,7 +5522,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		LPARAMETERS tcLine, tcComment
 		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
-		WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+		WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 			.get_SeparatedLineAndComment( @tcLine, @tcComment )
 
 			DO CASE
@@ -5383,7 +5545,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		LPARAMETERS tcAsignacion, tcComentario
 		LOCAL lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
 
-		WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+		WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 			.get_SeparatedPropAndValue( @tcAsignacion, @lcPropName, @lcValor )
 			tcComentario	= ''
 			.normalizarValorPropiedad( @lcPropName, @lcValor, @tcComentario )
@@ -5705,7 +5867,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 			DIMENSION laPropsAndValues( tnPropsAndValues_Count, lnArrayCols )
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
-			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 				IF m.tnSortType >= 1
 					* CON SORT:
 					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
@@ -6047,7 +6209,7 @@ DEFINE CLASS C_CONVERSOR_BASE AS SESSION
 		LPARAMETERS tcText, tnTimeStamp
 
 		TRY
-			WITH THIS AS C_CONVERSOR_BASE OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 				*-- Según el valor de nTimestamp:
 				*-- 0 = Sin timestamp
 				*-- 1 = Timestamp por delante
@@ -6081,7 +6243,7 @@ ENDDEFINE
 
 
 
-DEFINE CLASS c_conversor_prg_a_bin AS C_CONVERSOR_BASE
+DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -11390,7 +11552,7 @@ ENDDEFINE	&& CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 
 
-DEFINE CLASS c_conversor_bin_a_prg AS C_CONVERSOR_BASE
+DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 	#IF .F.
 		LOCAL THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -24121,7 +24283,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 ENDDEFINE
 
 
-DEFINE CLASS CL_DBF_UTILS AS SESSION
+DEFINE CLASS CL_DBF_UTILS AS Session
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="fields" display="Fields"/>] ;
 		+ [<memberdata name="c_backlink_dbc_name" display="c_Backlink_DBC_Name"/>] ;
@@ -24915,6 +25077,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= ""
 	C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= ""
 	C_UNKNOWN_CLASS_NAME_LOC										= ""
+	C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= ""
 	C_USING_THIS_SETTINGS_LOC										= ""
 	C_WARNING_LOC													= ""
 	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= ""
@@ -25028,6 +25191,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Nesting erreur de structure. ENDPROC prévu, mais a trouvé ENDDEFINE sur la classe <<toClase._Nombre>> (<<loProcedure._Nombre>>), ligne <<TRANSFORM(I)>> du fichier <<THIS.c_InputFile>>"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Nesting erreur de structure. ENDPROC attendue, mais ENDDEFINE sur la classe <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), ligne <<TRANSFORM(I)>> du fichier <<THIS.c_InputFile>>"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Classe inconnue[<<THIS.CLASS>>]"
+					.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Utilisez le fichier Optimisation d'horodatage"
 					.C_USING_THIS_SETTINGS_LOC										= "Utilisation de ce paramètre"
 					.C_WARNING_LOC													= "AVERTISSEMENT!"
 					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
@@ -25119,6 +25283,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Error de anidamiento de estructuras. Se esperaba ENDPROC pero se encontró ENDDEFINE en la clase <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), línea <<TRANSFORM(I)>> del archivo <<THIS.c_InputFile>>"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Clase [<<THIS.CLASS>>] desconocida"
+					.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Usar Optimización de filestamp de archivo"
 					.C_USING_THIS_SETTINGS_LOC										= "Usando esta configuración"
 					.C_WARNING_LOC													= "¡ATENCIÓN!"
 					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡ATENCIÓN!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
@@ -25210,6 +25375,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Fehler in Verschachtelungsstruktur. ENDPROC erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Fehler in Verschachtelungsstruktur. ENDPROC wurde erwartet, aber es wurde ENDDEFINE in Klasse <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), Zeile <<TRANSFORM(I)>> der Datei <<THIS.c_InputFile>> gefunden"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Unbekannte Klasse [<<THIS.CLASS>>]"
+					.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Verwenden Sie Datei-Zeitstempel-Optimierung"
 					.C_USING_THIS_SETTINGS_LOC										= "Mit dieser einstellung"
 					.C_WARNING_LOC													= "WARNUNG!"
 					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!" + CR_LF+ "STELLEN SIE SICHER, DAS KEIN TABELLENALIAS IM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
@@ -25301,6 +25467,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_LOC					= "Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
 					.C_STRUCTURE_NESTING_ERROR_ENDPROC_EXPECTED_2_LOC				= "Nesting structure error. ENDPROC expected but found ENDDEFINE on class <<toClase._Nombre>> (<<toObjeto._Nombre>>.<<loProcedure._Nombre>>), line <<TRANSFORM(I)>> of file <<THIS.c_InputFile>>"
 					.C_UNKNOWN_CLASS_NAME_LOC										= "Unknown class [<<THIS.CLASS>>]"
+					.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Use file timestamp Optimization"
 					.C_USING_THIS_SETTINGS_LOC										= "Using this settings"
 					.C_WARNING_LOC													= "WARNING!"
 					.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
