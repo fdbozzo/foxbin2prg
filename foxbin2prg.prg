@@ -4430,7 +4430,7 @@ DEFINE CLASS frm_interactive AS Form
 		+ [</VFPData>]
 
 
-	ADD OBJECT 'chk_FileTimeStampOptimization' AS checkbox WITH ;
+	ADD OBJECT chk_FileTimeStampOptimization AS checkbox WITH ;
 		Alignment = 0, ;
 		BackStyle = 0, ;
 		Caption = "chk_FileTimeStampOptimization", ;
@@ -4440,7 +4440,8 @@ DEFINE CLASS frm_interactive AS Form
 		Left = 40, ;
 		Name = "chk_FileTimeStampOptimization", ;
 		Top = 92, ;
-		Width = 300
+		Width = 300, ;
+		Visible = .F.
 
 
 	ADD OBJECT lbl_title AS label WITH ;
