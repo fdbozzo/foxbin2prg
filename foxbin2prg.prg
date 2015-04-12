@@ -156,6 +156,7 @@
 * 25/03/2015	FDBOZZO		v1.19.42	Mejora API: Nueva propiedad l_ProcessFiles que permite obtener la lista de archivos a procesar sin procesarlos realmente usando el valor .F.
 * 25/03/2015	FDBOZZO		v1.19.42	Bug Fix frx/lbx: Arreglo de CR,LF,TAB sobrantes en algunos archivos FR2/LB2 agregados en versiones anteriores (Ryan Harris)
 * 02/04/2015	FDBOZZO		v1.19.42	Mejora: Herencia de CFGs entre directorios
+* 12/04/2015	FDBOZZO		v1.19.42	Mejora API: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -233,6 +234,7 @@
 * 23/03/2015	Lutz Scheffler		Reporte bug mnx v1.19.41: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Arreglado en v1.19.42)
 * 24/03/2015	Ryan Harris			Reporte bug frx/lbx v1.19.41: Hay algunos CR,LF,TAB sobrantes en las etiquetas tag de algunos archivos FR2/LB2 (Arreglado en v1.19.42)
 * 24/03/2015	Ryan Harris			Mejora v1.19.41: Borrar archivos ERR al procesar, cuando se usa UseClassPerFile (Agregado en v1.19.42)
+* 10/04/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -560,6 +562,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="filenamefoundinfilter" display="FilenameFoundInFilter"/>] ;
 		+ [<memberdata name="filescomparedareequal" display="FilesComparedAreEqual"/>] ;
 		+ [<memberdata name="changelanguage" display="ChangeLanguage"/>] ;
+		+ [<memberdata name="get_dirsettings" display="get_DirSettings"/>] ;
 		+ [<memberdata name="get_l_cfg_cachedaccess" display="get_l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="get_l_configevaluated" display="get_l_ConfigEvaluated"/>] ;
 		+ [<memberdata name="get_textfilenames" display="get_TextFileNames"/>] ;
