@@ -157,6 +157,7 @@
 * 25/03/2015	FDBOZZO		v1.19.42	Bug Fix frx/lbx: Arreglo de CR,LF,TAB sobrantes en algunos archivos FR2/LB2 agregados en versiones anteriores (Ryan Harris)
 * 02/04/2015	FDBOZZO		v1.19.42	Mejora: Herencia de CFGs entre directorios
 * 12/04/2015	FDBOZZO		v1.19.42	Mejora API: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Lutz Scheffler)
+* 13/04/2015	FDBOZZO		v1.19.41	Mejora: Permitir generar texto de una clase de una librería (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -235,6 +236,7 @@
 * 24/03/2015	Ryan Harris			Reporte bug frx/lbx v1.19.41: Hay algunos CR,LF,TAB sobrantes en las etiquetas tag de algunos archivos FR2/LB2 (Arreglado en v1.19.42)
 * 24/03/2015	Ryan Harris			Mejora v1.19.41: Borrar archivos ERR al procesar, cuando se usa UseClassPerFile (Agregado en v1.19.42)
 * 10/04/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Agregado en v1.19.42)
+* 12/04/2015	Lutz Scheffler		Mejora v1.19.41: Permitir generar texto de una clase de una librería (Agregado en v1.19.42)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -655,6 +657,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_Foxbin2prg_ConfigFile			= ''
 	c_CurDir						= ''
 	c_InputFile						= ''
+	c_ClassToConvert				= ''			&& Guarda el nombre de la clase a convertir, indicada en tcInputFile como "archivo.vcx::clase"
 	c_OriginalFileName				= ''
 	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Debug.LOG'
 	c_ErrorLogFile					= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Error.LOG'
@@ -2313,6 +2316,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lcInputFile_Type	= ''
 
 
+				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+					ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+				ENDIF
+
 				IF .l_AutoClearProcessedFiles THEN
 					.ClearProcessedFiles()			&& Para evitar acumular procesos anteriores
 				ENDIF
@@ -2329,11 +2336,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*	EXIT
 				*ENDIF
 
-				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
-
-				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
-					ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+				*-- Reconocimiento de la clase indicada
+				IF '::' $ tc_InputFile THEN
+					.c_ClassToConvert	= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '::' ) ) )
+					tc_InputFile		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '::' ) ) )
 				ENDIF
+
+				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
 
 				*-- Ajusto la ruta si no es absoluta
 				tc_InputFile	= .get_AbsolutePath( tc_InputFile, .c_CurDir )
@@ -3036,7 +3045,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
-	PROCEDURE Convertir
+	PROTECTED PROCEDURE Convertir
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_InputFile				(v! IN    ) Nombre del archivo de entrada
@@ -3428,7 +3437,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* RETORNO					(@?    OUT) Objeto CFG
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcDir
-		THIS.EvaluarConfiguracion( '', '', '', '', '', '', '', '', tcDir, 'D' )
+		IF NOT EMPTY(tcDir)
+			THIS.EvaluarConfiguracion( '', '', '', '', '', '', '', '', tcDir, 'D' )
+		ENDIF
 		RETURN THIS.o_Configuration(THIS.n_CFG_Actual)
 	ENDPROC
 
@@ -13444,7 +13455,19 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
-				SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
+
+				IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+					*-- Exportar la librería entera a texto
+					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
+				ELSE
+					*-- Exportar solo una clase a texto cuando se usa ClassPerFile y se indicó una clase
+					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN ;
+						WHERE PLATFORM == 'WINDOWS ' ;
+						AND ( PROPER(RESERVED1) == "Class" AND LOWER(OBJNAME) == toFoxBin2Prg.c_ClassToConvert ;
+						OR LOWER(parent) == toFoxBin2Prg.c_ClassToConvert ) ;
+						OR PLATFORM == 'COMMENT ' AND LOWER(OBJNAME) == toFoxBin2Prg.c_ClassToConvert
+				ENDIF
+
 				lnStepCount	= 7
 				USE IN (SELECT("_TABLAORIG"))
 
@@ -13463,15 +13486,17 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				*----------------------------------------------
 				SELECT TABLABIN
 				SET ORDER TO PARENT_OBJ
-				GOTO RECORD 1	&& Class Library Header/Form Header
 
-				SCATTER FIELDS RESERVED7 MEMO NAME loRegClass
+				IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+					GOTO RECORD 1	&& Class Library Header/Form Header
+					SCATTER FIELDS RESERVED7 MEMO NAME loRegClass
 
-				IF NOT EMPTY(loRegClass.RESERVED7) THEN
-					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_LIBCOMMENT_I>> <<loRegClass.Reserved7>> <<C_LIBCOMMENT_F>>
-						*
-					ENDTEXT
+					IF NOT EMPTY(loRegClass.RESERVED7) THEN
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_LIBCOMMENT_I>> <<loRegClass.Reserved7>> <<C_LIBCOMMENT_F>>
+							*
+						ENDTEXT
+					ENDIF
 				ENDIF
 
 				COUNT ALL FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND PROPER( TABLABIN.RESERVED1 ) == "Class" TO lnClassTotal
@@ -13678,7 +13703,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				ELSE
 					DO CASE
 					CASE toFoxBin2Prg.n_UseClassPerFile = 1	&& LibName.ClassName.SC2
-						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						ENDIF
 
 						FOR I = 1 TO lnClassCount
 							lcOutputFile	= ADDBS( JUSTPATH( .c_OutputFile ) ) + JUSTSTEM( .c_OutputFile ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
@@ -13687,7 +13714,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 					CASE toFoxBin2Prg.n_UseClassPerFile = 2	&& LibName.BaseClass.ClassName.SC2
-						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						ENDIF
 
 						FOR I = 1 TO lnClassCount
 							lcOutputFile	= ADDBS( JUSTPATH( .c_OutputFile ) ) + JUSTSTEM( .c_OutputFile ) + '.' + laClasses(I,3) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )

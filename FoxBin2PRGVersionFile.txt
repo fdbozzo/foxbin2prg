@@ -47,6 +47,7 @@ Change History -------------------------------------------------------------
 - Bug Fix scx/vcx/dbc: Delete ERR files when processing with UseClassPerFile switch (Ryan Harris)
 - Feature: Implemented CFG inheritance between directories
 - Feature (API): New method get_DirSettings() that returns the CFG settings object for the indicated directory (Lutz Scheffler)
+- Feature: Allow generation of text for a single class of a librery when using ClassPerFile (Lutz Scheffler)
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
