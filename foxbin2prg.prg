@@ -246,10 +246,12 @@
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 *										- Si se indica "BIN2PRG", se procesa el directorio indicado en tcType para generar los TX2
 *										- Si se indica "PRG2BIN", se procesa el directorio indicado en tcType para generar los BIN
-* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG
+*										- En modo compatibilidad con Visual SourceSafe, se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
+* tcType					(v? IN    ) Tipo de archivo de entrada
 *										- Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
-* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
-* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
+*										- En modo compatibilidad con Visual SourceSafe, indica el tipo de archivo a convertir
+* tcTextName				(v? IN    ) Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
+* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. (Solo para compatibilidad con Visual SourceSafe)
 * tcDontShowErrors			(v? IN    ) '1' para NO mostrar errores con MESSAGEBOX
 * tcDebug					(v? IN    ) '1' para depurar en el sitio donde ocurre el error (solo modo desarrollo)
 * tcDontShowProgress		(v? IN    ) '1' para NO mostrar la ventana de progreso
@@ -681,7 +683,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_BackgroundImage				= ''
 	l_ClearUniqueID                 = .T.
 	l_ClearDBFLastUpdate        	= .T.
-	n_OptimizeByFilestamp           = 2
+	n_OptimizeByFilestamp           = 0
 	l_MethodSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled				= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_ReportSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
@@ -896,7 +898,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		TRY
 			*-- Si o_Frm_Avance se habilitó de forma externa, n_ShowProgressbar podría ser 0 para controlarlo desde fuera.
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-				IF .l_ProcessFiles AND VARTYPE(.o_Frm_Avance) = "O" THEN
+				IF VARTYPE(.o_Frm_Avance) = "O" THEN
 					*-- Cuando esta rutina se invoca desde el script, este método es el #1 y no puede cancelarse todavía
 					IF .o_Frm_Avance.l_Cancelled AND PROGRAM(-1) > 1 THEN
 						ERROR 1799
@@ -2256,13 +2258,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
+		*										- En modo compatibilidad con Visual SourceSafe, se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
 		* tcType					(v? IN    ) Tipo de archivo de entrada. Compatibilidad con SCCTEXT.PRG
 		*										- Si se indica "*" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto y el PJX/2
 		*										- Si se indica "*-" y tc_InputFile es un PJX, se procesan todos los archivos del proyecto sin el PJX/2
 		*										- Si se indica "BIN2PRG", se procesa el directorio indicado en tc_InputFile para generar los TX2
 		*										- Si se indica "PRG2BIN", se procesa el directorio indicado en tc_InputFile para generar los BIN
-		* tcTextName				(v? IN    ) Nombre del archivo texto. Compatibilidad con SCCTEXT.PRG
-		* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. Compatibilidad con SCCTEXT.PRG
+		*										- En modo compatibilidad con Visual SourceSafe, indica el tipo de archivo a convertir
+		* tcTextName				(v? IN    ) Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
+		* tlGenText					(v? IN    ) .T.=Genera Texto, .F.=Genera Binario. (Solo para compatibilidad con Visual SourceSafe)
 		* tcDontShowErrors			(v? IN    ) '1' para no mostrar mensajes de error (MESSAGEBOX)
 		* tcDebug					(v? IN    ) '1' para habilitar modo debug (SOLO DESARROLLO)
 		* tcDontShowProgress		(v? IN    ) '1' para inhabilitar la barra de progreso
@@ -2456,7 +2460,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 						ENDIF
 
 						IF EVL(tcType,'0') <> '*' THEN
-							IF .n_ShowProgressbar <> 0 THEN
+							IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 								.cargar_frm_avance()
 							ENDIF
 
@@ -2499,7 +2503,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					CASE ATC('-BIN2PRG', ('-' + tcType)) >= 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
 
-						IF .n_ShowProgressbar <> 0 THEN
+						IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 							.cargar_frm_avance()
 							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 						ENDIF
@@ -2559,7 +2563,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					CASE ATC('-PRG2BIN', ('-' + tcType)) >= 1
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
 
-						IF .n_ShowProgressbar <> 0 THEN
+						IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 							.cargar_frm_avance()
 							.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 						ENDIF
@@ -2683,7 +2687,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 						ENDCASE
 
 						IF FILE(tc_InputFile)
-							IF .n_ShowProgressbar = 1 THEN
+							IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 								.cargar_frm_avance()
 							ENDIF
 
@@ -2824,7 +2828,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				loLang		= _SCREEN.o_FoxBin2Prg_Lang
 				lcFileSpec	= FULLPATH( tc_InputFile )
 
-				IF .n_ShowProgressbar <> 0 THEN
+				IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 					.cargar_frm_avance()
 					.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Bin>Txt) -' )
 				ENDIF
@@ -2925,7 +2929,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				loLang		= _SCREEN.o_FoxBin2Prg_Lang
 				lcFileSpec	= FULLPATH( tc_InputFile )
 
-				IF .n_ShowProgressbar <> 0 THEN
+				IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 					.cargar_frm_avance()
 					.o_Frm_Avance.Caption = STRTRAN( .o_Frm_Avance.Caption, '> -', '(Txt>Bin) -' )
 				ENDIF
@@ -3411,6 +3415,18 @@ DEFINE CLASS c_foxbin2prg AS Session
 		ENDTRY
 
 		RETURN lnCodError
+	ENDPROC
+
+
+	PROCEDURE get_DirSettings
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(@?    OUT) Objeto CFG
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcDir
+		THIS.EvaluarConfiguracion( '', '', '', '', '', '', '', '', tcDir, 'D' )
+		RETURN THIS.o_Configuration(THIS.n_CFG_Actual)
 	ENDPROC
 
 
