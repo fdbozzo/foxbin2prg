@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.42'
-    .VersionDate          = Date(2015,04,03)
+    .VersionDate          = Date(2015,04,12)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,7 +17,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2015/04/03	v1.19.42
+2015/04/12	v1.19.42
 - Feature: Added VFP 9 SP1 runtime validation
 - Bug Fix: Broken SourceSafe compatibility because an error is thrown when querying for file support (Tuvia Vinitsky)
 - Bug Fix scx/vcx: Process only one TEXT/ENDTEXT nesting level because TEXT/ENDTEXT can't be nested (Lutz Scheffler)
@@ -46,6 +46,7 @@ Change History -------------------------------------------------------------
 - Bug Fix frx/lbx: Trimmed some extra CR,LF,TAB from FR2/LB2 tag that where included in previous versions (Ryan Harris)
 - Bug Fix scx/vcx/dbc: Delete ERR files when processing with UseClassPerFile switch (Ryan Harris)
 - Feature: Implemented CFG inheritance between directories
+- Feature (API): New method get_DirSettings() that returns the CFG settings object for the indicated directory (Lutz Scheffler)
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.
