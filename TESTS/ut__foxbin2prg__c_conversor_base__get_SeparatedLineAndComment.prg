@@ -77,8 +77,8 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__get_SeparatedLineAndComment AS Fx
 		
 			
 			*-- Visualización de valores
-			THIS.messageout( ' Linea = [' + TRANSFORM(tcLinea) + ']' )
-			THIS.messageout( ' Comentario = [' + TRANSFORM(tcComentario) + ']' )
+			THIS.messageout( ' Linea = [' + TRANSFORM(tcLinea_Esperada) + ']' )
+			THIS.messageout( ' Comentario = [' + TRANSFORM(tcComentario_Esperado) + ']' )
 
 			
 			*-- Evaluación de valores
@@ -107,14 +107,14 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__get_SeparatedLineAndComment AS Fx
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
-		lcComentario			= '    		con algunos comentarios  	'
-		lcLinea					= '			   esta es una linea de código   	 '
+		lcLinea					= '	' + CHR(9) + CHR(9) + '   esta es una linea de código   ' + CHR(9) + ' '
+		lcComentario			= '    ' + CHR(9) + CHR(9) + 'con algunos comentarios  	'
 		lcLineaOriginal			= lcLinea + '&' + '&' + lcComentario
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
 		lcLinea_Esperada		= lcLinea
-		lcComentario_Esperado	= lcComentario
+		lcComentario_Esperado	= LTRIM(lcComentario)
 
 		*-- TEST
 		loObj.get_SeparatedLineAndComment( @lcLineaOriginal, @lcComentario )

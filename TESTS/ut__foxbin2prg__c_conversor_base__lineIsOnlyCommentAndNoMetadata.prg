@@ -99,14 +99,14 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__lineIsOnlyCommentAndNoMetadata AS
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
-		lcComentario			= '    		con algunos comentarios  	'
-		lcLinea					= '			   esta es una linea de código   	 '
+		lcComentario			= '    ' + CHR(9) + CHR(9) + 'con algunos comentarios  	'
+		lcLinea					= '	' + CHR(9) + CHR(9) + '   esta es una linea de código   ' + CHR(9) + ' '
 		lcLineaOriginal			= lcLinea + '&' + '&' + lcComentario
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
 		lcLinea_Esperada		= lcLinea
-		lcComentario_Esperado	= lcComentario
+		lcComentario_Esperado	= LTRIM(lcComentario)
 		llRetorno_Esperado		= .F.
 
 		*-- TEST

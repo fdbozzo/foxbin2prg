@@ -89,7 +89,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 				THIS.messageout( 'l_ClearUniqueID: ' + TRANSFORM(loFB2P_Esperado.l_ClearUniqueID) )
 				THIS.messageout( 'n_Debug: ' + TRANSFORM(loFB2P_Esperado.n_Debug) )
 				THIS.messageout( 'n_ExtraBackupLevels: ' + TRANSFORM(loFB2P_Esperado.n_ExtraBackupLevels) )
-				THIS.messageout( 'l_OptimizeByFilestamp: ' + TRANSFORM(loFB2P_Esperado.l_OptimizeByFilestamp) )
+				THIS.messageout( 'n_OptimizeByFilestamp: ' + TRANSFORM(loFB2P_Esperado.n_OptimizeByFilestamp) )
 			
 				*-- VALIDACIONES
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.PJX_Conversion_Support), TRANSFORM(loFB2P.PJX_Conversion_Support), '> PJX_Conversion_Support' )
@@ -107,7 +107,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_ClearUniqueID), TRANSFORM(loFB2P.l_ClearUniqueID), '> l_ClearUniqueID' )
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.n_Debug), TRANSFORM(loFB2P.n_Debug), '> n_Debug' )
 				THIS.assertequals( TRANSFORM(loFB2P_Esperado.n_ExtraBackupLevels), TRANSFORM(loFB2P.n_ExtraBackupLevels), '> n_ExtraBackupLevels' )
-				THIS.assertequals( TRANSFORM(loFB2P_Esperado.l_OptimizeByFilestamp), TRANSFORM(loFB2P.l_OptimizeByFilestamp), '> l_OptimizeByFilestamp' )
+				THIS.assertequals( TRANSFORM(loFB2P_Esperado.n_OptimizeByFilestamp), TRANSFORM(loFB2P.n_OptimizeByFilestamp), '> n_OptimizeByFilestamp' )
 
 			ELSE
 				*-- Visualización de valores
@@ -175,7 +175,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'n_Debug', 0 )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
-			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_OptimizeByFilestamp', 0 )
 			*STRTOFILE('', 'TESTS\DATOS_TEST\foxbin2prg.cfg')
 
 
@@ -228,7 +228,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .F. )
 			ADDPROPERTY( loFB2P_Esperado, 'n_Debug', 0 )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 0 )
-			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .F. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_OptimizeByFilestamp', 0 )
 			*--
 			STRTOFILE( '* ' + PROGRAM() + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg')
 			STRTOFILE( 'PJX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
@@ -298,7 +298,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 			ADDPROPERTY( loFB2P_Esperado, 'l_ClearUniqueID', .T. )
 			ADDPROPERTY( loFB2P_Esperado, 'n_Debug', 1 )
 			ADDPROPERTY( loFB2P_Esperado, 'n_ExtraBackupLevels', 1 )
-			ADDPROPERTY( loFB2P_Esperado, 'l_OptimizeByFilestamp', .T. )
+			ADDPROPERTY( loFB2P_Esperado, 'n_OptimizeByFilestamp', 1 )
 			*--
 			STRTOFILE( '* ' + PROGRAM() + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg')
 			STRTOFILE( 'PJX_Conversion_Support: 1' + CRLF, 'TESTS\DATOS_TEST\foxbin2prg.cfg', 1 )
