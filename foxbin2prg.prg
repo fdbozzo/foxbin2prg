@@ -499,7 +499,7 @@ ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 IF _VFP.STARTMODE <> 4 && 4 = Visual FoxPro was started as a distributable .app or .exe file.
 	STORE NULL TO loEx, loCnv
 	RELEASE loEx, loCnv
-	RETURN lnResp
+	RETURN lnResp	&& lnResp contiene un código de error, pero invocado desde SourceSafe puede contener el tipo de soporte de archivo (0,1,2).
 ENDIF
 
 IF EMPTY(lnResp) OR VARTYPE(loEx) # "O"
@@ -2655,7 +2655,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							lnCodError	= .PJX_Conversion_Support
 
 						OTHERWISE
-							lnCodError	= -1
+							lnCodError	= -1	&& No support.
 						ENDCASE
 
 					ELSE
