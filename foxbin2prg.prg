@@ -15246,7 +15246,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, .F., .F., @lcExternalHeader )
 
 						*-- Connections
-						toDatabase._Connections.KeySort=2
 						FOR EACH loConnection IN toDatabase._Connections &&FOXOBJECT
 							lnClassCount	= lnClassCount + 1
 							DIMENSION laClasses(lnClassCount,3)
@@ -15257,7 +15256,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 						*-- Tables
-						toDatabase._Tables.KeySort=2
 						FOR EACH loTable IN toDatabase._Tables &&FOXOBJECT
 							lnClassCount	= lnClassCount + 1
 							DIMENSION laClasses(lnClassCount,3)
@@ -15268,7 +15266,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 						*-- Views
-						toDatabase._Views.KeySort=2
 						FOR EACH loView IN toDatabase._Views &&FOXOBJECT
 							lnClassCount	= lnClassCount + 1
 							DIMENSION laClasses(lnClassCount,3)
@@ -17803,7 +17800,8 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 						CASE C_CONNECTION_I $ tcLine
 							loConnection = CREATEOBJECT("CL_DBC_CONNECTION")
 							loConnection.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loConnection, loConnection._Name )
+							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+							.ADD( loConnection, PADR(loConnection._Name,128) )
 
 						CASE '<Comment>' $ tcLine
 							.analizarBloque_Comment( @tcLine, @taCodeLines, @I, tnCodeLines )
@@ -17921,7 +17919,8 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnConnection_Count
 						loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
 						loConnection.read_BinDataToProperties( laConnections(I) )
-						.ADD( loConnection, loConnection._Name )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( loConnection, PADR(loConnection._Name,128) )
 					ENDFOR
 				ENDIF
 			ENDWITH
@@ -18208,7 +18207,8 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 						CASE C_TABLE_I $ tcLine
 							loTable = CREATEOBJECT("CL_DBC_TABLE")
 							loTable.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loTable, loTable._Name )
+							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+							.ADD( loTable, PADR(loTable._Name,128) )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -18329,7 +18329,8 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnTable_Count
 						loTable = CREATEOBJECT("CL_DBC_TABLE")
 						loTable.read_BinDataToProperties( laTables(I) )
-						.ADD( loTable, loTable._Name )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( loTable, PADR(loTable._Name,128) )
 					ENDFOR
 				ENDIF
 
@@ -18674,7 +18675,8 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 							IF .n_Campos = 0 THEN
 								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
-								.ADD( loField, loField._Name )
+								*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+								.ADD( loField, PADR(loField._Name,128) )
 							ELSE
 								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
 								.a_Campos( lnPos, 2)	= loField
@@ -18687,7 +18689,8 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
 					FOR lnPos = 1 TO .n_Campos
-						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( .a_Campos( lnPos, 2), PADR(.a_Campos( lnPos, 1),128) )
 					ENDFOR
 				ENDWITH && THIS
 			ENDIF
@@ -18884,7 +18887,8 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnField_Count
 						loField = CREATEOBJECT("CL_DBC_FIELD_DB")
 						loField.read_BinDataToProperties( tcTable, laFields(I) )
-						.ADD( loField, loField._Name )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( loField, PADR(loField._Name,128) )
 					ENDFOR
 				ENDIF
 
@@ -19144,7 +19148,8 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 							loIndex = NULL
 							loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
 							loIndex.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loIndex, loIndex._Name )
+							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+							.ADD( loIndex, PADR(loIndex._Name,128) )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -19269,7 +19274,8 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnIndex_Count
 						loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
 						loIndex.read_BinDataToProperties( tcTable + '.' + laIndexes(I) )
-						.ADD( loIndex, loIndex._Name )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( loIndex, PADR(loIndex._Name,128) )
 					ENDFOR
 				ENDIF
 
@@ -19497,7 +19503,8 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 							loView = NULL
 							loView = CREATEOBJECT("CL_DBC_VIEW")
 							loView.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
-							.ADD( loView, loView._Name )
+							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+							.ADD( loView, PADR(loView._Name,128) )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -19617,7 +19624,8 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnView_Count
 						loView = CREATEOBJECT("CL_DBC_VIEW")
 						loView.read_BinDataToProperties( laViews(I) )
-						.ADD( loView, loView._Name )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( loView, PADR(loView._Name,128) )
 					ENDFOR
 				ENDIF
 
@@ -20072,7 +20080,8 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 
 							IF .n_Campos = 0 THEN
 								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
-								.ADD( loField, loField._Name )
+								*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+								.ADD( loField, PADR(loField._Name,128) )
 							ELSE
 								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
 								.a_Campos( lnPos, 2)	= loField
@@ -20085,7 +20094,8 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
 					FOR lnPos = 1 TO .n_Campos
-						.ADD( .a_Campos( lnPos, 2), .a_Campos( lnPos, 1) )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( .a_Campos( lnPos, 2), PADR(.a_Campos( lnPos, 1),128) )
 					ENDFOR
 				ENDWITH && THIS
 			ENDIF
@@ -20282,7 +20292,8 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 					FOR I = 1 TO lnField_Count
 						loField = CREATEOBJECT("CL_DBC_FIELD_VW")
 						loField.read_BinDataToProperties( tcView, laFields(I) )
-						.ADD( loField, loField._Name )
+						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+						.ADD( loField, PADR(loField._Name,128) )
 					ENDFOR
 				ENDIF
 
@@ -20558,7 +20569,8 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 							loRelation.analizarBloque( @tcLine, @taCodeLines, @I, tnCodeLines )
 
 							TRY
-								.ADD( loRelation, loRelation._Name )
+								*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
+								.ADD( loRelation, PADR(loRelation._Name,128) )
 							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
 								*-- Saltear este error, porque implica que la relación está duplicada
 							ENDTRY
