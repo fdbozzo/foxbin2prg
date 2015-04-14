@@ -11027,6 +11027,8 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 									CASE lcLastMemberType == 'database'
 										*C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + CR_LF
 									ENDCASE
+
+									lcLastMemberType	= ''
 								ENDIF
 
 								*-- Cambio de tipo de miembro, inicio del actual (connection, table, view, storedprocedures)
