@@ -112,14 +112,14 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbc AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( 'EVENTSFILE.PRG' )
 
 			*-- Genero el DC2
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Regenero el DBC
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DC2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DC2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'DC2')) TO (FORCEEXT(lc_OutputFile,'DC3'))
 			*-- Genero el DC2 desde el DBC regenerado
 			*WAIT WINDOW TIMEOUT 2	&& Para forzar una diferencia de 2 segundos entre el DC2 y el DC3
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DBC'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 			*-- Comparo los DC2 y DC3
 			lcDC2	= STREXTRACT( FILETOSTR( FORCEEXT(lc_OutputFile,'DC2') ), '<DATABASE>', '</DATABASE>' )
 			lcDC3	= STREXTRACT( FILETOSTR( FORCEEXT(lc_OutputFile,'DC3') ), '<DATABASE>', '</DATABASE>' )

@@ -1,7 +1,7 @@
-DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentMemo AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo OF ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo.PRG
+		LOCAL THIS AS ut__foxbin2prg__c_conversor_bin_a_prg__indentMemo OF ut__foxbin2prg__c_conversor_bin_a_prg__indentMemo.PRG
 	#ENDIF
 
 	#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
@@ -126,7 +126,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase 
 
 
 		*-- TEST
-		lcMemo_Salida	= loObj.IndentarMemo( @lcMemo, C_TAB+C_TAB )
+		lcMemo_Salida	= loObj.indentMemo( @lcMemo, C_TAB+C_TAB )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado, @lcMemo, @lcMemo_Salida, @lcMemo_Esperado )
 
@@ -163,7 +163,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase 
 
 		*-- TEST
 		TRY
-			lcMemo_Salida	= loObj.IndentarMemo( @lcMemo, C_TAB+C_TAB )
+			lcMemo_Salida	= loObj.indentMemo( @lcMemo, C_TAB+C_TAB )
 		CATCH TO loEx
 		ENDTRY
 

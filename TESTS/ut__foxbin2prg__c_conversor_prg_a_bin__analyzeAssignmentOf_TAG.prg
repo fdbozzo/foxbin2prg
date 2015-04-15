@@ -1,7 +1,7 @@
-DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indicado AS FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analyzeAssignmentOf_TAG AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indicado OF ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indicado.PRG
+		LOCAL THIS AS ut__foxbin2prg__c_conversor_prg_a_bin__analyzeAssignmentOf_TAG OF ut__foxbin2prg__c_conversor_prg_a_bin__analyzeAssignmentOf_TAG.PRG
 	#ENDIF
 
 	#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
@@ -153,7 +153,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(57,8) + 'Este es el valor 1' + CHR(13) + 'Este el 2' + CHR(13) + 'Y este bajo Shift_Enter el 3'
 
 		*-- TEST
-		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
+		loObj.analyzeAssignmentOf_TAG( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
 			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
@@ -220,7 +220,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(33,8) + 'El valor 1' + CR_LF + 'El valor 2' + CR_LF + 'Y el 3!' + CR_LF
 
 		*-- TEST
-		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
+		loObj.analyzeAssignmentOf_TAG( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
 			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
@@ -293,7 +293,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analizarAsignacion_TAG_Indic
 		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(23 + LEN(lcMemberdata),8) + '<VFPData>' + CR_LF + lcMemberdata + CR_LF + '</VFPData>'
 
 		*-- TEST
-		loObj.analizarAsignacion_TAG_Indicado( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
+		loObj.analyzeAssignmentOf_TAG( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;
 			, @I, lcTag_I, lcTag_F, lnLen_lcTag_I, lnLen_lcTag_F )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;

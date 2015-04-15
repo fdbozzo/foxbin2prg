@@ -1,7 +1,7 @@
-DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__evaluateConfiguration AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion OF ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion.PRG
+		LOCAL THIS AS ut__foxbin2prg__c_foxbin2prg__evaluateConfiguration OF ut__foxbin2prg__c_foxbin2prg__evaluateConfiguration.PRG
 	#ENDIF
 
 	#DEFINE C_CR		CHR(13)
@@ -180,7 +180,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 
 
 		CATCH TO loEx
@@ -250,7 +250,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 
 
 		CATCH TO loEx
@@ -320,7 +320,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion( '0', '0', '1', '1', '0', '1', '1', '1' )
+			loFB2P.evaluateConfiguration( '0', '0', '1', '1', '0', '1', '1', '1' )
 
 
 		CATCH TO loEx
@@ -357,7 +357,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -396,7 +396,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -434,7 +434,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -473,7 +473,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -511,7 +511,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -550,7 +550,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -590,7 +590,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -631,7 +631,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.getNext_BAK('TESTS\DATOS_TEST\foxbin2prg.cfg')
 			
 
@@ -666,7 +666,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.n_Debug
 			
 
@@ -704,7 +704,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.n_Debug
 			
 
@@ -742,7 +742,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.n_Debug
 			
 
@@ -779,7 +779,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_NoTimestamps
 			
 
@@ -817,7 +817,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_NoTimestamps
 			
 
@@ -855,7 +855,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_NoTimestamps
 			
 
@@ -892,7 +892,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_ClearUniqueID
 			
 
@@ -930,7 +930,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_ClearUniqueID
 			
 
@@ -968,7 +968,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_ClearUniqueID
 			
 
@@ -1005,7 +1005,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.n_ShowProgressbar
 			
 
@@ -1043,7 +1043,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.n_ShowProgressbar
 			
 
@@ -1081,7 +1081,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.n_ShowProgressbar
 			
 
@@ -1117,7 +1117,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_ShowErrors
 			
 
@@ -1154,7 +1154,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_ShowErrors
 			
 
@@ -1191,7 +1191,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.l_ShowErrors
 			
 
@@ -1228,7 +1228,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_DB2
 			
 
@@ -1266,7 +1266,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_DB2
 			
 
@@ -1303,7 +1303,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_DC2
 			
 
@@ -1341,7 +1341,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_DC2
 			
 
@@ -1378,7 +1378,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_FR2
 			
 
@@ -1416,7 +1416,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_FR2
 			
 
@@ -1453,7 +1453,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_LB2
 			
 
@@ -1491,7 +1491,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_LB2
 			
 
@@ -1528,7 +1528,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_MN2
 			
 
@@ -1566,7 +1566,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_MN2
 			
 
@@ -1603,7 +1603,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_PJ2
 			
 
@@ -1641,7 +1641,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_PJ2
 			
 
@@ -1678,7 +1678,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_SC2
 			
 
@@ -1716,7 +1716,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_SC2
 			
 
@@ -1753,7 +1753,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_VC2
 			
 
@@ -1791,7 +1791,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.c_VC2
 			
 
@@ -1830,7 +1830,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBF_Conversion_Support
 			
 
@@ -1873,7 +1873,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBF_Conversion_Support
 			
 
@@ -1912,7 +1912,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBF_Conversion_Support
 			
 
@@ -1950,7 +1950,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBF_Conversion_Support
 			
 
@@ -1988,7 +1988,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBF_Conversion_Support
 			
 
@@ -2025,7 +2025,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBC_Conversion_Support
 			
 
@@ -2063,7 +2063,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.DBC_Conversion_Support
 			
 
@@ -2100,7 +2100,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.PJX_Conversion_Support
 			
 
@@ -2138,7 +2138,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.PJX_Conversion_Support
 			
 
@@ -2175,7 +2175,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.SCX_Conversion_Support
 			
 
@@ -2213,7 +2213,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.SCX_Conversion_Support
 			
 
@@ -2250,7 +2250,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.VCX_Conversion_Support
 			
 
@@ -2288,7 +2288,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.VCX_Conversion_Support
 			
 
@@ -2325,7 +2325,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.MNX_Conversion_Support
 			
 
@@ -2363,7 +2363,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.MNX_Conversion_Support
 			
 
@@ -2400,7 +2400,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.FRX_Conversion_Support
 			
 
@@ -2438,7 +2438,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.FRX_Conversion_Support
 			
 
@@ -2475,7 +2475,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.LBX_Conversion_Support
 			
 
@@ -2513,7 +2513,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()
+			loFB2P.evaluateConfiguration()
 			leValor		= loFB2P.LBX_Conversion_Support
 			
 
@@ -2556,15 +2556,15 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			loFB2P.evaluateConfiguration()	&& Carga config.Principal
 
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
 
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
 
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
 
 			leValor		= loFB2P.LBX_Conversion_Support
@@ -2617,18 +2617,18 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			*loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			*loFB2P.evaluateConfiguration()	&& Carga config.Principal
 			loFB2P.LBX_Conversion_Support = 0
 
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
 
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*loFB2P.LBX_Conversion_Support = 0
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + 'otro' )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
 
 			leValor		= loFB2P.LBX_Conversion_Support
@@ -2681,21 +2681,21 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			*loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			*loFB2P.evaluateConfiguration()	&& Carga config.Principal
 
 			*-- c:\desa\foxbin2prg\foxbin2prg.cfg
 			loFB2P.c_InputFile	= loFB2P.c_Foxbin2prg_ConfigFile
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*-- c:\desa\foxbin2prg\tests\datos_test\foxbin2prg.cfg
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + '..\otro' )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*-- c:\desa\foxbin2prg\tests\datos_test\otro\foxbin2prg.cfg
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', oFXU_LIB.cPathDatosTest )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
 
 			leValor		= loFB2P.LBX_Conversion_Support
@@ -2748,21 +2748,21 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			*loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			*loFB2P.evaluateConfiguration()	&& Carga config.Principal
 
 			*-- c:\desa\foxbin2prg\foxbin2prg.cfg
 			loFB2P.c_InputFile	= loFB2P.c_Foxbin2prg_ConfigFile
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*-- c:\desa\foxbin2prg\tests\datos_test\otro\foxbin2prg.cfg
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', ADDBS(oFXU_LIB.cPathDatosTest) + 'otro' )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*-- c:\desa\foxbin2prg\tests\datos_test\foxbin2prg.cfg (DEBE CACHEAR DE CUANDO PROCESÓ EL ANTERIOR)
 			loFB2P.c_InputFile	= FORCEPATH( 'test.vcx', oFXU_LIB.cPathDatosTest )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
 
 			leValor		= loFB2P.LBX_Conversion_Support
@@ -2817,23 +2817,23 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__EvaluarConfiguracion AS FxuTestCase O
 
 
 			*-- TEST
-			*loFB2P.EvaluarConfiguracion()	&& Carga config.Principal
+			*loFB2P.evaluateConfiguration()	&& Carga config.Principal
 
 			*loFB2P.c_InputFile	= loFB2P.c_Foxbin2prg_ConfigFile
 
 			*-- c:\desa\foxbin2prg\foxbin2prg.cfg
 			loFB2P.c_InputFile	= FORCEPATH( 'test1.vcx', loFB2P.c_Foxbin2prg_ConfigFile )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(1)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*-- c:\desa\foxbin2prg\tests\datos_test\foxbin2prg.cfg
 			loFB2P.c_InputFile	= FORCEPATH( 'test2.vcx', oFXU_LIB.cPathDatosTest )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(2)	= loFB2P.get_l_CFG_CachedAccess()
 
 			*-- c:\desa\foxbin2prg\tests\datos_test\foxbin2prg.cfg
 			loFB2P.c_InputFile	= FORCEPATH( 'test3.vcx', oFXU_LIB.cPathDatosTest )
-			loFB2P.EvaluarConfiguracion()	&& Carga config.secundaria
+			loFB2P.evaluateConfiguration()	&& Carga config.secundaria
 			laCFG_CachedAccess(3)	= loFB2P.get_l_CFG_CachedAccess()
 
 			leValor		= loFB2P.LBX_Conversion_Support
