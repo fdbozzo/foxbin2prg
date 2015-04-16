@@ -527,7 +527,7 @@ QUIT
 DEFINE CLASS c_foxbin2prg AS Session
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="addprocessedfile" display="addProcessedFile"/>] ;
-		+ [<memberdata name="processprogress" display="processProgress"/>] ;
+		+ [<memberdata name="updateprogressbar" display="updateProgressbar"/>] ;
 		+ [<memberdata name="a_processedfiles" display="a_ProcessedFiles"/>] ;
 		+ [<memberdata name="clearprocessedfiles" display="clearProcessedFiles"/>] ;
 		+ [<memberdata name="convert" display="convert"/>] ;
@@ -900,7 +900,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
-	PROCEDURE processProgress
+	PROCEDURE updateProgressbar
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
 		TRY
@@ -911,7 +911,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					IF .o_Frm_Avance.l_Cancelled AND PROGRAM(-1) > 1 THEN
 						ERROR 1799
 					ENDIF
-					.o_Frm_Avance.processProgress( tcTexto, tnValor, tnTotal, tnTipo )
+					.o_Frm_Avance.updateProgressbar( tcTexto, tnValor, tnTotal, tnTipo )
 				ENDIF
 			ENDWITH
 
@@ -2505,7 +2505,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							OTHERWISE
 								*-- DEMÁS ARCHIVOS
 								*-- Filespec: "*.EXT"
-								.processProgress( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
 								.writeLog_Flush()
 							ENDCASE
@@ -2550,7 +2550,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 									LOOP
 								ENDIF
 
-								.processProgress( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
 								.writeLog_Flush()
 
@@ -2563,7 +2563,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 								ENDCASE
 							ENDFOR
 
-							.processProgress( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
+							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
 
 						CASE NOT .hasSupport_Bin2Prg( JUSTEXT(tc_InputFile) ) OR NOT FILE(tc_InputFile)
@@ -2610,7 +2610,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 									LOOP
 								ENDIF
 
-								.processProgress( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
 								.writeLog_Flush()
 
@@ -2623,7 +2623,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 								ENDCASE
 							ENDFOR
 
-							.processProgress( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
+							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
 
 						CASE NOT .hasSupport_Prg2Bin( JUSTEXT(tc_InputFile) ) OR NOT FILE(tc_InputFile)
@@ -2723,7 +2723,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							ENDIF
 
 							lnCodError = .convert( tc_InputFile, toModulo, toEx, .T., tcOriginalFileName )
-							*.processProgress( loLang.C_END_OF_PROCESS_LOC, 1, 1, 0 )
+							*.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, 1, 1, 0 )
 						ENDIF
 					ENDIF
 
@@ -2886,7 +2886,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*-- Luego convierto los archivos incluidos
 				FOR I = 1 TO lnFileCount
 					lcFile		= laFiles(I,1)
-					.processProgress( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+					.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
 					IF .hasSupport_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 						lnCodError	= .convert( lcFile, toModulo, @toEx, .F., tcOriginalFileName )
@@ -2988,7 +2988,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*-- Luego convierto los archivos incluidos
 				FOR I = 1 TO lnFileCount
 					lcFile	= laFiles(I)
-					.processProgress( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+					.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
 					IF .hasSupport_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
 						lnCodError = .convert( lcFile, toModulo, @toEx, .F., tcOriginalFileName )
@@ -3372,10 +3372,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					loConversor.c_OriginalFileName		= .c_OriginalFileName
 					loConversor.c_Foxbin2prg_FullPath	= .c_Foxbin2prg_FullPath
 					*--
-					.processProgress( loLang.C_PROCESSING_LOC + ' ' + .c_InputFile + '...', 0, 0, 0 )
+					.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + .c_InputFile + '...', 0, 0, 0 )
 
 					IF AEVENTS( laEvents, loConversor ) = 0 THEN
-						BINDEVENT( loConversor, 'processProgress', THIS, 'processProgress' )
+						BINDEVENT( loConversor, 'updateProgressbar', THIS, 'updateProgressbar' )
 					ENDIF
 
 					loConversor.convert( @toModulo, .F., THIS )
@@ -3632,7 +3632,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		IF DIRECTORY(tcDir)
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
-				.processProgress( loLang.C_SCANNING_FILE_AND_DIR_INFO_LOC + ' ' + tcDir + '...', 0, 0, 0 )
+				.updateProgressbar( loLang.C_SCANNING_FILE_AND_DIR_INFO_LOC + ' ' + tcDir + '...', 0, 0, 0 )
 				lnFiles = ADIR( laFiles, tcDir + '*.*', 'D', 1)
 
 				*-- Busco los archivos
@@ -3965,7 +3965,7 @@ DEFINE CLASS frm_avance AS Form
 	l_Cancelled = .F.
 	Name = "frm_avance"
 	_memberdata = [<VFPData>] ;
-		+ [<memberdata name="processprogress" display="processProgress"/>] ;
+		+ [<memberdata name="updateprogressbar" display="updateProgressbar"/>] ;
 		+ [<memberdata name="width" display="Width"/>] ;
 		+ [<memberdata name="height" display="Height"/>] ;
 		+ [<memberdata name="nlastseccount" display="nLastSecCount"/>] ;
@@ -4300,7 +4300,7 @@ DEFINE CLASS frm_avance AS Form
 		Top = 88, ;
 		Width = 136
 
-	PROCEDURE processProgress
+	PROCEDURE updateProgressbar
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 
 		WITH THISFORM AS frm_avance OF foxbin2prg.prg
@@ -4568,7 +4568,7 @@ DEFINE CLASS c_conversor_base AS Session
 	#ENDIF
 	_MEMBERDATA	= [<VFPData>] ;
 		+ [<memberdata name="analyzeassignmentof_tag" display="analyzeAssignmentOf_TAG"/>] ;
-		+ [<memberdata name="processprogress" display="processProgress"/>] ;
+		+ [<memberdata name="updateprogressbar" display="updateProgressbar"/>] ;
 		+ [<memberdata name="a_specialprops" display="a_SpecialProps"/>] ;
 		+ [<memberdata name="findmethodsobjectbyname" display="findMethodsObjectByName"/>] ;
 		+ [<memberdata name="verifyvalidexpression" display="verifyValidExpression"/>] ;
@@ -4800,7 +4800,7 @@ DEFINE CLASS c_conversor_base AS Session
 	ENDPROC
 
 
-	PROCEDURE processProgress
+	PROCEDURE updateProgressbar
 		LPARAMETERS tcTexto, tnValor, tnTotal, tnTipo
 	ENDPROC
 
@@ -6823,7 +6823,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			IF toClase._Prop_Count > 0
 				WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
-					.processProgress( 'Generating Props for Class ' + toClase._Nombre + '...', 0, 1, 2 )
+					.updateProgressbar( 'Generating Props for Class ' + toClase._Nombre + '...', 0, 1, 2 )
 					.c_ClaseActual	= LOWER(toClase._BaseClass)
 					DIMENSION laPropsAndValues( toClase._Prop_Count, 3 )
 					ACOPY( toClase._Props, laPropsAndValues )
@@ -6910,7 +6910,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				loProcedure	= toClase._Procedures(I)
 
 				IF loProcedure._ProcLine_Count > 0 THEN
-					.processProgress( 'Generating Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
+					.updateProgressbar( 'Generating Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
 
 					IF '.' $ loProcedure._Nombre
 						*-- cboNombre.InteractiveChange ==> No debe acortarse por ser método modificado de combobox heredado de la clase
@@ -6936,7 +6936,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					ENDIF
 
 					*-- Incluir las líneas del método
-					*.processProgress( 'Generating Lines of Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
+					*.updateProgressbar( 'Generating Lines of Procedure ' + toClase._Nombre + '.' + loProcedure._Nombre + '...', I, toClase._Procedure_Count, 2 )
 					FOR X = 1 TO loProcedure._ProcLine_Count
 						*TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						*	<<loProcedure._ProcLines(X)>>
@@ -6972,7 +6972,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		lcMemo	= ''
 
 		*-- Recorrer los métodos
-		THIS.processProgress( 'Generating Object Methods for ' + toClase._Nombre + '.' + toObjeto._ObjName + '...', 0, 1, 2 )
+		THIS.updateProgressbar( 'Generating Object Methods for ' + toClase._Nombre + '.' + toObjeto._ObjName + '...', 0, 1, 2 )
 		FOR I = 1 TO toObjeto._Procedure_Count
 			loProcedure	= NULL
 			loProcedure	= toObjeto._Procedures(I)
@@ -7441,7 +7441,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					toObjeto	= NULL
 					lcNombre	= ALLTRIM( CHRTRAN( STREXTRACT(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
 					lcObjName	= JUSTEXT( '.' + lcNombre )
-					.processProgress( 'Analyzing Block Add Object ' + toClase._Nombre + '.' + lcObjName + '...', I, tnCodeLines, 1 )
+					.updateProgressbar( 'Analyzing Block Add Object ' + toClase._Nombre + '.' + lcObjName + '...', I, tnCodeLines, 1 )
 
 					IF toClase.l_ObjectMetadataInHeader
 						FOR Z = 1 TO toClase._AddObject_Count
@@ -8198,7 +8198,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 			IF llBloqueEncontrado
 				*-- Evalúo todo el contenido del PROCEDURE
-				.processProgress( 'Analyzing Procedure ' + toClase._Nombre + '.' + tcProcedureAbierto + '...', I, tnCodeLines, 1 )
+				.updateProgressbar( 'Analyzing Procedure ' + toClase._Nombre + '.' + tcProcedureAbierto + '...', I, tnCodeLines, 1 )
 				.analyzeProcedureLines( @toClase, @toObjeto, @tcLine, @taCodeLines, @I, @tnCodeLines, @tcProcedureAbierto ;
 					, @tc_Comentario, @taLineasExclusion, @tnBloquesExclusion )
 			ENDIF
@@ -8605,10 +8605,10 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-					.processProgress( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+					.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 					.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
-					.processProgress( 'Loading Code...', 2, lnCodeLines, 1 )
+					.updateProgressbar( 'Loading Code...', 2, lnCodeLines, 1 )
 
 					*-- MÁSCARA DE BÚSQUEDA
 					IF toFoxBin2Prg.n_UseClassPerFile = 1 THEN
@@ -8668,7 +8668,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 						lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-						.processProgress( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+						.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 						.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 					ENDIF
 
@@ -8684,7 +8684,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				ENDIF
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				.processProgress( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
+				.updateProgressbar( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
 				.identifyExclusionBlocks( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
@@ -8695,7 +8695,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.processProgress( loLang.C_GENERATING_BINARY_LOC + '...', 0, lnCodeLines, 1 )
+				.updateProgressbar( loLang.C_GENERATING_BINARY_LOC + '...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createClasslib()
 				.writeBinaryFile( @toModulo, @toFoxBin2Prg )
@@ -9002,10 +9002,10 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-					.processProgress( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+					.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 					.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
-					.processProgress( 'Loading Code...', 2, lnCodeLines, 1 )
+					.updateProgressbar( 'Loading Code...', 2, lnCodeLines, 1 )
 
 					*-- MÁSCARA DE BÚSQUEDA
 					IF toFoxBin2Prg.n_UseClassPerFile = 1 THEN
@@ -9062,7 +9062,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-					.processProgress( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+					.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 					.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
 				ENDIF
@@ -9077,7 +9077,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				ENDIF
 
 				*-- Identifico los TEXT/ENDTEXT, #IF .F./#ENDIF
-				.processProgress( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
+				.updateProgressbar( 'Identifying Excluded Blocks...', 3, lnCodeLines, 1 )
 				.identifyExclusionBlocks( @laCodeLines, lnCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
@@ -9088,7 +9088,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.processProgress( 'Generating Binary...', 0, lnCodeLines, 1 )
+				.updateProgressbar( 'Generating Binary...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createForm()
 				.writeBinaryFile( @toModulo, @toFoxBin2Prg )
@@ -9406,7 +9406,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				*.identifyExclusionBlocks( @laCodeLines, .F., @laLineasExclusion, @lnBloquesExclusion )
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
-				.processProgress( 'Identifying Code Blocks...', 1, 2, 1 )
+				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
 
 				IF .l_Error
@@ -9414,7 +9414,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.processProgress( 'Generating Binary...', 2, 2, 1 )
+				.updateProgressbar( 'Generating Binary...', 2, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createProject()
 				.writeBinaryFile( @toProject, toFoxBin2Prg )
@@ -10213,7 +10213,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				.createReport('CURSOR')
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.processProgress( 'Identifying Code Blocks...', 1, 2, 1 )
+				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
 				USE IN (SELECT('TABLABIN'))
 
@@ -10222,7 +10222,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.processProgress( 'Generating Binary...', 2, 2, 1 )
+				.updateProgressbar( 'Generating Binary...', 2, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createReport()
 				.writeBinaryFile( @toReport, toFoxBin2Prg )
@@ -10979,10 +10979,10 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + laCodeLines(X) + CR_LF
 					ENDFOR
 
-					.processProgress( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+					.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 					.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase, @toFoxBin2Prg )
 
-					.processProgress( 'Loading Code...', 2, lnCodeLines, 1 )
+					.updateProgressbar( 'Loading Code...', 2, lnCodeLines, 1 )
 
 					*-- Esto crea la máscara de búsqueda "<path>Database.*.*.ext" para encontrar las partes
 					*-- con la sintaxis "<path>Database.MemberType.MemberName.ext"
@@ -11105,13 +11105,13 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-					.processProgress( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+					.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
 					.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase, @toFoxBin2Prg )
 
 				ENDIF
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.processProgress( 'Identifying Code Blocks...', 1, 2, 1 )
+				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase, @toFoxBin2Prg )
 
 				IF .l_Error
@@ -11119,7 +11119,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.processProgress( 'Generating Binary...', 2, 2, 1 )
+				.updateProgressbar( 'Generating Binary...', 2, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				*.createTable()
 				.writeBinaryFile( @toDatabase, toFoxBin2Prg )
@@ -11447,7 +11447,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				.createMenu('CURSOR')
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
-				.processProgress( 'Identifying Code Blocks...', 1, 2, 1 )
+				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
 				USE IN (SELECT('TABLABIN'))
 
@@ -11456,7 +11456,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 					EXIT
 				ENDIF
 
-				.processProgress( 'Generating Binary...', 1, 2, 1 )
+				.updateProgressbar( 'Generating Binary...', 1, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createMenu()
 				.writeBinaryFile( @toMenu )
@@ -13537,7 +13537,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ENDIF
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -13611,7 +13611,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					.write_INCLUDE( @loRegClass, @lcCodigo )
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
 						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo )
@@ -13619,7 +13619,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					FOR I = 1 TO lnObjCount
 						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo )
@@ -13628,7 +13628,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					DIMENSION laMethods(1,3), laCode(1)
 					STORE '' TO laMethods, laCode
@@ -13644,7 +13644,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					lnRecno	= RECNO()
 					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
@@ -13675,7 +13675,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					ENDSCAN
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
 						, lnProtected_Count, @toFoxBin2Prg, @lcCodigo )
@@ -13694,7 +13694,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				lnStep			= lnStep + 1
 				lcOutputFile	= .c_OutputFile
 
-				.processProgress( 'Writing ' + toFoxBin2Prg.c_VC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_VC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 				IF .l_Test
@@ -13881,7 +13881,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ENDIF
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -13955,7 +13955,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					.write_INCLUDE( @loRegClass, @lcCodigo )
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
 						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo )
@@ -13963,7 +13963,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					FOR I = 1 TO lnObjCount
 						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo )
@@ -13972,7 +13972,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					*-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					DIMENSION laMethods(1,3), laCode(1)
 					STORE '' TO laMethods, laCode
@@ -13988,7 +13988,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 					*-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					lnRecno	= RECNO()
 					LOCATE FOR TABLABIN.PLATFORM = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
@@ -14021,7 +14021,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					ENDSCAN
 
 					lnStep			= lnStep + 1
-					.processProgress( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
 						, lnProtected_Count, @toFoxBin2Prg, @lcCodigo )
@@ -14040,7 +14040,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				lnStep			= lnStep + 1
 				lcOutputFile	= .c_OutputFile
 
-				.processProgress( 'Writing ' + toFoxBin2Prg.c_SC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_SC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 				lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 				IF .l_Test
@@ -14142,7 +14142,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 					USE IN (SELECT("_TABLAORIG"))
 
 					loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
-					.processProgress( 'Processing Project ' + '...', 1, 2, 1 )
+					.updateProgressbar( 'Processing Project ' + '...', 1, 2, 1 )
 
 
 					*-- Obtengo los archivos del proyecto
@@ -14404,7 +14404,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
-				.processProgress( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
 
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
@@ -14483,7 +14483,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 				STORE NULL TO loProject, loReg, loServerHead, loServerData
 				lcStrPJM		= FILETOSTR( THIS.c_InputFile )
 				loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
-				THIS.processProgress( 'Scanning PJM...', 1, 2, 1 )
+				THIS.updateProgressbar( 'Scanning PJM...', 1, 2, 1 )
 
 
 				*-- Obtengo los archivos del proyecto
@@ -14785,7 +14785,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			ENDIF
 
 			*-- Genero el PJ2
-			THIS.processProgress( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
+			THIS.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
 
 			IF THIS.l_Test
 				toModulo	= C_FB2PRG_CODE
@@ -14869,7 +14869,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					STORE NULL TO loRegObj, loRegCab, loRegDataEnv, loRegCur
 
 					USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
-					THIS.processProgress( 'Scanning FRX...', 1, 2, 1 )
+					THIS.updateProgressbar( 'Scanning FRX...', 1, 2, 1 )
 
 					*-- Verificación de REPORTE VFP 9
 					IF FCOUNT() < 75 OR EMPTY(FIELD("USER"))
@@ -14974,7 +14974,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 				*-- Genero el FR2
-				.processProgress( 'Writing ' + toFoxBin2Prg.c_FR2 + '...', 2, 2, 1 )
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_FR2 + '...', 2, 2, 1 )
 
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
@@ -15048,7 +15048,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
 
 				*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
-				.processProgress( 'Scanning DBF Structure...', 1, 3, 1 )
+				.updateProgressbar( 'Scanning DBF Structure...', 1, 3, 1 )
 
 				*-- Include
 				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Included) AND NOT toFoxBin2Prg.DBF_Conversion_Included == '*' ;
@@ -15091,7 +15091,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Genero el DB2, renombrando el TMP
-					.processProgress( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
@@ -15114,7 +15114,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Genero el DB2
-					.processProgress( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
 					IF .l_Test
 						toModulo	= C_FB2PRG_CODE
 					ELSE
@@ -15239,7 +15239,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 
 					OPEN DATABASE (.c_InputFile) SHARED NOUPDATE
 
-					.processProgress( 'Analyzing DBC metadata...', 1, 2, 1 )
+					.updateProgressbar( 'Analyzing DBC metadata...', 1, 2, 1 )
 
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
@@ -15305,7 +15305,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 				lcOutputFile	= .c_OutputFile
 
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					.processProgress( 'Writing ' + toFoxBin2Prg.c_DC2 + '...', 2, 2, 1 )
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DC2 + '...', 2, 2, 1 )
 					lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 				ENDIF
 
@@ -15394,7 +15394,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 					USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 					SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
 					USE IN (SELECT("_TABLAORIG"))
-					.processProgress( 'Analyzing MNX...', 1, 2, 1 )
+					.updateProgressbar( 'Analyzing MNX...', 1, 2, 1 )
 
 					*-- Verificación de menú VFP 9
 					IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
@@ -15413,7 +15413,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 				*-- Genero el MN2
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					.processProgress( 'Writing ' + toFoxBin2Prg.c_MN2 + '...', 2, 2, 1 )
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_MN2 + '...', 2, 2, 1 )
 				ENDIF
 
 				IF .l_Test
@@ -21769,7 +21769,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 				lcText	= loRecord.toText(@taFields, tnField_Count)
 				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 				IF MOD(I,1000) = 0 THEN
-					toFoxBin2Prg.processProgress( 'Exporting DBF Data...', 1+(I/lnReccount), 3, 2 )
+					toFoxBin2Prg.updateProgressbar( 'Exporting DBF Data...', 1+(I/lnReccount), 3, 2 )
 
 					IF MOD(I,10000) = 0 THEN
 						FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )

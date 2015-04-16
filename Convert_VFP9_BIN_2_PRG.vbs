@@ -87,7 +87,7 @@ Else
 	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
 
 	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2Prg.ProcessProgress(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
+		oVFP9.DoCmd( "oFoxBin2Prg.updateProgressbar(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
 		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
 
 		If nDebug = 0 Or nDebug = 2 Then
@@ -143,7 +143,7 @@ Private Sub scanDirs( tcArgument )
 	Dim omFolder, oFolder
 	If FileSystemObject.FolderExists( tcArgument ) Then
 		'-- Es un directorio
-		oVFP9.DoCmd( "oFoxBin2Prg.ProcessProgress('Scanning file and directory information on " & tcArgument & "...', 0, 0, 0)" )
+		oVFP9.DoCmd( "oFoxBin2Prg.updateProgressbar('Scanning file and directory information on " & tcArgument & "...', 0, 0, 0)" )
 		Set omFolder = FileSystemObject.GetFolder( tcArgument )
 		For Each oFile IN omFolder.Files
 			evaluateFile( oFile.Path )
