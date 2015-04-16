@@ -1,7 +1,7 @@
-DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad AS FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizePropertyValue AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad OF ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad.PRG
+		LOCAL THIS AS ut__foxbin2prg__c_conversor_base__normalizePropertyValue OF ut__foxbin2prg__c_conversor_base__normalizePropertyValue.PRG
 	#ENDIF
 
 	#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
@@ -116,7 +116,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad AS FxuTe
 		ENDTEXT
 
 		*-- TEST
-		loObj.normalizarValorPropiedad( @lcPropName, @lcPropValue, @lcComentario )
+		loObj.normalizePropertyValue( @lcPropName, @lcPropValue, @lcComentario )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @lcComentario, @lcPropValue_Esperado )
@@ -143,7 +143,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad AS FxuTe
 		lcPropValue_Esperado	= C_FB2P_VALUE_I + 'valor 1&#13;valor 2&#13;valor 3' + C_FB2P_VALUE_F
 
 		*-- TEST
-		loObj.normalizarValorPropiedad( @lcPropName, @lcPropValue, @lcComentario )
+		loObj.normalizePropertyValue( @lcPropName, @lcPropValue, @lcComentario )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @lcComentario, @lcPropValue_Esperado )
@@ -170,7 +170,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad AS FxuTe
 		lcPropValue_Esperado	= C_FB2P_VALUE_I + 'valor 1' + CR_LF + 'valor 2' + CR_LF + 'valor 3' + C_FB2P_VALUE_F
 
 		*-- TEST
-		loObj.normalizarValorPropiedad( @lcPropName, @lcPropValue, @lcComentario )
+		loObj.normalizePropertyValue( @lcPropName, @lcPropValue, @lcComentario )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @lcComentario, @lcPropValue_Esperado )
@@ -197,7 +197,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad AS FxuTe
 		lcPropValue_Esperado	= C_FB2P_VALUE_I + 'valor 1' + '&#13;' + 'valor 2' + CR_LF + 'valor 3' + C_FB2P_VALUE_F
 
 		*-- TEST
-		loObj.normalizarValorPropiedad( @lcPropName, @lcPropValue, @lcComentario )
+		loObj.normalizePropertyValue( @lcPropName, @lcPropValue, @lcComentario )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @lcComentario, @lcPropValue_Esperado )
@@ -224,7 +224,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_base__normalizarValorPropiedad AS FxuTe
 		lcPropValue_Esperado	= C_FB2P_VALUE_I + 'valor 1' + '&#10;' + 'valor 2' + CR_LF + 'valor 3' + C_FB2P_VALUE_F
 
 		*-- TEST
-		loObj.normalizarValorPropiedad( @lcPropName, @lcPropValue, @lcComentario )
+		loObj.normalizePropertyValue( @lcPropName, @lcPropValue, @lcComentario )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcPropName, @lcPropValue, @lcComentario, @lcPropValue_Esperado )

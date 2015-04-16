@@ -61,7 +61,7 @@ Else
 	oVFP9.DoCmd( "SET PROCEDURE TO '" & cEXETool & "'" )
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
-	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
+	oVFP9.DoCmd( "oFoxBin2prg.loadProgressbarForm()" )
 	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress" )
 	
 	cFlagGenerateLog		= "'0'"
@@ -87,9 +87,9 @@ Else
 	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
 	
 	If nDebug = 0 Or nDebug = 2 Then
-		cCMD	= "oFoxBin2prg.ejecutar( '" & WScript.Arguments(0) & "' )"
+		cCMD	= "oFoxBin2prg.execute( '" & WScript.Arguments(0) & "' )"
 	Else
-		cCMD	= "oFoxBin2prg.ejecutar(  '" & WScript.Arguments(0) & "','INTERACTIVE','0','0'," _
+		cCMD	= "oFoxBin2prg.execute(  '" & WScript.Arguments(0) & "','INTERACTIVE','0','0'," _
 			& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 			& cFlagRecompile & "," & cNoTimestamps & " )"
 	End If
