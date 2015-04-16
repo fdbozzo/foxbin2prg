@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.41'
-    .VersionDate          = Date(2015,01,18)
+    .VersionNumber        = 'v1.19.42'
+    .VersionDate          = Date(2015,04,16)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,39 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/04/16	v1.19.42
+- Feature: Added VFP 9 SP1 runtime validation
+- Bug Fix: Broken SourceSafe compatibility because an error is thrown when querying for file support (Tuvia Vinitsky)
+- Bug Fix scx/vcx: Process only one TEXT/ENDTEXT nesting level because TEXT/ENDTEXT can't be nested (Lutz Scheffler)
+- Feature: Make some error descriptions more informative and precise (Lutz Scheffler)
+- Feature (API): Allow specifying inputFile with relative path (Lutz Scheffler)
+- Bug Fix scx: Metadata of Dataenvironment not properly generated when Dataenvironment is renamed
+- Bug Fix: Added PJX/PJ2 generation when specifying "file.pjx", "*" (Lutz Scheffler)
+- Some enhancements in german translations (Lutz Scheffler)
+- Feature: Added multiprocessing of projects (*.pjx, *.pj2) when specifying "file.pjx", "*" (Lutz Scheffler)
+- Change FoxBin2Prg base class from custom to session (Lutz Scheffler)
+- Feature: Allow processing all project files without converting the PJX/2, with "*-" (Lutz Scheffler)
+- Bug Fix pjx/pj2: If end of line (CR+LF) is used on pjx's "Build" properties data, generated pj2 is malformed
+- Feature: Default foxbin2prg.cfg configuration file renamed to foxbin2prg.cfg.txt to no overwrite user cfg (Lutz Scheffler)
+- Added DOS errOut output support and implemented in writeErrorLog when logging errors
+- Feature: Added full support for *? file masks for multi-processing files of the same extension
+- Feature (API): Added new parameter to allow alternative main CFG (Lutz Scheffler)
+- Feature (API): Added new get_Processed() method for obtaining information about processed files (Lutz Scheffler)
+- Feature: Added new file processing output to DOS stdOut (Lutz Scheffler)
+- Bug Fix: Fixed processing cancelation with Esc key
+- Feature: Sort table/view fields alphabetically to facilitate diffing and merging, while maintaining a list with the original field order for correct DBC regeneration (Ryan Harris)
+- Feature: Apply ClassPerFile to DBC connections, tables, views and SPs (Ryan Harris)
+- Bug Fix vw: Views now save/restore their Path and RecordCount properties
+- Feature: New default FoxBin2Prg App icon and background image, configurable with a new CFG "BackgroundImage" setting
+- Bug Fix mnx: Empty Pad name is not kept when regenerating a menu defined with and empty Pad name (Lutz Scheffler)
+- Feature (API): New property "l_ProcessFiles" that allow setting to .F. when using foxbin2prg as object to get Processing file info with get_Processed method without actual processing
+- Bug Fix frx/lbx: Trimmed some extra CR,LF,TAB from FR2/LB2 tag that where included in previous versions (Ryan Harris)
+- Bug Fix scx/vcx/dbc: Delete ERR files when processing with UseClassPerFile switch (Ryan Harris)
+- Feature: Implemented CFG inheritance between directories
+- Feature (API): New method get_DirSettings() that returns the CFG settings object for the indicated directory (Lutz Scheffler)
+- Feature: Allow generation of text for a single class of a librery when using ClassPerFile (Lutz Scheffler)
+- Feature (API): Renowned method names to English to facilitate international understanding (Mike Potjer)
 
 2015/01/18	v1.19.41
 - Bug Fix db2: Erroneous detection of Invalid Table when size is less than 328 bytes. Lower limit was changed to 65 bytes.

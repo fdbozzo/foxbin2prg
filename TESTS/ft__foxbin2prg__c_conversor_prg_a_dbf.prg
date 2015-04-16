@@ -113,7 +113,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( lc_File )
 
-			loCnv.Ejecutar( lc_OutputFile, '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -185,7 +185,7 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( lc_File )
 
-			loCnv.Ejecutar( lc_OutputFile, '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -258,8 +258,8 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -331,8 +331,8 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
-			loCnv.Ejecutar( FORCEEXT(lc_OutputFile,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DBF'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			loCnv.execute( FORCEEXT(lc_OutputFile,'DB2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
 
 			SELECT 0
 			USE (FORCEEXT(lc_InputFile,'DBF')) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -360,8 +360,22 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			this.assertequals( lnIndices_OUT, lnIndices_IN, '[Cantidad de campos IN y OUT]' )
 
 			FOR I = 1 TO lnIndices_IN
+				*- Busco el índice a evaluar
+				FOR Z = 1 TO lnIndices_OUT
+					IF LOWER(laIndices_OUT(Z,1)) == LOWER(laIndices_IN(I,1))
+						EXIT
+					ENDIF
+				ENDFOR
+
+				*-- Si no se encontró, registro error
+				THIS.asserttrue( Z <= lnIndices_OUT, 'El índice "' + laIndices_IN(I,1) + '" no se encontró' )
+				IF Z > lnIndices_OUT THEN
+					LOOP
+				ENDIF
+
+				*-- Si se encontró, comparo su especificación
 				FOR X = 1 TO 6
-					THIS.assertequals( laIndices_IN(I,X), laIndices_OUT(I,X), '[Comparando estructura del indice ' + laIndices_IN(I,1) + ']' )
+					THIS.assertequals( laIndices_IN(I,X), laIndices_OUT(Z,X), '[Comparando estructura del indice ' + laIndices_IN(I,1) + ']' )
 				ENDFOR
 			ENDFOR
 

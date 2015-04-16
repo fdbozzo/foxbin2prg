@@ -1,7 +1,7 @@
-DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase OF FxuTestCase.prg
+DEFINE CLASS ut__foxbin2prg__c_conversor_base__get_SeparatedLineAndComment AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo OF ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo.PRG
+		LOCAL THIS AS ut__foxbin2prg__c_conversor_base__get_SeparatedLineAndComment OF ut__foxbin2prg__c_conversor_base__get_SeparatedLineAndComment.PRG
 	#ENDIF
 
 	#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
@@ -29,7 +29,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase 
 		oFXU_LIB = CREATEOBJECT('CL_FXU_CONFIG')
 		oFXU_LIB.setup_comun()
 
-		THIS.icObj 	= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
+		THIS.icObj 	= NEWOBJECT("c_conversor_base", "FOXBIN2PRG.PRG")
 		loObj			= THIS.icObj
 		loObj.l_Test	= .T.
 
@@ -54,13 +54,14 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase 
 
 	*******************************************************************************************************************************************
 	FUNCTION Evaluate_results
-		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado, tcMemo, tcMemo_Salida, tcMemo_Esperado
+		LPARAMETERS toEx AS EXCEPTION, tnCodError_Esperado ;
+			, tcLinea, tcComentario, tcLinea_Esperada, tcComentario_Esperado
 
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		#ENDIF
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj	= THIS.icObj
+		LOCAL loObj AS c_conversor_base OF "FOXBIN2PRG.PRG"
+		loObj		= THIS.icObj
 
 		IF PCOUNT() = 0
 			THIS.messageout( "* Support method, not a valid test." )
@@ -69,22 +70,20 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase 
 
 		IF ISNULL(toEx)
 			*-- Algunos ajustes para mejor visualización de caracteres especiales
-			tcMemo			= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcMemo )
-			tcMemo_Esperado	= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcMemo_Esperado )
-			tcMemo_Salida	= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcMemo_Salida )
+			tcLinea					= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcLinea )
+			tcLinea_Esperada		= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcLinea_Esperada )
+			tcComentario			= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcComentario )
+			tcComentario_Esperado	= oFXU_LIB.mejorarPresentacionCaracteresEspeciales( tcComentario_Esperado )
+		
 			
 			*-- Visualización de valores
-			THIS.messageout( ' Memo de entrada:' )
-			THIS.messageout( '[' + tcMemo + ']' )
-
-			THIS.messageout( REPLICATE('-',80) )
-
-			THIS.messageout( ' Memo esperado:' )
-			THIS.messageout( '[' + tcMemo_Esperado + ']' )
+			THIS.messageout( ' Linea = [' + TRANSFORM(tcLinea_Esperada) + ']' )
+			THIS.messageout( ' Comentario = [' + TRANSFORM(tcComentario_Esperado) + ']' )
 
 			
 			*-- Evaluación de valores
-			THIS.assertequals( '[' + tcMemo_Esperado + ']', '[' + tcMemo_Salida + ']', "Contenido del Memo de PROCEDURE" )
+			THIS.assertequals( tcLinea_Esperada, tcLinea, "Línea de código" )
+			THIS.assertequals( tcComentario_Esperado, tcComentario, "Comentario" )
 
 		ELSE
 			*-- Evaluación de errores
@@ -98,76 +97,29 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentarMemo AS FxuTestCase 
 
 
 	*******************************************************************************************************************************************
-	FUNCTION Deberia_evaluarUnMemo_PROCEDURE_YQuitarleLaCabecera_PROCEDURE_YElPie_ENDPROC_DejandoSoloElContenido
+	FUNCTION Deberia_DevolverSeparados_LineaDeCodigo_y_Valor
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
-			, lcMemo, lcMemo_Salida, lcMemo_Esperado ;
+			, lcLinea, lcLineaOriginal, lcComentario, lcLinea_Esperada, lcComentario_Esperado ;
 			, loEx AS EXCEPTION
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
+		LOCAL loObj AS c_conversor_base OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
 		loEx		= NULL
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
-
-		TEXT TO lcMemo TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			<<'PROCEDURE miMetodo'>> 
-			Page1.Name = "Page1"
-			<<'ENDPROC'>>
-
-
-		ENDTEXT
+		lcLinea					= '	' + CHR(9) + CHR(9) + '   esta es una linea de código   ' + CHR(9) + ' '
+		lcComentario			= '    ' + CHR(9) + CHR(9) + 'con algunos comentarios  	'
+		lcLineaOriginal			= lcLinea + '&' + '&' + lcComentario
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
-
-		TEXT TO lcMemo_Esperado TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			<<C_TAB>><<C_TAB>>Page1.Name = "Page1"
-		ENDTEXT
-
+		lcLinea_Esperada		= lcLinea
+		lcComentario_Esperado	= LTRIM(lcComentario)
 
 		*-- TEST
-		lcMemo_Salida	= loObj.IndentarMemo( @lcMemo, C_TAB+C_TAB )
+		loObj.get_SeparatedLineAndComment( @lcLineaOriginal, @lcComentario )
 
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, @lcMemo, @lcMemo_Salida, @lcMemo_Esperado )
-
-	ENDFUNC
-
-
-	*******************************************************************************************************************************************
-	FUNCTION Deberia_evaluarUnMemo_PROCEDURE_YDarUnError_1098_Por_ProcedimientoSinCerrar
-		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
-			, lcMemo, lcMemo_Salida, lcMemo_Esperado ;
-			, loEx AS EXCEPTION
-		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
-		loObj		= THIS.icObj
-		loEx		= NULL
-
-		*-- DATOS DE ENTRADA
-		STORE 0 TO lnCodError
-
-		TEXT TO lcMemo TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			<<'PROCEDURE miMetodo'>> 
-			Page1.Name = "Page1"
-
-
-		ENDTEXT
-
-		*-- DATOS ESPERADOS
-		STORE 0 TO lnCodError_Esperado
-		lnCodError_Esperado	= 1098
-
-		TEXT TO lcMemo_Esperado TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-			<<C_TAB>><<C_TAB>>Page1.Name = "Page1"
-		ENDTEXT
-
-
-		*-- TEST
-		TRY
-			lcMemo_Salida	= loObj.IndentarMemo( @lcMemo, C_TAB+C_TAB )
-		CATCH TO loEx
-		ENDTRY
-
-		THIS.Evaluate_results( loEx, lnCodError_Esperado, @lcMemo, @lcMemo_Salida, @lcMemo_Esperado )
+		THIS.Evaluate_results( loEx, lnCodError_Esperado, @lcLinea, @lcComentario, @lcLinea_Esperada, @lcComentario_Esperado )
 
 	ENDFUNC
 

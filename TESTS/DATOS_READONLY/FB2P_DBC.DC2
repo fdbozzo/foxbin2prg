@@ -102,7 +102,16 @@
 					<Comment></Comment>
 					<IsUnique>.T.</IsUnique>
 				</INDEX>
+				<INDEX>
+					<Name>descrip</Name>
+					<Comment></Comment>
+					<IsUnique>.F.</IsUnique>
+				</INDEX>
 			</INDEXES>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</TABLE>
 
 		<TABLE>
@@ -181,17 +190,12 @@
 
 			<INDEXES>
 				<INDEX>
-					<Name>id</Name>
-					<Comment></Comment>
-					<IsUnique>.T.</IsUnique>
-				</INDEX>
-				<INDEX>
-					<Name>edad_nd</Name>
+					<Name>depto</Name>
 					<Comment></Comment>
 					<IsUnique>.F.</IsUnique>
 				</INDEX>
 				<INDEX>
-					<Name>notdeleted</Name>
+					<Name>edad_nd</Name>
 					<Comment></Comment>
 					<IsUnique>.F.</IsUnique>
 				</INDEX>
@@ -201,9 +205,14 @@
 					<IsUnique>.T.</IsUnique>
 				</INDEX>
 				<INDEX>
-					<Name>depto</Name>
+					<Name>i_nombre</Name>
 					<Comment></Comment>
 					<IsUnique>.F.</IsUnique>
+				</INDEX>
+				<INDEX>
+					<Name>id</Name>
+					<Comment></Comment>
+					<IsUnique>.T.</IsUnique>
 				</INDEX>
 				<INDEX>
 					<Name>nombre</Name>
@@ -211,11 +220,23 @@
 					<IsUnique>.F.</IsUnique>
 				</INDEX>
 				<INDEX>
-					<Name>i_nombre</Name>
+					<Name>notdeleted</Name>
 					<Comment></Comment>
 					<IsUnique>.F.</IsUnique>
 				</INDEX>
 			</INDEXES>
+
+			<RELATIONS>
+				<RELATION>
+					<Name>Relation 1</Name>
+					<ChildTable>NOMBRELARGODELDBF</ChildTable>
+					<ParentTable>FB2P_DEPTO</ParentTable>
+					<ChildIndex>DEPTO</ChildIndex>
+					<ParentIndex>DEPTO</ParentIndex>
+					<RefIntegrity></RefIntegrity>
+				</RELATION>
+			</RELATIONS>
+
 		</TABLE>
 	</TABLES>
 
@@ -393,6 +414,10 @@
 					<UpdateName>STROSNC.DB_DEBUG_SETUP.USUARIO</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 
 		<VIEW>
@@ -502,6 +527,123 @@
 					<UpdateName>fb2p_dbc!nombrelargodeldbf.depto</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
+		</VIEW>
+
+		<VIEW>
+			<Name>VW_LOCAL_ENCUESTAS</Name>
+			<Comment></Comment>
+			<Tables></Tables>
+			<SQL>SELECT ENCUESTAS.Promotor,ENCUESTAS.Idenc,ENCUESTAS.Calific,ENCUESTAS.Fecha, ENCUESTAS.Resultado FROM C:\DESA\FOXBIN2PRG\TESTS\DATOS_READONLY\ENCUESTAS.DBF ENCUESTAS</SQL>
+			<AllowSimultaneousFetch>.F.</AllowSimultaneousFetch>
+			<BatchUpdateCount>1</BatchUpdateCount>
+			<CompareMemo>.T.</CompareMemo>
+			<ConnectName></ConnectName>
+			<FetchAsNeeded>.F.</FetchAsNeeded>
+			<FetchMemo>.T.</FetchMemo>
+			<FetchSize>100</FetchSize>
+			<MaxRecords>-1</MaxRecords>
+			<Offline>.T.</Offline>
+			<ParameterList></ParameterList>
+			<Prepared>.F.</Prepared>
+			<RuleExpression></RuleExpression>
+			<RuleText></RuleText>
+			<SendUpdates>.F.</SendUpdates>
+			<ShareConnection>.T.</ShareConnection>
+			<SourceType>1</SourceType>
+			<UpdateType>1</UpdateType>
+			<UseMemoSize>255</UseMemoSize>
+			<WhereType>3</WhereType>
+
+			<FIELDS>
+				<FIELD>
+					<Name>promotor</Name>
+					<Caption></Caption>
+					<Comment></Comment>
+					<DataType>C(20)</DataType>
+					<DefaultValue></DefaultValue>
+					<DisplayClass></DisplayClass>
+					<DisplayClassLibrary></DisplayClassLibrary>
+					<Format></Format>
+					<InputMask></InputMask>
+					<KeyField>.F.</KeyField>
+					<RuleExpression></RuleExpression>
+					<RuleText></RuleText>
+					<Updatable>.F.</Updatable>
+					<UpdateName>promotor</UpdateName>
+				</FIELD>
+				<FIELD>
+					<Name>idenc</Name>
+					<Caption></Caption>
+					<Comment></Comment>
+					<DataType>C(20)</DataType>
+					<DefaultValue></DefaultValue>
+					<DisplayClass></DisplayClass>
+					<DisplayClassLibrary></DisplayClassLibrary>
+					<Format></Format>
+					<InputMask></InputMask>
+					<KeyField>.F.</KeyField>
+					<RuleExpression></RuleExpression>
+					<RuleText></RuleText>
+					<Updatable>.F.</Updatable>
+					<UpdateName>idenc</UpdateName>
+				</FIELD>
+				<FIELD>
+					<Name>calific</Name>
+					<Caption></Caption>
+					<Comment></Comment>
+					<DataType>C(2)</DataType>
+					<DefaultValue></DefaultValue>
+					<DisplayClass></DisplayClass>
+					<DisplayClassLibrary></DisplayClassLibrary>
+					<Format></Format>
+					<InputMask></InputMask>
+					<KeyField>.F.</KeyField>
+					<RuleExpression></RuleExpression>
+					<RuleText></RuleText>
+					<Updatable>.F.</Updatable>
+					<UpdateName>calific</UpdateName>
+				</FIELD>
+				<FIELD>
+					<Name>fecha</Name>
+					<Caption></Caption>
+					<Comment></Comment>
+					<DataType>D</DataType>
+					<DefaultValue></DefaultValue>
+					<DisplayClass></DisplayClass>
+					<DisplayClassLibrary></DisplayClassLibrary>
+					<Format></Format>
+					<InputMask></InputMask>
+					<KeyField>.F.</KeyField>
+					<RuleExpression></RuleExpression>
+					<RuleText></RuleText>
+					<Updatable>.F.</Updatable>
+					<UpdateName>fecha</UpdateName>
+				</FIELD>
+				<FIELD>
+					<Name>resultado</Name>
+					<Caption></Caption>
+					<Comment></Comment>
+					<DataType>C(10)</DataType>
+					<DefaultValue></DefaultValue>
+					<DisplayClass></DisplayClass>
+					<DisplayClassLibrary></DisplayClassLibrary>
+					<Format></Format>
+					<InputMask></InputMask>
+					<KeyField>.F.</KeyField>
+					<RuleExpression></RuleExpression>
+					<RuleText></RuleText>
+					<Updatable>.F.</Updatable>
+					<UpdateName>resultado</UpdateName>
+				</FIELD>
+			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 
 		<VIEW>
@@ -579,6 +721,10 @@
 					<UpdateName>CONVENIOS.HISTORICO</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 
 		<VIEW>
@@ -624,6 +770,10 @@
 					<UpdateName>DUAL.DUMMY</UpdateName>
 				</FIELD>
 			</FIELDS>
+
+			<RELATIONS>
+			</RELATIONS>
+
 		</VIEW>
 	</VIEWS>
 

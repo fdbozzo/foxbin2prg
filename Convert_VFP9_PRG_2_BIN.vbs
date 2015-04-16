@@ -59,7 +59,7 @@ Else
 	oVFP9.DoCmd( "SET PROCEDURE TO '" & cEXETool & "'" )
 	oVFP9.DoCmd( "PUBLIC oFoxBin2prg" )
 	oVFP9.DoCmd( "oFoxBin2prg = CREATEOBJECT('c_foxbin2prg')" )
-	oVFP9.DoCmd( "oFoxBin2prg.cargar_frm_avance()" )
+	oVFP9.DoCmd( "oFoxBin2prg.loadProgressbarForm()" )
 	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress" )
 	
 	For i = 0 To WScript.Arguments.Count-1
@@ -93,13 +93,13 @@ Else
 	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
 	
 	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2Prg.AvanceDelProceso(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
+		oVFP9.DoCmd( "oFoxBin2Prg.updateProgressbar(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
 		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
 
 		If nDebug = 0 Or nDebug = 2 Then
-			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "' )"
+			cCMD	= "oFoxBin2prg.execute( '" & aFiles(i) & "' )"
 		Else
-			cCMD	= "oFoxBin2prg.ejecutar( '" & aFiles(i) & "','PRG2BIN','0','0'," _
+			cCMD	= "oFoxBin2prg.execute( '" & aFiles(i) & "','PRG2BIN','0','0'," _
 				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 				& cFlagRecompile & "," & cFlagNoTimestamps & " )"
 		End If
@@ -149,7 +149,7 @@ Private Sub scanDirs( tcArgument )
 	Dim omFolder, oFolder
 	If FileSystemObject.FolderExists( tcArgument ) Then
 		'-- Es un directorio
-		oVFP9.DoCmd( "oFoxBin2Prg.AvanceDelProceso('Scanning file and directory information on " & tcArgument & "...', 0, 0, 0)" )
+		oVFP9.DoCmd( "oFoxBin2Prg.updateProgressbar('Scanning file and directory information on " & tcArgument & "...', 0, 0, 0)" )
 		Set omFolder = FileSystemObject.GetFolder( tcArgument )
 		For Each oFile IN omFolder.Files
 			evaluateFile( oFile.Path )
@@ -171,11 +171,11 @@ Private Sub evaluateFile( tcFile )
 	'lnPoints = UBound(laPoints)
 	'-- No proceso los archivos con más de un punto (clases en archivos individuales) por performance
 	'If lnPoints = 1 Then
-		'PROCEDURE EvaluarConfiguracion
+		'PROCEDURE evaluateConfiguration
 		'	LPARAMETERS tcDontShowProgress, tcDontShowErrors, tcFlagNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 		'		, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile
-		'oVFP9.DoCmd( "oFoxBin2prg.EvaluarConfiguracion( '1', '1', '', '', '', '', '', '', '" & tcFile & "' )" )
-		'If oVFP9.Eval("oFoxBin2prg.TieneSoporte_Prg2Bin('" & lcExt & "')") Then
+		'oVFP9.DoCmd( "oFoxBin2prg.evaluateConfiguration( '1', '1', '', '', '', '', '', '', '" & tcFile & "' )" )
+		'If oVFP9.Eval("oFoxBin2prg.hasSupport_Prg2Bin('" & lcExt & "')") Then
 			nFile_Count = nFile_Count + 1
 			ReDim Preserve aFiles(nFile_Count)
 			aFiles(nFile_Count) = tcFile
