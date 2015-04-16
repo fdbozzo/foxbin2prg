@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.42'
-    .VersionDate          = Date(2015,04,12)
+    .VersionDate          = Date(2015,04,16)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,7 +17,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2015/04/12	v1.19.42
+2015/04/16	v1.19.42
 - Feature: Added VFP 9 SP1 runtime validation
 - Bug Fix: Broken SourceSafe compatibility because an error is thrown when querying for file support (Tuvia Vinitsky)
 - Bug Fix scx/vcx: Process only one TEXT/ENDTEXT nesting level because TEXT/ENDTEXT can't be nested (Lutz Scheffler)
