@@ -145,7 +145,7 @@
 * 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2, usando *- (Lutz Scheffler)
 * 06/03/2015	FDBOZZO		v1.19.42	Bug Fix pjx: Permitir usar fin de linea (CR/LF) en los atributos de versión del PJX
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Agregado soporte de errOut e implementado en writeErrorLog
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte total de comodines *? en nombres de archivo para procesar múltiples archivos de la misma extensión
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte total de comodines *? en nombres de archivo para procesar múltiples archivos de la misma extensión (Lutz Scheffler)
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo parámetro para permitir un CFG alternativo (Lutz Scheffler)
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo método get_Processed() para obtener información de los archivos procesados (Lutz Scheffler)
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva salida de archivos procesados a stdOut (Lutz Scheffler)
@@ -2781,7 +2781,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 			CD (JUSTPATH(THIS.c_CurDir))
 
 			DO CASE
-			CASE ATC('-SHOWMSG', ('-' + tcType)) >= 1 OR THIS.l_ShowErrors
+			CASE EVL( lcInputFile_Type, C_FILETYPE_QUERYSUPPORT ) <> C_FILETYPE_QUERYSUPPORT ;
+					AND ( ATC('-SHOWMSG', ('-' + tcType)) >= 1 OR THIS.l_ShowErrors )
 				THIS.writeErrorLog_Flush()
 
 				DO CASE
@@ -3439,10 +3440,23 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* RETORNO					(@?    OUT) Objeto CFG
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcDir
+
 		IF NOT EMPTY(tcDir)
 			THIS.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
 		ENDIF
-		RETURN THIS.o_Configuration(THIS.n_CFG_Actual)
+
+		IF THIS.n_CFG_Actual = 0 THEN
+			loCFG = NULL
+		ELSE
+			loCFG = THIS.o_Configuration(THIS.n_CFG_Actual)
+		ENDIF
+
+		IF ISNULL(loCFG) THEN
+			lo_CFG	= CREATEOBJECT('CL_CFG')
+			lo_CFG.CopyFrom(THIS)
+		ENDIF
+
+		RETURN loCFG
 	ENDPROC
 
 

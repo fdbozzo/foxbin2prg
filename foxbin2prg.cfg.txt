@@ -21,7 +21,6 @@
 * ClearUniqueID: 1				&& 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge / 0=Mantener UniqueID, 1=Borrar Unique ID. Util para Diff y Merge
 * ClearDBFLastUpdate: 1			&& 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff. / 0=Mantener DBF LastDate, , 1=Borrar DBF LastDate. Util para Diff.
 * OptimizeByFilestamp: 0		&& Optimize file regeneration depending on file timestamp / Optimizar la regeneración de archivos dependiendo del timestamp de archivo
-* AllowMultiConfig: 1			&& 1=Allow CFG files per directory. if no CFG found, then use Main CFG. 0=Only use Main CFG
 * DropNullCharsFromCode: 1		&& 1=Drop NULL chars from source code / 0=Leave Nulls in code, if any
 * Language: (auto)				&& Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 
@@ -36,11 +35,11 @@
 * DBF_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge), 4=Generate TXT with DATA for DIFF (No Bidirectional!)
 * >>DBF_Conversion_Support NOTE:	>> EN: FoxBin2Prg support bi-directional convertion of DBFs, but does not keep data. Use with care.
 *									>> ES: FoxBin2Prg tiene soporte bi-direccional para convertir DBF, pero no mantiene los datos. Usar con cuidado.
-* DBF_Conversion_Included: *	&& If DBF_Conversion_Support:4, you can specify mnultiple filemasks: www,fb2p_free.dbf / Si DBF_Conversion_Support:4, se pueden indicar múltiples máscaras de archivo: www,fb2p_free.dbf
-* DBF_Conversion_Excluded:  	&& If DBF_Conversion_Support:4, you can specify mnultiple filemasks: www,fb2p_free.dbf / Si DBF_Conversion_Support:4, se pueden indicar múltiples máscaras de archivo: www,fb2p_free.dbf
+* DBF_Conversion_Included: *	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf / Si DBF_Conversion_Support:4, se pueden indicar múltiples máscaras de archivo: www,fb2p_free.dbf
+* DBF_Conversion_Excluded:  	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf / Si DBF_Conversion_Support:4, se pueden indicar múltiples máscaras de archivo: www,fb2p_free.dbf
 
 *-- "CLASS PER FILE" OPTIONS (UseClassPerFile: 1) / OPCIONES DE "CLASE POR ARCHIVO" (UseClassPerFile: 1)
-* UseClassPerFile: 0			&& 0=One library tx2 file, 1=Multiple file.class.tx2 files / 0=Una archivo librería tx2, 1=Múltiples archivo.clase.tx2
+* UseClassPerFile: 0			&& 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members / 0=Una archivo librería tx2, 1=Múltiples archivo.clase.tx2, 2=Múltiples archivo.clasebase.clase.tx2 incluendo miembros DBC
 * RedirectClassPerFileToMain: 0	&& 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2 / 0=No redireccionar a archivo.tx2, 1=Redireccionar a archivo.tx2 cuando se seleccione archivo.clase.tx2
 * ClassPerFileCheck: 0			&& 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion / 0=No verificar la inclusión de archivo.clase.tx2, 1=Verificar la inclusión de archivo.clase.tx2
 *

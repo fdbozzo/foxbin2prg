@@ -32,7 +32,7 @@ Change History -------------------------------------------------------------
 - Bug Fix pjx/pj2: If end of line (CR+LF) is used on pjx's "Build" properties data, generated pj2 is malformed
 - Feature: Default foxbin2prg.cfg configuration file renamed to foxbin2prg.cfg.txt to no overwrite user cfg (Lutz Scheffler)
 - Added DOS errOut output support and implemented in writeErrorLog when logging errors
-- Feature: Added full support for *? file masks for multi-processing files of the same extension
+- Feature: Added full support for *? file masks for multi-processing files of the same extension (Lutz Scheffler)
 - Feature (API): Added new parameter to allow alternative main CFG (Lutz Scheffler)
 - Feature (API): Added new get_Processed() method for obtaining information about processed files (Lutz Scheffler)
 - Feature: Added new file processing output to DOS stdOut (Lutz Scheffler)
