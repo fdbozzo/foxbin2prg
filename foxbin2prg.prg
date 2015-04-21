@@ -2782,7 +2782,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			DO CASE
 			CASE EVL( lcInputFile_Type, C_FILETYPE_QUERYSUPPORT ) <> C_FILETYPE_QUERYSUPPORT ;
-					AND ( ATC('-SHOWMSG', ('-' + tcType)) >= 1 OR THIS.l_ShowErrors )
+					AND ( ATC('-SHOWMSG', ('-' + tcType)) >= 1 OR THIS.l_ShowErrors AND lnCodError > 0 )
 				THIS.writeErrorLog_Flush()
 
 				DO CASE
