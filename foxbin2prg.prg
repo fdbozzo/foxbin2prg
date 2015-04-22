@@ -159,6 +159,7 @@
 * 12/04/2015	FDBOZZO		v1.19.42	Mejora API: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Lutz Scheffler)
 * 13/04/2015	FDBOZZO		v1.19.42	Mejora: Permitir generar texto de una clase de una librería (Lutz Scheffler)
 * 16/04/2015	FDBOZZO		v1.19.42	Mejora API: Renombrados los nombres de los métodos al Inglés para facilitar su entendimiento internacional (Mike Potjer)
+* 23/04/2015	FDBOZZO		v1.19.43	Mejora: Nueva configuración "RemoveZOrderSetFromProps" para quitar la propiedad ZOrderSet cuando se quiere mantener el ZOrder de la clase original siempre y evitar diferencias innecesarias (Ryan Harris)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -239,6 +240,7 @@
 * 10/04/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Agregado en v1.19.42)
 * 12/04/2015	Lutz Scheffler		Mejora v1.19.41: Permitir generar texto de una clase de una librería (Agregado en v1.19.42)
 * 15/04/2015	Mike Potjer			Sugerencia v1.19.41: Los nombres de los métodos en Inglés facilitarían su entendimiento a más personas (Agregado en v1.19.42)
+* 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quie los ZOrderProps que cambian constantemente y provocan diferencias (Agregado en v1.19.43)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -526,7 +528,6 @@ QUIT
 
 DEFINE CLASS c_foxbin2prg AS Session
 	_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="addprocessedfile" display="addProcessedFile"/>] ;
 		+ [<memberdata name="updateprogressbar" display="updateProgressbar"/>] ;
 		+ [<memberdata name="a_processedfiles" display="a_ProcessedFiles"/>] ;
 		+ [<memberdata name="clearprocessedfiles" display="clearProcessedFiles"/>] ;
@@ -578,7 +579,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="unloadprogressbarform" display="unloadProgressbarForm"/>] ;
 		+ [<memberdata name="run_aftercreatetable" display="run_AfterCreateTable"/>] ;
 		+ [<memberdata name="run_aftercreate_db2" display="run_AfterCreate_DB2"/>] ;
-		+ [<memberdata name="lfilemode" display="lFileMode"/>] ;
 		+ [<memberdata name="l_autoclearprocessedfiles" display="l_AutoClearProcessedFiles"/>] ;
 		+ [<memberdata name="l_cancelwithesckey" display="l_CancelWithEscKey"/>] ;
 		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
@@ -586,11 +586,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
-		+ [<memberdata name="l_dropnullcharsfromcode" display="l_DropNullCharsFromCode"/>] ;
+		+ [<memberdata name="l_removenullcharsfromcode" display="l_RemoveNullCharsFromCode"/>] ;
+		+ [<memberdata name="l_removezordersetfromprops" display="l_RemoveZOrderSetFromProps"/>] ;
 		+ [<memberdata name="l_error" display="l_Error"/>] ;
 		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
-		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
@@ -682,7 +682,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_AutoClearProcessedFiles		= .T.			&& Por defecto limpia archivos procesados entre ejecución y ejecución
 	l_ProcessFiles					= .T.			&& Por defecto procesa los archivos. En .F. sirve para obtener sus nombres sin reescribirlos.
 	l_CancelWithEscKey				= .T.
-	l_DropNullCharsFromCode			= .T.
+	l_RemoveNullCharsFromCode		= .T.
+	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
 	n_UseClassPerFile				= 0
 	l_ClassPerFileCheck				= .F.
@@ -1070,6 +1071,24 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.l_RedirectClassPerFileToMain
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_RedirectClassPerFileToMain, THIS.l_RedirectClassPerFileToMain )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_RemoveNullCharsFromCode_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_RemoveNullCharsFromCode
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_RemoveNullCharsFromCode, THIS.l_RemoveNullCharsFromCode )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE l_RemoveZOrderSetFromProps_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.l_RemoveZOrderSetFromProps
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_RemoveZOrderSetFromProps, THIS.l_RemoveZOrderSetFromProps )
 		ENDIF
 	ENDPROC
 
@@ -1913,11 +1932,18 @@ DEFINE CLASS c_foxbin2prg AS Session
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + TRANSFORM(lcValue) )
 							ENDIF
 
-						CASE LEFT( laConfig(I), 22 ) == LOWER('DropNullCharsFromCode:')
-							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 23 ) )
+						CASE LEFT( laConfig(I), 24 ) == LOWER('RemoveNullCharsFromCode:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 25 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
-								lo_CFG.l_DropNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
-								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DropNullCharsFromCode:      ' + TRANSFORM(lcValue) )
+								lo_CFG.l_RemoveNullCharsFromCode	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RemoveNullCharsFromCode:    ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(I), 25 ) == LOWER('RemoveZOrderSetFromProps:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 26 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.l_RemoveZOrderSetFromProps	= ( TRANSFORM(lcValue) == '1' )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RemoveZOrderSetFromProps:   ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 9 ) == LOWER('Language:')
@@ -2063,7 +2089,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( C_TAB + 'c_BackgroundImage:            ' + TRANSFORM(.c_BackgroundImage) )
 				.writeLog( C_TAB + 'n_OptimizeByFilestamp:        ' + TRANSFORM(.n_OptimizeByFilestamp) )
-				.writeLog( C_TAB + 'l_DropNullCharsFromCode:      ' + TRANSFORM(.l_DropNullCharsFromCode) )
+				.writeLog( C_TAB + 'l_RemoveNullCharsFromCode:    ' + TRANSFORM(.l_RemoveNullCharsFromCode) )
+				.writeLog( C_TAB + 'l_RemoveZOrderSetFromProps:   ' + TRANSFORM(.l_RemoveZOrderSetFromProps) )
 				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
 				.writeLog( C_TAB + 'c_Language:                   ' + TRANSFORM(.c_Language) )
 
@@ -6807,11 +6834,18 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	PROCEDURE classProps2Memo
-		*-- ARMA EL MEMO DE PROPERTIES CON LAS PROPIEDADES Y SUS VALORES
-		LPARAMETERS toClase
+		*--------------------------------------------------------------------------------------------------------------
+		* ARMA EL MEMO DE PROPERTIES CON LAS PROPIEDADES Y SUS VALORES
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toClase					(!@ IN    ) Objeto de la Clase
+		* toFoxBin2Prg				(@? IN    ) Referencia al objeto principal
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS toClase, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		*-- ESTRUCTURA A ANALIZAR: Propiedades normales, con CR codificado (<fb2p_value>) y con CR+LF (<fb2p_value>)
@@ -6849,6 +6883,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 					*-- ARMO EL MEMO A DEVOLVER
 					FOR I = 1 TO lnPropsAndValues_Count
+						*
+						* Skip ZOrderSet if configured to
+						*
+						IF toFoxBin2Prg.l_RemoveZOrderSetFromProps AND ATC( '.ZOrderSet.', '.' + laPropsAndValues(I, 1) + '.' ) > 0 THEN
+							LOOP
+						ENDIF
 						lcMemo	= lcMemo + laPropsAndValues(I,1) + ' = ' + laPropsAndValues(I,2) + CR_LF
 					ENDFOR
 				ENDWITH
@@ -7424,7 +7464,17 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	PROCEDURE analyzeCodeBlock_ADD_OBJECT
-		LPARAMETERS toModulo, toClase, tcLine, I, taCodeLines, tnCodeLines
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@ IN    ) Objeto del Modulo
+		* toClase					(!@ IN    ) Objeto de la Clase
+		* tcLine					(!@ IN    ) Línea de datos en evaluación
+		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
+		* I							(!@ IN    ) Número de línea en evaluación
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
+		* toFoxBin2Prg				(?@ IN    ) Referencia al objeto principal
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS toModulo, toClase, tcLine, I, taCodeLines, tnCodeLines, toFoxBin2Prg
 
 		EXTERNAL ARRAY taCodeLines
 
@@ -7432,6 +7482,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			LOCAL toModulo AS CL_CLASSLIB OF 'FOXBIN2PRG.PRG'
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 			LOCAL toObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -7541,9 +7592,23 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						IF RIGHT(tcLine, 3) == ', ;'	&& VALOR INTERMEDIO CON ", ;"
 							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
+							
+							*
+							* Skip ZOrderSet if configured to
+							*
+							IF toFoxBin2Prg.l_RemoveZOrderSetFromProps AND ATC( '.ZOrderSet.', '.' + lcProp + '.' ) > 0 THEN
+								LOOP
+							ENDIF
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ELSE	&& VALOR FINAL SIN ", ;" (JUSTO ANTES DEL <END OBJECT>)
 							.get_SeparatedPropAndValue( tcLine, @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
+							
+							*
+							* Skip ZOrderSet if configured to
+							*
+							IF toFoxBin2Prg.l_RemoveZOrderSetFromProps AND ATC( '.ZOrderSet.', '.' + lcProp + '.' ) > 0 THEN
+								LOOP
+							ENDIF
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ENDIF
 
@@ -7674,14 +7739,29 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 
 	PROCEDURE analyzeCodeBlock_DEFINE_CLASS
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@ IN    ) Objeto del Modulo
+		* toClase					(!@ IN    ) Objeto de la Clase
+		* tcLine					(!@ IN    ) Línea de datos en evaluación
+		* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
+		* I							(!@ IN    ) Número de línea en evaluación
+		* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
+		* tcProcedureAbierto		(!v IN    ) Nombre del Procedure abierto
+		* taLineasExclusion			(!@ IN    ) Array de líneas de exclusión
+		* tnBloquesExclusion		(!@ IN    ) Cantidad de líneas de exclusión
+		* tc_Comentario				(!v IN    ) Comentario
+		* toFoxBin2Prg				(@? IN    ) Referencia al objeto principal
+		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS toModulo, toClase, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto ;
-			, taLineasExclusion, tnBloquesExclusion, tc_Comentario
+			, taLineasExclusion, tnBloquesExclusion, tc_Comentario, toFoxBin2Prg
 
 		EXTERNAL ARRAY taCodeLines, tnBloquesExclusion, taLineasExclusion
 
 		#IF .F.
 			LOCAL toModulo AS CL_CLASSLIB OF 'FOXBIN2PRG.PRG'
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		LOCAL llBloqueEncontrado
@@ -7772,7 +7852,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							llDEFINED_PAM_Completed	= .T.
 
 
-						CASE .analyzeCodeBlock_ADD_OBJECT( @toModulo, @toClase, @tcLine, @I, @taCodeLines, @tnCodeLines )
+						CASE .analyzeCodeBlock_ADD_OBJECT( @toModulo, @toClase, @tcLine, @I, @taCodeLines, @tnCodeLines, @toFoxBin2Prg )
 							STORE .T. TO llCLASSCOMMENTS_Completed ;
 								, llCLASS_PROPERTY_Completed ;
 								, llPROTECTED_Completed ;
@@ -7813,12 +7893,12 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 						ERROR (TEXTMERGE(loLang.C_ENDDEFINE_MARKER_NOT_FOUND_LOC))
 					ENDIF
 
-					toClase._PROPERTIES		= .classProps2Memo( toClase )
-					toClase._PROTECTED		= .hiddenAndProtected_PAM( toClase )
-					toClase._METHODS		= .classMethods2Memo( toClase )
+					toClase._PROPERTIES		= .classProps2Memo( @toClase, @toFoxBin2Prg )
+					toClase._PROTECTED		= .hiddenAndProtected_PAM( @toClase )
+					toClase._METHODS		= .classMethods2Memo( @toClase )
 					toClase._RESERVED1		= IIF( .c_Type = 'SCX', '', 'Class' )
 					toClase._RESERVED2		= IIF( .c_Type = 'VCX' OR PROPER(toClase._Class) == 'Dataenvironment', TRANSFORM( toClase._AddObject_Count + 1 ), '' )
-					toClase._RESERVED3		= .defined_PAM2Memo( toClase )
+					toClase._RESERVED3		= .defined_PAM2Memo( @toClase )
 					toClase._RESERVED4		= toClase._ClassIcon
 					toClase._RESERVED5		= toClase._ProjectClassIcon
 					toClase._RESERVED6		= toClase._Scale
@@ -8373,7 +8453,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 								OR .lineIsOnlyCommentAndNoMetadata( @lcLine, @lc_Comentario ) && Excluida, vacía o solo Comentarios
 
 						CASE .analyzeCodeBlock_DEFINE_CLASS( @toModulo, @loClase, @lcLine, @taCodeLines, @I, tnCodeLines ;
-								, @lcProcedureAbierto, @taLineasExclusion, @tnBloquesExclusion, @lc_Comentario )
+								, @lcProcedureAbierto, @taLineasExclusion, @tnBloquesExclusion, @lc_Comentario, @toFoxBin2Prg )
 							*-- Puede haber varias clases definidas
 							*	llEXTERNAL_CLASS_Completed	= .T.
 
@@ -11948,11 +12028,17 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		* tnSort					(v? IN    ) Indica si se deben ordenar alfabéticamente los objetos y props (1), o no (0)
 		* taPropsAndValues			(!@    OUT) Array con las propiedades y comentarios
 		* tnPropsAndValues_Count	(!@    OUT) Cantidad de propiedades
-		* tcSortedMemo				(@?    OUT) Contenido del campo memo ordenado
+		* tcSortedMemo				(?@    OUT) Contenido del campo memo ordenado
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo
+		LPARAMETERS tcMemo, tnSort, taPropsAndValues, tnPropsAndValues_Count, tcSortedMemo, toFoxBin2Prg
 
 		EXTERNAL ARRAY taPropsAndValues
+
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
 
 		TRY
 			LOCAL laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods, lcLastIncompletePropName
@@ -12022,6 +12108,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 								*
 								*-- Solución: Guardar esta parte del nombre y agregarlo a la próxima propiedad.
 								lcLastIncompletePropName	= laItems(I)
+								LOOP
+							ENDIF
+							
+							* Skip ZOrderSet property if configured to
+							IF toFoxBin2Prg.l_RemoveZOrderSetFromProps AND ATC( '.ZOrderSet.', '.' + lcLastIncompletePropName + LEFT( laItems(I), lnPosEQ - 2 ) + '.' ) > 0 THEN
+								lcLastIncompletePropName	= ''
 								LOOP
 							ENDIF
 
@@ -12468,7 +12560,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 					*-- Analyze and count line methods, get method names and consolidate block code
 					FOR I = 1 TO lnLineCount
-						IF toFoxBin2Prg.l_DropNullCharsFromCode
+						IF toFoxBin2Prg.l_RemoveNullCharsFromCode
 							laLine(I)	= CHRTRAN( laLine(I), C_NULL_CHAR, '' )
 						ENDIF
 
@@ -12640,10 +12732,17 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 	PROCEDURE write_ADD_OBJECTS_WithProperties
-		LPARAMETERS toRegObj, tcCodigo
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toRegObj					(v! IN    ) Objeto de registro
+		* tcCodigo					(@?    OUT) Codigo generado
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toRegObj, tcCodigo, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toRegObj AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -12651,7 +12750,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				*-- Defino los objetos a cargar
-				.get_PropsAndValuesFrom_PROPERTIES( toRegObj.PROPERTIES, 1, @laPropsAndValues, @lnPropsAndValues_Count, @lcMemo )
+				.get_PropsAndValuesFrom_PROPERTIES( toRegObj.PROPERTIES, 1, @laPropsAndValues, @lnPropsAndValues_Count, @lcMemo, @toFoxBin2Prg )
 				lcMemo	= .set_MultilineMemoWithAddObjectProperties( @laPropsAndValues, @lnPropsAndValues_Count, C_TAB + C_TAB, .T. )
 
 				IF '.' $ toRegObj.PARENT
@@ -12757,7 +12856,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	PROCEDURE write_CLASS_PROPERTIES
 		LPARAMETERS toRegClass, taPropsAndValues, taPropsAndComments, taProtected ;
-			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count, tcCodigo
+			, tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count, tcCodigo, toFoxBin2Prg
 
 		EXTERNAL ARRAY taPropsAndValues, taPropsAndComments
 
@@ -12771,7 +12870,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				DIMENSION taProtected(1)
 				STORE '' TO lcHiddenProp, lcProtectedProp, lcPropsMethodsDefd
 				STORE 0 TO tnPropsAndValues_Count, tnPropsAndComments_Count, tnProtected_Count
-				.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, 1, @taPropsAndValues, @tnPropsAndValues_Count, '' )
+				.get_PropsAndValuesFrom_PROPERTIES( toRegClass.PROPERTIES, 1, @taPropsAndValues, @tnPropsAndValues_Count, '', @toFoxBin2Prg )
 				.get_PropsAndCommentsFrom_RESERVED3( toRegClass.RESERVED3, .T., @taPropsAndComments, @tnPropsAndComments_Count, '' )
 				.get_PropsFrom_PROTECTED( toRegClass.PROTECTED, .T., @taProtected, @tnProtected_Count, '' )
 
@@ -13628,7 +13727,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
-						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo )
+						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo, @toFoxBin2Prg )
 
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
 
@@ -13636,7 +13735,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					FOR I = 1 TO lnObjCount
-						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo )
+						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo, @toFoxBin2Prg )
 					ENDFOR
 
 
@@ -13972,7 +14071,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
-						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo )
+						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo, @toFoxBin2Prg )
 
 					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
 
@@ -13980,7 +14079,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 					FOR I = 1 TO lnObjCount
-						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo )
+						.write_ADD_OBJECTS_WithProperties( laObjs(I,1), @lcCodigo, @toFoxBin2Prg )
 					ENDFOR
 
 
@@ -25005,6 +25104,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_ClearDBFLastUpdate			= NULL
 	n_OptimizeByFilestamp			= NULL
 	l_RedirectClassPerFileToMain	= NULL
+	l_RemoveNullCharsFromCode		= NULL
+	l_RemoveZOrderSetFromProps		= NULL
 	n_UseClassPerFile				= NULL
 	l_ClassPerFileCheck				= NULL
 	n_ExtraBackupLevels				= NULL
@@ -25046,6 +25147,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.l_ClearDBFLastUpdate			= toParentCFG.l_ClearDBFLastUpdate
 			.n_OptimizeByFilestamp			= toParentCFG.n_OptimizeByFilestamp
 			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
+			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
+			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
