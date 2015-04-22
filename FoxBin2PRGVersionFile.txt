@@ -18,7 +18,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 Change History -------------------------------------------------------------
 
 2015/04/23	v1.19.43
-
+- Feature: Added new CFG setting "RemoveZOrderSetFromProps" for removing ZOrderSet property when you want to maintain the original class ZOrder always and avoid unnecesary differences (Ryan Harris)
 
 
 
@@ -291,7 +291,7 @@ Change History -------------------------------------------------------------
 - Fix on PJX regeneration caused for something missing in the last change of "Autor" to "Author"
 
 2014/01/08 	v1.19.1
-- Small change on TX2 headers to drop the "Generated" timestamp that causes innecesary differences / Updated the EXE version with the correct one
+- Small change on TX2 headers to drop the "Generated" timestamp that causes unnecesary differences / Updated the EXE version with the correct one
 
 2014/01/08 	v1.19
 - Added new debug flag on .vbs scripts to show a "End process" message for batch processing
