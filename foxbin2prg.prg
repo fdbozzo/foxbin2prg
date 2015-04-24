@@ -160,6 +160,7 @@
 * 13/04/2015	FDBOZZO		v1.19.42	Mejora: Permitir generar texto de una clase de una librería (Lutz Scheffler)
 * 16/04/2015	FDBOZZO		v1.19.42	Mejora API: Renombrados los nombres de los métodos al Inglés para facilitar su entendimiento internacional (Mike Potjer)
 * 23/04/2015	FDBOZZO		v1.19.43	Mejora: Nueva configuración "RemoveZOrderSetFromProps" para quitar la propiedad ZOrderSet cuando se quiere mantener el ZOrder de la clase original siempre y evitar diferencias innecesarias (Ryan Harris)
+* 23/04/2015	FDBOZZO		v1.19.43	Mejora: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -240,7 +241,8 @@
 * 10/04/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Agregado en v1.19.42)
 * 12/04/2015	Lutz Scheffler		Mejora v1.19.41: Permitir generar texto de una clase de una librería (Agregado en v1.19.42)
 * 15/04/2015	Mike Potjer			Sugerencia v1.19.41: Los nombres de los métodos en Inglés facilitarían su entendimiento a más personas (Agregado en v1.19.42)
-* 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quie los ZOrderProps que cambian constantemente y provocan diferencias (Agregado en v1.19.43)
+* 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quite los ZOrderProps de los objetos, que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Agregado en v1.19.43)
+* 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2346,7 +2348,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
-					ERROR C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+					ERROR loLang.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
 				ENDIF
 
 				IF .l_AutoClearProcessedFiles THEN
@@ -2789,10 +2791,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDIF
 			ENDIF
 
-			*IF THIS.l_ShowErrors AND ATC('-SHOWMSG', ('-' + tcType)) >= 1
-			*	MESSAGEBOX( lcErrorInfo, 0 + lnErrorIcon + 4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
-			*ENDIF
-
 			IF tlRelanzarError
 				THROW
 			ENDIF
@@ -2809,13 +2807,17 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			DO CASE
 			CASE EVL( lcInputFile_Type, C_FILETYPE_QUERYSUPPORT ) <> C_FILETYPE_QUERYSUPPORT ;
-					AND ( ATC('-SHOWMSG', ('-' + tcType)) >= 1 OR THIS.l_ShowErrors AND lnCodError > 0 )
+					AND ATC('-SHOWMSG', ('-' + tcType)) >= 1 ;
+					OR THIS.l_ShowErrors AND lnCodError > 0 AND NOT ISNULL(toEx)
 				THIS.writeErrorLog_Flush()
 
 				DO CASE
+				CASE lnCodError = 1098	&& User Error
+					MESSAGEBOX( toEx.Message, 0+64+4096, 'FoxBin2Prg', 60000 )
+					loWSH.Run( THIS.c_ErrorLogFile, 3 )
+
 				CASE lnCodError = 1799	&& Conversion Cancelled
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg', 60000 )
-					*loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				CASE THIS.l_Error
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg', 60000 )
@@ -3993,6 +3995,7 @@ DEFINE CLASS frm_avance AS Form
 	Width = 628
 	ShowWindow = 2
 	DoCreate = .T.
+	AllowOutput = .F.
 	AutoCenter = .T.
 	BorderStyle = 2
 	ControlBox = .F.
@@ -4469,6 +4472,7 @@ DEFINE CLASS frm_interactive AS Form
 	Width = 380
 	ShowWindow = 2
 	DoCreate = .T.
+	AllowOutput = .F.
 	AutoCenter = .T.
 	BorderStyle = 2
 	Caption = "FoxBin2Prg"

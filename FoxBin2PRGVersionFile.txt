@@ -18,8 +18,8 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 Change History -------------------------------------------------------------
 
 2015/04/23	v1.19.43
-- Feature: Added new CFG setting "RemoveZOrderSetFromProps" for removing ZOrderSet property when you want to maintain the original class ZOrder always and avoid unnecesary differences (Ryan Harris)
-
+- Feature: Added new CFG setting "RemoveZOrderSetFromProps" for removing ZOrderSet property when you want to maintain the original class ZOrder always, avoid unnecesary differences and fix some visual on top/on bottom control problems (Ryan Harris)
+- Feature: Do not allow progressbar window become the default output window of ? command (Lutz Scheffler)
 
 
 2015/04/16	v1.19.42
