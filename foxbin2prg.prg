@@ -2334,6 +2334,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, loFSO AS Scripting.FileSystemObject ;
 				, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, loFrm_Interactive	AS frm_interactive OF 'FOXBIN2PRG.PRG' ;
+				, loFrm_Main AS frm_main OF 'FOXBIN2PRG.PRG' ;
 				, loWSH AS WScript.Shell
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -2347,9 +2348,18 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lcInputFile_Type	= ''
 
 
-				IF VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+				DO CASE
+				CASE VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
 					ERROR loLang.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
-				ENDIF
+
+				CASE '\' $ tcType
+					ERROR loLang.C_INVALID_PARAMETER_LOC + ':' + CR_LF ;
+						+ 'tcType = "' + tcType + '"' + CR_LF ;
+						+ CR_LF ;
+						+ loLang.C_ALLOWED_VALUES_ARE_LOC + ': ' + CR_LF ;
+						+ '*, *-, -BIN2PRG, -PRG2BIN, -SHOWMSG'
+
+				ENDCASE
 
 				IF .l_AutoClearProcessedFiles THEN
 					.clearProcessedFiles()			&& Para evitar acumular procesos anteriores
@@ -2435,13 +2445,16 @@ DEFINE CLASS c_foxbin2prg AS Session
 				DO CASE
 				CASE VERSION(5) < 900
 					*-- '¡FOXBIN2PRG es solo para Visual FoxPro 9.0!'
-					MESSAGEBOX( loLang.C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, loLang.C_FOXBIN2PRG_WARN_CAPTION_LOC + ' (' + .c_Language + ')', 60000 )
+					MESSAGEBOX( loLang.C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_WARN_CAPTION_LOC + ' (' + .c_Language + ')', 60000 )
 					lnCodError	= 1
 
 				CASE EMPTY(tc_InputFile)
 					*-- (Ejemplo de sintaxis y uso)
-					MESSAGEBOX( loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC, 0+64+4096, loLang.C_FOXBIN2PRG_INFO_SINTAX_LOC + ' (' + .c_Language + ')', 60000 )
-					lnCodError	= 1
+					*MESSAGEBOX( loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_LOC + ' (' + .c_Language + ')', 60000 )
+					loFrm_Main	= CREATEOBJECT('frm_main', THIS)
+					loFrm_Main.Show()
+					READ EVENTS
+					lnCodError	= 0
 
 				OTHERWISE
 					*-- EJECUCIÓN NORMAL
@@ -2486,7 +2499,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					CASE lcInputFile_Type == C_FILETYPE_FILE AND ( '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile ) )
 						IF .l_ShowErrors
 							*MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).', 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
-							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
+							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
 							EXIT
 						ELSE
 							ERROR loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC
@@ -2813,18 +2826,18 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				DO CASE
 				CASE lnCodError = 1098	&& User Error
-					MESSAGEBOX( toEx.Message, 0+64+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( toEx.Message, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 					loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				CASE lnCodError = 1799	&& Conversion Cancelled
-					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 
 				CASE THIS.l_Error
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 					loWSH.Run( THIS.c_ErrorLogFile, 3 )
 
 				OTHERWISE
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '', 0+64+4096, 'FoxBin2Prg', 60000 )
+					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 
 				ENDCASE
 
@@ -4430,11 +4443,12 @@ DEFINE CLASS frm_avance AS Form
 			ENDIF
 
 			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
-				THIS.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
+				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
+
 			IF FILE( toFoxBin2Prg.c_BackgroundImage ) THEN
 				CLEAR RESOURCES
-				THIS.Picture = toFoxBin2Prg.c_BackgroundImage
+				THISFORM.Picture = toFoxBin2Prg.c_BackgroundImage
 			ENDIF
 		ENDIF
 
@@ -4476,8 +4490,11 @@ DEFINE CLASS frm_interactive AS Form
 	AutoCenter = .T.
 	BorderStyle = 2
 	Caption = "FoxBin2Prg"
-	ControlBox = .F.
+	Closable = .T.
+	ControlBox = .T.
 	AlwaysOnTop = .T.
+	MaxButton = .F.
+	MinButton = .F.
 	BackColor = RGB(255,255,255)
 	n_ConversionType = 3
 	l_FileTimeStampOptimization = .F.
@@ -4570,11 +4587,18 @@ DEFINE CLASS frm_interactive AS Form
 			THISFORM.l_FileTimeStampOptimization = (toFoxBin2Prg.n_OptimizeByFilestamp <> 0)
 
 			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
-				THIS.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
+				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
 		ENDIF
 	ENDPROC
 
+
+	PROCEDURE QueryUnload
+		THISFORM.n_ConversionType = 3
+		NODEFAULT
+		THISFORM.do_selection()
+		
+	ENDPROC
 
 	PROCEDURE do_selection
 		THISFORM.Hide()
@@ -4602,6 +4626,90 @@ DEFINE CLASS frm_interactive AS Form
 		THISFORM.do_selection()
 	ENDPROC
 
+
+ENDDEFINE
+
+
+
+DEFINE CLASS frm_main AS form 
+	AllowOutput = .F.
+	AlwaysOnTop = .T.
+	AutoCenter = .T.
+	BackColor = (RGB(255,255,255))
+	BorderStyle = 2
+	Caption = "FoxBin2Prg <x>"
+	Closable = .T.
+	ControlBox = .T.
+	DoCreate = .T.
+	Height = 380
+	KeyPreview = .T.
+	MaxButton = .F.
+	MinButton = .F.
+	Name = "FRM_MAIN"
+	ShowWindow = 2
+	Width = 756
+
+	ADD OBJECT 'cmd_Close' AS commandbutton WITH ;
+		Cancel = .T., ;
+		Caption = "Cerrar", ;
+		Height = 27, ;
+		Left = 656, ;
+		Name = "cmd_Close", ;
+		Top = 344, ;
+		Width = 84
+		*< END OBJECT: BaseClass="commandbutton" />
+
+	ADD OBJECT 'edt_Help' AS editbox WITH ;
+		BackStyle = 0, ;
+		BorderStyle = 0, ;
+		DisabledForeColor = (RGB(0,0,0)), ;
+		Enabled = .F., ;
+		Height = 324, ;
+		Left = 12, ;
+		Name = "edt_Help", ;
+		ScrollBars = 0, ;
+		Top = 12, ;
+		Width = 728
+		*< END OBJECT: BaseClass="editbox" />
+	
+	PROCEDURE Init
+		LPARAMETERS toFoxBin2Prg
+		
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		
+		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		
+		IF VARTYPE(toFoxBin2Prg) = "O" THEN
+			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
+				loLang			= _SCREEN.o_FoxBin2Prg_Lang
+		
+				IF PEMSTATUS(_SCREEN, 'c_FB2PRG_EXE_Version', 5) THEN
+					THISFORM.Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_LOC
+				ENDIF
+		
+				THISFORM.edt_help.Value		= loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC
+			ENDIF
+		
+			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
+				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
+			ENDIF
+		ENDIF
+		
+	ENDPROC
+
+	PROCEDURE QueryUnload
+		CLEAR EVENTS
+		NODEFAULT
+		
+	ENDPROC
+
+	PROCEDURE cmd_Close.Click
+		THISFORM.Hide()
+		CLEAR EVENTS
+		
+	ENDPROC
 
 ENDDEFINE
 
@@ -25193,6 +25301,7 @@ DEFINE CLASS CL_LANG AS Custom
 
 	n_LanguageSelectedMethod	= 0	&& 0=Automatic by version(3)
 
+	C_ALLOWED_VALUES_ARE_LOC										= ""
 	C_ASTERISK_EXT_NOT_ALLOWED_LOC									= ""
 	C_BACKLINK_CANT_UPDATE_BL_LOC									= ""
 	C_BACKLINK_OF_TABLE_LOC											= ""
@@ -25229,7 +25338,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_FILE_NOT_FOUND_LOC											= ""
 	C_FILENAME_LOC													= ""
 	C_FOXBIN2PRG_ERROR_CAPTION_LOC									= ""
-	C_FOXBIN2PRG_INFO_SINTAX_LOC									= ""
+	C_FOXBIN2PRG_SYNTAX_INFO_LOC									= ""
 	C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= ""
 	C_FOXBIN2PRG_JUST_VFP_9_LOC										= ""
 	C_FOXBIN2PRG_WARN_CAPTION_LOC									= ""
@@ -25240,6 +25349,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= ""
 	C_INHERITING_FROM_LOC											= ""
 	C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= ""
+	C_INVALID_PARAMETER_LOC											= ""
 	C_IS_A_FILE_LOC													= ""
 	C_IS_A_DIRECTORY_LOC											= ""
 	C_IS_UNSUPPORTED_LOC											= ""
@@ -25303,6 +25413,7 @@ DEFINE CLASS CL_LANG AS Custom
 					*-------------------------------------------------------------------------------------------------------------------------------------------
 					*-- NOTE: MUST USE DOUBLE QUOTES, OR SYNTAX ERRORS HAPPEN WHEN COMPILING. STRANGE :(
 					*-------------------------------------------------------------------------------------------------------------------------------------------
+					.C_ALLOWED_VALUES_ARE_LOC										= "Les valeurs autorisées sont"
 					.C_ASTERISK_EXT_NOT_ALLOWED_LOC									= "* Et ? extensions ne sont pas autorisées car il est dangereux (binaires peuvent être remplacés par des fichiers vides de XX2)"
 					.C_BACKLINK_CANT_UPDATE_BL_LOC									= "Impossible de mettre à jour backlink"
 					.C_BACKLINK_OF_TABLE_LOC										= "de la table"
@@ -25338,15 +25449,27 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "File [<<.c_InputFile>>] ne est pas supporté"
 					.C_FILE_NOT_FOUND_LOC											= "Fichier introuvable"
 					.C_FILENAME_LOC													= "Fichier"
-					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: ERREUR"
-					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
-						+ "Exemple pour générer TXT de tous VCX dans 'c:\development\classes', sans montrer la fenêtre d'erreur et générer fichier LOG: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\development\classes\*.vcx'  '0'  '0'  '0'  '1'  '1'" + CR_LF + CR_LF ;
-						+ "Exemple pour générer TXT de tous VCX est 'c:\development\classes', sans montrant fenêtre d'erreur et sans fichier LOG: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\development\classes\*.vc2'  '0'  '0'  '0'  '1'  '0'"
+					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
+					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
+						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
+						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
+						+ "- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified" + CR_LF ;
+						+ "cType: In SCCAPI (VSS) compatibility mode indicates the input file type. " ;
+						+ "If specified '*' o '*-' and tc_InputFile is a PJX, all project files are processed" + CR_LF ;
+						+ "cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
+						+ "lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
+						+ "cDontShowErrors: '1' for NOT showing errors" + CR_LF ;
+						+ "cDebug: '1' for generating process LOGs" + CR_LF ;
+						+ "cDontShowProgress: '1' for NOT showing the process window" + CR_LF ;
+						+ "cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate" ;
+						+ "	the correct filename on the header of the text version" + CR_LF ;
+						+ "cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)" + CR_LF ;
+						+ "cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')" + CR_LF ;
+						+ "cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory"
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
-					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: AVERTISSEMENT!"
+					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "AVERTISSEMENT!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Taille du fichier généré"
 					.C_GENERATING_BINARY_LOC										= "Génération Binaire"
 					.C_INCLUDING_CLASS_LOC											= "classe, y compris"
@@ -25354,6 +25477,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "SourceSafe Compatibilité ModeIncorrect VFP 9 Version - SP1 manquant! Prévue: 3504 ou plus tard, réelle: " + VERSION(4)
 					.C_INHERITING_FROM_LOC											= "Héritant de"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Sélection répertoire interactive"
+					.C_INVALID_PARAMETER_LOC										= "Paramètre non valide"
 					.C_IS_A_FILE_LOC												= "est un FICHIER"
 					.C_IS_A_DIRECTORY_LOC											= "est un RÉPERTOIRE"
 					.C_IS_UNSUPPORTED_LOC											= "ne est pas supporté"
@@ -25395,6 +25519,7 @@ DEFINE CLASS CL_LANG AS Custom
 					*-------------------------------------------------------------------------------------------------------------------------------------------
 					*-- NOTA: SE DEBEN USAR COMILLAS DOBLES, O ERRORES DE SINTAXIS OCURREN AL COMPILAR. EXTRAÑO :(
 					*-------------------------------------------------------------------------------------------------------------------------------------------
+					.C_ALLOWED_VALUES_ARE_LOC										= "Los valores permitidos son"
 					.C_ASTERISK_EXT_NOT_ALLOWED_LOC									= "No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos)."
 					.C_BACKLINK_CANT_UPDATE_BL_LOC									= "No se pudo actualizar el backlink"
 					.C_BACKLINK_OF_TABLE_LOC										= "de la tabla"
@@ -25430,15 +25555,27 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "El archivo [<<.c_InputFile>>] no está soportado"
 					.C_FILE_NOT_FOUND_LOC											= "No se encontró el archivo"
 					.C_FILENAME_LOC													= "Archivo"
-					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: ERROR"
-					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: INFORMACIÓN DE SINTAXIS"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cEspecArchivo.Ext> [,cType ,cTextName ,cGenText ,cNoMostrarErrores ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
-						+ "Ejemplo para generar los TXT de todos los VCX de 'c:\desa\clases', sin mostrar ventana de error y generando archivo LOG: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\desa\clases\*.vcx'  '0'  '0'  '0'  '1'  '1'" + CR_LF + CR_LF ;
-						+ "Ejemplo para generar los VCX de todos los TXT de 'c:\desa\clases', sin mostrar ventana de error y sin LOG: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\desa\clases\*.vc2'  '0'  '0'  '0'  '1'  '0'"
+					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS"
+					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+						+ "cFileSpec.Ext: Nombre completo (fullpath) del archivo a convertir o del directorio a procesar" + CR_LF ;
+						+ "- Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2" + CR_LF ;
+						+ "- Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN" + CR_LF ;
+						+ "- En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado" + CR_LF ;
+						+ "cType: En modo compatibilidad con SCCAPI (VSS) es el Tipo de archivo de entrada. " ;
+						+ "Si indica '*' o '*-' y tc_InputFile es un PJX, se procesa todo el proyecto" + CR_LF ;
+						+ "cTextName = Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)" + CR_LF ;
+						+ "lGenText: .T.=Genera Texto, .F.=Genera Binario. Solo para compatibilidad con SCCAPI (VSS)" + CR_LF ;
+						+ "cDontShowErrors: '1' para NO mostrar errores" + CR_LF ;
+						+ "cDebug: '1' para generar LOGs del proceso" + CR_LF ;
+						+ "cDontShowProgress: '1' para NO mostrar la ventana de progreso" + CR_LF ;
+						+ "cOriginalFileName: Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar" + CR_LF ;
+						+ "	el nombre correcto en la cabecera de la versión texto" + CR_LF ;
+						+ "cRecompile: Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)" + CR_LF ;
+						+ "cNoTimestamps: Indica si se debe anular el timestamp ('1' o vacío) o no ('0')" + CR_LF ;
+						+ "cCFG_File: Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg"
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
-					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: ¡ATENCIÓN!"
+					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "¡ATENCIÓN!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Tamaño del archivo generado"
 					.C_GENERATING_BINARY_LOC										= "Generando Binario"
 					.C_MENU_NOT_IN_VFP9_FORMAT_LOC									= "El Menú [<<THIS.c_InputFile>>] NO está en formato VFP 9! - Por favor convertirlo a VFP 9 con MODIFY MENU '<<THIS.c_InputFile>>'"
@@ -25447,6 +25584,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "Versión Incorrecta de VFP 9 - Falta el SP1! Esperado: 3504 o posterior, actual: " + VERSION(4)
 					.C_INHERITING_FROM_LOC											= "Heredando desde"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Selección Interactiva de Directorio"
+					.C_INVALID_PARAMETER_LOC										= "Parámetro inválido"
 					.C_IS_A_FILE_LOC												= "es un ARCHIVO"
 					.C_IS_A_DIRECTORY_LOC											= "es un DIRECTORIO"
 					.C_IS_UNSUPPORTED_LOC											= "no está soportado"
@@ -25487,6 +25625,7 @@ DEFINE CLASS CL_LANG AS Custom
 					*-------------------------------------------------------------------------------------------------------------------------------------------
 					*-- NOTE: ES MÜSSEN ANFÜHRUNGSZEICHEN BENUTZT WERDEN, ODER SYNTAX ERRORS PASSIEREN BEIM COMPILE. SELTSAM :(
 					*-------------------------------------------------------------------------------------------------------------------------------------------
+					.C_ALLOWED_VALUES_ARE_LOC										= "Erlaubte Werte sind"
 					.C_ASTERISK_EXT_NOT_ALLOWED_LOC									= "Die Erweiterungen * und ? sind nicht erlaubt, da sie gefährlich sind (Binaries könnten mit xx2 leeren Dateien überschrieben werden)"
 					.C_BACKLINK_CANT_UPDATE_BL_LOC									= "Backlink kann nicht aktualisiert werden"
 					.C_BACKLINK_OF_TABLE_LOC										= "von Tabelle"
@@ -25522,15 +25661,27 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "Datei [<<.c_InputFile>>] wird nicht unterstützt"
 					.C_FILE_NOT_FOUND_LOC											= "Datei nicht gefunden"
 					.C_FILENAME_LOC													= "Datei"
-					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: FEHLER"
-					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
-						+ "Ein Beispiel für die Generierung der TXT von allen VCX in 'c:\development\classes', ohne Anzeige des Fehlerfensters und Generierung der LOG Datei: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\development\classes\*.vcx'  '0'  '0'  '0'  '1'  '1'" + CR_LF + CR_LF ;
-						+ "Ein Beispiel für die Generierung der TXT von allen VCX in 'c:\development\classes', ohne Anzeige des Fehlerfensters und ohne LOG datei: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\development\classes\*.vc2'  '0'  '0'  '0'  '1'  '0'"
+					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FEHLER"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
+					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
+						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
+						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
+						+ "- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified" + CR_LF ;
+						+ "cType: In SCCAPI (VSS) compatibility mode indicates the input file type. " ;
+						+ "If specified '*' o '*-' and tc_InputFile is a PJX, all project files are processed" + CR_LF ;
+						+ "cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
+						+ "lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
+						+ "cDontShowErrors: '1' for NOT showing errors" + CR_LF ;
+						+ "cDebug: '1' for generating process LOGs" + CR_LF ;
+						+ "cDontShowProgress: '1' for NOT showing the process window" + CR_LF ;
+						+ "cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate" ;
+						+ "	the correct filename on the header of the text version" + CR_LF ;
+						+ "cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)" + CR_LF ;
+						+ "cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')" + CR_LF ;
+						+ "cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory"
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG arbeitet nur für Visual FoxPro 9.0!"
-					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: WARNUNG!"
+					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "WARNUNG!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Generierte Dateigröße"
 					.C_GENERATING_BINARY_LOC										= "Gene Binary"
 					.C_INCLUDING_CLASS_LOC											= "einschließlich Klasse"
@@ -25538,6 +25689,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "Source Kompatibilität ModeIncorrect VFP 9 Version - Fehlende SP1! Erwartet: 3504 oder später, aktuell:" + VERSION(4)
 					.C_INHERITING_FROM_LOC											= "Erben von"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Auswählen interaktive Verzeichnis"
+					.C_INVALID_PARAMETER_LOC										= "Ungültige Parameter"
 					.C_IS_A_FILE_LOC												= "ist eine DATEI"
 					.C_IS_A_DIRECTORY_LOC											= "ist ein VERZEICHNIS"
 					.C_IS_UNSUPPORTED_LOC											= "wird nicht unterstützt"
@@ -25579,6 +25731,7 @@ DEFINE CLASS CL_LANG AS Custom
 					*-------------------------------------------------------------------------------------------------------------------------------------------
 					*-- NOTE: MUST USE DOUBLE QUOTES, OR SYNTAX ERRORS HAPPEN WHEN COMPILING. STRANGE :(
 					*-------------------------------------------------------------------------------------------------------------------------------------------
+					.C_ALLOWED_VALUES_ARE_LOC										= "Allowed values are"
 					.C_ASTERISK_EXT_NOT_ALLOWED_LOC									= "* and ? extensions are not allowed because it's dangerous (binaries can be overwritten with xx2 empty files)"
 					.C_BACKLINK_CANT_UPDATE_BL_LOC									= "Could not update backlink"
 					.C_BACKLINK_OF_TABLE_LOC										= "of table"
@@ -25614,15 +25767,27 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NAME_IS_NOT_SUPPORTED_LOC								= "File [<<.c_InputFile>>] is not supported"
 					.C_FILE_NOT_FOUND_LOC											= "File not found"
 					.C_FILENAME_LOC													= "File"
-					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FOXBIN2PRG: ERROR"
-					.C_FOXBIN2PRG_INFO_SINTAX_LOC									= "FOXBIN2PRG: SYNTAX INFO"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG <cFileSpec.Ext> [,cType ,cTextName ,cGenText ,cDontShowErrors ,cDebug, cDontShowProgress, cOriginalFileName, cRecompile, cNoTimestamps]" + CR_LF + CR_LF ;
-						+ "Example of generating TXT from all VCX in 'c:\development\classes', without showing error window and generating LOG file: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\development\classes\*.vcx'  '0'  '0'  '0'  '1'  '1'" + CR_LF + CR_LF ;
-						+ "Example of generating TXT from all VCX is 'c:\development\classes', without showing error window and without LOG file: " + CR_LF ;
-						+ "   FOXBIN2PRG 'c:\development\classes\*.vc2'  '0'  '0'  '0'  '1'  '0'"
+					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
+					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
+						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
+						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
+						+ "- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified" + CR_LF ;
+						+ "cType: In SCCAPI (VSS) compatibility mode indicates the input file type. " ;
+						+ "If specified '*' o '*-' and tc_InputFile is a PJX, all project files are processed" + CR_LF ;
+						+ "cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
+						+ "lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
+						+ "cDontShowErrors: '1' for NOT showing errors" + CR_LF ;
+						+ "cDebug: '1' for generating process LOGs" + CR_LF ;
+						+ "cDontShowProgress: '1' for NOT showing the process window" + CR_LF ;
+						+ "cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate" ;
+						+ "	the correct filename on the header of the text version" + CR_LF ;
+						+ "cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)" + CR_LF ;
+						+ "cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')" + CR_LF ;
+						+ "cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory"
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
-					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "FOXBIN2PRG: WARNING!"
+					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "WARNING!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Generated file size"
 					.C_GENERATING_BINARY_LOC										= "Generating Binary"
 					.C_INCLUDING_CLASS_LOC											= "Including class"
@@ -25630,6 +25795,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC						= "Incorrect VFP 9 version - Missing SP1! Expected: 3504 or later, actual: " + VERSION(4)
 					.C_INHERITING_FROM_LOC											= "Inheriting from"
 					.C_INTERACTIVE_DIRECTORY_SELECTION_LOC							= "Interactive Directory Selection"
+					.C_INVALID_PARAMETER_LOC										= "Invalid parameter"
 					.C_IS_A_FILE_LOC												= "is a FILE"
 					.C_IS_A_DIRECTORY_LOC											= "is a DIRECTORY"
 					.C_IS_UNSUPPORTED_LOC											= "is unsupported"
