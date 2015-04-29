@@ -161,6 +161,8 @@
 * 16/04/2015	FDBOZZO		v1.19.42	Mejora API: Renombrados los nombres de los métodos al Inglés para facilitar su entendimiento internacional (Mike Potjer)
 * 23/04/2015	FDBOZZO		v1.19.43	Mejora: Nueva configuración "RemoveZOrderSetFromProps" para quitar la propiedad ZOrderSet de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Ryan Harris)
 * 23/04/2015	FDBOZZO		v1.19.43	Mejora: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Lutz Scheffler)
+* 28/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg PRG2BIN does not return error codes (Ralf Wagner)
+* 29/04/2015	FDBOZZO		v1.19.42	Bug Fix: FoxBin2Prg a veces genera un error OLE cuando se ejecuta por segunda vez sobre un archivo con problemas (Fidel Charny)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -243,6 +245,8 @@
 * 15/04/2015	Mike Potjer			Sugerencia v1.19.41: Los nombres de los métodos en Inglés facilitarían su entendimiento a más personas (Agregado en v1.19.42)
 * 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quite los ZOrderProps de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Agregado en v1.19.43)
 * 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
+* 28/04/2015	Ralf Wagner			Reporte Bug v1.19.42: FoxBin2Prg no retorna los códigos de error (Arreglado en v1.19.43)
+* 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera un error OLE cuando se ejecuta por segunda vez sobre un archivo con problemas (Arreglado en v1.19.43)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -254,10 +258,13 @@
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
-*										- Si se indica "BIN2PRG", se procesa el directorio indicado en tcType para generar los TX2
-*										- Si se indica "PRG2BIN", se procesa el directorio indicado en tcType para generar los BIN
 *										- En modo compatibilidad con Visual SourceSafe, se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
 * tcType					(v? IN    ) Tipo de archivo de entrada
+*										- Si se indica "BIN2PRG", se procesa el directorio indicado para generar los TX2
+*										- Si se indica "PRG2BIN", se procesa el directorio indicado para generar los BIN
+*										- Si se indica "SIMERR_I0", se simula un error de validación en el archivo de entrada
+*										- Si se indica "SIMERR_I1", se simula un error de programa en el archivo de entrada
+*										- Si se indica "SIMERR_O1", se simula un error de programa en el archivo de salida
 *										- Si se indica "*" y tc_InputFile es un PJX, se procesa todo el proyecto
 *										- En modo compatibilidad con Visual SourceSafe, indica el tipo de archivo a convertir
 * tcTextName				(v? IN    ) Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
@@ -485,12 +492,17 @@ LOCAL lnResp, loEx AS EXCEPTION
 *	MESSAGEBOX( SYS(5)+CURDIR(),64+4096,PROGRAM(),5000)
 *ENDIF
 
+*MESSAGEBOX( 'tc_InputFile = ' + TRANSFORM(tc_InputFile) + C_CR ;
++ 'tcType = ' + TRANSFORM(tcType) )
+
 *-- En el caso de recibir "BIN2PRG" o "PRG2BIN" en el primer parámetro, los invierto.
 tc_InputFile	= EVL(tc_InputFile,'')
 tcType			= EVL(tcType,'')
 
-IF ATC('-BIN2PRG','-'+tc_InputFile) >= 1 OR ATC('-PRG2BIN','-'+tc_InputFile) >= 1 ;
-		OR ATC('-SHOWMSG','-'+tc_InputFile) >= 1 OR ATC('-INTERACTIVE','-'+tc_InputFile) >= 1 THEN
+IF ATC('-BIN2PRG','-'+tc_InputFile) > 0 OR ATC('-PRG2BIN','-'+tc_InputFile) > 0 ;
+		OR ATC('-SHOWMSG','-'+tc_InputFile) > 0 OR ATC('-INTERACTIVE','-'+tc_InputFile) > 0 ;
+		OR ATC('-SIMERR_I0','-'+tc_InputFile) > 0 OR ATC('-SIMERR_I1','-'+tc_InputFile) > 0 ;
+		OR ATC('-SIMERR_O1','-'+tc_InputFile) > 0 THEN
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
@@ -512,7 +524,7 @@ IF _VFP.STARTMODE <> 4 && 4 = Visual FoxPro was started as a distributable .app 
 	RETURN lnResp	&& lnResp contiene un código de error, pero invocado desde SourceSafe puede contener el tipo de soporte de archivo (0,1,2).
 ENDIF
 
-IF EMPTY(lnResp) OR VARTYPE(loEx) # "O"
+IF EMPTY(lnResp)
 	STORE NULL TO loEx, loCnv
 	RELEASE loEx, loCnv
 	QUIT
@@ -654,6 +666,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_FB2PRG_Version				= 1.19
 	*--
 	c_Language						= ''			&& EN, FR, ES, DE
+	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
 	c_loc_processing_file			= ''
 	c_loc_process_progress			= ''
 	c_FB2PRG_EXE_Version			= ''
@@ -893,13 +906,17 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcFileMask				(v! IN    ) Fullpath del archivo del que se desea saber si se procesó
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcFile
+		LPARAMETERS tcFile, tnID
 
-		IF THIS.n_ProcessedFiles = 0 OR ASCAN( THIS.a_ProcessedFiles, tcFile, 1, 0, 1, 1+2+4 ) = 0
+		tnID = 0
+
+		IF THIS.n_ProcessedFiles = 0
 			RETURN .F.
-		ELSE
-			RETURN .T.
 		ENDIF
+
+		tnID = ASCAN( THIS.a_ProcessedFiles, tcFile, 1, 0, 1, 1+2+4 )
+
+		RETURN (tnID > 0)
 	ENDPROC
 
 
@@ -2253,14 +2270,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			llhasSupport	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support >= 1 ;
-				, tcExt == 'VCX', .VCX_Conversion_Support >= 1 ;
-				, tcExt == 'SCX', .SCX_Conversion_Support >= 1 ;
-				, tcExt == 'FRX', .FRX_Conversion_Support >= 1 ;
-				, tcExt == 'LBX', .LBX_Conversion_Support >= 1 ;
-				, tcExt == 'MNX', .MNX_Conversion_Support >= 1 ;
-				, tcExt == 'DBF', .DBF_Conversion_Support >= 1 ;
-				, tcExt == 'DBC', .DBC_Conversion_Support >= 1 ;
+			llhasSupport	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support > 0 ;
+				, tcExt == 'VCX', .VCX_Conversion_Support > 0 ;
+				, tcExt == 'SCX', .SCX_Conversion_Support > 0 ;
+				, tcExt == 'FRX', .FRX_Conversion_Support > 0 ;
+				, tcExt == 'LBX', .LBX_Conversion_Support > 0 ;
+				, tcExt == 'MNX', .MNX_Conversion_Support > 0 ;
+				, tcExt == 'DBF', .DBF_Conversion_Support > 0 ;
+				, tcExt == 'DBC', .DBC_Conversion_Support > 0 ;
 				, .F. )
 		ENDWITH && THIS
 
@@ -2329,7 +2346,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
-				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon ;
+				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon, llError ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
 				, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -2346,6 +2363,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				loWSH				= .o_WSH
 				lnPCount			= 0
 				lcInputFile_Type	= ''
+				.l_Error			= .F.
+				tcType				= UPPER( EVL(tcType,'') )
 
 
 				DO CASE
@@ -2357,8 +2376,17 @@ DEFINE CLASS c_foxbin2prg AS Session
 						+ 'tcType = "' + tcType + '"' + CR_LF ;
 						+ CR_LF ;
 						+ loLang.C_ALLOWED_VALUES_ARE_LOC + ': ' + CR_LF ;
-						+ '*, *-, -BIN2PRG, -PRG2BIN, -SHOWMSG'
+						+ '*, *-, -BIN2PRG, -PRG2BIN, -SHOWMSG, -SIMERR_I0, -SIMERR_I1, -SIMERR_O1'
 
+				ENDCASE
+
+				DO CASE
+				CASE ATC('-SIMERR_I0','-'+tcType) > 0
+					.c_SimulateError = 'SIMERR_I0'
+				CASE ATC('-SIMERR_I1','-'+tcType) > 0
+					.c_SimulateError = 'SIMERR_I1'
+				CASE ATC('-SIMERR_O1','-'+tcType) > 0
+					.c_SimulateError = 'SIMERR_O1'
 				ENDCASE
 
 				IF .l_AutoClearProcessedFiles THEN
@@ -2414,7 +2442,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				tcRecompile		= EVL(tcRecompile,'1')
 				.c_Recompile	= tcRecompile
-				tcType			= UPPER( EVL(tcType,'') )
 
 				.writeLog( REPLICATE( '*', 100 ) )
 				.writeLog( loLang.C_MAIN_EXECUTION_LOC, 2 )
@@ -2450,7 +2477,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				CASE EMPTY(tc_InputFile)
 					*-- (Ejemplo de sintaxis y uso)
-					*MESSAGEBOX( loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_LOC + ' (' + .c_Language + ')', 60000 )
+					*MESSAGEBOX( loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_LOC + ' (' + .c_Language + ')', 60000 )
 					loFrm_Main	= CREATEOBJECT('frm_main', THIS)
 					loFrm_Main.Show()
 					READ EVENTS
@@ -2460,7 +2487,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					*-- EJECUCIÓN NORMAL
 
 
-					IF ATC('-INTERACTIVE', ('-' + tcType)) >= 1 ;
+					IF ATC('-INTERACTIVE', ('-' + tcType)) > 0 ;
 							AND ATC('-BIN2PRG', ('-' + tcType)) = 0 AND ATC('-PRG2BIN', ('-' + tcType)) = 0 ;
 							AND lcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						*-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
@@ -2496,7 +2523,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 					*-- Evaluación de FileSpec de entrada
 					DO CASE
-					CASE lcInputFile_Type == C_FILETYPE_FILE AND ( '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile ) )
+					CASE ATC('-BIN2PRG', ('-' + tcType)) = 0 AND ATC('-PRG2BIN', ('-' + tcType)) = 0 ;
+							AND lcInputFile_Type == C_FILETYPE_FILE ;
+							AND ( '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile ) )
 						IF .l_ShowErrors
 							*MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).', 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
@@ -2544,19 +2573,69 @@ DEFINE CLASS c_foxbin2prg AS Session
 								*-- Filespec: "*.PJ2", "*"
 								.evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile, tcType)
 
+							CASE ATC('-BIN2PRG', ('-' + tcType)) > 0
+								*-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN DIRECTORIO
+								*-- Filespec: "*.*"
+								IF .hasSupport_Bin2Prg(lcFile) THEN
+									.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+									lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
+									.writeLog_Flush()
+
+									DO CASE
+									CASE lnCodError = 1799	&& Conversion Cancelled
+										ERROR 1799
+
+									CASE lnCodError > 0
+										.doWriteErrorLog( @toEx )
+										llError		= .T.
+										.l_Error	= .F.
+									ENDCASE
+								ENDIF
+
+							CASE ATC('-PRG2BIN', ('-' + tcType)) > 0
+								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN DIRECTORIO
+								*-- Filespec: "*.*"
+								IF .hasSupport_Prg2Bin(lcFile) THEN
+									.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
+									lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
+									.writeLog_Flush()
+
+									DO CASE
+									CASE lnCodError = 1799	&& Conversion Cancelled
+										ERROR 1799
+
+									CASE lnCodError > 0
+										.doWriteErrorLog( @toEx )
+										llError		= .T.
+										.l_Error	= .F.
+									ENDCASE
+								ENDIF
+
 							OTHERWISE
 								*-- DEMÁS ARCHIVOS
 								*-- Filespec: "*.EXT"
 								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .T., tcOriginalFileName )
 								.writeLog_Flush()
+
+								DO CASE
+								CASE lnCodError = 1799	&& Conversion Cancelled
+									ERROR 1799
+
+								CASE lnCodError > 0
+									.doWriteErrorLog( @toEx )
+								ENDCASE
 							ENDCASE
 						ENDFOR
+
+						IF llError
+							.l_Error = .T.
+						ENDIF
 
 						EXIT
 
 
-					CASE ATC('-BIN2PRG', ('-' + tcType)) >= 1
+					CASE ATC('-BIN2PRG', ('-' + tcType)) > 0
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
 
 						IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
@@ -2616,7 +2695,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 						ENDCASE
 
 
-					CASE ATC('-PRG2BIN', ('-' + tcType)) >= 1
+					CASE ATC('-PRG2BIN', ('-' + tcType)) > 0
 						.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
 
 						IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
@@ -2785,7 +2864,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lnErrorIcon		= 16
 			ENDIF
 
-			IF ATC('-SHOWMSG', ('-' + tcType)) >= 1 THEN
+			IF ATC('-SHOWMSG', ('-' + tcType)) > 0 THEN
 				IF lnCodError <> 1799 THEN	&& Conversion Cancelled
 					toEx.UserValue = toEx.UserValue + 'lcInputFile_Type  = [' + TRANSFORM(lcInputFile_Type) + ']' + CR_LF
 				ENDIF
@@ -2820,7 +2899,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			DO CASE
 			CASE EVL( lcInputFile_Type, C_FILETYPE_QUERYSUPPORT ) <> C_FILETYPE_QUERYSUPPORT ;
-					AND ATC('-SHOWMSG', ('-' + tcType)) >= 1 ;
+					AND ATC('-SHOWMSG', ('-' + tcType)) > 0 ;
 					OR THIS.l_ShowErrors AND lnCodError > 0 AND NOT ISNULL(toEx)
 				THIS.writeErrorLog_Flush()
 
@@ -2833,8 +2912,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 
 				CASE THIS.l_Error
-					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
-					loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					IF ADIR(laDirInfo, THIS.c_ErrorLogFile) > 0 THEN
+						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
+						loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					ELSE
+						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')' + CR_LF + "[Warning: Can't show Error LOG file because does not exist!]", 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
+					ENDIF
 
 				OTHERWISE
 					MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
@@ -2842,6 +2925,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDCASE
 
 			ENDCASE
+
+			IF EMPTY(lnCodError) AND THIS.l_Error
+				lnCodError = 1098
+			ENDIF
 
 			SET NOTIFY &lc_OldSetNotify.
 			STORE NULL TO loFSO, loWSH
@@ -2877,7 +2964,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile, tcType
 
-		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
+		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount, llError ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		TRY
@@ -2941,6 +3028,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE lnCodError > 0
 							.doWriteErrorLog( @toEx )
+							llError		= .T.
+							.l_Error	= .F.
 						ENDCASE
 					ELSE
 						*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -2950,6 +3039,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ENDIF
 
 					.writeLog_Flush()
+
+					IF llError
+						.l_Error = .T.
+					ENDIF
 				ENDFOR
 			ENDWITH
 		ENDTRY
@@ -3043,6 +3136,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE lnCodError > 0
 							.doWriteErrorLog( @toEx )
+							llError		= .T.
+							.l_Error	= .F.
 						ENDCASE
 					ELSE
 						*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -3052,6 +3147,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ENDIF
 
 					.writeLog_Flush()
+
+					IF llError
+						.l_Error = .T.
+					ENDIF
 				ENDFOR
 			ENDWITH
 		ENDTRY
@@ -3104,7 +3203,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 		TRY
 			LOCAL lnCodError, lcErrorInfo, laDirFile(1,5), lcExtension, lnFileCount, laFiles(1,1), I ;
-				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1), lcForceAttribs ;
+				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1), lcForceAttribs, lnIDInputFile ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, loConversor as c_conversor_base OF 'FOXBIN2PRG.PRG' ;
 				, loFSO AS Scripting.FileSystemObject
@@ -3115,6 +3214,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				lcForceAttribs	= '+N'
 				.c_InputFile	= FULLPATH( tc_InputFile )
+				.l_Error		= .F.
 				lcExtension		= UPPER( JUSTEXT(.c_InputFile) )
 
 				.writeLog( REPLICATE( '*', 100 ) )
@@ -3185,7 +3285,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 					EXIT
 				ENDIF
 
-				.updateProcessedFile()
+				*.updateProcessedFile()
+				lnIDInputFile	= .n_ProcessedFiles
+
 				.writeLog( C_TAB + 'c_OriginalFileName:           ' + .c_OriginalFileName )
 				.writeLog( )
 
@@ -3353,7 +3455,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lnFileCount	= ADIR( laFiles, FORCEEXT( .c_InputFile, '*' ), '', 1 )
 				STORE {//::} TO .t_InputFile_TimeStamp, .t_OutputFile_TimeStamp, ltFilestamp
 
-				IF lnFileCount >= 1 THEN
+				IF lnFileCount > 0 THEN
 					*-- Busca el archivo de entrada original
 					I	= ASCAN( laFiles, JUSTFNAME(.c_InputFile), 1, 0, 1, 1+2+4+8 )
 					IF I > 0 THEN
@@ -3422,6 +3524,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ENDIF
 
 					loConversor.convert( @toModulo, .F., THIS )
+
+					IF loConversor.l_Error THEN
+						.l_Error = .T.
+					ENDIF
+
 					.n_ProcessedFilesCount	= .n_ProcessedFilesCount + 1
 					.writeLog()
 					.writeLog(loConversor.c_TextLog)	&& Recojo el LOG que haya generado el conversor
@@ -3443,7 +3550,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 			*lcErrorInfo	= THIS.exception2Str(toEx) + CR_LF + CR_LF + loLang.C_SOURCEFILE_LOC + THIS.c_InputFile
 
 			*-- updateProcessedFile( tcProcessed, tcHasErrors, tcSupported, tcReserved )
-			THIS.updateProcessedFile( '', 'E1' )
+			THIS.updateProcessedFile( lnIDInputFile, '', '', 'E1' )
 
 			IF THIS.n_Debug > 0 THEN
 				IF _VFP.STARTMODE = 0
@@ -3461,9 +3568,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			STORE NULL TO loConversor, loFSO
 
-			*IF lnCodError = 0 OR NOT THIS.l_ShowErrors THEN
-			*	THIS.writeLog( REPLICATE('-',100) )
-			*ENDIF
+			IF lnCodError = 0 AND THIS.l_Error THEN
+				THIS.updateProcessedFile( lnIDInputFile, '', '', 'E1' )
+			ELSE
+				*THIS.updateProcessedFile( lnIDInputFile )
+			ENDIF
 
 			RELEASE tc_InputFile, toModulo, toEx, tlRelanzarError, tcOriginalFileName ;
 				, lcErrorInfo, laDirFile, lcExtension, lnFileCount, laFiles, I ;
@@ -3855,13 +3964,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* ACTUALIZA ALGUNOS DATOS DEL ARCHIVO PROCESADO ACTUAL
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnID						(v? IN    ) ID del archivo a actualizar. Si no se indica se asume el actual.
 		* tcInOutType				(v? IN    ) Archivo de entrada o de salida ("I"=Input file, "O"=Output file)
 		* tcProcessed				(v? IN    ) Procesado ("P0"=Not Processed, "P1"=Processed)
 		* tcHasErrors				(v? IN    ) Tuvo Errores ("E0"=No Errors, "E1"=Has Errors)
 		* tcSupported				(v? IN    ) Archivo soportado ("S0"=Unsupported, "S1"=Supported)
 		* tcExpanded				(v? IN    ) Tipo de archivo ("X0"=Normal file, "X1"=Expanded multipart file)
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded
+		LPARAMETERS tnID, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded
 
 		TRY
 			LOCAL loEx as Exception
@@ -3870,24 +3980,25 @@ DEFINE CLASS c_foxbin2prg AS Session
 				IF .n_ProcessedFiles = 0 THEN
 					EXIT
 				ENDIF
+				tnID	= EVL(tnID, .n_ProcessedFiles)
 				IF NOT EMPTY(tcInOutType)
-					.a_ProcessedFiles(.n_ProcessedFiles, 2)	= EVL(tcProcessed, '')
+					.a_ProcessedFiles(tnID, 2)	= EVL(tcProcessed, '')
 				ENDIF
 				IF NOT EMPTY(tcProcessed)
-					.a_ProcessedFiles(.n_ProcessedFiles, 3)	= EVL(tcProcessed, '')
+					.a_ProcessedFiles(tnID, 3)	= EVL(tcProcessed, '')
 				ENDIF
 				IF NOT EMPTY(tcHasErrors)
-					.a_ProcessedFiles(.n_ProcessedFiles, 4)	= EVL(tcHasErrors, '')
+					.a_ProcessedFiles(tnID, 4)	= EVL(tcHasErrors, '')
 				ENDIF
 				IF NOT EMPTY(tcSupported)
-					.a_ProcessedFiles(.n_ProcessedFiles, 5)	= EVL(tcSupported, '')
+					.a_ProcessedFiles(tnID, 5)	= EVL(tcSupported, '')
 				ENDIF
-				.stdOut( .a_ProcessedFiles(.n_ProcessedFiles,2) ;
-					+ ',' + .a_ProcessedFiles(.n_ProcessedFiles,3) ;
-					+ ',' + .a_ProcessedFiles(.n_ProcessedFiles,4) ;
-					+ ',' + .a_ProcessedFiles(.n_ProcessedFiles,5) ;
-					+ ',' + .a_ProcessedFiles(.n_ProcessedFiles,6) ;
-					+ ',' + LOWER(.a_ProcessedFiles(.n_ProcessedFiles,1)) )
+				.stdOut( .a_ProcessedFiles(tnID,2) ;
+					+ ',' + .a_ProcessedFiles(tnID,3) ;
+					+ ',' + .a_ProcessedFiles(tnID,4) ;
+					+ ',' + .a_ProcessedFiles(tnID,5) ;
+					+ ',' + .a_ProcessedFiles(tnID,6) ;
+					+ ',' + LOWER(.a_ProcessedFiles(tnID,1)) )
 			ENDWITH
 
 		CATCH TO loEx
@@ -4365,7 +4476,7 @@ DEFINE CLASS frm_avance AS Form
 
 			lnSecs	= SECONDS()
 
-			IF lnSecs - .nLastSecCount >= 1 THEN
+			IF lnSecs - .nLastSecCount > 0 THEN
 				.lblElapsedTime.Caption = 'Elapsed Time: ' + TTOC( {^2000-1-1,00:00:00} + lnSecs - .nSecsAtStart, 2 )
 				.nLastSecCount	= lnSecs
 			ENDIF
@@ -4597,7 +4708,7 @@ DEFINE CLASS frm_interactive AS Form
 		THISFORM.n_ConversionType = 3
 		NODEFAULT
 		THISFORM.do_selection()
-		
+
 	ENDPROC
 
 	PROCEDURE do_selection
@@ -4631,7 +4742,7 @@ ENDDEFINE
 
 
 
-DEFINE CLASS frm_main AS form 
+DEFINE CLASS frm_main AS form
 	AllowOutput = .F.
 	AlwaysOnTop = .T.
 	AutoCenter = .T.
@@ -4657,7 +4768,6 @@ DEFINE CLASS frm_main AS form
 		Name = "cmd_Close", ;
 		Top = 344, ;
 		Width = 84
-		*< END OBJECT: BaseClass="commandbutton" />
 
 	ADD OBJECT 'edt_Help' AS editbox WITH ;
 		BackStyle = 0, ;
@@ -4670,45 +4780,44 @@ DEFINE CLASS frm_main AS form
 		ScrollBars = 0, ;
 		Top = 12, ;
 		Width = 728
-		*< END OBJECT: BaseClass="editbox" />
-	
+
 	PROCEDURE Init
 		LPARAMETERS toFoxBin2Prg
-		
+
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
-		
+
 		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-		
+
 		IF VARTYPE(toFoxBin2Prg) = "O" THEN
 			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		
+
 				IF PEMSTATUS(_SCREEN, 'c_FB2PRG_EXE_Version', 5) THEN
 					THISFORM.Caption = 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' - ' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_LOC
 				ENDIF
-		
-				THISFORM.edt_help.Value		= loLang.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC
+
+				THISFORM.edt_help.Value		= loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC
 			ENDIF
-		
+
 			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
 				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
 		ENDIF
-		
+
 	ENDPROC
 
 	PROCEDURE QueryUnload
 		CLEAR EVENTS
 		NODEFAULT
-		
+
 	ENDPROC
 
 	PROCEDURE cmd_Close.Click
 		THISFORM.Hide()
 		CLEAR EVENTS
-		
+
 	ENDPROC
 
 ENDDEFINE
@@ -6054,7 +6163,7 @@ DEFINE CLASS c_conversor_base AS Session
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
 			WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
-				IF m.tnSortType >= 1
+				IF m.tnSortType > 0
 					* CON SORT:
 					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
 					FOR I = 1 TO m.tnPropsAndValues_Count
@@ -7704,7 +7813,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 						IF RIGHT(tcLine, 3) == ', ;'	&& VALOR INTERMEDIO CON ", ;"
 							.get_SeparatedPropAndValue( LEFT(tcLine, LEN(tcLine) - 3), @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
-							
+
 							*
 							* Skip ZOrderSet if configured to
 							*
@@ -7714,7 +7823,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							toObjeto.add_Property( @lcProp, @lcValue )
 						ELSE	&& VALOR FINAL SIN ", ;" (JUSTO ANTES DEL <END OBJECT>)
 							.get_SeparatedPropAndValue( tcLine, @lcProp, @lcValue, toClase, @taCodeLines, @tnCodeLines, @I )
-							
+
 							*
 							* Skip ZOrderSet if configured to
 							*
@@ -8774,8 +8883,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
-		+ [</VFPData>]
+	+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
+	+ [</VFPData>]
 	c_Type					= 'VC2'
 
 
@@ -8795,7 +8904,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName ;
+				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
@@ -8805,6 +8914,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				toModulo			= CREATEOBJECT('CL_CLASSLIB')
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -8880,12 +8990,12 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				ENDIF
 
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
-
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+					IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+						toFoxBin2Prg.updateProcessedFile()
+					ENDIF
+
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
@@ -8896,11 +9006,19 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( loLang.C_GENERATING_BINARY_LOC + '...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createClasslib()
@@ -9007,6 +9125,15 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loFSO, loClase
 				loFSO	= .oFSO
+
+				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+				toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+					ERROR 'OutputFile Error Simulation'
+				ENDCASE
 
 				*-- Creo el registro de cabecera
 				.createClasslib_RecordHeader( toModulo )
@@ -9139,11 +9266,14 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				IF toFoxBin2Prg.l_Recompile
 					toFoxBin2Prg.compileFoxProBinary()
 				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
 			ENDWITH && THIS
 
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
 
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -9171,8 +9301,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 		LOCAL THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 	*_MEMBERDATA	= [<VFPData>] ;
-		+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
-		+ [</VFPData>]
+	+ [<memberdata name="escribirarchivobin" display="escribirArchivoBin"/>] ;
+	+ [</VFPData>]
 	c_Type					= 'SC2'
 
 
@@ -9192,7 +9322,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I ;
+				, laLineasExclusion(1), lnBloquesExclusion, I, lnIDInputFile ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
@@ -9202,6 +9332,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				toModulo			= CREATEOBJECT('CL_CLASSLIB')
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -9273,12 +9404,12 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 
 				ENDIF
 
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
-
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+					IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+						toFoxBin2Prg.updateProcessedFile()
+					ENDIF
+
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
@@ -9289,11 +9420,19 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( 'Generating Binary...', 0, lnCodeLines, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createForm()
@@ -9397,6 +9536,14 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_scx OF 'FOXBIN2PRG.PRG'
+				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+				toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+					ERROR 'OutputFile Error Simulation'
+				ENDCASE
+
 				*-- Creo el registro de cabecera
 				.createForm_RecordHeader( toModulo )
 
@@ -9532,10 +9679,14 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 				IF toFoxBin2Prg.l_Recompile
 					toFoxBin2Prg.compileFoxProBinary()
 				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
 			ENDWITH && THIS
 
 
 		CATCH TO loEx
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
+
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
@@ -9590,18 +9741,19 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I
+			LOCAL laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I, lnIDInputFile
 
 			WITH THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodeLines
 				STORE NULL TO toModulo
-
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+					IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+						toFoxBin2Prg.updateProcessedFile()
+					ENDIF
+
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
@@ -9615,15 +9767,23 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( 'Generating Binary...', 2, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createProject()
-				.writeBinaryFile( @toProject, toFoxBin2Prg )
+				.writeBinaryFile( @toProject, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -9661,6 +9821,14 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				STORE NULL TO loFile, loServerHead
 				toProject._HomeDir	= CHRTRAN( toProject._HomeDir, ['], [] )
 				toProject._SccData	= CHR(3) + CHR(0) + CHR(1) + REPLICATE( CHR(0), 651 )
+
+				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+				toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+					ERROR 'OutputFile Error Simulation'
+				ENDCASE
 
 				*-- Creo solo el registro de cabecera del proyecto
 				.createProject_RecordHeader( toProject )
@@ -9745,11 +9913,13 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 				ENDFOR
 
 				USE IN (SELECT("TABLABIN"))
+				toFoxBin2Prg.updateProcessedFile()
 			ENDWITH && THIS
 
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
 
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -10398,18 +10568,19 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines ;
-				, laLineasExclusion(1), lnBloquesExclusion, I
+				, laLineasExclusion(1), lnBloquesExclusion, I, lnIDInputFile
 
 			WITH THIS AS c_conversor_prg_a_frx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
 				STORE NULL TO toReport
-
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+					IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+						toFoxBin2Prg.updateProcessedFile()
+					ENDIF
+
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
@@ -10423,15 +10594,23 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toReport )
 				USE IN (SELECT('TABLABIN'))
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( 'Generating Binary...', 2, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createReport()
-				.writeBinaryFile( @toReport, toFoxBin2Prg )
+				.writeBinaryFile( @toReport, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -10469,6 +10648,14 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 			SELECT TABLABIN
 			AFIELDS( laFieldTypes )
 			loReg	= NULL
+
+			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+			toFoxBin2Prg.addProcessedFile( THIS.c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+			DO CASE
+			CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+				ERROR 'OutputFile Error Simulation'
+			ENDCASE
 
 			*-- Agrego los registros
 			FOR EACH loReg IN toReport FOXOBJECT
@@ -10527,9 +10714,12 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 				toFoxBin2Prg.compileFoxProBinary()
 			ENDIF
 
+			toFoxBin2Prg.updateProcessedFile()
+
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
 
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -10847,16 +11037,19 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I
+			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I ;
+				, lnIDInputFile
 			STORE 0 TO lnCodError, lnCodeLines
 
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+					IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+						toFoxBin2Prg.updateProcessedFile()
+					ENDIF
+
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
@@ -10868,11 +11061,19 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toTable )
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.writeBinaryFile( @toTable, @toFoxBin2Prg )
 			ENDWITH && THIS
 
@@ -10917,6 +11118,14 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				STORE 0 TO lnCodError
 				STORE '' TO lcIndex, lcFieldDef
 				lnDataSessionID	= .DATASESSIONID
+
+				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+				toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+					ERROR 'OutputFile Error Simulation'
+				ENDCASE
 
 				ERASE (FORCEEXT(.c_OutputFile, 'DBF'))
 				ERASE (FORCEEXT(.c_OutputFile, 'FPT'))
@@ -11020,11 +11229,14 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				ENDIF
 
 				loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
+
+				toFoxBin2Prg.updateProcessedFile()
 			ENDWITH && THIS
 
 
 		CATCH TO loEx
 			lnCodError		= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
 			loEx.USERVALUE	= 'lcIndex="' + TRANSFORM(lcIndex) + '"' + CR_LF ;
 				+ 'lcFieldDef="' + TRANSFORM(lcFieldDef) + '"' + CR_LF ;
 				+ 'lcCreateTable="' + TRANSFORM(lcCreateTable) + '"'
@@ -11156,7 +11368,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines, lcBaseFilename, lcInputFile ;
-				, lcMemberType, lcMemberName, lcLastMemberType ;
+				, lcMemberType, lcMemberName, lcLastMemberType, lnIDInputFile ;
 				, laLineasExclusion(1), lnBloquesExclusion, I, X, Y, laFiles(1,5), lnFileCount, lcTempTxt, laLines(1) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnCodeLines, lnFileCount
@@ -11166,11 +11378,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			WITH THIS AS c_conversor_prg_a_dbc OF 'FOXBIN2PRG.PRG'
 				loLang				= _SCREEN.o_FoxBin2Prg_Lang
 				toDatabase			= CREATEOBJECT('CL_DBC')
-
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain
 					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -11278,6 +11486,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 					ENDFOR
 
 					IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+						*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+						IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+							toFoxBin2Prg.updateProcessedFile()
+						ENDIF
+
 						EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 					ENDIF
 
@@ -11304,6 +11517,11 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				ELSE
 					*-- No es clase por archivo, o no se quiere redireccionar a Main.
 					IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+						*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+						IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+							toFoxBin2Prg.updateProcessedFile()
+						ENDIF
+
 						EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 					ENDIF
 
@@ -11320,15 +11538,23 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toDatabase, @toFoxBin2Prg )
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( 'Generating Binary...', 2, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				*.createTable()
-				.writeBinaryFile( @toDatabase, toFoxBin2Prg )
+				.writeBinaryFile( @toDatabase, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -11362,6 +11588,14 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			LOCAL lnCodError, lcEventsFile
 			lnCodError	= 0
 
+			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+			toFoxBin2Prg.addProcessedFile( THIS.c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+			DO CASE
+			CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+				ERROR 'OutputFile Error Simulation'
+			ENDCASE
+
 			IF NOT EMPTY(toDatabase._DBCEventFilename)
 				IF LEFT(toDatabase._DBCEventFilename,1) = '.' THEN
 					lcEventsFile	= ADDBS( JUSTPATH(.c_InputFile) ) + toDatabase._DBCEventFilename
@@ -11384,9 +11618,12 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 				toFoxBin2Prg.compileFoxProBinary()
 			ENDIF
 
+			toFoxBin2Prg.updateProcessedFile()
+
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
 
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -11633,17 +11870,19 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, loReg, lcLine, laCodeLines(1), lnCodeLines ;
-				, laLineasExclusion(1), lnBloquesExclusion
+				, laLineasExclusion(1), lnBloquesExclusion, lnIDInputFile
 			STORE 0 TO lnCodError, lnCodeLines
 			STORE '' TO lcLine
 
 			WITH THIS AS c_conversor_prg_a_mnx OF 'FOXBIN2PRG.PRG'
-				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-				IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
-					toFoxBin2Prg.updateProcessedFile()
-				ENDIF
+				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+					IF toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' ) THEN
+						toFoxBin2Prg.updateProcessedFile()
+					ENDIF
+
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
@@ -11657,15 +11896,23 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toMenu )
 				USE IN (SELECT('TABLABIN'))
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
 				IF .l_Error
 					.writeLog( '*** ERRORS found - Generation Cancelled' )
 					EXIT
 				ENDIF
 
+				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( 'Generating Binary...', 1, 2, 1 )
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 				.createMenu()
-				.writeBinaryFile( @toMenu )
+				.writeBinaryFile( @toMenu, @toFoxBin2Prg )
 			ENDWITH && THIS
 
 
@@ -11756,7 +12003,7 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* toMenu					(!@    OUT) Objeto generado de clase CL_DBC con la información leida del texto
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS toMenu
+		LPARAMETERS toMenu, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toMenu AS CL_MENU OF 'FOXBIN2PRG.PRG'
@@ -11766,11 +12013,22 @@ DEFINE CLASS c_conversor_prg_a_mnx AS c_conversor_prg_a_bin
 			LOCAL lnCodError
 			lnCodError	= 0
 
+			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
+			toFoxBin2Prg.addProcessedFile( THIS.c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
+
+			DO CASE
+			CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+				ERROR 'OutputFile Error Simulation'
+			ENDCASE
+
 			toMenu.updateMENU( THIS )
+
+			toFoxBin2Prg.updateProcessedFile()
 
 
 		CATCH TO loEx
 			lnCodError	= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
 
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -12222,7 +12480,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 								lcLastIncompletePropName	= laItems(I)
 								LOOP
 							ENDIF
-							
+
 							* Skip ZOrderSet property if configured to
 							IF toFoxBin2Prg.l_RemoveZOrderSetFromProps AND ATC( '.ZOrderSet.', '.' + lcLastIncompletePropName + LEFT( laItems(I), lnPosEQ - 2 ) + '.' ) > 0 THEN
 								lcLastIncompletePropName	= ''
@@ -13534,10 +13792,16 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 		TRY
 			LOCAL lcExpanded
-			lcExpanded	= IIF( '.' $ JUSTFNAME(tcOutputFile), 'X1', 'X0' )
+			lcExpanded	= IIF( '.' $ JUSTSTEM(tcOutputFile), 'X1', 'X0' )
 
 			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
 			IF toFoxBin2Prg.addProcessedFile( tcOutputFile, 'O', 'P1', 'E0', 'S1', lcExpanded ) THEN
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_O1'
+					ERROR 'OutputFile Error Simulation'
+				ENDCASE
+
 				toFoxBin2Prg.updateProcessedFile()
 			ENDIF
 
@@ -13841,7 +14105,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
 						, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo, @toFoxBin2Prg )
 
-					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético (del SCAN original)
+					ASORT(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
 
 					lnStep			= lnStep + 1
 					.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
@@ -13913,6 +14177,20 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 THEN
 					lcExternalHeader	= lcExternalHeader + CR_LF
 				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
 
 
 				*-- Genero el VC2
@@ -14259,6 +14537,20 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 THEN
 					lcExternalHeader	= lcExternalHeader + CR_LF
 				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
 
 
 				*-- Genero el SC2
@@ -14626,6 +14918,20 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 					ENDTEXT
 
 				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
 
 
 				*-- Genero el PJ2
@@ -15006,8 +15312,23 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 						RETURN
 					ENDTEXT
 
+					DO CASE
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+						ERROR 'InputFile Error Simulation'
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+						.writeErrorLog( '*** SIMULATED ERROR' )
+					ENDCASE
+
+					IF .l_Error
+						.writeLog( '*** ERRORS found - Generation Cancelled' )
+						EXIT
+					ENDIF
+
 				ENDWITH && THIS
 			ENDIF
+
+			toFoxBin2Prg.updateProcessedFile()
+
 
 			*-- Genero el PJ2
 			THIS.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
@@ -15198,6 +15519,21 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					ENDSCAN
 				ENDIF
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
 				*-- Genero el FR2
 				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_FR2 + '...', 2, 2, 1 )
 
@@ -15314,6 +15650,20 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 					FCLOSE( toFoxBin2Prg.n_FileHandle )
 
+					DO CASE
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+						ERROR 'InputFile Error Simulation'
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+						.writeErrorLog( '*** SIMULATED ERROR' )
+					ENDCASE
+
+					IF .l_Error
+						.writeLog( '*** ERRORS found - Generation Cancelled' )
+						EXIT
+					ENDIF
+
+					toFoxBin2Prg.updateProcessedFile()
+
 
 					*-- Genero el DB2, renombrando el TMP
 					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
@@ -15336,6 +15686,20 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				ELSE
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+
+					DO CASE
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+						ERROR 'InputFile Error Simulation'
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+						.writeErrorLog( '*** SIMULATED ERROR' )
+					ENDCASE
+
+					IF .l_Error
+						.writeLog( '*** ERRORS found - Generation Cancelled' )
+						EXIT
+					ENDIF
+
+					toFoxBin2Prg.updateProcessedFile()
 
 
 					*-- Genero el DB2
@@ -15526,6 +15890,21 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 					lnClassCount	= _TALLY
 				ENDIF
 
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
 				*-- Genero el DC2
 				lcOutputFile	= .c_OutputFile
 
@@ -15634,6 +16013,20 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 					toMenu.get_DataFromTablabin()
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toMenu.toText()
 				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
 
 
 				*-- Genero el MN2
@@ -25339,7 +25732,7 @@ DEFINE CLASS CL_LANG AS Custom
 	C_FILENAME_LOC													= ""
 	C_FOXBIN2PRG_ERROR_CAPTION_LOC									= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_LOC									= ""
-	C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= ""
+	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= ""
 	C_FOXBIN2PRG_JUST_VFP_9_LOC										= ""
 	C_FOXBIN2PRG_WARN_CAPTION_LOC									= ""
 	C_GENERATED_FILE_SIZE_LOC										= ""
@@ -25451,7 +25844,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILENAME_LOC													= "Fichier"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
 					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
 						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
 						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
 						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
@@ -25557,7 +25950,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILENAME_LOC													= "Archivo"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
 					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
 						+ "cFileSpec.Ext: Nombre completo (fullpath) del archivo a convertir o del directorio a procesar" + CR_LF ;
 						+ "- Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2" + CR_LF ;
 						+ "- Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN" + CR_LF ;
@@ -25663,7 +26056,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILENAME_LOC													= "Datei"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FEHLER"
 					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
 						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
 						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
 						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
@@ -25769,7 +26162,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILENAME_LOC													= "File"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
 					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
-					.C_FOXBIN2PRG_INFO_SINTAX_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
+					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
 						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
 						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
 						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;

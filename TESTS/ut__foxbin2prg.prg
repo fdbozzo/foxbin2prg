@@ -140,8 +140,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 				loObj.get_PropsAndCommentsFrom_RESERVED3( toReg_Esperado.RESERVED3, .F., @laPropsAndComments_Esperado, @lnPropsAndComments_Count_Esperado, '' )
 
 				*-- Properties
-				loObj.get_PropsAndValuesFrom_PROPERTIES( toReg.PROPERTIES, 0, @laPropsAndValues, @lnPropsAndValues_Count, '' )
-				loObj.get_PropsAndValuesFrom_PROPERTIES( toReg_Esperado.PROPERTIES, 0, @laPropsAndValues_Esperado, @lnPropsAndValues_Count_Esperado, '' )
+				loObj.get_PropsAndValuesFrom_PROPERTIES( toReg.PROPERTIES, 0, @laPropsAndValues, @lnPropsAndValues_Count, '', @loFoxBin2Prg )
+				loObj.get_PropsAndValuesFrom_PROPERTIES( toReg_Esperado.PROPERTIES, 0, @laPropsAndValues_Esperado, @lnPropsAndValues_Count_Esperado, '', @loFoxBin2Prg )
 
 				*-- Protected
 				loObj.get_PropsFrom_PROTECTED( toReg.PROTECTED, .F., @laProtected, @lnProtected_Count, '' )
@@ -149,8 +149,8 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 				*-- Methods
 				STORE 0 TO lnMethods_Count, lnMethods_Count_Esperado
-				loObj.get_ADD_OBJECT_METHODS( toReg, toReg, '', @laMethods, '', @lnMethods_Count, '', 0, '', 0, loFoxBin2Prg )
-				loObj.get_ADD_OBJECT_METHODS( toReg_Esperado, toReg_Esperado, '', @laMethods_Esperado, '', @lnMethods_Count_Esperado, '', 0, '', 0, loFoxBin2Prg )
+				loObj.get_ADD_OBJECT_METHODS( toReg, toReg, '', @laMethods, '', @lnMethods_Count, '', 0, '', 0, @loFoxBin2Prg )
+				loObj.get_ADD_OBJECT_METHODS( toReg_Esperado, toReg_Esperado, '', @laMethods_Esperado, '', @lnMethods_Count_Esperado, '', 0, '', 0, @loFoxBin2Prg )
 				lcExtraData	= tcParent + '.' + tcObjName + ' (' + tcClass + ')'
 
 
@@ -1410,7 +1410,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 			loCnv.evaluateConfiguration( '1', '1', '1', '0', '1', '4', '1', '0' )
-			loCnv.l_DropNullCharsFromCode	= .F.
+			loCnv.l_RemoveNullCharsFromCode	= .F.
 			*loCnv.l_Test				= .T.
 
 
