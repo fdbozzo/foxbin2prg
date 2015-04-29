@@ -772,26 +772,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 			THIS.l_CancelWithEscKey	= ( tcCancelWithEscKey == '1' )
 		ENDIF
 
-		IF THIS.l_CancelWithEscKey THEN
-			ON ESCAPE ERROR 1799
-			SET ESCAPE ON
-		ENDIF
-
-		*-- Funciones para escribir en StdOut
-		DECLARE INTEGER 'GetStdHandle' IN WIN32API AS fb2p_GetStdHandle INTEGER nHandleType
-		DECLARE INTEGER 'WriteFile'	 IN WIN32API AS fb2p_WriteFile INTEGER hFile, STRING @ cBuffer, INTEGER nBytes, INTEGER @ nBytes2, INTEGER @ nBytes3
-		*-- Funciones para changeFileTime
-		DECLARE INTEGER 'SetFileTime' IN WIN32API AS fb2p_SetFileTime INTEGER hFile, STRING  lpCreationTime, STRING  lpLastAccessTime, STRING  lpLastWriteTime
-		DECLARE INTEGER 'GetFileAttributesEx' IN Win32API AS fb2p_GetFileAttributesEx STRING  lpFileName, INTEGER fInfoLevelId, STRING  @ lpFileInformation
-		DECLARE INTEGER 'LocalFileTimeToFileTime' IN Win32API AS fb2p_LocalFileTimeToFileTime STRING LOCALFILETIME, STRING @ FILETIME
-		DECLARE INTEGER 'FileTimeToSystemTime' IN Win32API AS fb2p_FileTimeToSystemTime STRING FILETIME, STRING @ SYSTEMTIME
-		DECLARE INTEGER 'SystemTimeToFileTime' IN Win32API AS fb2p_SystemTimeToFileTime STRING  lpSYSTEMTIME, STRING  @ FILETIME
-		DECLARE INTEGER '_lopen' IN Win32API AS fb2p_lopen STRING lpFileName, INTEGER iReadWrite
-		DECLARE INTEGER '_lclose' IN Win32API AS fb2p_lclose INTEGER hFile
-		*-- Funciones para changeFileAttributes
-		DECLARE SHORT 'SetFileAttributes' IN Win32API AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
-		DECLARE INTEGER 'GetFileAttributes' IN Win32API AS fb2p_GetFileAttributes STRING tcFileName
-		*--
+		THIS.declareDLL()
 
 		IF FILE(THIS.c_ErrorLogFile) THEN
 			ERASE (THIS.c_ErrorLogFile + '.BAK')
@@ -849,7 +830,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 		CATCH
 
 		FINALLY
-			ON ESCAPE
 			THIS.o_FSO	= NULL
 			THIS.o_WSH	= NULL
 			THIS.o_FNC	= NULL
@@ -961,6 +941,25 @@ DEFINE CLASS c_foxbin2prg AS Session
 			DIMENSION .a_ProcessedFiles(1, 6)
 			.a_ProcessedFiles		= ''
 		ENDWITH
+	ENDPROC
+
+
+	PROCEDURE declareDLL
+		*-- Funciones para escribir en StdOut
+		DECLARE INTEGER 'GetStdHandle' IN WIN32API AS fb2p_GetStdHandle INTEGER nHandleType
+		DECLARE INTEGER 'WriteFile'	 IN WIN32API AS fb2p_WriteFile INTEGER hFile, STRING @ cBuffer, INTEGER nBytes, INTEGER @ nBytes2, INTEGER @ nBytes3
+		*-- Funciones para changeFileTime
+		DECLARE INTEGER 'SetFileTime' IN WIN32API AS fb2p_SetFileTime INTEGER hFile, STRING  lpCreationTime, STRING  lpLastAccessTime, STRING  lpLastWriteTime
+		DECLARE INTEGER 'GetFileAttributesEx' IN Win32API AS fb2p_GetFileAttributesEx STRING  lpFileName, INTEGER fInfoLevelId, STRING  @ lpFileInformation
+		DECLARE INTEGER 'LocalFileTimeToFileTime' IN Win32API AS fb2p_LocalFileTimeToFileTime STRING LOCALFILETIME, STRING @ FILETIME
+		DECLARE INTEGER 'FileTimeToSystemTime' IN Win32API AS fb2p_FileTimeToSystemTime STRING FILETIME, STRING @ SYSTEMTIME
+		DECLARE INTEGER 'SystemTimeToFileTime' IN Win32API AS fb2p_SystemTimeToFileTime STRING  lpSYSTEMTIME, STRING  @ FILETIME
+		DECLARE INTEGER '_lopen' IN Win32API AS fb2p_lopen STRING lpFileName, INTEGER iReadWrite
+		DECLARE INTEGER '_lclose' IN Win32API AS fb2p_lclose INTEGER hFile
+		*-- Funciones para changeFileAttributes
+		DECLARE SHORT 'SetFileAttributes' IN Win32API AS fb2p_SetFileAttributes STRING tcFileName, INTEGER dwFileAttributes
+		DECLARE INTEGER 'GetFileAttributes' IN Win32API AS fb2p_GetFileAttributes STRING tcFileName
+		*--
 	ENDPROC
 
 
@@ -2347,6 +2346,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
 				, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon, llError ;
+				, lcOldSetEscape, lcOldOnEscape, llEscKeyRestored ;
 				, loEx AS EXCEPTION ;
 				, loFSO AS Scripting.FileSystemObject ;
 				, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -2365,7 +2365,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lcInputFile_Type	= ''
 				.l_Error			= .F.
 				tcType				= UPPER( EVL(tcType,'') )
+				.declareDLL()
 
+				IF THIS.l_CancelWithEscKey THEN
+					lcOldSetEscape	= SET("Escape")
+					lcOldOnEscape	= ON("Escape")
+					ON ESCAPE ERROR 1799
+					SET ESCAPE ON
+				ENDIF
 
 				DO CASE
 				CASE VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
@@ -2526,6 +2533,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					CASE ATC('-BIN2PRG', ('-' + tcType)) = 0 AND ATC('-PRG2BIN', ('-' + tcType)) = 0 ;
 							AND lcInputFile_Type == C_FILETYPE_FILE ;
 							AND ( '*' $ JUSTEXT( tc_InputFile ) OR '?' $ JUSTEXT( tc_InputFile ) )
+
 						IF .l_ShowErrors
 							*MESSAGEBOX( 'No se admiten extensiones * o ? porque es peligroso (se pueden pisar binarios con archivo xx2 vacíos).', 0+48+4096, 'FOXBIN2PRG: ERROR!!', 60000 )
 							MESSAGEBOX( loLang.C_ASTERISK_EXT_NOT_ALLOWED_LOC, 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_ERROR_CAPTION_LOC, 60000 )
@@ -2852,6 +2860,21 @@ DEFINE CLASS c_foxbin2prg AS Session
 			ENDWITH && THIS
 
 		CATCH TO toEx
+			IF THIS.l_CancelWithEscKey THEN
+				IF EMPTY(lcOldOnEscape)
+					ON ESCAPE
+				ELSE
+					ON ESCAPE &lcOldOnEscape.
+				ENDIF
+
+				IF EMPTY(lcOldSetEscape)
+					SET ESCAPE OFF
+				ELSE
+					SET ESCAPE &lcOldSetEscape.
+				ENDIF
+				llEscKeyRestored = .T.
+			ENDIF
+
 			lnCodError		= toEx.ERRORNO
 			lnErrorIcon		= 64
 
@@ -2888,6 +2911,20 @@ DEFINE CLASS c_foxbin2prg AS Session
 			ENDIF
 
 		FINALLY
+			IF NOT llEscKeyRestored AND THIS.l_CancelWithEscKey THEN
+				IF EMPTY(lcOldOnEscape)
+					ON ESCAPE
+				ELSE
+					ON ESCAPE &lcOldOnEscape.
+				ENDIF
+
+				IF EMPTY(lcOldSetEscape)
+					SET ESCAPE OFF
+				ELSE
+					SET ESCAPE &lcOldSetEscape.
+				ENDIF
+			ENDIF
+
 			IF VARTYPE(loLang) <> 'O' THEN
 				loLang		= CREATEOBJECT("CL_LANG","EN")
 			ENDIF
@@ -4824,7 +4861,7 @@ ENDDEFINE
 
 
 
-DEFINE CLASS c_conversor_base AS Session
+DEFINE CLASS c_conversor_base AS Custom
 	#IF .F.
 		LOCAL THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
 	#ENDIF
