@@ -756,7 +756,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 			LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath
+		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath, laDir(1,5)
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -774,12 +774,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 		THIS.declareDLL()
 
-		IF FILE(THIS.c_ErrorLogFile) THEN
+		IF ADIR(laDir, THIS.c_ErrorLogFile) > 0 THEN
 			ERASE (THIS.c_ErrorLogFile + '.BAK')
 			RENAME (THIS.c_ErrorLogFile) TO (THIS.c_ErrorLogFile + '.BAK')
 		ENDIF
 
-		IF FILE(THIS.c_LogFile) THEN
+		IF ADIR(laDir, THIS.c_LogFile) > 0 THEN
 			ERASE (THIS.c_LogFile + '.BAK')
 			RENAME (THIS.c_LogFile) TO (THIS.c_LogFile + '.BAK')
 		ENDIF
@@ -1559,7 +1559,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		#ENDIF
 
 		TRY
-			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3 ;
+			LOCAL lcNext_Bak, lcExt_1, lcExt_2, lcExt_3, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3, laDir(1,5) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			STORE '' TO tcBakFile_1, tcBakFile_2, tcBakFile_3, lcExt_1, lcExt_2, lcExt_3 ;
 				, tcOutputFile_Ext1, tcOutputFile_Ext2, tcOutputFile_Ext3
@@ -1600,7 +1600,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					IF NOT EMPTY(lcExt_1)
 						tcOutputFile_Ext1	= FORCEEXT(tcOutputFile, lcExt_1)
 
-						IF FILE( tcOutputFile_Ext1 )
+						IF ADIR( laDir, tcOutputFile_Ext1 ) > 0 THEN
 							*-- LOG
 							DO CASE
 							CASE EMPTY(lcExt_2)
@@ -1617,7 +1617,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							IF NOT EMPTY(lcExt_2)
 								tcOutputFile_Ext2	= FORCEEXT(tcOutputFile, lcExt_2)
 
-								IF FILE( tcOutputFile_Ext2 )
+								IF ADIR( laDir, tcOutputFile_Ext2 ) > 0 THEN
 									COPY FILE ( tcOutputFile_Ext2 ) TO ( tcBakFile_2 )
 								ENDIF
 							ENDIF
@@ -1625,7 +1625,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							IF NOT EMPTY(lcExt_3)
 								tcOutputFile_Ext3	= FORCEEXT(tcOutputFile, lcExt_3)
 
-								IF FILE( tcOutputFile_Ext3 )
+								IF ADIR( laDir, tcOutputFile_Ext3 ) > 0 THEN
 									COPY FILE ( tcOutputFile_Ext3 ) TO ( tcBakFile_3 )
 								ENDIF
 							ENDIF
@@ -2042,7 +2042,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE LEFT( laConfig(I), 16 ) == LOWER('BackgroundImage:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 17 ) )
-							IF EMPTY(lcValue) OR FILE( lcValue ) THEN
+							IF EMPTY(lcValue) OR ADIR( laDirInfo, lcValue ) > 0 THEN
 								lo_CFG.c_BackgroundImage	= lcValue
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > BackgroundImage:            ' + TRANSFORM(lo_CFG.c_BackgroundImage) )
 							ENDIF
@@ -2675,7 +2675,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							FOR I = 1 TO lnFileCount
 								lcFile	= laFiles(I)
 
-								IF NOT .hasSupport_Bin2Prg( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
+								IF NOT .hasSupport_Bin2Prg( JUSTEXT(lcFile) ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
 									LOOP
 								ENDIF
 
@@ -2695,7 +2695,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
 
-						CASE NOT .hasSupport_Bin2Prg( JUSTEXT(tc_InputFile) ) OR NOT FILE(tc_InputFile)
+						CASE NOT .hasSupport_Bin2Prg( JUSTEXT(tc_InputFile) ) OR NOT ADIR(laDirInfo, tc_InputFile) > 0
 							.writeLog( '> InputFile ' + loLang.C_IS_UNSUPPORTED_LOC )
 							.writeLog()
 							EXIT
@@ -2735,7 +2735,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							FOR I = 1 TO lnFileCount
 								lcFile	= laFiles(I)
 
-								IF NOT .hasSupport_Prg2Bin( JUSTEXT(lcFile) ) OR NOT FILE(lcFile) THEN
+								IF NOT .hasSupport_Prg2Bin( JUSTEXT(lcFile) ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
 									LOOP
 								ENDIF
 
@@ -2755,7 +2755,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
 
-						CASE NOT .hasSupport_Prg2Bin( JUSTEXT(tc_InputFile) ) OR NOT FILE(tc_InputFile)
+						CASE NOT .hasSupport_Prg2Bin( JUSTEXT(tc_InputFile) ) OR NOT ADIR(laDirInfo, tc_InputFile) > 0
 							.writeLog( '> InputFile ' + loLang.C_IS_UNSUPPORTED_LOC )
 							.writeLog()
 							EXIT
@@ -2829,7 +2829,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							ENDIF
 						ENDCASE
 
-						IF FILE(tc_InputFile)
+						IF ADIR(laDirInfo, tc_InputFile) > 0
 							IF .n_ShowProgressbar <> 0 AND .l_ProcessFiles THEN
 								.loadProgressbarForm()
 							ENDIF
@@ -3001,7 +3001,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile, tcType
 
-		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount, llError ;
+		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount, llError, laDirInfo(1,5) ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		TRY
@@ -3055,7 +3055,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					lcFile		= laFiles(I,1)
 					.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
-					IF .hasSupport_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+					IF .hasSupport_Bin2Prg( UPPER(JUSTEXT(lcFile)) ) AND ADIR( laDirInfo, lcFile ) > 0 THEN
 						lnCodError	= .convert( lcFile, toModulo, @toEx, .F., tcOriginalFileName )
 						.writeLog_Flush()
 
@@ -3108,7 +3108,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile, tcType
 
-		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount ;
+		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount, laDirInfo(1,5) ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		TRY
@@ -3163,7 +3163,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					lcFile	= laFiles(I)
 					.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', I, lnFileCount, 0 )
 
-					IF .hasSupport_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND FILE( lcFile )
+					IF .hasSupport_Prg2Bin( UPPER(JUSTEXT(lcFile)) ) AND ADIR( laDirInfo, lcFile ) > 0 THEN
 						lnCodError = .convert( lcFile, toModulo, @toEx, .F., tcOriginalFileName )
 						.writeLog_Flush()
 
@@ -3328,7 +3328,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'c_OriginalFileName:           ' + .c_OriginalFileName )
 				.writeLog( )
 
-				IF NOT FILE(.c_InputFile)
+				IF NOT ADIR(laDirFile, .c_InputFile) > 0 THEN
 					ERROR loLang.C_FILE_DOESNT_EXIST_LOC + ' [' + .c_InputFile + ']'
 				ENDIF
 
@@ -3500,7 +3500,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							, VAL(LEFT(laFiles(I,4),2)), VAL(SUBSTR(laFiles(I,4),4,2)), VAL(RIGHT(laFiles(I,4),2)) )
 					ENDIF
 
-					IF FILE( .c_OutputFile )
+					IF ADIR( laDirFile, .c_OutputFile ) > 0 THEN
 						I	= ASCAN( laFiles, JUSTFNAME(.c_OutputFile), 1, 0, 1, 1+2+4+8 )
 						IF I > 0 THEN
 							.t_OutputFile_TimeStamp	=	DATETIME( YEAR(laFiles(I,3)), MONTH(laFiles(I,3)), DAY(laFiles(I,3)) ;
@@ -3672,17 +3672,17 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* tc_OutputFilename			(v! IN    ) Nombre del archivo de salida a crear el backup
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tcOutputFileName
-		LOCAL lcNext_Bak, I
+		LOCAL lcNext_Bak, I, laDirInfo(1,5)
 		lcNext_Bak	= '.BAK'
 
 		FOR I = 1 TO THIS.n_ExtraBackupLevels
 			IF I = 1
-				IF NOT FILE( tcOutputFileName + '.BAK' )
+				IF NOT ADIR( laDirInfo, tcOutputFileName + '.BAK' ) > 0 THEN
 					lcNext_Bak	= '.BAK'
 					EXIT
 				ENDIF
 			ELSE
-				IF NOT FILE( tcOutputFileName + '.' + PADL(I-1,1,'0') + '.BAK' )
+				IF NOT ADIR( laDirInfo, tcOutputFileName + '.' + PADL(I-1,1,'0') + '.BAK' ) > 0 THEN
 					lcNext_Bak	= '.' + PADL(I-1,1,'0') + '.BAK'
 					EXIT
 				ENDIF
@@ -3718,7 +3718,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		LPARAMETERS tl_NormalizeInputFile, tcFileName
 
 		TRY
-			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType ;
+			LOCAL lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType, laDirInfo(1,5) ;
 				, loEx AS EXCEPTION ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, loFSO AS Scripting.FileSystemObject
@@ -3786,10 +3786,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					.renameFile( FORCEEXT(tcFileName,'LBT'), lcEXE_CAPS, loFSO, llRelanzarError )
 
 				CASE lcType = 'DBF'
-					IF FILE( FORCEEXT(tcFileName,'FPT') )
+					IF ADIR( laDirInfo, FORCEEXT(tcFileName,'FPT') ) > 0 THEN
 						.renameFile( FORCEEXT(tcFileName,'FPT'), lcEXE_CAPS, loFSO, llRelanzarError )
 					ENDIF
-					IF FILE( FORCEEXT(tcFileName,'CDX') )
+					IF ADIR( laDirInfo, FORCEEXT(tcFileName,'CDX') ) > 0 THEN
 						.renameFile( FORCEEXT(tcFileName,'CDX'), lcEXE_CAPS, loFSO, llRelanzarError )
 					ENDIF
 
@@ -4582,7 +4582,7 @@ DEFINE CLASS frm_avance AS Form
 			LOCAL THISFORM AS frm_avance OF foxbin2prg.prg
 		#ENDIF
 
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL laDirInfo(1,5), loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		IF VARTYPE(toFoxBin2Prg) = "O" THEN
 			IF TYPE("_SCREEN.o_FoxBin2Prg_Lang") = "O" THEN
@@ -4590,11 +4590,11 @@ DEFINE CLASS frm_avance AS Form
 				THISFORM.CAPTION		= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
 			ENDIF
 
-			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
+			IF ADIR( laDirInfo, FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) > 0 THEN
 				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
 
-			IF FILE( toFoxBin2Prg.c_BackgroundImage ) THEN
+			IF ADIR( laDirInfo, toFoxBin2Prg.c_BackgroundImage ) > 0 THEN
 				CLEAR RESOURCES
 				THISFORM.Picture = toFoxBin2Prg.c_BackgroundImage
 			ENDIF
@@ -4715,7 +4715,7 @@ DEFINE CLASS frm_interactive AS Form
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL laDirInfo(1,5), loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		IF VARTYPE(toFoxBin2Prg) = "O" THEN
 			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
@@ -4734,7 +4734,7 @@ DEFINE CLASS frm_interactive AS Form
 
 			THISFORM.l_FileTimeStampOptimization = (toFoxBin2Prg.n_OptimizeByFilestamp <> 0)
 
-			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
+			IF ADIR( laDirInfo, FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) > 0 THEN
 				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
 		ENDIF
@@ -4825,7 +4825,7 @@ DEFINE CLASS frm_main AS form
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL laDirInfo(1,5), loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		IF VARTYPE(toFoxBin2Prg) = "O" THEN
 			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
@@ -4838,7 +4838,7 @@ DEFINE CLASS frm_main AS form
 				THISFORM.edt_help.Value		= loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC
 			ENDIF
 
-			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
+			IF ADIR( laDirInfo, FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) > 0 THEN
 				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
 		ENDIF
@@ -11154,7 +11154,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 				STORE 0 TO lnCodError
 				STORE '' TO lcIndex, lcFieldDef
-				lnDataSessionID	= .DATASESSIONID
+				lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
 
 				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
 				toFoxBin2Prg.addProcessedFile( .c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
@@ -15636,7 +15636,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 
 				LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
-					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
+					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
 					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
 				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
@@ -15667,7 +15667,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				lnDatabases_Count	= ADATABASES(laDatabases)
 
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
-				lnDataSessionID	= .DATASESSIONID
+				lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -15708,7 +15708,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 						toModulo	= C_FB2PRG_CODE
 					ELSE
 						DO CASE
-						CASE FILE(.c_OutputFile) AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
+						CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
 							ERASE (.c_OutputFile + '.TMP')
 							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
 							lcOutputFile	= .c_OutputFile
