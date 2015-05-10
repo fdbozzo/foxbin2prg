@@ -162,7 +162,8 @@
 * 23/04/2015	FDBOZZO		v1.19.43	Mejora: Nueva configuración "RemoveZOrderSetFromProps" para quitar la propiedad ZOrderSet de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Ryan Harris)
 * 23/04/2015	FDBOZZO		v1.19.43	Mejora: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Lutz Scheffler)
 * 28/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
-* 29/04/2015	FDBOZZO		v1.19.42	Bug Fix: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Fidel Charny)
+* 29/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Fidel Charny)
+* 10/05/2015	FDBOZZO		v1.19.43	Bug Fix: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Esteban H)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -247,6 +248,7 @@
 * 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
 * 28/04/2015	Ralf Wagner			Reporte Bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
 * 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
+* 10/05/2015	Esteban H			Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------

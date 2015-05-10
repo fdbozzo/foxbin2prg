@@ -30,7 +30,6 @@ DragIcon
 TabStyle
 ShowTips
 BufferMode
-AutoCenter
 Picture
 ControlBox
 Closable
@@ -39,6 +38,7 @@ Top
 Left
 Height
 Width
+AutoCenter
 FontBold
 FontItalic
 FontName
