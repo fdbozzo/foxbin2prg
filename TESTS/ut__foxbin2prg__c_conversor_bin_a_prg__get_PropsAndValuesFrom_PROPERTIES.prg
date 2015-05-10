@@ -122,10 +122,12 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lnSort, laPropsAndValues(1,2), lnPropsAndValues_Count, lcMemo, lcSortedMemo ;
 			, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado, lcMemo_Esperado ;
-			, loEx AS EXCEPTION
+			, loEx AS EXCEPTION ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
 		loEx		= NULL
+		loFB2P		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 
 		*-- DATOS DE ENTRADA
 		STORE 0 TO lnCodError
@@ -195,12 +197,14 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 
 
 		*-- TEST
-		loObj.get_PropsAndValuesFrom_PROPERTIES( @lcMemo, lnSort, @laPropsAndValues, @lnPropsAndValues_Count, @lcSortedMemo )
+		loObj.get_PropsAndValuesFrom_PROPERTIES( @lcMemo, lnSort, @laPropsAndValues, @lnPropsAndValues_Count, @lcSortedMemo, @loFB2P )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcMemo, lnSort, @laPropsAndValues, @lnPropsAndValues_Count, @lcSortedMemo ;
 			, @laPropsAndValues_Esperado, @lnPropsAndValues_Count_Esperado, @lcMemo_Esperado )
 
+		STORE NULL TO loObj, loFB2P
+		RELEASE loObj, loFB2P
 	ENDFUNC
 
 
@@ -209,10 +213,12 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 		LOCAL lnCodError, lcMenError, lnCodError_Esperado  ;
 			, lnSort, laPropsAndValues(1,2), lnPropsAndValues_Count, lcMemo, lcSortedMemo ;
 			, laPropsAndValues_Esperado(1,2), lnPropsAndValues_Count_Esperado, lcMemo_Esperado ;
-			, loEx AS EXCEPTION
+			, loEx AS EXCEPTION ;
+			, loFB2P AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 		LOCAL loObj AS c_conversor_bin_a_prg OF "FOXBIN2PRG.PRG"
 		loObj		= THIS.icObj
 		loEx		= NULL
+		loFB2P		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 
 
 		*-- DATOS DE ENTRADA
@@ -284,12 +290,14 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 
 
 		*-- TEST
-		loObj.get_PropsAndValuesFrom_PROPERTIES( @lcMemo, lnSort, @laPropsAndValues, @lnPropsAndValues_Count, @lcSortedMemo )
+		loObj.get_PropsAndValuesFrom_PROPERTIES( @lcMemo, lnSort, @laPropsAndValues, @lnPropsAndValues_Count, @lcSortedMemo, @loFB2P )
 
 		THIS.Evaluate_results( loEx, lnCodError_Esperado ;
 			, @lcMemo, lnSort, @laPropsAndValues, @lnPropsAndValues_Count, @lcSortedMemo ;
 			, @laPropsAndValues_Esperado, @lnPropsAndValues_Count_Esperado, @lcMemo_Esperado )
 
+		STORE NULL TO loObj, loFB2P
+		RELEASE loObj, loFB2P
 	ENDFUNC
 
 

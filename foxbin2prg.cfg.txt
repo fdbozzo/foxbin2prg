@@ -1,13 +1,13 @@
 ****************************************************************************************************
-* FOXBIN2PRG v1.19.40
+* FOXBIN2PRG v1.19.43
 * CONFIGURATION FILE / ARCHIVO DE CONFIGURACIÓN
 ****************************************************************************************************
 
 ****************************************************************************************************
 * SECTION DOCUMENTATION OF OPTIONS / SECCIÓN DE DOCUMENTACIÓN DE OPCIONES
 *
-* EN: Note: This values have precedence over internal parameters and parameters used on scripts
-* ES: Nota: Estos valores tienen precedencia sobre los parámetros internos y los parámetros usados en los scripts
+* EN: Note: This values have precedence over internal parameters
+* ES: Nota: Estos valores tienen precedencia sobre los parámetros internos
 *
 * DETAIL OF SUPPORTED VALUES / DETALLE DE VALORES SOPORTADOS
 * If no values given, these are the DEFAULTS / Si no se proporcionan valores, estos son los PREDETERMINADOS
@@ -21,7 +21,8 @@
 * ClearUniqueID: 1				&& 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge / 0=Mantener UniqueID, 1=Borrar Unique ID. Util para Diff y Merge
 * ClearDBFLastUpdate: 1			&& 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff. / 0=Mantener DBF LastDate, , 1=Borrar DBF LastDate. Util para Diff.
 * OptimizeByFilestamp: 0		&& Optimize file regeneration depending on file timestamp / Optimizar la regeneración de archivos dependiendo del timestamp de archivo
-* DropNullCharsFromCode: 1		&& 1=Drop NULL chars from source code / 0=Leave Nulls in code, if any
+* RemoveNullCharsFromCode: 1	&& 1=Drop NULL chars from source code / 0=Leave Nulls in code, if any
+* RemoveZOrderSetFromProps: 0	&& 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object / 0=No quitar la propiedad ZOrderSet de los objetos, 1=Quitar la propiedad ZOrderSet de los objetos
 * Language: (auto)				&& Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 
 *-- CONVERTION OPTIONS / OPCIONES DE CONVERSIÓN
@@ -48,8 +49,6 @@
 
 
 ****************************************************************************************************
-* YOU CAN MODIFY FROM HERE / PUEDE MODIFICAR DESDE AQUÍ
-
 * EN: Uncomment for SourceSafe compatibility. You can change the extension on the right side.
 * ES: Descomentar para compatibilidad con SourceSafe. Puede cambiar la extensión del lado derecho.
 *---------------------------------------------------------------------------------------------------

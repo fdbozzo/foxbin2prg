@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.42'
-    .VersionDate          = Date(2015,04,16)
+    .VersionNumber        = 'v1.19.43'
+    .VersionDate          = Date(2015,05,10)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,15 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/05/10	v1.19.43
+- Feature: Added new CFG setting "RemoveZOrderSetFromProps" for removing ZOrderSet property when you want to maintain the original class ZOrder always, avoid unnecesary differences and fix some visual on top/on bottom control problems (Ryan Harris)
+- Feature: Do not allow progressbar window become the default output window of ? command (Lutz Scheffler)
+- Bug Fix: Fixed VFP9 SP1 validation message
+- Bug Fix: FoxBin2Prg does not return error codes when called from an external program (Ralf Wagner)
+- Bug Fix: FoxBin2Prg sometimes generates an OLE error when executed as object more than once on a file with problems (Fidel Charny)
+- Bug Fix: When a form have AutoCenter=.T., there are times that when regenerating the binary and executing it does not shows centered (Esteban H)
+
 
 2015/04/16	v1.19.42
 - Feature: Added VFP 9 SP1 runtime validation
@@ -286,7 +295,7 @@ Change History -------------------------------------------------------------
 - Fix on PJX regeneration caused for something missing in the last change of "Autor" to "Author"
 
 2014/01/08 	v1.19.1
-- Small change on TX2 headers to drop the "Generated" timestamp that causes innecesary differences / Updated the EXE version with the correct one
+- Small change on TX2 headers to drop the "Generated" timestamp that causes unnecesary differences / Updated the EXE version with the correct one
 
 2014/01/08 	v1.19
 - Added new debug flag on .vbs scripts to show a "End process" message for batch processing
