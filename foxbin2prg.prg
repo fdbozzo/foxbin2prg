@@ -164,6 +164,7 @@
 * 28/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * 29/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Fidel Charny)
 * 10/05/2015	FDBOZZO		v1.19.43	Bug Fix: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Esteban H)
+* 14/05/2015	FDBOZZO		v1.19.43	Bug Fix: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -248,7 +249,8 @@
 * 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
 * 28/04/2015	Ralf Wagner			Reporte Bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
 * 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
-* 10/05/2015	Esteban H			Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
+* 10/05/2015	Esteban Herrero		Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
+* 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -520,7 +522,7 @@ lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowE
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *SET COVERAGE TO
 
-IF _VFP.STARTMODE <> 4 && 4 = Visual FoxPro was started as a distributable .app or .exe file.
+IF _VFP.STARTMODE <> 4 OR NOT SYS(16) == SYS(16,0) && 4 = Visual FoxPro was started as a distributable .app or .exe file.
 	STORE NULL TO loEx, loCnv
 	RELEASE loEx, loCnv
 	RETURN lnResp	&& lnResp contiene un código de error, pero invocado desde SourceSafe puede contener el tipo de soporte de archivo (0,1,2).
@@ -536,9 +538,23 @@ STORE NULL TO loEx, loCnv
 RELEASE loEx, loCnv
 
 *-- Muy útil para procesos batch que capturan el código de error
-DECLARE ExitProcess IN Win32API INTEGER ExitCode && To read returned error code with ERRORLEVEL from Windows
-ExitProcess(1)	&& Esta debe ser de las últimas instrucciones
-QUIT
+*KillMode 1
+*DECLARE ExitProcess IN Win32API INTEGER ExitCode && To read returned error code with ERRORLEVEL from Windows
+*ExitProcess(1)	&& Esta debe ser de las últimas instrucciones
+
+*KillMode 2 - This one works better.
+DECLARE INTEGER OpenProcess IN Win32API INTEGER dwDesiredAccess, INTEGER bInheritHandle, INTEGER dwProcessID
+lnHandle = OpenProcess(1, 1, _VFP.PROCESSID)
+DECLARE INTEGER TerminateProcess IN Win32API INTEGER hProcess, INTEGER uExitCode
+=TerminateProcess(lnHandle,1)
+
+*KillMode 3
+*lcComputer = [.]
+*loCIMV2 = GETOBJECT( [winmgmts:{impersonationLevel=impersonate}!\\] + lcComputer + [\root\cimv2] )
+*loProcCols = loCIMV2.ExecQuery( [select * from Win32_Process where processid=] + TRANSFORM(_VFP.PROCESSID) + [] )
+*loCIMV2 = NULL
+*loProcCols.ItemIndex(0).TERMINATE(1)
+
 
 
 
@@ -829,6 +845,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 			THIS.writeLog( )
 			THIS.writeLog_Flush()
 			THIS.unloadProgressbarForm()
+			THIS.o_Configuration	= NULL
+			THIS.o_WSH				= NULL
+			THIS.o_FSO				= NULL
+			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
+				_SCREEN.o_FoxBin2Prg_Lang = NULL
+			ENDIF
 		CATCH
 
 		FINALLY
