@@ -2083,7 +2083,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1', '2' ) THEN
 					lo_CFG.n_ShowProgressbar		= ICASE(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
 				ENDIF
-				IF NOT EMPTY(tcDontShowErrors)
+				IF INLIST( TRANSFORM(tcDontShowErrors), '0', '1' ) THEN
 					lo_CFG.l_ShowErrors				= NOT (TRANSFORM(tcDontShowErrors) == '1')
 				ENDIF
 				*IF NOT .l_Main_CFG_Loaded
