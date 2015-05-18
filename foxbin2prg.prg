@@ -164,7 +164,8 @@
 * 28/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * 29/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Fidel Charny)
 * 10/05/2015	FDBOZZO		v1.19.43	Bug Fix: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Esteban H)
-* 14/05/2015	FDBOZZO		v1.19.43	Bug Fix: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
+* 14/05/2015	FDBOZZO		v1.19.44	Bug Fix: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
+* 18/05/2015	FDBOZZO		v1.19.44	Mejora: Permitir la exportación de datos de DBFs cuando se usa DBF_Conversion_Support:1 y CFG individual opcional
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -15698,80 +15699,52 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				*-- Header
 				loTable			= CREATEOBJECT('CL_DBF_TABLE')
 
-				IF toFoxBin2Prg.DBF_Conversion_Support = 4
-					*-- Exportación de estructura y datos (para Diff solamente)
-					ERASE (.c_OutputFile + '.TMP' )
-					toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+				*-- Exportación de estructura y datos (para Diff solamente)
+				ERASE (.c_OutputFile + '.TMP' )
+				toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
 
-					IF toFoxBin2Prg.n_FileHandle = -1 THEN
-						ERROR 102, (.c_OutputFile)
-					ENDIF
-
-					FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
-					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-					FCLOSE( toFoxBin2Prg.n_FileHandle )
-
-					DO CASE
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
-						ERROR 'InputFile Error Simulation'
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
-						.writeErrorLog( '*** SIMULATED ERROR' )
-					ENDCASE
-
-					IF .l_Error
-						.writeLog( '*** ERRORS found - Generation Cancelled' )
-						EXIT
-					ENDIF
-
-					toFoxBin2Prg.updateProcessedFile()
-
-
-					*-- Genero el DB2, renombrando el TMP
-					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
-					IF .l_Test
-						toModulo	= C_FB2PRG_CODE
-					ELSE
-						DO CASE
-						CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
-							ERASE (.c_OutputFile + '.TMP')
-							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-							lcOutputFile	= .c_OutputFile
-							.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-								AND toFoxBin2Prg.changeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
-								AND NOT toFoxBin2Prg.renameTmpFile2Tx2File( .c_OutputFile )
-							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-							ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-						ENDCASE
-					ENDIF
-
-				ELSE
-					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-
-					DO CASE
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
-						ERROR 'InputFile Error Simulation'
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
-						.writeErrorLog( '*** SIMULATED ERROR' )
-					ENDCASE
-
-					IF .l_Error
-						.writeLog( '*** ERRORS found - Generation Cancelled' )
-						EXIT
-					ENDIF
-
-					toFoxBin2Prg.updateProcessedFile()
-
-
-					*-- Genero el DB2
-					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
-					IF .l_Test
-						toModulo	= C_FB2PRG_CODE
-					ELSE
-						.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
-					ENDIF
-
+				IF toFoxBin2Prg.n_FileHandle = -1 THEN
+					ERROR 102, (.c_OutputFile)
 				ENDIF
+
+				FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+				loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+				FCLOSE( toFoxBin2Prg.n_FileHandle )
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
+				*-- Genero el DB2, renombrando el TMP
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
+				IF .l_Test
+					toModulo	= C_FB2PRG_CODE
+				ELSE
+					DO CASE
+					CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
+						ERASE (.c_OutputFile + '.TMP')
+						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+						lcOutputFile	= .c_OutputFile
+						.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+							AND toFoxBin2Prg.changeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
+							AND NOT toFoxBin2Prg.renameTmpFile2Tx2File( .c_OutputFile )
+						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+						ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+					ENDCASE
+				ENDIF
+
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreate_DB2)
@@ -15808,6 +15781,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			FCLOSE( toFoxBin2Prg.n_FileHandle )
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
@@ -21717,7 +21691,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 		TRY
 			LOCAL lcText, lcTableCFG, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
-				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition ;
+				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition, llExportData, laDirFile(1,5), lnFileCount ;
 				, loEx AS EXCEPTION ;
 				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG' ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
@@ -21726,6 +21700,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			LOCAL laFields[1], lnFieldCount
 
 			STORE NULL TO loIndexes, loFields, loRecords
+			STORE 0 TO lnFileCount
 			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -21749,11 +21724,17 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
 
-			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
-				lcTableCFG	= tc_InputFile + '.CFG'
+			*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
+			lcTableCFG	= tc_InputFile + '.CFG'
+			lnFileCount	= ADIR(laDirFile, lcTableCFG)
 
-				IF FILE(lcTableCFG)
+			IF toFoxBin2Prg.DBF_Conversion_Support = 4 ;	&& BIN2PRG (DATA EXPORT FOR DIFF)
+					OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
+				llExportData	= .T.
+			ENDIF
+
+			IF llExportData THEN
+				IF lnFileCount = 1
 					toFoxBin2Prg.writeLog()
 					toFoxBin2Prg.writeLog('* Found configuration file: ' + lcTableCFG)
 
@@ -21786,7 +21767,6 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 				*** DH 06/02/2014: added _Records
 				loRecords	= THIS._Records
-				*lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
 				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 				loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
 				lcText	= ''
@@ -21797,10 +21777,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>
 			ENDTEXT
 
-			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
-				lcText	= ''
-			ENDIF
+			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			lcText	= ''
 
 
 		CATCH TO loEx
