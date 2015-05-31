@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.43'
-    .VersionDate          = Date(2015,05,10)
+    .VersionNumber        = 'v1.19.44'
+    .VersionDate          = Date(2015,05,31)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,12 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/05/31	v1.19.44
+- Bug Fix: In certain PCs FoxBin2Prg does not return error codes when called from an external program, so another terminating method is implemented (Ralf Wagner)
+- Allow exporting DBF data when using DBF_Conversion_Support:1 and optional individual CFG files
+- Bug Fix: A previous bug fix on cascading errors management caused reseting the error status, making that sometimes errors don't get reported
+
 
 2015/05/10	v1.19.43
 - Feature: Added new CFG setting "RemoveZOrderSetFromProps" for removing ZOrderSet property when you want to maintain the original class ZOrder always, avoid unnecesary differences and fix some visual on top/on bottom control problems (Ryan Harris)

@@ -164,6 +164,9 @@
 * 28/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * 29/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Fidel Charny)
 * 10/05/2015	FDBOZZO		v1.19.43	Bug Fix: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Esteban H)
+* 14/05/2015	FDBOZZO		v1.19.44	Bug Fix: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
+* 18/05/2015	FDBOZZO		v1.19.44	Mejora: Permitir la exportación de datos de DBFs cuando se usa DBF_Conversion_Support:1 y CFG individual opcional
+* 31/05/2015	FDBOZZO		v1.19.44	Bug Fix: Un arreglo previo en el manejo de errores en cascada provocó un reseteo del último estado de error de proceso, haciendo que a veces los errores no se reporten.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -248,7 +251,8 @@
 * 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
 * 28/04/2015	Ralf Wagner			Reporte Bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
 * 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
-* 10/05/2015	Esteban H			Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
+* 10/05/2015	Esteban Herrero		Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
+* 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -520,7 +524,7 @@ lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowE
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *SET COVERAGE TO
 
-IF _VFP.STARTMODE <> 4 && 4 = Visual FoxPro was started as a distributable .app or .exe file.
+IF _VFP.STARTMODE <> 4 OR NOT SYS(16) == SYS(16,0) && 4 = Visual FoxPro was started as a distributable .app or .exe file.
 	STORE NULL TO loEx, loCnv
 	RELEASE loEx, loCnv
 	RETURN lnResp	&& lnResp contiene un código de error, pero invocado desde SourceSafe puede contener el tipo de soporte de archivo (0,1,2).
@@ -536,9 +540,23 @@ STORE NULL TO loEx, loCnv
 RELEASE loEx, loCnv
 
 *-- Muy útil para procesos batch que capturan el código de error
-DECLARE ExitProcess IN Win32API INTEGER ExitCode && To read returned error code with ERRORLEVEL from Windows
-ExitProcess(1)	&& Esta debe ser de las últimas instrucciones
-QUIT
+*KillMode 1
+*DECLARE ExitProcess IN Win32API INTEGER ExitCode && To read returned error code with ERRORLEVEL from Windows
+*ExitProcess(1)	&& Esta debe ser de las últimas instrucciones
+
+*KillMode 2 - This one works better.
+DECLARE INTEGER OpenProcess IN Win32API INTEGER dwDesiredAccess, INTEGER bInheritHandle, INTEGER dwProcessID
+lnHandle = OpenProcess(1, 1, _VFP.PROCESSID)
+DECLARE INTEGER TerminateProcess IN Win32API INTEGER hProcess, INTEGER uExitCode
+=TerminateProcess(lnHandle,1)
+
+*KillMode 3
+*lcComputer = [.]
+*loCIMV2 = GETOBJECT( [winmgmts:{impersonationLevel=impersonate}!\\] + lcComputer + [\root\cimv2] )
+*loProcCols = loCIMV2.ExecQuery( [select * from Win32_Process where processid=] + TRANSFORM(_VFP.PROCESSID) + [] )
+*loCIMV2 = NULL
+*loProcCols.ItemIndex(0).TERMINATE(1)
+
 
 
 
@@ -605,10 +623,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="l_removenullcharsfromcode" display="l_RemoveNullCharsFromCode"/>] ;
 		+ [<memberdata name="l_removezordersetfromprops" display="l_RemoveZOrderSetFromProps"/>] ;
 		+ [<memberdata name="l_error" display="l_Error"/>] ;
+		+ [<memberdata name="l_errors" display="l_Errors"/>] ;
 		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="l_processfiles" display="l_ProcessFiles"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
@@ -690,7 +710,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_ExisteCapitalizacion			= -1
 	l_CFG_CachedAccess				= .F.
 	n_Debug							= 0
-	l_Error							= .F.
+	l_Error							= .F.			&& Indicador de errores del proceso actual
+	l_Errors						= .F.			&& Indicador de error de la sesión actual, acumulativo de todos los procesos
 	c_TextErr						= ''
 	l_Test							= .F.
 	l_ShowErrors					= .T.
@@ -829,6 +850,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 			THIS.writeLog( )
 			THIS.writeLog_Flush()
 			THIS.unloadProgressbarForm()
+			THIS.o_Configuration	= NULL
+			THIS.o_WSH				= NULL
+			THIS.o_FSO				= NULL
+			IF VARTYPE(_SCREEN.o_FoxBin2Prg_Lang) = "O" THEN
+				_SCREEN.o_FoxBin2Prg_Lang = NULL
+			ENDIF
 		CATCH
 
 		FINALLY
@@ -942,6 +969,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 			.n_ProcessedFiles		= 0
 			DIMENSION .a_ProcessedFiles(1, 6)
 			.a_ProcessedFiles		= ''
+			*-- Los errores previos también se limpian.
+			.l_Error				= .F.
+			.l_Errors				= .F.
 		ENDWITH
 	ENDPROC
 
@@ -2061,7 +2091,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				IF INLIST( TRANSFORM(tcDontShowProgress), '0', '1', '2' ) THEN
 					lo_CFG.n_ShowProgressbar		= ICASE(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
 				ENDIF
-				IF NOT EMPTY(tcDontShowErrors)
+				IF INLIST( TRANSFORM(tcDontShowErrors), '0', '1' ) THEN
 					lo_CFG.l_ShowErrors				= NOT (TRANSFORM(tcDontShowErrors) == '1')
 				ENDIF
 				*IF NOT .l_Main_CFG_Loaded
@@ -2969,6 +2999,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lnCodError = 1098
 			ENDIF
 
+			IF lnCodError > 0 THEN
+				THIS.l_Errors = .T.
+			ENDIF
+
 			SET NOTIFY &lc_OldSetNotify.
 			STORE NULL TO loFSO, loWSH
 			RELEASE tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
@@ -3726,6 +3760,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, loFSO AS Scripting.FileSystemObject
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				IF NOT .l_ProcessFiles
+					EXIT
+				ENDIF
+
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				lcPath			= JUSTPATH(.c_Foxbin2prg_FullPath)
 				lcEXE_CAPS		= FORCEPATH( 'filename_caps.exe', lcPath )
@@ -4533,6 +4571,8 @@ DEFINE CLASS frm_avance AS Form
 				IF NOT EMPTY(tcTexto) THEN
 					.lbl_tarea.Caption		= tcTexto
 				ENDIF
+
+				.nValue2				= 0
 
 				IF tnTotal > 0 THEN
 					.nMax_value				= tnTotal
@@ -12641,7 +12681,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			X	= 0
 			FOR I = lnFin TO 1 STEP -1
 				IF NOT EMPTY(laLineas(I))	&& Última línea de código
-					IF llProcedure AND LEFT( laLineas(I), 10 ) <> C_ENDPROC
+					IF llProcedure AND LEFT( CHRTRAN(laLineas(I), C_TAB, ' ') + ' ', 8 ) <> C_ENDPROC + ' ' THEN
 						*ERROR 'Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [' + laLineas(1) + ']'
 						ERROR (TEXTMERGE(loLang.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC))
 					ENDIF
@@ -15676,80 +15716,52 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				*-- Header
 				loTable			= CREATEOBJECT('CL_DBF_TABLE')
 
-				IF toFoxBin2Prg.DBF_Conversion_Support = 4
-					*-- Exportación de estructura y datos (para Diff solamente)
-					ERASE (.c_OutputFile + '.TMP' )
-					toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+				*-- Exportación de estructura y datos (para Diff solamente)
+				ERASE (.c_OutputFile + '.TMP' )
+				toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
 
-					IF toFoxBin2Prg.n_FileHandle = -1 THEN
-						ERROR 102, (.c_OutputFile)
-					ENDIF
-
-					FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
-					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-					FCLOSE( toFoxBin2Prg.n_FileHandle )
-
-					DO CASE
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
-						ERROR 'InputFile Error Simulation'
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
-						.writeErrorLog( '*** SIMULATED ERROR' )
-					ENDCASE
-
-					IF .l_Error
-						.writeLog( '*** ERRORS found - Generation Cancelled' )
-						EXIT
-					ENDIF
-
-					toFoxBin2Prg.updateProcessedFile()
-
-
-					*-- Genero el DB2, renombrando el TMP
-					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
-					IF .l_Test
-						toModulo	= C_FB2PRG_CODE
-					ELSE
-						DO CASE
-						CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
-							ERASE (.c_OutputFile + '.TMP')
-							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-							lcOutputFile	= .c_OutputFile
-							.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-								AND toFoxBin2Prg.changeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
-								AND NOT toFoxBin2Prg.renameTmpFile2Tx2File( .c_OutputFile )
-							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-							ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-						ENDCASE
-					ENDIF
-
-				ELSE
-					C_FB2PRG_CODE	= C_FB2PRG_CODE + loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-
-					DO CASE
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
-						ERROR 'InputFile Error Simulation'
-					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
-						.writeErrorLog( '*** SIMULATED ERROR' )
-					ENDCASE
-
-					IF .l_Error
-						.writeLog( '*** ERRORS found - Generation Cancelled' )
-						EXIT
-					ENDIF
-
-					toFoxBin2Prg.updateProcessedFile()
-
-
-					*-- Genero el DB2
-					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
-					IF .l_Test
-						toModulo	= C_FB2PRG_CODE
-					ELSE
-						.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
-					ENDIF
-
+				IF toFoxBin2Prg.n_FileHandle = -1 THEN
+					ERROR 102, (.c_OutputFile)
 				ENDIF
+
+				FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+				loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+				FCLOSE( toFoxBin2Prg.n_FileHandle )
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
+				*-- Genero el DB2, renombrando el TMP
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
+				IF .l_Test
+					toModulo	= C_FB2PRG_CODE
+				ELSE
+					DO CASE
+					CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
+						ERASE (.c_OutputFile + '.TMP')
+						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+						lcOutputFile	= .c_OutputFile
+						.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+							AND toFoxBin2Prg.changeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
+							AND NOT toFoxBin2Prg.renameTmpFile2Tx2File( .c_OutputFile )
+						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+						ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+					ENDCASE
+				ENDIF
+
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreate_DB2)
@@ -15786,6 +15798,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			FCLOSE( toFoxBin2Prg.n_FileHandle )
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
@@ -21695,7 +21708,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 		TRY
 			LOCAL lcText, lcTableCFG, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
-				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition ;
+				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition, llExportData, laDirFile(1,5), lnFileCount ;
 				, loEx AS EXCEPTION ;
 				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG' ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
@@ -21704,6 +21717,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			LOCAL laFields[1], lnFieldCount
 
 			STORE NULL TO loIndexes, loFields, loRecords
+			STORE 0 TO lnFileCount
 			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -21727,11 +21741,17 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			loIndexes	= THIS._Indexes
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
 
-			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
-				lcTableCFG	= tc_InputFile + '.CFG'
+			*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
+			lcTableCFG	= tc_InputFile + '.CFG'
+			lnFileCount	= ADIR(laDirFile, lcTableCFG)
 
-				IF FILE(lcTableCFG)
+			IF toFoxBin2Prg.DBF_Conversion_Support = 4 ;	&& BIN2PRG (DATA EXPORT FOR DIFF)
+					OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
+				llExportData	= .T.
+			ENDIF
+
+			IF llExportData THEN
+				IF lnFileCount = 1
 					toFoxBin2Prg.writeLog()
 					toFoxBin2Prg.writeLog('* Found configuration file: ' + lcTableCFG)
 
@@ -21764,7 +21784,6 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 
 				*** DH 06/02/2014: added _Records
 				loRecords	= THIS._Records
-				*lcText = lcText + loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition)
 				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 				loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
 				lcText	= ''
@@ -21775,10 +21794,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>
 			ENDTEXT
 
-			IF toFoxBin2Prg.DBF_Conversion_Support = 4	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
-				lcText	= ''
-			ENDIF
+			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			lcText	= ''
 
 
 		CATCH TO loEx
