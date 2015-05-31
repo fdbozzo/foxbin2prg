@@ -628,6 +628,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="l_processfiles" display="l_ProcessFiles"/>] ;
 		+ [<memberdata name="l_propsort_enabled" display="l_PropSort_Enabled"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
@@ -3759,6 +3760,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, loFSO AS Scripting.FileSystemObject
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				IF NOT .l_ProcessFiles
+					EXIT
+				ENDIF
+
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				lcPath			= JUSTPATH(.c_Foxbin2prg_FullPath)
 				lcEXE_CAPS		= FORCEPATH( 'filename_caps.exe', lcPath )
