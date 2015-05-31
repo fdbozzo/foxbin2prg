@@ -12664,7 +12664,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			X	= 0
 			FOR I = lnFin TO 1 STEP -1
 				IF NOT EMPTY(laLineas(I))	&& Última línea de código
-					IF llProcedure AND LEFT( laLineas(I), 10 ) <> C_ENDPROC
+					IF llProcedure AND LEFT( CHRTRAN(laLineas(I), C_TAB, ' ') + ' ', 8 ) <> C_ENDPROC + ' ' THEN
 						*ERROR 'Procedimiento sin cerrar. La última línea de código debe ser ENDPROC. [' + laLineas(1) + ']'
 						ERROR (TEXTMERGE(loLang.C_PROCEDURE_NOT_CLOSED_ON_LINE_LOC))
 					ENDIF
