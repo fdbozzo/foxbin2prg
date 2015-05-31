@@ -166,6 +166,7 @@
 * 10/05/2015	FDBOZZO		v1.19.43	Bug Fix: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Esteban H)
 * 14/05/2015	FDBOZZO		v1.19.44	Bug Fix: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * 18/05/2015	FDBOZZO		v1.19.44	Mejora: Permitir la exportación de datos de DBFs cuando se usa DBF_Conversion_Support:1 y CFG individual opcional
+* 31/05/2015	FDBOZZO		v1.19.44	Bug Fix: Un arreglo previo en el manejo de errores en cascada provocó un reseteo del último estado de error de proceso, haciendo que a veces los errores no se reporten.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -622,6 +623,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="l_removenullcharsfromcode" display="l_RemoveNullCharsFromCode"/>] ;
 		+ [<memberdata name="l_removezordersetfromprops" display="l_RemoveZOrderSetFromProps"/>] ;
 		+ [<memberdata name="l_error" display="l_Error"/>] ;
+		+ [<memberdata name="l_errors" display="l_Errors"/>] ;
 		+ [<memberdata name="l_main_cfg_loaded" display="l_Main_CFG_Loaded"/>] ;
 		+ [<memberdata name="l_methodsort_enabled" display="l_MethodSort_Enabled"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
@@ -707,7 +709,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_ExisteCapitalizacion			= -1
 	l_CFG_CachedAccess				= .F.
 	n_Debug							= 0
-	l_Error							= .F.
+	l_Error							= .F.			&& Indicador de errores del proceso actual
+	l_Errors						= .F.			&& Indicador de error de la sesión actual, acumulativo de todos los procesos
 	c_TextErr						= ''
 	l_Test							= .F.
 	l_ShowErrors					= .T.
@@ -965,6 +968,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 			.n_ProcessedFiles		= 0
 			DIMENSION .a_ProcessedFiles(1, 6)
 			.a_ProcessedFiles		= ''
+			*-- Los errores previos también se limpian.
+			.l_Error				= .F.
+			.l_Errors				= .F.
 		ENDWITH
 	ENDPROC
 
@@ -2990,6 +2996,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			IF EMPTY(lnCodError) AND THIS.l_Error
 				lnCodError = 1098
+			ENDIF
+
+			IF lnCodError > 0 THEN
+				THIS.l_Errors = .T.
 			ENDIF
 
 			SET NOTIFY &lc_OldSetNotify.
