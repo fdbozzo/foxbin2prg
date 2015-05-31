@@ -4557,6 +4557,8 @@ DEFINE CLASS frm_avance AS Form
 					.lbl_tarea.Caption		= tcTexto
 				ENDIF
 
+				.nValue2				= 0
+
 				IF tnTotal > 0 THEN
 					.nMax_value				= tnTotal
 					.nValue					= tnValor
