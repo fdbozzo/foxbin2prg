@@ -167,6 +167,7 @@
 * 14/05/2015	FDBOZZO		v1.19.44	Bug Fix: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * 18/05/2015	FDBOZZO		v1.19.44	Mejora: Permitir la exportación de datos de DBFs cuando se usa DBF_Conversion_Support:1 y CFG individual opcional
 * 31/05/2015	FDBOZZO		v1.19.44	Bug Fix: Un arreglo previo en el manejo de errores en cascada provocó un reseteo del último estado de error de proceso, haciendo que a veces los errores no se reporten.
+* 01/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Mike Potjer)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -253,6 +254,7 @@
 * 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
 * 10/05/2015	Esteban Herrero		Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
 * 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
+* 01/06/2015	Mike Potjer			Reporte Bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -24421,7 +24423,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								loReg.SKIPFOR	= ALLTRIM( STREXTRACT( tcLine, 'SKIP FOR ', ';', 1, 2 ) )
 
 							CASE LEFT( tcLine, 8 ) == 'MESSAGE '
-								loReg.MESSAGE	= ALLTRIM( STREXTRACT( tcLine, '"', '"', 1, 4 ) )
+								loReg.MESSAGE	= ALLTRIM( SUBSTR( tcLine, 9 ) )
 
 							CASE LEFT( tcLine, 8 ) == 'PICTURE '
 								loReg.RESNAME	= ALLTRIM( STREXTRACT( tcLine, '"', '"' ) )
@@ -24620,7 +24622,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 								loReg.SKIPFOR	= ALLTRIM( STREXTRACT( tcLine, 'SKIP FOR ', ';', 1, 2 ) )
 
 							CASE LEFT( tcLine, 8 ) == 'MESSAGE '
-								loReg.MESSAGE	= ALLTRIM( STREXTRACT( tcLine, '"', '"', 1, 4 ) )
+								loReg.MESSAGE	= ALLTRIM( SUBSTR( tcLine, 9 ) )
 
 							CASE LEFT( tcLine, 8 ) == 'PICTURE '
 								loReg.RESNAME	= ALLTRIM( STREXTRACT( tcLine, '"', '"' ) )
