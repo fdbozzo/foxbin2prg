@@ -6736,7 +6736,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
 
-		IF LEFT( tcLine + ' ', LEN(C_FB2PRG_META_I) + 1 ) == C_FB2PRG_META_I + ' '
+		IF UPPER( LEFT( tcLine + ' ', LEN(C_FB2PRG_META_I) + 1 ) ) == C_FB2PRG_META_I + ' '
 			WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
 				llBloqueEncontrado	= .T.
 
@@ -6762,7 +6762,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado, laPropsAndValues(1,2), lnPropsAndValues_Count
 
-		IF LEFT( tcLine, LEN(C_LIBCOMMENT_I) ) == C_LIBCOMMENT_I
+		IF UPPER( LEFT( tcLine, LEN(C_LIBCOMMENT_I) ) ) == C_LIBCOMMENT_I
 			llBloqueEncontrado	= .T.
 
 			*-- Metadatos del módulo
@@ -7714,11 +7714,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							AND NOT .lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
 
 						DO CASE
-						CASE LEFT( tcLine, 8 ) + ' ' == C_ENDPROC + ' ' && Fin del PROCEDURE
+						CASE UPPER( LEFT( tcLine + ' ', 8 ) ) == C_ENDPROC + ' ' && Fin del PROCEDURE
 							tcProcedureAbierto	= ''
 							EXIT
 
-						CASE LEFT( tcLine + ' ', 10 ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEFINE) encontrado
+						CASE UPPER( LEFT( tcLine + ' ', 10 ) ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEFINE) encontrado
 							IF llEsProcedureDeClase
 								*ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
 								+ toClase._Nombre + ' (' + loProcedure._Nombre + ')' ;
@@ -7790,7 +7790,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		TRY
 			LOCAL llBloqueEncontrado
 
-			IF LEFT( tcLine, 11 ) == 'ADD OBJECT '
+			IF UPPER( LEFT( tcLine, 11 ) ) == 'ADD OBJECT '
 				*-- Estructura a reconocer: ADD OBJECT 'frm_a.Check1' AS check [WITH]
 				WITH THIS AS c_conversor_prg_a_bin OF foxbin2prg.prg
 					LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, Z, lcProp, lcValue, lcNombre, lcObjName, lnPos ;
@@ -7860,7 +7860,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					FOR I = I + 1 TO tnCodeLines
 						.set_Line( @tcLine, @taCodeLines, I )
 
-						IF LEFT( tcLine, C_LEN_END_OBJECT_I) == C_END_OBJECT_I && Fin del ADD OBJECT y METADATOS
+						IF UPPER( LEFT( tcLine, C_LEN_END_OBJECT_I) ) == C_END_OBJECT_I && Fin del ADD OBJECT y METADATOS
 							*< END OBJECT: baseclass = "olecontrol" Uniqueid = "_3X50L3I7V" OLEObject = "C:\WINDOWS\system32\FOXTLIB.OCX" checksum = "4101493921" />
 
 							.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count ;
@@ -8068,7 +8068,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine + ' ', 13) == C_DEFINE_CLASS + ' '
+		IF UPPER(LEFT(tcLine + ' ', 13)) == C_DEFINE_CLASS + ' '
 			TRY
 				llBloqueEncontrado = .T.
 				LOCAL Z, lcProp, lcValue, loEx AS EXCEPTION ;
@@ -8239,7 +8239,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT( tcLine + ' ', 10 ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEF / ENDPROC) encontrado
+		IF UPPER( LEFT( tcLine + ' ', 10 ) ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEF / ENDPROC) encontrado
 			llBloqueEncontrado	= .T.
 			toClase._Fin		= I
 
@@ -8272,7 +8272,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, 7) == 'HIDDEN '
+		IF UPPER(LEFT(tcLine, 7)) == 'HIDDEN '
 			llBloqueEncontrado	= .T.
 			toClase._HiddenProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 8 ) ) )
 		ENDIF
@@ -8293,7 +8293,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			LOCAL toClase AS CL_CLASE OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		IF LEFT(tcLine, 9) == '#INCLUDE '
+		IF UPPER(LEFT(tcLine, 9)) == '#INCLUDE '
 			llBloqueEncontrado		= .T.
 			IF THIS.c_Type = 'SCX'
 				toModulo._includeFile	= LOWER( ALLTRIM( CHRTRAN( SUBSTR( tcLine, 10 ), ["'], [] ) ) )
@@ -8373,7 +8373,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, C_LEN_CLASSDATA_I) == C_CLASSDATA_I	&& METADATA de la CLASE
+		IF UPPER(LEFT(tcLine, C_LEN_CLASSDATA_I)) == C_CLASSDATA_I	&& METADATA de la CLASE
 			*< CLASSDATA: Baseclass="custom" Timestamp="2013/11/19 11:51:04" Scale="Foxels" Uniqueid="_3WF0VSTN1" ProjectClassIcon="container.ico" ClassIcon="toolbar.ico" />
 			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
 			llBloqueEncontrado	= .T.
@@ -8416,7 +8416,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, C_LEN_EXTERNAL_CLASS_I) == C_EXTERNAL_CLASS_I
+		IF UPPER(LEFT(tcLine, C_LEN_EXTERNAL_CLASS_I)) == C_EXTERNAL_CLASS_I
 			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
 			llBloqueEncontrado	= .T.
 
@@ -8449,7 +8449,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, C_LEN_EXTERNAL_MEMBER_I) == C_EXTERNAL_MEMBER_I
+		IF UPPER(LEFT(tcLine, C_LEN_EXTERNAL_MEMBER_I)) == C_EXTERNAL_MEMBER_I
 			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count
 			llBloqueEncontrado	= .T.
 
@@ -8479,7 +8479,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, C_LEN_OBJECTDATA_I) == C_OBJECTDATA_I	&& METADATA del ADD OBJECT
+		IF UPPER(LEFT(tcLine, C_LEN_OBJECTDATA_I)) == C_OBJECTDATA_I	&& METADATA del ADD OBJECT
 			*< OBJECTDATA: ObjName="txtValor" Timestamp="2013/11/19 11:51:04" Uniqueid="_3WF0VSTN1" />
 			LOCAL laPropsAndValues(1,2), lnPropsAndValues_Count, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
 			llBloqueEncontrado	= .T.
@@ -8571,20 +8571,20 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		WITH THIS AS c_conversor_prg_a_bin OF 'FOXBIN2PRG.PRG'
 			DO CASE
-			CASE LEFT( tcLine, 20 ) == 'PROTECTED PROCEDURE '
+			CASE UPPER( LEFT( tcLine, 20 ) ) == 'PROTECTED PROCEDURE '
 				*-- Estructura a reconocer: PROTECTED PROCEDURE nombre_del_procedimiento
 				llBloqueEncontrado	= .T.
 				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 21 ) )
 				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'protected', @toObjeto )
 
 
-			CASE LEFT( tcLine, 17 ) == 'HIDDEN PROCEDURE '
+			CASE UPPER( LEFT( tcLine, 17 ) ) == 'HIDDEN PROCEDURE '
 				*-- Estructura a reconocer: HIDDEN PROCEDURE nombre_del_procedimiento
 				llBloqueEncontrado	= .T.
 				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 18 ) )
 				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'hidden', @toObjeto )
 
-			CASE LEFT( tcLine, 10 ) == 'PROCEDURE '
+			CASE UPPER( LEFT( tcLine, 10 ) ) == 'PROCEDURE '
 				*-- Estructura a reconocer: PROCEDURE [objeto.]nombre_del_procedimiento
 				llBloqueEncontrado	= .T.
 				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 11 ) )
@@ -8617,7 +8617,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		LOCAL llBloqueEncontrado
 
-		IF LEFT(tcLine, 10) == 'PROTECTED '
+		IF UPPER(LEFT(tcLine, 10)) == 'PROTECTED '
 			llBloqueEncontrado	= .T.
 			toClase._ProtectedProps		= LOWER( ALLTRIM( SUBSTR( tcLine, 11 ) ) )
 		ENDIF
