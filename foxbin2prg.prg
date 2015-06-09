@@ -25055,6 +25055,11 @@ DEFINE CLASS CL_DBF_UTILS AS Session
 		+ [<memberdata name="filetypedescription" display="fileTypeDescription"/>] ;
 		+ [<memberdata name="getcodepageinfo" display="getCodePageInfo"/>] ;
 		+ [<memberdata name="getdbfmetadata" display="getDBFmetadata"/>] ;
+		+ [<memberdata name="get_bintableflags" display="get_BinTableFlags"/>] ;
+		+ [<memberdata name="get_numtableflags" display="get_NumTableFlags"/>] ;
+		+ [<memberdata name="get_structure" display="get_Structure"/>] ;
+		+ [<memberdata name="set_bintableflags" display="set_BinTableFlags"/>] ;
+		+ [<memberdata name="set_numtableflags" display="set_NumTableFlags"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [<memberdata name="write_dbc_backlink" display="write_DBC_BackLink"/>] ;
 		+ [</VFPData>]
@@ -25472,49 +25477,51 @@ DEFINE CLASS CL_DBF_UTILS AS Session
 		TRY
 			LOCAL lnHandle, ln_HexFileType, lcStr, lnDataPos, lnFieldCount, loEx AS EXCEPTION
 
-			IF NOT EMPTY(tcDBC_Name)
-				ln_HexFileType	= 0
-				lnHandle		= FOPEN(tc_FileName,2)
+			tcDBC_Name	= EVL(tcDBC_Name,'')
 
-				IF lnHandle = -1
-					EXIT
-				ENDIF
+			*IF NOT EMPTY(tcDBC_Name)
+			ln_HexFileType	= 0
+			lnHandle		= FOPEN(tc_FileName,2)
 
-				lcStr			= FREAD(lnHandle,1)		&& File type
-				ln_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
+			IF lnHandle = -1
+				EXIT
+			ENDIF
 
-				IF EMPTY(tdLastUpdate)
-					lcStr	= FREAD(lnHandle,3)		&& Last update (YYMMDD)
-				ELSE
-					lcStr	= CHR( VAL( RIGHT( PADL( YEAR( tdLastUpdate ),4,'0'), 2 ) ) ) ;
-						+ CHR( VAL( PADL( MONTH( tdLastUpdate ),2,'0' ) ) ) ;
-						+ CHR( VAL( PADL( DAY( tdLastUpdate ),2,'0' ) ) )		&&	Last update (YYMMDD)
-					=FWRITE( lnHandle, PADR(lcStr,3,CHR(0)) )
-				ENDIF
+			lcStr			= FREAD(lnHandle,1)		&& File type
+			ln_HexFileType	= EVALUATE( TRANSFORM(ASC(lcStr),'@0') )
 
-				=FREAD(lnHandle,4)		&& Number of records in file
-				lcStr			= FREAD(lnHandle,2)		&& Position of first data record
-				lnDataPos		= CTOBIN(lcStr,"2RS")
-				IF INLIST(ln_HexFileType, 0x30, 0x31, 0x32) THEN
-					lnFieldCount	= (lnDataPos - 296) / 32
-				ELSE
-					EXIT	&& No DBC BackLink on older versions!
-				ENDIF
-				=FREAD(lnHandle,2)		&& Length of one data record, including delete flag
-				=FREAD(lnHandle,16)		&& Reserved
-				=FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
-				=FREAD(lnHandle,1)		&& Code page mark
-				=FREAD(lnHandle,2)		&& Reserved, contains 0x00
-				=FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
-				=FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
+			IF EMPTY(tdLastUpdate)
+				lcStr	= FREAD(lnHandle,3)		&& Last update (YYMMDD)
+			ELSE
+				lcStr	= CHR( VAL( RIGHT( PADL( YEAR( tdLastUpdate ),4,'0'), 2 ) ) ) ;
+					+ CHR( VAL( PADL( MONTH( tdLastUpdate ),2,'0' ) ) ) ;
+					+ CHR( VAL( PADL( DAY( tdLastUpdate ),2,'0' ) ) )		&&	Last update (YYMMDD)
+				=FWRITE( lnHandle, PADR(lcStr,3,CHR(0)) )
+			ENDIF
 
-				IF INLIST(ln_HexFileType, 0x30, 0x31, 0x32) THEN
-					IF FWRITE( lnHandle, PADR(tcDBC_Name,263,CHR(0)) ) = 0
-						*-- No se pudo actualizar el backlink [] de la tabla []
-						ERROR C_BACKLINK_CANT_UPDATE_BL_LOC + ' [' + tcDBC_Name + '] ' + C_BACKLINK_OF_TABLE_LOC + ' [' + tc_FileName + ']'
-					ENDIF
+			=FREAD(lnHandle,4)		&& Number of records in file
+			lcStr			= FREAD(lnHandle,2)		&& Position of first data record
+			lnDataPos		= CTOBIN(lcStr,"2RS")
+			IF INLIST(ln_HexFileType, 0x30, 0x31, 0x32) THEN
+				lnFieldCount	= (lnDataPos - 296) / 32
+			ELSE
+				EXIT	&& No DBC BackLink on older versions!
+			ENDIF
+			=FREAD(lnHandle,2)		&& Length of one data record, including delete flag
+			=FREAD(lnHandle,16)		&& Reserved
+			=FREAD(lnHandle,1)		&& Table flags: 0x01=Has CDX, 0x02=Has Memo, 0x04=Id DBC (flags acumulativos)
+			=FREAD(lnHandle,1)		&& Code page mark
+			=FREAD(lnHandle,2)		&& Reserved, contains 0x00
+			=FREAD(lnHandle,32 * lnFieldCount)		&& Field subrecords (los salteo)
+			=FREAD(lnHandle,1)		&& Header Record Terminator (0x0D)
+
+			IF INLIST(ln_HexFileType, 0x30, 0x31, 0x32) THEN
+				IF FWRITE( lnHandle, PADR(tcDBC_Name,263,CHR(0)) ) = 0
+					*-- No se pudo actualizar el backlink [] de la tabla []
+					ERROR C_BACKLINK_CANT_UPDATE_BL_LOC + ' [' + tcDBC_Name + '] ' + C_BACKLINK_OF_TABLE_LOC + ' [' + tc_FileName + ']'
 				ENDIF
 			ENDIF
+			*ENDIF
 
 
 		CATCH TO loEx
@@ -25529,6 +25536,74 @@ DEFINE CLASS CL_DBF_UTILS AS Session
 		ENDTRY
 
 		RETURN lnHandle
+	ENDPROC
+
+
+	FUNCTION get_Structure
+		LPARAMETERS taFields, tc_FileName
+
+		WITH THIS AS CL_DBF_UTILS OF 'lib_indices.prg'
+			LOCAL lnFieldCount
+			lnFieldCount = 0
+
+			IF NOT EMPTY(tc_FileName)
+				.getDBFmetadata(tc_FileName)
+			ENDIF
+
+			lnFieldCount	= .n_FieldCount
+			DIMENSION taFields(lnFieldCount,4)
+
+			FOR I = 1 TO lnFieldCount
+				WITH .Fields.Item(I)
+					taFields(I,1) = .FieldName
+					taFields(I,2) = .FieldType
+					taFields(I,3) = .FieldWidth
+					taFields(I,4) = .FieldDecimals
+				ENDWITH
+			ENDFOR
+		ENDWITH
+
+		RETURN lnFieldCount
+	ENDFUNC
+
+
+	PROCEDURE get_BinTableFlags
+		*-- Leo los flags de la tabla indicada
+		LPARAMETERS tcFile
+
+		LOCAL lnHandle, lcTableFlags
+		lnHandle		= FOPEN(tcFile,0)
+		FSEEK(lnHandle,28)
+		lcTableFlags	= FREAD(lnHandle,1)
+		FCLOSE(lnHandle)
+		RETURN lcTableFlags
+	ENDPROC
+
+
+	PROCEDURE get_NumTableFlags
+		*-- Leo los flags de la tabla indicada
+		LPARAMETERS tcFile
+		RETURN ASC( THIS.get_BinTableFlags(tcFile) )
+	ENDPROC
+
+
+	PROCEDURE set_BinTableFlags
+		*-- Seteo los flags en la tabla indicada
+		LPARAMETERS tcFile, tcBinTableFlags
+
+		LOCAL lnHandle, lnWritten
+		lnHandle		= FOPEN(tcFile,1)
+		FSEEK(lnHandle,28)
+		lnWritten	= FWRITE(lnHandle, tcTableFlags, 1)
+		FCLOSE(lnHandle)
+		RETURN lnWritten
+	ENDPROC
+
+
+	PROCEDURE set_NumTableFlags
+		*-- Seteo los flags en la tabla indicada
+		LPARAMETERS tcFile, tnNumTableFlags
+		RETURN THIS.set_BinTableFlags( tcFile, CHR(tnNumTableFlags) )
 	ENDPROC
 
 
