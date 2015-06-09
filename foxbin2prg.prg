@@ -168,6 +168,7 @@
 * 18/05/2015	FDBOZZO		v1.19.44	Mejora: Permitir la exportación de datos de DBFs cuando se usa DBF_Conversion_Support:1 y CFG individual opcional
 * 31/05/2015	FDBOZZO		v1.19.44	Bug Fix: Un arreglo previo en el manejo de errores en cascada provocó un reseteo del último estado de error de proceso, haciendo que a veces los errores no se reporten.
 * 01/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Mike Potjer)
+* 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -255,6 +256,7 @@
 * 10/05/2015	Esteban Herrero		Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
 * 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
 * 01/06/2015	Mike Potjer			Reporte Bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
+* 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3146,7 +3148,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcRecompile, toModulo, toEx, tcOriginalFileName, tcLogFile, tcType
 
-		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount, laDirInfo(1,5) ;
+		LOCAL lcFileSpec, lnFileCount, laFiles(1,1), lcFile, lnCodError, I, lnFileCount, llError, laDirInfo(1,5) ;
 			, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG'
 
 		TRY
