@@ -14706,6 +14706,10 @@ ENDDEFINE
 
 
 DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="loadfile" display="loadFile"/>] ;
+		+ [</VFPData>]
+
 	#IF .F.
 		LOCAL THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 	#ENDIF
@@ -14726,7 +14730,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx, @toFoxBin2Prg )
 
 		TRY
-			LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+			LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 				, loEx AS EXCEPTION ;
 				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
@@ -14737,86 +14741,11 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 			WITH THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
-					SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
-					USE IN (SELECT("_TABLAORIG"))
+					.loadFile( @toModulo, @toEx, @toFoxBin2Prg, @loProject )
 
-					loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
-					.updateProgressbar( 'Processing Project ' + '...', 1, 2, 1 )
-
-
-					*-- Obtengo los archivos del proyecto
-					loProject		= CREATEOBJECT('CL_PROJECT')
-					SCATTER MEMO NAME loReg
-
-					IF toFoxBin2Prg.l_NoTimestamps
-						loReg.TIMESTAMP	= 0
-					ENDIF
-					IF toFoxBin2Prg.l_ClearUniqueID
-						loReg.ID	= 0
-					ENDIF
-
-					loProject._HomeDir		= ['] + ALLTRIM( .get_ValueFromNullTerminatedValue( loReg.HOMEDIR ) ) + [']
-
-					loProject._ServerInfo	= loReg.RESERVED2
-					loProject._Debug		= loReg.DEBUG
-					loProject._Encrypted	= loReg.ENCRYPT
-					lcDevInfo				= loReg.DEVINFO
-
-
-					*--- Ubico el programa principal
-					LOCATE FOR MAINPROG
-
-					IF FOUND()
-						loProject._MainProg	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( NAME ) ) )
-					ENDIF
-
-
-					*-- Ubico el Project Hook
-					LOCATE FOR TYPE == 'W'
-
-					IF FOUND()
-						loProject._ProjectHookLibrary	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( NAME ) ) )
-						loProject._ProjectHookClass	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( RESERVED1 ) ) )
-					ENDIF
-
-
-					*-- Ubico el icono del proyecto
-					LOCATE FOR TYPE == 'i'
-
-					IF FOUND()
-						loProject._Icon	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( NAME ) ) )
-					ENDIF
-
-
-					*-- Escaneo el proyecto
-					SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
-						loReg	= NULL
-						SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
-
-						IF toFoxBin2Prg.l_NoTimestamps
-							loReg.TIMESTAMP	= 0
-						ENDIF
-						IF toFoxBin2Prg.l_ClearUniqueID
-							loReg.ID	= 0
-						ENDIF
-
-						loReg.NAME		= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( loReg.NAME ) ) )
-						loReg.COMMENTS	= ALLTRIM( .get_ValueFromNullTerminatedValue( loReg.COMMENTS ) )
-
-						*-- TIP: Si el "Name" del objeto está vacío, lo salteo
-						IF EMPTY(loReg.NAME)
-							LOOP
-						ENDIF
-
-						TRY
-							loProject.ADD( loReg, loReg.NAME )
-						CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
-							*-- Saltear y no agregar el archivo duplicado / Bypass and not add the duplicated file
-						ENDTRY
-					ENDSCAN
-
-
+					.updateProgressbar( 'Processing Project info...', 2, 3, 1 )
+					loServerHead	= loProject._ServerHead					
+					
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 
@@ -14831,15 +14760,12 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Información del programa
-					loProject.parseDeviceInfo( lcDevInfo )
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + loProject.getFormattedDeviceInfoText() + CR_LF
 
 
 					*-- Información de los Servidores definidos
 					IF NOT EMPTY(loProject._ServerInfo)
-						loServerHead.parseServerInfo( loProject._ServerInfo )
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + loServerHead.getFormattedServerText() + CR_LF
-						loServerHead	= NULL
 					ENDIF
 
 
@@ -14908,9 +14834,6 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 					FOR EACH loReg IN loProject &&FOXOBJECT
 						IF NOT EMPTY(loReg.COMMENTS)
-							*TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							*	<<>>	.ITEM(lcCurdir + '<<loReg.NAME>>').Description = '<<loReg.COMMENTS>>'
-							*ENDTEXT
 							C_FB2PRG_CODE = C_FB2PRG_CODE + CHR(13) + CHR(10) + CHR(9) + ".ITEM(lcCurdir + '" + loReg.NAME + "').Description = '" + loReg.COMMENTS + "'"
 						ENDIF
 						loReg	= NULL
@@ -14987,7 +14910,6 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Build y cierre
-					*	_VFP.Projects('<<JUSTFNAME( .c_inputFile )>>').FILES('__newproject.f2b').Remove()
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
 						_VFP.Projects('<<JUSTFNAME( EVL( .c_OriginalFileName, .c_InputFile ) )>>').Close()
@@ -15018,13 +14940,154 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 				*-- Genero el PJ2
-				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 2, 2, 1 )
+				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_PJ2 + '...', 3, 3, 1 )
 
 				IF .l_Test
 					toModulo	= C_FB2PRG_CODE
 				ELSE
 					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
 				ENDIF
+			ENDWITH && THIS
+
+
+		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
+			lnCodError	= toEx.ERRORNO
+
+			DO CASE
+			CASE lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
+				toEx.USERVALUE	= toEx.USERVALUE + loLang.C_DUPLICATED_FILE_LOC + ': ' + loReg.NAME
+			ENDCASE
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loProject, loReg, loServerHead, loServerData
+			RELEASE toModulo, toEx, toFoxBin2Prg ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
+				, loProject, loServerHead, loServerData
+
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE loadFile
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toModulo					(!@    OUT) Objeto generado de clase CL_PROJECT con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg, toProject
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		DODEFAULT( @toModulo, @toEx, @toFoxBin2Prg )
+
+		TRY
+			LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
+				, loEx AS EXCEPTION ;
+				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
+				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
+				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
+			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+			loLang			= _SCREEN.o_FoxBin2Prg_Lang
+			STORE NULL TO loProject, loReg, loServerHead, loServerData
+
+			WITH THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
+				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
+				SELECT * FROM _TABLAORIG INTO CURSOR TABLABIN
+				USE IN (SELECT("_TABLAORIG"))
+
+				.updateProgressbar( 'Loading Project info...', 1, 3, 1 )
+
+
+				*-- Obtengo los archivos del proyecto
+				loProject		= CREATEOBJECT('CL_PROJECT')
+				toProject		= loProject
+				loServerHead	= loProject._ServerHead
+				SCATTER MEMO NAME loReg
+
+				IF toFoxBin2Prg.l_NoTimestamps
+					loReg.TIMESTAMP	= 0
+				ENDIF
+				IF toFoxBin2Prg.l_ClearUniqueID
+					loReg.ID	= 0
+				ENDIF
+
+				loProject._HomeDir		= ['] + ALLTRIM( .get_ValueFromNullTerminatedValue( loReg.HOMEDIR ) ) + [']
+				loProject._ServerInfo	= loReg.RESERVED2
+				loProject._Debug		= loReg.DEBUG
+				loProject._Encrypted	= loReg.ENCRYPT
+				loProject.parseDeviceInfo( loReg.DEVINFO )
+
+				*-- Información de los Servidores definidos
+				IF NOT EMPTY(loProject._ServerInfo)
+					loServerHead.parseServerInfo( loProject._ServerInfo )
+					loServerHead	= NULL
+				ENDIF
+
+
+				*--- Ubico el programa principal
+				LOCATE FOR MAINPROG
+
+				IF FOUND()
+					loProject._MainProg	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( NAME ) ) )
+				ENDIF
+
+
+				*-- Ubico el Project Hook
+				LOCATE FOR TYPE == 'W'
+
+				IF FOUND()
+					loProject._ProjectHookLibrary	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( NAME ) ) )
+					loProject._ProjectHookClass	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( RESERVED1 ) ) )
+				ENDIF
+
+
+				*-- Ubico el icono del proyecto
+				LOCATE FOR TYPE == 'i'
+
+				IF FOUND()
+					loProject._Icon	= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( NAME ) ) )
+				ENDIF
+
+
+				*-- Escaneo el proyecto
+				SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
+					loReg	= NULL
+					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
+
+					IF toFoxBin2Prg.l_NoTimestamps
+						loReg.TIMESTAMP	= 0
+					ENDIF
+					IF toFoxBin2Prg.l_ClearUniqueID
+						loReg.ID	= 0
+					ENDIF
+
+					loReg.NAME		= LOWER( ALLTRIM( .get_ValueFromNullTerminatedValue( loReg.NAME ) ) )
+					loReg.COMMENTS	= ALLTRIM( .get_ValueFromNullTerminatedValue( loReg.COMMENTS ) )
+
+					*-- TIP: Si el "Name" del objeto está vacío, lo salteo
+					IF EMPTY(loReg.NAME)
+						LOOP
+					ENDIF
+
+					TRY
+						loProject.ADD( loReg, loReg.NAME )
+					CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
+						*-- Saltear y no agregar el archivo duplicado / Bypass and not add the duplicated file
+					ENDTRY
+				ENDSCAN
 			ENDWITH && THIS
 
 
@@ -15049,7 +15112,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 			USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
-				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 				, loProject, loServerHead, loServerData
 
 		ENDTRY
@@ -15085,7 +15148,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 
 		TRY
 			IF toFoxBin2Prg.l_ProcessFiles THEN
-				LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+				LOCAL lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 					, lcStrPJM, laLines(1), laProps(1) ;
 					, loEx AS EXCEPTION ;
 					, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
@@ -15096,12 +15159,12 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE NULL TO loProject, loReg, loServerHead, loServerData
 				lcStrPJM		= FILETOSTR( THIS.c_InputFile )
-				loServerHead	= CREATEOBJECT('CL_PROJ_SRV_HEAD')
 				THIS.updateProgressbar( 'Scanning PJM...', 1, 2, 1 )
 
 
 				*-- Obtengo los archivos del proyecto
 				loProject		= CREATEOBJECT('CL_PROJECT')
+				loServerHead	= loProject._ServerHead
 
 				WITH loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 					*-- Proj.Info
@@ -15156,7 +15219,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 						ENDWITH
 
 					ELSE
-						loServerData = CREATEOBJECT("CL_PROJ_SRV_DATA")
+						loServerData = loServerHead.getServerDataObject()
 
 						WITH loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
 							._HelpContextID	= laProps(4)
@@ -15444,7 +15507,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 			*USE IN (SELECT("TABLABIN"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
-				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lcDevInfo, lnLen ;
+				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 				, lcStrPJM, laLines, laProps, loProject, loServerHead, loServerData
 
 		ENDTRY
