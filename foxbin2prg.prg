@@ -2604,7 +2604,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 						lnFileCount	= ADIR( laFiles, lcFileSpec, '', 1 )
 
 						FOR I = 1 TO lnFileCount
-							lcFile	= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
+							toModulo	= NULL
+							lcFile		= FORCEPATH( laFiles(I,1), JUSTPATH( lcFileSpec ) )
 
 							DO CASE
 							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJX' AND LEFT(EVL(tcType,'0'),1) == '*'
@@ -2709,7 +2710,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 							.get_FilesFromDirectory( tc_InputFile, @laFiles, @lnFileCount )
 
 							FOR I = 1 TO lnFileCount
-								lcFile	= laFiles(I)
+								toModulo	= NULL
+								lcFile		= laFiles(I)
 
 								IF NOT .hasSupport_Bin2Prg( JUSTEXT(lcFile) ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
 									LOOP
@@ -2769,7 +2771,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 							.get_FilesFromDirectory( tc_InputFile, @laFiles, @lnFileCount )
 
 							FOR I = 1 TO lnFileCount
-								lcFile	= laFiles(I)
+								toModulo	= NULL
+								lcFile		= laFiles(I)
 
 								IF NOT .hasSupport_Prg2Bin( JUSTEXT(lcFile) ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
 									LOOP
@@ -3010,7 +3013,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 			SET NOTIFY &lc_OldSetNotify.
 			STORE NULL TO loFSO, loWSH
 			RELEASE tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
-				, toModulo, toEx, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+				, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
 				, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp ;
 				, I, lcPath, lcFileSpec, lcFile, laFiles, lnFileCount, lcErrorInfo, lcErrorFile, loEx, loFSO
 		ENDTRY
@@ -14734,10 +14737,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				, loEx AS EXCEPTION ;
 				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
 			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
-			STORE NULL TO loProject, loReg, loServerHead, loServerData
+			STORE NULL TO loProject, loReg, loServerHead
 
 			WITH THIS AS c_conversor_pjx_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
@@ -14968,10 +14970,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			STORE NULL TO loProject, loReg, loServerHead, loServerData
+			STORE NULL TO loProject, loReg, loServerHead
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
-				, loProject, loServerHead, loServerData
+				, loProject, loServerHead
 
 		ENDTRY
 
