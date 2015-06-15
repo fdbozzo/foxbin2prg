@@ -20,6 +20,7 @@ Change History -------------------------------------------------------------
 2015/06/09	v1.19.45
 - Bug Fix: When a menu that uses single quotes or an expression in the option's MESSAGE is exported to text, when regenerating the menu from the text there are parts of the message that are cut off (Mike Potjer)
 - Bug Fix: When processing multiple PJ2 files, an error "variable llError not defined" can occur (Lutz Scheffler)
+- Bug Fix pjx,*/pj2,*: PJX/PJ2 projects that references files from other disk units throw errors for those files when processing with "*" or "*-" options (Matt Slay)
 
 
 2015/05/31	v1.19.44
