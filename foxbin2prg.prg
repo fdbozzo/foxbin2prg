@@ -169,6 +169,7 @@
 * 31/05/2015	FDBOZZO		v1.19.44	Bug Fix: Un arreglo previo en el manejo de errores en cascada provocó un reseteo del último estado de error de proceso, haciendo que a veces los errores no se reporten.
 * 01/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Mike Potjer)
 * 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Lutz Scheffler)
+* 15/06/2015	FDBOZZO		v1.19.45	Bug Fix pjx,*/pj2,*: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Matt Slay)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -257,6 +258,7 @@
 * 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
 * 01/06/2015	Mike Potjer			Reporte Bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
 * 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
+* 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3078,7 +3080,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				SCAN FOR NOT DELETED() AND Type <> 'H'
 					lnFileCount	= lnFileCount + 1
 					DIMENSION laFiles(lnFileCount,1)
-					laFiles(lnFileCount,1) = ADDBS( JUSTPATH( lcFileSpec ) ) + ALLTRIM( NAME, 0, ' ', CHR(0) )
+					laFiles(lnFileCount,1)	= .get_absolutepath( ALLTRIM( NAME, 0, ' ', CHR(0) ), ADDBS( JUSTPATH( lcFileSpec ) ) )
 				ENDSCAN
 
 				USE IN (SELECT("TABLABIN"))
@@ -3182,8 +3184,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				FOR I = lnFileCount TO 1 STEP -1
 					IF '.ADD(' $ laFiles(I)
-						laFiles(I)	= ADDBS( JUSTPATH( lcFileSpec ) ) + STREXTRACT( laFiles(I), ".ADD('", "')" )
-						laFiles(I)	= FORCEEXT( laFiles(I), .get_Ext2FromExt( UPPER(JUSTEXT(laFiles(I))) ) )
+						lcFile		= .get_absolutepath( STREXTRACT( laFiles(I), ".ADD('", "')" ), ADDBS( JUSTPATH( lcFileSpec ) ) )
+						laFiles(I)	= FORCEEXT( lcFile, .get_Ext2FromExt( UPPER(JUSTEXT(lcFile)) ) )
 					ELSE
 						lnFileCount	= lnFileCount - 1
 						ADEL( laFiles, I )
