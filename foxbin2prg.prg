@@ -2986,7 +2986,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				CASE lnCodError = 1799	&& Conversion Cancelled
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 
-				CASE THIS.l_Error
+				CASE THIS.l_Errors
 					IF ADIR(laDirInfo, THIS.c_ErrorLogFile) > 0 THEN
 						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 						loWSH.Run( THIS.c_ErrorLogFile, 3 )
@@ -3001,12 +3001,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			ENDCASE
 
-			IF EMPTY(lnCodError) AND THIS.l_Error
+			IF EMPTY(lnCodError) AND THIS.l_Errors
 				lnCodError = 1098
-			ENDIF
-
-			IF lnCodError > 0 THEN
-				THIS.l_Errors = .T.
 			ENDIF
 
 			SET NOTIFY &lc_OldSetNotify.
@@ -4113,6 +4109,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				.errOut(tcText)
 				.l_Error	= .T.
+				.l_Errors 	= .T.
 			ENDWITH
 		CATCH
 		ENDTRY
