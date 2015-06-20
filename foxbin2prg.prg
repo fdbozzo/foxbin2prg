@@ -493,6 +493,10 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_FILETYPE_QUERYSUPPORT		"Q"
 *-- Fin / End
 
+IF _VFP.StartMode > 0 THEN
+	SYS(2450,1)
+ENDIF
+
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 LOCAL lnResp, loEx AS EXCEPTION
 
@@ -4638,11 +4642,13 @@ DEFINE CLASS frm_avance AS Form
 				THISFORM.CAPTION		= 'FoxBin2Prg ' + _SCREEN.c_FB2PRG_EXE_Version + ' > - ' + loLang.C_PROCESS_PROGRESS_LOC + '  (' + loLang.C_PRESS_ESC_TO_CANCEL + ')'
 			ENDIF
 
-			IF ADIR( laDirInfo, FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) > 0 THEN
+			*IF ADIR( laDirInfo, FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) > 0 THEN
+			IF FILE( FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' ) ) THEN
 				THISFORM.Icon = FORCEEXT( toFoxBin2Prg.c_Foxbin2prg_FullPath, 'ICO' )
 			ENDIF
 
-			IF ADIR( laDirInfo, toFoxBin2Prg.c_BackgroundImage ) > 0 THEN
+			*IF ADIR( laDirInfo, toFoxBin2Prg.c_BackgroundImage ) > 0 THEN
+			IF FILE( toFoxBin2Prg.c_BackgroundImage ) THEN
 				CLEAR RESOURCES
 				THISFORM.Picture = toFoxBin2Prg.c_BackgroundImage
 			ENDIF
