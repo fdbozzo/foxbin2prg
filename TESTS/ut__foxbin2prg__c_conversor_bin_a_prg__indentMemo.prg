@@ -18,18 +18,20 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentMemo AS FxuTestCase OF
 	#DEFINE C_ENDIF				'#ENDIF'
 	#DEFINE C_DEFINE_CLASS		'DEFINE CLASS'
 	#DEFINE C_ENDDEFINE_CLASS	'ENDDEFINE'
-	icObj = NULL
+	icObj 	= NULL
 
 
 	*******************************************************************************************************************************************
 	FUNCTION SETUP
 		PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
 		LOCAL loObj AS c_conversor_base OF "FOXBIN2PRG.PRG"
-		SET PROCEDURE TO 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		SET PROCEDURE TO 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG', 'foxbin2prg.prg'
 		oFXU_LIB = CREATEOBJECT('CL_FXU_CONFIG')
 		oFXU_LIB.setup_comun()
 
-		THIS.icObj 	= NEWOBJECT("c_conversor_bin_a_prg", "FOXBIN2PRG.PRG")
+		THIS.icObj 	= CREATEOBJECT("c_conversor_bin_a_prg")
+		_SCREEN.AddProperty( "o_FoxBin2Prg_Lang", CREATEOBJECT("CL_LANG") )
+
 		loObj			= THIS.icObj
 		loObj.l_Test	= .T.
 
@@ -47,7 +49,7 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__indentMemo AS FxuTestCase OF
 			oFXU_LIB.teardown_comun()
 			oFXU_LIB = NULL
 		ENDIF
-		RELEASE PROCEDURE 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		RELEASE PROCEDURE 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG', 'foxbin2prg.prg'
 
 	ENDFUNC
 

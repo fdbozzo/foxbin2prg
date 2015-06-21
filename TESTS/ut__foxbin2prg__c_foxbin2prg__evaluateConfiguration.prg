@@ -19,9 +19,7 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__evaluateConfiguration AS FxuTestCase 
 		oFXU_LIB = CREATEOBJECT('CL_FXU_CONFIG')
 		oFXU_LIB.setup_comun()
 
-		THIS.ioFB2P 	= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
-		*loFB2P			= THIS.ioFB2P
-		*loFB2P.l_Test	= .F.
+		THIS.ioFB2P 	= CREATEOBJECT("c_foxbin2prg")
 		
 		ERASE ('TESTS\DATOS_TEST\foxbin2prg.cfg')
 		ERASE ('TESTS\DATOS_TEST\foxbin2prg.cfg.bak')
@@ -152,7 +150,8 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__evaluateConfiguration AS FxuTestCase 
 		TRY
 			loEx			= NULL
 			loFB2P_Esperado	= CREATEOBJECT("EMPTY")
-			THIS.ioFB2P		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG", "", FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest ) )
+			THIS.ioFB2P		= NULL
+			THIS.ioFB2P		= CREATEOBJECT("c_foxbin2prg", FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest ) )
 			loFB2P			= THIS.ioFB2P
 			*loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
 
@@ -653,7 +652,8 @@ DEFINE CLASS ut__foxbin2prg__c_foxbin2prg__evaluateConfiguration AS FxuTestCase 
 
 		TRY
 			loEx			= NULL
-			THIS.ioFB2P		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG", "", FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest ) )
+			THIS.ioFB2P		= NULL
+			THIS.ioFB2P		= CREATEOBJECT("c_foxbin2prg", FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest ) )
 			loFB2P			= THIS.ioFB2P
 			*loFB2P.c_Foxbin2prg_ConfigFile	= FORCEPATH( 'foxbin2prg.cfg', oFXU_LIB.cPathDatosTest )
 			loFB2P.l_ShowErrors	= .F.
