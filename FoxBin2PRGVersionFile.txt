@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.44'
-    .VersionDate          = Date(2015,05,31)
+    .VersionNumber        = 'v1.19.45'
+    .VersionDate          = Date(2015,06,21)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,15 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/06/21	v1.19.45
+- Bug Fix mnx: When a menu that uses single quotes or an expression in the option's MESSAGE is exported to text, when regenerating the menu from the text there are parts of the message that are cut off (Mike Potjer)
+- Bug Fix: When processing multiple PJ2 files, an error "variable llError not defined" can occur (Lutz Scheffler)
+- Bug Fix pjx/pj2: PJX/PJ2 projects that references files from other disk units throw errors for those files when processing with "*" or "*-" options (Matt Slay)
+- Bug Fix: When processing multiple-files, sometimes encountered errores are not reported
+- Feature (API-PJX): New loadModule() method that returns the internal FoxBin2Prg Project object when the full name of an existent project file is specified
+- Feature (API-PJX): New getFilesNotFound() method for the FoxBin2Prg's Project object, that returns the count of files referenced in the project that are not found on disk and an array with all the existence state of each file
+
 
 2015/05/31	v1.19.44
 - Bug Fix: In certain PCs FoxBin2Prg does not return error codes when called from an external program, so another terminating method is implemented (Ralf Wagner)
