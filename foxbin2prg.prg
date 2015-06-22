@@ -171,6 +171,7 @@
 * 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Lutz Scheffler)
 * 15/06/2015	FDBOZZO		v1.19.45	Bug Fix pjx,*/pj2,*: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Matt Slay)
 * 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
+* 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2285,11 +2286,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE get_Ext2FromExt
-		LPARAMETERS tcExt
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcExt, tcDir
+
 		LOCAL lcExt2
 		tcExt	= UPPER(tcExt)
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			IF NOT EMPTY(tcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			ENDIF
+
 			lcExt2	= ICASE( tcExt == 'PJX', .c_PJ2 ;
 				, tcExt == 'VCX', .c_VC2 ;
 				, tcExt == 'SCX', .c_SC2 ;
@@ -2307,11 +2319,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE hasSupport_Bin2Prg
-		LPARAMETERS tcExt
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcExt, tcDir
+
 		LOCAL llhasSupport
 		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			IF NOT EMPTY(tcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			ENDIF
+
 			llhasSupport	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support > 0 ;
 				, tcExt == 'VCX', .VCX_Conversion_Support > 0 ;
 				, tcExt == 'SCX', .SCX_Conversion_Support > 0 ;
@@ -2329,11 +2352,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE hasSupport_Prg2Bin
-		LPARAMETERS tcExt
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcExt, tcDir
+
 		LOCAL llhasSupport
 		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			IF NOT EMPTY(tcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			ENDIF
+
 			llhasSupport	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
 				, tcExt == .c_VC2, .VCX_Conversion_Support = 2 ;
 				, tcExt == .c_SC2, .SCX_Conversion_Support = 2 ;
