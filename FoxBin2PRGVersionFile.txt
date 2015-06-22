@@ -18,6 +18,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 Change History -------------------------------------------------------------
 
 2015/06/22	v1.19.46
+- Bug Fix: set_UserValue() method causes error when trying to get information about another error and the VFP binary table can not be opened (ie, because corrupted memo)
 
 
 2015/06/21	v1.19.45

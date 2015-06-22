@@ -170,6 +170,7 @@
 * 01/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Mike Potjer)
 * 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Lutz Scheffler)
 * 15/06/2015	FDBOZZO		v1.19.45	Bug Fix pjx,*/pj2,*: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Matt Slay)
+* 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -13062,15 +13063,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 			toEx.UserValue = toEx.UserValue + CR_LF
 
-			IF INLIST(.c_Type, 'SCX', 'VCX') THEN
-				lcMethods		= METHODS
+			IF NOT EMPTY(ALIAS()) AND INLIST(.c_Type, 'SCX', 'VCX') THEN
+				IF TYPE("METHODS")#"U" THEN
+					lcMethods		= METHODS
+				ENDIF
 				toEx.UserValue	= toEx.UserValue + 'Error location ' + '..............................' + CR_LF
 
-				IF NOT EMPTY(Parent)
+				IF TYPE("PARENT")#"U" AND NOT EMPTY(Parent) THEN
 					lcLocation	= lcLocation + Parent + '.'
 				ENDIF
 
-				lcLocation	= lcLocation + OBJNAME
+				IF TYPE("OBJNAME")#"U" THEN
+					lcLocation	= lcLocation + OBJNAME
+				ENDIF
 
 				*-- Busco el Procedure si hay un n_Methods_LineNo
 				ALINES(laCodeLines, lcMethods)
