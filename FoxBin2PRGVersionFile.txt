@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.45'
-    .VersionDate          = Date(2015,06,21)
+    .VersionNumber        = 'v1.19.46'
+    .VersionDate          = Date(2015,06,22)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -16,6 +16,9 @@ Text to lcNote NoShow
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2015/06/22	v1.19.46
+
 
 2015/06/21	v1.19.45
 - Bug Fix mnx: When a menu that uses single quotes or an expression in the option's MESSAGE is exported to text, when regenerating the menu from the text there are parts of the message that are cut off (Mike Potjer)
