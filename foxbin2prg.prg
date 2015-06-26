@@ -7995,11 +7995,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							AND NOT .lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
 
 						DO CASE
-						CASE UPPER( LEFT( tcLine + ' ', 8 ) ) == C_ENDPROC + ' ' && Fin del PROCEDURE
+						CASE UPPER( LEFT( tcLine + ' ', 8 ) ) == 'ENDPROC ' ; && Fin del PROCEDURE
+							OR UPPER( LEFT( tcLine + ' ', 8 ) ) == 'ENDFUNC ' && Fin de la FUNCTION
+
 							tcProcedureAbierto	= ''
 							EXIT
 
-						CASE UPPER( LEFT( tcLine + ' ', 10 ) ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEFINE) encontrado
+						CASE UPPER( LEFT( tcLine + ' ', 10 ) ) == 'ENDDEFINE '	&& Fin de bloque (ENDDEFINE) encontrado
 							IF llEsProcedureDeClase
 								*ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
 								+ toClase._Nombre + ' (' + loProcedure._Nombre + ')' ;
@@ -8869,6 +8871,25 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				*-- Estructura a reconocer: PROCEDURE [objeto.]nombre_del_procedimiento
 				llBloqueEncontrado	= .T.
 				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 11 ) )
+				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'normal', @toObjeto )
+
+			CASE UPPER( LEFT( tcLine, 19 ) ) == 'PROTECTED FUNCTION '
+				*-- Estructura a reconocer: PROTECTED PROCEDURE nombre_del_procedimiento
+				llBloqueEncontrado	= .T.
+				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 20 ) )
+				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'protected', @toObjeto )
+
+
+			CASE UPPER( LEFT( tcLine, 16 ) ) == 'HIDDEN FUNCTION '
+				*-- Estructura a reconocer: HIDDEN FUNCTION nombre_del_procedimiento
+				llBloqueEncontrado	= .T.
+				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 17 ) )
+				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'hidden', @toObjeto )
+
+			CASE UPPER( LEFT( tcLine, 9 ) ) == 'FUNCTION '
+				*-- Estructura a reconocer: FUNCTION [objeto.]nombre_del_procedimiento
+				llBloqueEncontrado	= .T.
+				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 10 ) )
 				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'normal', @toObjeto )
 
 			ENDCASE
