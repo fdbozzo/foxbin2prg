@@ -3116,7 +3116,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				SCAN FOR NOT DELETED() AND Type <> 'H'
 					lnFileCount	= lnFileCount + 1
 					DIMENSION laFiles(lnFileCount,1)
-					laFiles(lnFileCount,1)	= .get_absolutepath( ALLTRIM( NAME, 0, ' ', CHR(0) ), ADDBS( JUSTPATH( lcFileSpec ) ) )
+					laFiles(lnFileCount,1)	= .get_AbsolutePath( ALLTRIM( NAME, 0, ' ', CHR(0) ), ADDBS( JUSTPATH( lcFileSpec ) ) )
 				ENDSCAN
 
 				USE IN (SELECT("TABLABIN"))
@@ -3228,7 +3228,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				FOR I = lnFileCount TO 1 STEP -1
 					IF '.ADD(' $ laFiles(I)
-						lcFile		= .get_absolutepath( STREXTRACT( laFiles(I), ".ADD('", "')" ), ADDBS( JUSTPATH( lcFileSpec ) ) )
+						lcFile		= .get_AbsolutePath( STREXTRACT( laFiles(I), ".ADD('", "')" ), ADDBS( JUSTPATH( lcFileSpec ) ) )
 						laFiles(I)	= FORCEEXT( lcFile, .get_Ext2FromExt( UPPER(JUSTEXT(lcFile)) ) )
 					ELSE
 						lnFileCount	= lnFileCount - 1
@@ -8358,9 +8358,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, llCLASSMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
 					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed, llOBJECTMETADATA_Completed ;
 					, llCLASSCOMMENTS_Completed ;
-					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG' ;
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
@@ -11025,8 +11025,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL loReg, I, lcFieldType, lnFieldLen, lnFieldDec, lnNumCampo, laFieldTypes(1,18) ;
-				, luValor, lnCodError, loEx AS EXCEPTION
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				, luValor, lnCodError, loEx AS EXCEPTION ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			SELECT TABLABIN
 			AFIELDS( laFieldTypes )
@@ -12190,8 +12191,9 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lnItem, I, X, lcClaseExterna
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL lnItem, I, X, lcClaseExterna ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
 		*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
@@ -12966,8 +12968,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethod, tcIndentation, tlKeepProcHeader
 		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
 		TRY
-			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1), lnOffset
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1), lnOffset ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			lcMethod		= ''
 			lnInicio		= 1
@@ -14178,7 +14181,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL lcExpanded
+			LOCAL lcExpanded, llFileExists, lnBytes, lcOutputFile ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			lcExpanded	= IIF( '.' $ JUSTSTEM(tcOutputFile), 'X1', 'X0' )
 
 			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -14196,8 +14201,6 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				EXIT	&& Si se indicó no procesar, salgo del proceso. (Modo de simulación)
 			ENDIF
 
-			LOCAL llFileExists, lnBytes, lcOutputFile
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			lcOutputFile	= tcOutputFile
 			llFileExists	= FILE(tcOutputFile)
@@ -15030,7 +15033,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			LOCAL toModulo AS cl_project OF 'FOXBIN2PRG.PRG'
+			LOCAL toModulo AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx, @toFoxBin2Prg )
 
@@ -15039,7 +15042,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				, loEx AS EXCEPTION ;
 				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			STORE NULL TO loProject, loReg, loServerHead
 
@@ -15053,8 +15057,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 					.updateProgressbar( 'Processing Project info...', 2, 3, 1 )
 					loProject		= toModulo
-					loServerHead	= loProject._ServerHead					
-					
+					loServerHead	= loProject._ServerHead
+
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 
@@ -15307,8 +15311,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				, loEx AS EXCEPTION ;
 				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG' ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 
@@ -15464,9 +15469,9 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 					, loEx AS EXCEPTION ;
 					, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 					, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-					, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
+					, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG' ;
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE NULL TO loProject, loReg, loServerHead, loServerData
 				lcStrPJM		= FILETOSTR( THIS.c_InputFile )
@@ -15864,8 +15869,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
 					LOCAL lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen ;
-						, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-					LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+						, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
+						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 					loLang			= _SCREEN.o_FoxBin2Prg_Lang
 					STORE 0 TO lnCodError, lnLastClass
 					STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
@@ -16058,8 +16064,9 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
 					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
 					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
-					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
-				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE NULL TO loTable, loDBFUtils
 				STORE 0 TO lnCodError
@@ -16420,8 +16427,9 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			WITH THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					LOCAL lnCodError, lnLen
-					LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+					LOCAL lnCodError, lnLen ;
+						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 					loLang			= _SCREEN.o_FoxBin2Prg_Lang
 					STORE 0 TO lnCodError
 
@@ -17350,7 +17358,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		LPARAMETERS tcDevInfo
 
 		TRY
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				._Author			= .parseNullTerminatedValue( @tcDevInfo, 1, 45 )
 				._Company			= .parseNullTerminatedValue( @tcDevInfo, 47, 45 )
 				._Address			= .parseNullTerminatedValue( @tcDevInfo, 93, 45 )
@@ -17393,7 +17401,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 				tcDevInfo	= REPLICATE( CHR(0), 1795 )
 			ENDIF
 
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				tcDevInfo	= STUFF( tcDevInfo, 1, LEN(._Author), ._Author)
 				tcDevInfo	= STUFF( tcDevInfo, 47, LEN(._Company), ._Company)
 				tcDevInfo	= STUFF( tcDevInfo, 93, LEN(._Address), ._Address)
@@ -17436,7 +17444,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 			LOCAL lcText
 			lcText		= ''
 
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<C_DEVINFO_I>>
 					_Author = "<<._Author>>"
@@ -17482,17 +17490,17 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		* taFiles					(?@    OUT) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
 		*---------------------------------------------------------------------------------------------------
 		EXTERNAL ARRAY taFiles
-		
+
 		TRY
 			LOCAL I, lnCount, laDirFile(1,5), lcHomeDir
 
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				DIMENSION taFiles( MAX(1,.Count), 2)
 				taFiles(1,1)	= ''
 				taFiles(1,2)	= .F.
 				lnCount			= 0
 				lcHomeDir		= ADDBS( EVL(JUSTPATH(.c_InputFile), ._HomeDir) )
-				
+
 				FOR I = 1 TO .Count
 					taFiles(I,1)	= .Item(I).Name
 					taFiles(I,2)	= ( ADIR(laDirFile, .get_AbsolutePath( taFiles(I,1), lcHomeDir) ) = 1 )
@@ -18133,8 +18141,9 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		* tnPropertyID				(v! IN    ) ID de la Propiedad
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tnPropertyID
-		LOCAL lcValueType
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL lcValueType ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 		lcValueType	= ''
 
@@ -22217,7 +22226,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			lnFileCount	= ADIR(laDirFile, lcTableCFG)
 
 			IF toFoxBin2Prg.DBF_Conversion_Support = 4 ;	&& BIN2PRG (DATA EXPORT FOR DIFF)
-					OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
+				OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
 				llExportData	= .T.
 			ENDIF
 
