@@ -20,7 +20,7 @@ _Country = "Spain"
 *--
 _Comments = "Conversor bidireccional de binarios FoxPro 9 (scx,vcx,pjx,pjm,mnx,frx,lbx,dbf,dbc) a texto para sustituir al scctext :-)"
 _CompanyName = "Fernando D. Bozzo"
-_FileDescription = "Conversor bidireccional de binarios FoxPro 9 (scx,vcx,pjx) a texto para sustituir al scctext :-)"
+_FileDescription = "Conversor bidireccional de binarios FoxPro 9 (scx,vcx,pjx,pjm,mnx,frx,lbx,dbf,dbc) a texto para sustituir al scctext :-)"
 _LegalCopyright = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
 _LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
 _ProductName = "FOXBIN2PRG"
@@ -54,7 +54,6 @@ WITH loProject.FILES
 	.ADD('foxbin2prg.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('foxbin2prg.jpg')		&& *< FileMetadata: Type="x" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('foxbin2prg.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
-	.ADD('foxbin2prg_keywords.dbf')		&& *< FileMetadata: Type="D" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_all.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_checkbox.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
 	.ADD('props_collection.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
@@ -125,7 +124,6 @@ WITH loProject.FILES
 	*</FileComments>
 
 	*<ExcludedFiles>
-	.ITEM(lcCurdir + 'foxbin2prg_keywords.dbf').Exclude = .T.
 	.ITEM(lcCurdir + 'readme.txt').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\foxunit_path.txt').Exclude = .T.
 	.ITEM(lcCurdir + 'tests\ft__foxbin2prg__c_conversor_bin_a_prg.prg').Exclude = .T.
