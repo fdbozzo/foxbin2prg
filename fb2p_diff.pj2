@@ -40,14 +40,14 @@ FOR EACH loProject IN _VFP.Projects FOXOBJECT
 ENDFOR
 
 STRTOFILE( '', '__newproject.f2b' )
-BUILD PROJECT fb2p_diff.PJX FROM '__newproject.f2b'
+BUILD PROJECT fb2p_diff.pjx FROM '__newproject.f2b'
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
 ENDFOR
 
-MODIFY PROJECT 'fb2p_diff.PJX' NOWAIT NOSHOW NOPROJECTHOOK
+MODIFY PROJECT 'fb2p_diff.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 
-loProject = _VFP.Projects('fb2p_diff.PJX')
+loProject = _VFP.Projects('fb2p_diff.pjx')
 
 WITH loProject.FILES
 	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
@@ -84,7 +84,7 @@ WITH loProject
 ENDWITH
 
 
-_VFP.Projects('fb2p_diff.PJX').Close()
+_VFP.Projects('fb2p_diff.pjx').Close()
 *ERASE '__newproject.f2b'
 CD (lcCurdir)
 RETURN
