@@ -22,6 +22,7 @@ Change History -------------------------------------------------------------
 - Feature: Added internal support for querying directory cfg information, with a new optional parameter, for API methods that require it (ie: get_Ext2FromExt, hasSupport*)
 - Feature: Convert FUNCTION to PROCEDURE for maintaining compatibility with the way that VFP save methods on binaries
 - New fb2p_diff.exe: Allow a quick Diff of VFP9 binaries, for those that don't need converting to text manually
+- Bug Fix: When processing a directory or a project with all the files, sometimes an "Alias already in use" error may occur (Dave Crozier)
 
 
 2015/06/21	v1.19.45
