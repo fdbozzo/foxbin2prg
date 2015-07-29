@@ -172,6 +172,7 @@
 * 15/06/2015	FDBOZZO		v1.19.45	Bug Fix pjx,*/pj2,*: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Matt Slay)
 * 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
 * 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
+* 29/07/2015	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Dave Crozier)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -261,6 +262,7 @@
 * 01/06/2015	Mike Potjer			Reporte Bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
 * 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
+* 29/07/2015	Dave Crozier		Reporte Bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -14641,6 +14643,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loRegClass, loRegObj
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
@@ -14997,6 +15000,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loRegClass, loRegObj
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
@@ -15426,6 +15430,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
@@ -16491,6 +16496,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			RELEASE toMenu, toEx, toFoxBin2Prg, lnCodError, lnLen
 		ENDTRY
 
