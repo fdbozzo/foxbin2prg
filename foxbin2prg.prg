@@ -173,6 +173,7 @@
 * 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
 * 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
 * 29/07/2015	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Dave Crozier)
+* 29/07/2015	FDBOZZO		v1.19.46	Mejora DBF-Data: Permitir exportar e importar datos de los DBF (Walter Nicholls)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -263,6 +264,7 @@
 * 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
 * 29/07/2015	Dave Crozier		Reporte Bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
+* 29/07/2015	Walter Nicholls		Mejora DBF-Data v1.19.45: Permitir exportar e importar datos de los DBF
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -23018,10 +23020,10 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 					DO CASE
 					CASE lcFieldType == 'G'
 						luValue		= 'GENERAL FIELD NOT SUPPORTED'
-					CASE lcFieldType == 'W'
-						luValue		= 'BLOB FIELD NOT SUPPORTED'
-					CASE lcFieldType == 'Q'
-						luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+					*CASE lcFieldType == 'W'
+					*	luValue		= 'BLOB FIELD NOT SUPPORTED'
+					*CASE lcFieldType == 'Q'
+					*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
 					OTHERWISE
 						luValue		= EVALUATE(lcField)
 					ENDCASE
@@ -23034,7 +23036,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 						ENDIF &&.Encode(luValue) <> luValue
 					ENDCASE
 					TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
-						<<>>			<<'<' + lcField + '>'>><<luValue>></<<lcField>>>
+						<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
 					ENDTEXT
 				NEXT
 
