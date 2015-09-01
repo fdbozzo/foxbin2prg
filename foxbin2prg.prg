@@ -173,6 +173,7 @@
 * 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
 * 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
 * 29/07/2015	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Dave Crozier)
+* 01/09/2015	FDBOZZO		v1.19.46	Bug Fix mnx: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Walter Nichols)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -263,6 +264,8 @@
 * 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
 * 29/07/2015	Dave Crozier		Reporte Bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
+* 29/07/2015	Walter Nicholls		Mejora DBF-Data v1.19.45: Permitir exportar e importar datos de los DBF
+* 28/08/2015	Walter Nicholls		Reporte Bug: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Arreglado en v1.19.46)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3792,20 +3795,86 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
-
 
 
 	PROCEDURE normalizeFileCapitalization
@@ -5925,20 +5994,84 @@ DEFINE CLASS c_conversor_base AS Custom
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
-		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -6153,16 +6286,22 @@ DEFINE CLASS c_conversor_base AS Custom
 	PROCEDURE lineIsOnlyCommentAndNoMetadata
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcLine					(!@ IN/OUT) Línea a separar del comentario
-		* tcComment					(@?    OUT) Comentario
+		* tcLine						(!@ IN/OUT) Línea a separar del comentario
+		* tcComment						(@?    OUT) Comentario
+		* tlDoNotSeparateLineAndComment	(v? IN    ) Indica o separar la línea de código del comentario
+		* tlDeepCommentAnalysis			(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
 		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDoNotSeparateLineAndComment as Boolean, tlDeepCommentAnalysis as Boolean
 		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
 		WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
-			.get_SeparatedLineAndComment( @tcLine, @tcComment )
+			IF tlDoNotSeparateLineAndComment
+				tcComment	= ''
+			ELSE
+				.get_SeparatedLineAndComment( @tcLine, @tcComment, tlDeepCommentAnalysis )
+			ENDIF
 
 			DO CASE
 			CASE LEFT(tcLine,2) == '*<'
@@ -16588,20 +16727,84 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
-		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -16699,20 +16902,84 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
-		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -23018,10 +23285,10 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 					DO CASE
 					CASE lcFieldType == 'G'
 						luValue		= 'GENERAL FIELD NOT SUPPORTED'
-					CASE lcFieldType == 'W'
-						luValue		= 'BLOB FIELD NOT SUPPORTED'
-					CASE lcFieldType == 'Q'
-						luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+					*CASE lcFieldType == 'W'
+					*	luValue		= 'BLOB FIELD NOT SUPPORTED'
+					*CASE lcFieldType == 'Q'
+					*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
 					OTHERWISE
 						luValue		= EVALUATE(lcField)
 					ENDCASE
@@ -23034,7 +23301,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 						ENDIF &&.Encode(luValue) <> luValue
 					ENDCASE
 					TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
-						<<>>			<<'<' + lcField + '>'>><<luValue>></<<lcField>>>
+						<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
 					ENDTEXT
 				NEXT
 
@@ -23786,7 +24053,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment, .F., .T. )
 						LOOP	&& Saltear comentarios
 
 					CASE NOT llBloque_MenuType_Analizado AND LEFT( tcLine, LEN(C_MENUTYPE_I) ) == C_MENUTYPE_I
@@ -24512,7 +24779,7 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment, .F., .T. )
 						LOOP	&& Saltear comentarios
 
 					CASE LEFT( tcLine, LEN(C_MENUCODE_F) ) == C_MENUCODE_F
@@ -24755,7 +25022,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment, .F., .T. )
 						LOOP	&& Saltear comentarios
 
 					CASE LEFT( tcLine, LEN(C_MENUCODE_F) ) == C_MENUCODE_F
