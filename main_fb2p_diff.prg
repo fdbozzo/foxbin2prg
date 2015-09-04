@@ -18,11 +18,18 @@
 *	USO/USE:
 *		DO MAIN_FB2P_DIFF.PRG WITH "<path>\File1.vcx" "<path>\File.vcx"
 *---------------------------------------------------------------------------------------------------
+* <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 04/09/2015	Mike Potjer		Reporte de Bug: Cuando se llama al programa fb2p_diff.exe desde un directorio distinto al de FoxBin2Prg, da un error por no encontrar al conversor (Arreglado en v1.1)
+* </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
+*---------------------------------------------------------------------------------------------------
 LPARAMETERS tcFilename1, tcFilename2
 
-LOCAL lnResp
+LOCAL lnResp, lcSys16, lcOldPath
 PRIVATE poFrm as Form
-lnResp	= 0
+lnResp		= 0
+lcSys16		= SYS(16)
+lcOldPath	= SET("Path")
+SET PATH TO (JUSTPATH(lcSys16)) ADDITIVE
 
 DO FORM FB2P_DIFF.SCX NAME poFrm LINKED NOSHOW
 poFrm.filename1 = EVL(tcFilename1, '')
@@ -32,6 +39,7 @@ poFrm.show()
 READ EVENTS
 
 STORE NULL TO poFrm
+SET PATH TO (lcOldPath)
 RELEASE poFrm
 
 IF _VFP.STARTMODE <> 4 OR NOT SYS(16) == SYS(16,0) && 4 = Visual FoxPro was started as a distributable .app or .exe file.

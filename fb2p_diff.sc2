@@ -66,8 +66,10 @@ DEFINE CLASS frmdiff AS form
 		*m: updateglobalenabled
 		*p: colorgreen
 		*p: coloryellow
-		*p: c_cfg_data
-		*p: c_cfg_file
+		*p: c_cfg_data		&& Contenido del archivo de configuración
+		*p: c_cfg_file		&& Ruta del archivo de configuración
+		*p: c_curdir		&& Ruta actual de la llamada
+		*p: c_fb2p_diff_fullpath		&& Ruta de este form
 		*p: difftoolconfig		&& Configuration for the Diff tool
 		*p: difftoolname		&& Name of the Diff tool
 		*p: difftoolpath
@@ -94,8 +96,10 @@ DEFINE CLASS frmdiff AS form
 	Caption = "Diff VFP 9 binary files (scx,vcx,mnx,pjx,frx,lbx,dbc,dbf)"
 	colorgreen = (RGB(35,245,24))
 	coloryellow = (RGB(239,245,165))
-	c_cfg_data = 
-	c_cfg_file = fb2p_diff.cfg
+	c_cfg_data = 		&& Contenido del archivo de configuración
+	c_cfg_file = 		&& Ruta del archivo de configuración
+	c_curdir = 		&& Ruta actual de la llamada
+	c_fb2p_diff_fullpath = 		&& Ruta de este form
 	difftoolconfig = 		&& Configuration for the Diff tool
 	difftoolname = 		&& Name of the Diff tool
 	difftoolpath = 
@@ -149,6 +153,8 @@ DEFINE CLASS frmdiff AS form
 		<memberdata name="difftoolpath" display="diffToolPath"/>
 		<memberdata name="a_tools" display="a_Tools"/>
 		<memberdata name="l_showcallonly" display="l_ShowCallOnly"/>
+		<memberdata name="c_curdir" display="c_CurDir"/>
+		<memberdata name="c_fb2p_diff_fullpath" display="c_fb2p_diff_FullPath"/>
 		</VFPData>		&& XML Metadata for customizable properties
 
 	ADD OBJECT 'chkAlwaysOnTop' AS checkbox WITH ;
@@ -956,12 +962,25 @@ DEFINE CLASS frmdiff AS form
 	ENDPROC
 
 	PROCEDURE Init
+		LOCAL lcSys16, lnPosProg
+		
 		*-- init
 		THISFORM.MinHeight	= THISFORM.Height
 		THISFORM.MaxHeight	= THISFORM.Height
 		THISFORM.MinWidth	= THISFORM.Width
 		
 		THISFORM.a_Tools	= ''
+		
+		lcSys16 = SYS(16)
+		IF LEFT(lcSys16,10) == 'PROCEDURE '
+			lnPosProg	= AT(" ", lcSys16, 2) + 1
+		ELSE
+			lnPosProg	= 1
+		ENDIF
+		
+		THIS.c_CurDir				= SYS(5) + CURDIR()		&& Directorio actual, que no necesariamente es donde está FoxBin2Prg
+		THIS.c_fb2p_diff_FullPath	= SUBSTR( lcSys16, lnPosProg )
+		THIS.c_CFG_File				= FORCEEXT( THIS.c_fb2p_diff_FullPath, 'CFG' )
 		
 	ENDPROC
 
