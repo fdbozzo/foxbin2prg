@@ -24,6 +24,7 @@
 * RemoveNullCharsFromCode: 1	&& 1=Drop NULL chars from source code / 0=Leave Nulls in code, if any
 * RemoveZOrderSetFromProps: 0	&& 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object / 0=No quitar la propiedad ZOrderSet de los objetos, 1=Quitar la propiedad ZOrderSet de los objetos
 * Language: (auto)				&& Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+* ExcludeDBFAutoincNextval: 0	&& [0=Do not exclude this value from db2], 1=Exclude this value from db2
 
 *-- CONVERTION OPTIONS / OPCIONES DE CONVERSIÓN
 * PJX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)

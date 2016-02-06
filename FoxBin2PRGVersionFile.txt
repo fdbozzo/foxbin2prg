@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.46'
-    .VersionDate          = Date(2015,11,04)
+    .VersionDate          = Date(2015,11,25)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,7 +17,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2015/11/04	v1.19.46
+2015/11/25	v1.19.46
 - Bug Fix: set_UserValue() method causes error when trying to get information about another error and the VFP binary table can not be opened (ie, because corrupted memo)
 - Feature: Added internal support for querying directory cfg information, with a new optional parameter, for API methods that require it (ie: get_Ext2FromExt, hasSupport*)
 - Feature: Convert FUNCTION to PROCEDURE for maintaining compatibility with the way that VFP save methods on binaries
@@ -30,6 +30,8 @@ Change History -------------------------------------------------------------
 - Bug Fix frx/lbx: When regenerating reports or labels with multiline texts center or right aligned, alignment is not completely right (Ryan Harris)
 - Bug Fix frx/lbx: When grouping objects in design mode, generating text and regenerating binary cause the lost of the grouping (does not affect data) (Lutz Scheffler)
 - Bug Fix Pjx: SPR and MPR files are not correctly identified in the PJX Project info (Ralf Wagner)
+- Bug Fix Pj2: An error is thrown when regenerating a PJX from a PJ2 when some file have parenthesis in it's name (EddieC)
+- Feature (dbf): New ExcludeDBFAutoincNextval parameter for minimizing DB2 differences (edyshor)
 
 
 2015/06/21	v1.19.45
