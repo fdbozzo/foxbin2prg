@@ -178,6 +178,7 @@
 * 15/09/2015	FDBOZZO		v1.19.46	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
 * 18/09/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
 * 29/10/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Lutz Scheffler)
+* 04/11/2015	RALFXWAGNER	v1.19.46	Bug Fix Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Ralf Wagner)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -260,20 +261,21 @@
 * 15/04/2015	Mike Potjer			Sugerencia v1.19.41: Los nombres de los métodos en Inglés facilitarían su entendimiento a más personas (Agregado en v1.19.42)
 * 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quite los ZOrderProps de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Agregado en v1.19.43)
 * 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
-* 28/04/2015	Ralf Wagner			Reporte Bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
-* 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
-* 10/05/2015	Esteban Herrero		Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
-* 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
-* 01/06/2015	Mike Potjer			Reporte Bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
+* 28/04/2015	Ralf Wagner			Reporte bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
+* 29/04/2015	Fidel Charny		Reporte bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
+* 10/05/2015	Esteban Herrero		Reporte bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
+* 29/04/2015	Ralf Wagner			Reporte bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
+* 01/06/2015	Mike Potjer			Reporte bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
 * 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
-* 29/07/2015	Dave Crozier		Reporte Bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
+* 29/07/2015	Dave Crozier		Reporte bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
 * 29/07/2015	Walter Nicholls		Mejora DBF-Data v1.19.45: Permitir exportar e importar datos de los DBF
-* 28/08/2015	Walter Nicholls		Reporte Bug: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Arreglado en v1.19.46)
+* 28/08/2015	Walter Nicholls		Reporte bug: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Arreglado en v1.19.46)
 * 09/09/2015	Aurélien Dellieux	Mejora v1.19.45: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones (Cambiado en v1.19.46)
-* 11/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
-* 17/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
+* 11/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
+* 17/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
 * 11/10/2015	Lutz Scheffler		Reporte bug Frx/Lbx v1.19.45: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Arreglado en v1.19.46 Preview-7)
+* 04/11/2015	Ralf Wagner			Reporte bug Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Arreglado en v1.19.46 Preview-8)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6140,6 +6142,10 @@ DEFINE CLASS c_conversor_base AS Custom
 			, tcExtension = 'TXT', 'T' ;
 			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
+			, tcExtension = 'HTM', 'T' ;
+			, tcExtension = 'HTML', 'T' ;
+			, tcExtension = 'SPR', 'E' ;
+			, tcExtension = 'MPR', 'P' ;
 			, 'x' )
 	ENDPROC
 
