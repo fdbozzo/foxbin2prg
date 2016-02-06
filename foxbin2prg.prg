@@ -174,6 +174,8 @@
 * 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
 * 29/07/2015	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Dave Crozier)
 * 01/09/2015	FDBOZZO		v1.19.46	Bug Fix mnx: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Walter Nichols)
+* 14/09/2015	FDBOZZO		v1.19.45	Mejora: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones, por lo que se reemplaza por llamadas Win32 nativas (Aurélien Dellieux)
+* 15/09/2015	FDBOZZO		v1.19.45	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -266,6 +268,8 @@
 * 29/07/2015	Dave Crozier		Reporte Bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
 * 29/07/2015	Walter Nicholls		Mejora DBF-Data v1.19.45: Permitir exportar e importar datos de los DBF
 * 28/08/2015	Walter Nicholls		Reporte Bug: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Arreglado en v1.19.46)
+* 09/09/2015	Aurélien Dellieux	Mejora v1.19.45: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones (Cambiado en v1.19.46)
+* 11/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -750,7 +754,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_OptimizeByFilestamp           = 0
 	l_MethodSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled				= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_ReportSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_ReportSort_Enabled			= .F.			&& Para Unit Testing. 11/09/2015 - Cambiad a .F. porque cambia el ZOrder de los objetos (Ryan Harris)
 	l_StdOutHabilitado				= .T.
 	l_Main_CFG_Loaded				= .F.
 	n_ExtraBackupLevels				= 1
@@ -847,7 +851,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.changeLanguage()
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
-		THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
+		*THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
 		THIS.o_Configuration			= CREATEOBJECT("COLLECTION")
 		THIS.evaluateConfiguration()
 		RELEASE lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues
@@ -3028,7 +3032,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				DO CASE
 				CASE lnCodError = 1098	&& User Error
 					MESSAGEBOX( toEx.Message, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
-					loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					*loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					THIS.wscriptshell_run( THIS.c_ErrorLogFile, 3 )
 
 				CASE lnCodError = 1799	&& Conversion Cancelled
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
@@ -3036,7 +3041,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				CASE THIS.l_Errors
 					IF ADIR(laDirInfo, THIS.c_ErrorLogFile) > 0 THEN
 						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
-						loWSH.Run( THIS.c_ErrorLogFile, 3 )
+						*loWSH.Run( THIS.c_ErrorLogFile, 3 )
+						THIS.wscriptshell_run( THIS.c_ErrorLogFile, 3 )
 					ELSE
 						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')' + CR_LF + "[Warning: Can't show Error LOG file because does not exist!]", 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 					ENDIF
@@ -4516,6 +4522,184 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN '_' + TRANSFORM( THIS.n_ID, '@L #########' )
 		ENDIF
 	ENDPROC
+
+
+	FUNCTION WScriptShell_Run
+		* Modificación basada en la rutina RunExitCode.prg de William GC Steinford (nov 2002)
+		* pero compatible con el método Run de WScript.Shell para su reemplazo cuando no es posible usarlo.
+		* http://fox.wikis.com/wc.dll?Wiki~ProcessExitCode
+		*-----------------------------------------------------------------------------------------------
+		* 'Run' Parameter Documentation at: https://msdn.microsoft.com/en-us/library/d5fk67ky%28v=vs.84%29.aspx
+		*-----------------------------------------------------------------------------------------------
+		LPARAMETERS tcCmdLine, tnWindowStyle, tbWaitOnReturn, tlDebug
+		* ? WScriptShell_Run("c:\windows\system32\cmd.exe /c dir c:\*.* > \temp\dir.txt")
+
+		LOCAL lnWfSO, ln_dwFlags, ln_wShowWindow, lcStartInfo, lcProcessInfo, ln_hProcess, ln_hThread ;
+			, lnExitCode, ln_dwProcessId, ln_dwThreadId, tcProgFile
+
+		TRY
+			DECLARE SHORT CreateProcess IN WIN32API ;
+				STRING lpszModuleName, ;
+				STRING @lpszCommandLine, ;
+				STRING lpSecurityAttributesProcess, ;
+				STRING lpSecurityAttributesThread, ;
+				SHORT bInheritHandles, ;
+				INTEGER dwCreateFlags, ;
+				STRING lpvEnvironment, ;
+				STRING lpszStartupDir, ;
+				STRING @lpStartInfo, ;
+				STRING @lpProcessInfo
+
+			DECLARE LONG WaitForSingleObject IN WIN32API INTEGER hHandle, LONG dwMilliseconds
+			DECLARE INTEGER GetExitCodeProcess IN WIN32API INTEGER ln_hProcess, INTEGER @ lnExitCode
+			DECLARE INTEGER CloseHandle IN kernel32.DLL INTEGER hObject
+
+			* NOTA: Las constantes para VFP se pueden consultar en http://www.news2news.com/vfp/w32constants.php
+
+			#DEFINE SW_SHOW			5
+			#DEFINE STILL_ACTIVE	0x103
+			#DEFINE cnINFINITE		0xFFFFFFFF
+			#DEFINE cnHalfASecond	500 && milliseconds
+			#DEFINE cnTimedOut		0x0102
+
+			*-- Constantes para WaitForSingleObject
+			#DEFINE WAIT_ABANDONED	0x00000080
+			#DEFINE WAIT_OBJECT_0	0x00000000
+			#DEFINE WAIT_TIMEOUT	0x00000102
+			#DEFINE WAIT_FAILED		0xFFFFFFFF
+
+			tcProgFile		= EVL(tcProgFile, NULL)
+			tcCmdLine		= EVL(tcCmdLine, NULL)
+
+			DO CASE
+			CASE VARTYPE(tbWaitOnReturn) = "L"
+			CASE VARTYPE(tbWaitOnReturn) = "N"
+				tbWaitOnReturn	= (tbWaitOnReturn=1)
+			OTHERWISE
+				ERROR 'Invalid value for tbWaitOnReturn parameter'
+			ENDCASE
+
+			IF VARTYPE(tnWindowStyle) # "N" OR NOT BETWEEN(tnWindowStyle, 0, 10) THEN
+				tnWindowStyle	= 10
+			ENDIF
+
+			ln_dwFlags		= 1
+			ln_wShowWindow	= tnWindowStyle
+
+			* DOCUMENTACIÓN estructura _STARTUPINFO:
+			* creates the STARTUP structure to specify main window
+			* properties if a new window is created for a new process
+
+			*| typedef struct _STARTUPINFO {
+			*|     DWORD   cb;                4
+			*|     LPTSTR  lpReserved;        4
+			*|     LPTSTR  lpDesktop;         4
+			*|     LPTSTR  lpTitle;           4
+			*|     DWORD   dwX;               4
+			*|     DWORD   dwY;               4
+			*|     DWORD   dwXSize;           4
+			*|     DWORD   dwYSize;           4
+			*|     DWORD   dwXCountChars;     4
+			*|     DWORD   dwYCountChars;     4
+			*|     DWORD   dwFillAttribute;   4
+			*|     DWORD   dwFlags;           4
+			*|     WORD    wShowWindow;       2
+			*|     WORD    cbReserved2;       2
+			*|     LPBYTE  lpReserved2;       4
+			*|     HANDLE  hStdInput;         4
+			*|     HANDLE  hStdOutput;        4
+			*|     HANDLE  hStdError;         4
+			*| } STARTUPINFO, *LPSTARTUPINFO; total: 68 bytes
+			lcStartInfo	= BINTOC(68,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(ln_dwFlags,'4RS') ;
+				+ BINTOC(ln_wShowWindow,'2RS') ;
+				+ BINTOC(0,'2RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS')
+
+			lcProcessInfo = REPLICATE( CHR(0), 16 )
+
+			* DOCUMENTACIÓN estructura _PROCESS_INFORMATION:
+			* https://msdn.microsoft.com/en-us/library/windows/desktop/ms684873%28v=vs.85%29.aspx
+			*!*    typedef struct _PROCESS_INFORMATION {
+			*!*        HANDLE hProcess;
+			*!*        HANDLE hThread;
+			*!*        DWORD dwProcessId;
+			*!*        DWORD dwThreadId;
+			*!*    } PROCESS_INFORMATION;
+			*
+
+			IF CreateProcess( tcProgFile, tcCmdLine,0,0,0,0,0,0, lcStartInfo, @lcProcessInfo ) = 0
+				IF tlDebug
+					? "Could not create process"
+				ENDIF
+				lnExitCode	= -1
+				EXIT
+			ENDIF
+
+			* Process and thread handles returned in ProcInfo structure
+			ln_hProcess 	= CTOBIN( LEFT( lcProcessInfo, 4 ), '4RS' )
+			ln_hThread		= CTOBIN( SUBSTR( lcProcessInfo, 5, 4 ), '4RS' )
+			ln_dwProcessId	= CTOBIN( SUBSTR( lcProcessInfo, 9, 4 ), '4RS' )
+			ln_dwThreadId	= CTOBIN( SUBSTR( lcProcessInfo, 13, 4 ), '4RS' )
+
+			IF tlDebug
+				? "Process handle    = "+TRANSFORM(ln_hProcess)
+				? "Thread handle     = "+TRANSFORM(ln_hThread)
+				? "Process handle id = "+TRANSFORM(ln_dwProcessId)
+				? "Thread handle id  = "+TRANSFORM(ln_dwThreadId)
+			ENDIF
+
+			IF tbWaitOnReturn THEN
+				* // Give the process time to execute and finish
+				lnExitCode = STILL_ACTIVE
+
+				DO WHILE lnExitCode = STILL_ACTIVE
+					*lnWfSO	= WaitForSingleObject(ln_hProcess, cnHalfASecond)
+					lnWfSO	= WaitForSingleObject(ln_hProcess, cnINFINITE)
+
+					IF tlDebug
+						? 'lnWfSO = ' + TRANSFORM(lnWfSO)
+					ENDIF
+
+					IF GetExitCodeProcess(ln_hProcess, @lnExitCode) <> 0
+						DO CASE
+						CASE lnExitCode = STILL_ACTIVE
+							IF tlDebug
+								? "Process is still active"
+							ENDIF
+						OTHERWISE
+							IF tlDebug
+								? "Exit code = "+ TRANSFORM( lnExitCode )
+							ENDIF
+						ENDCASE
+					ELSE
+						IF tlDebug
+							? "GetExitCodeProcess() failed"
+						ENDIF
+						lnExitCode	= -2
+					ENDIF
+
+					DOEVENTS
+				ENDDO
+			ELSE
+				lnExitCode	= 0
+			ENDIF
+
+			*-- DOCUMENTACIÓN sobre cierre procesos/threads:
+			*-- https://msdn.microsoft.com/en-us/library/windows/desktop/ms682512%28v=vs.85%29.aspx
+			=CloseHandle(ln_hProcess)
+			=CloseHandle(ln_hThread)
+
+			IF tlDebug
+				? '> FUNCTION RETURN VALUE = '
+			ENDIF
+		ENDTRY
+
+		RETURN lnExitCode
+	ENDFUNC
 
 
 ENDDEFINE

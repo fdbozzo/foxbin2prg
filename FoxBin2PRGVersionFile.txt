@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.46'
-    .VersionDate          = Date(2015,09,04)
+    .VersionDate          = Date(2015,09,15)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,7 +17,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2015/09/04	v1.19.46
+2015/09/15	v1.19.46
 - Bug Fix: set_UserValue() method causes error when trying to get information about another error and the VFP binary table can not be opened (ie, because corrupted memo)
 - Feature: Added internal support for querying directory cfg information, with a new optional parameter, for API methods that require it (ie: get_Ext2FromExt, hasSupport*)
 - Feature: Convert FUNCTION to PROCEDURE for maintaining compatibility with the way that VFP save methods on binaries
@@ -25,6 +25,8 @@ Change History -------------------------------------------------------------
 - Bug Fix: When processing a directory or a project with all the files, sometimes an "Alias already in use" error may occur (Dave Crozier)
 - Bug Fix mnx: When menu options contains '&&' in their texts, menu binary is corrupted when regenerated (Walter Nichols)
 - Bug Fix fb2p_diff: When calling fb2p_diff.exe from a directory out of FoxBin2Prg dir, an error is thrown because FoxBin2Prg is not found (Mike Potjer)
+- Feature: In some environments and under some conditions WSscript.Shell object can cause problems, so now it's replaced with Win32 native functions (Aurélien Dellieux)
+- Bug Fix frx/lbx: Ordering of report objects changes the ZOrder of near objects that can overlap, which can cause bad visualization and printing (Ryan Harris)
 
 
 2015/06/21	v1.19.45
