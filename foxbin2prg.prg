@@ -181,6 +181,7 @@
 * 04/11/2015	RALFXWAGNER	v1.19.46	Bug Fix Pjx: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Ralf Wagner)
 * 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
 * 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
+* 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -280,6 +281,7 @@
 * 04/11/2015	Ralf Wagner			Reporte bug Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Arreglado en v1.19.46 Preview-8)
 * 20/11/2015	EddieC				Reporte bug Pjx v1.19.45: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (Arreglado en v1.19.46 Preview-9)
 * 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
+* 01/02/2016	Aurélien Dellieux	Reporte bug v1.19.45: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Arreglado en v1.19.46 Preview-10)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1879,11 +1881,16 @@ DEFINE CLASS c_foxbin2prg AS Session
 								ENDIF
 							ENDFOR
 
-							*-- Ahora evalúo las configuraciones de los PATH intermedios desde la raíz en adelante
-							*-- y mantengo la última configuración CFG Padre en toParentCFG para usarla como base.
-							FOR I = 1 TO lnDirs
-								.evaluateConfiguration( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
-							ENDFOR
+							IF lnDirs = 1 AND laDirs(1) = lc_CFG_Path
+								*-- Cuando no hay PATH intermedios, salteo esta parte para que más abajo lo agregue. 04/02/2016. FDBOZZO
+								*-- Ejemplo: Puede pasar cuando se convierte un archivo en C:\ u otro disco RAIZ.
+							ELSE
+								*-- Ahora evalúo las configuraciones de los PATH intermedios desde la raíz en adelante
+								*-- y mantengo la última configuración CFG Padre en toParentCFG para usarla como base.
+								FOR I = 1 TO lnDirs
+									.evaluateConfiguration( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
+								ENDFOR
+							ENDIF
 
 							.l_CFG_CachedAccess	= .F.
 							.n_CFG_Actual		= 0
@@ -14659,7 +14666,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL lcExpanded, llFileExists, lnBytes, lcOutputFile ;
+			LOCAL lcExpanded, llFileExists, lnBytes, lcOutputFile, laDirFile(1,5) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			lcExpanded	= IIF( '.' $ JUSTSTEM(tcOutputFile), 'X1', 'X0' )
@@ -14681,7 +14688,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			lcOutputFile	= tcOutputFile
-			llFileExists	= FILE(tcOutputFile)
+			llFileExists	= ( ADIR(laDirFile, tcOutputFile) = 1 )
 
 			IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
 				*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
