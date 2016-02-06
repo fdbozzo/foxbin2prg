@@ -14,28 +14,28 @@
 
 *<MenuCode>
 DEFINE MENU _MSYSMENU BAR
-DEFINE PAD _43302YWGE OF _MSYSMENU PROMPT "Opción A con submenú" COLOR SCHEME 3 ;
+DEFINE PAD _000000001 OF _MSYSMENU PROMPT "Opción A && submenú" COLOR SCHEME 3 ;
 	NEGOTIATE NONE, LEFT ;
 	KEY DEL, "Pulsar <DEL>" ;
 	SKIP FOR SKIP_FOR() ;
-	MESSAGE "Mensaje para Opción A con submenú" && Comentario
+	MESSAGE "Mensaje para Opción A con submenú" && Comentario's Opción A
 
-ON PAD _43302YWGE OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
+ON PAD _000000001 OF _MSYSMENU ACTIVATE POPUP OpciónAsub
 
 	*----------------------------------
-	DEFINE POPUP OpciónA_CS MARGIN RELATIVE SHADOW COLOR SCHEME 4
-	DEFINE BAR 1 OF OpciónA_CS PROMPT "Opción A-1" ;
-		PICTURE "..\..\foxunit\fxuacknowledgements.bmp"
-	ON BAR 1 OF OpciónA_CS ACTIVATE POPUP OpciónA1
+	DEFINE POPUP OpciónAsub MARGIN RELATIVE SHADOW COLOR SCHEME 4
+	DEFINE BAR 1 OF OpciónAsub PROMPT "Opción A-&&-1" ;
+		PICTURE "..\..\foxunit\fxuacknowledgements.bmp" && Comentario Opción A-1
+	ON BAR 1 OF OpciónAsub ACTIVATE POPUP OpciónA1
 
 		*----------------------------------
 		DEFINE POPUP OpciónA1 MARGIN RELATIVE SHADOW COLOR SCHEME 4
-		DEFINE BAR Shortcut_Menu_Title OF OpciónA1 PROMPT "OpciónA-1-Sub" ;
-			PICTURE "..\..\foxunit\fxuacknowledgements.bmp"
-		ON SELECTION BAR Shortcut_Menu_Title OF OpciónA1 wait window "Ejecuta Comando o función para Opción A-1"
+		DEFINE BAR Shortcut_Menu_Title OF OpciónA1 PROMPT "OpciónA-1-&&-Sub" ;
+			PICTURE "..\..\foxunit\fxuacknowledgements.bmp" && Comentario Opción A-1-sub con && trampa :)
+		ON SELECTION BAR Shortcut_Menu_Title OF OpciónA1 wait window "Ejecuta Comando o función 'trampa' para Opción A-&&-1"
 
-	DEFINE BAR 2 OF OpciónA_CS PROMPT "Opción A-2"
-	ON BAR 2 OF OpciónA_CS ACTIVATE POPUP OpciónA2Su
+	DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A-2" && Comentario Opción A-2
+	ON BAR 2 OF OpciónAsub ACTIVATE POPUP OpciónA2Su
 
 		*----------------------------------
 		DEFINE POPUP OpciónA2Su MARGIN RELATIVE SHADOW COLOR SCHEME 4
@@ -65,14 +65,14 @@ ON PAD _43302YWGE OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
 			SKIP FOR NOT glEnabled_Opc_A_2_Sub_3 ;
 			PICTRES _mfi_sysprint ;
 			MESSAGE "Message para Opción A-2-Sub.3 (Tipo Bar#)" && Comentarios para Opción A-2-Sub.3
-	ON SELECTION POPUP OpciónA_CS *-- PROCEDURE Le cambié el nombre!
+	ON SELECTION POPUP OpciónAsub *-- PROCEDURE Le cambié el nombre!
 
 DEFINE PAD opc_b OF _MSYSMENU PROMPT "Opción B con comando" COLOR SCHEME 3 ;
 	KEY CTRL+B, "Pulse CTRL+B" ;
 	SKIP FOR NOT glEnabled_Opc_B ;
-	MESSAGE "Mensaje para Opción B con Command" && Comentario de la Opción b
+	MESSAGE "Mensaje para Opción B con Command && con trampa's" && Comentario's de la Opción b
 
-ON SELECTION PAD opc_b OF _MSYSMENU WAIT WINDOW "Opción B"
+ON SELECTION PAD opc_b OF _MSYSMENU WAIT WINDOW "Opción B y ma's trampas"
 ON SELECTION POPUP ALL DO MenuBarProc
 ON SELECTION MENU _MSYSMENU DO SELECTION_MENU__MSYSMENU_FB2P
 

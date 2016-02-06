@@ -170,6 +170,18 @@
 * 01/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Mike Potjer)
 * 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Lutz Scheffler)
 * 15/06/2015	FDBOZZO		v1.19.45	Bug Fix pjx,*/pj2,*: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Matt Slay)
+* 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
+* 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
+* 29/07/2015	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Dave Crozier)
+* 01/09/2015	FDBOZZO		v1.19.46	Bug Fix mnx: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Walter Nichols)
+* 14/09/2015	FDBOZZO		v1.19.46	Mejora: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones, por lo que se reemplaza por llamadas Win32 nativas (Aurélien Dellieux)
+* 15/09/2015	FDBOZZO		v1.19.46	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
+* 18/09/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
+* 29/10/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Lutz Scheffler)
+* 04/11/2015	RALFXWAGNER	v1.19.46	Bug Fix Pjx: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Ralf Wagner)
+* 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
+* 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
+* 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -252,13 +264,24 @@
 * 15/04/2015	Mike Potjer			Sugerencia v1.19.41: Los nombres de los métodos en Inglés facilitarían su entendimiento a más personas (Agregado en v1.19.42)
 * 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quite los ZOrderProps de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Agregado en v1.19.43)
 * 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
-* 28/04/2015	Ralf Wagner			Reporte Bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
-* 29/04/2015	Fidel Charny		Reporte Bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
-* 10/05/2015	Esteban Herrero		Reporte Bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
-* 29/04/2015	Ralf Wagner			Reporte Bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
-* 01/06/2015	Mike Potjer			Reporte Bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
+* 28/04/2015	Ralf Wagner			Reporte bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
+* 29/04/2015	Fidel Charny		Reporte bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
+* 10/05/2015	Esteban Herrero		Reporte bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
+* 29/04/2015	Ralf Wagner			Reporte bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
+* 01/06/2015	Mike Potjer			Reporte bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
 * 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
+* 29/07/2015	Dave Crozier		Reporte bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
+* 29/07/2015	Walter Nicholls		Mejora DBF-Data v1.19.45: Permitir exportar e importar datos de los DBF
+* 28/08/2015	Walter Nicholls		Reporte bug: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Arreglado en v1.19.46)
+* 09/09/2015	Aurélien Dellieux	Mejora v1.19.45: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones (Cambiado en v1.19.46)
+* 11/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
+* 17/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
+* 11/10/2015	Lutz Scheffler		Reporte bug Frx/Lbx v1.19.45: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Arreglado en v1.19.46 Preview-7)
+* 04/11/2015	Ralf Wagner			Reporte bug Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Arreglado en v1.19.46 Preview-8)
+* 20/11/2015	EddieC				Reporte bug Pjx v1.19.45: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (Arreglado en v1.19.46 Preview-9)
+* 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
+* 01/02/2016	Aurélien Dellieux	Reporte bug v1.19.45: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Arreglado en v1.19.46 Preview-10)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -493,8 +516,12 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_FILETYPE_QUERYSUPPORT		"Q"
 *-- Fin / End
 
+*-- Predefine 64MB of RAM
+SYS(3050,1,64*1024*1024)
+SYS(3050,2,64*1024*1024)
+
 IF _VFP.StartMode > 0 THEN
-	SYS(2450,1)
+	SYS(2450,1)		&& Set Application Search Path Order to APP/EXE 1st when not in Dev-Mode
 ENDIF
 
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -525,11 +552,22 @@ IF ATC('-BIN2PRG','-'+tc_InputFile) > 0 OR ATC('-PRG2BIN','-'+tc_InputFile) > 0 
 	RELEASE pcParamX
 ENDIF
 
-loCnv	= CREATEOBJECT("c_foxbin2prg")
-loEx	= NULL
-lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-	, tcDontShowProgress, NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-	, .F., .F., .F., tcCFG_File )
+TRY
+	loEx	= NULL
+	loCnv	= CREATEOBJECT("c_foxbin2prg")
+	lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
+		, tcDontShowProgress, NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+		, .F., .F., .F., tcCFG_File )
+CATCH TO loEx
+	*-- Esto solo es para errores en el INIT, ya que los demás se deben capturar y tratar antes.
+	lnResp		= loEx.ErrorNo
+	MESSAGEBOX( 'Error ' + TRANSFORM(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
+		+ loEx.Procedure + ', Line ' + TRANSFORM(loEx.LineNo) + C_CR ;
+		+ loEx.Details ;
+		, 0+16+4096 ;
+		, '' ;
+		, 60000 )
+ENDTRY
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *SET COVERAGE TO
@@ -734,6 +772,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
 	n_UseClassPerFile				= 0
+	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
 	l_NoTimestamps					= .T.
@@ -743,7 +782,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_OptimizeByFilestamp           = 0
 	l_MethodSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
 	l_PropSort_Enabled				= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
-	l_ReportSort_Enabled			= .T.			&& Para Unit Testing se puede cambiar a .F. para buscar diferencias
+	l_ReportSort_Enabled			= .F.			&& Para Unit Testing. 11/09/2015 - Cambiad a .F. porque cambia el ZOrder de los objetos (Ryan Harris)
 	l_StdOutHabilitado				= .T.
 	l_Main_CFG_Loaded				= .F.
 	n_ExtraBackupLevels				= 1
@@ -808,7 +847,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.declareDLL()
 
 		IF ADIR(laDir, THIS.c_ErrorLogFile) > 0 THEN
-			ERASE (THIS.c_ErrorLogFile + '.BAK')
+			IF ADIR(laDir, THIS.c_ErrorLogFile + '.BAK') > 0 THEN
+				THIS.changeFileAttribute( THIS.c_ErrorLogFile + '.BAK', '-R-S-H' )
+				ERASE (THIS.c_ErrorLogFile + '.BAK')
+			ENDIF
+
+			THIS.changeFileAttribute( THIS.c_ErrorLogFile, '-R-S-H' )
 			RENAME (THIS.c_ErrorLogFile) TO (THIS.c_ErrorLogFile + '.BAK')
 		ENDIF
 
@@ -840,7 +884,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.changeLanguage()
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
-		THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
+		*THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
 		THIS.o_Configuration			= CREATEOBJECT("COLLECTION")
 		THIS.evaluateConfiguration()
 		RELEASE lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues
@@ -1369,6 +1413,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
+	PROCEDURE n_ExcludeDBFAutoincNextval_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_ExcludeDBFAutoincNextval
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_ExcludeDBFAutoincNextval, THIS.n_ExcludeDBFAutoincNextval )
+		ENDIF
+	ENDPROC
+
+
 	PROCEDURE changeFileAttribute
 		* Using Win32 Functions in Visual FoxPro
 		* example=103
@@ -1740,7 +1793,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		#ENDIF
 
 		LOCAL lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDirInfo(1,5) ;
-			, lnDirs, laDirs(1), llMasterEval ;
+			, lnDirs, laDirs(1), llMasterEval, lcProp ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration AS Collection ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -1810,7 +1863,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 						toParentCFG		= THIS
 
 						IF LEFT( lc_CFG_Path, 2 ) == '\\' THEN
-							lnDirs	= OCCURS( '\', lc_CFG_Path ) - 3
+							*lnDirs	= OCCURS( '\', lc_CFG_Path ) - 3
+							lnDirs	= OCCURS( '\', lc_CFG_Path ) - 2
 						ELSE
 							lnDirs	= OCCURS( '\', lc_CFG_Path )
 						ENDIF
@@ -1827,11 +1881,16 @@ DEFINE CLASS c_foxbin2prg AS Session
 								ENDIF
 							ENDFOR
 
-							*-- Ahora evalúo las configuraciones de los PATH intermedios desde la raíz en adelante
-							*-- y mantengo la última configuración CFG Padre en toParentCFG para usarla como base.
-							FOR I = 1 TO lnDirs
-								.evaluateConfiguration( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
-							ENDFOR
+							IF lnDirs = 1 AND laDirs(1) = lc_CFG_Path
+								*-- Cuando no hay PATH intermedios, salteo esta parte para que más abajo lo agregue. 04/02/2016. FDBOZZO
+								*-- Ejemplo: Puede pasar cuando se convierte un archivo en C:\ u otro disco RAIZ.
+							ELSE
+								*-- Ahora evalúo las configuraciones de los PATH intermedios desde la raíz en adelante
+								*-- y mantengo la última configuración CFG Padre en toParentCFG para usarla como base.
+								FOR I = 1 TO lnDirs
+									.evaluateConfiguration( '', '', '', '', '', '', '', '', laDirs(I), C_FILETYPE_DIRECTORY, @toParentCFG)
+								ENDFOR
+							ENDIF
 
 							.l_CFG_CachedAccess	= .F.
 							.n_CFG_Actual		= 0
@@ -1897,11 +1956,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
 							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
-							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-							IF PEMSTATUS( lo_CFG, lcExt, 5 )
-								lo_CFG.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+							lcExt		= ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+							lcProp		= 'c_' + lcExt
+							IF PEMSTATUS( lo_CFG, lcProp, 5 )
+								lcValue	= UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) )
+								lo_CFG.ADDPROPERTY( lcProp, lcValue )
+								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + lcValue )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' -> ' + lcValue )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
@@ -2089,6 +2150,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > BackgroundImage:            ' + TRANSFORM(lo_CFG.c_BackgroundImage) )
 							ENDIF
 
+						CASE LEFT( laConfig(I), 25 ) == LOWER('ExcludeDBFAutoincNextval:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 26 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.n_ExcludeDBFAutoincNextval	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ExcludeDBFAutoincNextval:   ' + TRANSFORM(lo_CFG.n_ExcludeDBFAutoincNextval) )
+							ENDIF
+
 						ENDCASE
 					ENDFOR
 
@@ -2149,6 +2217,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( C_TAB + 'c_BackgroundImage:            ' + TRANSFORM(.c_BackgroundImage) )
 				.writeLog( C_TAB + 'n_OptimizeByFilestamp:        ' + TRANSFORM(.n_OptimizeByFilestamp) )
+				.writeLog( C_TAB + 'n_ExcludeDBFAutoincNextval:   ' + TRANSFORM(.n_ExcludeDBFAutoincNextval) )
 				.writeLog( C_TAB + 'l_RemoveNullCharsFromCode:    ' + TRANSFORM(.l_RemoveNullCharsFromCode) )
 				.writeLog( C_TAB + 'l_RemoveZOrderSetFromProps:   ' + TRANSFORM(.l_RemoveZOrderSetFromProps) )
 				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
@@ -2284,11 +2353,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE get_Ext2FromExt
-		LPARAMETERS tcExt
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcExt, tcDir
+
 		LOCAL lcExt2
 		tcExt	= UPPER(tcExt)
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			IF NOT EMPTY(tcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			ENDIF
+
 			lcExt2	= ICASE( tcExt == 'PJX', .c_PJ2 ;
 				, tcExt == 'VCX', .c_VC2 ;
 				, tcExt == 'SCX', .c_SC2 ;
@@ -2306,11 +2386,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE hasSupport_Bin2Prg
-		LPARAMETERS tcExt
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcExt, tcDir
+
 		LOCAL llhasSupport
 		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			IF NOT EMPTY(tcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			ENDIF
+
 			llhasSupport	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support > 0 ;
 				, tcExt == 'VCX', .VCX_Conversion_Support > 0 ;
 				, tcExt == 'SCX', .SCX_Conversion_Support > 0 ;
@@ -2328,11 +2419,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE hasSupport_Prg2Bin
-		LPARAMETERS tcExt
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcDir						(@? IN    ) Directorio del que devolver su configuración
+		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcExt, tcDir
+
 		LOCAL llhasSupport
 		tcExt	= UPPER(JUSTEXT('.' + tcExt))
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+			IF NOT EMPTY(tcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			ENDIF
+
 			llhasSupport	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
 				, tcExt == .c_VC2, .VCX_Conversion_Support = 2 ;
 				, tcExt == .c_SC2, .SCX_Conversion_Support = 2 ;
@@ -2988,7 +3090,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				DO CASE
 				CASE lnCodError = 1098	&& User Error
 					MESSAGEBOX( toEx.Message, 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
-					loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					*loWSH.Run( THIS.c_ErrorLogFile, 3 )
+					THIS.wscriptshell_run( THIS.c_ErrorLogFile, 3 )
 
 				CASE lnCodError = 1799	&& Conversion Cancelled
 					MESSAGEBOX( loLang.C_CONVERSION_CANCELLED_BY_USER_LOC + '!', 0+64+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
@@ -2996,7 +3099,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				CASE THIS.l_Errors
 					IF ADIR(laDirInfo, THIS.c_ErrorLogFile) > 0 THEN
 						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')', 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
-						loWSH.Run( THIS.c_ErrorLogFile, 3 )
+						*loWSH.Run( THIS.c_ErrorLogFile, 3 )
+						THIS.wscriptshell_run( THIS.c_ErrorLogFile, 3 )
 					ELSE
 						MESSAGEBOX( loLang.C_END_OF_PROCESS_LOC + '! (' + loLang.C_WITH_ERRORS_LOC + ')' + CR_LF + "[Warning: Can't show Error LOG file because does not exist!]", 0+48+4096, 'FoxBin2Prg ' + THIS.c_FB2PRG_EXE_Version, 60000 )
 					ENDIF
@@ -3081,7 +3185,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				SCAN FOR NOT DELETED() AND Type <> 'H'
 					lnFileCount	= lnFileCount + 1
 					DIMENSION laFiles(lnFileCount,1)
-					laFiles(lnFileCount,1)	= .get_absolutepath( ALLTRIM( NAME, 0, ' ', CHR(0) ), ADDBS( JUSTPATH( lcFileSpec ) ) )
+					laFiles(lnFileCount,1)	= .get_AbsolutePath( ALLTRIM( NAME, 0, ' ', CHR(0) ), ADDBS( JUSTPATH( lcFileSpec ) ) )
 				ENDSCAN
 
 				USE IN (SELECT("TABLABIN"))
@@ -3193,7 +3297,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				FOR I = lnFileCount TO 1 STEP -1
 					IF '.ADD(' $ laFiles(I)
-						lcFile		= .get_absolutepath( STREXTRACT( laFiles(I), ".ADD('", "')" ), ADDBS( JUSTPATH( lcFileSpec ) ) )
+						lcFile		= .get_AbsolutePath( STREXTRACT( laFiles(I), ".ADD('", "')" ), ADDBS( JUSTPATH( lcFileSpec ) ) )
 						laFiles(I)	= FORCEEXT( lcFile, .get_Ext2FromExt( UPPER(JUSTEXT(lcFile)) ) )
 					ELSE
 						lnFileCount	= lnFileCount - 1
@@ -3755,20 +3859,86 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
-
 
 
 	PROCEDURE normalizeFileCapitalization
@@ -4410,6 +4580,270 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN '_' + TRANSFORM( THIS.n_ID, '@L #########' )
 		ENDIF
 	ENDPROC
+
+
+	FUNCTION WScriptShell_Run
+		* Modificación basada en la rutina RunExitCode.prg de William GC Steinford (nov 2002)
+		* pero compatible con el método Run de WScript.Shell para su reemplazo cuando no es posible usarlo.
+		* http://fox.wikis.com/wc.dll?Wiki~ProcessExitCode
+		*-----------------------------------------------------------------------------------------------
+		* 'Run' Parameter Documentation at: https://msdn.microsoft.com/en-us/library/d5fk67ky%28v=vs.84%29.aspx
+		*-----------------------------------------------------------------------------------------------
+		LPARAMETERS tcCmdLine, tnWindowStyle, tbWaitOnReturn, tlDebug
+		* ? WScriptShell_Run("c:\windows\system32\cmd.exe /c dir c:\*.* > \temp\dir.txt")
+
+		LOCAL lnWfSO, ln_dwFlags, ln_wShowWindow, lcStartInfo, lcProcessInfo, ln_hProcess, ln_hThread ;
+			, lnExitCode, ln_dwProcessId, ln_dwThreadId, tcProgFile, laDirFile(1,5)
+
+		TRY
+			DECLARE SHORT CreateProcess IN WIN32API ;
+				STRING lpszModuleName, ;
+				STRING @lpszCommandLine, ;
+				STRING lpSecurityAttributesProcess, ;
+				STRING lpSecurityAttributesThread, ;
+				SHORT bInheritHandles, ;
+				INTEGER dwCreateFlags, ;
+				STRING lpvEnvironment, ;
+				STRING lpszStartupDir, ;
+				STRING @lpStartInfo, ;
+				STRING @lpProcessInfo
+
+			DECLARE LONG WaitForSingleObject IN WIN32API INTEGER hHandle, LONG dwMilliseconds
+			DECLARE INTEGER GetExitCodeProcess IN WIN32API INTEGER ln_hProcess, INTEGER @ lnExitCode
+			DECLARE INTEGER CloseHandle IN kernel32.DLL INTEGER hObject
+			*DECLARE INTEGER ShellExecuteEx IN Shell32 STRING @lpExecInfo
+			DECLARE LONG ShellExecuteEx IN shell32.DLL STRING @
+			DECLARE LONG HeapAlloc IN WIN32API LONG, LONG, LONG
+			DECLARE LONG HeapFree IN WIN32API LONG, LONG, LONG
+			DECLARE LONG GetProcessHeap IN WIN32API
+			*DECLARE LONG WaitForSingleObject IN WIN32API LONG, LONG
+			DECLARE LONG TerminateProcess IN WIN32API LONG, LONG
+
+			* NOTA: Las constantes para VFP se pueden consultar en http://www.news2news.com/vfp/w32constants.php
+
+			#DEFINE SEE_MASK_NOCLOSEPROCESS  0x00000040
+			#DEFINE WAIT_MILLISECOND 3000
+
+			#DEFINE SW_SHOW			5
+			#DEFINE STILL_ACTIVE	0x103
+			#DEFINE cnINFINITE		0xFFFFFFFF
+			#DEFINE cnHalfASecond	500 && milliseconds
+			#DEFINE cnTimedOut		0x0102
+
+			*-- Constantes para WaitForSingleObject
+			#DEFINE WAIT_ABANDONED	0x00000080
+			#DEFINE WAIT_OBJECT_0	0x00000000
+			#DEFINE WAIT_TIMEOUT	0x00000102
+			#DEFINE WAIT_FAILED		0xFFFFFFFF
+
+			tcProgFile		= EVL(tcProgFile, NULL)
+			tcCmdLine		= EVL(tcCmdLine, NULL)
+
+			DO CASE
+			CASE VARTYPE(tbWaitOnReturn) = "L"
+			CASE VARTYPE(tbWaitOnReturn) = "N"
+				tbWaitOnReturn	= (tbWaitOnReturn=1)
+			OTHERWISE
+				ERROR 'Invalid value for tbWaitOnReturn parameter'
+			ENDCASE
+
+			IF VARTYPE(tnWindowStyle) # "N" OR NOT BETWEEN(tnWindowStyle, 0, 10) THEN
+				tnWindowStyle	= 10
+			ENDIF
+
+			ln_dwFlags		= 1
+			ln_wShowWindow	= tnWindowStyle
+
+			* DOCUMENTACIÓN estructura _STARTUPINFO:
+			* creates the STARTUP structure to specify main window
+			* properties if a new window is created for a new process
+
+			*| typedef struct _STARTUPINFO {
+			*|     DWORD   cb;                4
+			*|     LPTSTR  lpReserved;        4
+			*|     LPTSTR  lpDesktop;         4
+			*|     LPTSTR  lpTitle;           4
+			*|     DWORD   dwX;               4
+			*|     DWORD   dwY;               4
+			*|     DWORD   dwXSize;           4
+			*|     DWORD   dwYSize;           4
+			*|     DWORD   dwXCountChars;     4
+			*|     DWORD   dwYCountChars;     4
+			*|     DWORD   dwFillAttribute;   4
+			*|     DWORD   dwFlags;           4
+			*|     WORD    wShowWindow;       2
+			*|     WORD    cbReserved2;       2
+			*|     LPBYTE  lpReserved2;       4
+			*|     HANDLE  hStdInput;         4
+			*|     HANDLE  hStdOutput;        4
+			*|     HANDLE  hStdError;         4
+			*| } STARTUPINFO, *LPSTARTUPINFO; total: 68 bytes
+			lcStartInfo	= BINTOC(68,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(ln_dwFlags,'4RS') ;
+				+ BINTOC(ln_wShowWindow,'2RS') ;
+				+ BINTOC(0,'2RS') + BINTOC(0,'4RS') ;
+				+ BINTOC(0,'4RS') + BINTOC(0,'4RS') + BINTOC(0,'4RS')
+
+			lcProcessInfo = REPLICATE( CHR(0), 16 )
+
+			* DOCUMENTACIÓN estructura _PROCESS_INFORMATION:
+			* https://msdn.microsoft.com/en-us/library/windows/desktop/ms684873%28v=vs.85%29.aspx
+			*    typedef struct _PROCESS_INFORMATION {
+			*        HANDLE hProcess;
+			*        HANDLE hThread;
+			*        DWORD dwProcessId;
+			*        DWORD dwThreadId;
+			*    } PROCESS_INFORMATION;
+			*
+
+			IF CreateProcess( tcProgFile, tcCmdLine,0,0,0,0,0,0, lcStartInfo, @lcProcessInfo ) = 0
+
+				*-- Segundo intento: Si se definió un archivo (ej: un TXT,LOG,etc) intento lanzarlo
+				*-- con la aplicación predeterminada
+				IF ADIR(laDirFile, tcCmdLine) = 1 THEN
+					LOCAL lcInfo, lnHeap, lnLen, lnPtr
+
+					*-- Ejemplo adaptado de: http://www.foxite.com/archives/0000316611.htm
+					lnLen	= LEN(tcCmdLine) + 1
+					lnHeap	= GetProcessHeap()
+					lnPtr	= HeapAlloc(lnHeap, 0x8, 5 + lnLen)
+					SYS(2600, lnPtr, 5, [open] + CHR(0))
+					SYS(2600, lnPtr+5, lnLen, tcCmdLine + CHR(0))
+
+					* DOCUMENTACIÓN estructura _SHELLEXECUTEINFO:
+					* https://msdn.microsoft.com/en-us/library/windows/desktop/bb759784%28v=vs.85%29.aspx
+					*typedef struct _SHELLEXECUTEINFO {
+					*    DWORD     cbSize;            4
+					*    ULONG     fMask;             4
+					*    HWND      hwnd;              4
+					*    LPCTSTR   lpVerb;            4
+					*    LPCTSTR   lpFile;            4
+					*    LPCTSTR   lpParameters;      4
+					*    LPCTSTR   lpDirectory;       4
+					*    int       nShow;             4
+					*    HINSTANCE hInstApp;          4
+					*    LPVOID    lpIDList;          4
+					*    LPCTSTR   lpClass;           4
+					*    HKEY      hkeyClass;         4
+					*    DWORD     dwHotKey;          4
+					*    union {
+					*        HANDLE hIcon;            
+					*        HANDLE hMonitor;         
+					*    } DUMMYUNIONNAME;            4
+					*    HANDLE    hProcess;          4
+					*} SHELLEXECUTEINFO, *LPSHELLEXECUTEINFO;
+					*
+
+					lcInfo = ;
+						BINTOC(60, [4RS]) + ;
+						BINTOC(SEE_MASK_NOCLOSEPROCESS, [4RS]) + ;
+						BINTOC(0, [4RS]) + ;
+						BINTOC(lnPtr, [4RS]) + ;
+						BINTOC(lnPtr+5, [4RS]) + ;
+						BINTOC(0, [4RS]) + ;
+						BINTOC(0, [4RS]) + ;
+						BINTOC(1, [4RS]) + ;
+						REPLICATE(CHR(0), 28)
+
+					IF ShellExecuteEx(@lcInfo) = 0
+						IF tlDebug
+							? "Could not call process"
+						ENDIF
+						lnExitCode	= -1
+						EXIT
+					ELSE
+						HeapFree(lnHeap, 0, lnPtr)
+						ln_hProcess	= CTOBIN(RIGHT(lcInfo, 4), [4RS])
+						ln_hThread	= 0
+
+						IF tlDebug
+							? "Process handle    = "+TRANSFORM(ln_hProcess)
+							? "Thread handle     = "+TRANSFORM(ln_hThread)
+						ENDIF
+
+						*IF lnProcess != 0
+						*	WaitForSingleObject(ln_hProcess, WAIT_MILLISECOND)
+						*	IF tlDebug
+						*		? "Terminating process!"
+						*	ENDIF
+						*	TerminateProcess(ln_hProcess, 0)
+						*ENDIF
+					ENDIF
+				
+				ELSE
+					IF tlDebug
+						? "Could not create process"
+					ENDIF
+					lnExitCode	= -1
+					EXIT
+				ENDIF
+			ELSE
+
+				* Process and thread handles returned in ProcInfo structure
+				ln_hProcess 	= CTOBIN( LEFT( lcProcessInfo, 4 ), '4RS' )
+				ln_hThread		= CTOBIN( SUBSTR( lcProcessInfo, 5, 4 ), '4RS' )
+				ln_dwProcessId	= CTOBIN( SUBSTR( lcProcessInfo, 9, 4 ), '4RS' )
+				ln_dwThreadId	= CTOBIN( SUBSTR( lcProcessInfo, 13, 4 ), '4RS' )
+
+				IF tlDebug
+					? "Process handle    = "+TRANSFORM(ln_hProcess)
+					? "Thread handle     = "+TRANSFORM(ln_hThread)
+					? "Process handle id = "+TRANSFORM(ln_dwProcessId)
+					? "Thread handle id  = "+TRANSFORM(ln_dwThreadId)
+				ENDIF
+			ENDIF
+
+			IF tbWaitOnReturn THEN
+				* // Give the process time to execute and finish
+				lnExitCode = STILL_ACTIVE
+
+				DO WHILE lnExitCode = STILL_ACTIVE
+					*lnWfSO	= WaitForSingleObject(ln_hProcess, cnHalfASecond)
+					lnWfSO	= WaitForSingleObject(ln_hProcess, cnINFINITE)
+
+					IF tlDebug
+						? 'lnWfSO = ' + TRANSFORM(lnWfSO)
+					ENDIF
+
+					IF GetExitCodeProcess(ln_hProcess, @lnExitCode) <> 0
+						DO CASE
+						CASE lnExitCode = STILL_ACTIVE
+							IF tlDebug
+								? "Process is still active"
+							ENDIF
+						OTHERWISE
+							IF tlDebug
+								? "Exit code = "+ TRANSFORM( lnExitCode )
+							ENDIF
+						ENDCASE
+					ELSE
+						IF tlDebug
+							? "GetExitCodeProcess() failed"
+						ENDIF
+						lnExitCode	= -2
+					ENDIF
+
+					DOEVENTS
+				ENDDO
+			ELSE
+				lnExitCode	= 0
+			ENDIF
+
+			*-- DOCUMENTACIÓN sobre cierre procesos/threads:
+			*-- https://msdn.microsoft.com/en-us/library/windows/desktop/ms682512%28v=vs.85%29.aspx
+			=CloseHandle(ln_hProcess)
+			=CloseHandle(ln_hThread)
+
+			IF tlDebug
+				? '> FUNCTION RETURN VALUE = '
+			ENDIF
+		ENDTRY
+
+		RETURN lnExitCode
+	ENDFUNC
 
 
 ENDDEFINE
@@ -5742,6 +6176,10 @@ DEFINE CLASS c_conversor_base AS Custom
 			, tcExtension = 'TXT', 'T' ;
 			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
+			, tcExtension = 'HTM', 'T' ;
+			, tcExtension = 'HTML', 'T' ;
+			, tcExtension = 'SPR', 'E' ;
+			, tcExtension = 'MPR', 'P' ;
 			, 'x' )
 	ENDPROC
 
@@ -5888,20 +6326,84 @@ DEFINE CLASS c_conversor_base AS Custom
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
-		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -6116,16 +6618,22 @@ DEFINE CLASS c_conversor_base AS Custom
 	PROCEDURE lineIsOnlyCommentAndNoMetadata
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcLine					(!@ IN/OUT) Línea a separar del comentario
-		* tcComment					(@?    OUT) Comentario
+		* tcLine						(!@ IN/OUT) Línea a separar del comentario
+		* tcComment						(@?    OUT) Comentario
+		* tlDoNotSeparateLineAndComment	(v? IN    ) Indica o separar la línea de código del comentario
+		* tlDeepCommentAnalysis			(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
 		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDoNotSeparateLineAndComment as Boolean, tlDeepCommentAnalysis as Boolean
 		LOCAL lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
 		WITH THIS AS c_conversor_base OF 'FOXBIN2PRG.PRG'
-			.get_SeparatedLineAndComment( @tcLine, @tcComment )
+			IF tlDoNotSeparateLineAndComment
+				tcComment	= ''
+			ELSE
+				.get_SeparatedLineAndComment( @tcLine, @tcComment, tlDeepCommentAnalysis )
+			ENDIF
 
 			DO CASE
 			CASE LEFT(tcLine,2) == '*<'
@@ -7960,11 +8468,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 							AND NOT .lineIsOnlyCommentAndNoMetadata( @tcLine, @tc_Comentario )
 
 						DO CASE
-						CASE UPPER( LEFT( tcLine + ' ', 8 ) ) == C_ENDPROC + ' ' && Fin del PROCEDURE
+						CASE UPPER( LEFT( tcLine + ' ', 8 ) ) == 'ENDPROC ' ; && Fin del PROCEDURE
+							OR UPPER( LEFT( tcLine + ' ', 8 ) ) == 'ENDFUNC ' && Fin de la FUNCTION
+
 							tcProcedureAbierto	= ''
 							EXIT
 
-						CASE UPPER( LEFT( tcLine + ' ', 10 ) ) == C_ENDDEFINE + ' '	&& Fin de bloque (ENDDEFINE) encontrado
+						CASE UPPER( LEFT( tcLine + ' ', 10 ) ) == 'ENDDEFINE '	&& Fin de bloque (ENDDEFINE) encontrado
 							IF llEsProcedureDeClase
 								*ERROR 'Error de anidamiento de estructuras. Se esperaba ENDPROC y se encontró ENDDEFINE en la clase ' ;
 								+ toClase._Nombre + ' (' + loProcedure._Nombre + ')' ;
@@ -8321,9 +8831,9 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, llCLASSMETADATA_Completed, llPROTECTED_Completed, llHIDDEN_Completed, llDEFINED_PAM_Completed ;
 					, llINCLUDE_Completed, llCLASS_PROPERTY_Completed, llOBJECTMETADATA_Completed ;
 					, llCLASSCOMMENTS_Completed ;
-					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG'
+					, loObjeto AS CL_OBJETO OF 'FOXBIN2PRG.PRG' ;
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE '' TO tcProcedureAbierto
 				toClase					= CREATEOBJECT('CL_CLASE')
@@ -8834,6 +9344,25 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				*-- Estructura a reconocer: PROCEDURE [objeto.]nombre_del_procedimiento
 				llBloqueEncontrado	= .T.
 				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 11 ) )
+				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'normal', @toObjeto )
+
+			CASE UPPER( LEFT( tcLine, 19 ) ) == 'PROTECTED FUNCTION '
+				*-- Estructura a reconocer: PROTECTED PROCEDURE nombre_del_procedimiento
+				llBloqueEncontrado	= .T.
+				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 20 ) )
+				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'protected', @toObjeto )
+
+
+			CASE UPPER( LEFT( tcLine, 16 ) ) == 'HIDDEN FUNCTION '
+				*-- Estructura a reconocer: HIDDEN FUNCTION nombre_del_procedimiento
+				llBloqueEncontrado	= .T.
+				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 17 ) )
+				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'hidden', @toObjeto )
+
+			CASE UPPER( LEFT( tcLine, 9 ) ) == 'FUNCTION '
+				*-- Estructura a reconocer: FUNCTION [objeto.]nombre_del_procedimiento
+				llBloqueEncontrado	= .T.
+				tcProcedureAbierto	= ALLTRIM( SUBSTR( tcLine, 10 ) )
 				.evaluateProcedureDefinition( @toClase, I, @tc_Comentario, tcProcedureAbierto, 'normal', @toObjeto )
 
 			ENDCASE
@@ -10644,7 +11173,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							EXIT
 
 						OTHERWISE
-							lcFile				= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
+							lcFile				= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ").Description", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 							lcComment			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) )
 							loFile				= toProject( lcFile )
 							loFile._Comments	= lcComment
@@ -10707,7 +11236,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							EXIT
 
 						OTHERWISE
-							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
+							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ").Exclude", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 							llExclude		= EVALUATE( ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) ) )
 							loFile			= toProject( lcFile )
 							loFile._Exclude	= llExclude
@@ -10969,8 +11498,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL loReg, I, lcFieldType, lnFieldLen, lnFieldDec, lnNumCampo, laFieldTypes(1,18) ;
-				, luValor, lnCodError, loEx AS EXCEPTION
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				, luValor, lnCodError, loEx AS EXCEPTION ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			SELECT TABLABIN
 			AFIELDS( laFieldTypes )
@@ -11158,6 +11688,12 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 					IF C_DATA_F $ tcLine	&& Fin del valor
 						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
+						
+						*-- Ajustes: En los labels, no se usa CR+LF, sino que se usa solo CR
+						IF toReg.objType = "5" THEN
+							lcValue = STRTRAN(lcValue, CR_LF, C_CR)
+						ENDIF
+
 						ADDPROPERTY( toReg, tcPropName, lcValue )
 						EXIT
 
@@ -11504,7 +12040,13 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 					*-- AutoInc
 					IF loField._AutoInc_NextVal <> '0'
-						lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+						IF toFoxBin2Prg.n_ExcludeDBFAutoincNextval = 1
+							*-- If AutoIncNextVal is excluded from text, then assign 1 for allowing regeneration
+							*-- of DBF with this field.
+							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
+						ELSE
+							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+						ENDIF
 					ENDIF
 
 					loField			= NULL
@@ -12134,8 +12676,9 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lnItem, I, X, lcClaseExterna
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL lnItem, I, X, lcClaseExterna ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
 		*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
@@ -12910,8 +13453,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		LPARAMETERS tcMethod, tcIndentation, tlKeepProcHeader
 		*-- INDENTA EL CÓDIGO DE UN MÉTODO DADO Y QUITA LA CABECERA DE MÉTODO (PROCEDURE/ENDPROC) SI LA ENCUENTRA
 		TRY
-			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1), lnOffset
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+			LOCAL I, X, lcMethod, llProcedure, lnInicio, lnFin, laLineas(1), lnOffset ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			lcMethod		= ''
 			lnInicio		= 1
@@ -13062,15 +13606,19 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		WITH THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 			toEx.UserValue = toEx.UserValue + CR_LF
 
-			IF INLIST(.c_Type, 'SCX', 'VCX') THEN
-				lcMethods		= METHODS
+			IF NOT EMPTY(ALIAS()) AND INLIST(.c_Type, 'SCX', 'VCX') THEN
+				IF TYPE("METHODS")#"U" THEN
+					lcMethods		= METHODS
+				ENDIF
 				toEx.UserValue	= toEx.UserValue + 'Error location ' + '..............................' + CR_LF
 
-				IF NOT EMPTY(Parent)
+				IF TYPE("PARENT")#"U" AND NOT EMPTY(Parent) THEN
 					lcLocation	= lcLocation + Parent + '.'
 				ENDIF
 
-				lcLocation	= lcLocation + OBJNAME
+				IF TYPE("OBJNAME")#"U" THEN
+					lcLocation	= lcLocation + OBJNAME
+				ENDIF
 
 				*-- Busco el Procedure si hay un n_Methods_LineNo
 				ALINES(laCodeLines, lcMethods)
@@ -14118,7 +14666,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		#ENDIF
 
 		TRY
-			LOCAL lcExpanded
+			LOCAL lcExpanded, llFileExists, lnBytes, lcOutputFile, laDirFile(1,5) ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			lcExpanded	= IIF( '.' $ JUSTSTEM(tcOutputFile), 'X1', 'X0' )
 
 			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -14136,11 +14686,9 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				EXIT	&& Si se indicó no procesar, salgo del proceso. (Modo de simulación)
 			ENDIF
 
-			LOCAL llFileExists, lnBytes, lcOutputFile
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			lcOutputFile	= tcOutputFile
-			llFileExists	= FILE(tcOutputFile)
+			llFileExists	= ( ADIR(laDirFile, tcOutputFile) = 1 )
 
 			IF llFileExists AND FILETOSTR( tcOutputFile ) == tcCodigo THEN
 				*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
@@ -14578,6 +15126,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loRegClass, loRegObj
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
@@ -14934,6 +15483,7 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loRegClass, loRegObj
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
@@ -14970,7 +15520,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 		LPARAMETERS toModulo, toEx AS EXCEPTION, toFoxBin2Prg
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			LOCAL toModulo AS cl_project OF 'FOXBIN2PRG.PRG'
+			LOCAL toModulo AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx, @toFoxBin2Prg )
 
@@ -14979,7 +15529,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				, loEx AS EXCEPTION ;
 				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			STORE NULL TO loProject, loReg, loServerHead
 
@@ -14993,8 +15544,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 					.updateProgressbar( 'Processing Project info...', 2, 3, 1 )
 					loProject		= toModulo
-					loServerHead	= loProject._ServerHead					
-					
+					loServerHead	= loProject._ServerHead
+
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 
@@ -15247,8 +15798,9 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				, loEx AS EXCEPTION ;
 				, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 				, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
-			LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG' ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 			loLang			= _SCREEN.o_FoxBin2Prg_Lang
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 
@@ -15361,6 +15913,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			STORE NULL TO loProject, loReg, loServerHead, loServerData
 			RELEASE toModulo, toEx, toFoxBin2Prg ;
 				, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
@@ -15404,9 +15957,9 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 					, loEx AS EXCEPTION ;
 					, loProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG' ;
 					, loServerHead AS CL_PROJ_SRV_HEAD OF 'FOXBIN2PRG.PRG' ;
-					, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG'
+					, loServerData AS CL_PROJ_SRV_DATA OF 'FOXBIN2PRG.PRG' ;
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE NULL TO loProject, loReg, loServerHead, loServerData
 				lcStrPJM		= FILETOSTR( THIS.c_InputFile )
@@ -15804,8 +16357,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
 					LOCAL lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen ;
-						, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1)
-					LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+						, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
+						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 					loLang			= _SCREEN.o_FoxBin2Prg_Lang
 					STORE 0 TO lnCodError, lnLastClass
 					STORE '' TO laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
@@ -15822,9 +16376,13 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
-					SELECT * FROM _TABLAORIG ;
+					*SELECT * FROM _TABLAORIG ;
 						WHERE ObjType IN (1,25,26) ;
 						ORDER BY ObjType ASC ;
+						INTO CURSOR TABLABIN_0 READWRITE
+					*-- Arreglo bug agrupación de controles. 29/10/2015
+					SELECT * FROM _TABLAORIG ;
+						WHERE ObjType IN (1,25,26) ;
 						INTO CURSOR TABLABIN_0 READWRITE
 
 					*-- Header
@@ -15998,8 +16556,9 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
 					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
 					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
-					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG'
-				LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				STORE NULL TO loTable, loDBFUtils
 				STORE 0 TO lnCodError
@@ -16360,8 +16919,9 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 		TRY
 			WITH THIS AS c_conversor_mnx_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
-					LOCAL lnCodError, lnLen
-					LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+					LOCAL lnCodError, lnLen ;
+						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 					loLang			= _SCREEN.o_FoxBin2Prg_Lang
 					STORE 0 TO lnCodError
 
@@ -16423,6 +16983,7 @@ DEFINE CLASS c_conversor_mnx_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT("_TABLAORIG"))
 			RELEASE toMenu, toEx, toFoxBin2Prg, lnCodError, lnLen
 		ENDTRY
 
@@ -16514,20 +17075,84 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
-		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -16625,20 +17250,84 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@ IN/OUT) Línea a separar del comentario
 		* tcComment					(@?    OUT) Comentario
+		* tlDeepCommentAnalysis		(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
 		*---------------------------------------------------------------------------------------------------
-		* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, tcComment
+		LPARAMETERS tcLine as String, tcComment as String, tlDeepCommentAnalysis as Boolean
 		LOCAL ln_AT_Cmt
 		tcComment	= ''
 		ln_AT_Cmt	= AT( '&'+'&', tcLine)
 
 		IF ln_AT_Cmt > 0
-			tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
-			tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios de la derecha de la línea de código
+			IF tlDeepCommentAnalysis THEN
+				LOCAL laSeparador(3,3), lcSeparadoresIzq, lcSeparadoresDer, lcStr, lnAT_Amp, lnAT1, lnAT2, lnLen, I, X
+
+				lcStr	= tcLine	&&EVL(tcStr, [DEFINE BAR 2 OF OpciónAsub PROMPT "Opción A&]+[&2" &]+[& Comentario Opción A-2])
+				laSeparador(1,1)	= '"'
+				laSeparador(1,2)	= '"'
+				laSeparador(1,3)	= 2
+				laSeparador(2,1)	= "'"
+				laSeparador(2,2)	= "'"
+				laSeparador(2,3)	= 2
+				laSeparador(3,1)	= '['
+				laSeparador(3,2)	= ']'
+				laSeparador(3,3)	= 1
+				lcSeparadoresIzq	= laSeparador(1,1) + laSeparador(2,1) + laSeparador(3,1)
+				lcSeparadoresDer	= laSeparador(1,2) + laSeparador(2,2) + laSeparador(3,2)
+				lnLen				= LEN(lcStr)
+
+				*-- Anular subcadenas para luego encontrar comentarios '&&' (y analizar solo si existe al menos un '&&')
+				X		= 1
+				lnAT1	= AT(laSeparador(X,1), lcStr)
+
+				*-- Funcionamiento:
+				*-- La anulación de subcadenas se hace comenzando desde la primer comilla doble ["], y luego se va
+				*-- cancelando hasta la siguiente. A partir de ahi, se busca carácter a carácter el siguiente separador
+				*-- izquierdo de cadena ( '"[ ), se busca su pareja derecha y se cancela el texto entre ambos.
+				*-- La anulación de subcadenas es temporal, solo para determinar la verdadera posición del comentario,
+				*-- por ejemplo, esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT ""+var+'aa'+["bb]+"Opción A&&2" && Comentario Opción A-2
+				*-- se convierte temporalmente en esto:
+				*-- DEFINE BAR 2 OF OpciónAsub PROMPT XX+var+XXXX+XXXXX+XXXXXXXXXXXXX && Comentario Opción A-2
+				*-- lo que facilita encontrar el comentario '&&' real.
+				*-- Si se encuentra algún separador de cadena que no cierre, se genera un error 10 (Syntax Error).
+				IF lnAT1 > 0 THEN
+					FOR I = lnAT1+1 TO lnLen
+						IF X > 0 THEN
+							lnAT2	= AT(laSeparador(X,2), lcStr, laSeparador(X,3))
+
+							IF lnAT2 > 0 THEN
+								lcStr	= STUFF(lcStr, lnAT1, lnAT2-lnAT1+1, REPLICATE('X',lnAT2-lnAT1+1))
+							ELSE
+								ln_AT_Cmt	= AT( '&'+'&', lcStr)
+
+								IF ln_AT_Cmt = 0 OR ln_AT_Cmt < lnAT1
+									*-- No tiene comentario '&&' real, o sí lo tiene y además contiene un delimitador de cadena como parte del comentario
+									EXIT
+								ELSE
+									ERROR 'Closing string delimiter <' + laSeparador(X,2) + '> not found: ' + tcLine
+								ENDIF
+							ENDIF
+						ENDIF
+
+						*-- Verifico si el carácter es un separador de cadenas: '"[
+						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
+						
+						IF X > 0 THEN
+							lnAT1	= AT(laSeparador(X,1), lcStr)
+						ENDIF
+					ENDFOR
+				ENDIF
+
+				ln_AT_Cmt	= AT( '&'+'&', lcStr)
+			ENDIF && tlDeepCommentAnalysis
+
+			IF ln_AT_Cmt > 0
+				tcComment	= LTRIM( SUBSTR( tcLine, ln_AT_Cmt + 2 ) )
+				tcLine		= RTRIM( LEFT( tcLine, ln_AT_Cmt - 1 ), 0, CHR(9), ' ' )	&& Quito TABS y espacios
+			ENDIF
+
 		ENDIF
 
-		RELEASE tcLine, tcComment
 		RETURN (ln_AT_Cmt > 0)
 	ENDPROC
 
@@ -17290,7 +17979,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		LPARAMETERS tcDevInfo
 
 		TRY
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				._Author			= .parseNullTerminatedValue( @tcDevInfo, 1, 45 )
 				._Company			= .parseNullTerminatedValue( @tcDevInfo, 47, 45 )
 				._Address			= .parseNullTerminatedValue( @tcDevInfo, 93, 45 )
@@ -17333,7 +18022,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 				tcDevInfo	= REPLICATE( CHR(0), 1795 )
 			ENDIF
 
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				tcDevInfo	= STUFF( tcDevInfo, 1, LEN(._Author), ._Author)
 				tcDevInfo	= STUFF( tcDevInfo, 47, LEN(._Company), ._Company)
 				tcDevInfo	= STUFF( tcDevInfo, 93, LEN(._Address), ._Address)
@@ -17376,7 +18065,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 			LOCAL lcText
 			lcText		= ''
 
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<C_DEVINFO_I>>
 					_Author = "<<._Author>>"
@@ -17422,17 +18111,17 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		* taFiles					(?@    OUT) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
 		*---------------------------------------------------------------------------------------------------
 		EXTERNAL ARRAY taFiles
-		
+
 		TRY
 			LOCAL I, lnCount, laDirFile(1,5), lcHomeDir
 
-			WITH THIS AS cl_project OF "FOXBIN2PRG.PRG"
+			WITH THIS AS CL_PROJECT OF "FOXBIN2PRG.PRG"
 				DIMENSION taFiles( MAX(1,.Count), 2)
 				taFiles(1,1)	= ''
 				taFiles(1,2)	= .F.
 				lnCount			= 0
 				lcHomeDir		= ADDBS( EVL(JUSTPATH(.c_InputFile), ._HomeDir) )
-				
+
 				FOR I = 1 TO .Count
 					taFiles(I,1)	= .Item(I).Name
 					taFiles(I,2)	= ( ADIR(laDirFile, .get_AbsolutePath( taFiles(I,1), lcHomeDir) ) = 1 )
@@ -18073,8 +18762,9 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		* tnPropertyID				(v! IN    ) ID de la Propiedad
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tnPropertyID
-		LOCAL lcValueType
-		LOCAL loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+		LOCAL lcValueType ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 		lcValueType	= ''
 
@@ -22146,18 +22836,18 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			loFields	= THIS._Fields
 
 			*** DH 06/02/2014: passed variables to toText
-			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
+			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount, @toFoxBin2Prg)
 
 			*-- Indexes
 			loIndexes	= THIS._Indexes
-			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
+			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile, @toFoxBin2Prg )
 
 			*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
 			lcTableCFG	= tc_InputFile + '.CFG'
 			lnFileCount	= ADIR(laDirFile, lcTableCFG)
 
 			IF toFoxBin2Prg.DBF_Conversion_Support = 4 ;	&& BIN2PRG (DATA EXPORT FOR DIFF)
-					OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
+				OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
 				llExportData	= .T.
 			ENDIF
 
@@ -22336,6 +23026,12 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 			loField			= CREATEOBJECT('CL_DBF_FIELD')
 
 			FOR I = 1 TO tnField_Count
+				IF taFields(I,17) > 0 AND toFoxBin2Prg.n_ExcludeDBFAutoincNextval = 1
+					*-- If AutoIncNextVal is excluded from text, then assign 1 for allowing regeneration
+					*-- of DBF with this field.
+					taFields(I,17)	= 1
+				ENDIF
+				
 				lcText	= lcText + loField.toText( @taFields, I )
 			ENDFOR
 
@@ -22943,10 +23639,10 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 					DO CASE
 					CASE lcFieldType == 'G'
 						luValue		= 'GENERAL FIELD NOT SUPPORTED'
-					CASE lcFieldType == 'W'
-						luValue		= 'BLOB FIELD NOT SUPPORTED'
-					CASE lcFieldType == 'Q'
-						luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+					*CASE lcFieldType == 'W'
+					*	luValue		= 'BLOB FIELD NOT SUPPORTED'
+					*CASE lcFieldType == 'Q'
+					*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
 					OTHERWISE
 						luValue		= EVALUATE(lcField)
 					ENDCASE
@@ -22959,7 +23655,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 						ENDIF &&.Encode(luValue) <> luValue
 					ENDCASE
 					TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
-						<<>>			<<'<' + lcField + '>'>><<luValue>></<<lcField>>>
+						<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
 					ENDTEXT
 				NEXT
 
@@ -23711,7 +24407,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment, .F., .T. )
 						LOOP	&& Saltear comentarios
 
 					CASE NOT llBloque_MenuType_Analizado AND LEFT( tcLine, LEN(C_MENUTYPE_I) ) == C_MENUTYPE_I
@@ -24437,7 +25133,7 @@ DEFINE CLASS CL_MENU_BARPOP AS CL_MENU_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment, .F., .T. )
 						LOOP	&& Saltear comentarios
 
 					CASE LEFT( tcLine, LEN(C_MENUCODE_F) ) == C_MENUCODE_F
@@ -24680,7 +25376,7 @@ DEFINE CLASS CL_MENU_OPTION AS CL_MENU_COL_BASE
 					CASE EMPTY( tcLine )
 						LOOP
 
-					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
+					CASE toConversor.lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment, .F., .T. )
 						LOOP	&& Saltear comentarios
 
 					CASE LEFT( tcLine, LEN(C_MENUCODE_F) ) == C_MENUCODE_F
@@ -26114,6 +26810,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="n_excludedbfautoincnextval" display="n_ExcludeDBFAutoincNextval"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
@@ -26150,6 +26847,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_ClearUniqueID					= NULL
 	l_ClearDBFLastUpdate			= NULL
 	n_OptimizeByFilestamp			= NULL
+	n_ExcludeDBFAutoincNextval		= NULL
 	l_RedirectClassPerFileToMain	= NULL
 	l_RemoveNullCharsFromCode		= NULL
 	l_RemoveZOrderSetFromProps		= NULL
@@ -26193,6 +26891,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.l_ClearUniqueID				= toParentCFG.l_ClearUniqueID
 			.l_ClearDBFLastUpdate			= toParentCFG.l_ClearDBFLastUpdate
 			.n_OptimizeByFilestamp			= toParentCFG.n_OptimizeByFilestamp
+			.n_ExcludeDBFAutoincNextval		= toParentCFG.n_ExcludeDBFAutoincNextval
 			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
