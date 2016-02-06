@@ -178,7 +178,9 @@
 * 15/09/2015	FDBOZZO		v1.19.46	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
 * 18/09/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
 * 29/10/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Lutz Scheffler)
-* 04/11/2015	RALFXWAGNER	v1.19.46	Bug Fix Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Ralf Wagner)
+* 04/11/2015	RALFXWAGNER	v1.19.46	Bug Fix Pjx: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Ralf Wagner)
+* 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
+* 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -276,6 +278,8 @@
 * 17/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
 * 11/10/2015	Lutz Scheffler		Reporte bug Frx/Lbx v1.19.45: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Arreglado en v1.19.46 Preview-7)
 * 04/11/2015	Ralf Wagner			Reporte bug Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Arreglado en v1.19.46 Preview-8)
+* 20/11/2015	EddieC				Reporte bug Pjx v1.19.45: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (Arreglado en v1.19.46 Preview-9)
+* 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -510,8 +514,12 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #DEFINE C_FILETYPE_QUERYSUPPORT		"Q"
 *-- Fin / End
 
+*-- Predefine 64MB of RAM
+SYS(3050,1,64*1024*1024)
+SYS(3050,2,64*1024*1024)
+
 IF _VFP.StartMode > 0 THEN
-	SYS(2450,1)
+	SYS(2450,1)		&& Set Application Search Path Order to APP/EXE 1st when not in Dev-Mode
 ENDIF
 
 LOCAL loCnv AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -762,6 +770,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
 	n_UseClassPerFile				= 0
+	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
 	l_NoTimestamps					= .T.
@@ -1402,6 +1411,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
+	PROCEDURE n_ExcludeDBFAutoincNextval_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_ExcludeDBFAutoincNextval
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_ExcludeDBFAutoincNextval, THIS.n_ExcludeDBFAutoincNextval )
+		ENDIF
+	ENDPROC
+
+
 	PROCEDURE changeFileAttribute
 		* Using Win32 Functions in Visual FoxPro
 		* example=103
@@ -1843,7 +1861,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 						toParentCFG		= THIS
 
 						IF LEFT( lc_CFG_Path, 2 ) == '\\' THEN
-							lnDirs	= OCCURS( '\', lc_CFG_Path ) - 3
+							*lnDirs	= OCCURS( '\', lc_CFG_Path ) - 3
+							lnDirs	= OCCURS( '\', lc_CFG_Path ) - 2
 						ELSE
 							lnDirs	= OCCURS( '\', lc_CFG_Path )
 						ENDIF
@@ -2124,6 +2143,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > BackgroundImage:            ' + TRANSFORM(lo_CFG.c_BackgroundImage) )
 							ENDIF
 
+						CASE LEFT( laConfig(I), 25 ) == LOWER('ExcludeDBFAutoincNextval:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 26 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.n_ExcludeDBFAutoincNextval	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ExcludeDBFAutoincNextval:   ' + TRANSFORM(lo_CFG.n_ExcludeDBFAutoincNextval) )
+							ENDIF
+
 						ENDCASE
 					ENDFOR
 
@@ -2184,6 +2210,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( C_TAB + 'c_BackgroundImage:            ' + TRANSFORM(.c_BackgroundImage) )
 				.writeLog( C_TAB + 'n_OptimizeByFilestamp:        ' + TRANSFORM(.n_OptimizeByFilestamp) )
+				.writeLog( C_TAB + 'n_ExcludeDBFAutoincNextval:   ' + TRANSFORM(.n_ExcludeDBFAutoincNextval) )
 				.writeLog( C_TAB + 'l_RemoveNullCharsFromCode:    ' + TRANSFORM(.l_RemoveNullCharsFromCode) )
 				.writeLog( C_TAB + 'l_RemoveZOrderSetFromProps:   ' + TRANSFORM(.l_RemoveZOrderSetFromProps) )
 				.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + TRANSFORM(.l_ClearDBFLastUpdate) )
@@ -11139,7 +11166,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							EXIT
 
 						OTHERWISE
-							lcFile				= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
+							lcFile				= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ").Description", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 							lcComment			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) )
 							loFile				= toProject( lcFile )
 							loFile._Comments	= lcComment
@@ -11202,7 +11229,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							EXIT
 
 						OTHERWISE
-							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
+							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ").Exclude", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 							llExclude		= EVALUATE( ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) ) )
 							loFile			= toProject( lcFile )
 							loFile._Exclude	= llExclude
@@ -12006,7 +12033,13 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 					*-- AutoInc
 					IF loField._AutoInc_NextVal <> '0'
-						lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+						IF toFoxBin2Prg.n_ExcludeDBFAutoincNextval = 1
+							*-- If AutoIncNextVal is excluded from text, then assign 1 for allowing regeneration
+							*-- of DBF with this field.
+							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
+						ELSE
+							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+						ENDIF
 					ENDIF
 
 					loField			= NULL
@@ -22796,11 +22829,11 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			loFields	= THIS._Fields
 
 			*** DH 06/02/2014: passed variables to toText
-			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount)
+			lcText		= lcText + loFields.toText(@laFields, @lnFieldCount, @toFoxBin2Prg)
 
 			*-- Indexes
 			loIndexes	= THIS._Indexes
-			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile )
+			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile, @toFoxBin2Prg )
 
 			*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
 			lcTableCFG	= tc_InputFile + '.CFG'
@@ -22986,6 +23019,12 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 			loField			= CREATEOBJECT('CL_DBF_FIELD')
 
 			FOR I = 1 TO tnField_Count
+				IF taFields(I,17) > 0 AND toFoxBin2Prg.n_ExcludeDBFAutoincNextval = 1
+					*-- If AutoIncNextVal is excluded from text, then assign 1 for allowing regeneration
+					*-- of DBF with this field.
+					taFields(I,17)	= 1
+				ENDIF
+				
 				lcText	= lcText + loField.toText( @taFields, I )
 			ENDFOR
 
@@ -26764,6 +26803,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
+		+ [<memberdata name="n_excludedbfautoincnextval" display="n_ExcludeDBFAutoincNextval"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
@@ -26800,6 +26840,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_ClearUniqueID					= NULL
 	l_ClearDBFLastUpdate			= NULL
 	n_OptimizeByFilestamp			= NULL
+	n_ExcludeDBFAutoincNextval		= NULL
 	l_RedirectClassPerFileToMain	= NULL
 	l_RemoveNullCharsFromCode		= NULL
 	l_RemoveZOrderSetFromProps		= NULL
@@ -26843,6 +26884,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.l_ClearUniqueID				= toParentCFG.l_ClearUniqueID
 			.l_ClearDBFLastUpdate			= toParentCFG.l_ClearDBFLastUpdate
 			.n_OptimizeByFilestamp			= toParentCFG.n_OptimizeByFilestamp
+			.n_ExcludeDBFAutoincNextval		= toParentCFG.n_ExcludeDBFAutoincNextval
 			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
