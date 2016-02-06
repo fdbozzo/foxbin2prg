@@ -174,9 +174,10 @@
 * 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
 * 29/07/2015	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Dave Crozier)
 * 01/09/2015	FDBOZZO		v1.19.46	Bug Fix mnx: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Walter Nichols)
-* 14/09/2015	FDBOZZO		v1.19.45	Mejora: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones, por lo que se reemplaza por llamadas Win32 nativas (Aurélien Dellieux)
-* 15/09/2015	FDBOZZO		v1.19.45	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
-* 18/09/2015	FDBOZZO		v1.19.45	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
+* 14/09/2015	FDBOZZO		v1.19.46	Mejora: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones, por lo que se reemplaza por llamadas Win32 nativas (Aurélien Dellieux)
+* 15/09/2015	FDBOZZO		v1.19.46	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
+* 18/09/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
+* 29/10/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -272,6 +273,7 @@
 * 09/09/2015	Aurélien Dellieux	Mejora v1.19.45: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones (Cambiado en v1.19.46)
 * 11/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
 * 17/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
+* 11/10/2015	Lutz Scheffler		Reporte bug Frx/Lbx v1.19.45: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Arreglado en v1.19.46 Preview-7)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1769,7 +1771,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		#ENDIF
 
 		LOCAL lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDirInfo(1,5) ;
-			, lnDirs, laDirs(1), llMasterEval ;
+			, lnDirs, laDirs(1), llMasterEval, lcProp ;
 			, lo_CFG AS CL_CFG OF 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration AS Collection ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
@@ -1926,11 +1928,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE LEFT( laConfig(I), 10 ) == LOWER('Extension:')
 							lcConfData	= ALLTRIM( SUBSTR( laConfig(I), 11 ) )
-							lcExt		= 'c_' + ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
-							IF PEMSTATUS( lo_CFG, lcExt, 5 )
-								lo_CFG.ADDPROPERTY( lcExt, UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
-								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' a ' + UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) ) )
+							lcExt		= ALLTRIM( GETWORDNUM( lcConfData, 1, '=' ) )
+							lcProp		= 'c_' + lcExt
+							IF PEMSTATUS( lo_CFG, lcProp, 5 )
+								lcValue	= UPPER( ALLTRIM( GETWORDNUM( lcConfData, 2, '=' ) ) )
+								lo_CFG.ADDPROPERTY( lcProp, lcValue )
+								*.writeLog( 'Reconfiguración de extensión:' + ' ' + lcExt + ' a ' + lcValue )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' -> ' + lcValue )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('DontShowProgress:')
@@ -16326,9 +16330,13 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
-					SELECT * FROM _TABLAORIG ;
+					*SELECT * FROM _TABLAORIG ;
 						WHERE ObjType IN (1,25,26) ;
 						ORDER BY ObjType ASC ;
+						INTO CURSOR TABLABIN_0 READWRITE
+					*-- Arreglo bug agrupación de controles. 29/10/2015
+					SELECT * FROM _TABLAORIG ;
+						WHERE ObjType IN (1,25,26) ;
 						INTO CURSOR TABLABIN_0 READWRITE
 
 					*-- Header
