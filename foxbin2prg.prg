@@ -176,6 +176,7 @@
 * 01/09/2015	FDBOZZO		v1.19.46	Bug Fix mnx: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Walter Nichols)
 * 14/09/2015	FDBOZZO		v1.19.45	Mejora: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones, por lo que se reemplaza por llamadas Win32 nativas (Aurélien Dellieux)
 * 15/09/2015	FDBOZZO		v1.19.45	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
+* 18/09/2015	FDBOZZO		v1.19.45	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -270,6 +271,7 @@
 * 28/08/2015	Walter Nicholls		Reporte Bug: Cuando se usa '&&' en los textos de las opciones, se corrompe el binario del menú al regenerarlo (Arreglado en v1.19.46)
 * 09/09/2015	Aurélien Dellieux	Mejora v1.19.45: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones (Cambiado en v1.19.46)
 * 11/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
+* 17/09/2015	Ryan Harris			Reporte Bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -536,11 +538,22 @@ IF ATC('-BIN2PRG','-'+tc_InputFile) > 0 OR ATC('-PRG2BIN','-'+tc_InputFile) > 0 
 	RELEASE pcParamX
 ENDIF
 
-loCnv	= CREATEOBJECT("c_foxbin2prg")
-loEx	= NULL
-lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-	, tcDontShowProgress, NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-	, .F., .F., .F., tcCFG_File )
+TRY
+	loEx	= NULL
+	loCnv	= CREATEOBJECT("c_foxbin2prg")
+	lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
+		, tcDontShowProgress, NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+		, .F., .F., .F., tcCFG_File )
+CATCH TO loEx
+	*-- Esto solo es para errores en el INIT, ya que los demás se deben capturar y tratar antes.
+	lnResp		= loEx.ErrorNo
+	MESSAGEBOX( 'Error ' + TRANSFORM(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
+		+ loEx.Procedure + ', Line ' + TRANSFORM(loEx.LineNo) + C_CR ;
+		+ loEx.Details ;
+		, 0+16+4096 ;
+		, '' ;
+		, 60000 )
+ENDTRY
 
 ADDPROPERTY(_SCREEN, 'ExitCode', lnResp)
 *SET COVERAGE TO
@@ -819,7 +832,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.declareDLL()
 
 		IF ADIR(laDir, THIS.c_ErrorLogFile) > 0 THEN
-			ERASE (THIS.c_ErrorLogFile + '.BAK')
+			IF ADIR(laDir, THIS.c_ErrorLogFile + '.BAK') > 0 THEN
+				THIS.changeFileAttribute( THIS.c_ErrorLogFile + '.BAK', '-R-S-H' )
+				ERASE (THIS.c_ErrorLogFile + '.BAK')
+			ENDIF
+
+			THIS.changeFileAttribute( THIS.c_ErrorLogFile, '-R-S-H' )
 			RENAME (THIS.c_ErrorLogFile) TO (THIS.c_ErrorLogFile + '.BAK')
 		ENDIF
 
@@ -4535,7 +4553,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		* ? WScriptShell_Run("c:\windows\system32\cmd.exe /c dir c:\*.* > \temp\dir.txt")
 
 		LOCAL lnWfSO, ln_dwFlags, ln_wShowWindow, lcStartInfo, lcProcessInfo, ln_hProcess, ln_hThread ;
-			, lnExitCode, ln_dwProcessId, ln_dwThreadId, tcProgFile
+			, lnExitCode, ln_dwProcessId, ln_dwThreadId, tcProgFile, laDirFile(1,5)
 
 		TRY
 			DECLARE SHORT CreateProcess IN WIN32API ;
@@ -4553,8 +4571,18 @@ DEFINE CLASS c_foxbin2prg AS Session
 			DECLARE LONG WaitForSingleObject IN WIN32API INTEGER hHandle, LONG dwMilliseconds
 			DECLARE INTEGER GetExitCodeProcess IN WIN32API INTEGER ln_hProcess, INTEGER @ lnExitCode
 			DECLARE INTEGER CloseHandle IN kernel32.DLL INTEGER hObject
+			*DECLARE INTEGER ShellExecuteEx IN Shell32 STRING @lpExecInfo
+			DECLARE LONG ShellExecuteEx IN shell32.DLL STRING @
+			DECLARE LONG HeapAlloc IN WIN32API LONG, LONG, LONG
+			DECLARE LONG HeapFree IN WIN32API LONG, LONG, LONG
+			DECLARE LONG GetProcessHeap IN WIN32API
+			*DECLARE LONG WaitForSingleObject IN WIN32API LONG, LONG
+			DECLARE LONG TerminateProcess IN WIN32API LONG, LONG
 
 			* NOTA: Las constantes para VFP se pueden consultar en http://www.news2news.com/vfp/w32constants.php
+
+			#DEFINE SEE_MASK_NOCLOSEPROCESS  0x00000040
+			#DEFINE WAIT_MILLISECOND 3000
 
 			#DEFINE SW_SHOW			5
 			#DEFINE STILL_ACTIVE	0x103
@@ -4623,33 +4651,109 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 			* DOCUMENTACIÓN estructura _PROCESS_INFORMATION:
 			* https://msdn.microsoft.com/en-us/library/windows/desktop/ms684873%28v=vs.85%29.aspx
-			*!*    typedef struct _PROCESS_INFORMATION {
-			*!*        HANDLE hProcess;
-			*!*        HANDLE hThread;
-			*!*        DWORD dwProcessId;
-			*!*        DWORD dwThreadId;
-			*!*    } PROCESS_INFORMATION;
+			*    typedef struct _PROCESS_INFORMATION {
+			*        HANDLE hProcess;
+			*        HANDLE hThread;
+			*        DWORD dwProcessId;
+			*        DWORD dwThreadId;
+			*    } PROCESS_INFORMATION;
 			*
 
 			IF CreateProcess( tcProgFile, tcCmdLine,0,0,0,0,0,0, lcStartInfo, @lcProcessInfo ) = 0
-				IF tlDebug
-					? "Could not create process"
+
+				*-- Segundo intento: Si se definió un archivo (ej: un TXT,LOG,etc) intento lanzarlo
+				*-- con la aplicación predeterminada
+				IF ADIR(laDirFile, tcCmdLine) = 1 THEN
+					LOCAL lcInfo, lnHeap, lnLen, lnPtr
+
+					*-- Ejemplo adaptado de: http://www.foxite.com/archives/0000316611.htm
+					lnLen	= LEN(tcCmdLine) + 1
+					lnHeap	= GetProcessHeap()
+					lnPtr	= HeapAlloc(lnHeap, 0x8, 5 + lnLen)
+					SYS(2600, lnPtr, 5, [open] + CHR(0))
+					SYS(2600, lnPtr+5, lnLen, tcCmdLine + CHR(0))
+
+					* DOCUMENTACIÓN estructura _SHELLEXECUTEINFO:
+					* https://msdn.microsoft.com/en-us/library/windows/desktop/bb759784%28v=vs.85%29.aspx
+					*typedef struct _SHELLEXECUTEINFO {
+					*    DWORD     cbSize;            4
+					*    ULONG     fMask;             4
+					*    HWND      hwnd;              4
+					*    LPCTSTR   lpVerb;            4
+					*    LPCTSTR   lpFile;            4
+					*    LPCTSTR   lpParameters;      4
+					*    LPCTSTR   lpDirectory;       4
+					*    int       nShow;             4
+					*    HINSTANCE hInstApp;          4
+					*    LPVOID    lpIDList;          4
+					*    LPCTSTR   lpClass;           4
+					*    HKEY      hkeyClass;         4
+					*    DWORD     dwHotKey;          4
+					*    union {
+					*        HANDLE hIcon;            
+					*        HANDLE hMonitor;         
+					*    } DUMMYUNIONNAME;            4
+					*    HANDLE    hProcess;          4
+					*} SHELLEXECUTEINFO, *LPSHELLEXECUTEINFO;
+					*
+
+					lcInfo = ;
+						BINTOC(60, [4RS]) + ;
+						BINTOC(SEE_MASK_NOCLOSEPROCESS, [4RS]) + ;
+						BINTOC(0, [4RS]) + ;
+						BINTOC(lnPtr, [4RS]) + ;
+						BINTOC(lnPtr+5, [4RS]) + ;
+						BINTOC(0, [4RS]) + ;
+						BINTOC(0, [4RS]) + ;
+						BINTOC(1, [4RS]) + ;
+						REPLICATE(CHR(0), 28)
+
+					IF ShellExecuteEx(@lcInfo) = 0
+						IF tlDebug
+							? "Could not call process"
+						ENDIF
+						lnExitCode	= -1
+						EXIT
+					ELSE
+						HeapFree(lnHeap, 0, lnPtr)
+						ln_hProcess	= CTOBIN(RIGHT(lcInfo, 4), [4RS])
+						ln_hThread	= 0
+
+						IF tlDebug
+							? "Process handle    = "+TRANSFORM(ln_hProcess)
+							? "Thread handle     = "+TRANSFORM(ln_hThread)
+						ENDIF
+
+						*IF lnProcess != 0
+						*	WaitForSingleObject(ln_hProcess, WAIT_MILLISECOND)
+						*	IF tlDebug
+						*		? "Terminating process!"
+						*	ENDIF
+						*	TerminateProcess(ln_hProcess, 0)
+						*ENDIF
+					ENDIF
+				
+				ELSE
+					IF tlDebug
+						? "Could not create process"
+					ENDIF
+					lnExitCode	= -1
+					EXIT
 				ENDIF
-				lnExitCode	= -1
-				EXIT
-			ENDIF
+			ELSE
 
-			* Process and thread handles returned in ProcInfo structure
-			ln_hProcess 	= CTOBIN( LEFT( lcProcessInfo, 4 ), '4RS' )
-			ln_hThread		= CTOBIN( SUBSTR( lcProcessInfo, 5, 4 ), '4RS' )
-			ln_dwProcessId	= CTOBIN( SUBSTR( lcProcessInfo, 9, 4 ), '4RS' )
-			ln_dwThreadId	= CTOBIN( SUBSTR( lcProcessInfo, 13, 4 ), '4RS' )
+				* Process and thread handles returned in ProcInfo structure
+				ln_hProcess 	= CTOBIN( LEFT( lcProcessInfo, 4 ), '4RS' )
+				ln_hThread		= CTOBIN( SUBSTR( lcProcessInfo, 5, 4 ), '4RS' )
+				ln_dwProcessId	= CTOBIN( SUBSTR( lcProcessInfo, 9, 4 ), '4RS' )
+				ln_dwThreadId	= CTOBIN( SUBSTR( lcProcessInfo, 13, 4 ), '4RS' )
 
-			IF tlDebug
-				? "Process handle    = "+TRANSFORM(ln_hProcess)
-				? "Thread handle     = "+TRANSFORM(ln_hThread)
-				? "Process handle id = "+TRANSFORM(ln_dwProcessId)
-				? "Thread handle id  = "+TRANSFORM(ln_dwThreadId)
+				IF tlDebug
+					? "Process handle    = "+TRANSFORM(ln_hProcess)
+					? "Thread handle     = "+TRANSFORM(ln_hThread)
+					? "Process handle id = "+TRANSFORM(ln_dwProcessId)
+					? "Thread handle id  = "+TRANSFORM(ln_dwThreadId)
+				ENDIF
 			ENDIF
 
 			IF tbWaitOnReturn THEN
@@ -11540,6 +11644,12 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 					IF C_DATA_F $ tcLine	&& Fin del valor
 						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
+						
+						*-- Ajustes: En los labels, no se usa CR+LF, sino que se usa solo CR
+						IF toReg.objType = "5" THEN
+							lcValue = STRTRAN(lcValue, CR_LF, C_CR)
+						ENDIF
+
 						ADDPROPERTY( toReg, tcPropName, lcValue )
 						EXIT
 
