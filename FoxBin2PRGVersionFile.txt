@@ -28,6 +28,7 @@ Change History -------------------------------------------------------------
 - Feature: In some environments and under some conditions WSscript.Shell object can cause problems, so now it's replaced with Win32 native functions (Aurélien Dellieux)
 - Bug Fix frx/lbx: Ordering of report objects changes the ZOrder of near objects that can overlap, which can cause bad visualization and printing (Ryan Harris)
 - Bug Fix frx/lbx: When regenerating reports or labels with multiline texts center or right aligned, alignment is not completely right (Ryan Harris)
+- Bug Fix frx/lbx: When grouping objects in design mode, generating text and regenerating binary cause the lost of the grouping (does not affect data) (Lutz Scheffler)
 
 
 2015/06/21	v1.19.45
