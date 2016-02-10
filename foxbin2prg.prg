@@ -182,7 +182,7 @@
 * 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
 * 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
 * 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
-* 10/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se realiza una conversión automática de binario a texto de todos los archivos (Alejandro Sosa)
+* 10/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -283,7 +283,7 @@
 * 20/11/2015	EddieC				Reporte bug Pjx v1.19.45: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (Arreglado en v1.19.46 Preview-9)
 * 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
 * 01/02/2016	Aurélien Dellieux	Reporte bug v1.19.45: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Arreglado en v1.19.46 Preview-10)
-* 10/02/2016	Alejandro Sosa		Reporte bug v1.19.46: Cuando se indica como nombre de archivo "*" y como tipo "*", se realiza una conversión automática de binario a texto de todos los archivos (Arreglado en v1.19.47 Preview-1)
+* 10/02/2016	Alejandro Sosa		Reporte bug v1.19.46: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Arreglado en v1.19.47 Preview-1)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
