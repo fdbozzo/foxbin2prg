@@ -182,6 +182,7 @@
 * 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
 * 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
 * 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
+* 10/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -282,6 +283,7 @@
 * 20/11/2015	EddieC				Reporte bug Pjx v1.19.45: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (Arreglado en v1.19.46 Preview-9)
 * 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
 * 01/02/2016	Aurélien Dellieux	Reporte bug v1.19.45: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Arreglado en v1.19.46 Preview-10)
+* 10/02/2016	Alejandro Sosa		Reporte bug v1.19.46: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Arreglado en v1.19.47 Preview-1)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2764,6 +2766,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 									ENDCASE
 								ENDIF
 
+							CASE EMPTY( JUSTEXT( EVL(tc_InputFile,'') ) )
+								*-- NO SE INDICÓ NINGUNA EXTENSIÓN
+								ERROR loLang.C_INVALID_PARAMETER_LOC + ': cInputFile = "' + tc_InputFile + '"'
+
 							OTHERWISE
 								*-- DEMÁS ARCHIVOS
 								*-- Filespec: "*.EXT"
@@ -3920,7 +3926,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						*-- Verifico si el carácter es un separador de cadenas: '"[
 						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
-						
+
 						IF X > 0 THEN
 							lnAT1	= AT(laSeparador(X,1), lcStr)
 						ENDIF
@@ -4582,7 +4588,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
-	FUNCTION WScriptShell_Run
+	FUNCTION wscriptshell_run
 		* Modificación basada en la rutina RunExitCode.prg de William GC Steinford (nov 2002)
 		* pero compatible con el método Run de WScript.Shell para su reemplazo cuando no es posible usarlo.
 		* http://fox.wikis.com/wc.dll?Wiki~ProcessExitCode
@@ -4730,8 +4736,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 					*    HKEY      hkeyClass;         4
 					*    DWORD     dwHotKey;          4
 					*    union {
-					*        HANDLE hIcon;            
-					*        HANDLE hMonitor;         
+					*        HANDLE hIcon;
+					*        HANDLE hMonitor;
 					*    } DUMMYUNIONNAME;            4
 					*    HANDLE    hProcess;          4
 					*} SHELLEXECUTEINFO, *LPSHELLEXECUTEINFO;
@@ -4772,7 +4778,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 						*	TerminateProcess(ln_hProcess, 0)
 						*ENDIF
 					ENDIF
-				
+
 				ELSE
 					IF tlDebug
 						? "Could not create process"
@@ -6387,7 +6393,7 @@ DEFINE CLASS c_conversor_base AS Custom
 
 						*-- Verifico si el carácter es un separador de cadenas: '"[
 						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
-						
+
 						IF X > 0 THEN
 							lnAT1	= AT(laSeparador(X,1), lcStr)
 						ENDIF
@@ -11688,9 +11694,9 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 					IF C_DATA_F $ tcLine	&& Fin del valor
 						lcValue	= lcValue + CR_LF + STREXTRACT( tcLine, '', C_DATA_F )
-						
+
 						*-- Ajustes: En los labels, no se usa CR+LF, sino que se usa solo CR
-						IF toReg.objType = "5" THEN
+						IF toReg.ObjType = "5" THEN
 							lcValue = STRTRAN(lcValue, CR_LF, C_CR)
 						ENDIF
 
@@ -16377,9 +16383,9 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
 					*SELECT * FROM _TABLAORIG ;
-						WHERE ObjType IN (1,25,26) ;
-						ORDER BY ObjType ASC ;
-						INTO CURSOR TABLABIN_0 READWRITE
+					WHERE ObjType IN (1,25,26) ;
+					ORDER BY ObjType ASC ;
+					INTO CURSOR TABLABIN_0 READWRITE
 					*-- Arreglo bug agrupación de controles. 29/10/2015
 					SELECT * FROM _TABLAORIG ;
 						WHERE ObjType IN (1,25,26) ;
@@ -17136,7 +17142,7 @@ DEFINE CLASS CL_CUS_BASE AS CUSTOM
 
 						*-- Verifico si el carácter es un separador de cadenas: '"[
 						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
-						
+
 						IF X > 0 THEN
 							lnAT1	= AT(laSeparador(X,1), lcStr)
 						ENDIF
@@ -17311,7 +17317,7 @@ DEFINE CLASS CL_COL_BASE AS COLLECTION
 
 						*-- Verifico si el carácter es un separador de cadenas: '"[
 						X	= AT( SUBSTR(lcStr, I, 1), lcSeparadoresIzq)
-						
+
 						IF X > 0 THEN
 							lnAT1	= AT(laSeparador(X,1), lcStr)
 						ENDIF
@@ -23031,7 +23037,7 @@ DEFINE CLASS CL_DBF_FIELDS AS CL_COL_BASE
 					*-- of DBF with this field.
 					taFields(I,17)	= 1
 				ENDIF
-				
+
 				lcText	= lcText + loField.toText( @taFields, I )
 			ENDFOR
 
@@ -23639,10 +23645,10 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 					DO CASE
 					CASE lcFieldType == 'G'
 						luValue		= 'GENERAL FIELD NOT SUPPORTED'
-					*CASE lcFieldType == 'W'
-					*	luValue		= 'BLOB FIELD NOT SUPPORTED'
-					*CASE lcFieldType == 'Q'
-					*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+						*CASE lcFieldType == 'W'
+						*	luValue		= 'BLOB FIELD NOT SUPPORTED'
+						*CASE lcFieldType == 'Q'
+						*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
 					OTHERWISE
 						luValue		= EVALUATE(lcField)
 					ENDCASE
