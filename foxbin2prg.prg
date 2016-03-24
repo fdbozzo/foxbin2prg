@@ -24930,7 +24930,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						CASE toConversor.c_MenuLocation == 'APPEND'
 							loReg.Location		= C_MENULOCATION_APPEND
 						OTHERWISE
-							IF LEFT(toConversor.c_MenuLocation,7) == 'BEFORE'
+							IF LEFT(toConversor.c_MenuLocation,6) == 'BEFORE'
 								loReg.Location		= C_MENULOCATION_BEFORE
 							ELSE
 								loReg.Location		= C_MENULOCATION_AFTER
