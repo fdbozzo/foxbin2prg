@@ -16,6 +16,8 @@ Const ForReading = 1
 Dim WSHShell, FileSystemObject, cEndOfProcessMsg, cWithErrorsMsg, cConvCancelByUserMsg, nProcessedFilesCount
 Dim oVFP9, nExitCode, cEXETool, cCMD, nDebug, lcExt, foxbin2prg_cfg, aFiles(), nFile_Count
 Dim i, x, str_cfg, aConf, cErrMsg, cFlagGenerateLog, cFlagDontShowErrMsg, cFlagJustShowCall, cFlagRecompile, cFlagNoTimestamps, cErrFile
+'' 2016.04.05 DH: added next line
+dim fileToProcess
 Set WSHShell = WScript.CreateObject("WScript.Shell")
 Set FileSystemObject = WScript.CreateObject("Scripting.FileSystemObject")
 Set oVFP9 = CreateObject("VisualFoxPro.Application.9")
@@ -29,7 +31,7 @@ nExitCode = 0
 ' 4=Don't show FoxBin2prg error modal messages
 ' 8=Show end of process message
 ' 16=Empty timestamps
-nDebug = 1+0+4+8
+nDebug = 1+0+4+8+16
 '---------------------------------------------------------------------------------------------------
 
 If WScript.Arguments.Count = 0 Then
@@ -68,8 +70,11 @@ Else
 
 	cFlagGenerateLog		= "'0'"
 	cFlagDontShowErrMsg		= "'0'"
-	cFlagShowCall			= "'0'"
+	'' 2016.04.05 DH: fixed incorrectly named variable
+	cFlagJustShowCall		= "'0'"
 	cFlagRecompile			= "'1'"
+	'' 2016.04.05 DH: added missing assignment
+	cFlagNoTimestamps		= "'0'"
 
 	If GetBit(nDebug, 1) Then
 		cFlagGenerateLog	= "'1'"
@@ -87,13 +92,17 @@ Else
 	oVFP9.DoCmd( "oFoxBin2prg.o_frm_avance.Caption = '" & FileSystemObject.GetBaseName( WScript.ScriptName ) & " - ' + oFoxBin2Prg.c_loc_process_progress + '  (Press Esc to Cancel)'" )
 
 	For i = 1 To nFile_Count
-		oVFP9.DoCmd( "oFoxBin2Prg.updateProgressbar(oFoxBin2Prg.c_loc_processing_file + ' " & aFiles(i) & "...', " & i & ", " & nFile_Count & ", 0)" )
-		cFlagRecompile	= "'" & FileSystemObject.GetParentFolderName( aFiles(i) ) & "'"
-
+		'' 2016.04.05 DH: put double quotes around path in case in contains single quote
+		fileToProcess = Chr(34) + aFiles(i) + Chr(34)
+		oVFP9.DoCmd( "oFoxBin2Prg.updateProgressbar(oFoxBin2Prg.c_loc_processing_file + " & fileToProcess & ", " & i & ", " & nFile_Count & ", 0)" )
+		cFlagRecompile	= Chr(34) + FileSystemObject.GetParentFolderName( aFiles(i) ) + Chr(34)
+		'' 2016.04.05 DH: end of change
 		If nDebug = 0 Or nDebug = 2 Then
-			cCMD	= "oFoxBin2prg.execute( '" & aFiles(i) & "' )"
+			'' 2016.04.05 DH: use new variable
+			cCMD	= "oFoxBin2prg.execute(" & fileToProcess & ")"
 		Else
-			cCMD	= "oFoxBin2prg.execute( '" & aFiles(i) & "','BIN2PRG','0','0'," _
+			'' 2016.04.05 DH: use new variable
+			cCMD	= "oFoxBin2prg.execute(" & fileToProcess & ",'BIN2PRG','0','0'," _
 				& cFlagDontShowErrMsg & "," & cFlagGenerateLog & ",'1','','',.F.,''," _
 				& cFlagRecompile & "," & cFlagNoTimestamps & " )"
 		End If
