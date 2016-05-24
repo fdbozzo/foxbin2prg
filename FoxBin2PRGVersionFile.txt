@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.47'
-    .VersionDate          = Date(2016,02,10)
+    .VersionDate          = Date(2016,05,24)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -17,8 +17,13 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2016/02/10	v1.19.47
+2016/05/24	v1.19.47
 - Bug Fix: When a filename "*" is specified with a type "*", an automatic regeneration of all binary files is made from text files (Alejandro Sosa)
+- BugFix: Added variable declaration (Doug Hennig)
+- BugFix: Fixed incorrectly named variable (Doug Hennig)
+- BugFix: Added missing assignment (Doug Hennig)
+- Enhancement: Put double quotes around path in case in contains single quote (Doug Hennig)
+- BugFix: Added "+16" to Debug flags to maintain internal defaults
 
 2016/02/06	v1.19.46
 - Bug Fix: set_UserValue() method causes error when trying to get information about another error and the VFP binary table can not be opened (ie, because corrupted memo)
