@@ -183,6 +183,7 @@
 * 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
 * 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
 * 10/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
+* 29/07/2015	FDBOZZO		v1.19.46	Mejora DBF-Data: Permitir exportar e importar datos de los DBF (Walter Nicholls)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -23645,10 +23646,10 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 					DO CASE
 					CASE lcFieldType == 'G'
 						luValue		= 'GENERAL FIELD NOT SUPPORTED'
-						*CASE lcFieldType == 'W'
-						*	luValue		= 'BLOB FIELD NOT SUPPORTED'
-						*CASE lcFieldType == 'Q'
-						*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
+					CASE lcFieldType == 'W'
+						luValue		= 'BLOB FIELD NOT SUPPORTED'
+					CASE lcFieldType == 'Q'
+						luValue		= 'VARBINARY FIELD NOT SUPPORTED'
 					OTHERWISE
 						luValue		= EVALUATE(lcField)
 					ENDCASE
