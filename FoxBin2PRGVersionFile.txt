@@ -24,6 +24,7 @@ Change History -------------------------------------------------------------
 - BugFix: Added missing assignment (Doug Hennig)
 - Enhancement: Put double quotes around path in case in contains single quote (Doug Hennig)
 - BugFix: Added "+16" to Debug flags to maintain internal defaults to not generate timestamps on xx2 files
+- Feature: Added support for appending data from DB2 to DBF. All datatypes except General. (Walter Nicholls)
 
 2016/02/06	v1.19.46
 - Bug Fix: set_UserValue() method causes error when trying to get information about another error and the VFP binary table can not be opened (ie, because corrupted memo)
