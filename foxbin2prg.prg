@@ -799,7 +799,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	o_Conversor                     = NULL
 	o_Frm_Avance					= NULL
 	o_WSH							= NULL
-	o_FSO							= NULL
+	o_FSO							= NULL			&& Scripting.FileSystemObject
+	o_TextStream					= NULL			&& Scripting.TextStream
 	o_FNC							= NULL			&& Filename_caps object
 	o_Configuration					= NULL
 	run_AfterCreateTable			= ''
@@ -2545,8 +2546,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				IF '\' $ tcFileName AND INLIST(lcExt, .c_DB2, 'DBF') THEN
 					lcFilename	= FORCEEXT(tcFileName, 'DBF')
-					lcDir		= JUSTPATH(lcFileName)
-					.get_DBF_Configuration(lcFileName, @loDBF_CFG, tlGenerarLog)
+					lcDir		= JUSTPATH(lcFilename)
+					.get_DBF_Configuration(lcFilename, @loDBF_CFG, tlGenerarLog)
 				ELSE
 					lcDir		= SYS(5) + CURDIR()
 				ENDIF
@@ -16763,9 +16764,12 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
 					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
-					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
+					, loFSO AS Scripting.FileSystemObject ;
+					, loTextStream AS Scripting.TextStream
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
+				loFSO			= toFoxBin2Prg.o_FSO
 				STORE NULL TO loTable, loDBFUtils
 				STORE 0 TO lnCodError
 				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
@@ -16801,15 +16805,19 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				*-- Exportación de estructura y datos (para Diff solamente)
 				ERASE (.c_OutputFile + '.TMP' )
-				toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+				*toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+				loTextStream	= loFSO.CreateTextFile(.c_OutputFile + '.TMP' )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
+				toFoxBin2Prg.o_TextStream = loTextStream
 
 				IF toFoxBin2Prg.n_FileHandle = -1 THEN
 					ERROR 102, (.c_OutputFile)
 				ENDIF
 
-				FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+				*FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+				loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-				FCLOSE( toFoxBin2Prg.n_FileHandle )
+				*FCLOSE( toFoxBin2Prg.n_FileHandle )
+				loTextStream.Close()
 
 				DO CASE
 				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
@@ -16881,7 +16889,10 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			FCLOSE( toFoxBin2Prg.n_FileHandle )
+			*FCLOSE( toFoxBin2Prg.n_FileHandle )
+			IF VARTYPE(loTextStream) = "O" THEN
+				loTextStream.Close()
+			ENDIF
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
@@ -16892,8 +16903,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 			ENDFOR
 
-			STORE NULL TO loTable, loDBFUtils
-			RELEASE toModulo, toEx, toFoxBin2Prg ;
+			STORE NULL TO loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
+			RELEASE toModulo, toEx, toFoxBin2Prg, loTextStream ;
 				, lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable, loDBFUtils
@@ -23040,13 +23051,17 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			LOCAL lcText, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
 				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition, llExportData, laDirFile(1,5), lnFileCount ;
 				, loEx AS EXCEPTION ;
+				, loFSO AS Scripting.FileSystemObject ;
+				, loTextStream AS Scripting.TextStream ;
 				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG' ;
 				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG' ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
 				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+
 			*** DH 06/02/2014: created variables
 			LOCAL laFields[1], lnFieldCount
-
+			loFSO			= toFoxBin2Prg.o_FSO
+			loTextStream	= toFoxBin2Prg.o_TextStream
 			STORE NULL TO loIndexes, loFields, loRecords
 			STORE 0 TO lnFileCount
 			lcText	= ''
@@ -23098,7 +23113,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			*** DH 06/02/2014: added _Records
 			IF llExportData
 				loRecords	= THIS._Records
-				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
 				lcText	= ''
 			ENDIF
@@ -23108,7 +23124,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>
 			ENDTEXT
 
-			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 			lcText	= ''
 
 
@@ -23125,8 +23142,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				ERASE (lcIndexFile)
 			ENDIF
 
-			STORE NULL TO loIndexes, loFields, loRecords, loDBF_CFG
-			RELEASE loFields, loIndexes, loRecords, loDBF_CFG
+			STORE NULL TO loIndexes, loFields, loRecords, loDBF_CFG, loTextStream
+			RELEASE loFields, loIndexes, loRecords, loDBF_CFG, loTextStream
 		ENDTRY
 
 		RETURN lcText
@@ -23806,17 +23823,21 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 
 		TRY
 			LOCAL lcText, loEx AS EXCEPTION, I, lnReccount ;
-				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG' ;
+				, loTextStream AS Scripting.TextStream
+
 			lcText		= ''
 			I			= 0
 			lnReccount	= RECCOUNT()	&& Realmente no es muy exacto, pero al menos muestra el avance.
+			loTextStream	= toFoxBin2Prg.o_TextStream
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
 				<<>>	<<C_RECORDS_I>>
 			ENDTEXT
 
-			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 			lcText	= ''
 			loRecord = CREATEOBJECT('CL_DBF_RECORD')
 
@@ -23827,13 +23848,11 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			SCAN FOR &tc_DBF_Conversion_Condition.
 				I	= I + 1
 				lcText	= loRecord.toText(@taFields, tnField_Count)
-				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
-				IF MOD(I,100) = 0 THEN
+				*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
+				IF MOD(I,100) = 0 OR LEN(lcText) > 8*1024 THEN
 					toFoxBin2Prg.updateProgressbar( 'Exporting DBF Data...', 1+(I/lnReccount), 3, 2 )
-
-					*IF MOD(I,1000) = 0 THEN
-					FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
-					*ENDIF
+					*FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 				ENDIF
 			ENDSCAN
 
@@ -23845,7 +23864,8 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 				<<>>
 			ENDTEXT
 
-			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 			lcText	= ''
 
 
@@ -23858,8 +23878,8 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			THROW
 
 		FINALLY
-			STORE NULL TO loRecord
-			RELEASE loRecord
+			STORE NULL TO loRecord, loTextStream
+			RELEASE loRecord, loTextStream
 
 		ENDTRY
 
@@ -23950,7 +23970,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 									*-- If NoCPTran, then must encode in b64binary
 									luValue		= STRCONV(lcValue,14)
 								ELSE
-									luValue = .Decode(RTRIM(lcValue))
+									luValue = .Decode(RTRIM(lcValue), .F.)
 								ENDIF
 
 							CASE lcFieldType == 'D'
@@ -24078,7 +24098,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 								*-- If NoCPTran, then must encode in b64binary
 								luValue		= STRCONV(luValue,13)
 							ELSE
-								luValue = .Encode(RTRIM(luValue))
+								luValue = .Encode(RTRIM(luValue), .F.)
 							ENDIF
 
 						ENDCASE
@@ -24110,7 +24130,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
 		IF tl_isCDATA THEN
-			lcString = STRTRAN(tcString, ']]>',   ']]]]><![CDATA[>')
+			lcString = '<![CDATA[' + STRTRAN(tcString, ']]>',   ']]]]><![CDATA[>') + ']]>'
 		ELSE
 			lcString = STRTRAN(tcString, '&',     '&amp;')
 			lcString = STRTRAN(lcString, '>',     '&gt;')
@@ -24129,7 +24149,9 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
 		IF tl_isCDATA THEN
-			lcString = STRTRAN(tcString, ']]]]><![CDATA[>', ']]>')
+			lcString = STREXTRACT( ;
+				STRTRAN(tcString, ']]]]><![CDATA[>', ']]>') ;
+				, '<![CDATA[', ']]>')
 		ELSE
 			lcString = STRTRAN(tcString, '&#9;',   CHR(9))
 			lcString = STRTRAN(lcString, '&#10;',  CHR(10))
