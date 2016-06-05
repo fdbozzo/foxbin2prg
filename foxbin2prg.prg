@@ -23928,7 +23928,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 						.set_Line( @tcLine, @taCodeLines, I )
 
 						DO CASE
-						CASE EMPTY( tcLine )
+						CASE EMPTY( tcLine ) OR LEFT(tcLine, 1) == '*'
 							LOOP
 
 						CASE C_RECORD_F $ tcLine	&& Fin
@@ -23938,26 +23938,26 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 							*-- Estructura a reconocer:
 							*	<fieldName>VALOR</fieldName>
 							lcFieldName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
-							lcValue		= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0 )
+							lcValue		= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0+2 )
 							loField		= toFields.Item(lcFieldName)
 
 							lcFieldType	= loField._Type
 							llNoCPTran	= CAST( loField._NoCPTran as Logical)
 
 							DO CASE
-							CASE lcFieldType == 'L'
+							CASE lcFieldType == 'L'	&& Logical (Boolean)
 								luValue = CAST(lcValue as Logical)
 
-							CASE lcFieldType == 'G'
+							CASE lcFieldType == 'G'	&& General (NOT SUPPORTED)
 								luValue		= ''
 
-							CASE lcFieldType == 'W'
+							CASE lcFieldType == 'W' && Blob (Memo binario)
 								luValue		= STRCONV(lcValue,14)
 
-							CASE lcFieldType == 'Q'
+							CASE lcFieldType == 'Q'	&& Varbinary
 								luValue		= STRCONV(lcValue,14)
 
-							CASE lcFieldType == 'V'
+							CASE lcFieldType == 'V'	&& Varchar
 								IF llNoCPTran
 									*-- If NoCPTran, then must encode in b64binary
 									luValue		= STRCONV(lcValue,14)
@@ -23965,36 +23965,46 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 									luValue = .Decode(lcValue)
 								ENDIF
 
-							CASE lcFieldType == 'M'
+							CASE lcFieldType == 'M'	&& Memo
 								IF llNoCPTran
 									*-- If NoCPTran, then must encode in b64binary
 									luValue		= STRCONV(lcValue,14)
 								ELSE
-									luValue = .Decode(RTRIM(lcValue), .F.)
+									* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
+									DO WHILE .T.
+										IF ']]>' $ tcLine THEN
+											luValue = .Decode(lcValue, .T.)
+											EXIT
+										ELSE
+											I = I + 1
+											.set_Line( @tcLine, @taCodeLines, I )
+											lcValue	= lcValue + CR_LF + tcLine
+										ENDIF
+									ENDDO
 								ENDIF
 
-							CASE lcFieldType == 'D'
+							CASE lcFieldType == 'D'	&& Date
 								luValue = CAST(lcValue as Date)
 
-							CASE lcFieldType == 'T'
+							CASE lcFieldType == 'T'	&& Datetime
 								luValue = CAST(lcValue as DateTime)
 
-							CASE lcFieldType == 'Y'
+							CASE lcFieldType == 'Y'	&& Currency
 								luValue = CAST(lcValue as Currency)
 
-							CASE lcFieldType == 'I'
+							CASE lcFieldType == 'I'	&& Integer
 								luValue = CAST(lcValue as Integer)
 
-							CASE lcFieldType == 'B'
+							CASE lcFieldType == 'B'	&& Double
 								luValue = CAST(lcValue as Double)
 
-							CASE lcFieldType == 'F'
+							CASE lcFieldType == 'F'	&& Float
 								luValue = CAST(lcValue as Float)
 
-							CASE lcFieldType == 'N'
+							CASE lcFieldType == 'N'	&& Numeric
 								luValue = CAST(lcValue as Numeric)
 
-							OTHERWISE	&& Asume 'C'
+							OTHERWISE	&& Asume 'C'	&& Character
 								IF llNoCPTran
 									*-- If NoCPTran, then must encode in b64binary
 									luValue		= STRCONV(lcValue,14)
@@ -24071,13 +24081,13 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 							OR lcFieldType $ 'DT' AND luValue == {} ;
 								OR lcFieldType $ 'YIBFN' AND luValue == 0
 
-						CASE lcFieldType == 'W'
+						CASE lcFieldType == 'W' && Blob (Memo binario)
 							luValue		= STRCONV(luValue,13)
 
-						CASE lcFieldType == 'Q'
+						CASE lcFieldType == 'Q' && Varbinary
 							luValue		= STRCONV(luValue,13)
 
-						CASE lcFieldType == 'V'
+						CASE lcFieldType == 'V'	&& Varchar
 							IF llNoCPTran THEN
 								*-- If NoCPTran, then must encode in b64binary
 								luValue		= STRCONV(luValue,13)
@@ -24085,7 +24095,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 								luValue = .Encode(luValue)
 							ENDIF
 
-						CASE lcFieldType $ 'C'
+						CASE lcFieldType $ 'C'	&& Character
 							IF llNoCPTran THEN
 								*-- If NoCPTran, then must encode in b64binary
 								luValue		= STRCONV(luValue,13)
@@ -24093,12 +24103,12 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 								luValue = .Encode(RTRIM(luValue))
 							ENDIF
 
-						CASE lcFieldType $ 'M'
+						CASE lcFieldType $ 'M'	&& Memo
 							IF llNoCPTran THEN
 								*-- If NoCPTran, then must encode in b64binary
 								luValue		= STRCONV(luValue,13)
 							ELSE
-								luValue = .Encode(RTRIM(luValue), .F.)
+								luValue = .Encode(RTRIM(luValue), .T.)
 							ENDIF
 
 						ENDCASE
@@ -24130,7 +24140,8 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
 		IF tl_isCDATA THEN
-			lcString = '<![CDATA[' + STRTRAN(tcString, ']]>',   ']]]]><![CDATA[>') + ']]>'
+			*lcString = '<![CDATA[' + STRTRAN(tcString, ']]>',   ']]]]><![CDATA[>') + ']]>'
+			lcString = '<![CDATA[' + STRTRAN( STRTRAN( tcString, '<![CDATA[', '&lt;![CDATA['), ']]>', ']]&gt;') + ']]>'
 		ELSE
 			lcString = STRTRAN(tcString, '&',     '&amp;')
 			lcString = STRTRAN(lcString, '>',     '&gt;')
@@ -24149,9 +24160,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
 		IF tl_isCDATA THEN
-			lcString = STREXTRACT( ;
-				STRTRAN(tcString, ']]]]><![CDATA[>', ']]>') ;
-				, '<![CDATA[', ']]>')
+			lcString = STRTRAN( STRTRAN( STREXTRACT( tcString, '<![CDATA[', ']]>'), '&lt;![CDATA[', '<![CDATA['), ']]&gt;', ']]>')
 		ELSE
 			lcString = STRTRAN(tcString, '&#9;',   CHR(9))
 			lcString = STRTRAN(lcString, '&#10;',  CHR(10))
