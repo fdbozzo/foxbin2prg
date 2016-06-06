@@ -462,7 +462,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *** DH 06/02/2014: added additional constants
 #DEFINE C_RECORDS_I					'<RECORDS>'
 #DEFINE C_RECORDS_F					'</RECORDS>'
-#DEFINE C_RECORD_I					'<RECORD num="##">'	&& *** FDBOZZO 2014/07/15: Optimized RECORD tag adding num property to not use REGNUM field
+#DEFINE C_RECORD_I					'<RECORD>'	&& *** FDBOZZO 2016/06/06: Quitado el REGNUM para evitar diferencias innecesarias
 #DEFINE C_RECORD_F					'</RECORD>'
 #DEFINE C_RECNO_I					'<RECNO>'
 #DEFINE C_RECNO_F					'</RECNO>'
@@ -23768,7 +23768,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 						CASE C_RECORDS_F $ tcLine	&& Fin
 							EXIT
 
-						CASE '<RECORD ' $ tcLine
+						CASE '<RECORD' $ tcLine
 							APPEND BLANK
 							loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines, @toFields )
 
@@ -23920,7 +23920,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 				, loField as CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcFieldName, lcValue
 
-			IF '<RECORD ' $ tcLine
+			IF '<RECORD' $ tcLine
 				llBloqueEncontrado	= .T.
 
 				WITH THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
@@ -24063,7 +24063,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 			WITH THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
 				*** FDBOZZO 2014/07/15: New "num" property invalidates the use of REGNUM field
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<<STRTRAN( C_RECORD_I, '##', TRANSFORM(RECNO()) )>>
+					<<>>		<<C_RECORD_I>>
 				ENDTEXT
 
 				FOR I = 1 TO tnField_Count
