@@ -12037,7 +12037,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I ;
-				, lnIDInputFile, lnFileCount, laConfig(1), lcConfigItem, lc_DBF_Conversion_Support ;
+				, lnIDInputFile, lnFileCount, laConfig(1), lcConfigItem, lc_DBF_Conversion_Support, lcAlterTable ;
 				, lcTempDBC, llImportData ;
 				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnCodeLines
@@ -12086,12 +12086,16 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				ENDIF
 
 				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
-				.writeBinaryFile_STRUCTURE( @toTable, @toFoxBin2Prg )
+				.writeBinaryFile_STRUCTURE( @toTable, @toFoxBin2Prg, @lcAlterTable )
 
 				IF llImportData AND lnCodeLines > 1 AND toTable._I > 1 THEN
 					*-- Identifico los registros de la tabla y los agrego
 					I = toTable._I - 1
 					toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @I, lnCodeLines )
+				ENDIF
+
+				IF NOT EMPTY(lcAlterTable)
+					EXECSCRIPT(lcAlterTable)
 				ENDIF
 
 				.writeBinaryFile_INDEXES( @toTable, @toFoxBin2Prg )
@@ -12130,7 +12134,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
 	PROCEDURE writeBinaryFile_STRUCTURE
-		LPARAMETERS toTable, toFoxBin2Prg
+		LPARAMETERS toTable, toFoxBin2Prg, tcAlterTable
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
@@ -12148,7 +12152,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
 
 				STORE 0 TO lnCodError
-				STORE '' TO lcIndex, lcFieldDef
+				STORE '' TO lcIndex, lcFieldDef, tcAlterTable
 				lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
 
 				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -12164,11 +12168,11 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				ERASE (FORCEEXT(.c_OutputFile, 'CDX'))
 
 				IF EMPTY(toTable._Database)
-					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
+					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ;' + CR_LF + ' ('
 				ELSE
 					lcTempDBC	= FORCEPATH( '_FB2P', JUSTPATH(.c_OutputFile) )
 					CREATE DATABASE ( lcTempDBC )
-					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" CodePage=' + toTable._CodePage + ' ('
+					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" CodePage=' + toTable._CodePage + ' ;' + CR_LF + ' ('
 				ENDIF
 
 				toTable._TableName	= .c_OutputFile
@@ -12177,8 +12181,12 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				FOR EACH loField IN toTable._Fields FOXOBJECT
 					lcLongDec		= ''
 
+					IF NOT EMPTY(lcFieldDef)
+						lcFieldDef	= lcFieldDef + ';' + CR_LF + ', '
+					ENDIF
+
 					*-- Nombre, Tipo
-					lcFieldDef	= lcFieldDef + ', ' + loField._Name + ' ' + loField._Type
+					lcFieldDef	= lcFieldDef + loField._Name + ' ' + loField._Type
 
 					*-- Longitud
 					IF INLIST( loField._Type, 'C', 'N', 'F', 'Q', 'V' )
@@ -12216,15 +12224,19 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 							*-- of DBF with this field.
 							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
 						ELSE
-							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+							tcAlterTable	= tcAlterTable + ' ;' + CR_LF + ' ALTER ' + loField._Name + ' ' + loField._Type + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
 						ENDIF
 					ENDIF
 
 					loField			= NULL
 				ENDFOR
 
-				lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
-				&lcCreateTable.
+				lcCreateTable	= lcCreateTable + lcFieldDef + ')'
+				EXECSCRIPT(lcCreateTable)
+
+				IF NOT EMPTY(tcAlterTable)
+					tcAlterTable	= 'ALTER TABLE "' + .c_OutputFile + '" ' + tcAlterTable
+				ENDIF
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para rellenar la tabla con datos)
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreateTable)
@@ -24015,8 +24027,8 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 
 							ENDCASE
 
-							IF lcFieldType == 'G' OR lcFieldType == 'I' AND NOT EMPTY(INT(VAL(loField._AutoInc_Step)))
-								*-- Saltar campos General o Integer con AutoInc
+							IF lcFieldType == 'G'
+								*-- Saltar campos General
 							ELSE
 								REPLACE (lcFieldName) WITH (luValue)
 							ENDIF
