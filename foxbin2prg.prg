@@ -23971,7 +23971,8 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 									luValue		= STRCONV(lcValue,14)
 								ELSE
 									* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
-									DO WHILE .T.
+									luValue = ''
+									DO WHILE NOT EMPTY(lcValue)
 										IF ']]>' $ tcLine THEN
 											luValue = .Decode(lcValue, .T.)
 											EXIT
