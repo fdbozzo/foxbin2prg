@@ -12091,7 +12091,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				IF llImportData AND lnCodeLines > 1 AND toTable._I > 1 THEN
 					*-- Identifico los registros de la tabla y los agrego
 					I = toTable._I - 1
-					toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @I, lnCodeLines )
+					toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @I, lnCodeLines, @toFoxBin2Prg )
 				ENDIF
 
 				IF NOT EMPTY(lcAlterTable)
@@ -22958,8 +22958,9 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
 		* I							(!@ IN/OUT) Número de línea en análisis
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toFoxBin2Prg
 
 		TRY
 			LOCAL llBloqueEncontrado, lcPropName, lcValue, llFieldsEvaluated, llIndexesEvaluated ;
@@ -23005,7 +23006,7 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 							ENDIF
 
 							loRecords	= ._Records
-							loRecords.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines, ._Fields )
+							loRecords.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines, ._Fields, @toFoxBin2Prg )
 
 						OTHERWISE	&& Otro valor
 							*-- Estructura a reconocer:
@@ -23747,11 +23748,13 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 		* I							(@! IN/OUT) Número de línea en análisis
 		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
 		* toFields					(@! IN    ) Estructura de los campos
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toFields
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toFields, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -23783,6 +23786,12 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 						CASE '<RECORD' $ tcLine
 							APPEND BLANK
 							loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines, @toFields )
+
+							IF MOD(I,1000) = 0 THEN
+								toFoxBin2Prg.updateProgressbar( 'Importing DBF Data... ' + TRANSFORM(I) + '/' + TRANSFORM(tnCodeLines) + '', 1+(I/tnCodeLines), 3, 2 )
+								DOEVENTS
+								*FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
+							ENDIF
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -23863,7 +23872,8 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 				*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 				loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				IF MOD(I,100) = 0 OR LEN(lcText) > 8*1024 THEN
-					toFoxBin2Prg.updateProgressbar( 'Exporting DBF Data...', 1+(I/lnReccount), 3, 2 )
+					toFoxBin2Prg.updateProgressbar( 'Exporting DBF Data... ' + TRANSFORM(I) + '/' + TRANSFORM(lnReccount) + '', 1+(I/lnReccount), 3, 2 )
+					DOEVENTS
 					*FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 				ENDIF
 			ENDSCAN
