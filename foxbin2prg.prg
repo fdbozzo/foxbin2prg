@@ -182,7 +182,8 @@
 * 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
 * 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
 * 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
-* 10/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
+* 10/02/2016	FDBOZZO		v1.19.47	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
+* 25/05/2016	FDBOZZO		v1.19.47	Mejora DBF-Data: Permitir importar datos de los DB2 a los DBF con el nuevo valor DBF_Conversion_Support=8. Todos los tipos de datos excepto General. (Walter Nicholls)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -461,7 +462,7 @@ LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 *** DH 06/02/2014: added additional constants
 #DEFINE C_RECORDS_I					'<RECORDS>'
 #DEFINE C_RECORDS_F					'</RECORDS>'
-#DEFINE C_RECORD_I					'<RECORD num="##">'	&& *** FDBOZZO 2014/07/15: Optimized RECORD tag adding num property to not use REGNUM field
+#DEFINE C_RECORD_I					'<RECORD>'	&& *** FDBOZZO 2016/06/06: Quitado el REGNUM para evitar diferencias innecesarias
 #DEFINE C_RECORD_F					'</RECORD>'
 #DEFINE C_RECNO_I					'<RECNO>'
 #DEFINE C_RECNO_F					'</RECNO>'
@@ -798,7 +799,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	o_Conversor                     = NULL
 	o_Frm_Avance					= NULL
 	o_WSH							= NULL
-	o_FSO							= NULL
+	o_FSO							= NULL			&& Scripting.FileSystemObject
+	o_TextStream					= NULL			&& Scripting.TextStream
 	o_FNC							= NULL			&& Filename_caps object
 	o_Configuration					= NULL
 	run_AfterCreateTable			= ''
@@ -2119,7 +2121,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE LEFT( laConfig(I), 23 ) == LOWER('DBF_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 24 ) )
-							IF INLIST( lcValue, '0', '1', '2', '4' ) THEN
+							IF INLIST( lcValue, '0', '1', '2', '4', '8' ) THEN
 								lo_CFG.DBF_Conversion_Support	= INT( VAL( lcValue ) )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > DBF_Conversion_Support:     ' + TRANSFORM(lo_CFG.DBF_Conversion_Support) )
 							ENDIF
@@ -2354,6 +2356,67 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDFUNC
 
 
+	PROCEDURE get_DBF_Configuration(tc_InputFile as String, to_out_DBF_CFG as Object, tlGenerateLog as Boolean) as Integer
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tc_InputFile				(@! IN    ) Ruta al archivo con Extensión para comprobar si tiene soporte de conversión
+		* to_out_DBF_CFG			(@?    OUT) Objeto CFG del DBF indicado, con las propiedades que contenga el CFG y sus valores
+		* RETORNO					(v?    OUT) Devuelve 0 si no existe el archivo CFG y 1 si lo encuentra
+		*---------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL to_out_DBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lcTableCFG, lnFileCount, laDirFile(1,5), I, lcConfigItem
+		lcTableCFG	= tc_InputFile + '.CFG'
+		lnFileCount	= ADIR(laDirFile, lcTableCFG)
+
+		IF lnFileCount = 1
+			to_out_DBF_CFG	= CREATEOBJECT("CL_DBF_CFG")
+
+			IF tlGenerateLog THEN
+				THIS.writeLog()
+				THIS.writeLog('	> Found DBF configuration file: ' + lcTableCFG)
+			ENDIF
+
+			FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcTableCFG ), 1+4 )
+				lcConfigItem	= LOWER( laConfig(I) )
+
+				DO CASE
+				CASE INLIST( LEFT( lcConfigItem, 1 ), '*', '#', '/', "'" )
+					LOOP
+
+				CASE LEFT( lcConfigItem, 21 ) == LOWER('DBF_Conversion_Order:')
+					to_out_DBF_CFG.DBF_Conversion_Order		= ALLTRIM( SUBSTR( laConfig(I), 22 ) )
+					IF tlGenerateLog THEN
+						THIS.writeLog('		' + JUSTFNAME(lcTableCFG) + ' > DBF_Conversion_Order: ' + to_out_DBF_CFG.DBF_Conversion_Order )
+					ENDIF
+
+				CASE LEFT( lcConfigItem, 25 ) == LOWER('DBF_Conversion_Condition:')
+					to_out_DBF_CFG.DBF_Conversion_Condition	= ALLTRIM( SUBSTR( laConfig(I), 26 ) )
+					IF tlGenerateLog THEN
+						THIS.writeLog('		' + JUSTFNAME(lcTableCFG) + ' > DBF_Conversion_Condition: ' + to_out_DBF_CFG.DBF_Conversion_Condition )
+					ENDIF
+
+				CASE LEFT( lcConfigItem, 23 ) == LOWER('DBF_Conversion_Support:')
+					to_out_DBF_CFG.DBF_Conversion_Support	= INT( VAL( SUBSTR( laConfig(I), 24 ) ) )
+					IF tlGenerateLog THEN
+						THIS.writeLog('		' + JUSTFNAME(lcTableCFG) + ' > DBF_Conversion_Support: ' + TRANSFORM(to_out_DBF_CFG.DBF_Conversion_Support) )
+					ENDIF
+
+				ENDCASE
+			ENDFOR
+
+			IF tlGenerateLog THEN
+				THIS.writeLog()
+			ENDIF
+
+		ENDIF
+
+		RETURN lnFileCount
+	ENDPROC
+
+
 	PROCEDURE get_Ext2FromExt
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -2387,69 +2450,132 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
-	PROCEDURE hasSupport_Bin2Prg
+	PROCEDURE hasSupport_Bin2Prg(tcFileName as String, tcDir as String) as Boolean
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcFilename				(@! IN    ) Extensión para comprobar si el archivo tiene soporte de conversión
 		* tcDir						(@? IN    ) Directorio del que devolver su configuración
 		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcExt, tcDir
-
-		LOCAL llhasSupport
-		tcExt	= UPPER(JUSTEXT('.' + tcExt))
+		LOCAL llhasSupport, lcExt, lcDir ;
+			, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			IF NOT EMPTY(tcDir)
-				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			loDBF_CFG	= NULL
+			lcExt		= UPPER(JUSTEXT('.' + tcFileName))
+
+			IF '\' $ tcFileName AND lcExt == 'DBF' THEN
+				lcDir		= JUSTPATH(tcFileName)
+				.get_DBF_Configuration(tcFileName, @loDBF_CFG)
+			ELSE
+				lcDir		= tcDir
 			ENDIF
 
-			llhasSupport	= ICASE( tcExt == 'PJX', .PJX_Conversion_Support > 0 ;
-				, tcExt == 'VCX', .VCX_Conversion_Support > 0 ;
-				, tcExt == 'SCX', .SCX_Conversion_Support > 0 ;
-				, tcExt == 'FRX', .FRX_Conversion_Support > 0 ;
-				, tcExt == 'LBX', .LBX_Conversion_Support > 0 ;
-				, tcExt == 'MNX', .MNX_Conversion_Support > 0 ;
-				, tcExt == 'DBF', .DBF_Conversion_Support > 0 ;
-				, tcExt == 'DBC', .DBC_Conversion_Support > 0 ;
+			IF NOT EMPTY(lcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
+			ENDIF
+
+			llhasSupport	= ICASE( lcExt == 'PJX', .PJX_Conversion_Support > 0 ;
+				, lcExt == 'VCX', .VCX_Conversion_Support > 0 ;
+				, lcExt == 'SCX', .SCX_Conversion_Support > 0 ;
+				, lcExt == 'FRX', .FRX_Conversion_Support > 0 ;
+				, lcExt == 'LBX', .LBX_Conversion_Support > 0 ;
+				, lcExt == 'MNX', .MNX_Conversion_Support > 0 ;
+				, lcExt == 'DBF', .DBF_Conversion_Support > 0 OR NOT ISNULL(loDBF_CFG) ;
+				, lcExt == 'DBC', .DBC_Conversion_Support > 0 ;
 				, .F. )
 		ENDWITH && THIS
 
-		RELEASE tcExt
 		RETURN llhasSupport
 	ENDPROC
 
 
-	PROCEDURE hasSupport_Prg2Bin
+	PROCEDURE hasSupport_Prg2Bin(tcFileName as String, tcDir as String) as Boolean
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcExt						(@! IN    ) Extensión para comprobar si tiene soporte de conversión
+		* tcFilename				(@! IN    ) Extensión para comprobar si el archivo tiene soporte de conversión
 		* tcDir						(@? IN    ) Directorio del que devolver su configuración
 		* RETORNO					(v?    OUT) .T. si tiene soporte de conversión, .F. si no lo tiene
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcExt, tcDir
-
-		LOCAL llhasSupport
-		tcExt	= UPPER(JUSTEXT('.' + tcExt))
+		LOCAL llhasSupport, lcExt, lcDir ;
+			, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
 
 		WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
-			IF NOT EMPTY(tcDir)
-				.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			loDBF_CFG	= NULL
+			lcExt		= UPPER(JUSTEXT('.' + tcFileName))
+
+			IF '\' $ tcFileName AND lcExt == .c_DB2 THEN
+				lcDir		= JUSTPATH(tcFileName)
+				.get_DBF_Configuration(tcFileName, @loDBF_CFG)
+			ELSE
+				lcDir		= tcDir
 			ENDIF
 
-			llhasSupport	= ICASE( tcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
-				, tcExt == .c_VC2, .VCX_Conversion_Support = 2 ;
-				, tcExt == .c_SC2, .SCX_Conversion_Support = 2 ;
-				, tcExt == .c_FR2, .FRX_Conversion_Support = 2 ;
-				, tcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
-				, tcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
-				, tcExt == .c_DB2, .DBF_Conversion_Support = 2 ;
-				, tcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
+			IF NOT EMPTY(lcDir)
+				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
+			ENDIF
+
+			llhasSupport	= ICASE( lcExt == .c_PJ2, .PJX_Conversion_Support = 2 ;
+				, lcExt == .c_VC2, .VCX_Conversion_Support = 2 ;
+				, lcExt == .c_SC2, .SCX_Conversion_Support = 2 ;
+				, lcExt == .c_FR2, .FRX_Conversion_Support = 2 ;
+				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
+				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
+				, lcExt == .c_DB2, INLIST(.DBF_Conversion_Support, 2, 8) OR NOT ISNULL(loDBF_CFG) AND loDBF_CFG.DBF_Conversion_Support = 8 ;
+				, lcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
 
-		RELEASE tcExt
 		RETURN llhasSupport
+	ENDPROC
+
+
+	PROCEDURE conversionSupportType(tcFileName as String, tlGenerarLog as Boolean) as Integer
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcFilename				(@! IN    ) Extensión para comprobar si el archivo tiene soporte de conversión
+		* RETORNO					(v?    OUT) Devuelve el código de soporte
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lnSupportType, lcExt, lcDir, lcFilename ;
+			, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
+
+		TRY
+			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+				loDBF_CFG	= NULL
+				lcExt		= UPPER(JUSTEXT('.' + tcFileName))
+
+				IF '\' $ tcFileName AND INLIST(lcExt, .c_DB2, 'DBF') THEN
+					lcFilename	= FORCEEXT(tcFileName, 'DBF')
+					lcDir		= JUSTPATH(lcFilename)
+					.get_DBF_Configuration(lcFilename, @loDBF_CFG, tlGenerarLog)
+				ELSE
+					lcDir		= SYS(5) + CURDIR()
+				ENDIF
+
+				IF NOT EMPTY(lcDir)
+					.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
+				ENDIF
+
+				lnSupportType	= ICASE( ;
+					INLIST(lcExt, .c_PJ2, 'PJX'), .PJX_Conversion_Support ;
+					, INLIST(lcExt, .c_VC2, 'VCX'), .VCX_Conversion_Support ;
+					, INLIST(lcExt, .c_SC2, 'SCX'), .SCX_Conversion_Support ;
+					, INLIST(lcExt, .c_FR2, 'FRX'), .FRX_Conversion_Support ;
+					, INLIST(lcExt, .c_LB2, 'LBX'), .LBX_Conversion_Support ;
+					, INLIST(lcExt, .c_MN2, 'MNX'), .MNX_Conversion_Support ;
+					, INLIST(lcExt, .c_DB2, 'DBF'), ICASE( ISNULL(loDBF_CFG) OR loDBF_CFG.DBF_Conversion_Support = 0, .DBF_Conversion_Support, loDBF_CFG.DBF_Conversion_Support ) ;
+					, INLIST(lcExt, .c_DC2, 'DBC'), .DBC_Conversion_Support ;
+					, 0 )
+
+				lnSupportType	= INT(lnSupportType)
+			ENDWITH && THIS
+
+		FINALLY
+			STORE NULL TO loDBF_CFG
+			RELEASE loDBF_CFG
+		ENDTRY
+
+		RETURN lnSupportType
 	ENDPROC
 
 
@@ -3552,7 +3678,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), lcForceAttribs )
 
 				CASE lcExtension = 'DBF'
-					IF NOT INLIST(.DBF_Conversion_Support, 1, 2, 4)
+					IF NOT INLIST(.DBF_Conversion_Support, 1, 2, 4, 8)
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_DB2 )
@@ -3621,7 +3747,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'LBT' ), lcForceAttribs )
 
 				CASE lcExtension = .c_DB2
-					IF .DBF_Conversion_Support <> 2
+					IF INLIST(.DBF_Conversion_Support, 2, 8) OR ADIR(laDirFile, FORCEEXT(.c_InputFile, 'DBF') + '.CFG') = 1 THEN
+						*-- Soporte txt-2-bin habilitado
+					ELSE
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
 					.c_OutputFile	= FORCEEXT( .c_InputFile, 'DBF' )
@@ -11886,6 +12014,8 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		+ [<memberdata name="analyzecodeblock_table" display="analyzeCodeBlock_TABLE"/>] ;
 		+ [<memberdata name="analyzecodeblock_fields" display="analyzeCodeBlock_FIELDS"/>] ;
 		+ [<memberdata name="analyzecodeblock_indexes" display="analyzeCodeBlock_INDEXES"/>] ;
+		+ [<memberdata name="writebinaryfile_structure" display="writeBinaryFile_STRUCTURE"/>] ;
+		+ [<memberdata name="writebinaryfile_indexes" display="writeBinaryFile_INDEXES"/>] ;
 		+ [</VFPData>]
 	c_Type					= 'DB2'
 
@@ -11907,7 +12037,9 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I ;
-				, lnIDInputFile
+				, lnIDInputFile, lnFileCount, laConfig(1), lcConfigItem, lc_DBF_Conversion_Support, lcAlterTable ;
+				, lcTempDBC, llImportData ;
+				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnCodeLines
 
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
@@ -11922,12 +12054,23 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
+				*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
+				lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( FORCEEXT(.c_InputFile, 'DBF'), @loDBF_CFG, .T. )
+				lcTempDBC	= FORCEPATH( '_FB2P', JUSTPATH(.c_OutputFile) )
+
+				DO CASE
+				CASE toFoxBin2Prg.DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
+					llImportData	= .T.
+				CASE INLIST(toFoxBin2Prg.DBF_Conversion_Support, 1, 2, 4) AND lnFileCount = 1
+					llImportData	= (loDBF_CFG.DBF_Conversion_Support = 8)
+				ENDCASE
+
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
 				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
-				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo del reporte
+				*-- Identifico el inicio/fin de bloque, campos e índices de la tabla
 				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toTable )
 
 				DO CASE
@@ -11943,7 +12086,20 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				ENDIF
 
 				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
-				.writeBinaryFile( @toTable, @toFoxBin2Prg )
+				.writeBinaryFile_STRUCTURE( @toTable, @toFoxBin2Prg, @lcAlterTable )
+
+				IF llImportData AND lnCodeLines > 1 AND toTable._I > 1 THEN
+					*-- Identifico los registros de la tabla y los agrego
+					I = toTable._I - 1
+					toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @I, lnCodeLines, @toFoxBin2Prg )
+				ENDIF
+
+				IF NOT EMPTY(lcAlterTable)
+					EXECSCRIPT(lcAlterTable)
+				ENDIF
+
+				.writeBinaryFile_INDEXES( @toTable, @toFoxBin2Prg )
+
 			ENDWITH && THIS
 
 
@@ -11958,6 +12114,18 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
+
+			IF NOT EMPTY(lcTempDBC)
+				CLOSE DATABASES
+				ERASE (FORCEEXT(lcTempDBC,'DBC'))
+				ERASE (FORCEEXT(lcTempDBC,'DCT'))
+				ERASE (FORCEEXT(lcTempDBC,'DCX'))
+			ENDIF
+
+			STORE NULL TO loDBF_CFG
+			RELEASE loDBF_CFG
+
 		ENDTRY
 
 		RETURN lnCodError
@@ -11965,8 +12133,8 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
 
-	PROCEDURE writeBinaryFile
-		LPARAMETERS toTable, toFoxBin2Prg
+	PROCEDURE writeBinaryFile_STRUCTURE
+		LPARAMETERS toTable, toFoxBin2Prg, tcAlterTable
 		*-- -----------------------------------------------------------------------------------------------------------
 		#IF .F.
 			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
@@ -11976,16 +12144,15 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		TRY
 			LOCAL I, lnCodError, loEx AS EXCEPTION ;
 				, loField AS CL_DBF_FIELD OF 'FOXBIN2PRG.PRG' ;
-				, loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG' ;
 				, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
-				, lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate, lcTempDBC, lnDataSessionID, lnSelect
+				, lcCreateTable, lcLongDec, lcFieldDef, lcIndex, lcTempDBC, lnDataSessionID, lnSelect
 
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loField, loIndex, loDBFUtils
 				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
 
 				STORE 0 TO lnCodError
-				STORE '' TO lcIndex, lcFieldDef
+				STORE '' TO lcIndex, lcFieldDef, tcAlterTable
 				lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
 
 				*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -12001,19 +12168,25 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 				ERASE (FORCEEXT(.c_OutputFile, 'CDX'))
 
 				IF EMPTY(toTable._Database)
-					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ('
+					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" FREE CodePage=' + toTable._CodePage + ' ;' + CR_LF + ' ('
 				ELSE
 					lcTempDBC	= FORCEPATH( '_FB2P', JUSTPATH(.c_OutputFile) )
 					CREATE DATABASE ( lcTempDBC )
-					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" CodePage=' + toTable._CodePage + ' ('
+					lcCreateTable	= 'CREATE TABLE "' + .c_OutputFile + '" CodePage=' + toTable._CodePage + ' ;' + CR_LF + ' ('
 				ENDIF
+
+				toTable._TableName	= .c_OutputFile
 
 				*-- Conformo los campos
 				FOR EACH loField IN toTable._Fields FOXOBJECT
 					lcLongDec		= ''
 
+					IF NOT EMPTY(lcFieldDef)
+						lcFieldDef	= lcFieldDef + ';' + CR_LF + ', '
+					ENDIF
+
 					*-- Nombre, Tipo
-					lcFieldDef	= lcFieldDef + ', ' + loField._Name + ' ' + loField._Type
+					lcFieldDef	= lcFieldDef + loField._Name + ' ' + loField._Type
 
 					*-- Longitud
 					IF INLIST( loField._Type, 'C', 'N', 'F', 'Q', 'V' )
@@ -12051,15 +12224,19 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 							*-- of DBF with this field.
 							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
 						ELSE
-							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
+							tcAlterTable	= tcAlterTable + ' ;' + CR_LF + ' ALTER ' + loField._Name + ' ' + loField._Type + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
 						ENDIF
 					ENDIF
 
 					loField			= NULL
 				ENDFOR
 
-				lcCreateTable	= lcCreateTable + SUBSTR(lcFieldDef,3) + ')'
-				&lcCreateTable.
+				lcCreateTable	= lcCreateTable + lcFieldDef + ')'
+				EXECSCRIPT(lcCreateTable)
+
+				IF NOT EMPTY(tcAlterTable)
+					tcAlterTable	= 'ALTER TABLE "' + .c_OutputFile + '" ' + tcAlterTable
+				ENDIF
 
 				*-- Hook para permitir ejecución externa (por ejemplo, para rellenar la tabla con datos)
 				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreateTable)
@@ -12068,6 +12245,53 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					SET DATASESSION TO (lnDataSessionID)	&& Por las dudas externamente se cambie
 					SELECT (lnSelect)
 				ENDIF
+
+			ENDWITH && THIS
+
+
+		CATCH TO loEx
+			lnCodError		= loEx.ERRORNO
+			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
+			loEx.USERVALUE	= 'lcFieldDef="' + TRANSFORM(lcFieldDef) + '"' + CR_LF ;
+				+ 'lcCreateTable="' + TRANSFORM(lcCreateTable) + '"'
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loField, loDBFUtils
+			RELEASE I, loField, loDBFUtils ;
+				, lcCreateTable, lcLongDec, lcFieldDef, lcTempDBC, lnDataSessionID, lnSelect
+
+		ENDTRY
+
+		RETURN lnCodError
+	ENDPROC
+
+
+
+	PROCEDURE writeBinaryFile_INDEXES
+		LPARAMETERS toTable, toFoxBin2Prg
+		*-- -----------------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL I, lnCodError, loEx AS EXCEPTION ;
+				, loIndex AS CL_DBF_INDEX OF 'FOXBIN2PRG.PRG' ;
+				, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
+				, ldLastUpdate
+
+			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
+				STORE NULL TO loIndex
+				STORE 0 TO lnCodError
+				STORE '' TO lcIndex
+				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
 
 				*-- Regenero los índices
 				FOR EACH loIndex IN toTable._Indexes FOXOBJECT
@@ -12112,9 +12336,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		CATCH TO loEx
 			lnCodError		= loEx.ERRORNO
 			toFoxBin2Prg.updateProcessedFile( 0, '', '', 'E1' )
-			loEx.USERVALUE	= 'lcIndex="' + TRANSFORM(lcIndex) + '"' + CR_LF ;
-				+ 'lcFieldDef="' + TRANSFORM(lcFieldDef) + '"' + CR_LF ;
-				+ 'lcCreateTable="' + TRANSFORM(lcCreateTable) + '"'
+			loEx.USERVALUE	= 'lcIndex="' + TRANSFORM(lcIndex) + '"'
 
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
@@ -12123,18 +12345,8 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 			THROW
 
 		FINALLY
-			USE IN (SELECT(JUSTSTEM(THIS.c_OutputFile)))
-			STORE NULL TO loField, loIndex, loDBFUtils
-
-			IF NOT EMPTY(lcTempDBC)
-				CLOSE DATABASES
-				ERASE (FORCEEXT(lcTempDBC,'DBC'))
-				ERASE (FORCEEXT(lcTempDBC,'DCT'))
-				ERASE (FORCEEXT(lcTempDBC,'DCX'))
-			ENDIF
-
-			RELEASE I, loField, loIndex, loDBFUtils ;
-				, lcCreateTable, lcLongDec, lcFieldDef, lcIndex, ldLastUpdate, lcTempDBC, lnDataSessionID, lnSelect
+			STORE NULL TO loIndex
+			RELEASE I, loIndex, lcIndex, ldLastUpdate
 
 		ENDTRY
 
@@ -12183,6 +12395,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 						CASE NOT llBloqueTable_Completed AND toTable.analyzeCodeBlock( @lcLine, @taCodeLines, @I, tnCodeLines )
 							llBloqueTable_Completed	= .T.
+							EXIT
 
 						ENDCASE
 					ENDFOR
@@ -16563,9 +16776,12 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
 					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
-					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
+					, loFSO AS Scripting.FileSystemObject ;
+					, loTextStream AS Scripting.TextStream
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
+				loFSO			= toFoxBin2Prg.o_FSO
 				STORE NULL TO loTable, loDBFUtils
 				STORE 0 TO lnCodError
 				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
@@ -16601,15 +16817,19 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				*-- Exportación de estructura y datos (para Diff solamente)
 				ERASE (.c_OutputFile + '.TMP' )
-				toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+				*toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
+				loTextStream	= loFSO.CreateTextFile(.c_OutputFile + '.TMP' )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
+				toFoxBin2Prg.o_TextStream = loTextStream
 
 				IF toFoxBin2Prg.n_FileHandle = -1 THEN
 					ERROR 102, (.c_OutputFile)
 				ENDIF
 
-				FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+				*FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
+				loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-				FCLOSE( toFoxBin2Prg.n_FileHandle )
+				*FCLOSE( toFoxBin2Prg.n_FileHandle )
+				loTextStream.Close()
 
 				DO CASE
 				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
@@ -16681,7 +16901,10 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			FCLOSE( toFoxBin2Prg.n_FileHandle )
+			*FCLOSE( toFoxBin2Prg.n_FileHandle )
+			IF VARTYPE(loTextStream) = "O" THEN
+				loTextStream.Close()
+			ENDIF
 
 			*-- Cierro DBC
 			FOR I = 1 TO ADATABASES(laDatabases2)
@@ -16692,8 +16915,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				ENDIF
 			ENDFOR
 
-			STORE NULL TO loTable, loDBFUtils
-			RELEASE toModulo, toEx, toFoxBin2Prg ;
+			STORE NULL TO loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
+			RELEASE toModulo, toEx, toFoxBin2Prg, loTextStream ;
 				, lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
 				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 				, loTable, loDBFUtils
@@ -22693,14 +22916,18 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		+ [<memberdata name="_version" display="_Version"/>] ;
 		+ [<memberdata name="_fields" display="_Fields"/>] ;
 		+ [<memberdata name="_indexes" display="_Indexes"/>] ;
+		+ [<memberdata name="_i" display="_I"/>] ;
+		+ [<memberdata name="_tablename" display="_TableName"/>] ;
 		+ [</VFPData>]
 
 
 	*-- Modulo
 	_Version			= 0
 	_SourceFile			= ''
+	_I					= 0
 
 	*-- Table Info
+	_TableName			= ''
 	_CodePage			= 0
 	_Database			= ''
 	_FileType			= ''
@@ -22731,14 +22958,17 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
 		* I							(!@ IN/OUT) Número de línea en análisis
 		* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toFoxBin2Prg
 
 		TRY
-			LOCAL llBloqueEncontrado, lcPropName, lcValue, loEx AS EXCEPTION ;
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, llFieldsEvaluated, llIndexesEvaluated ;
+				, loEx AS EXCEPTION ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
-				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
-			STORE NULL TO loIndexes, loFields
+				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG' ;
+				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG'
+			STORE NULL TO loIndexes, loFields, loRecords
 			STORE '' TO lcPropName, lcValue
 
 			IF LEFT(tcLine, LEN(C_TABLE_I)) == C_TABLE_I
@@ -22755,13 +22985,28 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 						CASE C_TABLE_F $ tcLine	&& Fin
 							EXIT
 
-						CASE C_FIELDS_I $ tcLine
+						CASE NOT llFieldsEvaluated AND C_FIELDS_I $ tcLine
 							loFields	= ._Fields
 							loFields.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines )
+							llFieldsEvaluated	= .T.
 
-						CASE C_INDEXES_I $ tcLine
+						CASE NOT llIndexesEvaluated AND C_INDEXES_I $ tcLine
 							loIndexes	= ._Indexes
 							loIndexes.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines )
+							llIndexesEvaluated	= .T.
+
+						CASE C_RECORDS_I $ tcLine
+							IF llFieldsEvaluated
+								* Pensado para poder llamar a este método 2 veces:
+								* > La 1ra.para evaluar Campos e Indices, y poder crear la estructura de la tabla
+								*   al finalizar este paso.
+								* > La 2da.para cargar los registros, luego de que se haya creado la tabla,
+								*   así se van volcando directamente y no se guardan en memoria.
+								EXIT
+							ENDIF
+
+							loRecords	= ._Records
+							loRecords.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines, ._Fields, @toFoxBin2Prg )
 
 						OTHERWISE	&& Otro valor
 							*-- Estructura a reconocer:
@@ -22771,6 +23016,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 							.ADDPROPERTY( '_' + lcPropName, lcValue )
 						ENDCASE
 					ENDFOR
+
+					._I = I
 				ENDWITH && THIS
 			ENDIF
 
@@ -22786,8 +23033,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			THROW
 
 		FINALLY
-			STORE NULL TO loIndexes, loFields
-			RELEASE lcPropName, lcValue, loFields, loIndexes
+			STORE NULL TO loIndexes, loFields, loRecords
+			RELEASE lcPropName, lcValue, loFields, loIndexes, loRecords
 
 		ENDTRY
 
@@ -22814,15 +23061,20 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 		#ENDIF
 
 		TRY
-			LOCAL lcText, lcTableCFG, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
+			LOCAL lcText, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
 				, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition, llExportData, laDirFile(1,5), lnFileCount ;
 				, loEx AS EXCEPTION ;
+				, loFSO AS Scripting.FileSystemObject ;
+				, loTextStream AS Scripting.TextStream ;
+				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG' ;
 				, loRecords AS CL_DBF_RECORDS OF 'FOXBIN2PRG.PRG' ;
 				, loFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG' ;
 				, loIndexes AS CL_DBF_INDEXES OF 'FOXBIN2PRG.PRG'
+
 			*** DH 06/02/2014: created variables
 			LOCAL laFields[1], lnFieldCount
-
+			loFSO			= toFoxBin2Prg.o_FSO
+			loTextStream	= toFoxBin2Prg.o_TextStream
 			STORE NULL TO loIndexes, loFields, loRecords
 			STORE 0 TO lnFileCount
 			lcText	= ''
@@ -22849,37 +23101,18 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			lcText		= lcText + loIndexes.toText( '', '', tc_InputFile, @toFoxBin2Prg )
 
 			*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
-			lcTableCFG	= tc_InputFile + '.CFG'
-			lnFileCount	= ADIR(laDirFile, lcTableCFG)
+			lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( FORCEEXT(tc_InputFile, 'DBF'), @loDBF_CFG, .T. )
 
-			IF toFoxBin2Prg.DBF_Conversion_Support = 4 ;	&& BIN2PRG (DATA EXPORT FOR DIFF)
-				OR toFoxBin2Prg.DBF_Conversion_Support = 1 AND lnFileCount = 1 THEN
-				llExportData	= .T.
-			ENDIF
+			DO CASE
+			CASE INLIST(toFoxBin2Prg.DBF_Conversion_Support, 4, 8) ;	&& BIN2TXT (DATA EXPORT FOR DIFF)
+				OR INLIST(toFoxBin2Prg.DBF_Conversion_Support, 1, 2) AND lnFileCount = 1
+				*-- ASUNCIÓN: Si hay un archivo DBF.CFG, es porque se quiere exportar datos, si no, no debe crearse el DBF.CFG
+				llExportData		= .T.
+			ENDCASE
 
 			IF llExportData THEN
 				IF lnFileCount = 1
-					toFoxBin2Prg.writeLog()
-					toFoxBin2Prg.writeLog('* Found configuration file: ' + lcTableCFG)
-
-					*-- Leer valores de configuración
-					FOR I = 1 TO ALINES( laConfig, FILETOSTR( lcTableCFG ), 1+4 )
-						lcConfigItem	= LOWER( laConfig(I) )
-
-						DO CASE
-						CASE INLIST( LEFT( lcConfigItem, 1 ), '*', '#', '/', "'" )
-							LOOP
-
-						CASE LEFT( lcConfigItem, 21 ) == LOWER('DBF_Conversion_Order:')
-							lc_DBF_Conversion_Order		= ALLTRIM( SUBSTR( laConfig(I), 22 ) )
-							toFoxBin2Prg.writeLog('  ' + JUSTFNAME(lcTableCFG) + ' -> DBF_Conversion_Order: ' + lc_DBF_Conversion_Order )
-
-						CASE LEFT( lcConfigItem, 25 ) == LOWER('DBF_Conversion_Condition:')
-							lc_DBF_Conversion_Condition	= ALLTRIM( SUBSTR( laConfig(I), 26 ) )
-							toFoxBin2Prg.writeLog('  ' + JUSTFNAME(lcTableCFG) + ' -> DBF_Conversion_Condition: ' + lc_DBF_Conversion_Condition )
-
-						ENDCASE
-					ENDFOR
+					lc_DBF_Conversion_Order	= loDBF_CFG.DBF_Conversion_Order
 
 					IF NOT EMPTY(lc_DBF_Conversion_Order)
 						lcIndexFile	= FORCEEXT(tc_InputFile,'IDX')
@@ -22888,10 +23121,13 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 					ENDIF
 
 				ENDIF
+			ENDIF
 
-				*** DH 06/02/2014: added _Records
+			*** DH 06/02/2014: added _Records
+			IF llExportData
 				loRecords	= THIS._Records
-				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
 				lcText	= ''
 			ENDIF
@@ -22901,7 +23137,8 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 				<<>>
 			ENDTEXT
 
-			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 			lcText	= ''
 
 
@@ -22913,12 +23150,13 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			THROW
 
 		FINALLY
-			STORE NULL TO loIndexes, loFields, loRecords
-			RELEASE loFields, loIndexes, loRecords
 			IF NOT EMPTY(lcIndexFile) AND FILE(lcIndexFile)
 				SET INDEX TO
 				ERASE (lcIndexFile)
 			ENDIF
+
+			STORE NULL TO loIndexes, loFields, loRecords, loDBF_CFG, loTextStream
+			RELEASE loFields, loIndexes, loRecords, loDBF_CFG, loTextStream
 		ENDTRY
 
 		RETURN lcText
@@ -23509,9 +23747,82 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
 		* I							(@! IN/OUT) Número de línea en análisis
 		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* toFields					(@! IN    ) Estructura de los campos
+		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
-		*** DH 06/02/2014: not implemented
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toFields, toFoxBin2Prg
+
+		#IF .F.
+			LOCAL toFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL llBloqueEncontrado, lcPropName, lcValue, lcAlias, loEx AS EXCEPTION ;
+				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG' ;
+				, loRecordData as Object
+			STORE NULL TO loIndex
+			STORE '' TO lcPropName, lcValue, lcAlias
+
+			IF LEFT(tcLine, LEN(C_RECORDS_I)) == C_RECORDS_I
+				llBloqueEncontrado	= .T.
+
+				WITH THIS AS CL_DBF_RECORDSS OF 'FOXBIN2PRG.PRG'
+					lcAlias		= ALIAS()
+					CURSORSETPROP("Buffering", 3)
+					loRecord	= NULL
+					loRecord	= CREATEOBJECT("CL_DBF_RECORD")
+
+					FOR I = I + 1 TO tnCodeLines
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE EMPTY( tcLine )
+							LOOP
+
+						CASE C_RECORDS_F $ tcLine	&& Fin
+							EXIT
+
+						CASE '<RECORD' $ tcLine
+							APPEND BLANK
+							loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @I, tnCodeLines, @toFields )
+
+							IF MOD(I,1000) = 0 THEN
+								toFoxBin2Prg.updateProgressbar( 'Importing DBF Data... ' + TRANSFORM(I) + '/' + TRANSFORM(tnCodeLines) + '', 1+(I/tnCodeLines), 3, 2 )
+								DOEVENTS
+								*FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
+							ENDIF
+
+						OTHERWISE	&& Otro valor
+							*-- No hay otros valores
+						ENDCASE
+					ENDFOR
+
+					TABLEUPDATE(.T.)
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine)
+			ENDIF
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			TABLEREVERT(.T.)
+			CURSORSETPROP("Buffering", 1)
+
+			STORE NULL TO loRecord
+			RELEASE lcPropName, lcValue, loRecord
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
 	ENDPROC
 
 
@@ -23533,17 +23844,21 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 
 		TRY
 			LOCAL lcText, loEx AS EXCEPTION, I, lnReccount ;
-				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+				, loRecord AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG' ;
+				, loTextStream AS Scripting.TextStream
+
 			lcText		= ''
 			I			= 0
 			lnReccount	= RECCOUNT()	&& Realmente no es muy exacto, pero al menos muestra el avance.
+			loTextStream	= toFoxBin2Prg.o_TextStream
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>
 				<<>>	<<C_RECORDS_I>>
 			ENDTEXT
 
-			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 			lcText	= ''
 			loRecord = CREATEOBJECT('CL_DBF_RECORD')
 
@@ -23554,16 +23869,16 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			SCAN FOR &tc_DBF_Conversion_Condition.
 				I	= I + 1
 				lcText	= loRecord.toText(@taFields, tnField_Count)
-				FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
-				IF MOD(I,1000) = 0 THEN
-					toFoxBin2Prg.updateProgressbar( 'Exporting DBF Data...', 1+(I/lnReccount), 3, 2 )
-
-					IF MOD(I,10000) = 0 THEN
-						FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
-					ENDIF
+				*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+				loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
+				IF MOD(I,100) = 0 OR LEN(lcText) > 8*1024 THEN
+					toFoxBin2Prg.updateProgressbar( 'Exporting DBF Data... ' + TRANSFORM(I) + '/' + TRANSFORM(lnReccount) + '', 1+(I/lnReccount), 3, 2 )
+					DOEVENTS
+					*FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 				ENDIF
 			ENDSCAN
 
+			toFoxBin2Prg.updateProgressbar( 'Data exported! ', 1+(lnReccount/lnReccount), 3, 2 )
 			lcText	= ''
 
 			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -23571,7 +23886,8 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 				<<>>
 			ENDTEXT
 
-			FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			*FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
+			loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 			lcText	= ''
 
 
@@ -23584,8 +23900,8 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 			THROW
 
 		FINALLY
-			STORE NULL TO loRecord
-			RELEASE loRecord
+			STORE NULL TO loRecord, loTextStream
+			RELEASE loRecord, loTextStream
 
 		ENDTRY
 
@@ -23602,6 +23918,8 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		LOCAL THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
 	#ENDIF
 
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [</VFPData>]
 
 
 	PROCEDURE analyzeCodeBlock
@@ -23611,9 +23929,143 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		* taCodeLines				(@! IN    ) Array de líneas del programa analizado
 		* I							(@! IN/OUT) Número de línea en análisis
 		* tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
+		* toFields					(@! IN    ) Estructura de los campos
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines
-		*** DH 06/02/2014: not implemented
+		LPARAMETERS tcLine, taCodeLines, I, tnCodeLines, toFields
+
+		#IF .F.
+			LOCAL toFields AS CL_DBF_FIELDS OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		TRY
+			LOCAL llBloqueEncontrado, lcFieldName, lcValue, luValue, loEx AS EXCEPTION ;
+				, loField as CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
+			STORE '' TO lcFieldName, lcValue
+
+			IF '<RECORD' $ tcLine
+				llBloqueEncontrado	= .T.
+
+				WITH THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
+					FOR I = I + 1 TO tnCodeLines
+						.set_Line( @tcLine, @taCodeLines, I )
+
+						DO CASE
+						CASE EMPTY( tcLine ) OR LEFT(tcLine, 1) == '*'
+							LOOP
+
+						CASE C_RECORD_F $ tcLine	&& Fin
+							EXIT
+
+						OTHERWISE	&& Campo de RECORD
+							*-- Estructura a reconocer:
+							*	<fieldName>VALOR</fieldName>
+							lcFieldName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
+							lcValue		= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0+2 )
+							loField		= toFields.Item(lcFieldName)
+
+							lcFieldType	= loField._Type
+							llNoCPTran	= CAST( loField._NoCPTran as Logical)
+
+							DO CASE
+							CASE lcFieldType == 'L'	&& Logical (Boolean)
+								luValue = CAST(lcValue as Logical)
+
+							CASE lcFieldType == 'G'	&& General (NOT SUPPORTED)
+								luValue		= ''
+
+							CASE lcFieldType == 'W' && Blob (Memo binario)
+								luValue		= STRCONV(lcValue,14)
+
+							CASE lcFieldType == 'Q'	&& Varbinary
+								luValue		= STRCONV(lcValue,14)
+
+							CASE lcFieldType == 'V'	&& Varchar
+								IF llNoCPTran
+									*-- If NoCPTran, then must encode in b64binary
+									luValue		= STRCONV(lcValue,14)
+								ELSE
+									luValue = .Decode(lcValue)
+								ENDIF
+
+							CASE lcFieldType == 'M'	&& Memo
+								IF llNoCPTran
+									*-- If NoCPTran, then must encode in b64binary
+									luValue		= STRCONV(lcValue,14)
+								ELSE
+									* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
+									luValue = ''
+									DO WHILE NOT EMPTY(lcValue)
+										IF ']]>' $ tcLine THEN
+											luValue = .Decode(lcValue, .T.)
+											EXIT
+										ELSE
+											I = I + 1
+											.set_Line( @tcLine, @taCodeLines, I )
+											lcValue	= lcValue + CR_LF + tcLine
+										ENDIF
+									ENDDO
+								ENDIF
+
+							CASE lcFieldType == 'D'	&& Date
+								luValue = CAST(lcValue as Date)
+
+							CASE lcFieldType == 'T'	&& Datetime
+								luValue = CAST(lcValue as DateTime)
+
+							CASE lcFieldType == 'Y'	&& Currency
+								luValue = CAST(lcValue as Currency)
+
+							CASE lcFieldType == 'I'	&& Integer
+								luValue = CAST(lcValue as Integer)
+
+							CASE lcFieldType == 'B'	&& Double
+								luValue = CAST(lcValue as Double)
+
+							CASE lcFieldType == 'F'	&& Float
+								luValue = CAST(lcValue as Float)
+
+							CASE lcFieldType == 'N'	&& Numeric
+								luValue = CAST(lcValue as Numeric)
+
+							OTHERWISE	&& Asume 'C'	&& Character
+								IF llNoCPTran
+									*-- If NoCPTran, then must encode in b64binary
+									luValue		= STRCONV(lcValue,14)
+								ELSE
+									luValue = .Decode(RTRIM(lcValue))
+								ENDIF
+
+							ENDCASE
+
+							IF lcFieldType == 'G'
+								*-- Saltar campos General
+							ELSE
+								REPLACE (lcFieldName) WITH (luValue)
+							ENDIF
+
+						ENDCASE
+					ENDFOR
+				ENDWITH && THIS
+			ENDIF
+
+		CATCH TO loEx
+			IF loEx.ERRORNO = 1470	&& Incorrect property name.
+				loEx.USERVALUE	= 'I=' + TRANSFORM(I) + ', tcLine=' + TRANSFORM(tcLine) + ', lcFieldName=[' + TRANSFORM(lcFieldName) + '], Value=[' + TRANSFORM(lcValue) + ']'
+			ENDIF
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			STORE NULL TO loField
+			RELEASE loField
+
+		ENDTRY
+
+		RETURN llBloqueEncontrado
 	ENDPROC
 
 
@@ -23628,41 +24080,66 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		EXTERNAL ARRAY taFields
 
 		TRY
-			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue, lcFieldType
+			LOCAL I, lcText, loEx AS EXCEPTION, lcField, luValue, lcFieldType, llNoCPTran
 			lcText	= ''
 
 			WITH THIS AS CL_DBF_RECORD OF 'FOXBIN2PRG.PRG'
 				*** FDBOZZO 2014/07/15: New "num" property invalidates the use of REGNUM field
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>		<<STRTRAN( C_RECORD_I, '##', TRANSFORM(RECNO()) )>>
+					<<>>		<<C_RECORD_I>>
 				ENDTEXT
 
 				FOR I = 1 TO tnField_Count
 					lcField		= taFields[I, 1]
 					lcFieldType	= taFields[I, 2]
+					llNoCPTran	= taFields[I, 6]
 
-					*** FDBOZZO 2014/07/15: Added field restrictions on binary and general fields
-					DO CASE
-					CASE lcFieldType == 'G'
-						luValue		= 'GENERAL FIELD NOT SUPPORTED'
-						*CASE lcFieldType == 'W'
-						*	luValue		= 'BLOB FIELD NOT SUPPORTED'
-						*CASE lcFieldType == 'Q'
-						*	luValue		= 'VARBINARY FIELD NOT SUPPORTED'
-					OTHERWISE
+					IF lcFieldType == 'G'
+						*-- Saltar campos de tipo General
+					ELSE
 						luValue		= EVALUATE(lcField)
-					ENDCASE
 
-					DO CASE
-					CASE taFields[I, 2] $ 'CMV'
-						luValue = TRIM(luValue)
-						IF .Encode(luValue) <> luValue
-							luValue = '<![CDATA[' + luValue + ']]>'
-						ENDIF &&.Encode(luValue) <> luValue
-					ENDCASE
-					TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
-						<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
-					ENDTEXT
+						DO CASE
+						CASE lcFieldType $ 'GWQVCM' AND luValue == '' ;	&& Vacío
+							OR lcFieldType $ 'DT' AND luValue == {} ;
+								OR lcFieldType $ 'YIBFN' AND luValue == 0
+
+						CASE lcFieldType == 'W' && Blob (Memo binario)
+							luValue		= STRCONV(luValue,13)
+
+						CASE lcFieldType == 'Q' && Varbinary
+							luValue		= STRCONV(luValue,13)
+
+						CASE lcFieldType == 'V'	&& Varchar
+							IF llNoCPTran THEN
+								*-- If NoCPTran, then must encode in b64binary
+								luValue		= STRCONV(luValue,13)
+							ELSE
+								luValue = .Encode(luValue)
+							ENDIF
+
+						CASE lcFieldType $ 'C'	&& Character
+							IF llNoCPTran THEN
+								*-- If NoCPTran, then must encode in b64binary
+								luValue		= STRCONV(luValue,13)
+							ELSE
+								luValue = .Encode(RTRIM(luValue))
+							ENDIF
+
+						CASE lcFieldType $ 'M'	&& Memo
+							IF llNoCPTran THEN
+								*-- If NoCPTran, then must encode in b64binary
+								luValue		= STRCONV(luValue,13)
+							ELSE
+								luValue = .Encode(RTRIM(luValue), .T.)
+							ENDIF
+
+						ENDCASE
+
+						TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
+							<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
+						ENDTEXT
+					ENDIF
 				NEXT
 
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2 additive
@@ -23683,17 +24160,41 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 	ENDPROC
 
 	PROCEDURE Encode
-		LPARAMETERS tcString
+		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
-		lcString = STRTRAN(tcString, '&',     '&amp;')
-		lcString = STRTRAN(lcString, '>',     '&gt;')
-		lcString = STRTRAN(lcString, '<',     '&lt;')
-		lcString = STRTRAN(lcString, '"',     '&quot;')
-		lcString = STRTRAN(lcString, "'",     '&#39;')
-		lcString = STRTRAN(lcString, '/',     '&#47;')
-		lcString = STRTRAN(lcString, CHR(13), '&#13;')
-		lcString = STRTRAN(lcString, CHR(10), '&#10;')
-		lcString = STRTRAN(lcString, CHR(9),  '&#9;')
+		IF tl_isCDATA THEN
+			*lcString = '<![CDATA[' + STRTRAN(tcString, ']]>',   ']]]]><![CDATA[>') + ']]>'
+			lcString = '<![CDATA[' + STRTRAN( STRTRAN( tcString, '<![CDATA[', '&lt;![CDATA['), ']]>', ']]&gt;') + ']]>'
+		ELSE
+			lcString = STRTRAN(tcString, '&',     '&amp;')
+			lcString = STRTRAN(lcString, '>',     '&gt;')
+			lcString = STRTRAN(lcString, '<',     '&lt;')
+			lcString = STRTRAN(lcString, '"',     '&quot;')
+			lcString = STRTRAN(lcString, "'",     '&#39;')
+			lcString = STRTRAN(lcString, '/',     '&#47;')
+			lcString = STRTRAN(lcString, CHR(13), '&#13;')
+			lcString = STRTRAN(lcString, CHR(10), '&#10;')
+			lcString = STRTRAN(lcString, CHR(9),  '&#9;')
+		ENDIF
+		RETURN lcString
+	ENDPROC
+
+	PROCEDURE Decode
+		LPARAMETERS tcString, tl_isCDATA
+		LOCAL lcString
+		IF tl_isCDATA THEN
+			lcString = STRTRAN( STRTRAN( STREXTRACT( tcString, '<![CDATA[', ']]>'), '&lt;![CDATA[', '<![CDATA['), ']]&gt;', ']]>')
+		ELSE
+			lcString = STRTRAN(tcString, '&#9;',   CHR(9))
+			lcString = STRTRAN(lcString, '&#10;',  CHR(10))
+			lcString = STRTRAN(lcString, '&#13;',  CHR(13))
+			lcString = STRTRAN(lcString, '&#47;',  '/')
+			lcString = STRTRAN(lcString, '&#39;',  "'")
+			lcString = STRTRAN(lcString, '&quot;', '"')
+			lcString = STRTRAN(lcString, '&lt;',   '<')
+			lcString = STRTRAN(lcString, '&gt;',   '>')
+			lcString = STRTRAN(lcString, '&amp;',  '&')
+		ENDIF
 		RETURN lcString
 	ENDPROC
 
@@ -27479,4 +27980,24 @@ DEFINE CLASS CL_LANG AS Custom
 		ENDTRY
 	ENDPROC
 
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_DBF_CFG AS CUSTOM
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="dbf_conversion_order" display="DBF_Conversion_Order"/>] ;
+		+ [<memberdata name="dbf_conversion_condition" display="DBF_Conversion_Condition"/>] ;
+		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
+		+ [</VFPData>]
+
+	#IF .F.
+		LOCAL THIS AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+
+	*-- Configuration class. By default asumes master value, except when overriding one.
+	DBF_Conversion_Order		= ''
+	DBF_Conversion_Condition	= ''
+	DBF_Conversion_Support		= 0
 ENDDEFINE

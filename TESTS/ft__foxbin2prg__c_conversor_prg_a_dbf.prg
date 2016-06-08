@@ -286,9 +286,16 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			this.assertequals( lnFields_OUT, lnFields_IN, '[Cantidad de campos IN y OUT]' )
 
 			FOR I = 1 TO lnFields_IN
-				FOR X = 1 TO 18
-					THIS.assertequals( laCampos_IN(I,X), laCampos_OUT(I,X), '[Comparando estructura del campo ' + laCampos_IN(I,1) + ']' )
-				ENDFOR
+				IF laCampos_IN(I,18) > 0 && Autoinc_Step
+					*-- Para los campos AutoInc solo se comparan los primeros 4 datos de estructura
+					FOR X = 1 TO 4
+						THIS.assertequals( laCampos_IN(I,X), laCampos_OUT(I,X), '[Comparando estructura del campo ' + laCampos_IN(I,1) + ']' )
+					ENDFOR
+				ELSE
+					FOR X = 1 TO 18
+						THIS.assertequals( laCampos_IN(I,X), laCampos_OUT(I,X), '[Comparando estructura del campo ' + laCampos_IN(I,1) + ']' )
+					ENDFOR
+				ENDIF
 			ENDFOR
 
 		CATCH TO loEx
