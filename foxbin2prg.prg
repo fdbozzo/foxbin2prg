@@ -24930,7 +24930,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						CASE toConversor.c_MenuLocation == 'APPEND'
 							loReg.Location		= C_MENULOCATION_APPEND
 						OTHERWISE
-							IF LEFT(toConversor.c_MenuLocation,7) == 'BEFORE'
+							IF LEFT(toConversor.c_MenuLocation,6) == 'BEFORE'
 								loReg.Location		= C_MENULOCATION_BEFORE
 							ELSE
 								loReg.Location		= C_MENULOCATION_AFTER
@@ -27792,7 +27792,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_END_OF_PROCESS_LOC											= "Ende desr Prozesses"
 					.C_ERROR_LOC													= "FEHLER"
 					.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
-					.C_EXTENSION_RECONFIGURATION_LOC								= "Nneukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
+					.C_EXTENSION_RECONFIGURATION_LOC								= "Neukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Die Anzahl externee Klassen (<< toModulo._ExternalClasses_Count >>) entspricht nicht der der gefunden Klassen (<< toModulo._Clases_Count >>), Datei: [<< toFoxBin2Prg.c_InputFile >>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Keine externe Klasse gefunden"
 					.C_EXTERNAL_MEMBER_NAME_WAS_NOT_FOUND_LOC						= "Externe Mitglied wurde nicht gefunden"
@@ -27845,7 +27845,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "Das äußere Element nicht den inneren Elementen entsprechen"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<lcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht verlängert, weil seine Zeitmarke ist die gleiche wie die Quelldatei."
 					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
