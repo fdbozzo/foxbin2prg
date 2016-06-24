@@ -184,6 +184,8 @@
 * 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
 * 10/02/2016	FDBOZZO		v1.19.47	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
 * 25/05/2016	FDBOZZO		v1.19.47	Mejora DBF-Data: Permitir importar datos de los DB2 a los DBF con el nuevo valor DBF_Conversion_Support=8. Todos los tipos de datos excepto General. (Walter Nicholls)
+* 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Error en variable usada en una de las traducciones al Alemán (Andy Kasper)
+* 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Andy Kasper)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -285,6 +287,8 @@
 * 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
 * 01/02/2016	Aurélien Dellieux	Reporte bug v1.19.45: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Arreglado en v1.19.46 Preview-10)
 * 10/02/2016	Alejandro Sosa		Reporte bug v1.19.46: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Arreglado en v1.19.47 Preview-1)
+* 24/06/2016	Andy Kasper			Reporte bug v1.19.47: Error en variable usada en una de las traducciones al Alemán (Arreglado en v1.19.48 Preview-1)
+* 24/06/2016	Andy Kasper			Reporte bug v1.19.47: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Arreglado en v1.19.48 Preview-1)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -24930,7 +24934,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						CASE toConversor.c_MenuLocation == 'APPEND'
 							loReg.Location		= C_MENULOCATION_APPEND
 						OTHERWISE
-							IF LEFT(toConversor.c_MenuLocation,7) == 'BEFORE'
+							IF LEFT(toConversor.c_MenuLocation,6) == 'BEFORE'
 								loReg.Location		= C_MENULOCATION_BEFORE
 							ELSE
 								loReg.Location		= C_MENULOCATION_AFTER
@@ -27792,7 +27796,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_END_OF_PROCESS_LOC											= "Ende desr Prozesses"
 					.C_ERROR_LOC													= "FEHLER"
 					.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
-					.C_EXTENSION_RECONFIGURATION_LOC								= "Nneukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
+					.C_EXTENSION_RECONFIGURATION_LOC								= "Neukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Die Anzahl externee Klassen (<< toModulo._ExternalClasses_Count >>) entspricht nicht der der gefunden Klassen (<< toModulo._Clases_Count >>), Datei: [<< toFoxBin2Prg.c_InputFile >>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Keine externe Klasse gefunden"
 					.C_EXTERNAL_MEMBER_NAME_WAS_NOT_FOUND_LOC						= "Externe Mitglied wurde nicht gefunden"
@@ -27845,7 +27849,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "Das äußere Element nicht den inneren Elementen entsprechen"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<lcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht verlängert, weil seine Zeitmarke ist die gleiche wie die Quelldatei."
 					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
