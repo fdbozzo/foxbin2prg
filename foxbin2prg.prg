@@ -187,6 +187,7 @@
 * 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Error en variable usada en una de las traducciones al Alemán (Andy Kasper)
 * 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Andy Kasper)
 * 30/06/2016	FDBOZZO		v1.19.48	Bug Fix: No se respetan algunas restricciones de conversión para DBFs cuando se usan CFGs particulares por tabla (Nathan Brown)
+* 09/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se lee un memo multilínea de un db2 con datos antiguo, se produce un error de índice fuera de rango
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -23976,7 +23977,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, lcFieldName, lcValue, luValue, loEx AS EXCEPTION ;
+			LOCAL llBloqueEncontrado, lcFieldName, lcValue, luValue, llOneLineOnly, loEx AS EXCEPTION ;
 				, loField as CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcFieldName, lcValue
 
@@ -23997,12 +23998,13 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 						OTHERWISE	&& Campo de RECORD
 							*-- Estructura a reconocer:
 							*	<fieldName>VALOR</fieldName>
-							lcFieldName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
-							lcValue		= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0+2 )
-							loField		= toFields.Item(lcFieldName)
+							lcFieldName		= STREXTRACT( tcLine, '<', '>', 1, 0 )
+							lcValue			= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0+2 )
+							loField			= toFields.Item(lcFieldName)
+							llOneLineOnly	= ('</' + lcFieldName + '>' $ tcLine)
 
-							lcFieldType	= loField._Type
-							llNoCPTran	= CAST( loField._NoCPTran as Logical)
+							lcFieldType		= loField._Type
+							llNoCPTran		= CAST( loField._NoCPTran as Logical)
 
 							DO CASE
 							CASE lcFieldType == 'L'	&& Logical (Boolean)
@@ -24030,18 +24032,22 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 									*-- If NoCPTran, then must encode in b64binary
 									luValue		= STRCONV(lcValue,14)
 								ELSE
-									* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
-									luValue = ''
-									DO WHILE NOT EMPTY(lcValue)
-										IF ']]>' $ tcLine THEN
-											luValue = .Decode(lcValue, .T.)
-											EXIT
-										ELSE
-											I = I + 1
-											.set_Line( @tcLine, @taCodeLines, I )
-											lcValue	= lcValue + CR_LF + tcLine
-										ENDIF
-									ENDDO
+									IF llOneLineOnly
+										luValue = .Decode(lcValue, .F.)
+									ELSE
+										* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
+										luValue = ''
+										DO WHILE NOT EMPTY(lcValue)
+											IF ']]>' $ tcLine OR '</' + lcFieldName + '>' $ tcLine THEN
+												luValue = .Decode(lcValue, .T.)
+												EXIT
+											ELSE
+												I = I + 1
+												.set_Line( @tcLine, @taCodeLines, I )
+												lcValue	= lcValue + CR_LF + tcLine
+											ENDIF
+										ENDDO
+									ENDIF
 								ENDIF
 
 							CASE lcFieldType == 'D'	&& Date
