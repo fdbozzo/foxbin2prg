@@ -188,6 +188,7 @@
 * 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Andy Kasper)
 * 30/06/2016	FDBOZZO		v1.19.48	Bug Fix: No se respetan algunas restricciones de conversión para DBFs cuando se usan CFGs particulares por tabla (Nathan Brown)
 * 09/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se lee un memo multilínea de un db2 con datos antiguo, se produce un error de índice fuera de rango
+* 10/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se usa ExcludeDBFAutoincNextval: 1 en FoxBin2Prg.cfg y a la vez la importación de datos de una tabla con campo AutoInc, se produce el error "Error 2088, Field <FIELD> is read-only" (Nathan Brown)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -292,6 +293,7 @@
 * 24/06/2016	Andy Kasper			Reporte bug v1.19.47: Error en variable usada en una de las traducciones al Alemán (Arreglado en v1.19.48 Preview-1)
 * 24/06/2016	Andy Kasper			Reporte bug v1.19.47: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Arreglado en v1.19.48 Preview-1)
 * 30/06/2016	Nathan Brown		Reporte bug v1.19.47: No se respetan algunas restricciones de conversión para DBFs cuando se usan CFGs particulares por tabla (Arreglado en v1.19.48 Preview-2)
+* 30/06/2016	Nathan Brown		Reporte bug v1.19.47: Cuando se usa ExcludeDBFAutoincNextval: 1 en FoxBin2Prg.cfg y a la vez la importación de datos de una tabla con campo AutoInc, se produce el error "Error 2088, Field <FIELD> is read-only" (Arreglado en v1.19.48 Preview-3)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -12251,7 +12253,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 						IF toFoxBin2Prg.n_ExcludeDBFAutoincNextval = 1
 							*-- If AutoIncNextVal is excluded from text, then assign 1 for allowing regeneration
 							*-- of DBF with this field.
-							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
+							tcAlterTable	= tcAlterTable + ' ;' + CR_LF + ' ALTER ' + loField._Name + ' ' + loField._Type + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
 						ELSE
 							tcAlterTable	= tcAlterTable + ' ;' + CR_LF + ' ALTER ' + loField._Name + ' ' + loField._Type + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
 						ENDIF

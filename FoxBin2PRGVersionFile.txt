@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.48'
-    .VersionDate          = Date(2016,07,05)
+    .VersionDate          = Date(2016,07,10)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -11,17 +11,22 @@ With toUpdateInfo
 EndWith
 
 Text to lcNote NoShow
-2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
+Developed by Fernando D. Bozzo - GitHub: https://github.com/fdbozzo/foxbin2prg
+
+FoxBin2Prg is a 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
+
+Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2016/07/05	v1.19.48
+2016/07/10	v1.19.48
 - Bug Fix: Error message 'variable tcOutputFile not found' (german version) (Andy Kasper)
 - Bug Fix: Menu location 'Before' always changed to 'after' when convert (Andy Kasper)
 - Bug Fix: DBF conversion restrictions are not always respected when using particular CFGs for DBFs (Nathan Brown)
 - Bug Fix db2: When reading a miltuline-memo with old db2 data, an index out of range error occurs
+- Bug Fix db2: When using ExcludeDBFAutoincNextval: 1 setting in FoxBin2Prg.cfg and at the same time the data import with an AutoInc field, then error "Error 2088, Field <FIELD> is read-only" occurs (Nathan Brown)
 
 2016/06/08	v1.19.47
 - Bug Fix: When a filename "*" is specified with a type "*", an automatic regeneration of all binary files is made from text files (Alejandro Sosa)
