@@ -29,6 +29,7 @@ Change History -------------------------------------------------------------
 - Bug Fix db2: When using ExcludeDBFAutoincNextval: 1 setting in FoxBin2Prg.cfg and at the same time the data import with an AutoInc field, then error "Error 2088, Field <FIELD> is read-only" occurs (Nathan Brown)
 - Defect Fix db2: When fixing the multi-line memo bug, introduced a new defect on which a single-line memo is not decoded correctly (Nathan Brown)
 - Bug Fix pj2: When a binary is regenerated from a PJ2 file containing files with parenthesis and spaces, the error "Error 36, Command contains unrecognized phrase/keyword" occurs (Nathan Brown)
+- Bug Fix frx: ControlSource of OLE Objects containing quotes are not well regenerated from FR2 (Nathan Brown)
 
 2016/06/08	v1.19.47
 - Bug Fix: When a filename "*" is specified with a type "*", an automatic regeneration of all binary files is made from text files (Alejandro Sosa)
