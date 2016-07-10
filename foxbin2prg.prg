@@ -190,6 +190,7 @@
 * 09/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se lee un memo multilínea de un db2 con datos antiguo, se produce un error de índice fuera de rango
 * 10/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se usa ExcludeDBFAutoincNextval: 1 en FoxBin2Prg.cfg y a la vez la importación de datos de una tabla con campo AutoInc, se produce el error "Error 2088, Field <FIELD> is read-only" (Nathan Brown)
 * 10/07/2016	FDBOZZO		v1.19.48	Fix defecto db2: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Nathan Brown)
+* 11/07/2016	FDBOZZO		v1.19.48	Bug Fix pj2: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Nathan Brown)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -296,6 +297,7 @@
 * 30/06/2016	Nathan Brown		Reporte bug v1.19.47: No se respetan algunas restricciones de conversión para DBFs cuando se usan CFGs particulares por tabla (Arreglado en v1.19.48 Preview-2)
 * 30/06/2016	Nathan Brown		Reporte bug v1.19.47: Cuando se usa ExcludeDBFAutoincNextval: 1 en FoxBin2Prg.cfg y a la vez la importación de datos de una tabla con campo AutoInc, se produce el error "Error 2088, Field <FIELD> is read-only" (Arreglado en v1.19.48 Preview-3)
 * 10/07/2016	Nathan Brown		Reporte defecto v1.19.48-Preview3: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Arreglado en v1.19.48 Preview-4)
+* 11/07/2016	Nathan Brown		Reporte bug pj2 v1.19.48-Preview4: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Arreglado en v1.19.48 Preview-5)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -11449,7 +11451,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							EXIT
 
 						OTHERWISE
-							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
+							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ").Type", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 							lcType			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) )
 							loFile			= toProject( lcFile )
 							loFile._Type	= lcType
