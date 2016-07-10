@@ -25,8 +25,9 @@ Change History -------------------------------------------------------------
 - Bug Fix: Error message 'variable tcOutputFile not found' (german version) (Andy Kasper)
 - Bug Fix: Menu location 'Before' always changed to 'after' when convert (Andy Kasper)
 - Bug Fix: DBF conversion restrictions are not always respected when using particular CFGs for DBFs (Nathan Brown)
-- Bug Fix db2: When reading a miltuline-memo with old db2 data, an index out of range error occurs
+- Bug Fix db2: When reading a miltiline-memo with old db2 data, an index out of range error occurs
 - Bug Fix db2: When using ExcludeDBFAutoincNextval: 1 setting in FoxBin2Prg.cfg and at the same time the data import with an AutoInc field, then error "Error 2088, Field <FIELD> is read-only" occurs (Nathan Brown)
+- Defect Fix db2: When fixing the multi-line memo bug, introduced a new defect on which a single-line memo is not decoded correctly (Nathan Brown)
 
 2016/06/08	v1.19.47
 - Bug Fix: When a filename "*" is specified with a type "*", an automatic regeneration of all binary files is made from text files (Alejandro Sosa)
