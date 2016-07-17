@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.47'
-    .VersionDate          = Date(2016,06,08)
+    .VersionNumber        = 'v1.19.48'
+    .VersionDate          = Date(2016,07,11)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -11,11 +11,25 @@ With toUpdateInfo
 EndWith
 
 Text to lcNote NoShow
-2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
+Developed by Fernando D. Bozzo - GitHub: https://github.com/fdbozzo/foxbin2prg
+
+FoxBin2Prg is a 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
+
+Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2016/07/11	v1.19.48
+- Bug Fix: Error message 'variable tcOutputFile not found' (german version) (Andy Kasper)
+- Bug Fix: Menu location 'Before' always changed to 'after' when convert (Andy Kasper)
+- Bug Fix: DBF conversion restrictions are not always respected when using particular CFGs for DBFs (Nathan Brown)
+- Bug Fix db2: When reading a miltiline-memo with old db2 data, an index out of range error occurs
+- Bug Fix db2: When using ExcludeDBFAutoincNextval: 1 setting in FoxBin2Prg.cfg and at the same time the data import with an AutoInc field, then error "Error 2088, Field <FIELD> is read-only" occurs (Nathan Brown)
+- Defect Fix db2: When fixing the multi-line memo bug, introduced a new defect on which a single-line memo is not decoded correctly (Nathan Brown)
+- Bug Fix pj2: When a binary is regenerated from a PJ2 file containing files with parenthesis and spaces, the error "Error 36, Command contains unrecognized phrase/keyword" occurs (Nathan Brown)
+- Bug Fix frx: ControlSource of OLE Objects containing quotes are not well regenerated from FR2 (Nathan Brown)
 
 2016/06/08	v1.19.47
 - Bug Fix: When a filename "*" is specified with a type "*", an automatic regeneration of all binary files is made from text files (Alejandro Sosa)

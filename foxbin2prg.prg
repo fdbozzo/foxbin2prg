@@ -184,6 +184,14 @@
 * 04/02/2016	FDBOZZO		v1.19.46	Bug Fix: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Aurélien Dellieux)
 * 10/02/2016	FDBOZZO		v1.19.47	Bug Fix: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Alejandro Sosa)
 * 25/05/2016	FDBOZZO		v1.19.47	Mejora DBF-Data: Permitir importar datos de los DB2 a los DBF con el nuevo valor DBF_Conversion_Support=8. Todos los tipos de datos excepto General. (Walter Nicholls)
+* 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Error en variable usada en una de las traducciones al Alemán (Andy Kasper)
+* 24/06/2016	AndyGK63	v1.19.48	Bug Fix: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Andy Kasper)
+* 30/06/2016	FDBOZZO		v1.19.48	Bug Fix: No se respetan algunas restricciones de conversión para DBFs cuando se usan CFGs particulares por tabla (Nathan Brown)
+* 09/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se lee un memo multilínea de un db2 con datos antiguo, se produce un error de índice fuera de rango
+* 10/07/2016	FDBOZZO		v1.19.48	Bug Fix db2: Cuando se usa ExcludeDBFAutoincNextval: 1 en FoxBin2Prg.cfg y a la vez la importación de datos de una tabla con campo AutoInc, se produce el error "Error 2088, Field <FIELD> is read-only" (Nathan Brown)
+* 10/07/2016	FDBOZZO		v1.19.48	Fix defecto db2: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Nathan Brown)
+* 11/07/2016	FDBOZZO		v1.19.48	Bug Fix pj2: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Nathan Brown)
+* 11/07/2016	FDBOZZO		v1.19.48	Bug Fix frx: Los ControlSource de objetos OLE que contienen comillas se generan mal (Nathan Brown)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -285,6 +293,13 @@
 * 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
 * 01/02/2016	Aurélien Dellieux	Reporte bug v1.19.45: Cuando se procesa un archivo en el directorio raiz, se genera un error 2062 (Arreglado en v1.19.46 Preview-10)
 * 10/02/2016	Alejandro Sosa		Reporte bug v1.19.46: Cuando se indica como nombre de archivo "*" y como tipo "*", se regeneran automáticamente todos los archivos binarios desde los archivos de texto (Arreglado en v1.19.47 Preview-1)
+* 24/06/2016	Andy Kasper			Reporte bug v1.19.47: Error en variable usada en una de las traducciones al Alemán (Arreglado en v1.19.48 Preview-1)
+* 24/06/2016	Andy Kasper			Reporte bug v1.19.47: Posición de menú BEFORE siempre cambiada a AFTER al convertir (Arreglado en v1.19.48 Preview-1)
+* 30/06/2016	Nathan Brown		Reporte bug v1.19.47: No se respetan algunas restricciones de conversión para DBFs cuando se usan CFGs particulares por tabla (Arreglado en v1.19.48 Preview-2)
+* 30/06/2016	Nathan Brown		Reporte bug v1.19.47: Cuando se usa ExcludeDBFAutoincNextval: 1 en FoxBin2Prg.cfg y a la vez la importación de datos de una tabla con campo AutoInc, se produce el error "Error 2088, Field <FIELD> is read-only" (Arreglado en v1.19.48 Preview-3)
+* 10/07/2016	Nathan Brown		Reporte defecto v1.19.48-Preview3: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Arreglado en v1.19.48 Preview-4)
+* 11/07/2016	Nathan Brown		Reporte bug pj2 v1.19.48-Preview4: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Arreglado en v1.19.48 Preview-5)
+* 11/07/2016	Nathan Brown		Reporte bug frx v1.19.48-Preview5: Los ControlSource de objetos OLE que contienen comillas se generan mal (Arreglado en v1.19.48 Preview-6)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2481,7 +2496,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == 'FRX', .FRX_Conversion_Support > 0 ;
 				, lcExt == 'LBX', .LBX_Conversion_Support > 0 ;
 				, lcExt == 'MNX', .MNX_Conversion_Support > 0 ;
-				, lcExt == 'DBF', .DBF_Conversion_Support > 0 OR NOT ISNULL(loDBF_CFG) ;
+				, lcExt == 'DBF', NOT ISNULL(loDBF_CFG) AND loDBF_CFG.DBF_Conversion_Support > 0 OR .DBF_Conversion_Support > 0 ;
 				, lcExt == 'DBC', .DBC_Conversion_Support > 0 ;
 				, .F. )
 		ENDWITH && THIS
@@ -2521,7 +2536,9 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == .c_FR2, .FRX_Conversion_Support = 2 ;
 				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
 				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
-				, lcExt == .c_DB2, INLIST(.DBF_Conversion_Support, 2, 8) OR NOT ISNULL(loDBF_CFG) AND loDBF_CFG.DBF_Conversion_Support = 8 ;
+				, lcExt == .c_DB2, NOT ISNULL(loDBF_CFG) AND INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8) ;
+					OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
+					AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
 				, lcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
@@ -2624,6 +2641,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, loLang AS CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, loFrm_Interactive	AS frm_interactive OF 'FOXBIN2PRG.PRG' ;
 				, loFrm_Main AS frm_main OF 'FOXBIN2PRG.PRG' ;
+				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG' ;
 				, loWSH AS WScript.Shell
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -2911,7 +2929,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 									.doWriteErrorLog( @toEx )
 								ENDCASE
 							ENDCASE
-						ENDFOR
+						ENDFOR && I = 1 TO lnFileCount
 
 						IF llError
 							.l_Error = .T.
@@ -2953,7 +2971,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 								toModulo	= NULL
 								lcFile		= laFiles(I)
 
-								IF NOT .hasSupport_Bin2Prg( JUSTEXT(lcFile) ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
+								IF NOT .hasSupport_Bin2Prg( lcFile ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
 									LOOP
 								ENDIF
 
@@ -2968,12 +2986,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 								CASE lnCodError > 0
 									.doWriteErrorLog( @toEx )
 								ENDCASE
-							ENDFOR
+							ENDFOR && I = 1 TO lnFileCount
 
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
 
-						CASE NOT .hasSupport_Bin2Prg( JUSTEXT(tc_InputFile) ) OR NOT ADIR(laDirInfo, tc_InputFile) > 0
+						CASE NOT .hasSupport_Bin2Prg( tc_InputFile ) OR NOT ADIR(laDirInfo, tc_InputFile) > 0
 							.writeLog( '> InputFile ' + loLang.C_IS_UNSUPPORTED_LOC )
 							.writeLog()
 							EXIT
@@ -3014,7 +3032,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 								toModulo	= NULL
 								lcFile		= laFiles(I)
 
-								IF NOT .hasSupport_Prg2Bin( JUSTEXT(lcFile) ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
+								IF NOT .hasSupport_Prg2Bin( lcFile ) OR NOT ADIR(laDirInfo, lcFile) > 0 THEN
 									LOOP
 								ENDIF
 
@@ -3029,12 +3047,12 @@ DEFINE CLASS c_foxbin2prg AS Session
 								CASE lnCodError > 0
 									.doWriteErrorLog( @toEx )
 								ENDCASE
-							ENDFOR
+							ENDFOR && I = 1 TO lnFileCount
 
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
 
-						CASE NOT .hasSupport_Prg2Bin( JUSTEXT(tc_InputFile) ) OR NOT ADIR(laDirInfo, tc_InputFile) > 0
+						CASE NOT .hasSupport_Prg2Bin( tc_InputFile ) OR NOT ADIR(laDirInfo, tc_InputFile) > 0
 							.writeLog( '> InputFile ' + loLang.C_IS_UNSUPPORTED_LOC )
 							.writeLog()
 							EXIT
@@ -3249,7 +3267,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 			ENDIF
 
 			SET NOTIFY &lc_OldSetNotify.
-			STORE NULL TO loFSO, loWSH
+			STORE NULL TO loFSO, loWSH, loDBF_CFG
 			RELEASE I, lcPath, lcFileSpec, lcFile, laFiles, lnFileCount, lcErrorInfo, lcErrorFile, loEx, loFSO
 		ENDTRY
 
@@ -3537,7 +3555,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, ltFilestamp, lcExtA, lcExtB, laEvents(1,1), lcForceAttribs, lnIDInputFile ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, loConversor as c_conversor_base OF 'FOXBIN2PRG.PRG' ;
-				, loFSO AS Scripting.FileSystemObject
+				, loFSO AS Scripting.FileSystemObject ;
+				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
 			lnCodError			= 0
 
 			WITH THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
@@ -3678,6 +3697,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_LB2 ), lcForceAttribs )
 
 				CASE lcExtension = 'DBF'
+					lnFileCount	= .get_DBF_Configuration( FORCEEXT(.c_InputFile, 'DBF'), @loDBF_CFG )
 					IF NOT INLIST(.DBF_Conversion_Support, 1, 2, 4, 8)
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
@@ -11433,7 +11453,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							EXIT
 
 						OTHERWISE
-							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ")", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
+							lcFile			= LOWER( ALLTRIM( STRTRAN( CHRTRAN( NORMALIZE( STREXTRACT( tcLine, ".ITEM(", ").Type", 1, 1 ) ), ["], [] ), 'lcCurDir+', '', 1, 1, 1) ) )
 							lcType			= ALLTRIM( CHRTRAN( STREXTRACT( tcLine, "=", "", 1, 2 ), ['], [] ) )
 							loFile			= toProject( lcFile )
 							loFile._Type	= lcType
@@ -11885,6 +11905,10 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						lnLenPropName	= LEN(laProps(X))
 						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
 						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
+						
+						IF laProps(X) == ' NAME' AND NOT EMPTY(lcValue)
+							lcValue	= THIS.denormalizeXMLValue(lcValue)
+						ENDIF
 
 						ADDPROPERTY( toReg, laProps(X), lcValue )
 					ENDIF
@@ -12038,12 +12062,40 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 		TRY
 			LOCAL lnCodError, loEx AS EXCEPTION, laCodeLines(1), lnCodeLines, laLineasExclusion(1), lnBloquesExclusion, I ;
 				, lnIDInputFile, lnFileCount, laConfig(1), lcConfigItem, lc_DBF_Conversion_Support, lcAlterTable ;
+				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
 				, lcTempDBC, llImportData ;
 				, loDBF_CFG AS CL_DBF_CFG OF 'FOXBIN2PRG.PRG'
 			STORE 0 TO lnCodError, lnCodeLines
 
 			WITH THIS AS c_conversor_prg_a_dbf OF 'FOXBIN2PRG.PRG'
 				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
+				loLang				= _SCREEN.o_FoxBin2Prg_Lang
+
+				*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
+				lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( FORCEEXT(.c_InputFile, 'DBF'), @loDBF_CFG, .T. )
+				lcTempDBC	= FORCEPATH( '_FB2P', JUSTPATH(.c_OutputFile) )
+
+				DO CASE
+				CASE lnFileCount = 1 AND loDBF_CFG.DBF_Conversion_Support > 0 AND NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8)
+					WITH toFoxBin2Prg
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDWITH
+					
+				CASE lnFileCount = 1 AND loDBF_CFG.DBF_Conversion_Support > 0	&& Implica 2 u 8
+					llImportData	= (loDBF_CFG.DBF_Conversion_Support = 8)
+					
+				CASE toFoxBin2Prg.DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
+					llImportData	= .T.
+
+				CASE toFoxBin2Prg.DBF_Conversion_Support <> 2
+					WITH toFoxBin2Prg
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDWITH
+
+				OTHERWISE
+					* Asume llImportData = .F.
+
+				ENDCASE
 
 				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
 					*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -12053,17 +12105,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
-
-				*-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
-				lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( FORCEEXT(.c_InputFile, 'DBF'), @loDBF_CFG, .T. )
-				lcTempDBC	= FORCEPATH( '_FB2P', JUSTPATH(.c_OutputFile) )
-
-				DO CASE
-				CASE toFoxBin2Prg.DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
-					llImportData	= .T.
-				CASE INLIST(toFoxBin2Prg.DBF_Conversion_Support, 1, 2, 4) AND lnFileCount = 1
-					llImportData	= (loDBF_CFG.DBF_Conversion_Support = 8)
-				ENDCASE
 
 				C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 				lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
@@ -12222,7 +12263,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 						IF toFoxBin2Prg.n_ExcludeDBFAutoincNextval = 1
 							*-- If AutoIncNextVal is excluded from text, then assign 1 for allowing regeneration
 							*-- of DBF with this field.
-							lcFieldDef	= lcFieldDef + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
+							tcAlterTable	= tcAlterTable + ' ;' + CR_LF + ' ALTER ' + loField._Name + ' ' + loField._Type + ' AUTOINC NEXTVAL 1 STEP ' + loField._AutoInc_Step
 						ELSE
 							tcAlterTable	= tcAlterTable + ' ;' + CR_LF + ' ALTER ' + loField._Name + ' ' + loField._Type + ' AUTOINC NEXTVAL ' + loField._AutoInc_NextVal + ' STEP ' + loField._AutoInc_Step
 						ENDIF
@@ -14688,7 +14729,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				objcode="<<toReg.ObjCode>>" name="<<toReg.Name>>" <<>>
+				objcode="<<toReg.ObjCode>>" name="<<THIS.normalizeXMLValue(toReg.Name)>>" <<>>
 			ENDTEXT
 
 			TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -23104,10 +23145,20 @@ DEFINE CLASS CL_DBF_TABLE AS CL_CUS_BASE
 			lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( FORCEEXT(tc_InputFile, 'DBF'), @loDBF_CFG, .T. )
 
 			DO CASE
-			CASE INLIST(toFoxBin2Prg.DBF_Conversion_Support, 4, 8) ;	&& BIN2TXT (DATA EXPORT FOR DIFF)
-				OR INLIST(toFoxBin2Prg.DBF_Conversion_Support, 1, 2) AND lnFileCount = 1
-				*-- ASUNCIÓN: Si hay un archivo DBF.CFG, es porque se quiere exportar datos, si no, no debe crearse el DBF.CFG
+			CASE lnFileCount = 1 AND INLIST(loDBF_CFG.DBF_Conversion_Support, 4, 8)
+				*-- Si hay un archivo DBF.CFG, manda sobre la configuración general
 				llExportData		= .T.
+
+			CASE lnFileCount = 1 AND loDBF_CFG.DBF_Conversion_Support > 0
+				*-- Si hay un archivo DBF.CFG, manda sobre la configuración general
+				* Asume llExportData=.F.
+
+			CASE INLIST(toFoxBin2Prg.DBF_Conversion_Support, 4, 8)	&& BIN2TXT (DATA EXPORT FOR DIFF)
+				llExportData		= .T.
+
+			OTHERWISE
+				* Asume llExportData=.F.
+
 			ENDCASE
 
 			IF llExportData THEN
@@ -23938,7 +23989,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		#ENDIF
 
 		TRY
-			LOCAL llBloqueEncontrado, lcFieldName, lcValue, luValue, loEx AS EXCEPTION ;
+			LOCAL llBloqueEncontrado, lcFieldName, lcValue, luValue, llOneLineOnly, loEx AS EXCEPTION ;
 				, loField as CL_DBF_FIELD OF 'FOXBIN2PRG.PRG'
 			STORE '' TO lcFieldName, lcValue
 
@@ -23959,12 +24010,13 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 						OTHERWISE	&& Campo de RECORD
 							*-- Estructura a reconocer:
 							*	<fieldName>VALOR</fieldName>
-							lcFieldName	= STREXTRACT( tcLine, '<', '>', 1, 0 )
-							lcValue		= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0+2 )
-							loField		= toFields.Item(lcFieldName)
+							lcFieldName		= STREXTRACT( tcLine, '<', '>', 1, 0 )
+							lcValue			= STREXTRACT( tcLine, '<' + lcFieldName + '>', '</' + lcFieldName + '>', 1, 0+2 )
+							loField			= toFields.Item(lcFieldName)
+							llOneLineOnly	= ('</' + lcFieldName + '>' $ tcLine)
 
-							lcFieldType	= loField._Type
-							llNoCPTran	= CAST( loField._NoCPTran as Logical)
+							lcFieldType		= loField._Type
+							llNoCPTran		= CAST( loField._NoCPTran as Logical)
 
 							DO CASE
 							CASE lcFieldType == 'L'	&& Logical (Boolean)
@@ -23992,18 +24044,22 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 									*-- If NoCPTran, then must encode in b64binary
 									luValue		= STRCONV(lcValue,14)
 								ELSE
-									* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
-									luValue = ''
-									DO WHILE NOT EMPTY(lcValue)
-										IF ']]>' $ tcLine THEN
-											luValue = .Decode(lcValue, .T.)
-											EXIT
-										ELSE
-											I = I + 1
-											.set_Line( @tcLine, @taCodeLines, I )
-											lcValue	= lcValue + CR_LF + tcLine
-										ENDIF
-									ENDDO
+									IF llOneLineOnly AND ATC('<![CDATA[', lcValue) = 0
+										luValue = .Decode(lcValue, .F.)
+									ELSE
+										* Si el memo es multi-línea, leer hasta encontrar el final ']]>' del CDATA.
+										luValue = ''
+										DO WHILE NOT EMPTY(lcValue)
+											IF ']]>' $ tcLine OR '</' + lcFieldName + '>' $ tcLine THEN
+												luValue = .Decode(lcValue, .T.)
+												EXIT
+											ELSE
+												I = I + 1
+												.set_Line( @tcLine, @taCodeLines, I )
+												lcValue	= lcValue + CR_LF + tcLine
+											ENDIF
+										ENDDO
+									ENDIF
 								ENDIF
 
 							CASE lcFieldType == 'D'	&& Date
@@ -24930,7 +24986,7 @@ DEFINE CLASS CL_MENU AS CL_MENU_COL_BASE
 						CASE toConversor.c_MenuLocation == 'APPEND'
 							loReg.Location		= C_MENULOCATION_APPEND
 						OTHERWISE
-							IF LEFT(toConversor.c_MenuLocation,7) == 'BEFORE'
+							IF LEFT(toConversor.c_MenuLocation,6) == 'BEFORE'
 								loReg.Location		= C_MENULOCATION_BEFORE
 							ELSE
 								loReg.Location		= C_MENULOCATION_AFTER
@@ -27792,7 +27848,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_END_OF_PROCESS_LOC											= "Ende desr Prozesses"
 					.C_ERROR_LOC													= "FEHLER"
 					.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
-					.C_EXTENSION_RECONFIGURATION_LOC								= "Nneukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
+					.C_EXTENSION_RECONFIGURATION_LOC								= "Neukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
 					.C_EXTERNAL_CLASS_COUNT_DOES_NOT_MATCH_FOUND_CLASSES_LOC		= "Die Anzahl externee Klassen (<< toModulo._ExternalClasses_Count >>) entspricht nicht der der gefunden Klassen (<< toModulo._Clases_Count >>), Datei: [<< toFoxBin2Prg.c_InputFile >>]"
 					.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC						= "Keine externe Klasse gefunden"
 					.C_EXTERNAL_MEMBER_NAME_WAS_NOT_FOUND_LOC						= "Externe Mitglied wurde nicht gefunden"
@@ -27845,7 +27901,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "Die äußere Klasse nicht die innere Klassifizierung anzeigen lassen"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "Das äußere Element nicht den inneren Elementen entsprechen"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<tcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimierung: Ausgabedatei [<<lcOutputFile>>] wurde nicht überschrieben, da sie dieselbe ist wie die neu generierte."
 					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht verlängert, weil seine Zeitmarke ist die gleiche wie die Quelldatei."
 					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimierung: Ausgabedatei [<<THIS.c_OutputFile>>] wurde nicht erneuert, da sie neuer ist als die Ursprungsdatei."
 					.C_PRESS_ESC_TO_CANCEL											= "Drücken Sie Esc für Abbrechen"
@@ -27999,5 +28055,5 @@ DEFINE CLASS CL_DBF_CFG AS CUSTOM
 	*-- Configuration class. By default asumes master value, except when overriding one.
 	DBF_Conversion_Order		= ''
 	DBF_Conversion_Condition	= ''
-	DBF_Conversion_Support		= 0
+	DBF_Conversion_Support		= NULL
 ENDDEFINE
