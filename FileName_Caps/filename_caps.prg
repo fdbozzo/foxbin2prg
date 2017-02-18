@@ -45,19 +45,34 @@ RETURN lcFileName
 
 DEFINE CLASS cl_FileName_Caps AS Custom
 
+	PROCEDURE INIT
+		DECLARE INTEGER MoveFile IN KERNEL32.DLL STRING lpExistingFileName, STRING lpNewFileName
+		DECLARE INTEGER GetLastError IN KERNEL32.DLL
+		
+		* DOCUMENTACIÓN: https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx
+		DECLARE INTEGER FormatMessage IN KERNEL32.DLL INTEGER dwFlags, INTEGER lpSource, INTEGER dwMessageId ;
+			, INTEGER dwLanguageId, STRING @lpBuffer, INTEGER nSize, INTEGER Arguments
+		_SCREEN.AddProperty("ExitCodeFNC",0)
+	ENDPROC
+
 	PROCEDURE Capitalize
 		LPARAMETERS tcFileName, tcFileMask, tcFileMaskType, tcLog, tlRelanzarError, tcDontShowErrors
 
 		TRY
 			LOCAL loEx AS EXCEPTION, laMasks(1,4), lcDefinition, lcFileDef, lcMaskDef, laLines(1), lcMenErr ;
-				, I, X, lcName, lcExt, lcPath, lcFileName, laFile(1,5), lcLogFile, lcSys16, lnPosProg ;
-				, loFSO AS Scripting.FileSystemObject
+				, I, X, lcName, lcExt, lcPath, lcFileName, laFile(1,5), lcLogFile, lcSys16, lnPosProg, lnRet
 
+			lnRet				= 0
 			loEx				= NULL
-			loFSO				= CREATEOBJECT('Scripting.FileSystemObject')
 			tcFileMaskType		= EVL(tcFileMaskType,'M')
 			lcFileName			= tcFileName
-			lcLogFile			= FORCEEXT(SYS(16),'LOG')
+			lcSys16				= SYS(16)
+			IF LEFT(lcSys16,10) == 'PROCEDURE '
+				lnPosProg	= AT(" ", lcSys16, 2) + 1
+			ELSE
+				lnPosProg	= 1
+			ENDIF
+			lcLogFile			= FORCEEXT( SUBSTR( lcSys16, lnPosProg ), 'LOG' )
 			tcLog				= ''
 			tcDontShowErrors	= EVL( tcDontShowErrors, '0' )
 
@@ -66,13 +81,6 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 					tcLog	= tcLog + CR_LF + '- No hay máscara definida ni archivo de configuración'
 					EXIT	&& No se indicó nada que hacer
 				ELSE
-					lcSys16 = SYS(16)
-					IF LEFT(lcSys16,10) == 'PROCEDURE '
-						lnPosProg	= AT(" ", lcSys16, 2) + 1
-					ELSE
-						lnPosProg	= 1
-					ENDIF
-
 					tcFileMask	= FORCEEXT( SUBSTR( lcSys16, lnPosProg ), 'CFG' )
 					tcLog	= tcLog + CR_LF + '- Se usará el archivo de configuración [' + tcFileMask + ']'
 					IF NOT FILE(tcFileMask)
@@ -163,9 +171,19 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 					EXIT
 				ENDIF
 			ENDFOR
+			
+			*MESSAGEBOX( 'lcLogFile = ' + TRANSFORM(lcLogFile),0+4096, 'Error' )
 
 			IF ADIR( laFile, lcFileName, '', 1 ) > 0 AND laFile(1,1) <> JUSTFNAME(lcFileName)
-				loFSO.MoveFile( FORCEPATH( laFile(1,1), JUSTPATH(lcFileName) ), lcFileName )
+				lnRet	= MoveFile( FORCEPATH( laFile(1,1), JUSTPATH(lcFileName) ), lcFileName )
+				*MESSAGEBOX('(MoveFile) lnRet = ' + TRANSFORM(lnRet),0+4096, 'Error')
+				
+				IF lnRet = 0 && Failed
+					lnRet = GetLastError()
+					*MESSAGEBOX('(GetLastError) lnRet = ' + TRANSFORM(lnRet),0+4096, 'Error')
+					ERROR 'MoveFile'
+				ENDIF
+				
 				tcLog	= tcLog + CR_LF + '  => Se renombrará a [' + lcFileName + ']'
 			ELSE
 				tcLog	= tcLog + CR_LF + '  => No se renombrará a [' + lcFileName + '] porque ya estaba correcto.'
@@ -173,6 +191,19 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 
 
 		CATCH TO loEx
+			_SCREEN.ExitCodeFNC = loEx.ErrorNo
+
+			IF loEx.ErrorNo = 1098 && User defined error
+				IF LOWER(loEx.Message) == 'movefile'
+					* SE OBTIENE EL MENSAJE DE ERROR DEL SISTEMA CORRESPONDIENTE A GetLastError()
+					* FORMAT_MESSAGE_FROM_SYSTEM	0x00001000
+					LOCAL lnRetLen, lpBuffer
+					lpBuffer = REPLICATE(CHR(0),256)
+					lnRetLen = FormatMessage(0x00001000,0,lnRet,0,@lpBuffer,256,0)
+					loEx.Message = LEFT(lpBuffer, lnRetLen)
+				ENDIF
+			ENDIF
+
 			IF tlRelanzarError THEN
 				THROW
 			ELSE
@@ -190,7 +221,6 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 			ENDIF
 
 		FINALLY
-			loFSO		= NULL
 			tcFileName	= lcFileName
 
 			*-- Si existe FileName_Caps.LOG, lo actualiza

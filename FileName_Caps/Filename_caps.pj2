@@ -25,7 +25,7 @@ _LegalCopyright = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): 
 _LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
 _ProductName = "FILENAME_CAPS"
 _MajorVer = "2"
-_MinorVer = "3"
+_MinorVer = "4"
 _Revision = "0"
 _LanguageID = ""
 _AutoIncrement = "0"
@@ -33,7 +33,7 @@ _AutoIncrement = "0"
 
 
 *<BuildProj>
-*<.HomeDir = 'c:\desa\filename_caps' />
+*<.HomeDir = 'c:\desa\foxbin2prg\filename_caps' />
 
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
