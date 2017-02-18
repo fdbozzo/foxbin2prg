@@ -48,7 +48,11 @@ Else
 	Next
 
 	If GetBit(nDebug, 4) Then
-		MsgBox "End of Process!", 64, WScript.ScriptName
+		If nExitCode = 0 Then
+			MsgBox "End of Process!", 64, WScript.ScriptName
+		Else
+			MsgBox "End of Process!", 48, WScript.ScriptName
+		End If
 	End If
 End If
 
@@ -93,7 +97,7 @@ Private Sub evaluateFile( tcFile )
 		MsgBox cCMD, 0, "PARAMETERS"
 	Else
 		nRet = oVFP9.DoCmd( cCMD )
-		'nExitCode = oVFP9.Eval("_SCREEN.ExitCode")
+		nExitCode = oVFP9.Eval("_SCREEN.ExitCodeFNC")
 	End If
 End Sub
 
