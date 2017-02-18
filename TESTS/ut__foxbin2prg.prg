@@ -1709,6 +1709,119 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 	ENDFUNC
 
 
+	*******************************************************************************************************************************************
+	FUNCTION Evaluate_TX2_Output_Test_from_ClassPerFile_VCX
+		LPARAMETERS tcFileName
+
+		IF PCOUNT() = 0
+			THIS.messageout( "* Support method, not a valid test." )
+			RETURN .T.
+		ENDIF
+
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileTx2s, lc_OutputFileBak, lcExt2, lcCFG, laFiles(1,5) ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		TRY
+			loEx		= NULL
+			TEXT TO lcCFG TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2+4
+				UseClassPerFile:1
+				RedirectClassPerFileToMain:1
+				ClassPerFileCheck:1
+			ENDTEXT
+			STRTOFILE(lcCFG, FORCEPATH('foxbin2prg.cfg', oFXU_LIB.cPathDatosTest))
+			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG", "", 'TESTS\DATOS_TEST\foxbin2prg.cfg')
+			*loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
+			*loCnv.evaluateConfiguration( '1', '1', '1', '0', '1', '4', '1', '0' )
+			*loCnv.l_Test				= .T.
+
+
+			*-- DATOS DE ENTRADA
+			STORE 0 TO lnCodError, lnCodError_Esperado
+			
+			*-- Copio la librería en DATOS_TEST
+			lc_File				= UPPER(tcFileName)
+			lcExt2				= loCnv.Get_Ext2FromExt( JUSTEXT( tcFileName ) )
+			lc_OutputFile		= FORCEPATH( lc_File, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2	= FORCEPATH( FORCEEXT( lc_File, lcExt2 ), oFXU_LIB.cPathDatosTest )
+			lc_OutputFileTx2s	= FORCEPATH( JUSTSTEM(lc_File) + '*.' + lcExt2, oFXU_LIB.cPathDatosTest )
+			lc_OutputFileBak	= lc_OutputFileTx2 + '.bak'
+
+			* Copio los .??2
+			*oFXU_LIB.copiarArchivosParaTest( lc_OutputFileTx2s )
+			FOR I = 1 TO ADIR(laFiles, FORCEPATH(lc_OutputFileTx2s, oFXU_LIB.cPathDatosReadOnly))
+				COPY FILE (FORCEPATH( laFiles(I,1), oFXU_LIB.cPathDatosReadOnly )) TO (FORCEPATH( laFiles(I,1), oFXU_LIB.cPathDatosTest ))
+			ENDFOR
+			
+			* Creo los .??2.BAK correspondientes
+			FOR I = 1 TO ADIR(laFiles, lc_OutputFileTx2s)
+				COPY FILE (FORCEPATH( laFiles(I,1), oFXU_LIB.cPathDatosTest )) TO (FORCEPATH( laFiles(I,1) + '.bak', oFXU_LIB.cPathDatosTest ))
+			ENDFOR
+
+			*-- Genero TX2
+			*loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Genero BIN
+			loCnv.execute( lc_OutputFileTx2, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Genero TX2
+			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			*-- Comparo resultados
+			THIS.messageout( "Se compara el archivo de texto generado con el original luego de 2 regeneraciones, para saber si hay cambios" )
+			*THIS.messageout( "OutputFileTx2 = " + lc_OutputFileTx2 )
+			*THIS.messageout( "OutputFileBak = " + lc_OutputFileBak )
+			*THIS.asserttrue( FILETOSTR( lc_OutputFileTx2 ) == FILETOSTR( lc_OutputFileBak ), "COMPARACIÓN DE ARCHIVOS TX2" )
+
+			FOR I = 1 TO ALEN(laFiles, 1)
+				THIS.messageout( "--------------------" )
+				THIS.messageout( "OutputFileTx2 = " + laFiles(I,1) )
+				THIS.messageout( "OutputFileBak = " + laFiles(I,1) + '.bak' )
+				THIS.asserttrue( FILETOSTR( FORCEPATH( laFiles(I,1), oFXU_LIB.cPathDatosTest ) ) == FILETOSTR( FORCEPATH( laFiles(I,1) + '.bak', oFXU_LIB.cPathDatosTest ) ), "COMPARACIÓN DE ARCHIVOS TX2" )
+			ENDFOR
+
+
+		CATCH TO loEx
+			THIS.Evaluate_results( loEx, lnCodError_Esperado, lc_OutputFile, lcParent, lcClass, lcObjName, loReg_Esperado )
+
+		FINALLY
+		*	USE IN (SELECT("ARCHIVOBIN_IN"))
+		*	USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loCnv, loCtl
+			RELEASE loCnv, loCtl
+		ENDTRY
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para_generar_un__VCX__con_ClassPerFile_ValidarEl_VC2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		LOCAL lnCodError, lnCodError_Esperado  ;
+			, lc_File, lcFileName, lc_OutputFile, lc_OutputFileTx2, lc_OutputFileBak, lcExt2 ;
+			, lcParent, lcClass, lcObjName, loReg_Esperado ;
+			, loCtl AS f_optiongroup OF "TESTS\DATOS_READONLY\LIB_CONTROLES.VCX" ;
+			, loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG" ;
+			, loEx AS EXCEPTION
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		PUBLIC goFXU AS ut__foxbin2prg OF ut__foxbin2prg.prg
+		goFXU		= THIS
+		loEx		= NULL
+
+		*-- Comparo resultados
+		THIS.Evaluate_TX2_Output_Test_from_ClassPerFile_VCX( 'fb2p_classperfile_text.vcx' )
+
+	ENDFUNC
+
+
 ENDDEFINE
 
 
