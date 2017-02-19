@@ -44,10 +44,23 @@ RETURN lcFileName
 
 
 DEFINE CLASS cl_FileName_Caps AS Custom
+	_memberdata = [<VFPData>] ;
+		+ [<memberdata name="capitalize" display="Capitalize"/>] ;
+		+ [<memberdata name="renamefile" display="RenameFile"/>] ;
+		+ [</VFPData>]
+
 
 	PROCEDURE INIT
-		DECLARE INTEGER MoveFile IN KERNEL32.DLL STRING lpExistingFileName, STRING lpNewFileName
+		*DECLARE INTEGER MoveFile IN KERNEL32.DLL STRING lpExistingFileName, STRING lpNewFileName
+		
+		* DOCUMENTACIÓN: https://msdn.microsoft.com/es-es/library/windows/desktop/aa365240(v=vs.85).aspx
+		* dwFlags:
+		* 1 (0x1) MOVEFILE_REPLACE_EXISTING
+		* 8 (0x8) MOVEFILE_WRITE_THROUGH
+		DECLARE INTEGER MoveFileEx IN KERNEL32.DLL STRING lpExistingFileName, STRING lpNewFileName, INTEGER dwFlags
+
 		DECLARE INTEGER GetLastError IN KERNEL32.DLL
+		DECLARE Sleep IN KERNEL32.DLL INTEGER dwMilliseconds
 		
 		* DOCUMENTACIÓN: https://msdn.microsoft.com/en-us/library/windows/desktop/ms679351(v=vs.85).aspx
 		DECLARE INTEGER FormatMessage IN KERNEL32.DLL INTEGER dwFlags, INTEGER lpSource, INTEGER dwMessageId ;
@@ -55,9 +68,10 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 		_SCREEN.AddProperty("ExitCodeFNC",0)
 	ENDPROC
 
-	PROCEDURE Capitalize
-		LPARAMETERS tcFileName, tcFileMask, tcFileMaskType, tcLog, tlRelanzarError, tcDontShowErrors
-
+	PROCEDURE Capitalize(tcFileName, tcFileMask, tcFileMaskType, tcLog, tlRelanzarError, tcDontShowErrors)
+		#IF .F.
+			LOCAL THIS AS cl_FileName_Caps OF 'filename_caps\filename_caps.prg'
+		#ENDIF
 		TRY
 			LOCAL loEx AS EXCEPTION, laMasks(1,4), lcDefinition, lcFileDef, lcMaskDef, laLines(1), lcMenErr ;
 				, I, X, lcName, lcExt, lcPath, lcFileName, laFile(1,5), lcLogFile, lcSys16, lnPosProg, lnRet
@@ -175,7 +189,7 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 			*MESSAGEBOX( 'lcLogFile = ' + TRANSFORM(lcLogFile),0+4096, 'Error' )
 
 			IF ADIR( laFile, lcFileName, '', 1 ) > 0 AND laFile(1,1) <> JUSTFNAME(lcFileName)
-				lnRet	= MoveFile( FORCEPATH( laFile(1,1), JUSTPATH(lcFileName) ), lcFileName )
+				lnRet	= THIS.RenameFile( FORCEPATH( laFile(1,1), JUSTPATH(lcFileName) ), lcFileName )
 				*MESSAGEBOX('(MoveFile) lnRet = ' + TRANSFORM(lnRet),0+4096, 'Error')
 				
 				IF lnRet = 0 && Failed
@@ -236,5 +250,25 @@ DEFINE CLASS cl_FileName_Caps AS Custom
 
 		RETURN lcFileName
 	ENDPROC
+
+
+	FUNCTION RenameFile(lpExistingFileName as String, lpNewFileName as String) as Integer
+		* RENAME con reintento. A veces el sistema operativo puede devolver un error en los primeros intentos de renombrado,
+		* por ejemplo con el error "Can not create a file that already exists"
+		* FUENTE: http://stackoverflow.com/questions/13025313/why-os-rename-is-raising-an-exception-in-python-2-7
+		LOCAL lnRet
+		lnRet	= 0
+		*lnRet	= MoveFile( FORCEPATH( laFile(1,1), JUSTPATH(lcFileName) ), lcFileName )
+		
+		FOR I = 1 TO 10
+			lnRet	= MoveFileEx( lpExistingFileName, lpNewFileName, 0x1 + 0x8 )
+			IF lnRet != 0
+				EXIT
+			ENDIF
+			Sleep(10)
+		ENDFOR
+		RETURN lnRet
+	ENDFUNC
+
 
 ENDDEFINE && CLASS cl_FileName_Caps AS Custom
