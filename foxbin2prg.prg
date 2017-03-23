@@ -192,6 +192,7 @@
 * 10/07/2016	FDBOZZO		v1.19.48	Fix defecto db2: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix pj2: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix frx: Los ControlSource de objetos OLE que contienen comillas se generan mal (Nathan Brown)
+* 23/03/2017	FDBOZZO		v1.19.49	Bug Fix scx/vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -300,6 +301,7 @@
 * 10/07/2016	Nathan Brown		Reporte defecto v1.19.48-Preview3: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Arreglado en v1.19.48 Preview-4)
 * 11/07/2016	Nathan Brown		Reporte bug pj2 v1.19.48-Preview4: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Arreglado en v1.19.48 Preview-5)
 * 11/07/2016	Nathan Brown		Reporte bug frx v1.19.48-Preview5: Los ControlSource de objetos OLE que contienen comillas se generan mal (Arreglado en v1.19.48 Preview-6)
+* 23/03/2017	Lutz Scheffler		Reporte bug scx/vcx v1.19.48: No funciona la generación de una clase individual con "classlib.vcx::classname" (Arreglado en v1.19.49)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2703,9 +2705,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*ENDIF
 
 				*-- Reconocimiento de la clase indicada
+				*-- Ej: [c:\desa\test\library.vcx::classname]
 				IF '::' $ tc_InputFile THEN
-					.c_ClassToConvert	= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '::' ) ) )
-					tc_InputFile		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '::' ) ) )
+					tc_InputFile		= STRTRAN(tc_InputFile, '::', '|')
+					.c_ClassToConvert	= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '|' ) ) )
+					tc_InputFile		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '|' ) ) )
 				ENDIF
 
 				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
