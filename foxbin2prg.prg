@@ -1854,9 +1854,19 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				IF .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
 					IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
-						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
+						IF NOT EMPTY(lcConfigFile) AND NOT EMPTY(JUSTPATH(lcConfigFile)) ;
+								AND ADDBS(JUSTPATH(lcConfigFile)) == ADDBS(tc_InputFile)
+							* Preservar el config indicado manualmente
+						ELSE
+							lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
+						ENDIF
 					ELSE
-						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
+						IF NOT EMPTY(lcConfigFile) AND NOT EMPTY(JUSTPATH(lcConfigFile)) ;
+								AND ADDBS(JUSTPATH(lcConfigFile)) == ADDBS(JUSTPATH(tc_InputFile))
+							* Preservar el config indicado manualmente
+						ELSE
+							lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
+						ENDIF
 					ENDIF
 				ENDIF
 
