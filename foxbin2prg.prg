@@ -1855,14 +1855,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 				IF .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
 					IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
 						IF NOT EMPTY(lcConfigFile) AND NOT EMPTY(JUSTPATH(lcConfigFile)) ;
-								AND ADDBS(JUSTPATH(lcConfigFile)) == ADDBS(tc_InputFile)
+								AND UPPER(ADDBS(JUSTPATH(lcConfigFile))) == UPPER(ADDBS(tc_InputFile))
 							* Preservar el config indicado manualmente
 						ELSE
 							lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
 						ENDIF
 					ELSE
 						IF NOT EMPTY(lcConfigFile) AND NOT EMPTY(JUSTPATH(lcConfigFile)) ;
-								AND ADDBS(JUSTPATH(lcConfigFile)) == ADDBS(JUSTPATH(tc_InputFile))
+								AND UPPER(ADDBS(JUSTPATH(lcConfigFile))) == UPPER(ADDBS(JUSTPATH(tc_InputFile)))
 							* Preservar el config indicado manualmente
 						ELSE
 							lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
@@ -2549,8 +2549,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
 				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
 				, lcExt == .c_DB2, NOT ISNULL(loDBF_CFG) AND INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8) ;
-					OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
-					AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
+				OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
+				AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
 				, lcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
@@ -11919,7 +11919,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						lnLenPropName	= LEN(laProps(X))
 						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
 						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
-						
+
 						IF laProps(X) == ' NAME' AND NOT EMPTY(lcValue)
 							lcValue	= THIS.denormalizeXMLValue(lcValue)
 						ENDIF
@@ -12094,10 +12094,10 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					WITH toFoxBin2Prg
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDWITH
-					
+
 				CASE lnFileCount = 1 AND loDBF_CFG.DBF_Conversion_Support > 0	&& Implica 2 u 8
 					llImportData	= (loDBF_CFG.DBF_Conversion_Support = 8)
-					
+
 				CASE toFoxBin2Prg.DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
 					llImportData	= .T.
 
