@@ -192,7 +192,8 @@
 * 10/07/2016	FDBOZZO		v1.19.48	Fix defecto db2: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix pj2: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix frx: Los ControlSource de objetos OLE que contienen comillas se generan mal (Nathan Brown)
-* 23/03/2017	FDBOZZO		v1.19.49	Bug Fix scx/vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
+* 23/03/2017	FDBOZZO		v1.19.49	Bug Fix vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
+* 25/03/2017	FDBOZZO		v1.19.49	Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -301,7 +302,8 @@
 * 10/07/2016	Nathan Brown		Reporte defecto v1.19.48-Preview3: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Arreglado en v1.19.48 Preview-4)
 * 11/07/2016	Nathan Brown		Reporte bug pj2 v1.19.48-Preview4: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Arreglado en v1.19.48 Preview-5)
 * 11/07/2016	Nathan Brown		Reporte bug frx v1.19.48-Preview5: Los ControlSource de objetos OLE que contienen comillas se generan mal (Arreglado en v1.19.48 Preview-6)
-* 23/03/2017	Lutz Scheffler		Reporte bug scx/vcx v1.19.48: No funciona la generación de una clase individual con "classlib.vcx::classname" (Arreglado en v1.19.49)
+* 23/03/2017	Lutz Scheffler		Reporte bug vcx v1.19.48: No funciona la generación de una clase individual con "classlib.vcx::classname" (Arreglado en v1.19.49)
+* 23/03/2017	Lutz Scheffler		Mejora vcx v1.19.48: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Agragado en v1.19.49)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -795,6 +797,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
+	n_RedirectClassType				= 0				&& 0=Redireccionar Todas las clases, 1=Redireccionar solo la clase indicada
 	l_NoTimestamps					= .T.
 	c_BackgroundImage				= ''
 	l_ClearUniqueID                 = .T.
@@ -1196,6 +1199,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.l_RedirectClassPerFileToMain
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_RedirectClassPerFileToMain, THIS.l_RedirectClassPerFileToMain )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE n_RedirectClassType_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_RedirectClassType
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_RedirectClassType, THIS.n_RedirectClassType )
 		ENDIF
 	ENDPROC
 
@@ -2074,6 +2086,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + TRANSFORM(lcValue) )
 							ENDIF
 
+						CASE LEFT( laConfig(I), 18 ) == LOWER('RedirectClassType:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 19 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.n_RedirectClassType	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > RedirectClassType:          ' + TRANSFORM(lcValue) )
+							ENDIF
+
 						CASE LEFT( laConfig(I), 24 ) == LOWER('RemoveNullCharsFromCode:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 25 ) )
 							IF INLIST( lcValue, '0', '1' ) THEN
@@ -2234,6 +2253,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'n_UseClassPerFile:            ' + TRANSFORM(.n_UseClassPerFile) )
 				.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + TRANSFORM(.l_ClassPerFileCheck) )
 				.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
+				.writeLog( C_TAB + 'n_RedirectClassType:          ' + TRANSFORM(.n_RedirectClassType) )
 				.writeLog( C_TAB + 'n_Debug:                      ' + TRANSFORM(.n_Debug) )
 				.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + TRANSFORM(.n_ExtraBackupLevels) )
 				.writeLog( C_TAB + 'c_BackgroundImage:            ' + TRANSFORM(.c_BackgroundImage) )
@@ -2539,8 +2559,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
 				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
 				, lcExt == .c_DB2, NOT ISNULL(loDBF_CFG) AND INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8) ;
-					OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
-					AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
+				OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
+				AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
 				, lcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
@@ -3589,10 +3609,16 @@ DEFINE CLASS c_foxbin2prg AS Session
 					lcForceAttribs	= lcForceAttribs + '-R'
 				ENDIF
 
-
 				*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
 				IF .n_UseClassPerFile > 0 AND .l_RedirectClassPerFileToMain THEN
 					DO CASE
+					CASE .n_RedirectClassType = 1 && Redireccionar solo esta clase
+						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
+							lc_BaseFile	= .c_InputFile
+						ELSE
+							lc_BaseFile	= FORCEPATH( FORCEEXT( JUSTSTEM( JUSTSTEM(.c_InputFile) ), JUSTEXT(.c_InputFile)) , JUSTPATH(.c_InputFile) )
+						ENDIF
+
 					CASE .n_UseClassPerFile = 1 AND INLIST(lcExtension,.c_VC2,.c_SC2)
 						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
 							lc_BaseFile	= .c_InputFile
@@ -9918,7 +9944,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile ;
+				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile, llReplaceClass ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
@@ -9931,29 +9957,39 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain
-					C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
+					IF toFoxBin2Prg.n_RedirectClassType = 0 && Redireccionar todas las clases
+						C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 
-					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
+						lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 
-					.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
-					.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
+						.updateProgressbar( 'Identifying Header Blocks...', 1, lnCodeLines, 1 )
+						.identifyHeaderBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toModulo, @toFoxBin2Prg )
 
-					.updateProgressbar( 'Loading Code...', 2, lnCodeLines, 1 )
+						.updateProgressbar( 'Loading Code...', 2, lnCodeLines, 1 )
+					ENDIF
 
 					*-- MÁSCARA DE BÚSQUEDA
 					IF toFoxBin2Prg.n_UseClassPerFile = 1 THEN
 						*-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
+						*-- con la sintaxis "<path>Classlib.Classname.ext" o "<path>Database.MemberName.ext"
 						lcBaseFilename		= JUSTSTEM( JUSTSTEM(.c_InputFile) )
 						lcInputFile			= ADDBS( JUSTPATH(.c_InputFile) ) + lcBaseFilename + '.*.' + JUSTEXT(.c_InputFile)
 					ELSE && toFoxBin2Prg.n_UseClassPerFile = 2
-						*-- Esto crea la máscara de búsqueda "<path>Database.*.*.ext" para encontrar las partes
-						*-- con la sintaxis "<path>Database.MemberType.MemberName.ext"
+						*-- Esto crea la máscara de búsqueda "<path>filename.*.*.ext" para encontrar las partes
+						*-- con la sintaxis "<path>Classlib.ClassType.Classname.ext" o "<path>Database.MemberType.MemberName.ext"
 						lcBaseFilename		= JUSTSTEM( JUSTSTEM( JUSTSTEM(.c_InputFile) ) )
 						lcInputFile			= ADDBS( JUSTPATH(.c_InputFile) ) + lcBaseFilename + '.*.*.' + JUSTEXT(.c_InputFile)
 					ENDIF
 
+					IF toFoxBin2Prg.n_RedirectClassType = 1 && Redireccionar solo esta clase
+						lcInputFile			= .c_InputFile
+					ENDIF
+
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
-					ASORT( laFiles, 1, 0, 0, 1)
+
+					IF lnFileCount > 1
+						ASORT( laFiles, 1, 0, 0, 1)
+					ENDIF
 
 					FOR I = 1 TO lnFileCount
 						IF toFoxBin2Prg.n_UseClassPerFile = 1 THEN
@@ -9964,7 +10000,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
-								LOOP	&& Salteo esta clase
+								LOOP	&& Salteo esta clase porque se indicó chequear y no concuerda con las anotadas
 							ENDIF
 						ELSE && toFoxBin2Prg.n_UseClassPerFile = 2
 							lcInputFile_Class	= FORCEPATH( JUSTSTEM( laFiles(I,1) ), JUSTPATH( .c_InputFile ) ) + '.' + JUSTEXT( .c_InputFile )
@@ -9974,7 +10010,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
-								LOOP	&& Salteo esta clase porque no concuerda con las anotadas
+								LOOP	&& Salteo esta clase porque se indicó chequear y no concuerda con las anotadas
 							ENDIF
 						ENDIF
 
@@ -10034,9 +10070,23 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( loLang.C_GENERATING_BINARY_LOC + '...', 0, lnCodeLines, 1 )
-				toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
-				.createClasslib()
-				.writeBinaryFile( @toModulo, @toFoxBin2Prg )
+
+				IF toFoxBin2Prg.n_RedirectClassType = 1 && Redireccionar solo esta clase a main
+					llReplaceClass	= .T.
+					toFoxBin2Prg.c_OutputFile = FORCEEXT( lcBaseFilename, 'VCX' )
+					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+
+					IF ADIR( laFiles, toFoxBin2Prg.c_OutputFile, "", 1 ) = 1
+						USE (toFoxBin2Prg.c_OutputFile) ALIAS TABLABIN AGAIN SHARED
+					ELSE
+						.createClasslib()
+					ENDIF
+				ELSE
+					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
+					.createClasslib()
+				ENDIF
+
+				.writeBinaryFile( @toModulo, @toFoxBin2Prg, llReplaceClass )
 			ENDWITH && THIS
 
 
@@ -10060,7 +10110,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 
 	PROCEDURE writeBinaryFile
-		LPARAMETERS toModulo, toFoxBin2Prg
+		LPARAMETERS toModulo, toFoxBin2Prg, tlReplaceClass
 		*-- Estructura del objeto toModulo generado:
 		*-- -----------------------------------------------------------------------------------------------------------
 		*-- Version					Versión usada para generar la versión PRG analizada
@@ -10132,7 +10182,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 		#ENDIF
 
 		TRY
-			LOCAL lcObjName, lnCodError, I, X, loEx AS EXCEPTION ;
+			LOCAL lcObjName, lnCodError, I, X, llReplace, laUniqueID(1,1), loEx AS EXCEPTION ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loFSO AS Scripting.FileSystemObject
 
@@ -10149,131 +10199,178 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					ERROR 'OutputFile Error Simulation'
 				ENDCASE
 
-				*-- Creo el registro de cabecera
-				.createClasslib_RecordHeader( toModulo )
+				IF tlReplaceClass
+					I			= 1
+					loClase		= toModulo._Clases(I)
+					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND OBJNAME == PADR(loClase._ObjName, FSIZE('OBJNAME'))
+					llReplace	= FOUND()
+				ENDIF
+
+				IF llReplace
+					*-- Reemplazar los campos del registro actual
+					IF EMPTY(loClase._TimeStamp)
+						loClase._TimeStamp	= .rowTimeStamp( {^2013/11/04 20:00:00} )
+					ENDIF
+					IF EMPTY(loClase._UniqueID)
+						loClase._UniqueID	= toFoxBin2Prg.unique_ID()
+					ENDIF
+
+					REPLACE ;
+						PLATFORM WITH 'WINDOWS' ;
+						, TIMESTAMP WITH loClase._TimeStamp ;
+						, CLASS WITH loClase._Class ;
+						, CLASSLOC WITH loClase._ClassLoc ;
+						, BASECLASS WITH loClase._BaseClass ;
+						, OBJNAME WITH loClase._ObjName ;
+						, PARENT WITH loClase._Parent ;
+						, PROPERTIES WITH loClase._PROPERTIES ;
+						, PROTECTED WITH loClase._PROTECTED ;
+						, METHODS WITH loClase._METHODS ;
+						, OLE WITH loClase._Ole ;
+						, OLE2 WITH loClase._Ole2 ;
+						, RESERVED1 WITH loClase._RESERVED1 ;
+						, RESERVED2 WITH loClase._RESERVED2 ;
+						, RESERVED3 WITH loClase._RESERVED3 ;
+						, RESERVED4 WITH loClase._RESERVED4 ;
+						, RESERVED5 WITH loClase._RESERVED5 ;
+						, RESERVED6 WITH loClase._RESERVED6 ;
+						, RESERVED7 WITH loClase._RESERVED7 ;
+						, RESERVED8 WITH loClase._RESERVED8 ;
+						, USER WITH loClase._User
+
+					.insert_AllObjects( @loClase, @toFoxBin2Prg )
+
+				ELSE
+					*-- Creo el registro de cabecera
+					IF tlReplaceClass AND RECCOUNT() > 0
+						SELECT MAX(VAL(SUBSTR(UNIQUEID,2))) FROM TABLABIN INTO ARRAY laUniqueID
+						toFoxBin2Prg.n_ID = laUniqueID(1)
+					ELSE
+						.createClasslib_RecordHeader( toModulo )
+					ENDIF
+
+					*-- Recorro las CLASES
+					FOR X = 1 TO 2
+						FOR I = 1 TO toModulo._Clases_Count
+							loClase	= NULL
+							loClase	= toModulo._Clases(I)
+
+							*-- El dataenvironment debe estar primero, luego lo demás.
+							IF X = 1 AND NOT loClase._BaseClass == 'dataenvironment' ;
+									OR X = 2 AND loClase._BaseClass == 'dataenvironment'
+								LOOP
+							ENDIF
+
+							IF EMPTY(loClase._TimeStamp)
+								loClase._TimeStamp	= .rowTimeStamp( {^2013/11/04 20:00:00} )
+							ENDIF
+							IF EMPTY(loClase._UniqueID)
+								loClase._UniqueID	= toFoxBin2Prg.unique_ID()
+							ENDIF
+
+							*-- Inserto la clase
+							INSERT INTO TABLABIN ;
+								( PLATFORM ;
+								, UNIQUEID ;
+								, TIMESTAMP ;
+								, CLASS ;
+								, CLASSLOC ;
+								, BASECLASS ;
+								, OBJNAME ;
+								, PARENT ;
+								, PROPERTIES ;
+								, PROTECTED ;
+								, METHODS ;
+								, OLE ;
+								, OLE2 ;
+								, RESERVED1 ;
+								, RESERVED2 ;
+								, RESERVED3 ;
+								, RESERVED4 ;
+								, RESERVED5 ;
+								, RESERVED6 ;
+								, RESERVED7 ;
+								, RESERVED8 ;
+								, USER) ;
+								VALUES ;
+								( 'WINDOWS' ;
+								, loClase._UniqueID ;
+								, loClase._TimeStamp ;
+								, loClase._Class ;
+								, loClase._ClassLoc ;
+								, loClase._BaseClass ;
+								, loClase._ObjName ;
+								, loClase._Parent ;
+								, loClase._PROPERTIES ;
+								, loClase._PROTECTED ;
+								, loClase._METHODS ;
+								, loClase._Ole ;
+								, loClase._Ole2 ;
+								, loClase._RESERVED1 ;
+								, loClase._RESERVED2 ;
+								, loClase._RESERVED3 ;
+								, loClase._ClassIcon ;
+								, loClase._ProjectClassIcon ;
+								, loClase._Scale ;
+								, loClase._Comentario ;
+								, loClase._includeFile ;
+								, loClase._User )
 
 
-				*-- Recorro las CLASES
-				FOR X = 1 TO 2
-					FOR I = 1 TO toModulo._Clases_Count
-						loClase	= NULL
-						loClase	= toModulo._Clases(I)
-
-						*-- El dataenvironment debe estar primero, luego lo demás.
-						IF X = 1 AND NOT loClase._BaseClass == 'dataenvironment' ;
-								OR X = 2 AND loClase._BaseClass == 'dataenvironment'
-							LOOP
-						ENDIF
-
-						IF EMPTY(loClase._TimeStamp)
-							loClase._TimeStamp	= .rowTimeStamp( {^2013/11/04 20:00:00} )
-						ENDIF
-						IF EMPTY(loClase._UniqueID)
-							loClase._UniqueID	= toFoxBin2Prg.unique_ID()
-						ENDIF
-
-						*-- Inserto la clase
-						INSERT INTO TABLABIN ;
-							( PLATFORM ;
-							, UNIQUEID ;
-							, TIMESTAMP ;
-							, CLASS ;
-							, CLASSLOC ;
-							, BASECLASS ;
-							, OBJNAME ;
-							, PARENT ;
-							, PROPERTIES ;
-							, PROTECTED ;
-							, METHODS ;
-							, OLE ;
-							, OLE2 ;
-							, RESERVED1 ;
-							, RESERVED2 ;
-							, RESERVED3 ;
-							, RESERVED4 ;
-							, RESERVED5 ;
-							, RESERVED6 ;
-							, RESERVED7 ;
-							, RESERVED8 ;
-							, USER) ;
-							VALUES ;
-							( 'WINDOWS' ;
-							, loClase._UniqueID ;
-							, loClase._TimeStamp ;
-							, loClase._Class ;
-							, loClase._ClassLoc ;
-							, loClase._BaseClass ;
-							, loClase._ObjName ;
-							, loClase._Parent ;
-							, loClase._PROPERTIES ;
-							, loClase._PROTECTED ;
-							, loClase._METHODS ;
-							, loClase._Ole ;
-							, loClase._Ole2 ;
-							, loClase._RESERVED1 ;
-							, loClase._RESERVED2 ;
-							, loClase._RESERVED3 ;
-							, loClase._ClassIcon ;
-							, loClase._ProjectClassIcon ;
-							, loClase._Scale ;
-							, loClase._Comentario ;
-							, loClase._includeFile ;
-							, loClase._User )
+							.insert_AllObjects( @loClase, @toFoxBin2Prg )
 
 
-						.insert_AllObjects( @loClase, @toFoxBin2Prg )
+							*-- Inserto el COMMENT
+							INSERT INTO TABLABIN ;
+								( PLATFORM ;
+								, UNIQUEID ;
+								, TIMESTAMP ;
+								, CLASS ;
+								, CLASSLOC ;
+								, BASECLASS ;
+								, OBJNAME ;
+								, PARENT ;
+								, PROPERTIES ;
+								, PROTECTED ;
+								, METHODS ;
+								, OLE ;
+								, OLE2 ;
+								, RESERVED1 ;
+								, RESERVED2 ;
+								, RESERVED3 ;
+								, RESERVED4 ;
+								, RESERVED5 ;
+								, RESERVED6 ;
+								, RESERVED7 ;
+								, RESERVED8 ;
+								, USER) ;
+								VALUES ;
+								( 'COMMENT' ;
+								, 'RESERVED' ;
+								, 0 ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, loClase._ObjName ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, IIF(loClase._OlePublic, 'OLEPublic', '') ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' ;
+								, '' )
 
-
-						*-- Inserto el COMMENT
-						INSERT INTO TABLABIN ;
-							( PLATFORM ;
-							, UNIQUEID ;
-							, TIMESTAMP ;
-							, CLASS ;
-							, CLASSLOC ;
-							, BASECLASS ;
-							, OBJNAME ;
-							, PARENT ;
-							, PROPERTIES ;
-							, PROTECTED ;
-							, METHODS ;
-							, OLE ;
-							, OLE2 ;
-							, RESERVED1 ;
-							, RESERVED2 ;
-							, RESERVED3 ;
-							, RESERVED4 ;
-							, RESERVED5 ;
-							, RESERVED6 ;
-							, RESERVED7 ;
-							, RESERVED8 ;
-							, USER) ;
-							VALUES ;
-							( 'COMMENT' ;
-							, 'RESERVED' ;
-							, 0 ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, loClase._ObjName ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, IIF(loClase._OlePublic, 'OLEPublic', '') ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' ;
-							, '' )
-
-					ENDFOR	&& I = 1 TO toModulo._Clases_Count
-				ENDFOR	&& X = 1 TO 2
+						ENDFOR	&& I = 1 TO toModulo._Clases_Count
+					ENDFOR	&& X = 1 TO 2
+				ENDIF
 
 				USE IN (SELECT("TABLABIN"))
 
@@ -11909,7 +12006,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						lnLenPropName	= LEN(laProps(X))
 						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
 						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
-						
+
 						IF laProps(X) == ' NAME' AND NOT EMPTY(lcValue)
 							lcValue	= THIS.denormalizeXMLValue(lcValue)
 						ENDIF
@@ -12084,10 +12181,10 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					WITH toFoxBin2Prg
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDWITH
-					
+
 				CASE lnFileCount = 1 AND loDBF_CFG.DBF_Conversion_Support > 0	&& Implica 2 u 8
 					llImportData	= (loDBF_CFG.DBF_Conversion_Support = 8)
-					
+
 				CASE toFoxBin2Prg.DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
 					llImportData	= .T.
 
@@ -27380,6 +27477,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="n_excludedbfautoincnextval" display="n_ExcludeDBFAutoincNextval"/>] ;
 		+ [<memberdata name="l_recompile" display="l_Recompile"/>] ;
 		+ [<memberdata name="l_redirectclassperfiletomain" display="l_RedirectClassPerFileToMain"/>] ;
+		+ [<memberdata name="n_redirectclasstype" display="n_RedirectClassType"/>] ;
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
@@ -27416,6 +27514,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	n_OptimizeByFilestamp			= NULL
 	n_ExcludeDBFAutoincNextval		= NULL
 	l_RedirectClassPerFileToMain	= NULL
+	n_RedirectClassType				= NULL
 	l_RemoveNullCharsFromCode		= NULL
 	l_RemoveZOrderSetFromProps		= NULL
 	n_UseClassPerFile				= NULL
@@ -27460,6 +27559,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.n_OptimizeByFilestamp			= toParentCFG.n_OptimizeByFilestamp
 			.n_ExcludeDBFAutoincNextval		= toParentCFG.n_ExcludeDBFAutoincNextval
 			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
+			.n_RedirectClassType			= toParentCFG.n_RedirectClassType
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
