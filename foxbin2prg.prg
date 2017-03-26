@@ -193,6 +193,7 @@
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix pj2: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix frx: Los ControlSource de objetos OLE que contienen comillas se generan mal (Nathan Brown)
 * 23/03/2017	FDBOZZO		v1.19.49	Bug Fix scx/vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
+* 26/03/2017	FDBOZZO		v1.19.49	Mejora cfg: Se permite indicar un archivo CFG por parámetro de cualquier directorio para anular los CFG predeterminados de los subdirectorios, para casos especiales donde sea necesario
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -777,6 +778,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	lFileMode						= .F.
 	n_ExisteCapitalizacion			= -1
 	l_CFG_CachedAccess				= .F.
+	n_CFG_EvaluateFromParam			= 0
 	n_Debug							= 0
 	l_Error							= .F.			&& Indicador de errores del proceso actual
 	l_Errors						= .F.			&& Indicador de error de la sesión actual, acumulativo de todos los procesos
@@ -1853,10 +1855,20 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDIF
 
 				IF .l_Main_CFG_Loaded AND NOT EMPTY(tc_InputFile) AND NOT tcInputFile_Type == C_FILETYPE_QUERYSUPPORT THEN
-					IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
-						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
+					IF .n_CFG_EvaluateFromParam = 1
+						* Si se indicó por parámetro (modo objeto), usarlo como Maestro
+						* Se saltea solo esta evaluación, y luego se usa la variable para determinar el Nº de CFG a usar.
+						.n_CFG_EvaluateFromParam = -1 && Luego se cambia por el Nº de CFG que corresponda.
 					ELSE
-						lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
+						IF tcInputFile_Type == C_FILETYPE_DIRECTORY THEN
+							* INDICÓ DIRECTORIO
+							*lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
+							lcConfigFile	= FULLPATH( JUSTFNAME(lcConfigFile), ADDBS(tc_InputFile) )
+						ELSE
+							* INDICÓ ARCHIVO
+							*lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
+							lcConfigFile	= FULLPATH( JUSTFNAME(lcConfigFile), tc_InputFile )
+						ENDIF
 					ENDIF
 				ENDIF
 
@@ -1870,7 +1882,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 				IF .l_Main_CFG_Loaded
 
 					IF lo_Configuration.Count > 0 THEN
-						.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0 = No hay CFG cacheada, >0 = Hay CFG cacheada
+						IF .n_CFG_EvaluateFromParam > 1
+							* Especial: Si hay una configuración de bloqueo (CFG Manual), se usa
+							.n_CFG_Actual = .n_CFG_EvaluateFromParam
+						ELSE
+							* Normalmente se buscará el CFG del directorio analizado
+							.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0 = No hay CFG cacheada, >0 = Hay CFG cacheada
+						ENDIF
 
 						IF .n_CFG_Actual > 0 THEN
 							lo_CFG			= lo_Configuration.Item(.n_CFG_Actual)
@@ -2215,7 +2233,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				.l_Main_CFG_Loaded	= .T.
 
-				IF NOT llMasterEval
+				IF llMasterEval
+					* Si se inidicó un archivo CFG por parámetro (modo objeto), aqui se bloquea
+					* al Nº de configuración correspondiente.
+					IF .n_CFG_EvaluateFromParam = -1
+						.n_CFG_EvaluateFromParam = .n_CFG_Actual
+					ENDIF
+				ELSE
 					*-- Si no es llMasterEval, es porque esta llamada es cíclica desde este mismo método,
 					*-- y no hay parámetros para evaluar, ya que se mandan todos vacíos desde el inicial.
 					EXIT
@@ -2539,8 +2563,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
 				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
 				, lcExt == .c_DB2, NOT ISNULL(loDBF_CFG) AND INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8) ;
-					OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
-					AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
+				OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
+				AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
 				, lcExt == .c_DC2, .DBC_Conversion_Support = 2 ;
 				, .F. )
 		ENDWITH && THIS
@@ -2713,6 +2737,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDIF
 
 				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
+				.n_CFG_EvaluateFromParam	= (IIF(EMPTY(tcCFG_File), 0, 1))
 
 				*-- Ajusto la ruta si no es absoluta
 				tc_InputFile	= .get_AbsolutePath( tc_InputFile, .c_CurDir )
@@ -11909,7 +11934,7 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						lnLenPropName	= LEN(laProps(X))
 						lnPos2			= AT( '"', SUBSTR( tcLine, lnPos + lnLenPropName + 2 ) )
 						lcValue			= SUBSTR( tcLine, lnPos + lnLenPropName + 2, lnPos2 - 1 )
-						
+
 						IF laProps(X) == ' NAME' AND NOT EMPTY(lcValue)
 							lcValue	= THIS.denormalizeXMLValue(lcValue)
 						ENDIF
@@ -12084,10 +12109,10 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					WITH toFoxBin2Prg
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDWITH
-					
+
 				CASE lnFileCount = 1 AND loDBF_CFG.DBF_Conversion_Support > 0	&& Implica 2 u 8
 					llImportData	= (loDBF_CFG.DBF_Conversion_Support = 8)
-					
+
 				CASE toFoxBin2Prg.DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
 					llImportData	= .T.
 
@@ -27799,7 +27824,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTION_LOC													= "Opción"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "La clase externa no coincide con las clases internas"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "El miembro externo no coincide con los miembros internos"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: el archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al generado."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimización: el archivo de salida [<<lcOutputFile>>] no se sobreescribe por ser igual al ya existente."
 					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por tener el mismo timestamp que el de entrada."
 					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimización: el archivo de salida [<<THIS.c_OutputFile>>] no se regenera por tener un timestamp más nuevo que el de entrada."
 					.C_PRESS_ESC_TO_CANCEL											= "Pulse Esc para Cancelar"
@@ -28011,7 +28036,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_OPTION_LOC													= "Option"
 					.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC					= "The outer class does not match the inner classes"
 					.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC				= "The outer member does not match the inner members"
-					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimization: output file [<<lcOutputFile>>] was not overwritten because it is the same as was generated."
+					.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC							= "Optimization: output file [<<lcOutputFile>>] was not overwritten because it is the same as the existing one."
 					.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it's filestamp is equal than the inputfile."
 					.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC		= "Optimization: output file [<<THIS.c_OutputFile>>] was not regenerated because it's filestamp is newer than the inputfile."
 					.C_PRESS_ESC_TO_CANCEL											= "Press Esc to Cancel"
