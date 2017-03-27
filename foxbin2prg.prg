@@ -10098,7 +10098,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				IF toFoxBin2Prg.n_RedirectClassType = 1 && Redireccionar solo esta clase a main
 					llReplaceClass	= .T.
-					toFoxBin2Prg.c_OutputFile = FORCEEXT( lcBaseFilename, 'VCX' )
+					toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
 					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 					IF ADIR( laFiles, toFoxBin2Prg.c_OutputFile, "", 1 ) = 1
@@ -10227,7 +10227,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				IF tlReplaceClass
 					I			= 1
 					loClase		= toModulo._Clases(I)
-					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND OBJNAME == PADR(loClase._ObjName, FSIZE('OBJNAME'))
+					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND OBJNAME == loClase._ObjName
 					llReplace	= FOUND()
 				ENDIF
 
