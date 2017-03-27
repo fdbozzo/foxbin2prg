@@ -195,6 +195,7 @@
 * 23/03/2017	FDBOZZO		v1.19.49	Bug Fix vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
 * 25/03/2017	FDBOZZO		v1.19.49	Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Lutz Scheffler)
 * 26/03/2017    FDBOZZO     v1.19.49    Mejora cfg: Se permite indicar un archivo CFG por parámetro de cualquier directorio para anular los CFG predeterminados de los subdirectorios, para casos especiales donde sea necesario
+* 28/03/2017    FDBOZZO     v1.19.49    Mejora vcx: Implementada sintaxis para importar o exportar clases individuales usando "classlibrary.vcx::classname::import" y "classlibrary.vcx::classname::export"
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -768,6 +769,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_CurDir						= ''
 	c_InputFile						= ''
 	c_ClassToConvert				= ''			&& Guarda el nombre de la clase a convertir, indicada en tcInputFile como "archivo.vcx::clase"
+	c_ClassOperationType			= ''			&& (I)mport o (E)xport. Se usa solo para manejar clases individuales.
 	c_OriginalFileName				= ''
 	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Debug.LOG'
 	c_ErrorLogFile					= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Error.LOG'
@@ -2751,9 +2753,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*-- Reconocimiento de la clase indicada
 				*-- Ej: [c:\desa\test\library.vcx::classname]
 				IF '::' $ tc_InputFile THEN
-					tc_InputFile		= STRTRAN(tc_InputFile, '::', '|')
-					.c_ClassToConvert	= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '|' ) ) )
-					tc_InputFile		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '|' ) ) )
+					tc_InputFile			= STRTRAN(tc_InputFile, '::', '|')
+					.c_ClassOperationType	= EVL( UPPER( LEFT( ALLTRIM( GETWORDNUM( tc_InputFile, 3, '|' ) ), 1) ), 'E')
+					.c_ClassToConvert		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '|' ) ) )
+					* CUIDADO!, evaluar esta última, que si no las anteriores no evalúan.
+					tc_InputFile			= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '|' ) ) )
+				ELSE
+					.c_ClassOperationType	= ''
 				ENDIF
 
 				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
@@ -2812,6 +2818,23 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 				.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 					, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type )
+
+				* Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
+				IF .c_ClassOperationType = 'I'
+					* En el caso de importar, debo cambiar la sintaxis de tc_InputFile para poder usar
+					* la conversión existente de clase vc2
+					IF .n_UseClassPerFile = 2
+						tc_InputFile		= FORCEEXT(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
+
+						IF ADIR(laFiles, tc_InputFile) = 1
+							tc_InputFile	= FULLPATH( laFiles(1,1), tc_InputFile )
+						ENDIF
+
+					ELSE && Asumo .n_UseClassPerFile = 1
+						tc_InputFile		= FORCEEXT(tc_InputFile, '') + '.' + .c_ClassToConvert + '.' + .c_VC2
+
+					ENDIF
+				ENDIF
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
@@ -9891,7 +9914,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		*-- Verificación de las Clases, si son Externas y se indicó chequearlas
 		DO CASE
-		CASE toFoxBin2Prg.n_UseClassPerFile = 1 AND toFoxBin2Prg.l_ClassPerFileCheck
+		CASE toFoxBin2Prg.n_UseClassPerFile = 1 AND toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType)
 			*-- El ClassPerFile original, con nomenclatura 'Libreria.NombreClase.vc2'
 			FOR I = 1 TO toModulo._ExternalClasses_Count
 				lnItem	= 0
@@ -9912,7 +9935,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toModulo._Clases(lnItem)._Checked = .T.
 			ENDFOR
 
-		CASE toFoxBin2Prg.n_UseClassPerFile = 2 AND toFoxBin2Prg.l_ClassPerFileCheck
+		CASE toFoxBin2Prg.n_UseClassPerFile = 2 AND toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType)
 			*-- El nuevo ClassPerFile, con nomenclatura 'Libreria.ClaseBase.NombreClase.vc2'
 			FOR I = 1 TO toModulo._ExternalClasses_Count
 				lnItem	= 0
@@ -10022,7 +10045,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase porque se indicó chequear y no concuerda con las anotadas
@@ -10032,7 +10056,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) + '.' + GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 3, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase porque se indicó chequear y no concuerda con las anotadas
@@ -10098,7 +10123,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				IF toFoxBin2Prg.n_RedirectClassType = 1 && Redireccionar solo esta clase a main
 					llReplaceClass	= .T.
-					toFoxBin2Prg.c_OutputFile = FORCEEXT( lcBaseFilename, 'VCX' )
+					toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
 					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 					IF ADIR( laFiles, toFoxBin2Prg.c_OutputFile, "", 1 ) = 1
@@ -10227,7 +10252,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				IF tlReplaceClass
 					I			= 1
 					loClase		= toModulo._Clases(I)
-					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND OBJNAME == PADR(loClase._ObjName, FSIZE('OBJNAME'))
+					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND OBJNAME == loClase._ObjName
 					llReplace	= FOUND()
 				ENDIF
 
@@ -10501,7 +10526,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase
@@ -10511,7 +10537,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) + '.' + GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 3, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase
@@ -12715,7 +12742,8 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 						ENDIF
 
 						*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
-						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toDatabase._ExternalClasses, lcMemberType + '.' + lcMemberName, 1, 0, 1, 1+2+4 ) = 0
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+								AND ASCAN( toDatabase._ExternalClasses, lcMemberType + '.' + lcMemberName, 1, 0, 1, 1+2+4 ) = 0
 							.writeLog( C_TAB + '- ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
 							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
 							LOOP	&& Salteo este miembro porque no concuerda con los anotados
@@ -13068,7 +13096,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
 		*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
-		IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_ClassPerFileCheck
+		IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType)
 			FOR I = 1 TO toDatabase._ExternalClasses_Count
 				lnItem	= 0
 
