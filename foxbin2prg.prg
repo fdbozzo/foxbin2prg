@@ -2758,6 +2758,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 					.c_ClassToConvert		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '|' ) ) )
 					* CUIDADO!, evaluar esta última, que si no las anteriores no evalúan.
 					tc_InputFile			= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '|' ) ) )
+				ELSE
+					.c_ClassOperationType	= ''
 				ENDIF
 
 				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
@@ -9912,7 +9914,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 
 		*-- Verificación de las Clases, si son Externas y se indicó chequearlas
 		DO CASE
-		CASE toFoxBin2Prg.n_UseClassPerFile = 1 AND toFoxBin2Prg.l_ClassPerFileCheck
+		CASE toFoxBin2Prg.n_UseClassPerFile = 1 AND toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType)
 			*-- El ClassPerFile original, con nomenclatura 'Libreria.NombreClase.vc2'
 			FOR I = 1 TO toModulo._ExternalClasses_Count
 				lnItem	= 0
@@ -9933,7 +9935,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				toModulo._Clases(lnItem)._Checked = .T.
 			ENDFOR
 
-		CASE toFoxBin2Prg.n_UseClassPerFile = 2 AND toFoxBin2Prg.l_ClassPerFileCheck
+		CASE toFoxBin2Prg.n_UseClassPerFile = 2 AND toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType)
 			*-- El nuevo ClassPerFile, con nomenclatura 'Libreria.ClaseBase.NombreClase.vc2'
 			FOR I = 1 TO toModulo._ExternalClasses_Count
 				lnItem	= 0
@@ -10043,7 +10045,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase porque se indicó chequear y no concuerda con las anotadas
@@ -10053,7 +10056,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) + '.' + GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 3, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase porque se indicó chequear y no concuerda con las anotadas
@@ -10522,7 +10526,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase
@@ -10532,7 +10537,8 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 							lcClassName			= LOWER( GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 2, '.' ) + '.' + GETWORDNUM( JUSTFNAME( lcInputFile_Class ), 3, '.' ) )
 
 							*-- Verificación de las Clases, si son Externas y se indicó chequearlas
-							IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
+							IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+									AND ASCAN( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
 								LOOP	&& Salteo esta clase
@@ -12736,7 +12742,8 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 						ENDIF
 
 						*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
-						IF toFoxBin2Prg.l_ClassPerFileCheck AND ASCAN( toDatabase._ExternalClasses, lcMemberType + '.' + lcMemberName, 1, 0, 1, 1+2+4 ) = 0
+						IF toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType) ;
+								AND ASCAN( toDatabase._ExternalClasses, lcMemberType + '.' + lcMemberName, 1, 0, 1, 1+2+4 ) = 0
 							.writeLog( C_TAB + '- ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
 							.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
 							LOOP	&& Salteo este miembro porque no concuerda con los anotados
@@ -13089,7 +13096,7 @@ DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
 		loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
 		*-- Verificación de los Miembros, si son Externos y se indicó chequearlos
-		IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_ClassPerFileCheck
+		IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_ClassPerFileCheck AND EMPTY(toFoxBin2Prg.c_ClassOperationType)
 			FOR I = 1 TO toDatabase._ExternalClasses_Count
 				lnItem	= 0
 
