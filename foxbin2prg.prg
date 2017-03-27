@@ -195,6 +195,7 @@
 * 23/03/2017	FDBOZZO		v1.19.49	Bug Fix vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
 * 25/03/2017	FDBOZZO		v1.19.49	Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Lutz Scheffler)
 * 26/03/2017    FDBOZZO     v1.19.49    Mejora cfg: Se permite indicar un archivo CFG por parámetro de cualquier directorio para anular los CFG predeterminados de los subdirectorios, para casos especiales donde sea necesario
+* 28/03/2017    FDBOZZO     v1.19.49    Mejora vcx: Implementada sintaxis para importar o exportar clases individuales usando "classlibrary.vcx::classname::import" y "classlibrary.vcx::classname::export"
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -768,6 +769,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_CurDir						= ''
 	c_InputFile						= ''
 	c_ClassToConvert				= ''			&& Guarda el nombre de la clase a convertir, indicada en tcInputFile como "archivo.vcx::clase"
+	c_ClassOperationType			= ''			&& (I)mport o (E)xport. Se usa solo para manejar clases individuales.
 	c_OriginalFileName				= ''
 	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Debug.LOG'
 	c_ErrorLogFile					= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Error.LOG'
@@ -2751,9 +2753,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*-- Reconocimiento de la clase indicada
 				*-- Ej: [c:\desa\test\library.vcx::classname]
 				IF '::' $ tc_InputFile THEN
-					tc_InputFile		= STRTRAN(tc_InputFile, '::', '|')
-					.c_ClassToConvert	= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '|' ) ) )
-					tc_InputFile		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '|' ) ) )
+					tc_InputFile			= STRTRAN(tc_InputFile, '::', '|')
+					.c_ClassOperationType	= EVL( UPPER( LEFT( ALLTRIM( GETWORDNUM( tc_InputFile, 3, '|' ) ), 1) ), 'E')
+					.c_ClassToConvert		= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 2, '|' ) ) )
+					* CUIDADO!, evaluar esta última, que si no las anteriores no evalúan.
+					tc_InputFile			= LOWER( ALLTRIM( GETWORDNUM( tc_InputFile, 1, '|' ) ) )
 				ENDIF
 
 				.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
@@ -2812,6 +2816,23 @@ DEFINE CLASS c_foxbin2prg AS Session
 				*-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 				.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 					, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type )
+
+				* Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
+				IF .c_ClassOperationType = 'I'
+					* En el caso de importar, debo cambiar la sintaxis de tc_InputFile para poder usar
+					* la conversión existente de clase vc2
+					IF .n_UseClassPerFile = 2
+						tc_InputFile		= FORCEEXT(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
+
+						IF ADIR(laFiles, tc_InputFile) = 1
+							tc_InputFile	= FULLPATH( laFiles(1,1), tc_InputFile )
+						ENDIF
+
+					ELSE && Asumo .n_UseClassPerFile = 1
+						tc_InputFile		= FORCEEXT(tc_InputFile, '') + '.' + .c_ClassToConvert + '.' + .c_VC2
+
+					ENDIF
+				ENDIF
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 
