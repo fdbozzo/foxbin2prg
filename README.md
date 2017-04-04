@@ -2,41 +2,46 @@
 
 ### Fernando D. Bozzo
 
-Blog: http://fdbozzo.blogspot.com.es/  -  Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
+- Blog: http://fdbozzo.blogspot.com.es/
+- Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
+- ![DONATE!](http://www.freepngimg.com/thumb/paypal_donate_button/6-2-paypal-donate-button-png-file-thumb.png) [Donate here](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted"> <img src="http://download-codeplex.sec.s-msft.com/Download?ProjectName=vfpx&amp;DownloadId=1591726" alt="Donate!" /> </a>
+    Thank you for your support!
 
-Thank you for your support!
-<br/>
-### ENGLISH/ESPAÑOL
-<br/>
-<br/>
+## [Codeplex is shutting down](https://blogs.msdn.microsoft.com/bharry/2017/03/31/shutting-down-codeplex/)
+
+Codeplex will be read-only in October of 2017 and gone on December 15 2017. The [repository at Github](https://github.com/fdbozzo/foxbin2prg) becomes the primary repository for this project effective Febuary 2017. 
+
+## ENGLISH/ESPAÑOL 
+
 ### ENGLISH
-<hr/>
 
 ### What is FOXBIN2PRG?
-It is a program intended to be used with **SCM tools** (Source Code Managers, like VSS, CVS, SVN) and *DVCS tools* (like Git, Mercurial, Plastic, and others), or as **standalone** program for **Diff** (viewing differences) and **Merge** operations, that pretends to substitute **SccText/X**, **TwoFox** and others, and enhance their functionality, generating bidirectional PRG-Style versions that allow recreating the original binary file
+It is a program intended to be used with **SCM tools** (Source Code Managers, like VSS, CVS, SVN) and *DVCS tools* (Version Control Systems such as Git, Mercurial, Plastic, and others), or as **standalone** program for **Diff** (viewing differences) and **Merge** operations. Foxbin2prg can substitute for **SccText/X**, **TwoFox** and others, and enhance their functionality, generating bidirectional PRG-Style versions of Foxpro binary files that allow recreating the original binary file.
 
 **Advantages:**
 
-* It generates "PRG" style programs (not compilable), for visual comparison
-* It enables the change of the Text version as easy as modifying a PRG
-* All the program code is in just one PRG, to simplify its maintainability
-* With Text versions you can regenerate the original binaries, so it is useful as backup
-* The extensions are configurable if you create the FOXBIN2PRG.CFG file
+* It generates "PRG" _style_ text files from Foxpro binary files for use in SCM and VCS systems and for visual comparison.
+
+    (it's not really a prg, and can not be compiled, but it reads like one to Foxpro developers.)
+* It enables the change of the Text version as easy as modifying a PRG.
+* All the program code for any binary file (a form, a report, a class) is in just one text file, to simplify its maintainability.
+* You can regenerate the original binaries from the text files, so it is useful as backup
+* The extensions are configurable if you create a FOXBIN2PRG.CFG file
 * Inheritance of CFG configuration files between directories
-* Methods and properties of Text version are alphabetically sorted for easy comparison
-* Can set "UseClassPerFile" setting to create individual files by class or DBC member
-* Takes advantage of the API using foxbin2prg as an object
-* It has compatibility with SccText/X at parameter level so can be used as substitute with SourceSafe
+* Methods and properties of Text versions are alphabetically sorted for easy comparison
+* You can set the "UseClassPerFile" setting to create individual files by class or DBC member. 
+
+    (Which violates number three above, but it may be what you want.) 
+* Takes advantage of the Win32 API using foxbin2prg as an object
+* It has compatibility with SccText/X at the parameter level so that it can be used as substitute for SccText with SourceSafe. (Not that we recommend SourceSafe.)
 * Productivity: You can create a shortcut in the "SendTo" folder on your user Windows Profile, so you can "send" the selected file (pjx,pj2,etc) to Foxbin2prg.exe and make on-the-fly conversions
-* Modify TX2 Prg-Style versions with MODIFY COMMAND (without compile) to see colored syntax, or even use the Document View to navigate the procedures
+* You can modify the TX2 Prg-Style versions of your objects with MODIFY COMMAND (without compile) to see colored syntax, or even use the Document View to navigate the procedures
 * Get back your SourceSafe projects (.pjx) from their .pjm file
 
+The program supports conversions between PJX,SCX,VCX,FRX,LBX,DBC,DBF and MNX files, for which it generates TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2,DB2 and MN2. If you want, the created text file extensions can be reconfigured to be compatibilize with SourceSafe.
 
-Actually supports conversions between PJX,SCX,VCX,FRX,LBX,DBC,DBF and MNX files, for which it generates TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2,DB2 and MN2 that can be reconfigured to compatibilize with SourceSafe.
-
-__Example of FOXBIN2PRG.CFG configuration file if need to change extensions for using with VSS (SourceSafe)__
+__Here is an example of a FOXBIN2PRG.CFG configuration file if you need to change extensions for using it with a specific VSS (SourceSafe)__
 ```
 extension: SC2=SCA
 extension: VC2=VCA
@@ -50,41 +55,38 @@ extension: DC2=DCA
 
 ### USE:
 ```dbase
-DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx"		==> Generates the TEXT version sc2 extension
-DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2"		==> Regenerates the binary version with scx extension
+DO FOXBIN2PRG.PRG WITH "<path>\archivo.scx"		==> Generates the TEXT version sc2 extension
+DO FOXBIN2PRG.PRG WITH "<path>\archivo.sc2"		==> Regenerates the binary version with scx extension
 ```
 
 ### USEFUL SETUP:
-You can create 3 shortcuts of FoxBin2Prg.exe and move them to "SendTo" folder on your Windows profile, so you can "send" the selected file (pjx,pj2,etc) to the selected option, and make on-the-fly conversions, then rename them as this (make sure you can see system file extensions):
+You can create up to three different shortcuts pointing to FoxBin2Prg.exe and in your "SendTo" folder in your Windows profile. This allows you to "send" a selected file (pjx,pj2,etc) to the selected option, and make on-the-fly conversions. (Make sure you have the option for seeing known file extensions turned on!):
 
-
-Name                         | Right-click/Properties/destination          | What you can do with this option
+Shortcut Name                | Right-click/Properties/destination          | What you can do with this option
 ---------------------------- | ------------------------------------------- | --------------------------------
 FoxBin2Prg - Binary2Text.lnk | <path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"     | Process directories or individual files
 FoxBin2Prg - Text2Binary.lnk | <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"     | Process directories or individual files
 FoxBin2Prg.lnk               | <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG" | Process individual files or directories asking what to convert
 
-In example: Select a file, right-click, SendTo -> FoxBin2Prg
-
+*How to use them*: Select a file, right-click, SendTo -> FoxBin2Prg
 
 ### LOCALIZATION:
 Is automatic starting at v1.19.38 (Languages: EN,ES,FR,DE)
 
 
 ### FINAL NOTE:
-This program is Open Source and "libre", and I don't make any garanties that it fulfills your espectations or that it will be free of bugs, that I will try to fix if my obligations let me do it.
+This program is Open Source and "libre", and I don't make any guaranties that it fulfills your expectations or that it will be free of bugs. I will try to fix bugs if my obligations let me do it.
 
-<p>Project info and updates: <a href="https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg">https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg</a></p>
+### Project info and updates: 
 
+Fernando D. Bozzo's repository at Github: https://github.com/fdbozzo/foxbin2prg
 
 ### LICENCE:
 This work is licensed under the Creative Commons Attribution 4.0 International License.
 To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
 
-<br/>
-<br/>
-### ESPAÑOL
-<hr/>
+## ESPAÑOL
+---
 
 ### ¿Que es FOXBIN2PRG?
 Es un programa pensado para ser utilizado con herramientas SCM (Administradores de Control de Código Fuente, como VSS, CVS, SVN) y herramientas DVCS (como Git, Mercurial, Plastic, and others), o como programa independiente, para hacer operaciones de Diff (ver diferencias) y Merge (mezclar cambios), que pretende sustituir a SccText/X y TwoFox y mejorar sus funcionalidades, generando versiones de texto estilo-PRG que permiten recrear el binario original.
