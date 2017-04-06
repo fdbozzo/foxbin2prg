@@ -7736,6 +7736,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
+*** DH 2017-04-05: handle _User
 		INSERT INTO TABLABIN ;
 			( NAME ;
 			, TYPE ;
@@ -7754,6 +7755,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, RESERVED2 ;
 			, SCCDATA ;
 			, LOCAL ;
+			, USER ;
 			, KEY ) ;
 			VALUES ;
 			( UPPER(EVL(THIS.c_OriginalFileName,THIS.c_OutputFile)) ;
@@ -7773,6 +7775,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, toProject._ServerHead.getRowServerInfo() ;
 			, toProject._SccData ;
 			, .T. ;
+			, toProject._User ;
 			, UPPER( JUSTSTEM( THIS.c_OutputFile) ) )
 
 	ENDPROC
@@ -10896,6 +10899,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						loFile._ID	= toFoxBin2Prg.unique_ID('N')
 					ENDIF
 
+*** DH 2017-04-05: include USER and DEVINFO and use the saved type rather than
+*** .fileTypeCode since that mistakes a table in a DBC (t) with free table (D).
 					INSERT INTO TABLABIN ;
 						( NAME ;
 						, TYPE ;
@@ -10907,10 +10912,12 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, ID ;
 						, TIMESTAMP ;
 						, OBJREV ;
+						, USER ;
+						, DEVINFO ;
 						, KEY ) ;
 						VALUES ;
 						( loFile._Name + CHR(0) ;
-						, .fileTypeCode(JUSTEXT(loFile._Name)) ;
+						, loFile._Type ;
 						, loFile._Exclude ;
 						, (loFile._Name == lcMainProg) ;
 						, loFile._Comments ;
@@ -10919,6 +10926,8 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, loFile._ID ;
 						, loFile._TimeStamp ;
 						, loFile._ObjRev ;
+						, loFile._User ;
+						, loFile._DevInfo ;
 						, UPPER(JUSTSTEM(loFile._Name)) )
 				ENDFOR
 
@@ -11091,6 +11100,9 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							loFile._TimeStamp	= .get_ValueByName_FromListNamesWithValues( 'Timestamp', 'I', @laPropsAndValues )
 							loFile._ID			= .get_ValueByName_FromListNamesWithValues( 'ID', 'I', @laPropsAndValues )
 							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues )
+*** DH 2017-04-05: handle USER and DEVINFO
+							loFile._User		= .get_ValueByName_FromListNamesWithValues( 'User', 'C', @laPropsAndValues )
+							loFile._DevInfo		= .get_ValueByName_FromListNamesWithValues( 'DevInfo', 'C', @laPropsAndValues )
 
 							toProject.ADD( loFile, loFile._Name )
 
@@ -15864,6 +15876,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	.ADD('<<loReg.NAME>>')
 						ENDTEXT
+*** DH 2017-04-05: added lines for USER and DEVINFO
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
 							<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
 							Type="<<loReg.TYPE>>"
@@ -15871,6 +15884,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 							Timestamp="<<INT( loReg.TIMESTAMP )>>"
 							ID="<<INT( loReg.ID )>>"
 							ObjRev="<<INT( loReg.OBJREV )>>"
+							User="<<loReg.USER>>"
+							DevInfo="<<loReg.DEVINFO>>"
 							<<C_FILE_META_F>>
 						ENDTEXT
 						loReg	= NULL
@@ -15955,12 +15970,14 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 						ENDTEXT
 					ENDIF
 
+*** DH 2017-04-05: handle _User
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>	.Debug = <<loProject._Debug>>
 						<<>>	.Encrypted = <<loProject._Encrypted>>
 						<<>>	*<.CmntStyle = <<loProject._CmntStyle>> />
 						<<>>	*<.NoLogo = <<loProject._NoLogo>> />
 						<<>>	*<.SaveCode = <<loProject._SaveCode>> />
+						<<>>	*<.User = '<<loProject._User>>' />
 						<<>>	.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
 						<<>>	.ProjectHookClass = '<<loProject._ProjectHookClass>>'
 						<<>>	<<C_PROJPROPS_F>>
@@ -16091,6 +16108,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				loProject._ServerInfo	= loReg.RESERVED2
 				loProject._Debug		= loReg.DEBUG
 				loProject._Encrypted	= loReg.ENCRYPT
+*** DH 2017-04-05: handle USER
+				loProject._User			= loReg.USER
 				loProject.parseDeviceInfo( loReg.DEVINFO )
 
 				*-- Información de los Servidores definidos
@@ -16128,7 +16147,8 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				*-- Escaneo el proyecto
 				SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 					loReg	= NULL
-					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
+*** DH 2017-04-05: include USER and DEVINFO
+					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV,USER,DEVINFO MEMO NAME loReg
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loReg.TIMESTAMP	= 0
@@ -16495,12 +16515,14 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 						ENDTEXT
 					ENDIF
 
+*** DH 2017-04-05: handle _User
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>	.Debug = <<loProject._Debug>>
 						<<>>	.Encrypted = <<loProject._Encrypted>>
 						<<>>	*<.CmntStyle = <<loProject._CmntStyle>> />
 						<<>>	*<.NoLogo = <<loProject._NoLogo>> />
 						<<>>	*<.SaveCode = <<loProject._SaveCode>> />
+						<<>>	*<.User = <<loProject._User>> />
 						<<>>	.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
 						<<>>	.ProjectHookClass = '<<loProject._ProjectHookClass>>'
 						<<>>	<<C_PROJPROPS_F>>
@@ -18136,6 +18158,8 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	_TimeStamp			= 0
 	_Version			= ''
 	_SccData			= ''
+*** DH 2017-04-05: added _User
+	_User				= ''
 
 	*-- Dev.info
 	_Author				= ''
@@ -24675,6 +24699,9 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 	_ID					= 0
 	_ObjRev				= 0
 	_TimeStamp			= 0
+*** DH 2017-04-05: added _User and _DevInfo
+	_User				= ''
+	_DevInfo			= ''   
 
 ENDDEFINE
 
