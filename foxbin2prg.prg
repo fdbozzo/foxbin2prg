@@ -198,6 +198,7 @@
 * 28/03/2017    FDBOZZO     v1.19.49    Mejora vcx: Implementada sintaxis para importar o exportar clases individuales usando "classlibrary.vcx::classname::import" y "classlibrary.vcx::classname::export"
 * 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
 * 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler)
+* 12/04/2017	DH&FDBOZZO	v1.19.49	Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -310,6 +311,7 @@
 * 23/03/2017	Lutz Scheffler		Mejora vcx v1.19.48: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Agragado en v1.19.49)
 * 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
 * 28/03/2017	Lutz Scheffler		Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
+* 06/04/2017	Doug Hennig			Reporte Bug y arreglo parcial PJX v1.19.48: No se estaba guardando el campo User en los archivos PJX (Agregado en v1.19.49)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1925,7 +1927,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 						IF .n_CFG_Actual > 0 THEN
 							lo_CFG			= lo_Configuration.Item(.n_CFG_Actual)
 							.l_CFG_CachedAccess	= .T.
-							
+
 							IF NOT ISNULL(loCFG_Manual)
 								* Si le paso un objeto CFG, prevalece sobre el guardado
 								lo_CFG.CopyFrom(@loCFG_Manual)
@@ -2793,10 +2795,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					IF NOT (loCFG.Class == PROPER('CL_CFG'))
 						ERROR 'CFG object: Invalid class. Please, generate it with get_DirSettings()'
 					ENDIF
-					
+
 					.c_Foxbin2prg_ConfigFile	= loCFG
 					.n_CFG_EvaluateFromParam	= 1
-					
+
 				ELSE
 					.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, .c_Foxbin2prg_ConfigFile )
 					.n_CFG_EvaluateFromParam	= (IIF(EMPTY(tcCFG_File), 0, 1))
@@ -6428,10 +6430,10 @@ DEFINE CLASS c_conversor_base AS Custom
 
 
 	PROCEDURE fileTypeCode
-		LPARAMETERS tcExtension
+		LPARAMETERS tcExtension, tcOriginalType
 		tcExtension	= UPPER(tcExtension)
 		RETURN ICASE( tcExtension = 'DBC', 'd' ;
-			, tcExtension = 'DBF', 'D' ;
+			, tcExtension = 'DBF', EVL(tcOriginalType, 'D') ;
 			, tcExtension = 'QPR', 'Q' ;
 			, tcExtension = 'SCX', 'K' ;
 			, tcExtension = 'FRX', 'R' ;
@@ -7869,6 +7871,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, RESERVED2 ;
 			, SCCDATA ;
 			, LOCAL ;
+			, USER ;
 			, KEY ) ;
 			VALUES ;
 			( UPPER(EVL(THIS.c_OriginalFileName,THIS.c_OutputFile)) ;
@@ -7888,6 +7891,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, toProject._ServerHead.getRowServerInfo() ;
 			, toProject._SccData ;
 			, .T. ;
+			, STRCONV(toProject._User,14) ;
 			, UPPER( JUSTSTEM( THIS.c_OutputFile) ) )
 
 	ENDPROC
@@ -8600,7 +8604,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, '' ;
 					, '' ;
 					, '' ;
-					, toObjeto._User )
+					, STRCONV(toObjeto._User,14) )
 			ENDIF
 		ENDWITH && THIS
 
@@ -11097,10 +11101,11 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, ID ;
 						, TIMESTAMP ;
 						, OBJREV ;
+						, USER ;
 						, KEY ) ;
 						VALUES ;
 						( loFile._Name + CHR(0) ;
-						, .fileTypeCode(JUSTEXT(loFile._Name)) ;
+						, .fileTypeCode(JUSTEXT(loFile._Name), loFile._Type) ;
 						, loFile._Exclude ;
 						, (loFile._Name == lcMainProg) ;
 						, loFile._Comments ;
@@ -11109,6 +11114,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, loFile._ID ;
 						, loFile._TimeStamp ;
 						, loFile._ObjRev ;
+						, STRCONV(loFile._User,14) ;
 						, UPPER(JUSTSTEM(loFile._Name)) )
 				ENDFOR
 
@@ -11281,6 +11287,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							loFile._TimeStamp	= .get_ValueByName_FromListNamesWithValues( 'Timestamp', 'I', @laPropsAndValues )
 							loFile._ID			= .get_ValueByName_FromListNamesWithValues( 'ID', 'I', @laPropsAndValues )
 							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues )
+							loFile._User		= .get_ValueByName_FromListNamesWithValues( 'User', 'C', @laPropsAndValues )
 
 							toProject.ADD( loFile, loFile._Name )
 
@@ -16059,8 +16066,10 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 							Timestamp="<<INT( loReg.TIMESTAMP )>>"
 							ID="<<INT( loReg.ID )>>"
 							ObjRev="<<INT( loReg.OBJREV )>>"
+							User="<<STRCONV(loReg.USER,13)>>"
 							<<C_FILE_META_F>>
 						ENDTEXT
+
 						loReg	= NULL
 					ENDFOR
 
@@ -16149,13 +16158,13 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 						<<>>	*<.CmntStyle = <<loProject._CmntStyle>> />
 						<<>>	*<.NoLogo = <<loProject._NoLogo>> />
 						<<>>	*<.SaveCode = <<loProject._SaveCode>> />
+						<<>>	*<.User = '<<STRCONV(loProject._User,13)>>' />
 						<<>>	.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
 						<<>>	.ProjectHookClass = '<<loProject._ProjectHookClass>>'
 						<<>>	<<C_PROJPROPS_F>>
 						<<C_ENDWITH>>
 						<<>>
 					ENDTEXT
-
 
 					*-- Build y cierre
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -16279,6 +16288,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				loProject._ServerInfo	= loReg.RESERVED2
 				loProject._Debug		= loReg.DEBUG
 				loProject._Encrypted	= loReg.ENCRYPT
+				loProject._User			= loReg.USER
 				loProject.parseDeviceInfo( loReg.DEVINFO )
 
 				*-- Información de los Servidores definidos
@@ -16316,7 +16326,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				*-- Escaneo el proyecto
 				SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 					loReg	= NULL
-					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV MEMO NAME loReg
+					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV,USER MEMO NAME loReg
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loReg.TIMESTAMP	= 0
@@ -16689,6 +16699,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 						<<>>	*<.CmntStyle = <<loProject._CmntStyle>> />
 						<<>>	*<.NoLogo = <<loProject._NoLogo>> />
 						<<>>	*<.SaveCode = <<loProject._SaveCode>> />
+						<<>>	*<.User = <<loProject._User>> />
 						<<>>	.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
 						<<>>	.ProjectHookClass = '<<loProject._ProjectHookClass>>'
 						<<>>	<<C_PROJPROPS_F>>
@@ -18291,6 +18302,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 		+ [<memberdata name="_revision" display="_Revision"/>] ;
 		+ [<memberdata name="_languageid" display="_LanguageID"/>] ;
 		+ [<memberdata name="_autoincrement" display="_AutoIncrement"/>] ;
+		+ [<memberdata name="_user" display="_User"/>] ;
 		+ [<memberdata name="decode_specialcodes_cr_lf" display="decode_SpecialCodes_CR_LF"/>] ;
 		+ [<memberdata name="encode_specialcodes_cr_lf" display="encode_SpecialCodes_CR_LF"/>] ;
 		+ [<memberdata name="getformatteddeviceinfotext" display="getFormattedDeviceInfoText"/>] ;
@@ -18324,6 +18336,7 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 	_TimeStamp			= 0
 	_Version			= ''
 	_SccData			= ''
+	_User				= ''
 
 	*-- Dev.info
 	_Author				= ''
@@ -24853,6 +24866,7 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 		+ [<memberdata name="_objrev" display="_ObjRev"/>] ;
 		+ [<memberdata name="_timestamp" display="_Timestamp"/>] ;
 		+ [<memberdata name="_type" display="_Type"/>] ;
+		+ [<memberdata name="_user" display="_User"/>] ;
 		+ [</VFPData>]
 
 	_Name				= ''
@@ -24863,6 +24877,7 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 	_ID					= 0
 	_ObjRev				= 0
 	_TimeStamp			= 0
+	_User				= ''
 
 ENDDEFINE
 
