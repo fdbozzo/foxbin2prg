@@ -196,6 +196,7 @@
 * 25/03/2017	FDBOZZO		v1.19.49	Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Lutz Scheffler)
 * 26/03/2017    FDBOZZO     v1.19.49    Mejora cfg: Se permite indicar un archivo CFG por parámetro de cualquier directorio para anular los CFG predeterminados de los subdirectorios, para casos especiales donde sea necesario
 * 28/03/2017    FDBOZZO     v1.19.49    Mejora vcx: Implementada sintaxis para importar o exportar clases individuales usando "classlibrary.vcx::classname::import" y "classlibrary.vcx::classname::export"
+* 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -306,6 +307,7 @@
 * 11/07/2016	Nathan Brown		Reporte bug frx v1.19.48-Preview5: Los ControlSource de objetos OLE que contienen comillas se generan mal (Arreglado en v1.19.48 Preview-6)
 * 23/03/2017	Lutz Scheffler		Reporte bug vcx v1.19.48: No funciona la generación de una clase individual con "classlib.vcx::classname" (Arreglado en v1.19.49)
 * 23/03/2017	Lutz Scheffler		Mejora vcx v1.19.48: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Agragado en v1.19.49)
+* 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -12116,9 +12118,6 @@ DEFINE CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 						CASE LEFT( tcLine, LEN(C_TAG_REPORTE_F) ) == C_TAG_REPORTE_F
 							I = I + 1
 							EXIT
-
-						CASE .lineIsOnlyCommentAndNoMetadata( @tcLine, @lcComment )
-							LOOP	&& Saltear comentarios
 
 						CASE .analyzeCodeBlock_platform( toReport, @tcLine, @taCodeLines, @I, @tnCodeLines, @loReg )
 
