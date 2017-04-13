@@ -8581,7 +8581,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, RESERVED6 ;
 					, RESERVED7 ;
 					, RESERVED8 ;
-					, USER) ;
+					, USER ;
+					, DEVINFO ) ;
 					VALUES ;
 					( 'WINDOWS' ;
 					, toObjeto._UniqueID ;
@@ -8604,7 +8605,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 					, '' ;
 					, '' ;
 					, '' ;
-					, STRCONV(toObjeto._User,14) )
+					, STRCONV(toObjeto._User,14) ;
+					, STRCONV(toObjeto._DevInfo,14) )
 			ENDIF
 		ENDWITH && THIS
 
@@ -11102,6 +11104,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, TIMESTAMP ;
 						, OBJREV ;
 						, USER ;
+						, DEVINFO ;
 						, KEY ) ;
 						VALUES ;
 						( loFile._Name + CHR(0) ;
@@ -11115,6 +11118,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						, loFile._TimeStamp ;
 						, loFile._ObjRev ;
 						, STRCONV(loFile._User,14) ;
+						, STRCONV(loFile._DevInfo,14) ;
 						, UPPER(JUSTSTEM(loFile._Name)) )
 				ENDFOR
 
@@ -11288,6 +11292,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							loFile._ID			= .get_ValueByName_FromListNamesWithValues( 'ID', 'I', @laPropsAndValues )
 							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues )
 							loFile._User		= .get_ValueByName_FromListNamesWithValues( 'User', 'C', @laPropsAndValues )
+							loFile._DevInfo		= .get_ValueByName_FromListNamesWithValues( 'DevInfo', 'C', @laPropsAndValues )
 
 							toProject.ADD( loFile, loFile._Name )
 
@@ -16067,6 +16072,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 							ID="<<INT( loReg.ID )>>"
 							ObjRev="<<INT( loReg.OBJREV )>>"
 							User="<<STRCONV(loReg.USER,13)>>"
+							DevInfo="<<STRCONV(loReg.DEVINFO,13)>>"
 							<<C_FILE_META_F>>
 						ENDTEXT
 
@@ -16326,7 +16332,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 				*-- Escaneo el proyecto
 				SCAN ALL FOR NOT INLIST(TYPE, 'H','W','i' )
 					loReg	= NULL
-					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV,USER MEMO NAME loReg
+					SCATTER FIELDS NAME,TYPE,EXCLUDE,COMMENTS,CPID,TIMESTAMP,ID,OBJREV,USER,DEVINFO MEMO NAME loReg
 
 					IF toFoxBin2Prg.l_NoTimestamps
 						loReg.TIMESTAMP	= 0
@@ -24867,6 +24873,7 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 		+ [<memberdata name="_timestamp" display="_Timestamp"/>] ;
 		+ [<memberdata name="_type" display="_Type"/>] ;
 		+ [<memberdata name="_user" display="_User"/>] ;
+		+ [<memberdata name="_devinfo" display="_DevInfo"/>] ;
 		+ [</VFPData>]
 
 	_Name				= ''
@@ -24878,6 +24885,7 @@ DEFINE CLASS CL_PROJ_FILE AS CL_CUS_BASE
 	_ObjRev				= 0
 	_TimeStamp			= 0
 	_User				= ''
+	_DevInfo			= ''
 
 ENDDEFINE
 
