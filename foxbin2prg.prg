@@ -773,12 +773,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_Foxbin2prg_FullPath			= ''
 	c_Foxbin2prg_ConfigFile			= ''
 	c_CurDir						= ''
+	c_TempDir						= SYS(2023)
 	c_InputFile						= ''
 	c_ClassToConvert				= ''			&& Guarda el nombre de la clase a convertir, indicada en tcInputFile como "archivo.vcx::clase"
 	c_ClassOperationType			= ''			&& (I)mport o (E)xport. Se usa solo para manejar clases individuales.
 	c_OriginalFileName				= ''
-	c_LogFile						= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Debug.LOG'
-	c_ErrorLogFile					= ADDBS( SYS(2023) ) + 'FoxBin2Prg_Error.LOG'
+	c_LogFile						= ''
+	c_ErrorLogFile					= ''
 	c_TextLog						= ''
 	c_OutputFile					= ''
 	c_Recompile						= '1'
@@ -879,6 +880,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 		ENDIF
 
 		THIS.declareDLL()
+
+		* Check if SYS(2023) point to "Program Files"
+		IF ATC("\PROGRAM FILES", THIS.c_TempDir) > 0 OR ATC("\ARCHIVOS DE PROGRAMA", THIS.c_TempDir) > 0
+			THIS.c_TempDir	= GETENV("TEMP")
+		ENDIF
+		
+		THIS.c_LogFile			= ADDBS( THIS.c_TempDir ) + 'FoxBin2Prg_Debug.LOG'
+		THIS.c_ErrorLogFile		= ADDBS( THIS.c_TempDir ) + 'FoxBin2Prg_Error.LOG'
 
 		IF ADIR(laDir, THIS.c_ErrorLogFile) > 0 THEN
 			IF ADIR(laDir, THIS.c_ErrorLogFile + '.BAK') > 0 THEN
@@ -8442,7 +8451,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			lnSelect	= SELECT()
 			SELECT 0
 			USE (THIS.c_InputFile) SHARED AGAIN ALIAS _TABLABIN
-			COPY STRUCTURE EXTENDED TO ( FORCEPATH( '_FRX_STRUC.DBF', ADDBS( SYS(2023) ) ) )
+			COPY STRUCTURE EXTENDED TO ( FORCEPATH( '_FRX_STRUC.DBF', ADDBS( THIS.c_TempDir ) ) )
 			**** CONTINUAR SI ES NECESARIO - SIN USO POR AHORA /// DO NOT USE - NOT IMPLEMENTED!
 
 		CATCH TO loEx
