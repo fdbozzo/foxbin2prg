@@ -2870,7 +2870,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				* Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
 				IF .c_ClassOperationType = 'I'
 					* En el caso de importar, debo cambiar la sintaxis de tc_InputFile para poder usar
-					* la conversión existente de clase vc2
+					* la conversión existente de clase vc2.
+					* Esto deja un archivo con sintaxis "classlib.vcx::classname::import" en "classlib.classname.vc2"
 					IF .n_UseClassPerFile = 2
 						tc_InputFile		= FORCEEXT(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
 
@@ -3706,9 +3707,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDIF
 
 				*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
-				IF .n_UseClassPerFile > 0 AND .l_RedirectClassPerFileToMain THEN
+				IF .n_UseClassPerFile > 0 AND .l_RedirectClassPerFileToMain ;
+					OR NOT EMPTY(.c_ClassToConvert)
+
 					DO CASE
-					CASE .n_RedirectClassType = 1 && Redireccionar solo esta clase
+					CASE .n_RedirectClassType = 1 OR NOT EMPTY(.c_ClassToConvert) && Redireccionar solo esta clase
 						IF OCCURS('.', JUSTSTEM(.c_InputFile)) = 0 THEN
 							lc_BaseFile	= .c_InputFile
 						ELSE
@@ -3851,7 +3854,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 					IF .VCX_Conversion_Support <> 2
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
-					.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
+					IF EMPTY(.c_ClassToConvert)
+						.c_OutputFile	= FORCEEXT( .c_InputFile, 'VCX' )
+					ELSE
+						* Si se usó la sintaxis "classlib.vcx::clase::import", se define el OutputFile
+						* con la Base "classlib.vcx" y no con el archivo entero.
+						.c_OutputFile	= FORCEEXT( lc_BaseFile, 'VCX' )
+					ENDIF
 					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_vcx' )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'VCX' ), lcForceAttribs )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'VCT' ), lcForceAttribs )
@@ -10057,6 +10066,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain
+
 					IF toFoxBin2Prg.n_RedirectClassType = 0 && Redireccionar todas las clases
 						C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 
@@ -10173,9 +10183,13 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 				.updateProgressbar( loLang.C_GENERATING_BINARY_LOC + '...', 0, lnCodeLines, 1 )
 
-				IF toFoxBin2Prg.n_RedirectClassType = 1 && Redireccionar solo esta clase a main
+				IF toFoxBin2Prg.n_RedirectClassType = 1 OR NOT EMPTY(toFoxBin2Prg.c_ClassToConvert) && Redireccionar solo esta clase a main
 					llReplaceClass	= .T.
-					toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
+					
+					IF EMPTY(toFoxBin2Prg.c_ClassToConvert)
+						toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
+					ENDIF
+					
 					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 					IF ADIR( laFiles, toFoxBin2Prg.c_OutputFile, "", 1 ) = 1
@@ -15291,7 +15305,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 
-				IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+				IF toFoxBin2Prg.n_UseClassPerFile = 0 AND EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 					*-- Exportar la librería entera a texto
 					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
 				ELSE
@@ -15378,7 +15392,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					.write_CLASSMETADATA( @loRegClass, @lcCodigo )
 
-					IF toFoxBin2Prg.n_UseClassPerFile > 0 THEN
+					IF toFoxBin2Prg.n_UseClassPerFile > 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 						.write_EXTERNAL_CLASS_HEADER( @loRegClass, @toFoxBin2Prg, @lcExternalHeader )
 					ENDIF
 
@@ -15551,8 +15565,15 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*toModulo	= lcCodigo
 				ELSE
 					DO CASE
+					CASE (toFoxBin2Prg.n_UseClassPerFile = 0 AND NOT EMPTY(toFoxBin2Prg.c_ClassToConvert))	&& LibName.ClassName.SC2
+						FOR I = 1 TO lnClassCount
+							lcOutputFile	= ADDBS( JUSTPATH( .c_OutputFile ) ) + JUSTSTEM( .c_OutputFile ) + '.' + laClasses(I,1) + '.' + JUSTEXT( .c_OutputFile )
+							lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + laClasses(I,2)
+							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+						ENDFOR
+
 					CASE toFoxBin2Prg.n_UseClassPerFile = 1	&& LibName.ClassName.SC2
-						IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+						IF EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 						ENDIF
 
@@ -15563,7 +15584,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 						ENDFOR
 
 					CASE toFoxBin2Prg.n_UseClassPerFile = 2	&& LibName.BaseClass.ClassName.SC2
-						IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+						IF EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 						ENDIF
 
