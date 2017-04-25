@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.49'
-    .VersionDate          = Date(2017,02,17)
+    .VersionDate          = Date(2017,04,26)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -21,8 +21,18 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2017/02/17	v1.19.49
-
+2017/04/26	v1.19.49
+v1.19.49
+- Replace Scripting.FileSystemObject MoveFile with Win32API equivalent
+- Added support for using temporal CFG file for low-level API operations
+- Bug Fix: Single-class export with "classlib.vcx::classname" syntax did not export (Lutz Scheffler)
+- Added single-class import support ("library.vcx::classname::import")
+- Added new single-class export syntax ("library.vcx::classname::export")
+- Both single-class syntaxes doesn't require a CFG configuration
+- Bug Fix: Partially corrupted frx/lbx info generated when using "&&" string inside field expressions (Alejandro A Sosa)
+- sys(2023) secure temp: When sys(2023) points to "program files", then getenv("temp") is used
+- Add more options to config.fpw to minimize interference from existent configs
+- Feature: Save the contents of User field (Doug Hennig). Note: DevInfo is already supported
 
 2016/07/11	v1.19.48
 - Bug Fix: Error message 'variable tcOutputFile not found' (german version) (Andy Kasper)
