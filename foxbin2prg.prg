@@ -10053,7 +10053,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		TRY
 			LOCAL lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
-				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile, llReplaceClass ;
+				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile, llReplaceClass, lnRow ;
+				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
@@ -10065,7 +10066,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				toModulo			= CREATEOBJECT('CL_CLASSLIB')
 				lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
-				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain
+				IF toFoxBin2Prg.n_UseClassPerFile > 0 AND toFoxBin2Prg.l_RedirectClassPerFileToMain ;
+						AND EMPTY(toFoxBin2Prg.c_ClassToConvert)
 
 					IF toFoxBin2Prg.n_RedirectClassType = 0 && Redireccionar todas las clases
 						C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
@@ -10141,7 +10143,8 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
 				ELSE
-					*-- No es clase por archivo, o no se quiere redireccionar a Main.
+					*-- No es clase por archivo, o no se quiere redireccionar a Main, o se usó
+					*-- la sintaxis "classlib.vcx::classname::import"
 					IF toFoxBin2Prg.l_ProcessFiles THEN
 						C_FB2PRG_CODE		= FILETOSTR( .c_InputFile )
 						lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
@@ -10188,6 +10191,18 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 					
 					IF EMPTY(toFoxBin2Prg.c_ClassToConvert)
 						toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
+					ELSE
+						loClase	= toModulo._Clases(1)
+						* Ajusto el nombre interno de la clase al indicado en el nombre del archivo
+						loClase._nombre		= toFoxBin2Prg.c_ClassToConvert
+						loClase._objname	= toFoxBin2Prg.c_ClassToConvert
+						* Reemplazo la propiedad Name
+						lnRow	= ASCAN(loClase._props, 'Name', 1, -1, 1, 2+4+8)
+						IF lnRow > 0
+							loClase._props(lnRow,2)	= toFoxBin2Prg.c_ClassToConvert
+						ENDIF
+						* Y finalmente actualizo el memo
+						loClase._PROPERTIES		= .classProps2Memo( @loClase, @toFoxBin2Prg )
 					ENDIF
 					
 					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
@@ -10215,6 +10230,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
+			STORE NULL TO loClase
 			RELEASE lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
 				, laLineasExclusion, lnBloquesExclusion, I
 		ENDTRY
