@@ -199,6 +199,7 @@
 * 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
 * 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler)
 * 12/04/2017	DH&FDBOZZO	v1.19.49	Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig)
+* 31/08/2017	JS&FDBOZZO	v1.19.50	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -312,6 +313,7 @@
 * 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
 * 28/03/2017	Lutz Scheffler		Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
 * 06/04/2017	Doug Hennig			Reporte Bug y arreglo parcial PJX v1.19.48: No se estaba guardando el campo User en los archivos PJX (Agregado en v1.19.49)
+* 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.50)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -12523,7 +12525,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					ENDIF
 
 					*-- Decimales
-					IF INLIST( loField._Type, 'B', 'N', 'F' ) AND loField._Decimals > '0'
+					IF INLIST( loField._Type, 'N', 'F' ) AND loField._Decimals > '0' OR loField._Type = 'B'
 						IF EMPTY(lcLongDec)
 							lcLongDec	= lcLongDec + '('
 						ELSE
