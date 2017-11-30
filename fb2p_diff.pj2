@@ -33,7 +33,7 @@ _AutoIncrement = "0"
 
 
 *<BuildProj>
-*<.HomeDir = 'c:\desa\foxbin2prg' />
+*<.HomeDir = 'g:\desa\foxbin2prg' />
 
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
