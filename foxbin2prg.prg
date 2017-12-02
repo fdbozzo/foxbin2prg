@@ -887,7 +887,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		IF ATC("\PROGRAM FILES", THIS.c_TempDir) > 0 OR ATC("\ARCHIVOS DE PROGRAMA", THIS.c_TempDir) > 0
 			THIS.c_TempDir	= GETENV("TEMP")
 		ENDIF
-		
+
 		THIS.c_LogFile			= ADDBS( THIS.c_TempDir ) + 'FoxBin2Prg_Debug.LOG'
 		THIS.c_ErrorLogFile		= ADDBS( THIS.c_TempDir ) + 'FoxBin2Prg_Error.LOG'
 
@@ -3710,7 +3710,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
 				IF .n_UseClassPerFile > 0 AND .l_RedirectClassPerFileToMain ;
-					OR NOT EMPTY(.c_ClassToConvert)
+						OR NOT EMPTY(.c_ClassToConvert)
 
 					DO CASE
 					CASE .n_RedirectClassType = 1 OR NOT EMPTY(.c_ClassToConvert) && Redireccionar solo esta clase
@@ -10240,23 +10240,23 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				IF toFoxBin2Prg.n_RedirectClassType = 1 OR NOT EMPTY(toFoxBin2Prg.c_ClassToConvert) && Redireccionar solo esta clase a main
 					llReplaceClass	= .T.
-					
+
 					IF EMPTY(toFoxBin2Prg.c_ClassToConvert)
 						toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
 					ELSE
 						loClase	= toModulo._Clases(1)
 						* Ajusto el nombre interno de la clase al indicado en el nombre del archivo
-						loClase._nombre		= toFoxBin2Prg.c_ClassToConvert
-						loClase._objname	= toFoxBin2Prg.c_ClassToConvert
+						loClase._Nombre		= toFoxBin2Prg.c_ClassToConvert
+						loClase._ObjName	= toFoxBin2Prg.c_ClassToConvert
 						* Reemplazo la propiedad Name
-						lnRow	= ASCAN(loClase._props, 'Name', 1, -1, 1, 2+4+8)
+						lnRow	= ASCAN(loClase._Props, 'Name', 1, -1, 1, 2+4+8)
 						IF lnRow > 0
-							loClase._props(lnRow,2)	= toFoxBin2Prg.c_ClassToConvert
+							loClase._Props(lnRow,2)	= toFoxBin2Prg.c_ClassToConvert
 						ENDIF
 						* Y finalmente actualizo el memo
 						loClase._PROPERTIES		= .classProps2Memo( @loClase, @toFoxBin2Prg )
 					ENDIF
-					
+
 					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 					IF ADIR( laFiles, toFoxBin2Prg.c_OutputFile, "", 1 ) = 1
@@ -15306,10 +15306,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	FUNCTION OcxOutsideProjDir
 		LPARAMETERS tcOcx, tcProjDir
-
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Returns .T. when the OCX control resides outside the project directory
-
 		LOCAL lcOcxDir, llOutside
 		lcOcxDir = UPPER (JUSTPATH (m.tcOcx))
 		IF LEFT(m.lcOcxDir, LEN(m.tcProjDir)) == m.tcProjDir
@@ -15319,12 +15317,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDIF
 
 		RETURN m.llOutside
+	ENDFUNC
 
 
-
+	PROCEDURE TruncateOle2 (tcOcx)
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Cambios de un campo OLE2 exclusivamente en el nombre del archivo
-	PROCEDURE TruncateOle2 (tcOcx)
 		REPLACE OLE2 WITH STRTRAN ( ;
 			OLE2 ;
 			,"OLEObject = " + m.tcOcx ;
@@ -15381,7 +15379,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN ;
 						WHERE PLATFORM == 'WINDOWS ' ;
 						AND ( PROPER(RESERVED1) == "Class" AND LOWER(OBJNAME) == toFoxBin2Prg.c_ClassToConvert ;
-						OR LOWER(parent) == toFoxBin2Prg.c_ClassToConvert ) ;
+						OR LOWER( ALLTRIM( GETWORDNUM( _TABLAORIG.PARENT + '.', 1, '.' ) ) ) == toFoxBin2Prg.c_ClassToConvert ) ;
 						OR PLATFORM == 'COMMENT ' AND LOWER(OBJNAME) == toFoxBin2Prg.c_ClassToConvert
 				ENDIF
 
@@ -15469,9 +15467,12 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
+						AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
+							AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
+
 						lnObjCount	= lnObjCount + 1
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj
