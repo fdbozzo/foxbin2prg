@@ -21,8 +21,13 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
+2017/12/02  v1.19.49.2
+- Bug Fix: ClassPerFile didn't work correctly starting from v1.19.49 / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/9)
+
+2017/06/25  v1.19.49.1
+- Bug Fix: DEVINFO field is only used when doing PJX conversions. On other files throw errors
+
 2017/04/26	v1.19.49
-v1.19.49
 - Replace Scripting.FileSystemObject MoveFile with Win32API equivalent
 - Added support for using temporal CFG file for low-level API operations
 - Bug Fix: Single-class export with "classlib.vcx::classname" syntax did not export (Lutz Scheffler)

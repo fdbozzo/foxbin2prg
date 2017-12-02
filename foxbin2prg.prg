@@ -199,6 +199,7 @@
 * 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
 * 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler)
 * 12/04/2017	DH&FDBOZZO	v1.19.49	Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig)
+* 02/12/2017	FDBOZZO		v1.19.49.2	Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -312,6 +313,7 @@
 * 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
 * 28/03/2017	Lutz Scheffler		Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
 * 06/04/2017	Doug Hennig			Reporte Bug y arreglo parcial PJX v1.19.48: No se estaba guardando el campo User en los archivos PJX (Agregado en v1.19.49)
+* 28/11/2017	Lutz Scheffler		Reporte Bug tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -8577,104 +8579,54 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 				ENDIF
 
 				*-- Inserto el objeto
-				IF JUSTEXT(toFoxBin2Prg.c_InputFile) = toFoxBin2Prg.c_PJ2
-					* Solo los PJX/PJ2 tienen el campo DEVINFO
-					INSERT INTO TABLABIN ;
-						( PLATFORM ;
-						, UNIQUEID ;
-						, TIMESTAMP ;
-						, CLASS ;
-						, CLASSLOC ;
-						, BASECLASS ;
-						, OBJNAME ;
-						, PARENT ;
-						, PROPERTIES ;
-						, PROTECTED ;
-						, METHODS ;
-						, OLE ;
-						, OLE2 ;
-						, RESERVED1 ;
-						, RESERVED2 ;
-						, RESERVED3 ;
-						, RESERVED4 ;
-						, RESERVED5 ;
-						, RESERVED6 ;
-						, RESERVED7 ;
-						, RESERVED8 ;
-						, USER ;
-						, DEVINFO ) ;
-						VALUES ;
-						( 'WINDOWS' ;
-						, toObjeto._UniqueID ;
-						, toObjeto._TimeStamp ;
-						, toObjeto._Class ;
-						, toObjeto._ClassLib ;
-						, toObjeto._BaseClass ;
-						, toObjeto._ObjName ;
-						, toObjeto._Parent ;
-						, lcPropsMemo ;
-						, '' ;
-						, lcMethodsMemo ;
-						, toObjeto._Ole ;
-						, toObjeto._Ole2 ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, STRCONV(toObjeto._User,14) ;
-						, STRCONV(toObjeto._DevInfo,14) )
-				ELSE
-					INSERT INTO TABLABIN ;
-						( PLATFORM ;
-						, UNIQUEID ;
-						, TIMESTAMP ;
-						, CLASS ;
-						, CLASSLOC ;
-						, BASECLASS ;
-						, OBJNAME ;
-						, PARENT ;
-						, PROPERTIES ;
-						, PROTECTED ;
-						, METHODS ;
-						, OLE ;
-						, OLE2 ;
-						, RESERVED1 ;
-						, RESERVED2 ;
-						, RESERVED3 ;
-						, RESERVED4 ;
-						, RESERVED5 ;
-						, RESERVED6 ;
-						, RESERVED7 ;
-						, RESERVED8 ;
-						, USER ) ;
-						VALUES ;
-						( 'WINDOWS' ;
-						, toObjeto._UniqueID ;
-						, toObjeto._TimeStamp ;
-						, toObjeto._Class ;
-						, toObjeto._ClassLib ;
-						, toObjeto._BaseClass ;
-						, toObjeto._ObjName ;
-						, toObjeto._Parent ;
-						, lcPropsMemo ;
-						, '' ;
-						, lcMethodsMemo ;
-						, toObjeto._Ole ;
-						, toObjeto._Ole2 ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, '' ;
-						, STRCONV(toObjeto._User,14) )
-				ENDIF
+				INSERT INTO TABLABIN ;
+					( PLATFORM ;
+					, UNIQUEID ;
+					, TIMESTAMP ;
+					, CLASS ;
+					, CLASSLOC ;
+					, BASECLASS ;
+					, OBJNAME ;
+					, PARENT ;
+					, PROPERTIES ;
+					, PROTECTED ;
+					, METHODS ;
+					, OLE ;
+					, OLE2 ;
+					, RESERVED1 ;
+					, RESERVED2 ;
+					, RESERVED3 ;
+					, RESERVED4 ;
+					, RESERVED5 ;
+					, RESERVED6 ;
+					, RESERVED7 ;
+					, RESERVED8 ;
+					, USER ;
+					, DEVINFO ) ;
+					VALUES ;
+					( 'WINDOWS' ;
+					, toObjeto._UniqueID ;
+					, toObjeto._TimeStamp ;
+					, toObjeto._Class ;
+					, toObjeto._ClassLib ;
+					, toObjeto._BaseClass ;
+					, toObjeto._ObjName ;
+					, toObjeto._Parent ;
+					, lcPropsMemo ;
+					, '' ;
+					, lcMethodsMemo ;
+					, toObjeto._Ole ;
+					, toObjeto._Ole2 ;
+					, '' ;
+					, '' ;
+					, '' ;
+					, '' ;
+					, '' ;
+					, '' ;
+					, '' ;
+					, '' ;
+					, STRCONV(toObjeto._User,14) ;
+					, STRCONV(toObjeto._DevInfo,14) )
 			ENDIF
 		ENDWITH && THIS
 
@@ -15371,7 +15323,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 
-				IF toFoxBin2Prg.n_UseClassPerFile = 0 AND EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+				IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 					*-- Exportar la librería entera a texto
 					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
 				ELSE
@@ -15458,7 +15410,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					.write_CLASSMETADATA( @loRegClass, @lcCodigo )
 
-					IF toFoxBin2Prg.n_UseClassPerFile > 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+					IF toFoxBin2Prg.n_UseClassPerFile > 0 OR NOT EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 						.write_EXTERNAL_CLASS_HEADER( @loRegClass, @toFoxBin2Prg, @lcExternalHeader )
 					ENDIF
 
