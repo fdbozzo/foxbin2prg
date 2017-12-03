@@ -23,6 +23,11 @@ Change History -------------------------------------------------------------
 2017/04/26	v1.19.50
 - Bug Fix: "Double" field types are explicitly defined with 0 decimals when no decimals are defined (Jerry Stager)
 
+2017/12/02  v1.19.49.2
+- Bug Fix: ClassPerFile export didn't work correctly starting from v1.19.49 / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/9)
+
+2017/06/25  v1.19.49.1
+- Bug Fix: DEVINFO field is only used when doing PJX conversions. On other files throw errors
 
 2017/04/26	v1.19.49
 - Replace Scripting.FileSystemObject MoveFile with Win32API equivalent

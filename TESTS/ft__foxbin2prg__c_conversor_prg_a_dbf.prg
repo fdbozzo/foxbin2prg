@@ -126,14 +126,19 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_dbf AS FxuTestCase OF FxuTestCase
 			*-- Visualización de valores
 			THIS.messageout( 'Cantidad de campos: ' + TRANSFORM(lnFields_OUT) )
 			THIS.messageout( '' )
-			THIS.messageout( PADR('Nombre',12) + ' ' + PADC('Tipo',4) + ' ' + PADL('Long',4) + ' ' + PADL('Dec',4) )
-			THIS.messageout( PADR('----------',12) + ' ' + PADC('----',4) + ' ' + PADL('----',4) + ' ' + PADL('---',4) )
+			THIS.messageout( PADR('Nombre',12) + ' ' + PADC('Tipo',4) + ' ' + PADL('Long',4) + ' ' + PADL('Dec',4) ;
+				+ ' ' + PADL('Next',4) + ' ' + PADL('Step',4) )
+			THIS.messageout( PADR('----------',12) + ' ' + PADC('----',4) + ' ' + PADL('----',4) + ' ' + PADL('---',4) ;
+				+ ' ' + PADL('----',4) + ' ' + PADL('----',4) )
 
 			FOR I = 1 TO lnFields_IN
-				THIS.messageout( PADR(laCampos_IN(I,1),12) + ' ' + PADC(laCampos_IN(I,2),4) + ' ' + PADL(laCampos_IN(I,3),4) + ' ' + PADL(laCampos_IN(I,4),4) )
+				THIS.messageout( PADR(laCampos_IN(I,1),12) + ' ' + PADC(laCampos_IN(I,2),4) ;
+					+ ' ' + PADL(laCampos_IN(I,3),4) + ' ' + PADL(laCampos_IN(I,4),4) ;
+					+ ' ' + PADL(laCampos_IN(I,17),4) + ' ' + PADL(laCampos_IN(I,18),4) )
 			ENDFOR
 
-			THIS.messageout( PADR('----------',12) + ' ' + PADC('----',4) + ' ' + PADL('----',4) + ' ' + PADL('---',4) )
+			THIS.messageout( PADR('----------',12) + ' ' + PADC('----',4) + ' ' + PADL('----',4) + ' ' + PADL('---',4) ;
+				+ ' ' + PADL('----',4) + ' ' + PADL('----',4) )
 
 			
 			*-- Evaluación de valores

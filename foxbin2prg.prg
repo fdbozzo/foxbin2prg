@@ -199,6 +199,7 @@
 * 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
 * 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler)
 * 12/04/2017	DH&FDBOZZO	v1.19.49	Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig)
+* 02/12/2017	FDBOZZO		v1.19.49.2	Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Lutz Scheffler)
 * 31/08/2017	JS&FDBOZZO	v1.19.50	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
@@ -313,6 +314,7 @@
 * 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
 * 28/03/2017	Lutz Scheffler		Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
 * 06/04/2017	Doug Hennig			Reporte Bug y arreglo parcial PJX v1.19.48: No se estaba guardando el campo User en los archivos PJX (Agregado en v1.19.49)
+* 28/11/2017	Lutz Scheffler		Reporte Bug tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
 * 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.50)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -887,7 +889,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		IF ATC("\PROGRAM FILES", THIS.c_TempDir) > 0 OR ATC("\ARCHIVOS DE PROGRAMA", THIS.c_TempDir) > 0
 			THIS.c_TempDir	= GETENV("TEMP")
 		ENDIF
-		
+
 		THIS.c_LogFile			= ADDBS( THIS.c_TempDir ) + 'FoxBin2Prg_Debug.LOG'
 		THIS.c_ErrorLogFile		= ADDBS( THIS.c_TempDir ) + 'FoxBin2Prg_Error.LOG'
 
@@ -3710,7 +3712,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
 				IF .n_UseClassPerFile > 0 AND .l_RedirectClassPerFileToMain ;
-					OR NOT EMPTY(.c_ClassToConvert)
+						OR NOT EMPTY(.c_ClassToConvert)
 
 					DO CASE
 					CASE .n_RedirectClassType = 1 OR NOT EMPTY(.c_ClassToConvert) && Redireccionar solo esta clase
@@ -10240,23 +10242,23 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 				IF toFoxBin2Prg.n_RedirectClassType = 1 OR NOT EMPTY(toFoxBin2Prg.c_ClassToConvert) && Redireccionar solo esta clase a main
 					llReplaceClass	= .T.
-					
+
 					IF EMPTY(toFoxBin2Prg.c_ClassToConvert)
 						toFoxBin2Prg.c_OutputFile = FULLPATH( FORCEEXT( lcBaseFilename, 'VCX' ), .c_InputFile)
 					ELSE
 						loClase	= toModulo._Clases(1)
 						* Ajusto el nombre interno de la clase al indicado en el nombre del archivo
-						loClase._nombre		= toFoxBin2Prg.c_ClassToConvert
-						loClase._objname	= toFoxBin2Prg.c_ClassToConvert
+						loClase._Nombre		= toFoxBin2Prg.c_ClassToConvert
+						loClase._ObjName	= toFoxBin2Prg.c_ClassToConvert
 						* Reemplazo la propiedad Name
-						lnRow	= ASCAN(loClase._props, 'Name', 1, -1, 1, 2+4+8)
+						lnRow	= ASCAN(loClase._Props, 'Name', 1, -1, 1, 2+4+8)
 						IF lnRow > 0
-							loClase._props(lnRow,2)	= toFoxBin2Prg.c_ClassToConvert
+							loClase._Props(lnRow,2)	= toFoxBin2Prg.c_ClassToConvert
 						ENDIF
 						* Y finalmente actualizo el memo
 						loClase._PROPERTIES		= .classProps2Memo( @loClase, @toFoxBin2Prg )
 					ENDIF
-					
+
 					toFoxBin2Prg.doBackup( .F., .T., '', '', '' )
 
 					IF ADIR( laFiles, toFoxBin2Prg.c_OutputFile, "", 1 ) = 1
@@ -15306,10 +15308,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 	FUNCTION OcxOutsideProjDir
 		LPARAMETERS tcOcx, tcProjDir
-
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Returns .T. when the OCX control resides outside the project directory
-
 		LOCAL lcOcxDir, llOutside
 		lcOcxDir = UPPER (JUSTPATH (m.tcOcx))
 		IF LEFT(m.lcOcxDir, LEN(m.tcProjDir)) == m.tcProjDir
@@ -15319,12 +15319,12 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDIF
 
 		RETURN m.llOutside
+	ENDFUNC
 
 
-
+	PROCEDURE TruncateOle2 (tcOcx)
 		* (This method is taken from Open Source project TwoFox, from Christof Wallenhaupt - http://www.foxpert.com/downloads.htm)
 		* Cambios de un campo OLE2 exclusivamente en el nombre del archivo
-	PROCEDURE TruncateOle2 (tcOcx)
 		REPLACE OLE2 WITH STRTRAN ( ;
 			OLE2 ;
 			,"OLEObject = " + m.tcOcx ;
@@ -15373,7 +15373,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 			WITH THIS AS c_conversor_vcx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
 
-				IF toFoxBin2Prg.n_UseClassPerFile = 0 AND EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+				IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 					*-- Exportar la librería entera a texto
 					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
 				ELSE
@@ -15381,7 +15381,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN ;
 						WHERE PLATFORM == 'WINDOWS ' ;
 						AND ( PROPER(RESERVED1) == "Class" AND LOWER(OBJNAME) == toFoxBin2Prg.c_ClassToConvert ;
-						OR LOWER(parent) == toFoxBin2Prg.c_ClassToConvert ) ;
+						OR LOWER( ALLTRIM( GETWORDNUM( _TABLAORIG.PARENT + '.', 1, '.' ) ) ) == toFoxBin2Prg.c_ClassToConvert ) ;
 						OR PLATFORM == 'COMMENT ' AND LOWER(OBJNAME) == toFoxBin2Prg.c_ClassToConvert
 				ENDIF
 
@@ -15460,7 +15460,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 					.write_CLASSMETADATA( @loRegClass, @lcCodigo )
 
-					IF toFoxBin2Prg.n_UseClassPerFile > 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
+					IF toFoxBin2Prg.n_UseClassPerFile > 0 OR NOT EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 						.write_EXTERNAL_CLASS_HEADER( @loRegClass, @toFoxBin2Prg, @lcExternalHeader )
 					ENDIF
 
@@ -15469,9 +15469,12 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 					*-------------------------------------------------------------------------------
 					lnObjCount	= 0
 					lnRecno	= RECNO()
-					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
+					LOCATE FOR UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
+						AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
 
-					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
+					SCAN REST WHILE UPPER( TABLABIN.PLATFORM ) = "WINDOWS" ;
+							AND LOWER( ALLTRIM( GETWORDNUM( TABLABIN.PARENT, 1, '.' ) ) ) == LOWER(lcObjName)
+
 						lnObjCount	= lnObjCount + 1
 						loRegObj	= NULL
 						SCATTER MEMO NAME loRegObj

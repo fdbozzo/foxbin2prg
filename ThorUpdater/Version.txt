@@ -1,0 +1,10 @@
+lparameters toUpdateObject
+local ldDate, ;
+	lnJulian, ;
+	lcJulian
+ldDate   = date()
+lnJulian = val(sys(11, ldDate)) - val(sys(11, {^2000-01-01}))
+lcJulian = padl(transform(lnJulian), 4, '0')
+toUpdateObject.AvailableVersion = 'APPNAME-MAJORVERSION' + lcJulian + ;
+	'-update-' + dtoc(ldDate, 1)
+return toUpdateObject
