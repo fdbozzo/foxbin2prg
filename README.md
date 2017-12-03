@@ -1,6 +1,8 @@
-## FoxBin2Prg v1.19 - Binary/Text Conversor for Microsoft Visual FoxPro 9
+## FoxBin2Prg v1.19.xx - Binary/Text Conversor for Microsoft Visual FoxPro 9
 
 ### Fernando D. Bozzo
+
+![](https://vfpx.github.io/images/vfpxbanner_small.gif)
 
 - Blog: http://fdbozzo.blogspot.com.es/
 - Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg

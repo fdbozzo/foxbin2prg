@@ -22,7 +22,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 Change History -------------------------------------------------------------
 
 2017/12/02  v1.19.49.2
-- Bug Fix: ClassPerFile didn't work correctly starting from v1.19.49 / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/9)
+- Bug Fix: ClassPerFile export didn't work correctly starting from v1.19.49 / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/9)
 
 2017/06/25  v1.19.49.1
 - Bug Fix: DEVINFO field is only used when doing PJX conversions. On other files throw errors
