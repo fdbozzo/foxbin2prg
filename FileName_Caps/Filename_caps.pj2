@@ -21,8 +21,8 @@ _Country = ""
 _Comments = "Capitalization for files"
 _CompanyName = "Fernando D. Bozzo"
 _FileDescription = "Capitalization for files"
-_LegalCopyright = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
-_LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
+_LegalCopyright = "MIT License"
+_LegalTrademark = "MIT License"
 _ProductName = "FILENAME_CAPS"
 _MajorVer = "2"
 _MinorVer = "4"
@@ -33,7 +33,7 @@ _AutoIncrement = "0"
 
 
 *<BuildProj>
-*<.HomeDir = 'c:\desa\foxbin2prg\filename_caps' />
+*<.HomeDir = 'g:\desa\foxbin2prg\filename_caps' />
 
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
@@ -50,8 +50,8 @@ MODIFY PROJECT 'Filename_caps.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 loProject = _VFP.Projects('Filename_caps.pjx')
 
 WITH loProject.FILES
-	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
-	.ADD('filename_caps.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
+	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" DevInfo="" />
+	.ADD('filename_caps.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" DevInfo="" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
@@ -75,6 +75,7 @@ WITH loProject
 	*<.CmntStyle = 1 />
 	*<.NoLogo = .F. />
 	*<.SaveCode = .T. />
+	*<.User = '' />
 	.ProjectHookLibrary = ''
 	.ProjectHookClass = ''
 	*</ProjectProperties>

@@ -20,10 +20,14 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
-2017/04/26	v1.19.50
+
+2017/12/04  v1.19.49.4
+- Bug Fix VCX: When using ClassPerFile in API Mode and importing single classes, sometimes their names get unquoted, throwing errors / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/11)
+
+2017/12/03  v1.19.49.3
 - Bug Fix: "Double" field types are explicitly defined with 0 decimals when no decimals are defined (Jerry Stager)
 
-2017/12/02  v1.19.49.2
+2017/12/03  v1.19.49.2
 - Bug Fix: ClassPerFile export didn't work correctly starting from v1.19.49 / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/9)
 
 2017/06/25  v1.19.49.1

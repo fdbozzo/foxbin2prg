@@ -21,8 +21,8 @@ _Country = "Spain"
 _Comments = "Comparador de binarios FoxPro 9 (scx,vcx,pjx,pjm,mnx,frx,lbx,dbf,dbc) para FoxBin2Prg"
 _CompanyName = "Fernand D. Bozzo"
 _FileDescription = "Comparador de binarios FoxPro 9 (scx,vcx,pjx,pjm,mnx,frx,lbx,dbf,dbc) para FoxBin2Prg"
-_LegalCopyright = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
-_LegalTrademark = "Creative Commons 4:	Reconocimiento - CompartirIgual (by-sa): http://creativecommons.org/licenses/by/4.0/"
+_LegalCopyright = "MIT License"
+_LegalTrademark = "MIT License"
 _ProductName = "FB2P_DIFF"
 _MajorVer = "1"
 _MinorVer = "1"
@@ -50,10 +50,10 @@ MODIFY PROJECT 'fb2p_diff.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 loProject = _VFP.Projects('fb2p_diff.pjx')
 
 WITH loProject.FILES
-	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" />
-	.ADD('fb2p_diff.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" />
-	.ADD('fb2p_diff.scx')		&& *< FileMetadata: Type="K" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
-	.ADD('main_fb2p_diff.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" />
+	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" DevInfo="" />
+	.ADD('fb2p_diff.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" User="" DevInfo="" />
+	.ADD('fb2p_diff.scx')		&& *< FileMetadata: Type="K" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" DevInfo="" />
+	.ADD('main_fb2p_diff.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" DevInfo="" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
@@ -78,6 +78,7 @@ WITH loProject
 	*<.CmntStyle = 1 />
 	*<.NoLogo = .F. />
 	*<.SaveCode = .T. />
+	*<.User = '' />
 	.ProjectHookLibrary = ''
 	.ProjectHookClass = ''
 	*</ProjectProperties>

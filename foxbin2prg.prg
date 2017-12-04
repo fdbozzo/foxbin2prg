@@ -199,8 +199,10 @@
 * 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
 * 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler)
 * 12/04/2017	DH&FDBOZZO	v1.19.49	Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig)
+* 25/06/2017	FDBOZZO		v1.19.49.1	Bug Fix tx2 v1.19.49: El campo DEVINFO usado en los PJX se estaba usando en los demás binarios, dando errores
 * 02/12/2017	FDBOZZO		v1.19.49.2	Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Lutz Scheffler)
-* 31/08/2017	JS&FDBOZZO	v1.19.50	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
+* 03/12/2017	JS&FDBOZZO	v1.19.49.3	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
+* 04/12/2017	FDBOZZO		v1.19.49.4	Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Lutz Scheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -314,8 +316,9 @@
 * 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
 * 28/03/2017	Lutz Scheffler		Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
 * 06/04/2017	Doug Hennig			Reporte Bug y arreglo parcial PJX v1.19.48: No se estaba guardando el campo User en los archivos PJX (Agregado en v1.19.49)
-* 28/11/2017	Lutz Scheffler		Reporte Bug tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
-* 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.50)
+* 28/11/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: No exporta los objetos a VX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
+* 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.49.3)
+* 03/12/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Arreglado en v1.19.49.4)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -10253,7 +10256,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						* Reemplazo la propiedad Name
 						lnRow	= ASCAN(loClase._Props, 'Name', 1, -1, 1, 2+4+8)
 						IF lnRow > 0
-							loClase._Props(lnRow,2)	= toFoxBin2Prg.c_ClassToConvert
+							loClase._Props(lnRow,2)	= ["] + toFoxBin2Prg.c_ClassToConvert + ["]
 						ENDIF
 						* Y finalmente actualizo el memo
 						loClase._PROPERTIES		= .classProps2Memo( @loClase, @toFoxBin2Prg )
@@ -10388,7 +10391,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				IF tlReplaceClass
 					I			= 1
 					loClase		= toModulo._Clases(I)
-					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND OBJNAME == loClase._ObjName
+					LOCATE FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND LOWER(OBJNAME) == loClase._ObjName
 					llReplace	= FOUND()
 				ENDIF
 
@@ -10424,6 +10427,9 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						, RESERVED8 WITH loClase._RESERVED8 ;
 						, USER WITH loClase._User
 
+					* Si tiene objetos asociados, antes debo eliminar los existentes para no duplicarlos
+					DELETE ALL FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND LOWER(PARENT) == loClase._ObjName
+					
 					.insert_AllObjects( @loClase, @toFoxBin2Prg )
 
 				ELSE
