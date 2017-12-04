@@ -2,9 +2,9 @@ lparameters toUpdateObject
 local ldDate, ;
 	lnJulian, ;
 	lcJulian
-ldDate   = date(2017,12,3)
+ldDate   = date(2017,12,5)
 lnJulian = val(sys(11, ldDate)) - val(sys(11, {^2000-01-01}))
 lcJulian = padl(transform(lnJulian), 4, '0')
-toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.19.49.2' + lcJulian + ;
+toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.19.49.4' + lcJulian + ;
 	'-update-' + dtoc(ldDate, 1)
 return toUpdateObject
