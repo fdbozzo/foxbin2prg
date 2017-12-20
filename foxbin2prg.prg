@@ -3239,7 +3239,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 							.evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, '', tcType)
 							EXIT
 
-						CASE EVL(tcType,'0') <> '0' AND EVL(tcTextName,'0') <> '0'
+						CASE INLIST( EVL(tcType,'0') ;
+								, FILETYPE_DATABASE ;
+								, FILETYPE_FREETABLE ;
+								, FILETYPE_QUERY ;
+								, FILETYPE_FORM ;
+								, FILETYPE_REPORT ;
+								, FILETYPE_LABEL ;
+								, FILETYPE_CLASSLIB ;
+								, FILETYPE_PROGRAM ;
+								, FILETYPE_PROJECT ;
+								, FILETYPE_APILIB ;
+								, FILETYPE_APPLICATION ;
+								, FILETYPE_MENU ;
+								, FILETYPE_TEXT ;
+								, FILETYPE_OTHER ) ;
+								AND EVL(tcTextName,'0') <> '0'
 							*-- COMPATIBILIDAD CON SOURCESAFE. 30/01/2014
 							IF tlGenText
 								.writeLog( '> ' + loLang.C_SOURCESAFE_COMPATIBILITY_MODE_LOC + ': ' + loLang.C_BINARY_TO_TEXT_LOC )
