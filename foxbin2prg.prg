@@ -203,6 +203,7 @@
 * 02/12/2017	FDBOZZO		v1.19.49.2	Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Lutz Scheffler)
 * 03/12/2017	JS&FDBOZZO	v1.19.49.3	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
 * 04/12/2017	FDBOZZO		v1.19.49.4	Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Lutz Scheffler)
+* 20/12/2017	DH&FDBOZZO	v1.19.49.5	Bug Fix dbf: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Doug Hennig)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -319,6 +320,7 @@
 * 28/11/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: No exporta los objetos a VX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
 * 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.49.3)
 * 03/12/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Arreglado en v1.19.49.4)
+* 18/12/2017	Doug Hennnig		Reporte Bug dbf v1.19.49: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Arreglado en v1.19.49.5)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -24289,6 +24291,18 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 	ENDPROC
 
 
+	PROCEDURE set_Line
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@    OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(v! IN    ) Número de línea en análisis
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I
+		tcLine 	= taCodeLines(I)
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -24544,6 +24558,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		RETURN lcText
 	ENDPROC
 
+
 	PROCEDURE Encode
 		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
@@ -24564,6 +24579,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		RETURN lcString
 	ENDPROC
 
+
 	PROCEDURE Decode
 		LPARAMETERS tcString, tl_isCDATA
 		LOCAL lcString
@@ -24582,6 +24598,19 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 		ENDIF
 		RETURN lcString
 	ENDPROC
+
+
+	PROCEDURE set_Line
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcLine					(!@    OUT) Contenido de la línea en análisis
+		* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+		* I							(v! IN    ) Número de línea en análisis
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcLine, taCodeLines, I
+		tcLine 	= taCodeLines(I)
+	ENDPROC
+
 
 ENDDEFINE
 
