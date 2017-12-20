@@ -21,6 +21,9 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
+2017/12/20	v1.19.49.5
+- BugFix DBF: When FoxBin2PRG converts a DB2 file to a DBF file and imports the data (using DBF_Conversion_Support = 8), tabs at the start of lines in memo fields are lost (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/13)
+
 2017/12/04  v1.19.49.4
 - Bug Fix VCX: When using ClassPerFile in API Mode and importing single classes, sometimes their names get unquoted, throwing errors / Reported by Lutz Scheffler (https://github.com/fdbozzo/foxbin2prg/issues/11)
 
