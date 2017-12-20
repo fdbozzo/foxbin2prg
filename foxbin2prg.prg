@@ -24291,7 +24291,7 @@ DEFINE CLASS CL_DBF_RECORDS AS CL_COL_BASE
 	ENDPROC
 
 
-	PROCEDURE set_Linex
+	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@    OUT) Contenido de la línea en análisis
@@ -24600,7 +24600,7 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 	ENDPROC
 
 
-	PROCEDURE set_Linex
+	PROCEDURE set_Line
 		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcLine					(!@    OUT) Contenido de la línea en análisis
