@@ -204,6 +204,7 @@
 * 03/12/2017	JS&FDBOZZO	v1.19.49.3	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
 * 04/12/2017	FDBOZZO		v1.19.49.4	Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Lutz Scheffler)
 * 20/12/2017	DH&FDBOZZO	v1.19.49.5	Bug Fix dbf: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Doug Hennig)
+* 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Doug Hennig)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -321,6 +322,7 @@
 * 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.49.3)
 * 03/12/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Arreglado en v1.19.49.4)
 * 18/12/2017	Doug Hennnig		Reporte Bug dbf v1.19.49: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Arreglado en v1.19.49.5)
+* 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Arreglado en v1.19.49.6)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -10446,7 +10448,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 					* Si tiene objetos asociados, antes debo eliminar los existentes para no duplicarlos
 					DELETE ALL FOR PLATFORM == PADR('WINDOWS', FSIZE('PLATFORM')) AND LOWER(PARENT) == loClase._ObjName
-					
+
 					.insert_AllObjects( @loClase, @toFoxBin2Prg )
 
 				ELSE
@@ -13510,6 +13512,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		+ [<memberdata name="get_propsfrom_protected" display="get_PropsFrom_PROTECTED"/>] ;
 		+ [<memberdata name="get_propsandcommentsfrom_reserved3" display="get_PropsAndCommentsFrom_RESERVED3"/>] ;
 		+ [<memberdata name="get_propsandvaluesfrom_properties" display="get_PropsAndValuesFrom_PROPERTIES"/>] ;
+		+ [<memberdata name="ignoreincorrectdefinedobjects" display="ignoreIncorrectDefinedObjects"/>] ;
 		+ [<memberdata name="indentmemo" display="indentMemo"/>] ;
 		+ [<memberdata name="memoinoneline" display="memoInOneLine"/>] ;
 		+ [<memberdata name="method2array" display="method2Array"/>] ;
@@ -14020,6 +14023,43 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		ENDIF
 
 		RELEASE tcMemo, tlSort, taProtected, tnProtected_Count, tcSortedMemo, I
+		RETURN
+	ENDPROC
+
+
+
+	PROCEDURE ignoreIncorrectDefinedObjects(lcCursor)
+		* Issue#15 - VFP Designer ignored objects should be ignored by FoxBin2Prg
+		LOCAL lcObjName, lcParent, lcParentObjName, loObjs as Collection
+		loObjs		= CREATEOBJECT("Collection")
+		SELECT (lcCursor)
+
+		SCAN FOR PLATFORM = "WINDOWS"
+			lcObjName	= LOWER(OBJNAME)
+			lcParent	= LOWER(PARENT)
+
+			IF EMPTY(lcParent)
+				lcParentObjName	= lcObjName
+			ELSE
+				lcParentObjName	= lcParent + '.' + lcObjName
+			ENDIF
+
+			IF NOT EMPTY(lcParent)
+				* Tiene Parent, y debe existir, si no es ignorado
+				IF loObjs.GetKey(lcParent) > 0
+					* Existe: se agrega al array el nuevo objeto
+					loObjs.Add( '', lcParentObjName )
+				ELSE
+					* No existe: se ignora
+					DELETE
+				ENDIF
+			ELSE
+				* No Existe: se agrega al array
+				loObjs.Add( '', lcParentObjName )
+
+			ENDIF
+		ENDSCAN
+
 		RETURN
 	ENDPROC
 
@@ -15398,7 +15438,7 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 				IF toFoxBin2Prg.n_UseClassPerFile = 0 OR EMPTY(toFoxBin2Prg.c_ClassToConvert) THEN
 					*-- Exportar la librería entera a texto
-					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
+					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN READWRITE
 				ELSE
 					*-- Exportar solo una clase a texto cuando se usa ClassPerFile y se indicó una clase
 					SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN ;
@@ -15410,6 +15450,9 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 
 				lnStepCount	= 7
 				USE IN (SELECT("_TABLAORIG"))
+
+				* Issue#15: Ignorar objetos mal definidos
+				.ignoreIncorrectDefinedObjects('TABLABIN')
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ ADDITIVE
 				SET ORDER TO 0 IN TABLABIN
@@ -15763,8 +15806,11 @@ DEFINE CLASS c_conversor_scx_a_prg AS c_conversor_bin_a_prg
 
 			WITH THIS AS c_conversor_scx_a_prg OF 'FOXBIN2PRG.PRG'
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS _TABLAORIG
-				SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN
+				SELECT _TABLAORIG.*,RECNO() regnum FROM _TABLAORIG INTO CURSOR TABLABIN READWRITE
 				USE IN (SELECT("_TABLAORIG"))
+
+				* Issue#15: Ignorar objetos mal definidos
+				.ignoreIncorrectDefinedObjects('TABLABIN')
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ ADDITIVE
 				SET ORDER TO 0 IN TABLABIN
