@@ -205,6 +205,7 @@
 * 04/12/2017	FDBOZZO		v1.19.49.4	Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Lutz Scheffler)
 * 20/12/2017	DH&FDBOZZO	v1.19.49.5	Bug Fix dbf: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Doug Hennig)
 * 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Doug Hennig)
+* 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Doug Hennnig)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -323,6 +324,7 @@
 * 03/12/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Arreglado en v1.19.49.4)
 * 18/12/2017	Doug Hennnig		Reporte Bug dbf v1.19.49: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Arreglado en v1.19.49.5)
 * 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Arreglado en v1.19.49.6)
+* 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Arreglado en v1.19.49.6)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6351,12 +6353,6 @@ DEFINE CLASS c_conversor_base AS Custom
 		LOCAL lnCodError, lnPos, lcValue
 		tcComentario	= ''
 
-		*-- Limpieza de caracteres sin uso
-		*IF INLIST(tcValue, '..\', '..\..\' ) THEN
-		*	MESSAGEBOX( 'Encontrado valor "' + tcValue + '" en propiedad "' + tcProp, 4096, PROGRAM() )
-		*	tcValue = ''
-		*ENDIF
-
 		*-- Ajustes de algunos casos especiales
 		DO CASE
 		CASE tcProp == '_memberdata'
@@ -6364,16 +6360,13 @@ DEFINE CLASS c_conversor_base AS Custom
 			lcValue	= ''
 
 			FOR I = 1 TO OCCURS( '/>', tcValue )
-				*TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				*	<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )>>
-				*ENDTEXT
-				lcValue = lcValue + CHR(13) + CHR(10) + CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )
+				* issue#16: memberdata property should be saved in compressed format
+				lcValue = lcValue + CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', I, 1+4 ), CR_LF, '  ' )
 			ENDFOR
 
+			* issue#16: memberdata property should be saved in compressed format
 			TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-				<VFPData>
-				<<SUBSTR( lcValue, 3)>>
-				</VFPData>
+				<VFPData><<SUBSTR( lcValue, 1)>></VFPData>
 			ENDTEXT
 
 			IF LEN(lcValue) > 255
