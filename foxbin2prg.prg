@@ -14039,7 +14039,8 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 			IF NOT EMPTY(lcParent)
 				* Tiene Parent, y debe existir, si no es ignorado
-				IF loObjs.GetKey(lcParent) > 0
+				* NOTA: Del parent solo se puede comprobar el objeto primario.
+				IF loObjs.GetKey(GETWORDNUM(lcParent + '.', 1, '.')) > 0
 					* Existe: se agrega al array el nuevo objeto
 					loObjs.Add( '', lcParentObjName )
 				ELSE
