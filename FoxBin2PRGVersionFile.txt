@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.49.4'
-    .VersionDate          = Date(2017,12,04)
+    .VersionNumber        = 'v1.19.49.6'
+    .VersionDate          = Date(2018,01,06)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -20,6 +20,10 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2018/01/04	v1.19.49.6
+- BugFix vcx/scx: FoxBin2Prg should ignore the records that VFP Designer ignores (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/15)
+- BugFix vcx/scx: FoxBin2Prg encodes MemberData property with CR/LF, which can cause "property '_memberdata' value is too long" error (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/16)
 
 2017/12/20	v1.19.49.5
 - BugFix DBF: When FoxBin2PRG converts a DB2 file to a DBF file and imports the data (using DBF_Conversion_Support = 8), tabs at the start of lines in memo fields are lost (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/13)
