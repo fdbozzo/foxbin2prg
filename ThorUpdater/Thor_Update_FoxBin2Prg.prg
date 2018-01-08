@@ -9,9 +9,9 @@ local lcAppName, ;
 
 * Set the project settings; edit these for your specific project.
 
-lcAppName       = 'FoxBin2PRG'
+lcAppName       = 'FoxBin2Prg'
 	&& the name of the project
-lcAppID         = 'FoxBin2PRG'
+lcAppID         = 'FoxBin2Prg'
 	&& similar to lcAppName but must be URL-friendly (no spaces or other
 	&& illegal URL characters)
 lcRepositoryURL = 'https://github.com/fdbozzo/foxbin2prg'
