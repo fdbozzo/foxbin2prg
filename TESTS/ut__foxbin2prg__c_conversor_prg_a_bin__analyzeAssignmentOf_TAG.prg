@@ -290,7 +290,9 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_prg_a_bin__analyzeAssignmentOf_TAG AS F
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
-		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(23 + LEN(lcMemberdata),8) + '<VFPData>' + CR_LF + lcMemberdata + CR_LF + '</VFPData>'
+		*lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(23 + LEN(lcMemberdata),8) + '<VFPData>' + CR_LF + lcMemberdata + CR_LF + '</VFPData>'
+		lcMemberdata		= CHRTRAN(lcMemberdata,CR_LF,'')	&& Issue#15 - Doug Hennig
+		lcValue_Esperado	= REPLICATE( CHR(1), 517 ) + STR(19 + LEN(lcMemberdata),8) + '<VFPData>' + lcMemberdata + '</VFPData>'
 
 		*-- TEST
 		loObj.analyzeAssignmentOf_TAG( @lcPropName, @lcPropValue, @laProps, @lnProp_Count ;

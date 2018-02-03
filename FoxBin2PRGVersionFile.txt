@@ -21,7 +21,17 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
-2017/12/20	v1.19.49.5
+2018-02-03  v1.19.49.8
+- Bug Fix: When converting a VCX corrupted with duplicated objects to text, "The specified key already exists" error is thrown (Kirides)
+
+2018-01-11  v1.19.49.7
+- Bug Fix: When converting a DBF an error is thrown if there is a field called X or I (Francisco Prieto)
+
+2018/01/04  v1.19.49.6
+- BugFix vcx/scx: FoxBin2Prg should ignore the records that VFP Designer ignores (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/15)
+- BugFix vcx/scx: FoxBin2Prg encodes MemberData property with CR/LF, which can cause "property '_memberdata' value is too long" error (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/16)
+
+2017/12/20  v1.19.49.5
 - BugFix DBF: When FoxBin2PRG converts a DB2 file to a DBF file and imports the data (using DBF_Conversion_Support = 8), tabs at the start of lines in memo fields are lost (Doug Hennig / https://github.com/fdbozzo/foxbin2prg/issues/13)
 
 2017/12/04  v1.19.49.4

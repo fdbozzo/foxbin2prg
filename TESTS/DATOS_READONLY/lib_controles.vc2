@@ -1544,7 +1544,7 @@ DEFINE CLASS f_base AS form
 			tcFilename	= SYS(5) + ADDBS(CURDIR()) + "TESTS\DATOS_TEST\" + tcFilename + '.bmp'
 		ENDIF
 		
-		Declare Integer formtobmp IN "TESTS\PCT_DLL.dll" integer hwnd,String bmpFileName
+		Declare Integer formtobmp IN "PCT_DLL.dll" integer hwnd,String bmpFileName
 		retVal = formtobmp( THISFORM.HWnd, tcFilename )
 		
 		*Declare Integer formtobmpA  IN "TESTS\PCT_DLL.dll" string bmpfilename,integer nX,integer nY,integer nX2,integer nY2
@@ -1561,6 +1561,7 @@ DEFINE CLASS f_base AS form
 	ENDPROC
 
 	PROCEDURE Init
+		SET PATH TO (FULLPATH("..\", THIS.ClassLibrary)) ADDITIVE
 		THISFORM.cmdCapturar.SetFocus()
 		
 	ENDPROC

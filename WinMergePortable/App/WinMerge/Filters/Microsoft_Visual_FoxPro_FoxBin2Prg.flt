@@ -1,0 +1,29 @@
+## This is a directory/file filter template for WinMerge
+name: FoxBin2Prg (Visual FoxPro 9)
+desc: Exclusive filter for FoxBin2Prg text files
+
+## Select if filter is inclusive or exclusive
+## Inclusive (loose) filter lets through all items not matching rules
+## Exclusive filter lets through only items that match to rule
+## include or exclude
+def: exclude
+
+## Filters for filenames begin with f:
+## Filters for directories begin with d:
+## (Inline comments begin with " ##" and extend to the end of the line)
+
+f: \.vc2$ ## Class libraries text views
+f: \.sc2$ ## Screens text views
+f: \.db2$ ## DBF database files text views
+f: \.dc2$ ## DBC Database containers text views
+f: \.mn2$ ## Menus text views
+f: \.pj2$ ## Projects text views
+f: \.h$ ## Include files
+f: \.xml$ ## XML files
+f: \.cfg$ ## CFG configuration files
+f: \.txt$ ## Text files
+f: \.fpw$ ## VFP configuration files
+f: \.prg$ ## Programs
+
+##d: \\subdir$ ## Filter for directory
+
