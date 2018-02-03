@@ -207,6 +207,7 @@
 * 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Doug Hennig)
 * 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Doug Hennnig)
 * 11/01/2018	FDBOZZO		v1.19.49.7	Bug Fix: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Francisco Prieto)
+* 30/01/2018	FDBOZZO		v1.19.49.8	Bug Fix: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Kirides)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -327,6 +328,7 @@
 * 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Arreglado en v1.19.49.6)
 * 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Arreglado en v1.19.49.6)
 * 11/01/2018	Francisco Prieto	Reporte Bug v1.19.49: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Arreglado en v1.19.49.7)
+* 30/01/2018	Kirides				Reporte Bug v1.19.49: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Arreglado en v1.19.49.9)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -13927,6 +13929,29 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 
 
+	PROCEDURE ignoreCorruptedObjects(lcCursor)
+		* Issue#17 - Error, The specified key already exists
+		* Para evitar este error se deben ignorar los objetos corruptos (duplicados)
+		* Se identifican porque la clase principal el campo Reserved1 tiene vacio en vez de "Class"
+		LOCAL lcParentObjName, lcSetDeleted
+		SELECT (lcCursor)
+		lcSetDeleted	= SET("Deleted")
+		SET DELETED OFF
+
+		SCAN FOR PLATFORM = "WINDOWS" AND EMPTY(Parent) AND EMPTY(Reserved1)
+			lcParentObjName	= LOWER(OBJNAME)
+			DELETE
+			SKIP
+			DELETE REST WHILE GETWORDNUM(LOWER(PARENT) + '.', 1, '.') == lcParentObjName
+			SKIP -1
+		ENDSCAN
+
+		SET DELETED &lcSetDeleted.
+		RETURN
+	ENDPROC
+
+
+
 	PROCEDURE ignoreIncorrectDefinedObjects(lcCursor)
 		* Issue#15 - VFP Designer ignored objects should be ignored by FoxBin2Prg
 		LOCAL lcObjName, lcParent, lcParentObjName, loObjs as Collection
@@ -13948,7 +13973,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 				* NOTA: Del parent solo se puede comprobar el objeto primario.
 				IF loObjs.GetKey(GETWORDNUM(lcParent + '.', 1, '.')) > 0
 					* Existe: se agrega al array el nuevo objeto
-					loObjs.Add( '', lcParentObjName )
+					* NOTA: Podría estar duplicado, pero no se trata ese caso aquí
+					IF NOT EMPTY(lcParentObjName) AND loObjs.GetKey(lcParentObjName) = 0
+						loObjs.Add( '', lcParentObjName )
+					ENDIF
 				ELSE
 					* No existe: se ignora
 					DELETE
@@ -15353,7 +15381,10 @@ DEFINE CLASS c_conversor_vcx_a_prg AS c_conversor_bin_a_prg
 				lnStepCount	= 7
 				USE IN (SELECT("_TABLAORIG"))
 
-				* Issue#15: Ignorar objetos mal definidos
+				* Issue#17: Error, The Specified Key already exists (Kirides)
+				.ignoreCorruptedObjects('TABLABIN')
+
+				* Issue#15: Ignorar objetos mal definidos (Doug Hennig)
 				.ignoreIncorrectDefinedObjects('TABLABIN')
 
 				INDEX ON PADR(LOWER(PLATFORM + IIF(EMPTY(PARENT),'',ALLTRIM(PARENT)+'.')+OBJNAME),240) TAG PARENT_OBJ ADDITIVE
