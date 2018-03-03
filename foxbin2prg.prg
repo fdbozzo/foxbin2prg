@@ -208,6 +208,7 @@
 * 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Doug Hennnig)
 * 11/01/2018	FDBOZZO		v1.19.49.7	Bug Fix: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Francisco Prieto)
 * 30/01/2018	FDBOZZO		v1.19.49.8	Bug Fix: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Kirides)
+* 03/03/2018	FDBOZZO		v1.19.50	Mejora: La información DevInfo de los PJX estará inhabilitada por defecto y se podrá activar con el nuevo switch BodyDevInfo
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -808,6 +809,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_CFG_CachedAccess				= .F.
 	n_CFG_EvaluateFromParam			= 0
 	n_Debug							= 0
+	n_BodyDevInfo					= 0				&& Indica si se debe incluir el campo DevInfo en el cuerpo de los pjx/pj2
 	l_Error							= .F.			&& Indicador de errores del proceso actual
 	l_Errors						= .F.			&& Indicador de error de la sesión actual, acumulativo de todos los procesos
 	c_TextErr						= ''
@@ -1190,6 +1192,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.n_Debug
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_Debug, THIS.n_Debug )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE n_BodyDevInfo_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_BodyDevInfo
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_BodyDevInfo, THIS.n_BodyDevInfo )
 		ENDIF
 	ENDPROC
 
@@ -2266,6 +2277,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 							IF INLIST( lcValue, '0', '1' ) THEN
 								lo_CFG.n_ExcludeDBFAutoincNextval	= INT( VAL( lcValue ) )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ExcludeDBFAutoincNextval:   ' + TRANSFORM(lo_CFG.n_ExcludeDBFAutoincNextval) )
+							ENDIF
+
+						CASE LEFT( laConfig(m.I), 12 ) == LOWER('BodyDevInfo:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 13 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.n_BodyDevInfo	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > BodyDevInfo:                ' + TRANSFORM(lo_CFG.n_BodyDevInfo) )
 							ENDIF
 
 						ENDCASE
@@ -10990,7 +11008,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 				*-- Identifico el inicio/fin de bloque, definición, cabecera y cuerpo de cada clase
 				.updateProgressbar( 'Identifying Code Blocks...', 1, 2, 1 )
-				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject )
+				.identifyCodeBlocks( @laCodeLines, lnCodeLines, @laLineasExclusion, lnBloquesExclusion, @toProject, @toFoxBin2Prg )
 
 				DO CASE
 				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
@@ -11169,7 +11187,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 
 	PROCEDURE identifyCodeBlocks
-		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toProject
+		LPARAMETERS taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toProject, toFoxBin2Prg
 		*--------------------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* taCodeLines				(@! IN    ) El array con las líneas del código donde buscar
@@ -11177,6 +11195,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 		* taLineasExclusion			(@! IN    ) Array unidimensional con un .T. o .F. según la línea sea de exclusión o no
 		* tnBloquesExclusion		(@! IN    ) Cantidad de bloques de exclusión
 		* toProject					(@?    OUT) Objeto con toda la información del proyecto analizado
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
 		*
 		* NOTA:
 		* Como identificador se usa el nombre de clase o de procedimiento, según corresponda.
@@ -11185,6 +11204,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -11219,7 +11239,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 						CASE .analyzeCodeBlock_ServerData( toProject, @lcLine, @taCodeLines, @m.I, tnCodeLines )
 							*-- Puede haber varios servidores, por eso se siguen valuando
 
-						CASE NOT llBuildProj_Completed AND .analyzeCodeBlock_BuildProj( toProject, @lcLine, @taCodeLines, @m.I, tnCodeLines )
+						CASE NOT llBuildProj_Completed AND .analyzeCodeBlock_BuildProj( toProject, @lcLine, @taCodeLines, @m.I, tnCodeLines, @toFoxBin2Prg )
 							llBuildProj_Completed	= .T.
 
 						CASE NOT llFileComments_Completed AND .analyzeCodeBlock_FileComments( toProject, @lcLine, @taCodeLines, @m.I, tnCodeLines )
@@ -11260,13 +11280,21 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 
 	PROCEDURE analyzeCodeBlock_BuildProj
-		*------------------------------------------------------
-		*-- Analiza el bloque <BuildProj>
-		*------------------------------------------------------
-		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines
+		*--------------------------------------------------------------------------------------------------------------
+		* Analiza el bloque <BuildProj>
+		*--------------------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toProject					(@?    OUT) Objeto con toda la información del proyecto analizado
+		* tcLine					(@! IN    ) Línea de datos en evaluación
+		* taCodeLines				(@! IN    ) El array con las líneas del código donde buscar
+		* tnCodeLines				(@! IN    ) Cantidad de líneas de código
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*--------------------------------------------------------------------------------------------------------------
+		LPARAMETERS toProject, tcLine, taCodeLines, I, tnCodeLines, toFoxBin2Prg
 
 		#IF .F.
 			LOCAL toProject AS CL_PROJECT OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
 		TRY
@@ -11311,7 +11339,10 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							loFile._ID			= .get_ValueByName_FromListNamesWithValues( 'ID', 'I', @laPropsAndValues )
 							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues )
 							loFile._User		= .get_ValueByName_FromListNamesWithValues( 'User', 'C', @laPropsAndValues )
-							loFile._DevInfo		= .get_ValueByName_FromListNamesWithValues( 'DevInfo', 'C', @laPropsAndValues )
+							
+							IF toFoxBin2Prg.n_BodyDevInfo = 1
+								loFile._DevInfo		= .get_ValueByName_FromListNamesWithValues( 'DevInfo', 'C', @laPropsAndValues )
+							ENDIF
 
 							toProject.ADD( loFile, loFile._Name )
 
@@ -16167,17 +16198,32 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	.ADD('<<loReg.NAME>>')
 						ENDTEXT
-						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-							<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
-							Type="<<loReg.TYPE>>"
-							Cpid="<<INT( loReg.CPID )>>"
-							Timestamp="<<INT( loReg.TIMESTAMP )>>"
-							ID="<<INT( loReg.ID )>>"
-							ObjRev="<<INT( loReg.OBJREV )>>"
-							User="<<STRCONV(loReg.USER,13)>>"
-							DevInfo="<<STRCONV(loReg.DEVINFO,13)>>"
-							<<C_FILE_META_F>>
-						ENDTEXT
+						
+						IF toFoxBin2Prg.n_BodyDevInfo=1
+							* Generates an extra DevInfo tag for each body PJX record
+							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+								<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
+								Type="<<loReg.TYPE>>"
+								Cpid="<<INT( loReg.CPID )>>"
+								Timestamp="<<INT( loReg.TIMESTAMP )>>"
+								ID="<<INT( loReg.ID )>>"
+								ObjRev="<<INT( loReg.OBJREV )>>"
+								User="<<STRCONV(loReg.USER,13)>>"
+								DevInfo="<<STRCONV(loReg.DEVINFO,13)>>"
+								<<C_FILE_META_F>>
+							ENDTEXT
+						ELSE
+							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+								<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
+								Type="<<loReg.TYPE>>"
+								Cpid="<<INT( loReg.CPID )>>"
+								Timestamp="<<INT( loReg.TIMESTAMP )>>"
+								ID="<<INT( loReg.ID )>>"
+								ObjRev="<<INT( loReg.OBJREV )>>"
+								User="<<STRCONV(loReg.USER,13)>>"
+								<<C_FILE_META_F>>
+							ENDTEXT
+						ENDIF
 
 						loReg	= NULL
 					ENDFOR
@@ -27712,6 +27758,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
+		+ [<memberdata name="n_bodydevinfo" display="n_BodyDevInfo"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="n_excludedbfautoincnextval" display="n_ExcludeDBFAutoincNextval"/>] ;
@@ -27745,6 +27792,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	c_Foxbin2prg_ConfigFile			= ''
 	c_CurDir						= ''
 	n_Debug							= NULL
+	n_BodyDevInfo					= NULL
 	l_ShowErrors					= NULL
 	n_ShowProgressbar				= NULL
 	l_Recompile						= NULL
@@ -27790,6 +27838,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.c_Foxbin2prg_ConfigFile		= toParentCFG.c_Foxbin2prg_ConfigFile
 			.c_CurDir						= toParentCFG.c_CurDir
 			.n_Debug						= toParentCFG.n_Debug
+			.n_BodyDevInfo					= toParentCFG.n_BodyDevInfo
 			.l_ShowErrors					= toParentCFG.l_ShowErrors
 			.n_ShowProgressbar				= toParentCFG.n_ShowProgressbar
 			.l_Recompile					= toParentCFG.l_Recompile

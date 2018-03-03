@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.50'
-    .VersionDate          = Date(2017,04,26)
+    .VersionDate          = Date(2018,03,03)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'http://vfpx.codeplex.com/wikipage?title=FoxBin2PRG'
@@ -20,6 +20,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2018-03-03  v1.19.50
+- Added a new CFG "BodyDevInfo" switch to control the DevInfo body data of PJX. It is disabled by default because DevInfo normally have compiled data that can be regenerated and causes many differences on source control tools
 
 2018-02-03  v1.19.49.8
 - Bug Fix: When converting a VCX corrupted with duplicated objects to text, "The specified key already exists" error is thrown (Kirides)
