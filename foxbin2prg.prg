@@ -825,7 +825,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
 	n_UseClassPerFile				= 0
-	n_PRG_Compat_Level				= 1				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
+	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
@@ -2299,10 +2299,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('PRG_Compat_Level:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(I), 18 ) )
-							IF INLIST( lcValue, '0', '1' ) THEN
-								lo_CFG.n_PRG_Compat_Level	= INT( VAL( lcValue ) )
-								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > PRG_Compat_Level:           ' + TRANSFORM(lo_CFG.n_PRG_Compat_Level) )
-							ENDIF
+							lo_CFG.n_PRG_Compat_Level	= INT( VAL( lcValue ) )
+							.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > PRG_Compat_Level:           ' + TRANSFORM(lo_CFG.n_PRG_Compat_Level) )
 
 						ENDCASE
 					ENDFOR
@@ -13682,7 +13680,13 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 
 						*-- Comentarios del método (si tiene)
 						IF lnCommentRow > 0 AND NOT EMPTY(taPropsAndComments(lnCommentRow,2))
-							lcMethod	= lcMethod + C_TAB + C_TAB + '&' + '& ' + taPropsAndComments(lnCommentRow,2)
+							* PRG_Compat_Level >= 1
+                            IF BITAND(toFoxBin2Prg.n_PRG_Compat_Level, 1) > 0
+								lcMethod	= lcMethod + C_TAB + C_TAB + 'HELPSTRING "' + taPropsAndComments(lnCommentRow,2) + '"'
+                            ELSE
+                            	* PRG_Compat_Level = 0 (Default old setting)
+								lcMethod	= lcMethod + C_TAB + C_TAB + '&' + '& ' + taPropsAndComments(lnCommentRow,2)
+							ENDIF
 						ENDIF
 
 						*-- Código del método
@@ -27807,7 +27811,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
 		+ [<memberdata name="dbc_conversion_support" display="DBC_Conversion_Support"/>] ;
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
-		+ [<memberdata name="prg_compat_level" display="PRG_Compat_Level"/>] ;
+		+ [<memberdata name="n_prg_compat_level" display="n_PRG_Compat_Level"/>] ;
 		+ [<memberdata name="copyfrom" display="CopyFrom"/>] ;
 		+ [</VFPData>]
 
