@@ -17,6 +17,7 @@
 * DontShowErrors: 0				&& Show message errors by default / Mostrar mensajes de error por defecto
 * NoTimestamps: 1				&& Clear timestamps by default for minimize differences / Vaciar Timestamps por defecto para minimizar diferencias
 * Debug: 0						&& Don't Activate individual <file>.Log by default / No Activar <archivo>.Log por defecto
+* BodyDevInfo: 0				&& [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo / [0=No guardar DevInfo para el cuerpo del PJX], 1=Guardar DevInfo
 * ExtraBackupLevels: 1			&& By default 1 BAK is created. With this you can make more .N.BAK, or none / Por defecto 1 BAK es creado. Con esto puede crear más .N.BAK, o ninguno
 * ClearUniqueID: 1				&& 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge / 0=Mantener UniqueID, 1=Borrar Unique ID. Util para Diff y Merge
 * ClearDBFLastUpdate: 1			&& 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff. / 0=Mantener DBF LastDate, , 1=Borrar DBF LastDate. Util para Diff.
