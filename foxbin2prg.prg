@@ -7852,11 +7852,11 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, USER ;
 			, KEY ) ;
 			VALUES ;
-			( UPPER(EVL(THIS.c_OriginalFileName,THIS.c_OutputFile)) ;
+			( UPPER( FORCEPATH( EVL(THIS.c_OriginalFileName,THIS.c_OutputFile), toProject._HomeDir) ) + CHR(0) ;
 			, 'H' ;
 			, 0 ;
 			, '<Source>' + CHR(0) ;
-			, toProject._HomeDir + CHR(0) ;
+			, LOWER(toProject._HomeDir) + CHR(0) ;
 			, toProject._SaveCode ;
 			, toProject._Debug ;
 			, toProject._Encrypted ;
@@ -7864,8 +7864,8 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			, toProject._CmntStyle ;
 			, 260 ;
 			, toProject.getRowDeviceInfo() ;
-			, toProject._HomeDir + CHR(0) ;
-			, UPPER(THIS.c_OutputFile) ;
+			, LOWER(toProject._HomeDir) + CHR(0) ;
+			, UPPER( FORCEPATH( EVL(THIS.c_OriginalFileName,THIS.c_OutputFile), toProject._HomeDir) ) + CHR(0) ;
 			, toProject._ServerHead.getRowServerInfo() ;
 			, toProject._SccData ;
 			, .T. ;
