@@ -26,7 +26,7 @@
 * RemoveZOrderSetFromProps: 0	&& 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object / 0=No quitar la propiedad ZOrderSet de los objetos, 1=Quitar la propiedad ZOrderSet de los objetos
 * Language: (auto)				&& Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 * ExcludeDBFAutoincNextval: 0	&& [0=Do not exclude this value from db2], 1=Exclude this value from db2
-* PRG_Compat_Level: 0			&& [0=Legacy (up to v1.19.49)], 1=Use HELPSTRING as Procedure comment
+* PRG_Compat_Level: 0			&& [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
 
 *-- CONVERTION OPTIONS / OPCIONES DE CONVERSIÓN
 * PJX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
