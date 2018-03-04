@@ -889,6 +889,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 			*loCnv.l_Debug				= .F.
 			loCnv.l_ShowErrors			= .F.
+			loCnv.n_PRG_COMPAT_LEVEL		= 0
 			*loCnv.l_Test				= .T.
 			*loCnv.l_PropSort_Enabled	= .F.	&& Para buscar diferencias
 			*loCnv.l_MethodSort_Enabled	= .F.	&& Para buscar diferencias
@@ -1474,6 +1475,7 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			loEx		= NULL
 			loCnv		= NEWOBJECT("c_foxbin2prg", "FOXBIN2PRG.PRG")
 			loCnv.evaluateConfiguration( '1', '1', '1', '0', '1', '4', '1', '0' )
+			loCnv.n_PRG_COMPAT_LEVEL		= 0
 			*loCnv.l_Test				= .T.
 
 
