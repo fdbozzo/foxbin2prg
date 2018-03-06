@@ -6623,46 +6623,67 @@ DEFINE CLASS c_conversor_base AS Custom
 		EXTERNAL ARRAY taPropsAndValues
 
 		LOCAL lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas ;
-			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
-		loLang			= _SCREEN.o_FoxBin2Prg_Lang
-		STORE '' TO lcVirtualMeta
-		STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
+			, loEx as Exception
 
-		lcMetadatos		= ALLTRIM( STREXTRACT( tcLineWithMetadata, tcLeftTag, tcRightTag, 1, 1) )
-		lnCantComillas	= OCCURS( '"', lcMetadatos )
+		TRY
+			loLang			= _SCREEN.o_FoxBin2Prg_Lang
+			STORE '' TO lcVirtualMeta
+			STORE 0 TO lnPos1, lnPos2, lnLastPos, tnPropsAndValues_Count, I
 
-		IF lnCantComillas % 2 <> 0	&& Valido que las comillas "" sean pares
-			*ERROR "Error de datos: No se puede parsear porque las comillas no son pares en la línea [" + lcMetadatos + "]"
-			ERROR (TEXTMERGE(loLang.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC))
-		ENDIF
+			lcMetadatos		= ALLTRIM( STREXTRACT( tcLineWithMetadata, tcLeftTag, tcRightTag, 1, 1) )
 
-		lnLastPos	= 1
-		DIMENSION taPropsAndValues( lnCantComillas / 2, 2 )
+			IF EMPTY(lcMetadatos)
+				* Puede que la línea esté separada con un CR erróneo. El usuario debe revisarlo
+				ERROR (TEXTMERGE("Can't identify Metadata TAG '<<tcRightTag>>'. May be the Source line have an extra CR/LF?"))
+			ENDIF
 
-		*-------------------------------------------------------------------------------------
-		* IMPORTANTE!!
-		* ------------
-		* SI SE SEPARAN LAS IGUALDADES CON ESPACIOS, ÉSTAS DEJAN DE RECONOCERSE!!  (prop = "valor" en vez de prop="valor")
-		* TENER EN CUENTA AL GENERAR EL TEXTO O AL MODIFICARLO MANUALMENTE AL MERGEAR
-		*-------------------------------------------------------------------------------------
-		FOR I = 1 TO lnCantComillas STEP 2
-			tnPropsAndValues_Count	= tnPropsAndValues_Count + 1
+			lnCantComillas	= OCCURS( '"', lcMetadatos )
 
-			*  Type="V" Cpid="1252"
-			*       ^ ^					=> Posiciones del par de comillas dobles
-			lnPos1	= AT( '"', lcMetadatos, m.I )
-			lnPos2	= AT( '"', lcMetadatos, m.I + 1 )
+			IF lnCantComillas % 2 <> 0	&& Valido que las comillas "" sean pares
+				*ERROR "Error de datos: No se puede parsear porque las comillas no son pares en la línea [" + lcMetadatos + "]"
+				ERROR (TEXTMERGE(loLang.C_DATA_ERROR_CANT_PARSE_UNPAIRING_DOUBLE_QUOTES_LOC))
+			ENDIF
 
-			*  Type="V" Cpid="1252"
-			*          ^     ^    ^			=> LastPos, lnPos1 y lnPos2
-			taPropsAndValues(tnPropsAndValues_Count,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
-			taPropsAndValues(tnPropsAndValues_Count,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
+			lnLastPos	= 1
+			DIMENSION taPropsAndValues( lnCantComillas / 2, 2 )
 
-			lnLastPos = lnPos2 + 1
-		ENDFOR
+			*-------------------------------------------------------------------------------------
+			* IMPORTANTE!!
+			* ------------
+			* SI SE SEPARAN LAS IGUALDADES CON ESPACIOS, ÉSTAS DEJAN DE RECONOCERSE!!  (prop = "valor" en vez de prop="valor")
+			* TENER EN CUENTA AL GENERAR EL TEXTO O AL MODIFICARLO MANUALMENTE AL MERGEAR
+			*-------------------------------------------------------------------------------------
+			FOR I = 1 TO lnCantComillas STEP 2
+				tnPropsAndValues_Count	= tnPropsAndValues_Count + 1
 
-		RELEASE tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag ;
-			, lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+				*  Type="V" Cpid="1252"
+				*       ^ ^					=> Posiciones del par de comillas dobles
+				lnPos1	= AT( '"', lcMetadatos, m.I )
+				lnPos2	= AT( '"', lcMetadatos, m.I + 1 )
+
+				*  Type="V" Cpid="1252"
+				*          ^     ^    ^			=> LastPos, lnPos1 y lnPos2
+				taPropsAndValues(tnPropsAndValues_Count,1)	= ALLTRIM( GETWORDNUM( SUBSTR( lcMetadatos, lnLastPos, lnPos1 - lnLastPos ), 1, '=' ) )
+				taPropsAndValues(tnPropsAndValues_Count,2)	= SUBSTR( lcMetadatos, lnPos1 + 1, lnPos2 - lnPos1 - 1 )
+
+				lnLastPos = lnPos2 + 1
+			ENDFOR
+
+		CATCH TO loEx
+			loEx.UserValue = loEx.UserValue + TEXTMERGE('I=<<I>>, lcMetadatos="<<lcMetadatos>>", tcLineWithMetadata="<<tcLineWithMetadata>>"') + CR_LF
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			RELEASE tcLineWithMetadata, taPropsAndValues, tnPropsAndValues_Count, tcLeftTag, tcRightTag ;
+				, lcMetadatos, I, lcVirtualMeta, lnPos1, lnPos2, lnLastPos, lnCantComillas
+
+		ENDTRY
+
 		RETURN
 	ENDPROC
 
@@ -8980,6 +9001,7 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 			ENDIF
 
 		CATCH TO loEx
+			loEx.UserValue = loEx.UserValue + TEXTMERGE('Source line=<<I>>') + CR_LF
 			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
 				SET STEP ON
 			ENDIF
