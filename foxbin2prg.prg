@@ -209,7 +209,8 @@
 * 11/01/2018	FDBOZZO		v1.19.49.7	Bug Fix: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Francisco Prieto)
 * 30/01/2018	FDBOZZO		v1.19.49.8	Bug Fix: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Kirides)
 * 03/03/2018	FDBOZZO		v1.19.50	Mejora: La información DevInfo de los PJX estará inhabilitada por defecto y se podrá activar con el nuevo switch BodyDevInfo
-* 03/03/2018    FDBOZZO     v1.19.50    Mejora: Nueva opción de configuración "PRG_Compat_Level": 0=Legacy
+* 03/03/2018    FDBOZZO     v1.19.50    Mejora: Nueva opción de configuración "PRG_Compat_Level": 0=Legacy, 1=Usar HELPSTRING para comentarios de métodos de clase en vez de "&&"
+* 03/03/2018    FDBOZZO     v1.19.50    Mejora: Permitir exportar a texto la información de DBFs cuya apertura está protegida por eventos del DBC
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -8400,13 +8401,13 @@ DEFINE CLASS c_conversor_prg_a_bin AS c_conversor_base
 		LOCAL lnATC
 		tcComment	= ''
 		lnATC		= ATC("HELPSTRING", tcLine)
-		
+
 		IF lnATC > 0
 			tcComment	= ALLTRIM(SUBSTR(tcLine, lnATC + 10 ))
-			
+
 			* Quitar comillas
 			tcComment	= SUBSTR(tcComment, 2, LEN(tcComment) - 2)
-			
+
 			tcLine		= RTRIM(LEFT(tcLine, lnATC - 1 ), 0, CHR(9), CHR(0), ' ')
 		ENDIF
 
@@ -11361,7 +11362,7 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 							loFile._ID			= .get_ValueByName_FromListNamesWithValues( 'ID', 'I', @laPropsAndValues )
 							loFile._ObjRev		= .get_ValueByName_FromListNamesWithValues( 'ObjRev', 'I', @laPropsAndValues )
 							loFile._User		= .get_ValueByName_FromListNamesWithValues( 'User', 'C', @laPropsAndValues )
-							
+
 							IF toFoxBin2Prg.n_BodyDevInfo = 1
 								loFile._DevInfo		= .get_ValueByName_FromListNamesWithValues( 'DevInfo', 'C', @laPropsAndValues )
 							ENDIF
@@ -13681,10 +13682,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 						*-- Comentarios del método (si tiene)
 						IF lnCommentRow > 0 AND NOT EMPTY(taPropsAndComments(lnCommentRow,2))
 							* PRG_Compat_Level >= 1
-                            IF BITAND(toFoxBin2Prg.n_PRG_Compat_Level, 1) > 0
+							IF BITAND(toFoxBin2Prg.n_PRG_Compat_Level, 1) > 0
 								lcMethod	= lcMethod + C_TAB + C_TAB + 'HELPSTRING "' + taPropsAndComments(lnCommentRow,2) + '"'
-                            ELSE
-                            	* PRG_Compat_Level = 0 (Default old setting)
+							ELSE
+								* PRG_Compat_Level = 0 (Default old setting)
 								lcMethod	= lcMethod + C_TAB + C_TAB + '&' + '& ' + taPropsAndComments(lnCommentRow,2)
 							ENDIF
 						ENDIF
@@ -14001,7 +14002,7 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 		lcSetDeleted	= SET("Deleted")
 		SET DELETED OFF
 
-		SCAN FOR PLATFORM = "WINDOWS" AND EMPTY(Parent) AND EMPTY(Reserved1)
+		SCAN FOR PLATFORM = "WINDOWS" AND EMPTY(Parent) AND EMPTY(RESERVED1)
 			lcParentObjName	= LOWER(OBJNAME)
 			DELETE
 			SKIP
@@ -16230,7 +16231,7 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	.ADD('<<loReg.NAME>>')
 						ENDTEXT
-						
+
 						IF toFoxBin2Prg.n_BodyDevInfo=1
 							* Generates an extra DevInfo tag for each body PJX record
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
@@ -17199,19 +17200,24 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 				ENDIF
 
-				LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1), lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
-					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
+				LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
+					, lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
+					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC ;
+					, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
+					, llDBCEventsEnabled ;
 					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
 					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
 					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
 					, loFSO AS Scripting.FileSystemObject ;
-					, loTextStream AS Scripting.TextStream
+					, loTextStream AS Scripting.TextStream ;
+					, loDBC AS CL_DBC OF 'FOXBIN2PRG.PRG'
 
 				loLang			= _SCREEN.o_FoxBin2Prg_Lang
 				loFSO			= toFoxBin2Prg.o_FSO
 				STORE NULL TO loTable, loDBFUtils
 				STORE 0 TO lnCodError
 				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
+				loDBC				= CREATEOBJECT('CL_DBC')
 
 				*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
 				.updateProgressbar( 'Scanning DBF Structure...', 1, 3, 1 )
@@ -17234,8 +17240,21 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
 				lnDatabases_Count	= ADATABASES(laDatabases)
 
+				* Si la tabla pertenece a un DBC, desactivar temporalmente los eventos
+				IF NOT EMPTY(lc_DBC_Name) AND ADIR(laDirInfo, FULLPATH(lc_DBC_Name, .c_InputFile)) = 1
+					loDBC._DBC			= FULLPATH(lc_DBC_Name, .c_InputFile)
+					llDBCEventsEnabled	= loDBC.DBGETPROP(lc_DBC_Name,"DATABASE","DBCEvents")
+
+					IF llDBCEventsEnabled
+						IF NOT loDBC.DBSETPROP(lc_DBC_Name,"DATABASE","DBCEvents",.F.)
+							llDBCEventsEnabled	= .F.
+						ENDIF
+					ENDIF
+				ENDIF
+
 				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
 				lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
+				.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
 
 				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
@@ -17244,7 +17263,6 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 				*-- Exportación de estructura y datos (para Diff solamente)
 				ERASE (.c_OutputFile + '.TMP' )
-				*toFoxBin2Prg.n_FileHandle	= FCREATE( .c_OutputFile + '.TMP' )
 				loTextStream	= loFSO.CreateTextFile(.c_OutputFile + '.TMP' )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				toFoxBin2Prg.o_TextStream = loTextStream
 
@@ -17252,10 +17270,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 					ERROR 102, (.c_OutputFile)
 				ENDIF
 
-				*FWRITE( toFoxBin2Prg.n_FileHandle, C_FB2PRG_CODE )
 				loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
 				loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-				*FCLOSE( toFoxBin2Prg.n_FileHandle )
 				loTextStream.Close()
 
 				DO CASE
@@ -17328,7 +17344,8 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		FINALLY
 			USE IN (SELECT("TABLABIN"))
-			*FCLOSE( toFoxBin2Prg.n_FileHandle )
+			THIS.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
+
 			IF VARTYPE(loTextStream) = "O" THEN
 				loTextStream.Close()
 			ENDIF
@@ -17351,6 +17368,19 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 
 		RETURN
 	ENDPROC
+
+
+	PROCEDURE RestoreDBCEvents(toDBC, tlDBCEventsEnabled)
+		#IF .F.
+			LOCAL toDBC AS CL_DBC OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		IF tlDBCEventsEnabled AND VARTYPE(toDBC)="O"
+			toDBC.DBSETPROP('',"DATABASE","DBCEvents",.T.)
+			tlDBCEventsEnabled	= .F.
+		ENDIF
+	ENDPROC
+
+
 ENDDEFINE
 
 
@@ -19451,6 +19481,8 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 	PROCEDURE DBGETPROP
 		*---------------------------------------------------------------------------------------------------
+		* Emula el comando DBGETPROP interno de VFP
+		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcName					(v! IN    ) Nombre del objeto
 		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
@@ -19459,87 +19491,59 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 		LPARAMETERS tcName, tcType, tcProperty
 
 		TRY
-			LOCAL lcValue, leValue, lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnPropertyID ;
-				, lnLastPos, lnLenCCode, lcDataType, lnSerchedDataCC, lcDBF, lnLenData, lnLenHeader
+			LOCAL lcValue, lxValue, lnSelect, lcInfo, lnRecno, lnRecordLen, lcBinRecord, lnPropertyID ;
+				, lnLastPos, lnLenCCode, lcDataType, lnSerchedDataCC, lcDBF, lnLenData, lnLenHeader ;
+				, lcInfo, lnRecno ;
+				, loEx as Exception
 
 			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
 				lnSelect	= SELECT()
-				leValue		= ''
-				tcName		= PROPER(RTRIM(tcName))
-				tcType		= PROPER(RTRIM(tcType))
-				tcProperty	= PROPER(RTRIM(tcProperty))
-				lcDBF		= DBF()
+				lxValue		= ''
 
-				SELECT 0
-				USE (lcDBF) SHARED AGAIN NOUPDATE ALIAS C_TABLABIN2
-
-				IF INLIST( tcType, 'Index', 'Field' )
-					SELECT TB.Property FROM C_TABLABIN2 TB ;
-						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
-						AND TB2.ObjectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
-						INTO ARRAY laProperty
-
-				ELSE
-					SELECT TB.Property FROM C_TABLABIN2 TB ;
-						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
-						INTO ARRAY laProperty
-
-				ENDIF
-
-				IF _TALLY > 0
-					IF EMPTY(laProperty(1,1))
+				IF .DBPROP_INFO_RECNO(tcName, tcType, tcProperty, @lcInfo, @lnRecno) > 0
+					IF EMPTY(lcInfo)
 						EXIT
 					ENDIF
 
-					lnLastPos		= 1
-					lnSerchedDataCC	= .getDBCPropertyIDByName( tcProperty, .T. )
+					IF .DBGETPROP_POS_AND_LEN(tcProperty, @lcInfo, @lnLastPos, @lnRecordLen ;
+							, @lcBinRecord, @lnLenCCode, @lnPropertyID)
 
-					DO WHILE lnLastPos < LEN(laProperty(1,1))
-						lnRecordLen		= CTOBIN( SUBSTR(laProperty(1,1), lnLastPos, 4), "4RS" )
-						lcBinRecord		= SUBSTR(laProperty(1,1), lnLastPos, lnRecordLen)
-						lnLenCCode		= CTOBIN( SUBSTR(lcBinRecord, 4+1, 2), "2RS" )
-						lnPropertyID	= ASC( SUBSTR(lcBinRecord, 4+2+1, lnLenCCode) )
+						lcDataType		= .getDBCPropertyValueTypeByPropertyID( lnPropertyID )
+						lnLenHeader		= 4 + 2 + lnLenCCode
+						lcValue			= SUBSTR(lcBinRecord, lnLenHeader + 1)
 
-						IF lnPropertyID = lnSerchedDataCC
-							lcDataType		= .getDBCPropertyValueTypeByPropertyID( lnPropertyID )
-							lnLenHeader		= 4 + 2 + lnLenCCode
-							lcValue			= SUBSTR(lcBinRecord, lnLenHeader + 1)
+						DO CASE
+						CASE lcDataType = 'B'
+							IF lnLenHeader = lnRecordLen
+								lxValue		= 0
+							ELSE
+								lxValue		= ASC( lcValue )
+							ENDIF
 
-							DO CASE
-							CASE lcDataType = 'B'
-								IF lnLenHeader = lnRecordLen
-									leValue		= 0
-								ELSE
-									leValue		= ASC( lcValue )
-								ENDIF
+						CASE lcDataType = 'L'
+							IF lnLenHeader = lnRecordLen
+								lxValue		= .F.
+							ELSE
+								lxValue		= ( CTOBIN( lcValue, "1S" ) = 1 )
+							ENDIF
 
-							CASE lcDataType = 'L'
-								IF lnLenHeader = lnRecordLen
-									leValue		= .F.
-								ELSE
-									leValue		= ( CTOBIN( lcValue, "1S" ) = 1 )
-								ENDIF
+						CASE lcDataType = 'N'
+							IF lnLenHeader = lnRecordLen
+								lxValue		= 0
+							ELSE
+								lxValue		= CTOBIN( lcValue, "4S" )
+							ENDIF
 
-							CASE lcDataType = 'N'
-								IF lnLenHeader = lnRecordLen
-									leValue		= 0
-								ELSE
-									leValue		= CTOBIN( lcValue, "4S" )
-								ENDIF
+						OTHERWISE && Asume 'C'
+							IF lnLenHeader = lnRecordLen
+								lxValue		= ''
+							ELSE
+								lxValue		= LEFT( lcValue, AT( CHR(0), lcValue ) - 1 )
+							ENDIF
+						ENDCASE
 
-							OTHERWISE && Asume 'C'
-								IF lnLenHeader = lnRecordLen
-									leValue		= ''
-								ELSE
-									leValue		= LEFT( lcValue, AT( CHR(0), lcValue ) - 1 )
-								ENDIF
-							ENDCASE
+					ENDIF
 
-							EXIT
-						ENDIF
-
-						lnLastPos	= lnLastPos + lnRecordLen
-					ENDDO
 				ELSE
 					ERROR 1562, (tcName)
 				ENDIF
@@ -19558,20 +19562,194 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 			SELECT (lnSelect)
 		ENDTRY
 
-		RETURN leValue
+		RETURN lxValue
 	ENDPROC
 
 
 	PROCEDURE DBSETPROP
 		*---------------------------------------------------------------------------------------------------
+		* Emula el comando DBSETPROP interno de VFP
+		*---------------------------------------------------------------------------------------------------
 		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 		* tcName					(v! IN    ) Nombre del objeto
 		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
 		* tcProperty				(v! IN    ) Nombre de la propiedad
-		* tePropertyValue			(v! IN    ) Valor de la propiedad
+		* txPropertyValue			(v! IN    ) Valor de la propiedad
 		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcName, tcType, tcProperty, tePropertyValue
+		LPARAMETERS tcName, tcType, tcProperty, txPropertyValue
 
+		TRY
+			LOCAL lnSelect, laProperty(1,1), lnRecordLen, lcBinRecord, lnPropertyID ;
+				, lnLastPos, lnLenCCode, lcDataType, lnSerchedDataCC, lnLenData, lnLenHeader ;
+				, lcInfo, lnRecno, llSet ;
+				, loEx as Exception
+
+			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+				lnSelect	= SELECT()
+				lcInfo		= ''
+
+				IF .DBPROP_INFO_RECNO(tcName, tcType, tcProperty, @lcInfo, @lnRecno) > 0
+					IF EMPTY(lcInfo)
+						EXIT
+					ENDIF
+
+					IF .DBGETPROP_POS_AND_LEN(tcProperty, @lcInfo, @lnLastPos, @lnRecordLen ;
+							, @lcBinRecord, @lnLenCCode, @lnPropertyID)
+
+						lcDataType		= .getDBCPropertyValueTypeByPropertyID( lnPropertyID )
+						lcBinRecord		= .getBinPropertyDataRecord( @txPropertyValue, lnPropertyID )
+
+						IF EMPTY(lcInfo)
+							lcInfo	= lcBinRecord
+						ELSE
+							lcInfo	= STUFF(lcInfo, lnLastPos, lnRecordLen, lcBinRecord)
+						ENDIF
+
+						GOTO RECORD (lnRecno)
+						REPLACE Property WITH lcInfo
+					ENDIF
+
+					llSet	= .T.
+
+				ELSE
+					ERROR 1562, (tcName)
+				ENDIF
+			ENDWITH && THIS
+
+
+		CATCH TO loEx
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			USE IN (SELECT("C_TABLABIN2"))
+			SELECT (lnSelect)
+		ENDTRY
+
+		RETURN llSet
+	ENDPROC
+
+
+	HIDDEN PROCEDURE DBPROP_INFO_RECNO
+		*---------------------------------------------------------------------------------------------------
+		* Devuelve el campo property y el número de registro donde lo encontró
+		* para ser usado por DBGETPROP y DBSETPROP
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcName					(v! IN    ) Nombre del objeto
+		* tcType					(v! IN    ) Tipo de objeto (Table, Index, Field, View, Relation)
+		* tcProperty				(v! IN    ) Nombre de la propiedad
+		* tcInfo					(@!    OUT) Información del campo memo "Property" que contiene el dato indicado
+		* tnRecno					(@!    OUT) Número de registro del campo encontrado
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcName, tcType, tcProperty, tcInfo, tnRecno
+
+		TRY
+			LOCAL laProperty(1,1), lcDBF, lnTally ;
+				, loEx as Exception
+
+			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+				tcType		= PROPER(RTRIM(tcType))
+				tcName		= IIF(tcType = 'Database', 'Database', PROPER(RTRIM(tcName)) )
+				tcProperty	= PROPER(RTRIM(tcProperty))
+				lcDBF		= IIF(tcType = 'Database', EVL(._DBC, tcName), DBF())
+				tcInfo		= ''
+				tnRecno		= 0
+				lnTally		= 0
+
+				SELECT 0
+				USE (lcDBF) SHARED AGAIN ALIAS C_TABLABIN2
+
+				IF INLIST( tcType, 'Index', 'Field' )
+					SELECT TB.Property, RECNO() FROM C_TABLABIN2 TB ;
+						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(JUSTEXT(tcName)),128) ;
+						AND TB2.ObjectName = PADR(LOWER(JUSTSTEM(tcName)),128) ;
+						INTO ARRAY laProperty
+
+				ELSE
+					SELECT TB.Property, RECNO() FROM C_TABLABIN2 TB ;
+						INNER JOIN C_TABLABIN2 TB2 ON STR(TB.ParentId)+TB.ObjectType+LOWER(TB.ObjectName) = STR(TB2.ObjectID)+PADR(tcType,10)+PADR(LOWER(tcName),128) ;
+						INTO ARRAY laProperty
+
+				ENDIF
+
+				IF _TALLY > 0
+					lnTally	= _TALLY
+					tcInfo	= laProperty(1,1)
+					tnRecno	= laProperty(1,2)
+				ENDIF
+			ENDWITH && THIS
+
+		CATCH TO loEx
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN lnTally
+	ENDPROC
+
+
+	HIDDEN PROCEDURE DBGETPROP_POS_AND_LEN
+		*---------------------------------------------------------------------------------------------------
+		* Devuelve la posición y longitud del dato asociado a la propiedad indicada
+		* para ser usado por DBGETPROP y DBSETPROP
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcProperty				(v! IN    ) Nombre de la propiedad
+		* tcInfo					(@! IN    ) Información del campo memo "Property" que contiene el dato indicado
+		* tnLastPos					(@!    OUT) Posición del campo Property donde se encontró el dato
+		* tnRecordLen				(@!    OUT) Longitud del registro del dato
+		* tcBinRecord				(@!    OUT) Registro de datos de la propiedad indicada
+		* tnLenCCode				(@!    OUT) Longitud del valor de la propiedad indicada
+		* tnPropertyID				(@!    OUT) ID de la propiedad indicada
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcProperty, tcInfo, tnLastPos, tnRecordLen, tcBinRecord, tnLenCCode, tnPropertyID
+
+		TRY
+			LOCAL lnSerchedDataCC, llFound ;
+				, loEx as Exception
+
+			WITH THIS AS CL_DBC_BASE OF 'FOXBIN2PRG.PRG'
+				tnLastPos		= 1
+				lnSerchedDataCC	= .getDBCPropertyIDByName( tcProperty, .T. )
+
+				DO WHILE tnLastPos < LEN(tcInfo)
+					* Estructura de tcBinRecord
+					* ----------------------
+					* |RLen|LC|ID|Value    |
+					* ----------------------
+
+					tnRecordLen		= CTOBIN( SUBSTR(tcInfo, tnLastPos, 4), "4RS" )
+					tcBinRecord		= SUBSTR(tcInfo, tnLastPos, tnRecordLen)
+					tnLenCCode		= CTOBIN( SUBSTR(tcBinRecord, 4+1, 2), "2RS" )
+					tnPropertyID	= ASC( SUBSTR(tcBinRecord, 4+2+1, tnLenCCode) )
+
+					IF tnPropertyID = lnSerchedDataCC
+						llFound	= .T.
+						EXIT
+					ENDIF
+
+					tnLastPos	= tnLastPos + tnRecordLen
+				ENDDO
+			ENDWITH && THIS
+
+		CATCH TO loEx
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		ENDTRY
+
+		RETURN llFound
 	ENDPROC
 
 
@@ -19585,6 +19763,11 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 
 		TRY
 			LOCAL lcBinRecord, lnLen, lcDataType
+
+			* Estructura de tcBinRecord
+			* ----------------------
+			* |RLen|LC|ID|Value    |
+			* ----------------------
 
 			lcBinRecord	= ''
 			lcDataType	= THIS.getDBCPropertyValueTypeByPropertyID( tnPropertyID )
