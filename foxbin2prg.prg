@@ -211,6 +211,7 @@
 * 03/03/2018	FDBOZZO		v1.19.50	Mejora: La información DevInfo de los PJX estará inhabilitada por defecto y se podrá activar con el nuevo switch BodyDevInfo
 * 03/03/2018    FDBOZZO     v1.19.50    Mejora: Nueva opción de configuración "PRG_Compat_Level": 0=Legacy, 1=Usar HELPSTRING para comentarios de métodos de clase en vez de "&&"
 * 03/03/2018    FDBOZZO     v1.19.50    Mejora: Permitir exportar a texto la información de DBFs cuya apertura está protegida por eventos del DBC
+* 12/03/2018	FDBOZZO		v1.19.50.1	Bug Fix: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Darko Kezic)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -332,6 +333,7 @@
 * 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Arreglado en v1.19.49.6)
 * 11/01/2018	Francisco Prieto	Reporte Bug v1.19.49: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Arreglado en v1.19.49.7)
 * 30/01/2018	Kirides				Reporte Bug v1.19.49: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Arreglado en v1.19.49.9)
+* 12/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Arreglado en v1.19.50.1)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3820,7 +3822,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				.c_OriginalFileName	= EVL( tcOriginalFileName, .c_InputFile )
 
-				IF UPPER( JUSTEXT(.c_OriginalFileName) ) = 'PJM'
+				IF UPPER( JUSTEXT(.c_OriginalFileName) ) = 'PJM' AND .c_PJ2 <> 'PJM'
 					.c_OriginalFileName	= FORCEEXT(.c_OriginalFileName,'pjx')
 				ENDIF
 
@@ -3868,7 +3870,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					loConversor		= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_PJ2 ), lcForceAttribs )
 
-				CASE lcExtension = 'PJM'
+				CASE lcExtension = 'PJM' AND .c_PJ2 <> 'PJM'
 					IF NOT INLIST(.PJX_Conversion_Support, 1, 2)
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 					ENDIF
@@ -4499,7 +4501,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 				.c_OriginalFileName	= EVL( tcOriginalFileName, .c_InputFile )
 
-				IF UPPER( JUSTEXT(.c_OriginalFileName) ) = 'PJM'
+				IF UPPER( JUSTEXT(.c_OriginalFileName) ) = 'PJM' AND .c_PJ2 <> 'PJM'
 					.c_OriginalFileName	= FORCEEXT(.c_OriginalFileName,'pjx')
 				ENDIF
 
@@ -4522,7 +4524,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				CASE lcExtension = 'PJX'
 					loConversor		= CREATEOBJECT( 'c_conversor_pjx_a_prg' )
 
-				CASE lcExtension = 'PJM'
+				CASE lcExtension = 'PJM' AND .c_PJ2 <> 'PJM'
 					loConversor		= CREATEOBJECT( 'c_conversor_pjm_a_prg' )
 
 				CASE lcExtension = 'FRX'
@@ -16820,6 +16822,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 							Timestamp="<<INT( loReg.TIMESTAMP )>>"
 							ID="<<INT( loReg.ID )>>"
 							ObjRev="<<INT( loReg.OBJREV )>>"
+							User=""
 							<<C_FILE_META_F>>
 						ENDTEXT
 						loReg	= NULL
@@ -16909,7 +16912,7 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 						<<>>	*<.CmntStyle = <<loProject._CmntStyle>> />
 						<<>>	*<.NoLogo = <<loProject._NoLogo>> />
 						<<>>	*<.SaveCode = <<loProject._SaveCode>> />
-						<<>>	*<.User = <<loProject._User>> />
+						<<>>	*<.User = '<<loProject._User>>' />
 						<<>>	.ProjectHookLibrary = '<<loProject._ProjectHookLibrary>>'
 						<<>>	.ProjectHookClass = '<<loProject._ProjectHookClass>>'
 						<<>>	<<C_PROJPROPS_F>>
@@ -17023,7 +17026,7 @@ DEFINE CLASS c_conversor_frx_a_prg AS c_conversor_bin_a_prg
 		DODEFAULT( @toModulo, @toEx, @toFoxBin2Prg )
 
 		TRY
-			WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
+			WITH THIS AS c_conversor_frx_a_prg OF 'FOXBIN2PRG.PRG'
 				IF toFoxBin2Prg.l_ProcessFiles THEN
 					LOCAL lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods(1), laCode(1), laProtected(1), lnLen ;
 						, laPropsAndValues(1), laPropsAndComments(1), lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle(1) ;
