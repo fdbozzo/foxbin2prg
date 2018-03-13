@@ -3042,7 +3042,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 								*-- Filespec: "*.PJX", "*"
 								.evaluate_Full_PJX(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile, tcType)
 
-							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND LEFT(EVL(tcType,'0'),1) == '*'
+							CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == .c_PJ2 AND LEFT(EVL(tcType,'0'),1) == '*'
 								*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UNO O MÁS PROYECTOS PJ2
 								*-- Filespec: "*.PJ2", "*"
 								.evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile, tcType)
@@ -3281,7 +3281,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 							.evaluate_Full_PJX(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, '', tcType)
 							EXIT
 
-						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == 'PJ2' AND LEFT(EVL(tcType,'0'),1) == '*'
+						CASE UPPER( JUSTEXT( EVL(tc_InputFile,'') ) ) == .c_PJ2 AND LEFT(EVL(tcType,'0'),1) == '*'
 							*-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN PROYECTO PJ2
 							.evaluate_Full_PJ2(tc_InputFile, tcRecompile, @toModulo, @toEx, @tcOriginalFileName, '', tcType)
 							EXIT
