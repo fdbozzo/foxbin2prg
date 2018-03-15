@@ -6517,11 +6517,14 @@ DEFINE CLASS c_conversor_base AS Custom
 			, tcExtension = 'LBX', 'B' ;
 			, tcExtension = 'VCX', 'V' ;
 			, tcExtension = 'PRG', 'P' ;
+			, tcExtension = 'FXP', 'P' ;
 			, tcExtension = 'FLL', 'L' ;
 			, tcExtension = 'APP', 'Z' ;
 			, tcExtension = 'EXE', 'Z' ;
 			, tcExtension = 'MNX', 'M' ;
 			, tcExtension = 'TXT', 'T' ;
+			, tcExtension = 'INI', 'T' ;
+			, tcExtension = 'BAT', 'T' ;
 			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
 			, tcExtension = 'HTM', 'T' ;
