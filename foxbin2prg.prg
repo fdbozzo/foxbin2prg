@@ -212,6 +212,7 @@
 * 03/03/2018    FDBOZZO     v1.19.50    Mejora: Nueva opción de configuración "PRG_Compat_Level": 0=Legacy, 1=Usar HELPSTRING para comentarios de métodos de clase en vez de "&&"
 * 03/03/2018    FDBOZZO     v1.19.50    Mejora: Permitir exportar a texto la información de DBFs cuya apertura está protegida por eventos del DBC
 * 12/03/2018	FDBOZZO		v1.19.50.1	Bug Fix: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Darko Kezic)
+* 15/03/2018	FDBOZZO		v1.19.50.3	Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -334,6 +335,7 @@
 * 11/01/2018	Francisco Prieto	Reporte Bug v1.19.49: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Arreglado en v1.19.49.7)
 * 30/01/2018	Kirides				Reporte Bug v1.19.49: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Arreglado en v1.19.49.9)
 * 12/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Arreglado en v1.19.50.1)
+* 15/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Arreglado en v1.19.50.3)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6524,11 +6526,9 @@ DEFINE CLASS c_conversor_base AS Custom
 			, tcExtension = 'TXT', 'T' ;
 			, tcExtension = 'FPW', 'T' ;
 			, tcExtension = 'H', 'T' ;
-			, tcExtension = 'HTM', 'T' ;
-			, tcExtension = 'HTML', 'T' ;
 			, tcExtension = 'SPR', 'E' ;
 			, tcExtension = 'MPR', 'P' ;
-			, 'x' )
+			, EVL(tcOriginalType, 'x') )
 	ENDPROC
 
 
