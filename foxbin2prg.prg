@@ -950,6 +950,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.writeLog( 'FoxBin2Prg INIT  -', 2 )
 		THIS.writeLog( REPLICATE( '*', 100 ) )
 		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ', FoxPro Version: ' + VERSION(4) + ')' )
+		THIS.writeLog( TEXTMERGE( '- Internal CFG: <<SYS(2019,2)>> / External CFG: <<SYS(2019,1)>> / CodePage Used: <<CPCURRENT()>>)' ) )
 		THIS.changeLanguage()
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
