@@ -213,6 +213,7 @@
 * 03/03/2018    FDBOZZO     v1.19.50    Mejora: Permitir exportar a texto la información de DBFs cuya apertura está protegida por eventos del DBC
 * 12/03/2018	FDBOZZO		v1.19.50.1	Bug Fix: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Darko Kezic)
 * 15/03/2018	FDBOZZO		v1.19.50.3	Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic)
+* 16/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de macros (.FKY)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -690,6 +691,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="c_fk2" display="c_FK2"/>] ;
+		+ [<memberdata name="c_me2" display="c_ME2"/>] ;
 		+ [<memberdata name="changefileattribute" display="changeFileAttribute"/>] ;
 		+ [<memberdata name="changefiletime" display="changeFileTime"/>] ;
 		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
@@ -751,7 +754,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="normalizefilecapitalization" display="normalizeFileCapitalization"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
-		+ [<memberdata name="o_fnc" display="o_FNC"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
 		+ [<memberdata name="o_wsh" display="o_WSH"/>] ;
 		+ [<memberdata name="o_configuration" display="o_Configuration"/>] ;
@@ -871,12 +873,16 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_DB2							= 'DB2'			&& DBF
 	c_DC2							= 'DC2'			&& DBC
 	c_MN2							= 'MN2'			&& MNX
+	c_FK2							= 'FK2'			&& FKY
+	c_ME2							= 'ME2'			&& MEM
 	PJX_Conversion_Support			= 2
 	VCX_Conversion_Support			= 2
 	SCX_Conversion_Support			= 2
 	FRX_Conversion_Support			= 2
 	LBX_Conversion_Support			= 2
 	MNX_Conversion_Support			= 2
+	FKY_Conversion_Support			= 2
+	MEM_Conversion_Support			= 0
 	DBF_Conversion_Support			= 1
 	DBC_Conversion_Support			= 2
 	DBF_Conversion_Included			= ''
@@ -1403,6 +1409,24 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
+	PROCEDURE c_FK2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_FK2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_FK2, THIS.c_FK2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_ME2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_ME2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_ME2, THIS.c_ME2 )
+		ENDIF
+	ENDPROC
+
+
 	PROCEDURE PJX_Conversion_Support_ACCESS
 		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
 			RETURN THIS.PJX_Conversion_Support
@@ -1453,6 +1477,24 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.MNX_Conversion_Support
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).MNX_Conversion_Support, THIS.MNX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE FKY_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.FKY_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).FKY_Conversion_Support, THIS.FKY_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE MEM_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.MEM_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).MEM_Conversion_Support, THIS.MEM_Conversion_Support )
 		ENDIF
 	ENDPROC
 
@@ -1766,7 +1808,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					tcBakFile_1		= FORCEEXT(tcOutputFile, lcExt_1 + lcNext_Bak)
 
 					DO CASE
-					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, 'PJM' )
+					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, .c_FK2, .c_ME2, 'PJM' )
 						*-- Extensiones TEXTO
 
 					CASE lcExt_1 = 'DBF'
@@ -1783,10 +1825,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
 						tcBakFile_3	= FORCEEXT(tcOutputFile, lcExt_3 + lcNext_Bak)
 
-					OTHERWISE
+					CASE INLIST( lcExt_1, 'PJX', 'VCX', 'SCX', 'FRX', 'LBX', 'MNX' )
 						*-- PJX, VCX, SCX, FRX, LBX, MNX
 						lcExt_2		= LEFT(lcExt_1,2) + 'T'
 						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
+
+					OTHERWISE
+						*-- PKY, MEM
 
 					ENDCASE
 
@@ -2636,6 +2681,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == 'FRX', .FRX_Conversion_Support > 0 ;
 				, lcExt == 'LBX', .LBX_Conversion_Support > 0 ;
 				, lcExt == 'MNX', .MNX_Conversion_Support > 0 ;
+				, lcExt == 'FKY', .FKY_Conversion_Support > 0 ;
+				, lcExt == 'MEM', .MEM_Conversion_Support > 0 ;
 				, lcExt == 'DBF', NOT ISNULL(loDBF_CFG) AND loDBF_CFG.DBF_Conversion_Support > 0 OR .DBF_Conversion_Support > 0 ;
 				, lcExt == 'DBC', .DBC_Conversion_Support > 0 ;
 				, .F. )
@@ -2676,6 +2723,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == .c_FR2, .FRX_Conversion_Support = 2 ;
 				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
 				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
+				, lcExt == .c_FK2, .FKY_Conversion_Support = 2 ;
+				, lcExt == .c_ME2, .MEM_Conversion_Support = 2 ;
 				, lcExt == .c_DB2, NOT ISNULL(loDBF_CFG) AND INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8) ;
 				OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
 				AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
@@ -2720,6 +2769,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 					, INLIST(lcExt, .c_FR2, 'FRX'), .FRX_Conversion_Support ;
 					, INLIST(lcExt, .c_LB2, 'LBX'), .LBX_Conversion_Support ;
 					, INLIST(lcExt, .c_MN2, 'MNX'), .MNX_Conversion_Support ;
+					, INLIST(lcExt, .c_FK2, 'FKY'), .FKY_Conversion_Support ;
+					, INLIST(lcExt, .c_ME2, 'MEM'), .MEM_Conversion_Support ;
 					, INLIST(lcExt, .c_DB2, 'DBF'), ICASE( ISNULL(loDBF_CFG) OR loDBF_CFG.DBF_Conversion_Support = 0, .DBF_Conversion_Support, loDBF_CFG.DBF_Conversion_Support ) ;
 					, INLIST(lcExt, .c_DC2, 'DBC'), .DBC_Conversion_Support ;
 					, 0 )
@@ -3242,7 +3293,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ENDCASE
 
 					*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
-					*IF LEN(EVL(tc_InputFile,'')) = 1
 					IF lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT
 						*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
 						*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
@@ -3923,6 +3973,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 					loConversor		= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), lcForceAttribs )
 
+				CASE lcExtension = 'FKY'
+					IF NOT INLIST(.FKY_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FK2 )
+					loConversor		= CREATEOBJECT( 'c_conversor_fky_a_prg' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_FK2 ), lcForceAttribs )
+
+				CASE lcExtension = 'MEM'
+					IF NOT INLIST(.MEM_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_ME2 )
+					loConversor		= CREATEOBJECT( 'c_conversor_mem_a_prg' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_ME2 ), lcForceAttribs )
+
 				CASE lcExtension = .c_VC2
 					IF .VCX_Conversion_Support <> 2
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
@@ -4004,6 +4070,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), lcForceAttribs )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), lcForceAttribs )
+
+				CASE lcExtension = .c_FK2
+					IF .FKY_Conversion_Support <> 2
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FKY' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_fky' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, 'FKY' ), lcForceAttribs )
+
+				CASE lcExtension = .c_ME2
+					IF .MEM_Conversion_Support <> 2
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MEM' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_mem' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, 'MEM' ), lcForceAttribs )
 
 				OTHERWISE
 					*ERROR 'El archivo [' + .c_InputFile + '] no está soportado'
@@ -5205,6 +5287,36 @@ DEFINE CLASS c_foxbin2prg AS Session
 		ENDTRY
 
 		RETURN lnExitCode
+	ENDFUNC
+
+
+	FUNCTION FERROR_Message(tcFileName as String)
+		LOCAL lcMsg, lnError
+		tcFileName	= EVL(tcFileName,'')
+		lnError		= FERROR()
+
+		DO CASE
+		CASE lnError = 2
+			lcMsg	= 'File not found'
+		CASE lnError = 4
+			lcMsg	= 'Too many files open (out of file handles)'
+		CASE lnError = 5
+			lcMsg	= 'Access denied'
+		CASE lnError = 6
+			lcMsg	= 'Invalid file handle given'
+		CASE lnError = 8
+			lcMsg	= 'Out of memory'
+		CASE lnError = 25
+			lcMsg	= [Seek error (can't seek before the start of a file)]
+		CASE lnError = 29
+			lcMsg	= 'Disk full'
+		CASE lnError = 31
+			lcMsg	= 'Error opening file'
+		OTHERWISE
+			lcMsg	= 'Unrecognized error trying to open the file ' + tcFileName
+		ENDCASE
+
+		RETURN lcMsg
 	ENDFUNC
 
 
@@ -17713,6 +17825,102 @@ ENDDEFINE
 
 
 
+DEFINE CLASS c_conversor_fky_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_fky_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	c_Type					= 'FKY'
+
+
+	PROCEDURE convert
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toMacro					(!@    OUT) Objeto generado de clase CL_MACRO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toMacro, toEx AS EXCEPTION, toFoxBin2Prg
+		DODEFAULT( @toMacro, @toEx, @toFoxBin2Prg )
+
+		#IF .F.
+			LOCAL toMacro AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnCodError, lnLen, lnHandle ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
+		TRY
+			WITH THIS AS c_conversor_fky_a_prg OF 'FOXBIN2PRG.PRG'
+				lnHandle	= -1
+
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					loLang			= _SCREEN.o_FoxBin2Prg_Lang
+					STORE 0 TO lnCodError
+
+					.updateProgressbar( 'Analyzing FKY...', 1, 2, 1 )
+
+					*-- Verificación de archivo de macros válido
+					*IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
+					*	*ERROR 'Menu [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU ' + JUSTFNAME((.c_InputFile))
+					*	ERROR (TEXTMERGE(loLang.C_MENU_NOT_IN_VFP9_FORMAT_LOC))
+					*ENDIF
+
+					*-- Header
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+
+					toMacro			= CREATEOBJECT('CL_MACRO')
+					toMacro.get_DataFromMacroFKY(.c_InputFile, @toFoxBin2Prg)
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toMacro.toText()
+				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
+				*-- Genero el FK2
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_FK2 + '...', 2, 2, 1 )
+				ENDIF
+
+				IF .l_Test
+					toMacro	= C_FB2PRG_CODE
+				ELSE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+				ENDIF
+			ENDWITH && THIS
+
+
+		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			*
+		ENDTRY
+
+		RETURN
+	ENDPROC
+ENDDEFINE
+
+
+
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT, CLASS)
 	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
@@ -28000,6 +28208,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
 		+ [<memberdata name="c_lb2" display="c_LB2"/>] ;
 		+ [<memberdata name="c_mn2" display="c_MN2"/>] ;
+		+ [<memberdata name="c_fk2" display="c_FK2"/>] ;
+		+ [<memberdata name="c_me2" display="c_ME2"/>] ;
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
@@ -28023,6 +28233,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="frx_conversion_support" display="FRX_Conversion_Support"/>] ;
 		+ [<memberdata name="lbx_conversion_support" display="LBX_Conversion_Support"/>] ;
 		+ [<memberdata name="mnx_conversion_support" display="MNX_Conversion_Support"/>] ;
+		+ [<memberdata name="fky_conversion_support" display="FKY_Conversion_Support"/>] ;
+		+ [<memberdata name="mem_conversion_support" display="MEM_Conversion_Support"/>] ;
 		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
 		+ [<memberdata name="dbf_conversion_included" display="DBF_Conversion_Included"/>] ;
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
@@ -28066,12 +28278,16 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	c_DB2							= NULL
 	c_DC2							= NULL
 	c_MN2							= NULL
+	c_FK2							= NULL
+	c_ME2							= NULL
 	PJX_Conversion_Support			= NULL
 	VCX_Conversion_Support			= NULL
 	SCX_Conversion_Support			= NULL
 	FRX_Conversion_Support			= NULL
 	LBX_Conversion_Support			= NULL
 	MNX_Conversion_Support			= NULL
+	FKY_Conversion_Support			= NULL
+	MEM_Conversion_Support			= NULL
 	DBF_Conversion_Support			= NULL
 	DBF_Conversion_Included			= NULL
 	DBF_Conversion_Excluded			= NULL
@@ -28113,12 +28329,16 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.c_DB2							= toParentCFG.c_DB2
 			.c_DC2							= toParentCFG.c_DC2
 			.c_MN2							= toParentCFG.c_MN2
+			.c_FK2							= toParentCFG.c_FK2
+			.c_ME2							= toParentCFG.c_ME2
 			.PJX_Conversion_Support			= toParentCFG.PJX_Conversion_Support
 			.VCX_Conversion_Support			= toParentCFG.VCX_Conversion_Support
 			.SCX_Conversion_Support			= toParentCFG.SCX_Conversion_Support
 			.FRX_Conversion_Support			= toParentCFG.FRX_Conversion_Support
 			.LBX_Conversion_Support			= toParentCFG.LBX_Conversion_Support
 			.MNX_Conversion_Support			= toParentCFG.MNX_Conversion_Support
+			.FKY_Conversion_Support			= toParentCFG.FKY_Conversion_Support
+			.MEM_Conversion_Support			= toParentCFG.MEM_Conversion_Support
 			.DBF_Conversion_Support			= toParentCFG.DBF_Conversion_Support
 			.DBF_Conversion_Included		= toParentCFG.DBF_Conversion_Included
 			.DBF_Conversion_Excluded		= toParentCFG.DBF_Conversion_Excluded
@@ -28938,3 +29158,892 @@ DEFINE CLASS CL_DBF_CFG AS CUSTOM
 	DBF_Conversion_Condition	= ''
 	DBF_Conversion_Support		= NULL
 ENDDEFINE
+
+
+
+DEFINE CLASS CL_MACRO AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="_numberofmacros" display="_NumberOfMacros"/>] ;
+		+ [<memberdata name="_debug" display="_Debug"/>] ;
+		+ [<memberdata name="_signature" display="_Signature"/>] ;
+		+ [<memberdata name="get_datafrommacrofky" display="get_DataFromMacroFKY"/>] ;
+		+ [<memberdata name="_macros" display="_Macros"/>] ;
+		+ [</VFPData>]
+
+
+	c_InputFile			= ''
+
+	*-- Macro Header
+	_Signature			= ''
+	_Debug				= .F.
+	_NumberOfMacros		= ''
+	_Macros				= NULL		&& Colección de macros
+
+
+
+	PROCEDURE INIT
+		DODEFAULT()
+		THIS._Macros = CREATEOBJECT("COLLECTION")
+	ENDPROC
+
+
+	PROCEDURE get_DataFromMacroFKY(tcInputFile as String, toFoxBin2Prg)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcInputFile				(!v IN    ) Archivo de entrada
+		* toFoxBin2Prg				(!@ IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnHandle, lnFileLen, lcMsg, lcStr, lnNumberOfMacros ;
+			, loMRec as CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG' ;
+			, loColl as Collection ;
+			, loEx as Exception
+
+		TRY
+			lnHandle	= -1
+
+			WITH THIS AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+				loColl		= ._Macros
+				lnHandle	= FOPEN(tcInputFile, 0)
+
+				IF lnHandle = -1
+					lcMsg	= toFoxBin2Prg.FERROR_Message(tcInputFile)
+					ERROR (lcMsg)
+				ENDIF
+
+				lnFileLen	= FSEEK(lnHandle, 0, 2)
+
+				IF lnFileLen < 17
+					ERROR 'Invalid FKY Macro File size'
+				ELSE
+					=FSEEK(lnHandle, 0, 0)
+				ENDIF
+
+				._Signature	= FREAD(lnHandle, 2)
+
+				IF ._Signature <> CHR(0xFF)+CHR(0x79)
+					ERROR 'Invalid FKY Macro signature'
+				ENDIF
+
+				=FSEEK(lnHandle, 14, 1)	&& Saltar bytes ignorados
+
+				._NumberOfMacros	= FREAD(lnHandle, 2)
+				lnNumberOfMacros	= CTOBIN(._NumberOfMacros,'2RS')
+
+				IF lnFileLen < 17 + 25 * lnNumberOfMacros
+					* 25 caracteres es el tamaño mínimo de una macro sin teclas guardadas (solo la estructura)
+					ERROR 'Invalid FKY Macro File size'
+				ENDIF
+
+				FOR I = 1 TO lnNumberOfMacros
+					loMRec	= CREATEOBJECT("CL_MACRO_RECORD")
+
+					IF NOT loMRec.ReadNextMacro(lnHandle)
+						EXIT
+					ENDIF
+
+					loColl.Add( loMRec, loMRec.Macro_Name )
+					loMRec	= NULL
+				ENDFOR
+
+			ENDWITH
+
+		CATCH TO loEx
+			*loEx.UserValue = loEx.UserValue + 'lcAsignacion = [' + TRANSFORM(lcAsignacion) + ']' + CR_LF
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			IF lnHandle <> -1
+				=FCLOSE(lnHandle)
+			ENDIF
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE decode_SpecialCodes_CR_LF
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Decodifica los caracteres ASCII 10 y 13 de {nCode} a CHR(nCode)
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcText
+		tcText	= STRTRAN( STRTRAN( tcText, '{10}', CHR(10) ), '{13}', CHR(13) )
+		RETURN tcText
+	ENDPROC
+
+
+
+	PROCEDURE encode_SpecialCodes_CR_LF
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcText					(!@ IN    ) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS tcText
+		tcText	= STRTRAN( STRTRAN( tcText, CHR(10), '{10}' ), CHR(13), '{13}' )
+		RETURN tcText
+	ENDPROC
+
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loMRec AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+
+			*-- Macros
+			FOR EACH loMRec AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG' IN ._Macros
+				lcText	= lcText + CR_LF + loMRec.toText()
+			ENDFOR
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="macro_name" display="Macro_Name"/>] ;
+		+ [<memberdata name="macro_length" display="Macro_Length"/>] ;
+		+ [<memberdata name="keystroke" display="Keystroke"/>] ;
+		+ [<memberdata name="macro_keystrokes" display="Macro_Keystrokes"/>] ;
+		+ [<memberdata name="readnextmacro" display="ReadNextMacro"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [<memberdata name="tobin" display="toBin"/>] ;
+		+ [<memberdata name="get_macro_keystrokes" display="get_Macro_Keystrokes"/>] ;
+		+ [<memberdata name="get_keytext" display="get_KeyText"/>] ;
+		+ [</VFPData>]
+
+	*--
+	Macro_Name					= ''
+	Macro_Length				= ''
+	Keystroke					= ''
+	Macro_Keystrokes			= ''
+
+
+	PROCEDURE ReadNextMacro(tnHandle as Integer)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnHandle					(!v IN    ) FKY file handle
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lnMacro_Length
+
+		TRY
+			WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+				.Macro_Name			= FREAD(tnHandle, 20)
+				.Macro_Length		= FREAD(tnHandle, 2)
+				.Keystroke			= FREAD(tnHandle, 2)
+				lnMacro_Length		= CTOBIN(.Macro_Length, '2RS')
+				.Macro_Keystrokes	= FREAD(tnHandle, lnMacro_Length * 2)
+			ENDWITH
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE toBin as String
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText
+
+		WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE toText as String
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loField AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>><MACRO>
+				<<>>	Macro_Name      : <<ALLTRIM(.Macro_Name, 0, CHR(0), CHR(32))>>
+				<<>>	Keystroke       : <<.get_Macro_Keystrokes(.Keystroke, .T.)>>
+				<<>>	Macro_Keystrokes: <<.get_Macro_Keystrokes(.Macro_Keystrokes)>>
+				<<>></MACRO>
+			ENDTEXT
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+	FUNCTION get_Macro_Keystrokes(tcMacroStr, tlLiteralForCaption)
+		*---------------------------------------------------------------------------------------------------
+		* DEVLUELVE LOS LITERALES DE TODAS LAS TECLAS
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcKeystrokes, I
+
+		WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+			lcKeystrokes	= ''
+
+			FOR I = 1 TO LEN(tcMacroStr) STEP 2
+				lcKeystrokes	= lcKeystrokes + .get_KeyText(@tcMacroStr, @I, tlLiteralForCaption)
+			ENDFOR
+		ENDWITH
+
+		RETURN lcKeystrokes
+	ENDFUNC
+
+
+	FUNCTION get_KeyText(tcMacroStr as String, I as Integer, tlLiteralForCaption as Boolean) as String
+		*---------------------------------------------------------------------------------------------------
+		* DEVLUELVE EL LITERAL DE UNA TECLA
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcMacroStr				(!@ IN    ) Cadena de teclas de la macro
+		* I							(!@ IN    ) Posición actualmente analizada de la cadena
+		* tlLiteralForCaption		(?v IN    ) Indica si algunos caracteres especiales se deben convertir a literal (ej: ";" => "SHIFT+SEMICOLON")
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcMod, lcKey, lcKeyName, lcKeyMod, lcTecla, lnKeyVal, lcKeyPair, lnCntMod ;
+			, llComplementar, llKeyCodeShift, llKeyCodeCtrl, llKeyCodeAlt, lnMod, lnKey
+
+		STORE '' TO lcTecla, lcKeyName, lcKeyMod, lcKey
+		lcKeyPair	= SUBSTR(tcMacroStr,I,2)
+		lnKeyVal	= CTOBIN(lcKeyPair, '2RS')
+		lcKey		= LEFT(lcKeyPair,1)
+		lcMod		= RIGHT(lcKeyPair,1)
+		lnMod		= ASC(lcMod)
+		lnKey		= ASC(lcKey)
+		lnCntMod	= 0
+
+		* Tratamiento de modificadores
+		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF)
+			IF BITAND(lnMod, 0x80) = 0x80	&& LITERAL
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'LITERAL'
+			ENDIF
+			IF BITAND(lnMod, 0x40) = 0x40	&& ALT
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'ALT'
+				llKeyCodeAlt	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+			IF BITAND(lnMod, 0x20) = 0x20	&& CTRL
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
+				llKeyCodeCtrl	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+			IF BITAND(lnMod, 0x10) = 0x10	&& SHIFT
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
+				llKeyCodeShift	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+		ENDIF
+
+		llComplementar	= llKeyCodeAlt OR llKeyCodeCtrl OR llKeyCodeShift
+		*llComplementar	= llKeyCodeShift
+
+		* Tratamiento de teclas normales
+		* (Ordenar de mayor valor a menor: 0xFFF > 0x000)
+		DO CASE
+		CASE lcKeyPair == CHR(0xFE)+CHR(0xFF)
+			lcKeyName	= 'PAUSE '
+			* Buscar el tiempo
+			I	= I + 2
+			lcKeyPair	= SUBSTR(tcMacroStr,I,2)
+
+			IF lcKeyPair == CHR(0xFF)+CHR(0xFF)
+				lcKeyName	= lcKeyName + 'KEY'
+			ELSE
+				lnKeyVal	= CTOBIN(lcKeyPair, '2RS')
+				lcKeyName	= lcKeyName + LTRIM(STR(lnKeyVal/100,5,2))
+			ENDIF
+
+		CASE BITAND(lnMod, 0x01) = 0x01 ;
+				OR BITAND(lnMod, 0x10) = 0x10 ;
+				OR BITAND(lnMod, 0x20) = 0x20 ;
+				OR BITAND(lnMod, 0x40) = 0x40
+			*llComplementar	= .F.
+
+			DO CASE
+			CASE BITAND(lnKeyVal, 0x41A3) = 0x41A3
+				lcKeyName	= 'ALT+DEL'
+
+			CASE BITAND(lnKeyVal, 0x41A2) = 0x41A2
+				lcKeyName	= 'ALT+INS'
+
+			CASE BITAND(lnKeyVal, 0x41A1) = 0x41A1
+				lcKeyName	= 'ALT+PGND'
+
+			CASE BITAND(lnKeyVal, 0x41A0) = 0x41A0
+				lcKeyName	= 'ALT+DNARROW'
+
+			CASE BITAND(lnKeyVal, 0x419F) = 0x419F
+				lcKeyName	= 'ALT+END'
+
+			CASE BITAND(lnKeyVal, 0x419D) = 0x419D
+				lcKeyName	= 'ALT+RIGHTARROW'
+
+			CASE BITAND(lnKeyVal, 0x419B) = 0x419B
+				lcKeyName	= 'ALT+LEFTARROW'
+
+			CASE BITAND(lnKeyVal, 0x4199) = 0x4199
+				lcKeyName	= 'ALT+PGUP'
+
+			CASE BITAND(lnKeyVal, 0x4198) = 0x4198
+				lcKeyName	= 'ALT+UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x4197) = 0x4197
+				lcKeyName	= 'ALT+HOME'
+
+			CASE BITAND(lnKeyVal, 0x418C) = 0x418C
+				lcKeyName	= 'ALT+F12'
+
+			CASE BITAND(lnKeyVal, 0x418B) = 0x418B
+				lcKeyName	= 'ALT+F11'
+
+			CASE BITAND(lnKeyVal, 0x4181) = 0x4181
+				lcKeyName	= 'ALT+0'
+
+			CASE BITAND(lnKeyVal, 0x4180) = 0x4180
+				lcKeyName	= 'ALT+9'
+
+			CASE BITAND(lnKeyVal, 0x417F) = 0x417F
+				lcKeyName	= 'ALT+8'
+
+			CASE BITAND(lnKeyVal, 0x417E) = 0x417E
+				lcKeyName	= 'ALT+7'
+
+			CASE BITAND(lnKeyVal, 0x417D) = 0x417D
+				lcKeyName	= 'ALT+6'
+
+			CASE BITAND(lnKeyVal, 0x417C) = 0x417C
+				lcKeyName	= 'ALT+5'
+
+			CASE BITAND(lnKeyVal, 0x417B) = 0x417B
+				lcKeyName	= 'ALT+4'
+
+			CASE BITAND(lnKeyVal, 0x417A) = 0x417A
+				lcKeyName	= 'ALT+3'
+
+			CASE BITAND(lnKeyVal, 0x4179) = 0x4179
+				lcKeyName	= 'ALT+2'
+
+			CASE BITAND(lnKeyVal, 0x4178) = 0x4178
+				lcKeyName	= 'ALT+1'
+
+			CASE BITAND(lnKeyVal, 0x4171) = 0x4171
+				lcKeyName	= 'ALT+F10'
+
+			CASE BITAND(lnKeyVal, 0x4170) = 0x4170
+				lcKeyName	= 'ALT+F9'
+
+			CASE BITAND(lnKeyVal, 0x416F) = 0x416F
+				lcKeyName	= 'ALT+F8'
+
+			CASE BITAND(lnKeyVal, 0x416E) = 0x416E
+				lcKeyName	= 'ALT+F7'
+
+			CASE BITAND(lnKeyVal, 0x416D) = 0x416D
+				lcKeyName	= 'ALT+F6'
+
+			CASE BITAND(lnKeyVal, 0x416C) = 0x416C
+				lcKeyName	= 'ALT+F5'
+
+			CASE BITAND(lnKeyVal, 0x416B) = 0x416B
+				lcKeyName	= 'ALT+F4'
+
+			CASE BITAND(lnKeyVal, 0x416A) = 0x416A
+				lcKeyName	= 'ALT+F3'
+
+			CASE BITAND(lnKeyVal, 0x4169) = 0x4169
+				lcKeyName	= 'ALT+F2'
+
+			CASE BITAND(lnKeyVal, 0x4168) = 0x4168
+				lcKeyName	= 'ALT+F1'
+
+			CASE BITAND(lnKeyVal, 0x4132) = 0x4132
+				lcKeyName	= 'ALT+M'
+
+			CASE BITAND(lnKeyVal, 0x4131) = 0x4131
+				lcKeyName	= 'ALT+N'
+
+			CASE BITAND(lnKeyVal, 0x4130) = 0x4130
+				lcKeyName	= 'ALT+B'
+
+			CASE BITAND(lnKeyVal, 0x412F) = 0x412F
+				lcKeyName	= 'ALT+V'
+
+			CASE BITAND(lnKeyVal, 0x412E) = 0x412E
+				lcKeyName	= 'ALT+C'
+
+			CASE BITAND(lnKeyVal, 0x412D) = 0x412D
+				lcKeyName	= 'ALT+X'
+
+			CASE BITAND(lnKeyVal, 0x412C) = 0x412C
+				lcKeyName	= 'ALT+Z'
+
+			CASE BITAND(lnKeyVal, 0x4126) = 0x4126
+				lcKeyName	= 'ALT+L'
+
+			CASE BITAND(lnKeyVal, 0x4125) = 0x4125
+				lcKeyName	= 'ALT+K'
+
+			CASE BITAND(lnKeyVal, 0x4124) = 0x4124
+				lcKeyName	= 'ALT+J'
+
+			CASE BITAND(lnKeyVal, 0x4123) = 0x4123
+				lcKeyName	= 'ALT+H'
+
+			CASE BITAND(lnKeyVal, 0x4122) = 0x4122
+				lcKeyName	= 'ALT+G'
+
+			CASE BITAND(lnKeyVal, 0x4121) = 0x4121
+				lcKeyName	= 'ALT+F'
+
+			CASE BITAND(lnKeyVal, 0x4120) = 0x4120
+				lcKeyName	= 'ALT+D'
+
+			CASE BITAND(lnKeyVal, 0x411F) = 0x411F
+				lcKeyName	= 'ALT+S'
+
+			CASE BITAND(lnKeyVal, 0x411E) = 0x411E
+				lcKeyName	= 'ALT+A'
+
+			CASE BITAND(lnKeyVal, 0x4119) = 0x4119
+				lcKeyName	= 'ALT+P'
+
+			CASE BITAND(lnKeyVal, 0x4118) = 0x4118
+				lcKeyName	= 'ALT+O'
+
+			CASE BITAND(lnKeyVal, 0x4117) = 0x4117
+				lcKeyName	= 'ALT+I'
+
+			CASE BITAND(lnKeyVal, 0x4116) = 0x4116
+				lcKeyName	= 'ALT+U'
+
+			CASE BITAND(lnKeyVal, 0x4115) = 0x4115
+				lcKeyName	= 'ALT+Y'
+
+			CASE BITAND(lnKeyVal, 0x4114) = 0x4114
+				lcKeyName	= 'ALT+T'
+
+			CASE BITAND(lnKeyVal, 0x4113) = 0x4113
+				lcKeyName	= 'ALT+R'
+
+			CASE BITAND(lnKeyVal, 0x4112) = 0x4112
+				lcKeyName	= 'ALT+E'
+
+			CASE BITAND(lnKeyVal, 0x4111) = 0x4111
+				lcKeyName	= 'ALT+U'
+
+			CASE BITAND(lnKeyVal, 0x4110) = 0x4110
+				lcKeyName	= 'ALT+Q'
+
+			CASE BITAND(lnKeyVal, 0x410C) = 0x410C
+				lcKeyName	= [ALT+']	&& No está en la ayuda de VFP
+
+			CASE BITAND(lnKeyVal, 0x2194) = 0x2194
+				lcKeyName	= 'CTRL+TAB'
+
+			CASE BITAND(lnKeyVal, 0x2193) = 0x2193
+				lcKeyName	= 'CTRL+DEL'
+
+			CASE BITAND(lnKeyVal, 0x2192) = 0x2192
+				lcKeyName	= 'CTRL+INS'
+
+			CASE BITAND(lnKeyVal, 0x2191) = 0x2191
+				lcKeyName	= 'CTRL+DNARROW'
+
+			CASE BITAND(lnKeyVal, 0x218D) = 0x218D
+				lcKeyName	= 'CTRL+UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x218A) = 0x218A
+				lcKeyName	= 'CTRL+F12'
+
+			CASE BITAND(lnKeyVal, 0x2189) = 0x2189
+				lcKeyName	= 'CTRL+F11'
+
+			CASE BITAND(lnKeyVal, 0x2184) = 0x2184
+				lcKeyName	= 'CTRL+PGUP'
+
+			CASE BITAND(lnKeyVal, 0x2177) = 0x2177
+				lcKeyName	= 'CTRL+HOME'
+
+			CASE BITAND(lnKeyVal, 0x2176) = 0x2176
+				lcKeyName	= 'CTRL+PGDN'
+
+			CASE BITAND(lnKeyVal, 0x2175) = 0x2175
+				lcKeyName	= 'CTRL+END'
+
+			CASE BITAND(lnKeyVal, 0x2174) = 0x2174
+				lcKeyName	= 'CTRL+RIGHTARROW'
+
+			CASE BITAND(lnKeyVal, 0x2173) = 0x2173
+				lcKeyName	= 'CTRL+LEFTARROW'
+
+			CASE BITAND(lnKeyVal, 0x2167) = 0x2167
+				lcKeyName	= 'CTRL+F10'
+
+			CASE BITAND(lnKeyVal, 0x2166) = 0x2166
+				lcKeyName	= 'CTRL+F9'
+
+			CASE BITAND(lnKeyVal, 0x2165) = 0x2165
+				lcKeyName	= 'CTRL+F8'
+
+			CASE BITAND(lnKeyVal, 0x2164) = 0x2164
+				lcKeyName	= 'CTRL+F7'
+
+			CASE BITAND(lnKeyVal, 0x2163) = 0x2163
+				lcKeyName	= 'CTRL+F6'
+
+			CASE BITAND(lnKeyVal, 0x2162) = 0x2162
+				lcKeyName	= 'CTRL+F5'
+
+			CASE BITAND(lnKeyVal, 0x2161) = 0x2161
+				lcKeyName	= 'CTRL+F4'
+
+			CASE BITAND(lnKeyVal, 0x2160) = 0x2160
+				lcKeyName	= 'CTRL+F3'
+
+			CASE BITAND(lnKeyVal, 0x215F) = 0x215F
+				lcKeyName	= 'CTRL+F2'
+
+			CASE BITAND(lnKeyVal, 0x215E) = 0x215E
+				lcKeyName	= 'CTRL+F1'
+
+			CASE BITAND(lnKeyVal, 0x2020) = 0x2020
+				lcKeyName	= 'CTRL+SPACEBAR'
+
+			CASE BITAND(lnKeyVal, 0x201F) = 0x201F
+				lcKeyName	= 'CTRL+HYPHEN'
+
+			CASE BITAND(lnKeyVal, 0x201E) = 0x201E
+				lcKeyName	= 'CTRL+CARET'
+
+			CASE BITAND(lnKeyVal, 0x201D) = 0x201D
+				lcKeyName	= 'CTRL+RBRACKET'
+
+			CASE BITAND(lnKeyVal, 0x201C) = 0x201C
+				lcKeyName	= 'CTRL+BACKSLASH'
+
+			CASE BITAND(lnKeyVal, 0x201B) = 0x201B
+				lcKeyName	= 'CTRL+LBRACKET'
+
+			CASE BITAND(lnKeyVal, 0x201A) = 0x201A
+				lcKeyName	= 'CTRL+Z'
+
+			CASE BITAND(lnKeyVal, 0x2019) = 0x2019
+				lcKeyName	= 'CTRL+Y'
+
+			CASE BITAND(lnKeyVal, 0x2018) = 0x2018
+				lcKeyName	= 'CTRL+X'
+
+			CASE BITAND(lnKeyVal, 0x2017) = 0x2017
+				lcKeyName	= 'CTRL+W'
+
+			CASE BITAND(lnKeyVal, 0x2016) = 0x2016
+				lcKeyName	= 'CTRL+V'
+
+			CASE BITAND(lnKeyVal, 0x2015) = 0x2015
+				lcKeyName	= 'CTRL+U'
+
+			CASE BITAND(lnKeyVal, 0x2014) = 0x2014
+				lcKeyName	= 'CTRL+T'
+
+			CASE BITAND(lnKeyVal, 0x2013) = 0x2013
+				lcKeyName	= 'CTRL+S'
+
+			CASE BITAND(lnKeyVal, 0x2012) = 0x2012
+				lcKeyName	= 'CTRL+R'
+
+			CASE BITAND(lnKeyVal, 0x2011) = 0x2011
+				lcKeyName	= 'CTRL+Q'
+
+			CASE BITAND(lnKeyVal, 0x2010) = 0x2010
+				lcKeyName	= 'CTRL+P'
+
+			CASE BITAND(lnKeyVal, 0x200F) = 0x200F
+				lcKeyName	= 'CTRL+O'
+
+			CASE BITAND(lnKeyVal, 0x200E) = 0x200E
+				lcKeyName	= 'CTRL+N'
+
+			CASE BITAND(lnKeyVal, 0x200D) = 0x200D
+				lcKeyName	= 'CTRL+M'
+
+			CASE BITAND(lnKeyVal, 0x200C) = 0x200C
+				lcKeyName	= 'CTRL+L'
+
+			CASE BITAND(lnKeyVal, 0x200B) = 0x200B
+				lcKeyName	= 'CTRL+K'
+
+			CASE BITAND(lnKeyVal, 0x200A) = 0x200A
+				lcKeyName	= 'CTRL+ENTER'
+
+			CASE BITAND(lnKeyVal, 0x200A) = 0x200A
+				lcKeyName	= 'CTRL+J'
+
+			CASE BITAND(lnKeyVal, 0x2009) = 0x2009
+				lcKeyName	= 'CTRL+I'
+
+			CASE BITAND(lnKeyVal, 0x2008) = 0x2008
+				lcKeyName	= 'CTRL+H'
+
+			CASE BITAND(lnKeyVal, 0x2007) = 0x2007
+				lcKeyName	= 'CTRL+G'
+
+			CASE BITAND(lnKeyVal, 0x2006) = 0x2006
+				lcKeyName	= 'CTRL+F'
+
+			CASE BITAND(lnKeyVal, 0x2005) = 0x2005
+				lcKeyName	= 'CTRL+E'
+
+			CASE BITAND(lnKeyVal, 0x2004) = 0x2004
+				lcKeyName	= 'CTRL+D'
+
+			CASE BITAND(lnKeyVal, 0x2003) = 0x2003
+				lcKeyName	= 'CTRL+C'
+
+			CASE BITAND(lnKeyVal, 0x2002) = 0x2002
+				lcKeyName	= 'CTRL+B'
+
+			CASE BITAND(lnKeyVal, 0x2001) = 0x2001
+				lcKeyName	= 'CTRL+A'
+
+			CASE BITAND(lnKeyVal, 0x1188) = 0x1188
+				lcKeyName	= 'SHIFT+F12'
+
+			CASE BITAND(lnKeyVal, 0x1187) = 0x1187
+				lcKeyName	= 'SHIFT+F11'
+
+			CASE BITAND(lnKeyVal, 0x115D) = 0x115D
+				lcKeyName	= 'SHIFT+F10'
+
+			CASE BITAND(lnKeyVal, 0x115C) = 0x115C
+				lcKeyName	= 'SHIFT+F9'
+
+			CASE BITAND(lnKeyVal, 0x115B) = 0x115B
+				lcKeyName	= 'SHIFT+F8'
+
+			CASE BITAND(lnKeyVal, 0x115A) = 0x115A
+				lcKeyName	= 'SHIFT+F7'
+
+			CASE BITAND(lnKeyVal, 0x1159) = 0x1159
+				lcKeyName	= 'SHIFT+F6'
+
+			CASE BITAND(lnKeyVal, 0x1158) = 0x1158
+				lcKeyName	= 'SHIFT+F5'
+
+			CASE BITAND(lnKeyVal, 0x1157) = 0x1157
+				lcKeyName	= 'SHIFT+F4'
+
+			CASE BITAND(lnKeyVal, 0x1156) = 0x1156
+				lcKeyName	= 'SHIFT+F3'
+
+			CASE BITAND(lnKeyVal, 0x1155) = 0x1155
+				lcKeyName	= 'SHIFT+F2'
+
+			CASE BITAND(lnKeyVal, 0x1154) = 0x1154
+				lcKeyName	= 'SHIFT+F1'
+
+			CASE BITAND(lnKeyVal, 0x0186) = 0x0186
+				lcKeyName	= 'F12'
+
+			CASE BITAND(lnKeyVal, 0x0185) = 0x0185
+				lcKeyName	= 'F11'
+
+			CASE INLIST(lnKeyVal, 0x0153, 0x1153)
+				lcKeyName	= 'DEL'
+
+			CASE INLIST(lnKeyVal, 0x0152, 0x1152)
+				lcKeyName	= 'INS'
+
+			CASE INLIST(lnKeyVal, 0x0151, 0x1151)
+				lcKeyName	= 'PGDN'
+
+			CASE INLIST(lnKeyVal, 0x0150, 0x1150)
+				lcKeyName	= 'DNARROW'
+
+			CASE INLIST(lnKeyVal, 0x014F, 0x114F)
+				lcKeyName	= 'END'
+
+			CASE INLIST(lnKeyVal, 0x014D, 0x114D)
+				lcKeyName	= 'RIGHTARROW'
+
+			CASE INLIST(lnKeyVal, 0x014B, 0x114B)
+				lcKeyName	= 'LEFTARROW'
+
+			CASE INLIST(lnKeyVal, 0x0149, 0x1149)
+				lcKeyName	= 'PGUP'
+
+			CASE INLIST(lnKeyVal, 0x0148, 0x1148)
+				lcKeyName	= 'UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x0147) = 0x0147
+				lcKeyName	= 'HOME'
+
+			CASE lnKeyVal = 0x0144
+				lcKeyName	= 'F10'
+
+			CASE lnKeyVal = 0x0143
+				lcKeyName	= 'F9'
+
+			CASE lnKeyVal = 0x0142
+				lcKeyName	= 'F8'
+
+			CASE lnKeyVal = 0x0141
+				lcKeyName	= 'F7'
+
+			CASE lnKeyVal = 0x0140
+				lcKeyName	= 'F6'
+
+			CASE lnKeyVal = 0x013F
+				lcKeyName	= 'F5'
+
+			CASE lnKeyVal = 0x013E
+				lcKeyName	= 'F4'
+
+			CASE lnKeyVal = 0x013D
+				lcKeyName	= 'F3'
+
+			CASE lnKeyVal = 0x013C
+				lcKeyName	= 'F2'
+
+			CASE lnKeyVal = 0x013B
+				lcKeyName	= 'F1'
+
+			CASE lnKeyVal = 0x010F
+				lcKeyName	= 'BACKTAB'
+
+			CASE lnKeyVal = 0x0100
+				lcKeyName	= 'LEFTMOUSE'
+
+			OTHERWISE
+				*lcKeyName	= CHR(lnKeyVal)
+
+			ENDCASE
+
+		ENDCASE
+		
+		IF EMPTY(lcKeyName)
+		*OTHERWISE &&CASE INLIST( lnKey, 0x00, 0x10, 0x80) OR lnCntMod > 1
+			*llComplementar	= NOT EMPTY(lcKeyMod)
+
+			DO CASE
+			CASE BETWEEN(lnKey, 0x41, 0x5A) OR BETWEEN(lnKey, 0x61, 0x7A) OR INLIST(lnKey, 0x7C, 0x7E)	&& A..Z, a..z, |, ~
+				lcKeyName	= lcKey
+				llKeyCodeShift	= .F.
+
+			*CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (tlLiteralForCaption AND lnKey = 0x3B)
+			CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (lnKey = 0x3B)
+				llKeyCodeShift	= .F.
+				lcKeyName	= lcKey
+
+			CASE lnKey = 0x7F
+				lcKeyName	= 'DEL'
+
+			CASE lnKey = 0x7D	&& "{"
+				lcKeyName	= 'RBRACE'
+
+			CASE lnKey = 0x7B	&& "}"
+				lcKeyName	= 'LBRACE'
+
+			CASE lnKey = 0x3B	&& ";"
+				lcKeyName	= 'SEMICOLON'
+
+			CASE lnKey = 0x2C	&& ","
+				lcKeyName	= 'SEMICOLON'
+
+			CASE lnKey = 0x20	&& " "
+				lcKeyName	= 'SPACEBAR'
+
+			CASE lnKey = 0x1B
+				lcKeyName	= 'ESCAPE'
+
+			CASE lnKey = 0x0D
+				lcKeyName	= 'ENTER'
+
+			CASE lnKey = 0x09
+				lcKeyName	= 'TAB'
+
+			CASE lnKey = 0x08
+				lcKeyName	= 'BACKSPACE'
+
+			OTHERWISE
+				llComplementar	= .F.
+				lcKeyName	= 'x' + RIGHT( TRANSFORM(lnKeyVal,'@0'), 4)
+
+			ENDCASE
+
+		*ENDCASE
+		ENDIF
+
+		* Tratamiento de modificadores
+		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF) AND llComplementar
+			IF llKeyCodeShift AND AT("SHIFT",lcKeyName) = 0	&& SHIFT
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
+			ENDIF
+			IF llKeyCodeCtrl AND AT("CTRL",lcKeyName) = 0	&& CTRL
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
+			ENDIF
+			IF llKeyCodeAlt AND AT("ALT",lcKeyName) = 0	&& ALT
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'ALT'
+			ENDIF
+			*IF BITAND(lnKeyVal, 0x8000) = 0x8000	&& LITERAL
+			*	lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'LITERAL'
+			*ENDIF
+		ENDIF
+
+		* Tratamiento de combinación final
+		DO CASE
+		CASE LEN(lcKeyName) > 1 AND (NOT llComplementar OR EMPTY(lcKeyMod))
+			IF tlLiteralForCaption
+				lcTecla	= lcKeyName
+			ELSE
+				lcTecla	= '{' + lcKeyName + '}'
+			ENDIF
+
+		CASE EMPTY(lcKeyMod)
+			lcTecla	= lcKeyName
+
+		OTHERWISE
+			IF tlLiteralForCaption
+				lcTecla	= lcKeyMod + '+' + lcKeyName
+			ELSE
+				lcTecla	= '{' + lcKeyMod + '+' + lcKeyName + '}'
+			ENDIF
+
+		ENDCASE
+
+		RETURN lcTecla
+	ENDFUNC
+
+
+ENDDEFINE
+
+
+
