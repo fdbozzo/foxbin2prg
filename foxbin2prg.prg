@@ -29429,42 +29429,42 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 		* I							(!@ IN    ) Posición actualmente analizada de la cadena
 		* tlLiteralForCaption		(?v IN    ) Indica si algunos caracteres especiales se deben convertir a literal (ej: ";" => "SHIFT+SEMICOLON")
 		*---------------------------------------------------------------------------------------------------
-		LOCAL lcK1, lcK2, lcKeyName, lcKeyMod, lcTecla, lnKeyVal, lcKeyPair, lnCntMod ;
-			, llComplementar, llKeyCodeShift, llKeyCodeCtrl, llKeyCodeAlt, lnK1, lnK2
+		LOCAL lcMod, lcKey, lcKeyName, lcKeyMod, lcTecla, lnKeyVal, lcKeyPair, lnCntMod ;
+			, llComplementar, llKeyCodeShift, llKeyCodeCtrl, llKeyCodeAlt, lnMod, lnKey
 
 		STORE '' TO lcTecla, lcKeyName, lcKeyMod, lcKey
 		lcKeyPair	= SUBSTR(tcMacroStr,I,2)
-		lcK1		= LEFT(lcKeyPair,1)
-		lcK2		= RIGHT(lcKeyPair,1)
-		lnK1		= ASC(lcK1)
-		lnK2		= ASC(lcK2)
 		lnKeyVal	= CTOBIN(lcKeyPair, '2RS')
+		lcKey		= LEFT(lcKeyPair,1)
+		lcMod		= RIGHT(lcKeyPair,1)
+		lnMod		= ASC(lcMod)
+		lnKey		= ASC(lcKey)
 		lnCntMod	= 0
 
 		* Tratamiento de modificadores
 		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF)
-			IF BITAND(lnKeyVal, 0x1000) = 0x1000	&& SHIFT
-				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
-				llKeyCodeShift	= .T.
-				lnCntMod		= lnCntMod + 1
+			IF BITAND(lnMod, 0x80) = 0x80	&& LITERAL
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'LITERAL'
 			ENDIF
-			IF BITAND(lnKeyVal, 0x2000) = 0x2000	&& CTRL
-				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
-				llKeyCodeCtrl	= .T.
-				lnCntMod		= lnCntMod + 1
-			ENDIF
-			IF BITAND(lnKeyVal, 0x4000) = 0x4000	&& ALT
+			IF BITAND(lnMod, 0x40) = 0x40	&& ALT
 				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'ALT'
 				llKeyCodeAlt	= .T.
 				lnCntMod		= lnCntMod + 1
 			ENDIF
-			IF BITAND(lnKeyVal, 0x8000) = 0x8000	&& LITERAL
-				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'LITERAL'
+			IF BITAND(lnMod, 0x20) = 0x20	&& CTRL
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
+				llKeyCodeCtrl	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+			IF BITAND(lnMod, 0x10) = 0x10	&& SHIFT
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
+				llKeyCodeShift	= .T.
+				lnCntMod		= lnCntMod + 1
 			ENDIF
 		ENDIF
 
-		*llComplementar	= NOT EMPTY(lcKeyMod)
-		llComplementar	= llKeyCodeShift
+		llComplementar	= llKeyCodeAlt OR llKeyCodeCtrl OR llKeyCodeShift
+		*llComplementar	= llKeyCodeShift
 
 		* Tratamiento de teclas normales
 		* (Ordenar de mayor valor a menor: 0xFFF > 0x000)
@@ -29482,30 +29482,515 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 				lcKeyName	= lcKeyName + LTRIM(STR(lnKeyVal/100,5,2))
 			ENDIF
 
-		CASE INLIST( lnK2, 0x00, 0x10, 0x80) OR lnCntMod > 1
+		CASE BITAND(lnMod, 0x01) = 0x01 ;
+				OR BITAND(lnMod, 0x10) = 0x10 ;
+				OR BITAND(lnMod, 0x20) = 0x20 ;
+				OR BITAND(lnMod, 0x40) = 0x40
+			*llComplementar	= .F.
+
+			DO CASE
+			CASE BITAND(lnKeyVal, 0x41A3) = 0x41A3
+				lcKeyName	= 'ALT+DEL'
+
+			CASE BITAND(lnKeyVal, 0x41A2) = 0x41A2
+				lcKeyName	= 'ALT+INS'
+
+			CASE BITAND(lnKeyVal, 0x41A1) = 0x41A1
+				lcKeyName	= 'ALT+PGND'
+
+			CASE BITAND(lnKeyVal, 0x41A0) = 0x41A0
+				lcKeyName	= 'ALT+DNARROW'
+
+			CASE BITAND(lnKeyVal, 0x419F) = 0x419F
+				lcKeyName	= 'ALT+END'
+
+			CASE BITAND(lnKeyVal, 0x419D) = 0x419D
+				lcKeyName	= 'ALT+RIGHTARROW'
+
+			CASE BITAND(lnKeyVal, 0x419B) = 0x419B
+				lcKeyName	= 'ALT+LEFTARROW'
+
+			CASE BITAND(lnKeyVal, 0x4199) = 0x4199
+				lcKeyName	= 'ALT+PGUP'
+
+			CASE BITAND(lnKeyVal, 0x4198) = 0x4198
+				lcKeyName	= 'ALT+UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x4197) = 0x4197
+				lcKeyName	= 'ALT+HOME'
+
+			CASE BITAND(lnKeyVal, 0x418C) = 0x418C
+				lcKeyName	= 'ALT+F12'
+
+			CASE BITAND(lnKeyVal, 0x418B) = 0x418B
+				lcKeyName	= 'ALT+F11'
+
+			CASE BITAND(lnKeyVal, 0x4181) = 0x4181
+				lcKeyName	= 'ALT+0'
+
+			CASE BITAND(lnKeyVal, 0x4180) = 0x4180
+				lcKeyName	= 'ALT+9'
+
+			CASE BITAND(lnKeyVal, 0x417F) = 0x417F
+				lcKeyName	= 'ALT+8'
+
+			CASE BITAND(lnKeyVal, 0x417E) = 0x417E
+				lcKeyName	= 'ALT+7'
+
+			CASE BITAND(lnKeyVal, 0x417D) = 0x417D
+				lcKeyName	= 'ALT+6'
+
+			CASE BITAND(lnKeyVal, 0x417C) = 0x417C
+				lcKeyName	= 'ALT+5'
+
+			CASE BITAND(lnKeyVal, 0x417B) = 0x417B
+				lcKeyName	= 'ALT+4'
+
+			CASE BITAND(lnKeyVal, 0x417A) = 0x417A
+				lcKeyName	= 'ALT+3'
+
+			CASE BITAND(lnKeyVal, 0x4179) = 0x4179
+				lcKeyName	= 'ALT+2'
+
+			CASE BITAND(lnKeyVal, 0x4178) = 0x4178
+				lcKeyName	= 'ALT+1'
+
+			CASE BITAND(lnKeyVal, 0x4171) = 0x4171
+				lcKeyName	= 'ALT+F10'
+
+			CASE BITAND(lnKeyVal, 0x4170) = 0x4170
+				lcKeyName	= 'ALT+F9'
+
+			CASE BITAND(lnKeyVal, 0x416F) = 0x416F
+				lcKeyName	= 'ALT+F8'
+
+			CASE BITAND(lnKeyVal, 0x416E) = 0x416E
+				lcKeyName	= 'ALT+F7'
+
+			CASE BITAND(lnKeyVal, 0x416D) = 0x416D
+				lcKeyName	= 'ALT+F6'
+
+			CASE BITAND(lnKeyVal, 0x416C) = 0x416C
+				lcKeyName	= 'ALT+F5'
+
+			CASE BITAND(lnKeyVal, 0x416B) = 0x416B
+				lcKeyName	= 'ALT+F4'
+
+			CASE BITAND(lnKeyVal, 0x416A) = 0x416A
+				lcKeyName	= 'ALT+F3'
+
+			CASE BITAND(lnKeyVal, 0x4169) = 0x4169
+				lcKeyName	= 'ALT+F2'
+
+			CASE BITAND(lnKeyVal, 0x4168) = 0x4168
+				lcKeyName	= 'ALT+F1'
+
+			CASE BITAND(lnKeyVal, 0x4132) = 0x4132
+				lcKeyName	= 'ALT+M'
+
+			CASE BITAND(lnKeyVal, 0x4131) = 0x4131
+				lcKeyName	= 'ALT+N'
+
+			CASE BITAND(lnKeyVal, 0x4130) = 0x4130
+				lcKeyName	= 'ALT+B'
+
+			CASE BITAND(lnKeyVal, 0x412F) = 0x412F
+				lcKeyName	= 'ALT+V'
+
+			CASE BITAND(lnKeyVal, 0x412E) = 0x412E
+				lcKeyName	= 'ALT+C'
+
+			CASE BITAND(lnKeyVal, 0x412D) = 0x412D
+				lcKeyName	= 'ALT+X'
+
+			CASE BITAND(lnKeyVal, 0x412C) = 0x412C
+				lcKeyName	= 'ALT+Z'
+
+			CASE BITAND(lnKeyVal, 0x4126) = 0x4126
+				lcKeyName	= 'ALT+L'
+
+			CASE BITAND(lnKeyVal, 0x4125) = 0x4125
+				lcKeyName	= 'ALT+K'
+
+			CASE BITAND(lnKeyVal, 0x4124) = 0x4124
+				lcKeyName	= 'ALT+J'
+
+			CASE BITAND(lnKeyVal, 0x4123) = 0x4123
+				lcKeyName	= 'ALT+H'
+
+			CASE BITAND(lnKeyVal, 0x4122) = 0x4122
+				lcKeyName	= 'ALT+G'
+
+			CASE BITAND(lnKeyVal, 0x4121) = 0x4121
+				lcKeyName	= 'ALT+F'
+
+			CASE BITAND(lnKeyVal, 0x4120) = 0x4120
+				lcKeyName	= 'ALT+D'
+
+			CASE BITAND(lnKeyVal, 0x411F) = 0x411F
+				lcKeyName	= 'ALT+S'
+
+			CASE BITAND(lnKeyVal, 0x411E) = 0x411E
+				lcKeyName	= 'ALT+A'
+
+			CASE BITAND(lnKeyVal, 0x4119) = 0x4119
+				lcKeyName	= 'ALT+P'
+
+			CASE BITAND(lnKeyVal, 0x4118) = 0x4118
+				lcKeyName	= 'ALT+O'
+
+			CASE BITAND(lnKeyVal, 0x4117) = 0x4117
+				lcKeyName	= 'ALT+I'
+
+			CASE BITAND(lnKeyVal, 0x4116) = 0x4116
+				lcKeyName	= 'ALT+U'
+
+			CASE BITAND(lnKeyVal, 0x4115) = 0x4115
+				lcKeyName	= 'ALT+Y'
+
+			CASE BITAND(lnKeyVal, 0x4114) = 0x4114
+				lcKeyName	= 'ALT+T'
+
+			CASE BITAND(lnKeyVal, 0x4113) = 0x4113
+				lcKeyName	= 'ALT+R'
+
+			CASE BITAND(lnKeyVal, 0x4112) = 0x4112
+				lcKeyName	= 'ALT+E'
+
+			CASE BITAND(lnKeyVal, 0x4111) = 0x4111
+				lcKeyName	= 'ALT+U'
+
+			CASE BITAND(lnKeyVal, 0x4110) = 0x4110
+				lcKeyName	= 'ALT+Q'
+
+			CASE BITAND(lnKeyVal, 0x410C) = 0x410C
+				lcKeyName	= [ALT+']	&& No está en la ayuda de VFP
+
+			CASE BITAND(lnKeyVal, 0x2194) = 0x2194
+				lcKeyName	= 'CTRL+TAB'
+
+			CASE BITAND(lnKeyVal, 0x2193) = 0x2193
+				lcKeyName	= 'CTRL+DEL'
+
+			CASE BITAND(lnKeyVal, 0x2192) = 0x2192
+				lcKeyName	= 'CTRL+INS'
+
+			CASE BITAND(lnKeyVal, 0x2191) = 0x2191
+				lcKeyName	= 'CTRL+DNARROW'
+
+			CASE BITAND(lnKeyVal, 0x218D) = 0x218D
+				lcKeyName	= 'CTRL+UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x218A) = 0x218A
+				lcKeyName	= 'CTRL+F12'
+
+			CASE BITAND(lnKeyVal, 0x2189) = 0x2189
+				lcKeyName	= 'CTRL+F11'
+
+			CASE BITAND(lnKeyVal, 0x2184) = 0x2184
+				lcKeyName	= 'CTRL+PGUP'
+
+			CASE BITAND(lnKeyVal, 0x2177) = 0x2177
+				lcKeyName	= 'CTRL+HOME'
+
+			CASE BITAND(lnKeyVal, 0x2176) = 0x2176
+				lcKeyName	= 'CTRL+PGDN'
+
+			CASE BITAND(lnKeyVal, 0x2175) = 0x2175
+				lcKeyName	= 'CTRL+END'
+
+			CASE BITAND(lnKeyVal, 0x2174) = 0x2174
+				lcKeyName	= 'CTRL+RIGHTARROW'
+
+			CASE BITAND(lnKeyVal, 0x2173) = 0x2173
+				lcKeyName	= 'CTRL+LEFTARROW'
+
+			CASE BITAND(lnKeyVal, 0x2167) = 0x2167
+				lcKeyName	= 'CTRL+F10'
+
+			CASE BITAND(lnKeyVal, 0x2166) = 0x2166
+				lcKeyName	= 'CTRL+F9'
+
+			CASE BITAND(lnKeyVal, 0x2165) = 0x2165
+				lcKeyName	= 'CTRL+F8'
+
+			CASE BITAND(lnKeyVal, 0x2164) = 0x2164
+				lcKeyName	= 'CTRL+F7'
+
+			CASE BITAND(lnKeyVal, 0x2163) = 0x2163
+				lcKeyName	= 'CTRL+F6'
+
+			CASE BITAND(lnKeyVal, 0x2162) = 0x2162
+				lcKeyName	= 'CTRL+F5'
+
+			CASE BITAND(lnKeyVal, 0x2161) = 0x2161
+				lcKeyName	= 'CTRL+F4'
+
+			CASE BITAND(lnKeyVal, 0x2160) = 0x2160
+				lcKeyName	= 'CTRL+F3'
+
+			CASE BITAND(lnKeyVal, 0x215F) = 0x215F
+				lcKeyName	= 'CTRL+F2'
+
+			CASE BITAND(lnKeyVal, 0x215E) = 0x215E
+				lcKeyName	= 'CTRL+F1'
+
+			CASE BITAND(lnKeyVal, 0x2020) = 0x2020
+				lcKeyName	= 'CTRL+SPACEBAR'
+
+			CASE BITAND(lnKeyVal, 0x201F) = 0x201F
+				lcKeyName	= 'CTRL+HYPHEN'
+
+			CASE BITAND(lnKeyVal, 0x201E) = 0x201E
+				lcKeyName	= 'CTRL+CARET'
+
+			CASE BITAND(lnKeyVal, 0x201D) = 0x201D
+				lcKeyName	= 'CTRL+RBRACKET'
+
+			CASE BITAND(lnKeyVal, 0x201C) = 0x201C
+				lcKeyName	= 'CTRL+BACKSLASH'
+
+			CASE BITAND(lnKeyVal, 0x201B) = 0x201B
+				lcKeyName	= 'CTRL+LBRACKET'
+
+			CASE BITAND(lnKeyVal, 0x201A) = 0x201A
+				lcKeyName	= 'CTRL+Z'
+
+			CASE BITAND(lnKeyVal, 0x2019) = 0x2019
+				lcKeyName	= 'CTRL+Y'
+
+			CASE BITAND(lnKeyVal, 0x2018) = 0x2018
+				lcKeyName	= 'CTRL+X'
+
+			CASE BITAND(lnKeyVal, 0x2017) = 0x2017
+				lcKeyName	= 'CTRL+W'
+
+			CASE BITAND(lnKeyVal, 0x2016) = 0x2016
+				lcKeyName	= 'CTRL+V'
+
+			CASE BITAND(lnKeyVal, 0x2015) = 0x2015
+				lcKeyName	= 'CTRL+U'
+
+			CASE BITAND(lnKeyVal, 0x2014) = 0x2014
+				lcKeyName	= 'CTRL+T'
+
+			CASE BITAND(lnKeyVal, 0x2013) = 0x2013
+				lcKeyName	= 'CTRL+S'
+
+			CASE BITAND(lnKeyVal, 0x2012) = 0x2012
+				lcKeyName	= 'CTRL+R'
+
+			CASE BITAND(lnKeyVal, 0x2011) = 0x2011
+				lcKeyName	= 'CTRL+Q'
+
+			CASE BITAND(lnKeyVal, 0x2010) = 0x2010
+				lcKeyName	= 'CTRL+P'
+
+			CASE BITAND(lnKeyVal, 0x200F) = 0x200F
+				lcKeyName	= 'CTRL+O'
+
+			CASE BITAND(lnKeyVal, 0x200E) = 0x200E
+				lcKeyName	= 'CTRL+N'
+
+			CASE BITAND(lnKeyVal, 0x200D) = 0x200D
+				lcKeyName	= 'CTRL+M'
+
+			CASE BITAND(lnKeyVal, 0x200C) = 0x200C
+				lcKeyName	= 'CTRL+L'
+
+			CASE BITAND(lnKeyVal, 0x200B) = 0x200B
+				lcKeyName	= 'CTRL+K'
+
+			CASE BITAND(lnKeyVal, 0x200A) = 0x200A
+				lcKeyName	= 'CTRL+ENTER'
+
+			CASE BITAND(lnKeyVal, 0x200A) = 0x200A
+				lcKeyName	= 'CTRL+J'
+
+			CASE BITAND(lnKeyVal, 0x2009) = 0x2009
+				lcKeyName	= 'CTRL+I'
+
+			CASE BITAND(lnKeyVal, 0x2008) = 0x2008
+				lcKeyName	= 'CTRL+H'
+
+			CASE BITAND(lnKeyVal, 0x2007) = 0x2007
+				lcKeyName	= 'CTRL+G'
+
+			CASE BITAND(lnKeyVal, 0x2006) = 0x2006
+				lcKeyName	= 'CTRL+F'
+
+			CASE BITAND(lnKeyVal, 0x2005) = 0x2005
+				lcKeyName	= 'CTRL+E'
+
+			CASE BITAND(lnKeyVal, 0x2004) = 0x2004
+				lcKeyName	= 'CTRL+D'
+
+			CASE BITAND(lnKeyVal, 0x2003) = 0x2003
+				lcKeyName	= 'CTRL+C'
+
+			CASE BITAND(lnKeyVal, 0x2002) = 0x2002
+				lcKeyName	= 'CTRL+B'
+
+			CASE BITAND(lnKeyVal, 0x2001) = 0x2001
+				lcKeyName	= 'CTRL+A'
+
+			CASE BITAND(lnKeyVal, 0x1188) = 0x1188
+				lcKeyName	= 'SHIFT+F12'
+
+			CASE BITAND(lnKeyVal, 0x1187) = 0x1187
+				lcKeyName	= 'SHIFT+F11'
+
+			CASE BITAND(lnKeyVal, 0x115D) = 0x115D
+				lcKeyName	= 'SHIFT+F10'
+
+			CASE BITAND(lnKeyVal, 0x115C) = 0x115C
+				lcKeyName	= 'SHIFT+F9'
+
+			CASE BITAND(lnKeyVal, 0x115B) = 0x115B
+				lcKeyName	= 'SHIFT+F8'
+
+			CASE BITAND(lnKeyVal, 0x115A) = 0x115A
+				lcKeyName	= 'SHIFT+F7'
+
+			CASE BITAND(lnKeyVal, 0x1159) = 0x1159
+				lcKeyName	= 'SHIFT+F6'
+
+			CASE BITAND(lnKeyVal, 0x1158) = 0x1158
+				lcKeyName	= 'SHIFT+F5'
+
+			CASE BITAND(lnKeyVal, 0x1157) = 0x1157
+				lcKeyName	= 'SHIFT+F4'
+
+			CASE BITAND(lnKeyVal, 0x1156) = 0x1156
+				lcKeyName	= 'SHIFT+F3'
+
+			CASE BITAND(lnKeyVal, 0x1155) = 0x1155
+				lcKeyName	= 'SHIFT+F2'
+
+			CASE BITAND(lnKeyVal, 0x1154) = 0x1154
+				lcKeyName	= 'SHIFT+F1'
+
+			CASE BITAND(lnKeyVal, 0x0186) = 0x0186
+				lcKeyName	= 'F12'
+
+			CASE BITAND(lnKeyVal, 0x0185) = 0x0185
+				lcKeyName	= 'F11'
+
+			CASE INLIST(lnKeyVal, 0x0153, 0x1153)
+				lcKeyName	= 'DEL'
+
+			CASE INLIST(lnKeyVal, 0x0152, 0x1152)
+				lcKeyName	= 'INS'
+
+			CASE INLIST(lnKeyVal, 0x0151, 0x1151)
+				lcKeyName	= 'PGDN'
+
+			CASE INLIST(lnKeyVal, 0x0150, 0x1150)
+				lcKeyName	= 'DNARROW'
+
+			CASE INLIST(lnKeyVal, 0x014F, 0x114F)
+				lcKeyName	= 'END'
+
+			CASE INLIST(lnKeyVal, 0x014D, 0x114D)
+				lcKeyName	= 'RIGHTARROW'
+
+			CASE INLIST(lnKeyVal, 0x014B, 0x114B)
+				lcKeyName	= 'LEFTARROW'
+
+			CASE INLIST(lnKeyVal, 0x0149, 0x1149)
+				lcKeyName	= 'PGUP'
+
+			CASE INLIST(lnKeyVal, 0x0148, 0x1148)
+				lcKeyName	= 'UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x0147) = 0x0147
+				lcKeyName	= 'HOME'
+
+			CASE lnKeyVal = 0x0144
+				lcKeyName	= 'F10'
+
+			CASE lnKeyVal = 0x0143
+				lcKeyName	= 'F9'
+
+			CASE lnKeyVal = 0x0142
+				lcKeyName	= 'F8'
+
+			CASE lnKeyVal = 0x0141
+				lcKeyName	= 'F7'
+
+			CASE lnKeyVal = 0x0140
+				lcKeyName	= 'F6'
+
+			CASE lnKeyVal = 0x013F
+				lcKeyName	= 'F5'
+
+			CASE lnKeyVal = 0x013E
+				lcKeyName	= 'F4'
+
+			CASE lnKeyVal = 0x013D
+				lcKeyName	= 'F3'
+
+			CASE lnKeyVal = 0x013C
+				lcKeyName	= 'F2'
+
+			CASE lnKeyVal = 0x013B
+				lcKeyName	= 'F1'
+
+			CASE lnKeyVal = 0x010F
+				lcKeyName	= 'BACKTAB'
+
+			CASE lnKeyVal = 0x0100
+				lcKeyName	= 'LEFTMOUSE'
+
+			OTHERWISE
+				*lcKeyName	= CHR(lnKeyVal)
+
+			ENDCASE
+
+		ENDCASE
+		
+		IF EMPTY(lcKeyName)
+		*OTHERWISE &&CASE INLIST( lnKey, 0x00, 0x10, 0x80) OR lnCntMod > 1
 			*llComplementar	= NOT EMPTY(lcKeyMod)
 
 			DO CASE
-			CASE BETWEEN(lnK1, 0x41, 0x7A)	&& A..z
-				lcKeyName	= lcK1
-
-			CASE BETWEEN(lnK1, 0x21, 0x7E)
+			CASE BETWEEN(lnKey, 0x41, 0x5A) OR BETWEEN(lnKey, 0x61, 0x7A) OR INLIST(lnKey, 0x7C, 0x7E)	&& A..Z, a..z, |, ~
+				lcKeyName	= lcKey
 				llKeyCodeShift	= .F.
-				lcKeyName	= lcK1
 
-			CASE lnK1 = 0x7F
+			*CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (tlLiteralForCaption AND lnKey = 0x3B)
+			CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (lnKey = 0x3B)
+				llKeyCodeShift	= .F.
+				lcKeyName	= lcKey
+
+			CASE lnKey = 0x7F
 				lcKeyName	= 'DEL'
 
-			CASE lnK1 = 0x1B
+			CASE lnKey = 0x7D	&& "{"
+				lcKeyName	= 'RBRACE'
+
+			CASE lnKey = 0x7B	&& "}"
+				lcKeyName	= 'LBRACE'
+
+			CASE lnKey = 0x3B	&& ";"
+				lcKeyName	= 'SEMICOLON'
+
+			CASE lnKey = 0x2C	&& ","
+				lcKeyName	= 'SEMICOLON'
+
+			CASE lnKey = 0x20	&& " "
+				lcKeyName	= 'SPACEBAR'
+
+			CASE lnKey = 0x1B
 				lcKeyName	= 'ESCAPE'
 
-			CASE lnK1 = 0x0D
+			CASE lnKey = 0x0D
 				lcKeyName	= 'ENTER'
 
-			CASE lnK1 = 0x09
+			CASE lnKey = 0x09
 				lcKeyName	= 'TAB'
 
-			CASE lnK1 = 0x08
+			CASE lnKey = 0x08
 				lcKeyName	= 'BACKSPACE'
 
 			OTHERWISE
@@ -29514,475 +29999,18 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 
 			ENDCASE
 
-		OTHERWISE
-			llComplementar	= .F.
-
-			DO CASE
-			CASE BITAND(lnKeyVal, 0x1A3) = 0x1A3
-				lcKeyName	= 'ALT+DEL'
-
-			CASE BITAND(lnKeyVal, 0x1A2) = 0x1A2
-				lcKeyName	= 'ALT+INS'
-
-			CASE BITAND(lnKeyVal, 0x1A1) = 0x1A1
-				lcKeyName	= 'ALT+PGND'
-
-			CASE BITAND(lnKeyVal, 0x1A0) = 0x1A0
-				lcKeyName	= 'ALT+DNARROW'
-
-			CASE BITAND(lnKeyVal, 0x19F) = 0x19F
-				lcKeyName	= 'ALT+END'
-
-			CASE BITAND(lnKeyVal, 0x19D) = 0x19D
-				lcKeyName	= 'ALT+RIGHTARROW'
-
-			CASE BITAND(lnKeyVal, 0x19B) = 0x19B
-				lcKeyName	= 'ALT+LEFTARROW'
-
-			CASE BITAND(lnKeyVal, 0x199) = 0x199
-				lcKeyName	= 'ALT+PGUP'
-
-			CASE BITAND(lnKeyVal, 0x198) = 0x198
-				lcKeyName	= 'ALT+UPARROW'
-
-			CASE BITAND(lnKeyVal, 0x197) = 0x197
-				lcKeyName	= 'ALT+HOME'
-
-			CASE BITAND(lnKeyVal, 0x194) = 0x194
-				lcKeyName	= 'CTRL+TAB'
-
-			CASE BITAND(lnKeyVal, 0x193) = 0x193
-				lcKeyName	= 'CTRL+DEL'
-
-			CASE BITAND(lnKeyVal, 0x192) = 0x192
-				lcKeyName	= 'CTRL+INS'
-
-			CASE BITAND(lnKeyVal, 0x191) = 0x191
-				lcKeyName	= 'CTRL+DNARROW'
-
-			CASE BITAND(lnKeyVal, 0x18D) = 0x18D
-				lcKeyName	= 'CTRL+UPARROW'
-
-			CASE BITAND(lnKeyVal, 0x18C) = 0x18C
-				lcKeyName	= 'ALT+F12'
-
-			CASE BITAND(lnKeyVal, 0x18B) = 0x18B
-				lcKeyName	= 'ALT+F11'
-
-			CASE BITAND(lnKeyVal, 0x18A) = 0x18A
-				lcKeyName	= 'CTRL+F12'
-
-			CASE BITAND(lnKeyVal, 0x189) = 0x189
-				lcKeyName	= 'CTRL+F11'
-
-			CASE BITAND(lnKeyVal, 0x15F) = 0x188
-				lcKeyName	= 'SHIFT+F12'
-
-			CASE BITAND(lnKeyVal, 0x15E) = 0x187
-				lcKeyName	= 'SHIFT+F11'
-
-			CASE BITAND(lnKeyVal, 0x186) = 0x186
-				lcKeyName	= 'F12'
-
-			CASE BITAND(lnKeyVal, 0x185) = 0x185
-				lcKeyName	= 'F11'
-
-			CASE BITAND(lnKeyVal, 0x184) = 0x184
-				lcKeyName	= 'CTRL+PGUP'
-
-			CASE BITAND(lnKeyVal, 0x181) = 0x181
-				lcKeyName	= 'ALT+0'
-
-			CASE BITAND(lnKeyVal, 0x180) = 0x180
-				lcKeyName	= 'ALT+9'
-
-			CASE BITAND(lnKeyVal, 0x17F) = 0x17F
-				lcKeyName	= 'ALT+8'
-
-			CASE BITAND(lnKeyVal, 0x17E) = 0x17E
-				lcKeyName	= 'ALT+7'
-
-			CASE BITAND(lnKeyVal, 0x17D) = 0x17D
-				lcKeyName	= 'ALT+6'
-
-			CASE BITAND(lnKeyVal, 0x17C) = 0x17C
-				lcKeyName	= 'ALT+5'
-
-			CASE BITAND(lnKeyVal, 0x17B) = 0x17B
-				lcKeyName	= 'ALT+4'
-
-			CASE BITAND(lnKeyVal, 0x17A) = 0x17A
-				lcKeyName	= 'ALT+3'
-
-			CASE BITAND(lnKeyVal, 0x179) = 0x179
-				lcKeyName	= 'ALT+2'
-
-			CASE BITAND(lnKeyVal, 0x178) = 0x178
-				lcKeyName	= 'ALT+1'
-
-			CASE BITAND(lnKeyVal, 0x177) = 0x177
-				lcKeyName	= 'CTRL+HOME'
-
-			CASE BITAND(lnKeyVal, 0x176) = 0x176
-				lcKeyName	= 'CTRL+PGDN'
-
-			CASE BITAND(lnKeyVal, 0x175) = 0x175
-				lcKeyName	= 'CTRL+END'
-
-			CASE BITAND(lnKeyVal, 0x174) = 0x174
-				lcKeyName	= 'CTRL+RIGHTARROW'
-
-			CASE BITAND(lnKeyVal, 0x173) = 0x173
-				lcKeyName	= 'CTRL+LEFTARROW'
-
-			CASE BITAND(lnKeyVal, 0x171) = 0x171
-				lcKeyName	= 'ALT+F10'
-
-			CASE BITAND(lnKeyVal, 0x170) = 0x170
-				lcKeyName	= 'ALT+F9'
-
-			CASE BITAND(lnKeyVal, 0x16F) = 0x16F
-				lcKeyName	= 'ALT+F8'
-
-			CASE BITAND(lnKeyVal, 0x16E) = 0x16E
-				lcKeyName	= 'ALT+F7'
-
-			CASE BITAND(lnKeyVal, 0x16D) = 0x16D
-				lcKeyName	= 'ALT+F6'
-
-			CASE BITAND(lnKeyVal, 0x16C) = 0x16C
-				lcKeyName	= 'ALT+F5'
-
-			CASE BITAND(lnKeyVal, 0x16B) = 0x16B
-				lcKeyName	= 'ALT+F4'
-
-			CASE BITAND(lnKeyVal, 0x16A) = 0x16A
-				lcKeyName	= 'ALT+F3'
-
-			CASE BITAND(lnKeyVal, 0x169) = 0x169
-				lcKeyName	= 'ALT+F2'
-
-			CASE BITAND(lnKeyVal, 0x168) = 0x168
-				lcKeyName	= 'ALT+F1'
-
-			CASE BITAND(lnKeyVal, 0x167) = 0x167
-				lcKeyName	= 'CTRL+F10'
-
-			CASE BITAND(lnKeyVal, 0x166) = 0x166
-				lcKeyName	= 'CTRL+F9'
-
-			CASE BITAND(lnKeyVal, 0x165) = 0x165
-				lcKeyName	= 'CTRL+F8'
-
-			CASE BITAND(lnKeyVal, 0x164) = 0x164
-				lcKeyName	= 'CTRL+F7'
-
-			CASE BITAND(lnKeyVal, 0x163) = 0x163
-				lcKeyName	= 'CTRL+F6'
-
-			CASE BITAND(lnKeyVal, 0x162) = 0x162
-				lcKeyName	= 'CTRL+F5'
-
-			CASE BITAND(lnKeyVal, 0x161) = 0x161
-				lcKeyName	= 'CTRL+F4'
-
-			CASE BITAND(lnKeyVal, 0x160) = 0x160
-				lcKeyName	= 'CTRL+F3'
-
-			CASE BITAND(lnKeyVal, 0x15F) = 0x15F
-				lcKeyName	= 'CTRL+F2'
-
-			CASE BITAND(lnKeyVal, 0x15E) = 0x15E
-				lcKeyName	= 'CTRL+F1'
-
-			CASE BITAND(lnKeyVal, 0x15D) = 0x15D
-				lcKeyName	= 'SHIFT+F10'
-
-			CASE BITAND(lnKeyVal, 0x15C) = 0x15C
-				lcKeyName	= 'SHIFT+F9'
-
-			CASE BITAND(lnKeyVal, 0x15B) = 0x15B
-				lcKeyName	= 'SHIFT+F8'
-
-			CASE BITAND(lnKeyVal, 0x15A) = 0x15A
-				lcKeyName	= 'SHIFT+F7'
-
-			CASE BITAND(lnKeyVal, 0x159) = 0x159
-				lcKeyName	= 'SHIFT+F6'
-
-			CASE BITAND(lnKeyVal, 0x158) = 0x158
-				lcKeyName	= 'SHIFT+F5'
-
-			CASE BITAND(lnKeyVal, 0x157) = 0x157
-				lcKeyName	= 'SHIFT+F4'
-
-			CASE BITAND(lnKeyVal, 0x156) = 0x156
-				lcKeyName	= 'SHIFT+F3'
-
-			CASE BITAND(lnKeyVal, 0x155) = 0x155
-				lcKeyName	= 'SHIFT+F2'
-
-			CASE BITAND(lnKeyVal, 0x154) = 0x154
-				lcKeyName	= 'SHIFT+F1'
-
-			CASE BITAND(lnKeyVal, 0x153) = 0x153
-				lcKeyName	= 'DEL'
-
-			CASE BITAND(lnKeyVal, 0x152) = 0x152
-				lcKeyName	= 'INS'
-
-			CASE BITAND(lnKeyVal, 0x151) = 0x151
-				lcKeyName	= 'PGDN'
-
-			CASE BITAND(lnKeyVal, 0x150) = 0x150
-				lcKeyName	= 'DNARROW'
-
-			CASE BITAND(lnKeyVal, 0x14F) = 0x14F
-				lcKeyName	= 'END'
-
-			CASE BITAND(lnKeyVal, 0x14D) = 0x14D
-				lcKeyName	= 'RIGHTARROW'
-
-			CASE BITAND(lnKeyVal, 0x14B) = 0x14B
-				lcKeyName	= 'LEFTARROW'
-
-			CASE BITAND(lnKeyVal, 0x149) = 0x149
-				lcKeyName	= 'PGUP'
-
-			CASE BITAND(lnKeyVal, 0x148) = 0x148
-				lcKeyName	= 'UPARROW'
-
-			CASE BITAND(lnKeyVal, 0x147) = 0x147
-				lcKeyName	= 'HOME'
-
-			CASE BITAND(lnKeyVal, 0x144) = 0x144
-				lcKeyName	= 'F10'
-
-			CASE BITAND(lnKeyVal, 0x143) = 0x143
-				lcKeyName	= 'F9'
-
-			CASE BITAND(lnKeyVal, 0x142) = 0x142
-				lcKeyName	= 'F8'
-
-			CASE BITAND(lnKeyVal, 0x141) = 0x141
-				lcKeyName	= 'F7'
-
-			CASE BITAND(lnKeyVal, 0x140) = 0x140
-				lcKeyName	= 'F6'
-
-			CASE BITAND(lnKeyVal, 0x13F) = 0x13F
-				lcKeyName	= 'F5'
-
-			CASE BITAND(lnKeyVal, 0x13E) = 0x13E
-				lcKeyName	= 'F4'
-
-			CASE BITAND(lnKeyVal, 0x13D) = 0x13D
-				lcKeyName	= 'F3'
-
-			CASE BITAND(lnKeyVal, 0x13C) = 0x13C
-				lcKeyName	= 'F2'
-
-			CASE BITAND(lnKeyVal, 0x13B) = 0x13B
-				lcKeyName	= 'F1'
-
-			CASE BITAND(lnKeyVal, 0x132) = 0x132
-				lcKeyName	= 'ALT+M'
-
-			CASE BITAND(lnKeyVal, 0x131) = 0x131
-				lcKeyName	= 'ALT+N'
-
-			CASE BITAND(lnKeyVal, 0x130) = 0x130
-				lcKeyName	= 'ALT+B'
-
-			CASE BITAND(lnKeyVal, 0x12F) = 0x12F
-				lcKeyName	= 'ALT+V'
-
-			CASE BITAND(lnKeyVal, 0x12E) = 0x12E
-				lcKeyName	= 'ALT+C'
-
-			CASE BITAND(lnKeyVal, 0x12D) = 0x12D
-				lcKeyName	= 'ALT+X'
-
-			CASE BITAND(lnKeyVal, 0x12C) = 0x12C
-				lcKeyName	= 'ALT+Z'
-
-			CASE BITAND(lnKeyVal, 0x126) = 0x126
-				lcKeyName	= 'ALT+L'
-
-			CASE BITAND(lnKeyVal, 0x125) = 0x125
-				lcKeyName	= 'ALT+K'
-
-			CASE BITAND(lnKeyVal, 0x124) = 0x124
-				lcKeyName	= 'ALT+J'
-
-			CASE BITAND(lnKeyVal, 0x123) = 0x123
-				lcKeyName	= 'ALT+H'
-
-			CASE BITAND(lnKeyVal, 0x122) = 0x122
-				lcKeyName	= 'ALT+G'
-
-			CASE BITAND(lnKeyVal, 0x121) = 0x121
-				lcKeyName	= 'ALT+F'
-
-			CASE BITAND(lnKeyVal, 0x120) = 0x120
-				lcKeyName	= 'ALT+D'
-
-			CASE BITAND(lnKeyVal, 0x11F) = 0x11F
-				lcKeyName	= 'ALT+S'
-
-			CASE BITAND(lnKeyVal, 0x11E) = 0x11E
-				lcKeyName	= 'ALT+A'
-
-			CASE BITAND(lnKeyVal, 0x119) = 0x119
-				lcKeyName	= 'ALT+P'
-
-			CASE BITAND(lnKeyVal, 0x118) = 0x118
-				lcKeyName	= 'ALT+O'
-
-			CASE BITAND(lnKeyVal, 0x117) = 0x117
-				lcKeyName	= 'ALT+I'
-
-			CASE BITAND(lnKeyVal, 0x116) = 0x116
-				lcKeyName	= 'ALT+U'
-
-			CASE BITAND(lnKeyVal, 0x115) = 0x115
-				lcKeyName	= 'ALT+Y'
-
-			CASE BITAND(lnKeyVal, 0x114) = 0x114
-				lcKeyName	= 'ALT+T'
-
-			CASE BITAND(lnKeyVal, 0x113) = 0x113
-				lcKeyName	= 'ALT+R'
-
-			CASE BITAND(lnKeyVal, 0x112) = 0x112
-				lcKeyName	= 'ALT+E'
-
-			CASE BITAND(lnKeyVal, 0x111) = 0x111
-				lcKeyName	= 'ALT+U'
-
-			CASE BITAND(lnKeyVal, 0x110) = 0x110
-				lcKeyName	= 'ALT+Q'
-
-			CASE BITAND(lnKeyVal, 0x10F) = 0x10F
-				lcKeyName	= 'BACKTAB'
-
-			CASE BITAND(lnKeyVal, 0x100) = 0x100
-				lcKeyName	= 'LEFTMOUSE'
-
-			CASE BITAND(lnKeyVal, 0x020) = 0x020
-				lcKeyName	= 'CTRL+SPACEBAR'
-
-			CASE BITAND(lnKeyVal, 0x01F) = 0x01F
-				lcKeyName	= 'CTRL+HYPHEN'
-
-			CASE BITAND(lnKeyVal, 0x01E) = 0x01E
-				lcKeyName	= 'CTRL+CARET'
-
-			CASE BITAND(lnKeyVal, 0x01D) = 0x01D
-				lcKeyName	= 'CTRL+RBRACKET'
-
-			CASE BITAND(lnKeyVal, 0x01C) = 0x01C
-				lcKeyName	= 'CTRL+BACKSLASH'
-
-			CASE BITAND(lnKeyVal, 0x01B) = 0x01B
-				lcKeyName	= 'CTRL+LBRACKET'
-
-			CASE BITAND(lnKeyVal, 0x01A) = 0x01A
-				lcKeyName	= 'CTRL+Z'
-
-			CASE BITAND(lnKeyVal, 0x019) = 0x019
-				lcKeyName	= 'CTRL+Y'
-
-			CASE BITAND(lnKeyVal, 0x018) = 0x018
-				lcKeyName	= 'CTRL+X'
-
-			CASE BITAND(lnKeyVal, 0x017) = 0x017
-				lcKeyName	= 'CTRL+W'
-
-			CASE BITAND(lnKeyVal, 0x016) = 0x016
-				lcKeyName	= 'CTRL+V'
-
-			CASE BITAND(lnKeyVal, 0x015) = 0x015
-				lcKeyName	= 'CTRL+U'
-
-			CASE BITAND(lnKeyVal, 0x014) = 0x014
-				lcKeyName	= 'CTRL+T'
-
-			CASE BITAND(lnKeyVal, 0x013) = 0x013
-				lcKeyName	= 'CTRL+S'
-
-			CASE BITAND(lnKeyVal, 0x012) = 0x012
-				lcKeyName	= 'CTRL+R'
-
-			CASE BITAND(lnKeyVal, 0x011) = 0x011
-				lcKeyName	= 'CTRL+Q'
-
-			CASE BITAND(lnKeyVal, 0x010) = 0x010
-				lcKeyName	= 'CTRL+P'
-
-			CASE BITAND(lnKeyVal, 0x00F) = 0x00F
-				lcKeyName	= 'CTRL+O'
-
-			CASE BITAND(lnKeyVal, 0x00E) = 0x00E
-				lcKeyName	= 'CTRL+N'
-
-			CASE BITAND(lnKeyVal, 0x00D) = 0x00D
-				lcKeyName	= 'CTRL+M'
-
-			CASE BITAND(lnKeyVal, 0x00C) = 0x00C
-				lcKeyName	= 'CTRL+L'
-
-			CASE BITAND(lnKeyVal, 0x00B) = 0x00B
-				lcKeyName	= 'CTRL+K'
-
-			CASE BITAND(lnKeyVal, 0x00A) = 0x00A
-				lcKeyName	= 'CTRL+ENTER'
-
-			CASE BITAND(lnKeyVal, 0x00A) = 0x00A
-				lcKeyName	= 'CTRL+J'
-
-			CASE BITAND(lnKeyVal, 0x009) = 0x009
-				lcKeyName	= 'CTRL+I'
-
-			CASE BITAND(lnKeyVal, 0x008) = 0x008
-				lcKeyName	= 'CTRL+H'
-
-			CASE BITAND(lnKeyVal, 0x007) = 0x007
-				lcKeyName	= 'CTRL+G'
-
-			CASE BITAND(lnKeyVal, 0x006) = 0x006
-				lcKeyName	= 'CTRL+F'
-
-			CASE BITAND(lnKeyVal, 0x005) = 0x005
-				lcKeyName	= 'CTRL+E'
-
-			CASE BITAND(lnKeyVal, 0x004) = 0x004
-				lcKeyName	= 'CTRL+D'
-
-			CASE BITAND(lnKeyVal, 0x003) = 0x003
-				lcKeyName	= 'CTRL+C'
-
-			CASE BITAND(lnKeyVal, 0x002) = 0x002
-				lcKeyName	= 'CTRL+B'
-
-			CASE BITAND(lnKeyVal, 0x001) = 0x001
-				lcKeyName	= 'CTRL+A'
-
-			OTHERWISE
-				lcKeyName	= CHR(lnKeyVal)
-
-			ENDCASE
-		ENDCASE
+		*ENDCASE
+		ENDIF
 
 		* Tratamiento de modificadores
-		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF)
-			IF llKeyCodeShift	&& SHIFT
+		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF) AND llComplementar
+			IF llKeyCodeShift AND AT("SHIFT",lcKeyName) = 0	&& SHIFT
 				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
 			ENDIF
-			IF llKeyCodeCtrl	&& CTRL
+			IF llKeyCodeCtrl AND AT("CTRL",lcKeyName) = 0	&& CTRL
 				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
 			ENDIF
-			IF llKeyCodeAlt	&& ALT
+			IF llKeyCodeAlt AND AT("ALT",lcKeyName) = 0	&& ALT
 				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'ALT'
 			ENDIF
 			*IF BITAND(lnKeyVal, 0x8000) = 0x8000	&& LITERAL
@@ -29992,14 +30020,22 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 
 		* Tratamiento de combinación final
 		DO CASE
-		CASE LEN(lcKeyName) > 1 AND NOT llComplementar
-			lcTecla	= '{' + lcKeyName + '}'
+		CASE LEN(lcKeyName) > 1 AND (NOT llComplementar OR EMPTY(lcKeyMod))
+			IF tlLiteralForCaption
+				lcTecla	= lcKeyName
+			ELSE
+				lcTecla	= '{' + lcKeyName + '}'
+			ENDIF
 
 		CASE EMPTY(lcKeyMod)
 			lcTecla	= lcKeyName
 
 		OTHERWISE
-			lcTecla	= '{' + lcKeyMod + '+' + lcKeyName + '}'
+			IF tlLiteralForCaption
+				lcTecla	= lcKeyMod + '+' + lcKeyName
+			ELSE
+				lcTecla	= '{' + lcKeyMod + '+' + lcKeyName + '}'
+			ENDIF
 
 		ENDCASE
 
