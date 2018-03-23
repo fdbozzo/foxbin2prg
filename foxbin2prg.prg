@@ -881,7 +881,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	FRX_Conversion_Support			= 2
 	LBX_Conversion_Support			= 2
 	MNX_Conversion_Support			= 2
-	FKY_Conversion_Support			= 2
+	FKY_Conversion_Support			= 1
 	MEM_Conversion_Support			= 0
 	DBF_Conversion_Support			= 1
 	DBC_Conversion_Support			= 2
@@ -29250,9 +29250,12 @@ DEFINE CLASS CL_MACRO AS CL_COL_BASE
 						EXIT
 					ENDIF
 
-					loColl.Add( loMRec, loMRec.Macro_Name )
+					loColl.Add( loMRec, loMRec.get_Macro_Keystrokes(loMRec.Keystroke, .T.) )
 					loMRec	= NULL
 				ENDFOR
+				
+				* Ordenar alfabéticamente por keystroke
+				loColl.KeySort = 2
 
 			ENDWITH
 
@@ -29273,30 +29276,6 @@ DEFINE CLASS CL_MACRO AS CL_COL_BASE
 
 		RETURN
 	ENDPROC
-
-
-	PROCEDURE decode_SpecialCodes_CR_LF
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcText					(!@ IN    ) Decodifica los caracteres ASCII 10 y 13 de {nCode} a CHR(nCode)
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcText
-		tcText	= STRTRAN( STRTRAN( tcText, '{10}', CHR(10) ), '{13}', CHR(13) )
-		RETURN tcText
-	ENDPROC
-
-
-
-	PROCEDURE encode_SpecialCodes_CR_LF
-		*---------------------------------------------------------------------------------------------------
-		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-		* tcText					(!@ IN    ) Codifica los caracteres ASCII 10 y 13 de CHR(nCode) a {nCode}
-		*---------------------------------------------------------------------------------------------------
-		LPARAMETERS tcText
-		tcText	= STRTRAN( STRTRAN( tcText, CHR(10), '{10}' ), CHR(13), '{13}' )
-		RETURN tcText
-	ENDPROC
-
 
 
 	PROCEDURE toText
