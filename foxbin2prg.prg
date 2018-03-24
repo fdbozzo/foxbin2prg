@@ -896,7 +896,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 			LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath, laDir(1,5)
+		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath, laDir(1,5) ;
+			, lcLang
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -958,7 +959,23 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.writeLog( REPLICATE( '*', 100 ) )
 		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ', FoxPro Version: ' + VERSION(4) + ')' )
 		THIS.writeLog( TEXTMERGE( '- Internal CFG: <<SYS(2019,2)>> / External CFG: <<SYS(2019,1)>> / CodePage Used: <<CPCURRENT()>>)' ) )
-		THIS.changeLanguage()
+		
+		* Get default language info
+		* ISO 639-2 Language Codes: https://www.loc.gov/standards/iso639-2/php/code_list.php
+		lcLang	= THIS.getLocaleInfo(0x00000067) && ie: spa
+		
+		DO CASE
+		CASE lcLang = 'spa'
+			lcLang = 'ES'
+		CASE INLIST(lcLang, 'den', 'deu', 'ger', 'gmh', 'goh', 'gsw', 'nds')
+			lcLang = 'DE'
+		CASE INLIST(lcLang, 'cpf', 'fra', 'fre', 'frm', 'fro')
+			lcLang = 'FR'
+		OTHERWISE && Default: EN
+			lcLang = 'EN'
+		ENDCASE
+		
+		THIS.changeLanguage(lcLang)
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
 		*THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
@@ -5317,6 +5334,27 @@ DEFINE CLASS c_foxbin2prg AS Session
 		ENDCASE
 
 		RETURN lcMsg
+	ENDFUNC
+
+
+	FUNCTION GetLocaleInfo
+		LPARAMETERS tnSetting, tcLocale
+		#DEFINE C_NULL CHR(0)
+		LOCAL lcLocale, lnLen, lcBuffer, lnReturn, lcReturn
+
+		IF VARTYPE(tcLocale) = 'C' AND NOT EMPTY(tcLocale)
+			lcLocale = STRCONV(tcLocale, 5) + C_NULL
+		ELSE
+			lcLocale = .NULL.
+		ENDIF
+		
+		DECLARE INTEGER GetLocaleInfoEx in Win32API ;
+			string locale, long type, string @buffer, integer len
+		lnLen    = 255
+		lcBuffer = SPACE(lnLen)
+		lnReturn = GetLocaleInfoEx(lcLocale, tnSetting, @lcBuffer, lnLen)
+		lcReturn = STRCONV(LEFT(lcBuffer, 2 * (lnReturn - 1)), 6)
+		RETURN lcReturn
 	ENDFUNC
 
 
@@ -28512,7 +28550,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "Fichier introuvable"
 					.C_FILENAME_LOC													= "Fichier"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
 					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
@@ -28677,7 +28715,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "No se encontró el archivo"
 					.C_FILENAME_LOC													= "Archivo"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS Y PARÁMETROS"
 					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
@@ -28842,7 +28880,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "Datei nicht gefunden"
 					.C_FILENAME_LOC													= "Datei"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FEHLER"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
 					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
@@ -29007,7 +29045,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "File not found"
 					.C_FILENAME_LOC													= "File"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
 					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
@@ -29253,7 +29291,7 @@ DEFINE CLASS CL_MACRO AS CL_COL_BASE
 					loColl.Add( loMRec, loMRec.get_Macro_Keystrokes(loMRec.Keystroke, .T.) )
 					loMRec	= NULL
 				ENDFOR
-				
+
 				* Ordenar alfabéticamente por keystroke
 				loColl.KeySort = 2
 
@@ -29927,17 +29965,14 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 			ENDCASE
 
 		ENDCASE
-		
+
 		IF EMPTY(lcKeyName)
-		*OTHERWISE &&CASE INLIST( lnKey, 0x00, 0x10, 0x80) OR lnCntMod > 1
-			*llComplementar	= NOT EMPTY(lcKeyMod)
 
 			DO CASE
 			CASE BETWEEN(lnKey, 0x41, 0x5A) OR BETWEEN(lnKey, 0x61, 0x7A) OR INLIST(lnKey, 0x7C, 0x7E)	&& A..Z, a..z, |, ~
 				lcKeyName	= lcKey
 				llKeyCodeShift	= .F.
 
-			*CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (tlLiteralForCaption AND lnKey = 0x3B)
 			CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (lnKey = 0x3B)
 				llKeyCodeShift	= .F.
 				lcKeyName	= lcKey
@@ -29978,7 +30013,7 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 
 			ENDCASE
 
-		*ENDCASE
+			*ENDCASE
 		ENDIF
 
 		* Tratamiento de modificadores
