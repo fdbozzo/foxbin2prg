@@ -213,6 +213,8 @@
 * 03/03/2018    FDBOZZO     v1.19.50    Mejora: Permitir exportar a texto la información de DBFs cuya apertura está protegida por eventos del DBC
 * 12/03/2018	FDBOZZO		v1.19.50.1	Bug Fix: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Darko Kezic)
 * 15/03/2018	FDBOZZO		v1.19.50.3	Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic)
+* 16/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de macros (.FKY)
+* 25/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de memoria (.MEM)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -690,6 +692,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
+		+ [<memberdata name="c_fk2" display="c_FK2"/>] ;
+		+ [<memberdata name="c_me2" display="c_ME2"/>] ;
 		+ [<memberdata name="changefileattribute" display="changeFileAttribute"/>] ;
 		+ [<memberdata name="changefiletime" display="changeFileTime"/>] ;
 		+ [<memberdata name="compilefoxprobinary" display="compileFoxProBinary"/>] ;
@@ -751,7 +755,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="normalizefilecapitalization" display="normalizeFileCapitalization"/>] ;
 		+ [<memberdata name="o_conversor" display="o_Conversor"/>] ;
 		+ [<memberdata name="o_frm_avance" display="o_Frm_Avance"/>] ;
-		+ [<memberdata name="o_fnc" display="o_FNC"/>] ;
 		+ [<memberdata name="o_fso" display="o_FSO"/>] ;
 		+ [<memberdata name="o_wsh" display="o_WSH"/>] ;
 		+ [<memberdata name="o_configuration" display="o_Configuration"/>] ;
@@ -788,6 +791,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	PROTECTED n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
 	n_FB2PRG_Version				= 1.19
+	c_FB2PRG_Version_Real			= '1.19.51'
 	*--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -870,12 +874,16 @@ DEFINE CLASS c_foxbin2prg AS Session
 	c_DB2							= 'DB2'			&& DBF
 	c_DC2							= 'DC2'			&& DBC
 	c_MN2							= 'MN2'			&& MNX
+	c_FK2							= 'FK2'			&& FKY
+	c_ME2							= 'ME2'			&& MEM
 	PJX_Conversion_Support			= 2
 	VCX_Conversion_Support			= 2
 	SCX_Conversion_Support			= 2
 	FRX_Conversion_Support			= 2
 	LBX_Conversion_Support			= 2
 	MNX_Conversion_Support			= 2
+	FKY_Conversion_Support			= 1
+	MEM_Conversion_Support			= 1
 	DBF_Conversion_Support			= 1
 	DBC_Conversion_Support			= 2
 	DBF_Conversion_Included			= ''
@@ -889,7 +897,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 			LOCAL THIS AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
 
-		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath, laDir(1,5)
+		LOCAL lcSys16, lnPosProg, lc_Foxbin2prg_EXE, laValues(1,5), lcPicturePath, laDir(1,5) ;
+			, lcLang
 		SET DELETED ON
 		SET DATE YMD
 		SET HOURS TO 24
@@ -942,7 +951,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.c_Foxbin2prg_ConfigFile	= EVL( tcCFG_File, FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'CFG' ) )
 		THIS.c_BackgroundImage			= THIS.get_AbsolutePath( ADDBS(JUSTPATH(THIS.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg' )
 		lc_Foxbin2prg_EXE				= FORCEEXT( THIS.c_Foxbin2prg_FullPath, 'EXE' )
-		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.n_FB2PRG_Version), laValues(11) )
+		THIS.c_FB2PRG_EXE_Version		= 'v' + IIF( AGETFILEVERSION( laValues, lc_Foxbin2prg_EXE ) = 0, TRANSFORM(THIS.c_FB2PRG_Version_Real), laValues(11) )
 		ADDPROPERTY(_SCREEN, 'c_FB2PRG_EXE_Version', THIS.c_FB2PRG_EXE_Version)
 		ADDPROPERTY(_SCREEN, 'ExitCode', 0)
 
@@ -950,7 +959,24 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.writeLog( 'FoxBin2Prg INIT  -', 2 )
 		THIS.writeLog( REPLICATE( '*', 100 ) )
 		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ', FoxPro Version: ' + VERSION(4) + ')' )
-		THIS.changeLanguage()
+		THIS.writeLog( TEXTMERGE( '- Internal CFG: <<SYS(2019,2)>> / External CFG: <<SYS(2019,1)>> / CodePage Used: <<CPCURRENT()>>)' ) )
+
+		* Get default language info
+		* ISO 639-2 Language Codes: https://www.loc.gov/standards/iso639-2/php/code_list.php
+		lcLang	= THIS.getLocaleInfo(0x00000067) && ie: spa
+
+		DO CASE
+		CASE lcLang = 'spa'
+			lcLang = 'ES'
+		CASE INLIST(lcLang, 'den', 'deu', 'ger', 'gmh', 'goh', 'gsw', 'nds')
+			lcLang = 'DE'
+		CASE INLIST(lcLang, 'cpf', 'fra', 'fre', 'frm', 'fro')
+			lcLang = 'FR'
+		OTHERWISE && Default: EN
+			lcLang = 'EN'
+		ENDCASE
+
+		THIS.changeLanguage(lcLang)
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
 		*THIS.o_WSH						= CREATEOBJECT("WScript.Shell")
@@ -1401,6 +1427,24 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDPROC
 
 
+	PROCEDURE c_FK2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_FK2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_FK2, THIS.c_FK2 )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE c_ME2_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.c_ME2
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).c_ME2, THIS.c_ME2 )
+		ENDIF
+	ENDPROC
+
+
 	PROCEDURE PJX_Conversion_Support_ACCESS
 		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
 			RETURN THIS.PJX_Conversion_Support
@@ -1451,6 +1495,24 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.MNX_Conversion_Support
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).MNX_Conversion_Support, THIS.MNX_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE FKY_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.FKY_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).FKY_Conversion_Support, THIS.FKY_Conversion_Support )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE MEM_Conversion_Support_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.MEM_Conversion_Support
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).MEM_Conversion_Support, THIS.MEM_Conversion_Support )
 		ENDIF
 	ENDPROC
 
@@ -1764,7 +1826,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					tcBakFile_1		= FORCEEXT(tcOutputFile, lcExt_1 + lcNext_Bak)
 
 					DO CASE
-					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, 'PJM' )
+					CASE INLIST( lcExt_1, .c_PJ2, .c_VC2, .c_SC2, .c_FR2, .c_LB2, .c_DB2, .c_DC2, .c_MN2, .c_FK2, .c_ME2, 'PJM' )
 						*-- Extensiones TEXTO
 
 					CASE lcExt_1 = 'DBF'
@@ -1781,10 +1843,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
 						tcBakFile_3	= FORCEEXT(tcOutputFile, lcExt_3 + lcNext_Bak)
 
-					OTHERWISE
+					CASE INLIST( lcExt_1, 'PJX', 'VCX', 'SCX', 'FRX', 'LBX', 'MNX' )
 						*-- PJX, VCX, SCX, FRX, LBX, MNX
 						lcExt_2		= LEFT(lcExt_1,2) + 'T'
 						tcBakFile_2	= FORCEEXT(tcOutputFile, lcExt_2 + lcNext_Bak)
+
+					OTHERWISE
+						*-- PKY, MEM
 
 					ENDCASE
 
@@ -2253,6 +2318,20 @@ DEFINE CLASS c_foxbin2prg AS Session
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support:     ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
 							ENDIF
 
+						CASE LEFT( laConfig(m.I), 23 ) == LOWER('FKY_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 24 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.FKY_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > FKY_Conversion_Support:     ' + TRANSFORM(lo_CFG.FKY_Conversion_Support) )
+							ENDIF
+
+						CASE LEFT( laConfig(m.I), 23 ) == LOWER('MEM_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 24 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.MEM_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > MEM_Conversion_Support:     ' + TRANSFORM(lo_CFG.MEM_Conversion_Support) )
+							ENDIF
+
 						CASE LEFT( laConfig(m.I), 23 ) == LOWER('DBF_Conversion_Support:')
 							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 24 ) )
 							IF INLIST( lcValue, '0', '1', '2', '4', '8' ) THEN
@@ -2634,6 +2713,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == 'FRX', .FRX_Conversion_Support > 0 ;
 				, lcExt == 'LBX', .LBX_Conversion_Support > 0 ;
 				, lcExt == 'MNX', .MNX_Conversion_Support > 0 ;
+				, lcExt == 'FKY', .FKY_Conversion_Support > 0 ;
+				, lcExt == 'MEM', .MEM_Conversion_Support > 0 ;
 				, lcExt == 'DBF', NOT ISNULL(loDBF_CFG) AND loDBF_CFG.DBF_Conversion_Support > 0 OR .DBF_Conversion_Support > 0 ;
 				, lcExt == 'DBC', .DBC_Conversion_Support > 0 ;
 				, .F. )
@@ -2674,6 +2755,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 				, lcExt == .c_FR2, .FRX_Conversion_Support = 2 ;
 				, lcExt == .c_LB2, .LBX_Conversion_Support = 2 ;
 				, lcExt == .c_MN2, .MNX_Conversion_Support = 2 ;
+				, lcExt == .c_FK2, .FKY_Conversion_Support = 2 ;
+				, lcExt == .c_ME2, .MEM_Conversion_Support = 2 ;
 				, lcExt == .c_DB2, NOT ISNULL(loDBF_CFG) AND INLIST(loDBF_CFG.DBF_Conversion_Support, 2, 8) ;
 				OR (INLIST(.DBF_Conversion_Support, 2, 8) ;
 				AND (ISNULL(loDBF_CFG) OR NOT INLIST(loDBF_CFG.DBF_Conversion_Support, 1, 4))) ;
@@ -2718,6 +2801,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 					, INLIST(lcExt, .c_FR2, 'FRX'), .FRX_Conversion_Support ;
 					, INLIST(lcExt, .c_LB2, 'LBX'), .LBX_Conversion_Support ;
 					, INLIST(lcExt, .c_MN2, 'MNX'), .MNX_Conversion_Support ;
+					, INLIST(lcExt, .c_FK2, 'FKY'), .FKY_Conversion_Support ;
+					, INLIST(lcExt, .c_ME2, 'MEM'), .MEM_Conversion_Support ;
 					, INLIST(lcExt, .c_DB2, 'DBF'), ICASE( ISNULL(loDBF_CFG) OR loDBF_CFG.DBF_Conversion_Support = 0, .DBF_Conversion_Support, loDBF_CFG.DBF_Conversion_Support ) ;
 					, INLIST(lcExt, .c_DC2, 'DBC'), .DBC_Conversion_Support ;
 					, 0 )
@@ -3240,7 +3325,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ENDCASE
 
 					*-- UN ARCHIVO INDIVIDUAL O CONSULTA DE SOPORTE DE ARCHIVO
-					*IF LEN(EVL(tc_InputFile,'')) = 1
 					IF lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT
 						*-- Consulta de soporte de conversión (compatibilidad con SourceSafe)
 						*-- SourceSafe consulta el tipo de soporte de cada archivo antes del Checkin/Checkout
@@ -3921,6 +4005,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 					loConversor		= CREATEOBJECT( 'c_conversor_mnx_a_prg' )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_MN2 ), lcForceAttribs )
 
+				CASE lcExtension = 'FKY'
+					IF NOT INLIST(.FKY_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_FK2 )
+					loConversor		= CREATEOBJECT( 'c_conversor_fky_a_prg' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_FK2 ), lcForceAttribs )
+
+				CASE lcExtension = 'MEM'
+					IF NOT INLIST(.MEM_Conversion_Support, 1, 2)
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, .c_ME2 )
+					loConversor		= CREATEOBJECT( 'c_conversor_mem_a_prg' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, .c_ME2 ), lcForceAttribs )
+
 				CASE lcExtension = .c_VC2
 					IF .VCX_Conversion_Support <> 2
 						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
@@ -4002,6 +4102,22 @@ DEFINE CLASS c_foxbin2prg AS Session
 					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_mnx' )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'MNX' ), lcForceAttribs )
 					.changeFileAttribute( FORCEEXT( .c_InputFile, 'MNT' ), lcForceAttribs )
+
+				CASE lcExtension = .c_FK2
+					IF .FKY_Conversion_Support <> 2
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'FKY' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_fky' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, 'FKY' ), lcForceAttribs )
+
+				CASE lcExtension = .c_ME2
+					IF .MEM_Conversion_Support <> 2
+						ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+					ENDIF
+					.c_OutputFile	= FORCEEXT( .c_InputFile, 'MEM' )
+					loConversor		= CREATEOBJECT( 'c_conversor_prg_a_mem' )
+					.changeFileAttribute( FORCEEXT( .c_InputFile, 'MEM' ), lcForceAttribs )
 
 				OTHERWISE
 					*ERROR 'El archivo [' + .c_InputFile + '] no está soportado'
@@ -5206,6 +5322,57 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDFUNC
 
 
+	FUNCTION FERROR_Message(tcFileName as String)
+		LOCAL lcMsg, lnError
+		tcFileName	= EVL(tcFileName,'')
+		lnError		= FERROR()
+
+		DO CASE
+		CASE lnError = 2
+			lcMsg	= 'File not found'
+		CASE lnError = 4
+			lcMsg	= 'Too many files open (out of file handles)'
+		CASE lnError = 5
+			lcMsg	= 'Access denied'
+		CASE lnError = 6
+			lcMsg	= 'Invalid file handle given'
+		CASE lnError = 8
+			lcMsg	= 'Out of memory'
+		CASE lnError = 25
+			lcMsg	= [Seek error (can't seek before the start of a file)]
+		CASE lnError = 29
+			lcMsg	= 'Disk full'
+		CASE lnError = 31
+			lcMsg	= 'Error opening file'
+		OTHERWISE
+			lcMsg	= 'Unrecognized error trying to open the file ' + tcFileName
+		ENDCASE
+
+		RETURN lcMsg
+	ENDFUNC
+
+
+	FUNCTION getLocaleInfo
+		LPARAMETERS tnSetting, tcLocale
+		#DEFINE C_NULL CHR(0)
+		LOCAL lcLocale, lnLen, lcBuffer, lnReturn, lcReturn
+
+		IF VARTYPE(tcLocale) = 'C' AND NOT EMPTY(tcLocale)
+			lcLocale = STRCONV(tcLocale, 5) + C_NULL
+		ELSE
+			lcLocale = .NULL.
+		ENDIF
+
+		DECLARE INTEGER GetLocaleInfoEx in Win32API ;
+			string locale, long type, string @buffer, integer len
+		lnLen    = 255
+		lcBuffer = SPACE(lnLen)
+		lnReturn = GetLocaleInfoEx(lcLocale, tnSetting, @lcBuffer, lnLen)
+		lcReturn = STRCONV(LEFT(lcBuffer, 2 * (lnReturn - 1)), 6)
+		RETURN lcReturn
+	ENDFUNC
+
+
 ENDDEFINE
 
 
@@ -5846,39 +6013,46 @@ DEFINE CLASS frm_main AS form
 	AlwaysOnTop = .T.
 	AutoCenter = .T.
 	BackColor = (RGB(255,255,255))
-	BorderStyle = 2
+	BorderStyle = 3
 	Caption = "FoxBin2Prg <x>"
 	Closable = .T.
 	ControlBox = .T.
 	DoCreate = .T.
 	Height = 380
 	KeyPreview = .T.
-	MaxButton = .F.
+	MaxButton = .T.
 	MinButton = .F.
+	MinHeight = 380
+	MinWidth = 756
 	Name = "FRM_MAIN"
 	ShowWindow = 2
 	Width = 756
 
+	ADD OBJECT 'edt_Help' AS editbox WITH ;
+		Anchor = 1+2+4+8, ;
+		BackStyle = 0, ;
+		BorderStyle = 0, ;
+		DisabledForeColor = (RGB(0,0,0)), ;
+		Enabled = .T., ;
+		FontName = "Courier New", ;
+		FontSize = 9, ;
+		Height = 324, ;
+		Left = 12, ;
+		Name = "edt_Help", ;
+		ReadOnly = .T., ;
+		ScrollBars = 2, ;
+		Top = 12, ;
+		Width = 728
+
 	ADD OBJECT 'cmd_Close' AS commandbutton WITH ;
+		Anchor = 4+8, ;
 		Cancel = .T., ;
-		Caption = "Cerrar", ;
+		Caption = "Close", ;
 		Height = 27, ;
 		Left = 656, ;
 		Name = "cmd_Close", ;
 		Top = 344, ;
 		Width = 84
-
-	ADD OBJECT 'edt_Help' AS editbox WITH ;
-		BackStyle = 0, ;
-		BorderStyle = 0, ;
-		DisabledForeColor = (RGB(0,0,0)), ;
-		Enabled = .F., ;
-		Height = 324, ;
-		Left = 12, ;
-		Name = "edt_Help", ;
-		ScrollBars = 0, ;
-		Top = 12, ;
-		Width = 728
 
 	PROCEDURE Init
 		LPARAMETERS toFoxBin2Prg
@@ -17704,6 +17878,201 @@ ENDDEFINE
 
 
 
+DEFINE CLASS c_conversor_fky_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_fky_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	c_Type					= 'FKY'
+
+
+	PROCEDURE convert
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toMacro					(!@    OUT) Objeto generado de clase CL_MACRO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toMacro, toEx AS EXCEPTION, toFoxBin2Prg
+		DODEFAULT( @toMacro, @toEx, @toFoxBin2Prg )
+
+		#IF .F.
+			LOCAL toMacro AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnCodError, lnLen, lnHandle ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
+		TRY
+			WITH THIS AS c_conversor_fky_a_prg OF 'FOXBIN2PRG.PRG'
+				lnHandle	= -1
+
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					loLang			= _SCREEN.o_FoxBin2Prg_Lang
+					STORE 0 TO lnCodError
+
+					.updateProgressbar( 'Analyzing FKY...', 1, 2, 1 )
+
+					*-- Verificación de archivo de macros válido
+					*IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
+					*	*ERROR 'Menu [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU ' + JUSTFNAME((.c_InputFile))
+					*	ERROR (TEXTMERGE(loLang.C_MENU_NOT_IN_VFP9_FORMAT_LOC))
+					*ENDIF
+
+					*-- Header
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+
+					toMacro			= CREATEOBJECT('CL_MACRO')
+					toMacro.get_DataFromMacroFKY(.c_InputFile, @toFoxBin2Prg)
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toMacro.toText()
+				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
+				*-- Genero el FK2
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_FK2 + '...', 2, 2, 1 )
+				ENDIF
+
+				IF .l_Test
+					toMacro	= C_FB2PRG_CODE
+				ELSE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+				ENDIF
+			ENDWITH && THIS
+
+
+		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			*
+		ENDTRY
+
+		RETURN
+	ENDPROC
+ENDDEFINE
+
+
+
+DEFINE CLASS c_conversor_mem_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_mem_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	c_Type					= 'MEM'
+
+
+	PROCEDURE convert
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toMacro					(!@    OUT) Objeto generado de clase CL_MACRO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toMemVar, toEx AS EXCEPTION, toFoxBin2Prg
+		DODEFAULT( @toMemVar, @toEx, @toFoxBin2Prg )
+
+		#IF .F.
+			LOCAL toMemVar AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnCodError, lnLen, lnHandle ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
+		PRIVATE pnCols, pnRows, pnElement
+		STORE 0 TO pnCols, pnRows, pnElement
+
+		TRY
+			WITH THIS AS c_conversor_mem_a_prg OF 'FOXBIN2PRG.PRG'
+				lnHandle	= -1
+
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					loLang			= _SCREEN.o_FoxBin2Prg_Lang
+					STORE 0 TO lnCodError
+
+					.updateProgressbar( 'Analyzing MEM...', 1, 2, 1 )
+
+					*-- Verificación de archivo de macros válido
+					*IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
+					*	*ERROR 'Menu [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU ' + JUSTFNAME((.c_InputFile))
+					*	ERROR (TEXTMERGE(loLang.C_MENU_NOT_IN_VFP9_FORMAT_LOC))
+					*ENDIF
+
+					*-- Header
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+
+					toMemVar		= CREATEOBJECT('CL_MEMVAR')
+					toMemVar.get_DataFromMEM(.c_InputFile, @toFoxBin2Prg)
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toMemVar.toText()
+				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
+				*-- Genero el FK2
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_ME2 + '...', 2, 2, 1 )
+				ENDIF
+
+				IF .l_Test
+					toMemVar	= C_FB2PRG_CODE
+				ELSE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+				ENDIF
+			ENDWITH && THIS
+
+
+		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			*
+		ENDTRY
+
+		RETURN
+	ENDPROC
+ENDDEFINE
+
+
+
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT, CLASS)
 	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
@@ -27991,6 +28360,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="c_fr2" display="c_FR2"/>] ;
 		+ [<memberdata name="c_lb2" display="c_LB2"/>] ;
 		+ [<memberdata name="c_mn2" display="c_MN2"/>] ;
+		+ [<memberdata name="c_fk2" display="c_FK2"/>] ;
+		+ [<memberdata name="c_me2" display="c_ME2"/>] ;
 		+ [<memberdata name="c_pj2" display="c_PJ2"/>] ;
 		+ [<memberdata name="c_sc2" display="c_SC2"/>] ;
 		+ [<memberdata name="c_vc2" display="c_VC2"/>] ;
@@ -28014,6 +28385,8 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="frx_conversion_support" display="FRX_Conversion_Support"/>] ;
 		+ [<memberdata name="lbx_conversion_support" display="LBX_Conversion_Support"/>] ;
 		+ [<memberdata name="mnx_conversion_support" display="MNX_Conversion_Support"/>] ;
+		+ [<memberdata name="fky_conversion_support" display="FKY_Conversion_Support"/>] ;
+		+ [<memberdata name="mem_conversion_support" display="MEM_Conversion_Support"/>] ;
 		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
 		+ [<memberdata name="dbf_conversion_included" display="DBF_Conversion_Included"/>] ;
 		+ [<memberdata name="dbf_conversion_excluded" display="DBF_Conversion_Excluded"/>] ;
@@ -28057,12 +28430,16 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	c_DB2							= NULL
 	c_DC2							= NULL
 	c_MN2							= NULL
+	c_FK2							= NULL
+	c_ME2							= NULL
 	PJX_Conversion_Support			= NULL
 	VCX_Conversion_Support			= NULL
 	SCX_Conversion_Support			= NULL
 	FRX_Conversion_Support			= NULL
 	LBX_Conversion_Support			= NULL
 	MNX_Conversion_Support			= NULL
+	FKY_Conversion_Support			= NULL
+	MEM_Conversion_Support			= NULL
 	DBF_Conversion_Support			= NULL
 	DBF_Conversion_Included			= NULL
 	DBF_Conversion_Excluded			= NULL
@@ -28104,12 +28481,16 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.c_DB2							= toParentCFG.c_DB2
 			.c_DC2							= toParentCFG.c_DC2
 			.c_MN2							= toParentCFG.c_MN2
+			.c_FK2							= toParentCFG.c_FK2
+			.c_ME2							= toParentCFG.c_ME2
 			.PJX_Conversion_Support			= toParentCFG.PJX_Conversion_Support
 			.VCX_Conversion_Support			= toParentCFG.VCX_Conversion_Support
 			.SCX_Conversion_Support			= toParentCFG.SCX_Conversion_Support
 			.FRX_Conversion_Support			= toParentCFG.FRX_Conversion_Support
 			.LBX_Conversion_Support			= toParentCFG.LBX_Conversion_Support
 			.MNX_Conversion_Support			= toParentCFG.MNX_Conversion_Support
+			.FKY_Conversion_Support			= toParentCFG.FKY_Conversion_Support
+			.MEM_Conversion_Support			= toParentCFG.MEM_Conversion_Support
 			.DBF_Conversion_Support			= toParentCFG.DBF_Conversion_Support
 			.DBF_Conversion_Included		= toParentCFG.DBF_Conversion_Included
 			.DBF_Conversion_Excluded		= toParentCFG.DBF_Conversion_Excluded
@@ -28283,24 +28664,83 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "Fichier introuvable"
 					.C_FILENAME_LOC													= "Fichier"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
-					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
-						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
-						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
-						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
-						+ "- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified" + CR_LF ;
-						+ "cType: In SCCAPI (VSS) compatibility mode indicates the input file type. " ;
-						+ "If specified '*' o '*-' and tc_InputFile is a PJX, all project files are processed" + CR_LF ;
-						+ "cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
-						+ "lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
-						+ "cDontShowErrors: '1' for NOT showing errors" + CR_LF ;
-						+ "cDebug: '1' for generating process LOGs" + CR_LF ;
-						+ "cDontShowProgress: '1' for NOT showing the process window" + CR_LF ;
-						+ "cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate" ;
-						+ "	the correct filename on the header of the text version" + CR_LF ;
-						+ "cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)" + CR_LF ;
-						+ "cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')" + CR_LF ;
-						+ "cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
+					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
+						<<>>
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process
+						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
+						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
+						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
+						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
+						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
+						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
+						<<>>cDontShowErrors: '1' for NOT showing errors
+						<<>>cDebug: '1' for generating process LOGs
+						<<>>cDontShowProgress: '1' for NOT showing the process window
+						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
+						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
+						<<>>cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')
+						<<>>cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>
+						<<>>
+						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>
+						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>NoTimestamps: 1                && Clear timestamps by default for minimize differences
+						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
+						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>
+						<<>>-- Convertion options:
+						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>
+						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>
+						<<>>-- Example configuration for SourceSafe compatibility:
+						<<>>extension: pj2=pja
+						<<>>extension: vc2=vca
+						<<>>extension: sc2=sca
+						<<>>extension: fr2=fra
+						<<>>extension: lb2=lba
+						<<>>extension: mn2=mna
+						<<>>extension: db2=dba
+						<<>>extension: dc2=dca
+						<<>>
+						<<>>
+						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg)
+						<<>>DBF_Conversion_Support: <1,2,4,8>           && See same config in upper side
+						<<>>DBF_Conversion_Order: <C_Expression>        && Field expresion. ie: name+str(age,3)
+						<<>>DBF_Conversion_Condition: <C_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>
+					ENDTEXT
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "AVERTISSEMENT!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Taille du fichier généré"
@@ -28389,24 +28829,83 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "No se encontró el archivo"
 					.C_FILENAME_LOC													= "Archivo"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS"
-					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
-						+ "cFileSpec.Ext: Nombre completo (fullpath) del archivo a convertir o del directorio a procesar" + CR_LF ;
-						+ "- Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2" + CR_LF ;
-						+ "- Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN" + CR_LF ;
-						+ "- En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado" + CR_LF ;
-						+ "cType: En modo compatibilidad con SCCAPI (VSS) es el Tipo de archivo de entrada. " ;
-						+ "Si indica '*' o '*-' y tc_InputFile es un PJX, se procesa todo el proyecto" + CR_LF ;
-						+ "cTextName = Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)" + CR_LF ;
-						+ "lGenText: .T.=Genera Texto, .F.=Genera Binario. Solo para compatibilidad con SCCAPI (VSS)" + CR_LF ;
-						+ "cDontShowErrors: '1' para NO mostrar errores" + CR_LF ;
-						+ "cDebug: '1' para generar LOGs del proceso" + CR_LF ;
-						+ "cDontShowProgress: '1' para NO mostrar la ventana de progreso" + CR_LF ;
-						+ "cOriginalFileName: Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar" + CR_LF ;
-						+ "	el nombre correcto en la cabecera de la versión texto" + CR_LF ;
-						+ "cRecompile: Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)" + CR_LF ;
-						+ "cNoTimestamps: Indica si se debe anular el timestamp ('1' o vacío) o no ('0')" + CR_LF ;
-						+ "cCFG_File: Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS Y PARÁMETROS"
+					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
+						<<>>
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>
+						<<>>-- Detalle de parámetros:
+						<<>>cFileSpec.Ext: Nombre completo (fullpath) del archivo a convertir o del directorio a procesar
+						<<>>- Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2
+						<<>>- Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN
+						<<>>- En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
+						<<>>cType: En modo compatibilidad con SCCAPI (VSS) es el Tipo de archivo de entrada.
+						<<>>- Si indica '*' o '*-' y tc_InputFile es un PJX, se procesa todo el proyecto
+						<<>>cTextName = Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
+						<<>>lGenText: .T.=Genera Texto, .F.=Genera Binario. Solo para compatibilidad con SCCAPI (VSS)
+						<<>>cDontShowErrors: '1' para NO mostrar errores
+						<<>>cDebug: '1' para generar LOGs del proceso
+						<<>>cDontShowProgress: '1' para NO mostrar la ventana de progreso
+						<<>>cOriginalFileName: Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar el nombre correcto en la cabecera de la versión texto
+						<<>>cRecompile: Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)
+						<<>>cNoTimestamps: Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
+						<<>>cCFG_File: Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
+						<<>>
+						<<>>
+						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>
+						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>NoTimestamps: 1                && Clear timestamps by default for minimize differences
+						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
+						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>
+						<<>>-- Convertion options:
+						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>
+						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>
+						<<>>-- Example configuration for SourceSafe compatibility:
+						<<>>extension: pj2=pja
+						<<>>extension: vc2=vca
+						<<>>extension: sc2=sca
+						<<>>extension: fr2=fra
+						<<>>extension: lb2=lba
+						<<>>extension: mn2=mna
+						<<>>extension: db2=dba
+						<<>>extension: dc2=dca
+						<<>>
+						<<>>
+						<<>>-- Archivo de configuración individual para DBF (sintaxis: archivo.dbf.cfg)
+						<<>>DBF_Conversion_Support: <1,2,4,8>           && Ver esta misma configuración más arriba
+						<<>>DBF_Conversion_Order: <C_Expression>        && Expresión de campo. ej: nombre+str(edad,3)
+						<<>>DBF_Conversion_Condition: <C_Expression>    && Expresión lógica. ej: edad > 10 AND NOT DELETED()
+						<<>>
+					ENDTEXT
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "¡ATENCIÓN!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Tamaño del archivo generado"
@@ -28495,24 +28994,83 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "Datei nicht gefunden"
 					.C_FILENAME_LOC													= "Datei"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FEHLER"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
-					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
-						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
-						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
-						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
-						+ "- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified" + CR_LF ;
-						+ "cType: In SCCAPI (VSS) compatibility mode indicates the input file type. " ;
-						+ "If specified '*' o '*-' and tc_InputFile is a PJX, all project files are processed" + CR_LF ;
-						+ "cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
-						+ "lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
-						+ "cDontShowErrors: '1' for NOT showing errors" + CR_LF ;
-						+ "cDebug: '1' for generating process LOGs" + CR_LF ;
-						+ "cDontShowProgress: '1' for NOT showing the process window" + CR_LF ;
-						+ "cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate" ;
-						+ "	the correct filename on the header of the text version" + CR_LF ;
-						+ "cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)" + CR_LF ;
-						+ "cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')" + CR_LF ;
-						+ "cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
+					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
+						<<>>
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process
+						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
+						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
+						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
+						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
+						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
+						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
+						<<>>cDontShowErrors: '1' for NOT showing errors
+						<<>>cDebug: '1' for generating process LOGs
+						<<>>cDontShowProgress: '1' for NOT showing the process window
+						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
+						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
+						<<>>cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')
+						<<>>cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>
+						<<>>
+						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>
+						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>NoTimestamps: 1                && Clear timestamps by default for minimize differences
+						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
+						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>
+						<<>>-- Convertion options:
+						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>
+						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>
+						<<>>-- Example configuration for SourceSafe compatibility:
+						<<>>extension: pj2=pja
+						<<>>extension: vc2=vca
+						<<>>extension: sc2=sca
+						<<>>extension: fr2=fra
+						<<>>extension: lb2=lba
+						<<>>extension: mn2=mna
+						<<>>extension: db2=dba
+						<<>>extension: dc2=dca
+						<<>>
+						<<>>
+						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg)
+						<<>>DBF_Conversion_Support: <1,2,4,8>           && See same config in upper side
+						<<>>DBF_Conversion_Order: <C_Expression>        && Field expresion. ie: name+str(age,3)
+						<<>>DBF_Conversion_Condition: <C_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>
+					ENDTEXT
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG arbeitet nur für Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "WARNUNG!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Generierte Dateigröße"
@@ -28601,24 +29159,83 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_FILE_NOT_FOUND_LOC											= "File not found"
 					.C_FILENAME_LOC													= "File"
 					.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
-					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX INFO"
-					.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= "FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]" + CR_LF + CR_LF ;
-						+ "cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process" + CR_LF ;
-						+ "- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2" + CR_LF ;
-						+ "- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN" + CR_LF ;
-						+ "- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified" + CR_LF ;
-						+ "cType: In SCCAPI (VSS) compatibility mode indicates the input file type. " ;
-						+ "If specified '*' o '*-' and tc_InputFile is a PJX, all project files are processed" + CR_LF ;
-						+ "cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
-						+ "lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode." + CR_LF ;
-						+ "cDontShowErrors: '1' for NOT showing errors" + CR_LF ;
-						+ "cDebug: '1' for generating process LOGs" + CR_LF ;
-						+ "cDontShowProgress: '1' for NOT showing the process window" + CR_LF ;
-						+ "cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate" ;
-						+ "	the correct filename on the header of the text version" + CR_LF ;
-						+ "cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)" + CR_LF ;
-						+ "cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')" + CR_LF ;
-						+ "cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory"
+					.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
+					TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
+						<<>>
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process
+						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
+						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
+						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
+						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
+						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
+						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
+						<<>>cDontShowErrors: '1' for NOT showing errors
+						<<>>cDebug: '1' for generating process LOGs
+						<<>>cDontShowProgress: '1' for NOT showing the process window
+						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
+						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
+						<<>>cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')
+						<<>>cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>
+						<<>>
+						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>
+						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>NoTimestamps: 1                && Clear timestamps by default for minimize differences
+						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
+						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>
+						<<>>-- Convertion options:
+						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+						<<>>
+						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>
+						<<>>-- Example configuration for SourceSafe compatibility:
+						<<>>extension: pj2=pja
+						<<>>extension: vc2=vca
+						<<>>extension: sc2=sca
+						<<>>extension: fr2=fra
+						<<>>extension: lb2=lba
+						<<>>extension: mn2=mna
+						<<>>extension: db2=dba
+						<<>>extension: dc2=dca
+						<<>>
+						<<>>
+						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg)
+						<<>>DBF_Conversion_Support: <1,2,4,8>           && See same config in upper side
+						<<>>DBF_Conversion_Order: <C_Expression>        && Field expresion. ie: name+str(age,3)
+						<<>>DBF_Conversion_Condition: <C_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>
+					ENDTEXT
 					.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
 					.C_FOXBIN2PRG_WARN_CAPTION_LOC									= "WARNING!"
 					.C_GENERATED_FILE_SIZE_LOC										= "Generated file size"
@@ -28693,3 +29310,1361 @@ DEFINE CLASS CL_DBF_CFG AS CUSTOM
 	DBF_Conversion_Condition	= ''
 	DBF_Conversion_Support		= NULL
 ENDDEFINE
+
+
+
+DEFINE CLASS CL_MACRO AS CL_COL_BASE
+	#IF .F.
+		LOCAL THIS AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="_numberofmacros" display="_NumberOfMacros"/>] ;
+		+ [<memberdata name="_debug" display="_Debug"/>] ;
+		+ [<memberdata name="_signature" display="_Signature"/>] ;
+		+ [<memberdata name="get_datafrommacrofky" display="get_DataFromMacroFKY"/>] ;
+		+ [<memberdata name="_macros" display="_Macros"/>] ;
+		+ [</VFPData>]
+
+
+	c_InputFile			= ''
+
+	*-- Macro Header
+	_Signature			= ''
+	_Debug				= .F.
+	_NumberOfMacros		= ''
+	_Macros				= NULL		&& Colección de macros
+
+
+
+	PROCEDURE INIT
+		DODEFAULT()
+		THIS._Macros = CREATEOBJECT("COLLECTION")
+	ENDPROC
+
+
+	PROCEDURE get_DataFromMacroFKY(tcInputFile as String, toFoxBin2Prg)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcInputFile				(!v IN    ) Archivo de entrada
+		* toFoxBin2Prg				(!@ IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnHandle, lnFileLen, lcMsg, lcStr, lnNumberOfMacros ;
+			, loMRec as CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG' ;
+			, loColl as Collection ;
+			, loEx as Exception
+
+		TRY
+			lnHandle	= -1
+
+			WITH THIS AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+				loColl		= ._Macros
+				lnHandle	= FOPEN(tcInputFile, 0)
+
+				IF lnHandle = -1
+					lcMsg	= toFoxBin2Prg.FERROR_Message(tcInputFile)
+					ERROR (lcMsg)
+				ENDIF
+
+				lnFileLen	= FSEEK(lnHandle, 0, 2)
+
+				IF lnFileLen < 17
+					ERROR 'Invalid FKY Macro File size'
+				ELSE
+					=FSEEK(lnHandle, 0, 0)
+				ENDIF
+
+				._Signature	= FREAD(lnHandle, 2)
+
+				IF ._Signature <> CHR(0xFF)+CHR(0x79)
+					ERROR 'Invalid FKY Macro signature'
+				ENDIF
+
+				=FSEEK(lnHandle, 14, 1)	&& Saltar bytes ignorados
+
+				._NumberOfMacros	= FREAD(lnHandle, 2)
+				lnNumberOfMacros	= CTOBIN(._NumberOfMacros,'2RS')
+
+				IF lnFileLen < 17 + 25 * lnNumberOfMacros
+					* 25 caracteres es el tamaño mínimo de una macro sin teclas guardadas (solo la estructura)
+					ERROR 'Invalid FKY Macro File size'
+				ENDIF
+
+				FOR I = 1 TO lnNumberOfMacros
+					loMRec	= CREATEOBJECT("CL_MACRO_RECORD")
+
+					IF NOT loMRec.ReadNextMacro(lnHandle)
+						EXIT
+					ENDIF
+
+					loColl.Add( loMRec, loMRec.get_Macro_Keystrokes(loMRec.Keystroke, .T.) )
+					loMRec	= NULL
+				ENDFOR
+
+				* Ordenar alfabéticamente por keystroke
+				loColl.KeySort = 2
+
+			ENDWITH
+
+		CATCH TO loEx
+			*loEx.UserValue = loEx.UserValue + 'lcAsignacion = [' + TRANSFORM(lcAsignacion) + ']' + CR_LF
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			IF lnHandle <> -1
+				=FCLOSE(lnHandle)
+			ENDIF
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loMRec AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_MACRO OF 'FOXBIN2PRG.PRG'
+
+			*-- Macros
+			FOR EACH loMRec AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG' IN ._Macros
+				lcText	= lcText + CR_LF + loMRec.toText()
+			ENDFOR
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="macro_name" display="Macro_Name"/>] ;
+		+ [<memberdata name="macro_length" display="Macro_Length"/>] ;
+		+ [<memberdata name="keystroke" display="Keystroke"/>] ;
+		+ [<memberdata name="macro_keystrokes" display="Macro_Keystrokes"/>] ;
+		+ [<memberdata name="readnextmacro" display="ReadNextMacro"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [<memberdata name="tobin" display="toBin"/>] ;
+		+ [<memberdata name="get_macro_keystrokes" display="get_Macro_Keystrokes"/>] ;
+		+ [<memberdata name="get_keytext" display="get_KeyText"/>] ;
+		+ [</VFPData>]
+
+	*--
+	Macro_Name					= ''
+	Macro_Length				= ''
+	Keystroke					= ''
+	Macro_Keystrokes			= ''
+
+
+	PROCEDURE ReadNextMacro(tnHandle as Integer)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnHandle					(!v IN    ) FKY file handle
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lnMacro_Length
+
+		TRY
+			WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+				.Macro_Name			= FREAD(tnHandle, 20)
+				.Macro_Length		= FREAD(tnHandle, 2)
+				.Keystroke			= FREAD(tnHandle, 2)
+				lnMacro_Length		= CTOBIN(.Macro_Length, '2RS')
+				.Macro_Keystrokes	= FREAD(tnHandle, lnMacro_Length * 2)
+			ENDWITH
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE toBin as String
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText
+
+		WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+	PROCEDURE toText as String
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loField AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+			TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+				<<>><MACRO>
+				<<>>	Macro_Name      : <<ALLTRIM(.Macro_Name, 0, CHR(0), CHR(32))>>
+				<<>>	Keystroke       : <<.get_Macro_Keystrokes(.Keystroke, .T.)>>
+				<<>>	Macro_Keystrokes: <<.get_Macro_Keystrokes(.Macro_Keystrokes)>>
+				<<>></MACRO>
+			ENDTEXT
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+	FUNCTION get_Macro_Keystrokes(tcMacroStr, tlLiteralForCaption)
+		*---------------------------------------------------------------------------------------------------
+		* DEVLUELVE LOS LITERALES DE TODAS LAS TECLAS
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcKeystrokes, I
+
+		WITH THIS AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+			lcKeystrokes	= ''
+
+			FOR I = 1 TO LEN(tcMacroStr) STEP 2
+				lcKeystrokes	= lcKeystrokes + .get_KeyText(@tcMacroStr, @I, tlLiteralForCaption)
+			ENDFOR
+		ENDWITH
+
+		RETURN lcKeystrokes
+	ENDFUNC
+
+
+	FUNCTION get_KeyText(tcMacroStr as String, I as Integer, tlLiteralForCaption as Boolean) as String
+		*---------------------------------------------------------------------------------------------------
+		* DEVLUELVE EL LITERAL DE UNA TECLA
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcMacroStr				(!@ IN    ) Cadena de teclas de la macro
+		* I							(!@ IN    ) Posición actualmente analizada de la cadena
+		* tlLiteralForCaption		(?v IN    ) Indica si algunos caracteres especiales se deben convertir a literal (ej: ";" => "SHIFT+SEMICOLON")
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcMod, lcKey, lcKeyName, lcKeyMod, lcTecla, lnKeyVal, lcKeyPair, lnCntMod ;
+			, llComplementar, llKeyCodeShift, llKeyCodeCtrl, llKeyCodeAlt, lnMod, lnKey
+
+		STORE '' TO lcTecla, lcKeyName, lcKeyMod, lcKey
+		lcKeyPair	= SUBSTR(tcMacroStr,I,2)
+		lnKeyVal	= CTOBIN(lcKeyPair, '2RS')
+		lcKey		= LEFT(lcKeyPair,1)
+		lcMod		= RIGHT(lcKeyPair,1)
+		lnMod		= ASC(lcMod)
+		lnKey		= ASC(lcKey)
+		lnCntMod	= 0
+
+		* Tratamiento de modificadores
+		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF)
+			IF BITAND(lnMod, 0x80) = 0x80	&& LITERAL
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'LITERAL'
+			ENDIF
+			IF BITAND(lnMod, 0x40) = 0x40	&& ALT
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'ALT'
+				llKeyCodeAlt	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+			IF BITAND(lnMod, 0x20) = 0x20	&& CTRL
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
+				llKeyCodeCtrl	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+			IF BITAND(lnMod, 0x10) = 0x10	&& SHIFT
+				*lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
+				llKeyCodeShift	= .T.
+				lnCntMod		= lnCntMod + 1
+			ENDIF
+		ENDIF
+
+		llComplementar	= llKeyCodeAlt OR llKeyCodeCtrl OR llKeyCodeShift
+		*llComplementar	= llKeyCodeShift
+
+		* Tratamiento de teclas normales
+		* (Ordenar de mayor valor a menor: 0xFFF > 0x000)
+		DO CASE
+		CASE lcKeyPair == CHR(0xFE)+CHR(0xFF)
+			lcKeyName	= 'PAUSE '
+			* Buscar el tiempo
+			I	= I + 2
+			lcKeyPair	= SUBSTR(tcMacroStr,I,2)
+
+			IF lcKeyPair == CHR(0xFF)+CHR(0xFF)
+				lcKeyName	= lcKeyName + 'KEY'
+			ELSE
+				lnKeyVal	= CTOBIN(lcKeyPair, '2RS')
+				lcKeyName	= lcKeyName + LTRIM(STR(lnKeyVal/100,5,2))
+			ENDIF
+
+		CASE BITAND(lnMod, 0x01) = 0x01 ;
+				OR BITAND(lnMod, 0x10) = 0x10 ;
+				OR BITAND(lnMod, 0x20) = 0x20 ;
+				OR BITAND(lnMod, 0x40) = 0x40
+			*llComplementar	= .F.
+
+			DO CASE
+			CASE BITAND(lnKeyVal, 0x41A3) = 0x41A3
+				lcKeyName	= 'ALT+DEL'
+
+			CASE BITAND(lnKeyVal, 0x41A2) = 0x41A2
+				lcKeyName	= 'ALT+INS'
+
+			CASE BITAND(lnKeyVal, 0x41A1) = 0x41A1
+				lcKeyName	= 'ALT+PGND'
+
+			CASE BITAND(lnKeyVal, 0x41A0) = 0x41A0
+				lcKeyName	= 'ALT+DNARROW'
+
+			CASE BITAND(lnKeyVal, 0x419F) = 0x419F
+				lcKeyName	= 'ALT+END'
+
+			CASE BITAND(lnKeyVal, 0x419D) = 0x419D
+				lcKeyName	= 'ALT+RIGHTARROW'
+
+			CASE BITAND(lnKeyVal, 0x419B) = 0x419B
+				lcKeyName	= 'ALT+LEFTARROW'
+
+			CASE BITAND(lnKeyVal, 0x4199) = 0x4199
+				lcKeyName	= 'ALT+PGUP'
+
+			CASE BITAND(lnKeyVal, 0x4198) = 0x4198
+				lcKeyName	= 'ALT+UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x4197) = 0x4197
+				lcKeyName	= 'ALT+HOME'
+
+			CASE BITAND(lnKeyVal, 0x418C) = 0x418C
+				lcKeyName	= 'ALT+F12'
+
+			CASE BITAND(lnKeyVal, 0x418B) = 0x418B
+				lcKeyName	= 'ALT+F11'
+
+			CASE BITAND(lnKeyVal, 0x4181) = 0x4181
+				lcKeyName	= 'ALT+0'
+
+			CASE BITAND(lnKeyVal, 0x4180) = 0x4180
+				lcKeyName	= 'ALT+9'
+
+			CASE BITAND(lnKeyVal, 0x417F) = 0x417F
+				lcKeyName	= 'ALT+8'
+
+			CASE BITAND(lnKeyVal, 0x417E) = 0x417E
+				lcKeyName	= 'ALT+7'
+
+			CASE BITAND(lnKeyVal, 0x417D) = 0x417D
+				lcKeyName	= 'ALT+6'
+
+			CASE BITAND(lnKeyVal, 0x417C) = 0x417C
+				lcKeyName	= 'ALT+5'
+
+			CASE BITAND(lnKeyVal, 0x417B) = 0x417B
+				lcKeyName	= 'ALT+4'
+
+			CASE BITAND(lnKeyVal, 0x417A) = 0x417A
+				lcKeyName	= 'ALT+3'
+
+			CASE BITAND(lnKeyVal, 0x4179) = 0x4179
+				lcKeyName	= 'ALT+2'
+
+			CASE BITAND(lnKeyVal, 0x4178) = 0x4178
+				lcKeyName	= 'ALT+1'
+
+			CASE BITAND(lnKeyVal, 0x4171) = 0x4171
+				lcKeyName	= 'ALT+F10'
+
+			CASE BITAND(lnKeyVal, 0x4170) = 0x4170
+				lcKeyName	= 'ALT+F9'
+
+			CASE BITAND(lnKeyVal, 0x416F) = 0x416F
+				lcKeyName	= 'ALT+F8'
+
+			CASE BITAND(lnKeyVal, 0x416E) = 0x416E
+				lcKeyName	= 'ALT+F7'
+
+			CASE BITAND(lnKeyVal, 0x416D) = 0x416D
+				lcKeyName	= 'ALT+F6'
+
+			CASE BITAND(lnKeyVal, 0x416C) = 0x416C
+				lcKeyName	= 'ALT+F5'
+
+			CASE BITAND(lnKeyVal, 0x416B) = 0x416B
+				lcKeyName	= 'ALT+F4'
+
+			CASE BITAND(lnKeyVal, 0x416A) = 0x416A
+				lcKeyName	= 'ALT+F3'
+
+			CASE BITAND(lnKeyVal, 0x4169) = 0x4169
+				lcKeyName	= 'ALT+F2'
+
+			CASE BITAND(lnKeyVal, 0x4168) = 0x4168
+				lcKeyName	= 'ALT+F1'
+
+			CASE BITAND(lnKeyVal, 0x4132) = 0x4132
+				lcKeyName	= 'ALT+M'
+
+			CASE BITAND(lnKeyVal, 0x4131) = 0x4131
+				lcKeyName	= 'ALT+N'
+
+			CASE BITAND(lnKeyVal, 0x4130) = 0x4130
+				lcKeyName	= 'ALT+B'
+
+			CASE BITAND(lnKeyVal, 0x412F) = 0x412F
+				lcKeyName	= 'ALT+V'
+
+			CASE BITAND(lnKeyVal, 0x412E) = 0x412E
+				lcKeyName	= 'ALT+C'
+
+			CASE BITAND(lnKeyVal, 0x412D) = 0x412D
+				lcKeyName	= 'ALT+X'
+
+			CASE BITAND(lnKeyVal, 0x412C) = 0x412C
+				lcKeyName	= 'ALT+Z'
+
+			CASE BITAND(lnKeyVal, 0x4126) = 0x4126
+				lcKeyName	= 'ALT+L'
+
+			CASE BITAND(lnKeyVal, 0x4125) = 0x4125
+				lcKeyName	= 'ALT+K'
+
+			CASE BITAND(lnKeyVal, 0x4124) = 0x4124
+				lcKeyName	= 'ALT+J'
+
+			CASE BITAND(lnKeyVal, 0x4123) = 0x4123
+				lcKeyName	= 'ALT+H'
+
+			CASE BITAND(lnKeyVal, 0x4122) = 0x4122
+				lcKeyName	= 'ALT+G'
+
+			CASE BITAND(lnKeyVal, 0x4121) = 0x4121
+				lcKeyName	= 'ALT+F'
+
+			CASE BITAND(lnKeyVal, 0x4120) = 0x4120
+				lcKeyName	= 'ALT+D'
+
+			CASE BITAND(lnKeyVal, 0x411F) = 0x411F
+				lcKeyName	= 'ALT+S'
+
+			CASE BITAND(lnKeyVal, 0x411E) = 0x411E
+				lcKeyName	= 'ALT+A'
+
+			CASE BITAND(lnKeyVal, 0x4119) = 0x4119
+				lcKeyName	= 'ALT+P'
+
+			CASE BITAND(lnKeyVal, 0x4118) = 0x4118
+				lcKeyName	= 'ALT+O'
+
+			CASE BITAND(lnKeyVal, 0x4117) = 0x4117
+				lcKeyName	= 'ALT+I'
+
+			CASE BITAND(lnKeyVal, 0x4116) = 0x4116
+				lcKeyName	= 'ALT+U'
+
+			CASE BITAND(lnKeyVal, 0x4115) = 0x4115
+				lcKeyName	= 'ALT+Y'
+
+			CASE BITAND(lnKeyVal, 0x4114) = 0x4114
+				lcKeyName	= 'ALT+T'
+
+			CASE BITAND(lnKeyVal, 0x4113) = 0x4113
+				lcKeyName	= 'ALT+R'
+
+			CASE BITAND(lnKeyVal, 0x4112) = 0x4112
+				lcKeyName	= 'ALT+E'
+
+			CASE BITAND(lnKeyVal, 0x4111) = 0x4111
+				lcKeyName	= 'ALT+U'
+
+			CASE BITAND(lnKeyVal, 0x4110) = 0x4110
+				lcKeyName	= 'ALT+Q'
+
+			CASE BITAND(lnKeyVal, 0x410C) = 0x410C
+				lcKeyName	= [ALT+']	&& No está en la ayuda de VFP
+
+			CASE BITAND(lnKeyVal, 0x2194) = 0x2194
+				lcKeyName	= 'CTRL+TAB'
+
+			CASE BITAND(lnKeyVal, 0x2193) = 0x2193
+				lcKeyName	= 'CTRL+DEL'
+
+			CASE BITAND(lnKeyVal, 0x2192) = 0x2192
+				lcKeyName	= 'CTRL+INS'
+
+			CASE BITAND(lnKeyVal, 0x2191) = 0x2191
+				lcKeyName	= 'CTRL+DNARROW'
+
+			CASE BITAND(lnKeyVal, 0x218D) = 0x218D
+				lcKeyName	= 'CTRL+UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x218A) = 0x218A
+				lcKeyName	= 'CTRL+F12'
+
+			CASE BITAND(lnKeyVal, 0x2189) = 0x2189
+				lcKeyName	= 'CTRL+F11'
+
+			CASE BITAND(lnKeyVal, 0x2184) = 0x2184
+				lcKeyName	= 'CTRL+PGUP'
+
+			CASE BITAND(lnKeyVal, 0x2177) = 0x2177
+				lcKeyName	= 'CTRL+HOME'
+
+			CASE BITAND(lnKeyVal, 0x2176) = 0x2176
+				lcKeyName	= 'CTRL+PGDN'
+
+			CASE BITAND(lnKeyVal, 0x2175) = 0x2175
+				lcKeyName	= 'CTRL+END'
+
+			CASE BITAND(lnKeyVal, 0x2174) = 0x2174
+				lcKeyName	= 'CTRL+RIGHTARROW'
+
+			CASE BITAND(lnKeyVal, 0x2173) = 0x2173
+				lcKeyName	= 'CTRL+LEFTARROW'
+
+			CASE BITAND(lnKeyVal, 0x2167) = 0x2167
+				lcKeyName	= 'CTRL+F10'
+
+			CASE BITAND(lnKeyVal, 0x2166) = 0x2166
+				lcKeyName	= 'CTRL+F9'
+
+			CASE BITAND(lnKeyVal, 0x2165) = 0x2165
+				lcKeyName	= 'CTRL+F8'
+
+			CASE BITAND(lnKeyVal, 0x2164) = 0x2164
+				lcKeyName	= 'CTRL+F7'
+
+			CASE BITAND(lnKeyVal, 0x2163) = 0x2163
+				lcKeyName	= 'CTRL+F6'
+
+			CASE BITAND(lnKeyVal, 0x2162) = 0x2162
+				lcKeyName	= 'CTRL+F5'
+
+			CASE BITAND(lnKeyVal, 0x2161) = 0x2161
+				lcKeyName	= 'CTRL+F4'
+
+			CASE BITAND(lnKeyVal, 0x2160) = 0x2160
+				lcKeyName	= 'CTRL+F3'
+
+			CASE BITAND(lnKeyVal, 0x215F) = 0x215F
+				lcKeyName	= 'CTRL+F2'
+
+			CASE BITAND(lnKeyVal, 0x215E) = 0x215E
+				lcKeyName	= 'CTRL+F1'
+
+			CASE BITAND(lnKeyVal, 0x2020) = 0x2020
+				lcKeyName	= 'CTRL+SPACEBAR'
+
+			CASE BITAND(lnKeyVal, 0x201F) = 0x201F
+				lcKeyName	= 'CTRL+HYPHEN'
+
+			CASE BITAND(lnKeyVal, 0x201E) = 0x201E
+				lcKeyName	= 'CTRL+CARET'
+
+			CASE BITAND(lnKeyVal, 0x201D) = 0x201D
+				lcKeyName	= 'CTRL+RBRACKET'
+
+			CASE BITAND(lnKeyVal, 0x201C) = 0x201C
+				lcKeyName	= 'CTRL+BACKSLASH'
+
+			CASE BITAND(lnKeyVal, 0x201B) = 0x201B
+				lcKeyName	= 'CTRL+LBRACKET'
+
+			CASE BITAND(lnKeyVal, 0x201A) = 0x201A
+				lcKeyName	= 'CTRL+Z'
+
+			CASE BITAND(lnKeyVal, 0x2019) = 0x2019
+				lcKeyName	= 'CTRL+Y'
+
+			CASE BITAND(lnKeyVal, 0x2018) = 0x2018
+				lcKeyName	= 'CTRL+X'
+
+			CASE BITAND(lnKeyVal, 0x2017) = 0x2017
+				lcKeyName	= 'CTRL+W'
+
+			CASE BITAND(lnKeyVal, 0x2016) = 0x2016
+				lcKeyName	= 'CTRL+V'
+
+			CASE BITAND(lnKeyVal, 0x2015) = 0x2015
+				lcKeyName	= 'CTRL+U'
+
+			CASE BITAND(lnKeyVal, 0x2014) = 0x2014
+				lcKeyName	= 'CTRL+T'
+
+			CASE BITAND(lnKeyVal, 0x2013) = 0x2013
+				lcKeyName	= 'CTRL+S'
+
+			CASE BITAND(lnKeyVal, 0x2012) = 0x2012
+				lcKeyName	= 'CTRL+R'
+
+			CASE BITAND(lnKeyVal, 0x2011) = 0x2011
+				lcKeyName	= 'CTRL+Q'
+
+			CASE BITAND(lnKeyVal, 0x2010) = 0x2010
+				lcKeyName	= 'CTRL+P'
+
+			CASE BITAND(lnKeyVal, 0x200F) = 0x200F
+				lcKeyName	= 'CTRL+O'
+
+			CASE BITAND(lnKeyVal, 0x200E) = 0x200E
+				lcKeyName	= 'CTRL+N'
+
+			CASE BITAND(lnKeyVal, 0x200D) = 0x200D
+				lcKeyName	= 'CTRL+M'
+
+			CASE BITAND(lnKeyVal, 0x200C) = 0x200C
+				lcKeyName	= 'CTRL+L'
+
+			CASE BITAND(lnKeyVal, 0x200B) = 0x200B
+				lcKeyName	= 'CTRL+K'
+
+			CASE BITAND(lnKeyVal, 0x200A) = 0x200A
+				lcKeyName	= 'CTRL+ENTER'
+
+			CASE BITAND(lnKeyVal, 0x200A) = 0x200A
+				lcKeyName	= 'CTRL+J'
+
+			CASE BITAND(lnKeyVal, 0x2009) = 0x2009
+				lcKeyName	= 'CTRL+I'
+
+			CASE BITAND(lnKeyVal, 0x2008) = 0x2008
+				lcKeyName	= 'CTRL+H'
+
+			CASE BITAND(lnKeyVal, 0x2007) = 0x2007
+				lcKeyName	= 'CTRL+G'
+
+			CASE BITAND(lnKeyVal, 0x2006) = 0x2006
+				lcKeyName	= 'CTRL+F'
+
+			CASE BITAND(lnKeyVal, 0x2005) = 0x2005
+				lcKeyName	= 'CTRL+E'
+
+			CASE BITAND(lnKeyVal, 0x2004) = 0x2004
+				lcKeyName	= 'CTRL+D'
+
+			CASE BITAND(lnKeyVal, 0x2003) = 0x2003
+				lcKeyName	= 'CTRL+C'
+
+			CASE BITAND(lnKeyVal, 0x2002) = 0x2002
+				lcKeyName	= 'CTRL+B'
+
+			CASE BITAND(lnKeyVal, 0x2001) = 0x2001
+				lcKeyName	= 'CTRL+A'
+
+			CASE BITAND(lnKeyVal, 0x1188) = 0x1188
+				lcKeyName	= 'SHIFT+F12'
+
+			CASE BITAND(lnKeyVal, 0x1187) = 0x1187
+				lcKeyName	= 'SHIFT+F11'
+
+			CASE BITAND(lnKeyVal, 0x115D) = 0x115D
+				lcKeyName	= 'SHIFT+F10'
+
+			CASE BITAND(lnKeyVal, 0x115C) = 0x115C
+				lcKeyName	= 'SHIFT+F9'
+
+			CASE BITAND(lnKeyVal, 0x115B) = 0x115B
+				lcKeyName	= 'SHIFT+F8'
+
+			CASE BITAND(lnKeyVal, 0x115A) = 0x115A
+				lcKeyName	= 'SHIFT+F7'
+
+			CASE BITAND(lnKeyVal, 0x1159) = 0x1159
+				lcKeyName	= 'SHIFT+F6'
+
+			CASE BITAND(lnKeyVal, 0x1158) = 0x1158
+				lcKeyName	= 'SHIFT+F5'
+
+			CASE BITAND(lnKeyVal, 0x1157) = 0x1157
+				lcKeyName	= 'SHIFT+F4'
+
+			CASE BITAND(lnKeyVal, 0x1156) = 0x1156
+				lcKeyName	= 'SHIFT+F3'
+
+			CASE BITAND(lnKeyVal, 0x1155) = 0x1155
+				lcKeyName	= 'SHIFT+F2'
+
+			CASE BITAND(lnKeyVal, 0x1154) = 0x1154
+				lcKeyName	= 'SHIFT+F1'
+
+			CASE BITAND(lnKeyVal, 0x0186) = 0x0186
+				lcKeyName	= 'F12'
+
+			CASE BITAND(lnKeyVal, 0x0185) = 0x0185
+				lcKeyName	= 'F11'
+
+			CASE INLIST(lnKeyVal, 0x0153, 0x1153)
+				lcKeyName	= 'DEL'
+
+			CASE INLIST(lnKeyVal, 0x0152, 0x1152)
+				lcKeyName	= 'INS'
+
+			CASE INLIST(lnKeyVal, 0x0151, 0x1151)
+				lcKeyName	= 'PGDN'
+
+			CASE INLIST(lnKeyVal, 0x0150, 0x1150)
+				lcKeyName	= 'DNARROW'
+
+			CASE INLIST(lnKeyVal, 0x014F, 0x114F)
+				lcKeyName	= 'END'
+
+			CASE INLIST(lnKeyVal, 0x014D, 0x114D)
+				lcKeyName	= 'RIGHTARROW'
+
+			CASE INLIST(lnKeyVal, 0x014B, 0x114B)
+				lcKeyName	= 'LEFTARROW'
+
+			CASE INLIST(lnKeyVal, 0x0149, 0x1149)
+				lcKeyName	= 'PGUP'
+
+			CASE INLIST(lnKeyVal, 0x0148, 0x1148)
+				lcKeyName	= 'UPARROW'
+
+			CASE BITAND(lnKeyVal, 0x0147) = 0x0147
+				lcKeyName	= 'HOME'
+
+			CASE lnKeyVal = 0x0144
+				lcKeyName	= 'F10'
+
+			CASE lnKeyVal = 0x0143
+				lcKeyName	= 'F9'
+
+			CASE lnKeyVal = 0x0142
+				lcKeyName	= 'F8'
+
+			CASE lnKeyVal = 0x0141
+				lcKeyName	= 'F7'
+
+			CASE lnKeyVal = 0x0140
+				lcKeyName	= 'F6'
+
+			CASE lnKeyVal = 0x013F
+				lcKeyName	= 'F5'
+
+			CASE lnKeyVal = 0x013E
+				lcKeyName	= 'F4'
+
+			CASE lnKeyVal = 0x013D
+				lcKeyName	= 'F3'
+
+			CASE lnKeyVal = 0x013C
+				lcKeyName	= 'F2'
+
+			CASE lnKeyVal = 0x013B
+				lcKeyName	= 'F1'
+
+			CASE lnKeyVal = 0x010F
+				lcKeyName	= 'BACKTAB'
+
+			CASE lnKeyVal = 0x0100
+				lcKeyName	= 'LEFTMOUSE'
+
+			OTHERWISE
+				*lcKeyName	= CHR(lnKeyVal)
+
+			ENDCASE
+
+		ENDCASE
+
+		IF EMPTY(lcKeyName)
+
+			DO CASE
+			CASE BETWEEN(lnKey, 0x41, 0x5A) OR BETWEEN(lnKey, 0x61, 0x7A) OR INLIST(lnKey, 0x7C, 0x7E)	&& A..Z, a..z, |, ~
+				lcKeyName	= lcKey
+				llKeyCodeShift	= .F.
+
+			CASE BETWEEN(lnKey, 0x21, 0x7A) AND NOT (lnKey = 0x3B)
+				llKeyCodeShift	= .F.
+				lcKeyName	= lcKey
+
+			CASE lnKey = 0x7F
+				lcKeyName	= 'DEL'
+
+			CASE lnKey = 0x7D	&& "{"
+				lcKeyName	= 'RBRACE'
+
+			CASE lnKey = 0x7B	&& "}"
+				lcKeyName	= 'LBRACE'
+
+			CASE lnKey = 0x3B	&& ";"
+				lcKeyName	= 'SEMICOLON'
+
+			CASE lnKey = 0x2C	&& ","
+				lcKeyName	= 'SEMICOLON'
+
+			CASE lnKey = 0x20	&& " "
+				lcKeyName	= 'SPACEBAR'
+
+			CASE lnKey = 0x1B
+				lcKeyName	= 'ESCAPE'
+
+			CASE lnKey = 0x0D
+				lcKeyName	= 'ENTER'
+
+			CASE lnKey = 0x09
+				lcKeyName	= 'TAB'
+
+			CASE lnKey = 0x08
+				lcKeyName	= 'BACKSPACE'
+
+			OTHERWISE
+				llComplementar	= .F.
+				lcKeyName	= 'x' + RIGHT( TRANSFORM(lnKeyVal,'@0'), 4)
+
+			ENDCASE
+
+			*ENDCASE
+		ENDIF
+
+		* Tratamiento de modificadores
+		IF NOT lcKeyPair == CHR(0xFE)+CHR(0xFF) AND llComplementar
+			IF llKeyCodeShift AND AT("SHIFT",lcKeyName) = 0	&& SHIFT
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'SHIFT'
+			ENDIF
+			IF llKeyCodeCtrl AND AT("CTRL",lcKeyName) = 0	&& CTRL
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'CTRL'
+			ENDIF
+			IF llKeyCodeAlt AND AT("ALT",lcKeyName) = 0	&& ALT
+				lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'ALT'
+			ENDIF
+			*IF BITAND(lnKeyVal, 0x8000) = 0x8000	&& LITERAL
+			*	lcKeyMod		= lcKeyMod + IIF(EMPTY(lcKeyMod),'','+') + 'LITERAL'
+			*ENDIF
+		ENDIF
+
+		* Tratamiento de combinación final
+		DO CASE
+		CASE LEN(lcKeyName) > 1 AND (NOT llComplementar OR EMPTY(lcKeyMod))
+			IF tlLiteralForCaption
+				lcTecla	= lcKeyName
+			ELSE
+				lcTecla	= '{' + lcKeyName + '}'
+			ENDIF
+
+		CASE EMPTY(lcKeyMod)
+			lcTecla	= lcKeyName
+
+		OTHERWISE
+			IF tlLiteralForCaption
+				lcTecla	= lcKeyMod + '+' + lcKeyName
+			ELSE
+				lcTecla	= '{' + lcKeyMod + '+' + lcKeyName + '}'
+			ENDIF
+
+		ENDCASE
+
+		RETURN lcTecla
+	ENDFUNC
+
+
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_MEMVAR AS CL_COL_BASE
+	*	.MEM FILE STRUCTURE (Based on observation and testing) - Fernando D. Bozzo. 2018/03/24
+	*	Complementary documentation: https://www.clicketyclick.dk/databases/xbase/format/mem.html#MEM_STRUCT
+
+
+	*	STRUCTURE OF VARIABLES
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	0 - 10      NULL terminated VarName. If VarName is empty, then VarName starts at offset 32
+	*	11          VarType (A,C,N,Y,B,F,I,Q,D,T,L,0). If VarType is lowercase, then next VarName 
+	*	            begins with 2 bytes for VarName length.
+	*	12 - 15     Reserved
+	*	16          Value length
+	*	17          Decimal count
+	*	18 - 24     Reserved
+	*	25          0x00 if it is an array element, 0x03 if it isn't an array element
+	*	26 - 31     Reserved
+	*	32 - n      If VarName (offset 0-10) is NULL then goto TABLE 1, If VarType=A then continue in TABLE 2, 
+	*	            if VarType=0 then continue in TABLE 3, else continue in TABLE 4
+	*	...
+	*	eof         Last character is EOF (0x1A) character
+	*	----------- -------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 1 - ARRAY STRUCTURE (VarType=A)
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	32 - 33     VarName length
+	*	34 - n      VarName
+	*	n  + 1      Next TABLE: If VarType=A then continue in TABLE 2, if VarType=0 then continue in TABLE 3, 
+	*	            else continue in TABLE 4
+	*	----------- -------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 2 - ARRAY STRUCTURE (VarType=A)
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	n   - n+1   Array rows
+	*	n+2 - n+3   Array cols
+	*	n+4 - x     Next Variable structure, or EOF (0x1A)
+	*	-----------	-------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 3 - NULL VALUE STRUCTURE (VarType=0)
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	n           VarType.
+	*	n+1 - x     Next Variable structure, or EOF (0x1A)
+	*	----------- -------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 4 - NORMAL VALUE STRUCTURE
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	n - x       Value of length "value length". If ValTye is a Char type then Value length is the value's width, 
+	*	            else the width is 8 for numbers and dates
+	*	x           Next Variable structure, or EOF (0x1A)
+	*	----------- -------------------------------------------------------------------------------------------------
+
+	#IF .F.
+		LOCAL THIS AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="_debug" display="_Debug"/>] ;
+		+ [<memberdata name="get_datafrommem" display="get_DataFromMEM"/>] ;
+		+ [<memberdata name="_memvars" display="_MemVars"/>] ;
+		+ [</VFPData>]
+
+
+	c_InputFile			= ''
+	_Debug				= .F.
+	_MemVars			= NULL		&& Colección de variables de memoria
+
+
+
+	PROCEDURE INIT
+		DODEFAULT()
+		THIS._MemVars = CREATEOBJECT("COLLECTION")
+	ENDPROC
+
+
+	PROCEDURE get_DataFromMEM(tcInputFile as String, toFoxBin2Prg)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcInputFile				(!v IN    ) Archivo de entrada
+		* toFoxBin2Prg				(!@ IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnHandle, lnFileLen, lcMsg, lcStr, lnNumberOfMacros ;
+			, loMVRec as CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG' ;
+			, loColl as Collection ;
+			, loEx as Exception
+
+		TRY
+			lnHandle	= -1
+
+			WITH THIS AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+				loColl		= ._MemVars
+				lnHandle	= FOPEN(tcInputFile, 0)
+
+				IF lnHandle = -1
+					lcMsg	= toFoxBin2Prg.FERROR_Message(tcInputFile)
+					ERROR (lcMsg)
+				ENDIF
+
+				lnFileLen	= FSEEK(lnHandle, 0, 2)
+
+				IF lnFileLen < 1
+					ERROR 'Invalid MEM File size'
+				ELSE
+					=FSEEK(lnHandle, 0, 0)
+				ENDIF
+
+				*IF lnFileLen < 17 + 25 * lnNumberOfMacros
+				*	* 25 caracteres es el tamaño mínimo de una macro sin teclas guardadas (solo la estructura)
+				*	ERROR 'Invalid FKY Macro File size'
+				*ENDIF
+
+				IF lnFileLen > 1
+					DO WHILE NOT FEOF(lnHandle) AND FSEEK(lnHandle, 0, 1) < (lnFileLen - 1)
+						loMVRec	= CREATEOBJECT("CL_MEMVAR_RECORD")
+
+						IF NOT loMVRec.ReadNextMemVar(lnHandle)
+							EXIT
+						ENDIF
+
+						loColl.Add( loMVRec, loMVRec.getName() + PADL(pnElement, 5, '0') )
+						loMVRec	= NULL
+					ENDDO
+
+					* Ordenar alfabéticamente por nombre de variable
+					loColl.KeySort = 2
+				ENDIF
+
+			ENDWITH
+
+		CATCH TO loEx
+			*loEx.UserValue = loEx.UserValue + 'lcAsignacion = [' + TRANSFORM(lcAsignacion) + ']' + CR_LF
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			IF lnHandle <> -1
+				=FCLOSE(lnHandle)
+			ENDIF
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loMVRec AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+
+			*-- Macros
+			FOR EACH loMVRec IN ._MemVars &&FOXOBJECT
+				lcText	= lcText + CR_LF + loMVRec.toText()
+			ENDFOR
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_MEMVAR_RECORD AS CL_CUS_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="memvar_name" display="MemVar_Name"/>] ;
+		+ [<memberdata name="memvar_namelength" display="MemVar_NameLength"/>] ;
+		+ [<memberdata name="memvar_type" display="MemVar_Type"/>] ;
+		+ [<memberdata name="memvar_rows" display="MemVar_Rows"/>] ;
+		+ [<memberdata name="memvar_cols" display="MemVar_Cols"/>] ;
+		+ [<memberdata name="memvar_length" display="MemVar_Length"/>] ;
+		+ [<memberdata name="memvar_dec" display="MemVar_Dec"/>] ;
+		+ [<memberdata name="memvar_value" display="MemVar_Value"/>] ;
+		+ [<memberdata name="memvar_elemtype" display="MemVar_ElemType"/>] ;
+		+ [<memberdata name="readnextmemvar" display="ReadNextMemVar"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [<memberdata name="get_memvardata" display="get_MemVarData"/>] ;
+		+ [<memberdata name="getrows" display="getRows"/>] ;
+		+ [<memberdata name="getcols" display="getCols"/>] ;
+		+ [<memberdata name="getlength" display="getLength"/>] ;
+		+ [<memberdata name="getdec" display="getDec"/>] ;
+		+ [<memberdata name="getvalue" display="getValue"/>] ;
+		+ [<memberdata name="getname" display="getName"/>] ;
+		+ [<memberdata name="juliantodatetime" display="julianToDateTime"/>] ;
+		+ [<memberdata name="isarrayelement" display="isArrayElement"/>] ;
+		+ [</VFPData>]
+
+	*--
+	MemVar_Name					= ''
+	MemVar_NameLength			= ''
+	MemVar_Type					= ''
+	MemVar_Rows					= ''
+	MemVar_Cols					= ''
+	MemVar_Length				= ''
+	MemVar_Dec					= ''
+	MemVar_Value				= ''
+	MemVar_ElemType				= ''
+
+
+	PROCEDURE ReadNextMemVar(tnHandle as Integer)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnHandle					(!v IN    ) FKY file handle
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lnVarLength, lnVarDec, lnVarNameLength, lcVarNameLength, llVarTypeIsChar
+
+		TRY
+			WITH THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+				.MemVar_Name		= FREAD(tnHandle, 11)
+				.MemVar_Type		= FREAD(tnHandle, 1)
+				=FSEEK(tnHandle, 4, 1)	&& Skip 4 bytes
+				.MemVar_Length		= FREAD(tnHandle, 1)
+				.MemVar_Dec			= FREAD(tnHandle, 1)
+
+				DO CASE
+				CASE INLIST( UPPER(.MemVar_Type), 'C', 'Q', 'L')
+					llVarTypeIsChar		= .T.
+					lnVarLength			= .getLength()
+
+				CASE UPPER(.MemVar_Type) = 'A'
+					* Array
+
+				OTHERWISE && Numeric
+					lnVarLength			= 8
+					lnVarDec			= .getDec()
+
+				ENDCASE
+
+				=FSEEK(tnHandle, 7, 1)	&& Skip 7 bytes
+				.MemVar_ElemType	= FREAD(tnHandle, 1)	&& 0x00 if it is an array element, else 0x03
+				=FSEEK(tnHandle, 6, 1)	&& Skip 6 bytes
+
+				IF .isArrayElement()
+					* Mantiene el contador de elemento
+					pnElement	= pnElement + 1
+				ELSE
+					* Reinicia el conteo de filas, columnas y elemento actual
+					STORE 0 TO pnCols, pnRows, pnElement
+				ENDIF
+
+				IF EMPTY( RTRIM(.MemVar_Name, 0, CHR(0)) )
+					* Long VarName
+					lcVarNameLength = FREAD(tnHandle, 2)
+					lnVarNameLength = CTOBIN(lcVarNameLength, '2RS')
+					.MemVar_Name	= FREAD(tnHandle, lnVarNameLength)
+				ENDIF
+
+				DO CASE
+				CASE INLIST(.MemVar_Type, 'A', 'a')
+					* ARRAY
+					* Rows/Cols
+					.MemVar_Rows		= FREAD(tnHandle, 2)
+					.MemVar_Cols		= FREAD(tnHandle, 2)
+					pnCols				= .getCols()
+					pnRows				= .getRows()
+
+				CASE .MemVar_Type = '0'
+					* NULL
+					* VarType
+					.MemVar_Type	= FREAD(tnHandle, 1)
+					.MemVar_Value	= NULL
+
+				OTHERWISE
+					* NORMAL VALUE
+					* Value
+					.MemVar_Value	= FREAD(tnHandle, lnVarLength)
+
+				ENDCASE
+			ENDWITH
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	FUNCTION isArrayElement
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN ASC(THIS.MemVar_ElemType) = 0
+	ENDFUNC
+
+
+	FUNCTION getRows
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN CTOBIN(THIS.MemVar_Rows, '2RS')
+	ENDFUNC
+
+
+	FUNCTION getCols
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN CTOBIN(THIS.MemVar_Cols, '2RS')
+	ENDFUNC
+
+
+	FUNCTION getLength
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN ASC(THIS.MemVar_Length)
+	ENDFUNC
+
+
+	FUNCTION getDec
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN ASC(THIS.MemVar_Dec)
+	ENDFUNC
+
+
+	FUNCTION getName
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN RTRIM(THIS.MemVar_Name, 0, CHR(0))
+	ENDFUNC
+
+
+	FUNCTION getValue
+		WITH THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+			LOCAL lxValue
+
+			DO CASE
+			CASE ISNULL(.MemVar_Value)
+				lxValue	= NULL
+
+			CASE UPPER(.MemVar_Type) = 'L'
+				lxValue	= ( ASC(.MemVar_Value) = 1 )
+
+			CASE INLIST( UPPER(.MemVar_Type), 'C', 'M')
+				lxValue	= ["] + RTRIM(.MemVar_Value, 0, CHR(0)) + ["]
+
+			CASE INLIST( UPPER(.MemVar_Type), 'Q')
+				lxValue	= '0h' + STRCONV(.MemVar_Value,15)
+
+			CASE UPPER(.MemVar_Type) = 'D'
+				lxValue	= SYS(10, CTOBIN(.MemVar_Value, '8S'))
+
+			CASE UPPER(.MemVar_Type) = 'T'
+				lxValue	=.julianToDateTime( CTOBIN(.MemVar_Value, '8S') )
+
+			CASE UPPER(.MemVar_Type) = 'Y'
+				lxValue	= CTOBIN(.MemVar_Value, '8YRS')
+
+			CASE UPPER(.MemVar_Type) = 'B'
+				lxValue	= CTOBIN(.MemVar_Value, '8BRS')
+
+			OTHERWISE && 'N'
+				lxValue	= CTOBIN(.MemVar_Value, '8S')
+
+				*IF .getDec() = 0
+				*	lxValue	= ROUND(lxValue,0)
+				*ENDIF
+
+			ENDCASE
+		ENDWITH
+
+		RETURN lxValue
+	ENDFUNC
+
+
+	FUNCTION julianToDateTime(tnJulian as Double)
+		LOCAL lnInt, lnDec, ltValue, ldDate, lcTime ;
+			, lnSecs, lnMins, lnHours
+
+		ltValue = {/:}
+		lnInt	= INT(tnJulian)
+		lnDec	= tnJulian - lnInt
+		ldDate	= EVALUATE( '{^' + SYS(10, lnInt) + '}' )
+		lnSecs	= 24 * 60 * 60 * lnDec
+		lnHours	= INT(lnSecs / 3600)
+		lnSecs	= lnSecs - lnHours * 3600
+		lnMins	= INT(lnSecs / 60)
+		lnSecs	= lnSecs - lnMins * 60
+		ltValue	= DATETIME( YEAR(ldDate), MONTH(ldDate), DAY(ldDate), lnHours, lnMins, lnSecs)
+
+		RETURN ltValue
+	ENDFUNC
+
+
+	PROCEDURE toText as String
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, lcVarName, lcVarType, lnVarLen, lnVarDec, lcPrecision, lnLenName ;
+			, loField AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+		lnLenName	= 16
+		lcText		= ''
+		lcPrecision	= ''
+		lcVarName	= ''
+
+		WITH THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+			lcVarType	= UPPER(.MemVar_Type)
+			lnVarLen	= .getLength()
+			lnVarDec	= .getDec()
+			lcVarName	= .getName()
+
+			IF LEN(lcVarName) < lnLenName
+				lcVarName	= PADR(lcVarName, lnLenName)
+			ENDIF
+
+			IF lcVarType = 'N'
+				IF lnVarDec > 0
+					lcPrecision	= TEXTMERGE( '(<<lnVarLen>>,<<lnVarDec>>)' )
+				ELSE
+					lcPrecision	= TEXTMERGE( '(<<lnVarLen>>)' )
+				ENDIF
+			ENDIF
+
+			lcPrecision	= PADR(lcPrecision, 10)
+
+			IF lcVarType = 'A'
+				pnCols		= .getCols()
+				pnRows		= .getRows()
+				pnElement	= 0
+
+				IF CTOBIN(.MemVar_Cols, '2RS') = 0
+					* Array Unidimensional
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<lcVarName>>   <<lcVarType>>(<<.getRows()>>)
+					ENDTEXT
+				ELSE
+					* Array Bidimensional
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<lcVarName>>   <<lcVarType>>(<<.getRows()>>,<<.getCols()>>)
+					ENDTEXT
+				ENDIF
+
+			ELSE
+
+				IF .isArrayElement()
+					* Elemento de array
+					pnElement	= pnElement + 1
+
+					IF pnCols = 0
+						* Elemento de Array Unidimensional
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							<<>>         (<<STR(pnElement,5)>>)   <<lcVarType>><<lcPrecision>>   <<.getValue()>>
+						ENDTEXT
+
+					ELSE
+						* Elemento de Array Bidimensional
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							<<>>   (<<STR(CEILING(pnElement/pnCols),5)>>,<<STR(EVL( MOD(pnElement,pnCols), pnCols),5)>>)   <<lcVarType>><<lcPrecision>>   <<.getValue()>>
+						ENDTEXT
+
+					ENDIF
+
+				ELSE
+					* Variable normal
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<lcVarName>>   <<lcVarType>><<lcPrecision>>   <<.getValue()>>
+					ENDTEXT
+				ENDIF
+
+			ENDIF
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+

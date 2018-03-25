@@ -12,18 +12,18 @@
 * DETAIL OF SUPPORTED VALUES / DETALLE DE VALORES SOPORTADOS
 * If no values given, these are the DEFAULTS / Si no se proporcionan valores, estos son los PREDETERMINADOS
 *
-* extension: tx2=newext			&& Default FoxBin2Prg extensions ends in '2' (see at the bottom) / Las extensiones por defecto de FoxBin2Prg terminan en '2' (ver debajo de todo)
-* ShowProgressbar: 1			&& 0=Don't show, 1=Allways show, 2= Show only for multi-file processing / 0=No mostrar, 1=Mostrar siempre, 2=Mostrar solamente para multi-procesamiento
-* DontShowErrors: 0				&& Show message errors by default / Mostrar mensajes de error por defecto
-* NoTimestamps: 1				&& Clear timestamps by default for minimize differences / Vaciar Timestamps por defecto para minimizar diferencias
-* Debug: 0						&& Don't Activate individual <file>.Log by default / No Activar <archivo>.Log por defecto
-* BodyDevInfo: 0				&& [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo / [0=No guardar DevInfo para el cuerpo del PJX], 1=Guardar DevInfo
-* ExtraBackupLevels: 1			&& By default 1 BAK is created. With this you can make more .N.BAK, or none / Por defecto 1 BAK es creado. Con esto puede crear más .N.BAK, o ninguno
-* ClearUniqueID: 1				&& 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge / 0=Mantener UniqueID, 1=Borrar Unique ID. Util para Diff y Merge
-* ClearDBFLastUpdate: 1			&& 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff. / 0=Mantener DBF LastDate, , 1=Borrar DBF LastDate. Util para Diff.
-* OptimizeByFilestamp: 0		&& Optimize file regeneration depending on file timestamp / Optimizar la regeneración de archivos dependiendo del timestamp de archivo
-* RemoveNullCharsFromCode: 1	&& 1=Drop NULL chars from source code / 0=Leave Nulls in code, if any
-* RemoveZOrderSetFromProps: 0	&& 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object / 0=No quitar la propiedad ZOrderSet de los objetos, 1=Quitar la propiedad ZOrderSet de los objetos
+* extension: tx2=newext			&& Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+* ShowProgressbar: 1			&& 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+* DontShowErrors: 0				&& Show message errors by default
+* NoTimestamps: 1				&& Clear timestamps by default for minimize differences
+* Debug: 0						&& Don't Activate individual <file>.Log by default
+* BodyDevInfo: 0				&& [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+* ExtraBackupLevels: 1			&& By default 1 BAK is created. With this you can make more .N.BAK, or none
+* ClearUniqueID: 1				&& 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+* ClearDBFLastUpdate: 1			&& 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+* OptimizeByFilestamp: 0		&& Optimize file regeneration depending on file timestamp
+* RemoveNullCharsFromCode: 1	&& 1=Drop NULL chars from source code
+* RemoveZOrderSetFromProps: 0	&& 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 * Language: (auto)				&& Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 * ExcludeDBFAutoincNextval: 0	&& [0=Do not exclude this value from db2], 1=Exclude this value from db2
 * PRG_Compat_Level: 0			&& [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
@@ -35,17 +35,17 @@
 * FRX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 * LBX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 * MNX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+* FKY_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff)
+* MEM_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff)
 * DBC_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 * DBF_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-* >>DBF_Conversion_Support NOTE:	>> EN: FoxBin2Prg support bi-directional convertion of DBFs, but does not keep data. Use with care.
-*									>> ES: FoxBin2Prg tiene soporte bi-direccional para convertir DBF, pero no mantiene los datos. Usar con cuidado.
-* DBF_Conversion_Included: *	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf / Si DBF_Conversion_Support:4, se pueden indicar múltiples máscaras de archivo: www,fb2p_free.dbf
-* DBF_Conversion_Excluded:  	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf / Si DBF_Conversion_Support:4, se pueden indicar múltiples máscaras de archivo: www,fb2p_free.dbf
+* DBF_Conversion_Included: *	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+* DBF_Conversion_Excluded:  	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 
-*-- "CLASS PER FILE" OPTIONS (UseClassPerFile: 1) / OPCIONES DE "CLASE POR ARCHIVO" (UseClassPerFile: 1)
-* UseClassPerFile: 0			&& 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members / 0=Una archivo librería tx2, 1=Múltiples archivo.clase.tx2, 2=Múltiples archivo.clasebase.clase.tx2 incluendo miembros DBC
-* RedirectClassPerFileToMain: 0	&& 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2 / 0=No redireccionar a archivo.tx2, 1=Redireccionar a archivo.tx2 cuando se seleccione archivo.clase.tx2
-* ClassPerFileCheck: 0			&& 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion / 0=No verificar la inclusión de archivo.clase.tx2, 1=Verificar la inclusión de archivo.clase.tx2
+*-- "CLASS PER FILE" OPTIONS (UseClassPerFile: 1)
+* UseClassPerFile: 0			&& 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+* RedirectClassPerFileToMain: 0	&& 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+* ClassPerFileCheck: 0			&& 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 *
 * END DOCUMENTATION SECTION / FIN DE LA SECCIÓN DE DOCUMENTACIÓN
 ****************************************************************************************************
