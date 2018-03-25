@@ -214,6 +214,7 @@
 * 12/03/2018	FDBOZZO		v1.19.50.1	Bug Fix: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Darko Kezic)
 * 15/03/2018	FDBOZZO		v1.19.50.3	Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic)
 * 16/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de macros (.FKY)
+* 25/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de memoria (.MEM)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
