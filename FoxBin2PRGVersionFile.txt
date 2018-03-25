@@ -26,6 +26,7 @@ Change History -------------------------------------------------------------
 - Enhanced HELP dialog info when running FoxBin2Prg with double-click
 - Feature: Added automatic default language recognition for the supported ones (FR,DE,ES,EN)
 - Feature: FKY file structure support (MACRO exporting to text fk2)
+- Feature: MEM file structure support (MEMORY exporting to text me2)
 
 2018-03-15  v1.19.50.3
 - Bug Fix: When adding some non-VFP text files like html,css,etc, in the text section of the project, FoxBin2Prg does not keep this selection when regenerating the PJX, leaving them in the files section (Darko Kezic)

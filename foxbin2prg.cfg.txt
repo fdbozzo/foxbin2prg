@@ -35,6 +35,8 @@
 * FRX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 * LBX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 * MNX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+* FKY_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff)
+* MEM_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff)
 * DBC_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 * DBF_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 * DBF_Conversion_Included: *	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf

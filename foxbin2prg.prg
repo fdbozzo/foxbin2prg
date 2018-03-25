@@ -882,7 +882,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	LBX_Conversion_Support			= 2
 	MNX_Conversion_Support			= 2
 	FKY_Conversion_Support			= 1
-	MEM_Conversion_Support			= 0
+	MEM_Conversion_Support			= 1
 	DBF_Conversion_Support			= 1
 	DBC_Conversion_Support			= 2
 	DBF_Conversion_Included			= ''
@@ -959,11 +959,11 @@ DEFINE CLASS c_foxbin2prg AS Session
 		THIS.writeLog( REPLICATE( '*', 100 ) )
 		THIS.writeLog( 'FoxBin2Prg: [' + THIS.c_Foxbin2prg_FullPath + '] (EXE Version: ' + THIS.c_FB2PRG_EXE_Version + ', FoxPro Version: ' + VERSION(4) + ')' )
 		THIS.writeLog( TEXTMERGE( '- Internal CFG: <<SYS(2019,2)>> / External CFG: <<SYS(2019,1)>> / CodePage Used: <<CPCURRENT()>>)' ) )
-		
+
 		* Get default language info
 		* ISO 639-2 Language Codes: https://www.loc.gov/standards/iso639-2/php/code_list.php
 		lcLang	= THIS.getLocaleInfo(0x00000067) && ie: spa
-		
+
 		DO CASE
 		CASE lcLang = 'spa'
 			lcLang = 'ES'
@@ -974,7 +974,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		OTHERWISE && Default: EN
 			lcLang = 'EN'
 		ENDCASE
-		
+
 		THIS.changeLanguage(lcLang)
 
 		THIS.o_FSO						= CREATEOBJECT("Scripting.FileSystemObject")
@@ -2315,6 +2315,20 @@ DEFINE CLASS c_foxbin2prg AS Session
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.MNX_Conversion_Support	= INT( VAL( lcValue ) )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > MNX_Conversion_Support:     ' + TRANSFORM(lo_CFG.MNX_Conversion_Support) )
+							ENDIF
+
+						CASE LEFT( laConfig(m.I), 23 ) == LOWER('FKY_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 24 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.FKY_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > FKY_Conversion_Support:     ' + TRANSFORM(lo_CFG.FKY_Conversion_Support) )
+							ENDIF
+
+						CASE LEFT( laConfig(m.I), 23 ) == LOWER('MEM_Conversion_Support:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 24 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.MEM_Conversion_Support	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > MEM_Conversion_Support:     ' + TRANSFORM(lo_CFG.MEM_Conversion_Support) )
 							ENDIF
 
 						CASE LEFT( laConfig(m.I), 23 ) == LOWER('DBF_Conversion_Support:')
@@ -5337,7 +5351,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	ENDFUNC
 
 
-	FUNCTION GetLocaleInfo
+	FUNCTION getLocaleInfo
 		LPARAMETERS tnSetting, tcLocale
 		#DEFINE C_NULL CHR(0)
 		LOCAL lcLocale, lnLen, lcBuffer, lnReturn, lcReturn
@@ -5347,7 +5361,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		ELSE
 			lcLocale = .NULL.
 		ENDIF
-		
+
 		DECLARE INTEGER GetLocaleInfoEx in Win32API ;
 			string locale, long type, string @buffer, integer len
 		lnLen    = 255
@@ -17959,6 +17973,105 @@ ENDDEFINE
 
 
 
+DEFINE CLASS c_conversor_mem_a_prg AS c_conversor_bin_a_prg
+	#IF .F.
+		LOCAL THIS AS c_conversor_mem_a_prg OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+	c_Type					= 'MEM'
+
+
+	PROCEDURE convert
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* toMacro					(!@    OUT) Objeto generado de clase CL_MACRO con la información leida del texto
+		* toEx						(!@    OUT) Objeto con información del error
+		* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		LPARAMETERS toMemVar, toEx AS EXCEPTION, toFoxBin2Prg
+		DODEFAULT( @toMemVar, @toEx, @toFoxBin2Prg )
+
+		#IF .F.
+			LOCAL toMemVar AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnCodError, lnLen, lnHandle ;
+			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+
+		PRIVATE pnCols, pnRows, pnElement
+		STORE 0 TO pnCols, pnRows, pnElement
+
+		TRY
+			WITH THIS AS c_conversor_mem_a_prg OF 'FOXBIN2PRG.PRG'
+				lnHandle	= -1
+
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					loLang			= _SCREEN.o_FoxBin2Prg_Lang
+					STORE 0 TO lnCodError
+
+					.updateProgressbar( 'Analyzing MEM...', 1, 2, 1 )
+
+					*-- Verificación de archivo de macros válido
+					*IF FCOUNT() < 25 OR EMPTY(FIELD("RESNAME")) OR EMPTY(FIELD("SYSRES"))
+					*	*ERROR 'Menu [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY MENU ' + JUSTFNAME((.c_InputFile))
+					*	ERROR (TEXTMERGE(loLang.C_MENU_NOT_IN_VFP9_FORMAT_LOC))
+					*ENDIF
+
+					*-- Header
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+
+					toMemVar		= CREATEOBJECT('CL_MEMVAR')
+					toMemVar.get_DataFromMEM(.c_InputFile, @toFoxBin2Prg)
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toMemVar.toText()
+				ENDIF
+
+				DO CASE
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+					ERROR 'InputFile Error Simulation'
+				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+					.writeErrorLog( '*** SIMULATED ERROR' )
+				ENDCASE
+
+				IF .l_Error
+					.writeLog( '*** ERRORS found - Generation Cancelled' )
+					EXIT
+				ENDIF
+
+				toFoxBin2Prg.updateProcessedFile()
+
+
+				*-- Genero el FK2
+				IF toFoxBin2Prg.l_ProcessFiles THEN
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_ME2 + '...', 2, 2, 1 )
+				ENDIF
+
+				IF .l_Test
+					toMemVar	= C_FB2PRG_CODE
+				ELSE
+					.write_OutputFile( (C_FB2PRG_CODE), .c_OutputFile, @toFoxBin2Prg )
+				ENDIF
+			ENDWITH && THIS
+
+
+		CATCH TO toEx
+			THIS.set_UserValue(@toEx)
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			*
+		ENDTRY
+
+		RETURN
+	ENDPROC
+ENDDEFINE
+
+
+
 DEFINE CLASS CL_CUS_BASE AS CUSTOM
 	*-- Propiedades (Se preservan: CONTROLCOUNT, CONTROLS, OBJECTS, PARENT, CLASS)
 	HIDDEN BASECLASS, TOP, WIDTH, CLASSLIB, CLASSLIBRARY, COMMENT ;
@@ -30055,6 +30168,499 @@ DEFINE CLASS CL_MACRO_RECORD AS CL_CUS_BASE
 
 		RETURN lcTecla
 	ENDFUNC
+
+
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_MEMVAR AS CL_COL_BASE
+	*	.MEM FILE STRUCTURE (Based on observation and testing) - Fernando D. Bozzo. 2018/03/24
+	*	Complementary documentation: https://www.clicketyclick.dk/databases/xbase/format/mem.html#MEM_STRUCT
+
+
+	*	STRUCTURE OF VARIABLES
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	0 - 10      NULL terminated VarName. If VarName is empty, then VarName starts at offset 32
+	*	11          VarType (A,C,N,Y,B,F,I,Q,D,T,L,0). If VarType is lowercase, then next VarName 
+	*	            begins with 2 bytes for VarName length.
+	*	12 - 15     Reserved
+	*	16          Value length
+	*	17          Decimal count
+	*	18 - 24     Reserved
+	*	25          0x00 if it is an array element, 0x03 if it isn't an array element
+	*	26 - 31     Reserved
+	*	32 - n      If VarName (offset 0-10) is NULL then goto TABLE 1, If VarType=A then continue in TABLE 2, 
+	*	            if VarType=0 then continue in TABLE 3, else continue in TABLE 4
+	*	...
+	*	eof         Last character is EOF (0x1A) character
+	*	----------- -------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 1 - ARRAY STRUCTURE (VarType=A)
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	32 - 33     VarName length
+	*	34 - n      VarName
+	*	n  + 1      Next TABLE: If VarType=A then continue in TABLE 2, if VarType=0 then continue in TABLE 3, 
+	*	            else continue in TABLE 4
+	*	----------- -------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 2 - ARRAY STRUCTURE (VarType=A)
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	n   - n+1   Array rows
+	*	n+2 - n+3   Array cols
+	*	n+4 - x     Next Variable structure, or EOF (0x1A)
+	*	-----------	-------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 3 - NULL VALUE STRUCTURE (VarType=0)
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	n           VarType.
+	*	n+1 - x     Next Variable structure, or EOF (0x1A)
+	*	----------- -------------------------------------------------------------------------------------------------
+
+
+	*	TABLE 4 - NORMAL VALUE STRUCTURE
+	*	Byte Offset Description
+	*	----------- -------------------------------------------------------------------------------------------------
+	*	n - x       Value of length "value length". If ValTye is a Char type then Value length is the value's width, 
+	*	            else the width is 8 for numbers and dates
+	*	x           Next Variable structure, or EOF (0x1A)
+	*	----------- -------------------------------------------------------------------------------------------------
+
+	#IF .F.
+		LOCAL THIS AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+	#ENDIF
+
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="c_inputfile" display="c_InputFile"/>] ;
+		+ [<memberdata name="_debug" display="_Debug"/>] ;
+		+ [<memberdata name="get_datafrommem" display="get_DataFromMEM"/>] ;
+		+ [<memberdata name="_memvars" display="_MemVars"/>] ;
+		+ [</VFPData>]
+
+
+	c_InputFile			= ''
+	_Debug				= .F.
+	_MemVars			= NULL		&& Colección de variables de memoria
+
+
+
+	PROCEDURE INIT
+		DODEFAULT()
+		THIS._MemVars = CREATEOBJECT("COLLECTION")
+	ENDPROC
+
+
+	PROCEDURE get_DataFromMEM(tcInputFile as String, toFoxBin2Prg)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tcInputFile				(!v IN    ) Archivo de entrada
+		* toFoxBin2Prg				(!@ IN    ) Referencia al objeto principal
+		*---------------------------------------------------------------------------------------------------
+		#IF .F.
+			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+
+		LOCAL lnHandle, lnFileLen, lcMsg, lcStr, lnNumberOfMacros ;
+			, loMVRec as CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG' ;
+			, loColl as Collection ;
+			, loEx as Exception
+
+		TRY
+			lnHandle	= -1
+
+			WITH THIS AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+				loColl		= ._MemVars
+				lnHandle	= FOPEN(tcInputFile, 0)
+
+				IF lnHandle = -1
+					lcMsg	= toFoxBin2Prg.FERROR_Message(tcInputFile)
+					ERROR (lcMsg)
+				ENDIF
+
+				lnFileLen	= FSEEK(lnHandle, 0, 2)
+
+				IF lnFileLen < 1
+					ERROR 'Invalid MEM File size'
+				ELSE
+					=FSEEK(lnHandle, 0, 0)
+				ENDIF
+
+				*IF lnFileLen < 17 + 25 * lnNumberOfMacros
+				*	* 25 caracteres es el tamaño mínimo de una macro sin teclas guardadas (solo la estructura)
+				*	ERROR 'Invalid FKY Macro File size'
+				*ENDIF
+
+				IF lnFileLen > 1
+					DO WHILE NOT FEOF(lnHandle) AND FSEEK(lnHandle, 0, 1) < (lnFileLen - 1)
+						loMVRec	= CREATEOBJECT("CL_MEMVAR_RECORD")
+
+						IF NOT loMVRec.ReadNextMemVar(lnHandle)
+							EXIT
+						ENDIF
+
+						loColl.Add( loMVRec, loMVRec.getName() + PADL(pnElement, 5, '0') )
+						loMVRec	= NULL
+					ENDDO
+
+					* Ordenar alfabéticamente por nombre de variable
+					loColl.KeySort = 2
+				ENDIF
+
+			ENDWITH
+
+		CATCH TO loEx
+			*loEx.UserValue = loEx.UserValue + 'lcAsignacion = [' + TRANSFORM(lcAsignacion) + ']' + CR_LF
+
+			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+				SET STEP ON
+			ENDIF
+
+			THROW
+
+		FINALLY
+			IF lnHandle <> -1
+				=FCLOSE(lnHandle)
+			ENDIF
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	PROCEDURE toText
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, loMVRec AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		lcText	= ''
+
+		WITH THIS AS CL_MEMVAR OF 'FOXBIN2PRG.PRG'
+
+			*-- Macros
+			FOR EACH loMVRec IN ._MemVars &&FOXOBJECT
+				lcText	= lcText + CR_LF + loMVRec.toText()
+			ENDFOR
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
+
+
+ENDDEFINE
+
+
+
+DEFINE CLASS CL_MEMVAR_RECORD AS CL_CUS_BASE
+	_MEMBERDATA	= [<VFPData>] ;
+		+ [<memberdata name="memvar_name" display="MemVar_Name"/>] ;
+		+ [<memberdata name="memvar_namelength" display="MemVar_NameLength"/>] ;
+		+ [<memberdata name="memvar_type" display="MemVar_Type"/>] ;
+		+ [<memberdata name="memvar_rows" display="MemVar_Rows"/>] ;
+		+ [<memberdata name="memvar_cols" display="MemVar_Cols"/>] ;
+		+ [<memberdata name="memvar_length" display="MemVar_Length"/>] ;
+		+ [<memberdata name="memvar_dec" display="MemVar_Dec"/>] ;
+		+ [<memberdata name="memvar_value" display="MemVar_Value"/>] ;
+		+ [<memberdata name="memvar_elemtype" display="MemVar_ElemType"/>] ;
+		+ [<memberdata name="readnextmemvar" display="ReadNextMemVar"/>] ;
+		+ [<memberdata name="totext" display="toText"/>] ;
+		+ [<memberdata name="get_memvardata" display="get_MemVarData"/>] ;
+		+ [<memberdata name="getrows" display="getRows"/>] ;
+		+ [<memberdata name="getcols" display="getCols"/>] ;
+		+ [<memberdata name="getlength" display="getLength"/>] ;
+		+ [<memberdata name="getdec" display="getDec"/>] ;
+		+ [<memberdata name="getvalue" display="getValue"/>] ;
+		+ [<memberdata name="getname" display="getName"/>] ;
+		+ [<memberdata name="juliantodatetime" display="julianToDateTime"/>] ;
+		+ [<memberdata name="isarrayelement" display="isArrayElement"/>] ;
+		+ [</VFPData>]
+
+	*--
+	MemVar_Name					= ''
+	MemVar_NameLength			= ''
+	MemVar_Type					= ''
+	MemVar_Rows					= ''
+	MemVar_Cols					= ''
+	MemVar_Length				= ''
+	MemVar_Dec					= ''
+	MemVar_Value				= ''
+	MemVar_ElemType				= ''
+
+
+	PROCEDURE ReadNextMemVar(tnHandle as Integer)
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		* tnHandle					(!v IN    ) FKY file handle
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lnVarLength, lnVarDec, lnVarNameLength, lcVarNameLength, llVarTypeIsChar
+
+		TRY
+			WITH THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+				.MemVar_Name		= FREAD(tnHandle, 11)
+				.MemVar_Type		= FREAD(tnHandle, 1)
+				=FSEEK(tnHandle, 4, 1)	&& Skip 4 bytes
+				.MemVar_Length		= FREAD(tnHandle, 1)
+				.MemVar_Dec			= FREAD(tnHandle, 1)
+
+				DO CASE
+				CASE INLIST( UPPER(.MemVar_Type), 'C', 'Q', 'L')
+					llVarTypeIsChar		= .T.
+					lnVarLength			= .getLength()
+
+				CASE UPPER(.MemVar_Type) = 'A'
+					* Array
+
+				OTHERWISE && Numeric
+					lnVarLength			= 8
+					lnVarDec			= .getDec()
+
+				ENDCASE
+
+				=FSEEK(tnHandle, 7, 1)	&& Skip 7 bytes
+				.MemVar_ElemType	= FREAD(tnHandle, 1)	&& 0x00 if it is an array element, else 0x03
+				=FSEEK(tnHandle, 6, 1)	&& Skip 6 bytes
+
+				IF .isArrayElement()
+					* Mantiene el contador de elemento
+					pnElement	= pnElement + 1
+				ELSE
+					* Reinicia el conteo de filas, columnas y elemento actual
+					STORE 0 TO pnCols, pnRows, pnElement
+				ENDIF
+
+				IF EMPTY( RTRIM(.MemVar_Name, 0, CHR(0)) )
+					* Long VarName
+					lcVarNameLength = FREAD(tnHandle, 2)
+					lnVarNameLength = CTOBIN(lcVarNameLength, '2RS')
+					.MemVar_Name	= FREAD(tnHandle, lnVarNameLength)
+				ENDIF
+
+				DO CASE
+				CASE INLIST(.MemVar_Type, 'A', 'a')
+					* ARRAY
+					* Rows/Cols
+					.MemVar_Rows		= FREAD(tnHandle, 2)
+					.MemVar_Cols		= FREAD(tnHandle, 2)
+					pnCols				= .getCols()
+					pnRows				= .getRows()
+
+				CASE .MemVar_Type = '0'
+					* NULL
+					* VarType
+					.MemVar_Type	= FREAD(tnHandle, 1)
+					.MemVar_Value	= NULL
+
+				OTHERWISE
+					* NORMAL VALUE
+					* Value
+					.MemVar_Value	= FREAD(tnHandle, lnVarLength)
+
+				ENDCASE
+			ENDWITH
+		ENDTRY
+
+		RETURN
+	ENDPROC
+
+
+	FUNCTION isArrayElement
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN ASC(THIS.MemVar_ElemType) = 0
+	ENDFUNC
+
+
+	FUNCTION getRows
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN CTOBIN(THIS.MemVar_Rows, '2RS')
+	ENDFUNC
+
+
+	FUNCTION getCols
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN CTOBIN(THIS.MemVar_Cols, '2RS')
+	ENDFUNC
+
+
+	FUNCTION getLength
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN ASC(THIS.MemVar_Length)
+	ENDFUNC
+
+
+	FUNCTION getDec
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN ASC(THIS.MemVar_Dec)
+	ENDFUNC
+
+
+	FUNCTION getName
+		#IF .F.
+			LOCAL THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+		#ENDIF
+		RETURN RTRIM(THIS.MemVar_Name, 0, CHR(0))
+	ENDFUNC
+
+
+	FUNCTION getValue
+		WITH THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+			LOCAL lxValue
+
+			DO CASE
+			CASE ISNULL(.MemVar_Value)
+				lxValue	= NULL
+
+			CASE UPPER(.MemVar_Type) = 'L'
+				lxValue	= ( ASC(.MemVar_Value) = 1 )
+
+			CASE INLIST( UPPER(.MemVar_Type), 'C', 'M')
+				lxValue	= ["] + RTRIM(.MemVar_Value, 0, CHR(0)) + ["]
+
+			CASE INLIST( UPPER(.MemVar_Type), 'Q')
+				lxValue	= '0h' + STRCONV(.MemVar_Value,15)
+
+			CASE UPPER(.MemVar_Type) = 'D'
+				lxValue	= SYS(10, CTOBIN(.MemVar_Value, '8S'))
+
+			CASE UPPER(.MemVar_Type) = 'T'
+				lxValue	=.julianToDateTime( CTOBIN(.MemVar_Value, '8S') )
+
+			CASE UPPER(.MemVar_Type) = 'Y'
+				lxValue	= CTOBIN(.MemVar_Value, '8YRS')
+
+			CASE UPPER(.MemVar_Type) = 'B'
+				lxValue	= CTOBIN(.MemVar_Value, '8BRS')
+
+			OTHERWISE && 'N'
+				lxValue	= CTOBIN(.MemVar_Value, '8S')
+
+				*IF .getDec() = 0
+				*	lxValue	= ROUND(lxValue,0)
+				*ENDIF
+
+			ENDCASE
+		ENDWITH
+
+		RETURN lxValue
+	ENDFUNC
+
+
+	FUNCTION julianToDateTime(tnJulian as Double)
+		LOCAL lnInt, lnDec, ltValue, ldDate, lcTime ;
+			, lnSecs, lnMins, lnHours
+
+		ltValue = {/:}
+		lnInt	= INT(tnJulian)
+		lnDec	= tnJulian - lnInt
+		ldDate	= EVALUATE( '{^' + SYS(10, lnInt) + '}' )
+		lnSecs	= 24 * 60 * 60 * lnDec
+		lnHours	= INT(lnSecs / 3600)
+		lnSecs	= lnSecs - lnHours * 3600
+		lnMins	= INT(lnSecs / 60)
+		lnSecs	= lnSecs - lnMins * 60
+		ltValue	= DATETIME( YEAR(ldDate), MONTH(ldDate), DAY(ldDate), lnHours, lnMins, lnSecs)
+
+		RETURN ltValue
+	ENDFUNC
+
+
+	PROCEDURE toText as String
+		*---------------------------------------------------------------------------------------------------
+		* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+		*---------------------------------------------------------------------------------------------------
+		LOCAL lcText, lcVarName, lcVarType, lnVarLen, lnVarDec, lcPrecision, lnLenName ;
+			, loField AS CL_MACRO_RECORD OF 'FOXBIN2PRG.PRG'
+		lnLenName	= 16
+		lcText		= ''
+		lcPrecision	= ''
+		lcVarName	= ''
+
+		WITH THIS AS CL_MEMVAR_RECORD OF 'FOXBIN2PRG.PRG'
+			lcVarType	= UPPER(.MemVar_Type)
+			lnVarLen	= .getLength()
+			lnVarDec	= .getDec()
+			lcVarName	= .getName()
+
+			IF LEN(lcVarName) < lnLenName
+				lcVarName	= PADR(lcVarName, lnLenName)
+			ENDIF
+
+			IF lcVarType = 'N'
+				IF lnVarDec > 0
+					lcPrecision	= TEXTMERGE( '(<<lnVarLen>>,<<lnVarDec>>)' )
+				ELSE
+					lcPrecision	= TEXTMERGE( '(<<lnVarLen>>)' )
+				ENDIF
+			ENDIF
+
+			lcPrecision	= PADR(lcPrecision, 10)
+
+			IF lcVarType = 'A'
+				pnCols		= .getCols()
+				pnRows		= .getRows()
+				pnElement	= 0
+
+				IF CTOBIN(.MemVar_Cols, '2RS') = 0
+					* Array Unidimensional
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<lcVarName>>   <<lcVarType>>(<<.getRows()>>)
+					ENDTEXT
+				ELSE
+					* Array Bidimensional
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<lcVarName>>   <<lcVarType>>(<<.getRows()>>,<<.getCols()>>)
+					ENDTEXT
+				ENDIF
+
+			ELSE
+
+				IF .isArrayElement()
+					* Elemento de array
+					pnElement	= pnElement + 1
+
+					IF pnCols = 0
+						* Elemento de Array Unidimensional
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							<<>>         (<<STR(pnElement,5)>>)   <<lcVarType>><<lcPrecision>>   <<.getValue()>>
+						ENDTEXT
+
+					ELSE
+						* Elemento de Array Bidimensional
+						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+							<<>>   (<<STR(CEILING(pnElement/pnCols),5)>>,<<STR(EVL( MOD(pnElement,pnCols), pnCols),5)>>)   <<lcVarType>><<lcPrecision>>   <<.getValue()>>
+						ENDTEXT
+
+					ENDIF
+
+				ELSE
+					* Variable normal
+					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<lcVarName>>   <<lcVarType>><<lcPrecision>>   <<.getValue()>>
+					ENDTEXT
+				ENDIF
+
+			ENDIF
+
+		ENDWITH
+
+		RETURN lcText
+	ENDPROC
 
 
 ENDDEFINE
