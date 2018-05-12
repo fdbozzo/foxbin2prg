@@ -6,13 +6,10 @@
 
 - Blog: http://fdbozzo.blogspot.com.es/
 - Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
-- ![DONATE!](http://www.freepngimg.com/thumb/paypal_donate_button/6-2-paypal-donate-button-png-file-thumb.png) [Donate here](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
+- [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
     Thank you for your support!
 
-## [Codeplex is shutting down](https://blogs.msdn.microsoft.com/bharry/2017/03/31/shutting-down-codeplex/)
-
-Codeplex will be read-only in October of 2017 and gone on December 15 2017. The [repository at Github](https://github.com/fdbozzo/foxbin2prg) becomes the primary repository for this project effective Febuary 2017. 
 
 ## ENGLISH/ESPAÑOL 
 
