@@ -215,6 +215,7 @@
 * 15/03/2018	FDBOZZO		v1.19.50.3	Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic)
 * 16/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de macros (.FKY)
 * 25/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de memoria (.MEM)
+* 05/05/2018	SSF1&FDB		v1.19.51.1	Bug Fix: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (SkySurfer1)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -338,6 +339,7 @@
 * 30/01/2018	Kirides				Reporte Bug v1.19.49: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Arreglado en v1.19.49.9)
 * 12/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Arreglado en v1.19.50.1)
 * 15/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Arreglado en v1.19.50.3)
+* 05/05/2018	SkySurfer1			Reporte Bug v1.19.51: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (Arreglado en v1.19.51.1)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -20367,7 +20369,7 @@ DEFINE CLASS CL_DBC_BASE AS CL_CUS_BASE
 					( lcID ;
 					, tnParentID ;
 					, lcObjectType ;
-					, LOWER(._Name) ;
+					, IIF(lcObjectType == 'View', ._Name, LOWER(._Name)) ;
 					, lcMemoWithProperties ;
 					, lcCodeMemo ;
 					, lcRI_Info ;
@@ -20928,7 +20930,7 @@ DEFINE CLASS CL_DBC_CONNECTIONS AS CL_DBC_COL_BASE
 						loConnection	= CREATEOBJECT('CL_DBC_CONNECTION')
 						loConnection.read_BinDataToProperties( laConnections(m.I) )
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( loConnection, PADR(loConnection._Name,128) )
+						.ADD( loConnection, PADR(LOWER(loConnection._Name),128) )
 					ENDFOR
 				ENDIF
 			ENDWITH
@@ -21216,7 +21218,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 							loTable = CREATEOBJECT("CL_DBC_TABLE")
 							loTable.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-							.ADD( loTable, PADR(loTable._Name,128) )
+							.ADD( loTable, PADR(LOWER(loTable._Name),128) )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -21338,7 +21340,7 @@ DEFINE CLASS CL_DBC_TABLES AS CL_DBC_COL_BASE
 						loTable = CREATEOBJECT("CL_DBC_TABLE")
 						loTable.read_BinDataToProperties( laTables(m.I) )
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( loTable, PADR(loTable._Name,128) )
+						.ADD( loTable, PADR(LOWER(loTable._Name),128) )
 					ENDFOR
 				ENDIF
 
@@ -21684,7 +21686,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 							IF .n_Campos = 0 THEN
 								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
 								*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-								.ADD( loField, PADR(loField._Name,128) )
+								.ADD( loField, PADR(LOWER(loField._Name),128) )
 							ELSE
 								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
 								.a_Campos( lnPos, 2)	= loField
@@ -21698,7 +21700,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
 					FOR lnPos = 1 TO .n_Campos
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( .a_Campos( lnPos, 2), PADR(.a_Campos( lnPos, 1),128) )
+						.ADD( .a_Campos( lnPos, 2), PADR(LOWER(.a_Campos( lnPos, 1)),128) )
 					ENDFOR
 				ENDWITH && THIS
 			ENDIF
@@ -21885,9 +21887,10 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				STORE NULL TO loField
 				STORE 0 TO I, lnField_Count
 				_TALLY	= 0
+				
 				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
 					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-					AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
+					AND LOWER(TB2.ObjectName) = PADR(LOWER(tcTable),128) ;
 					INTO ARRAY laFields
 				lnField_Count	= _TALLY
 
@@ -21896,7 +21899,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 						loField = CREATEOBJECT("CL_DBC_FIELD_DB")
 						loField.read_BinDataToProperties( tcTable, laFields(m.I) )
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( loField, PADR(loField._Name,128) )
+						.ADD( loField, PADR(LOWER(loField._Name),128) )
 					ENDFOR
 				ENDIF
 
@@ -22157,7 +22160,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 							loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
 							loIndex.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-							.ADD( loIndex, PADR(loIndex._Name,128) )
+							.ADD( loIndex, PADR(LOWER(loIndex._Name),128) )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -22274,7 +22277,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 				_TALLY	= 0
 				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
 					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Index',10) ;
-					AND TB2.ObjectName = PADR(LOWER(tcTable),128) ;
+					AND LOWER(TB2.ObjectName) = PADR(LOWER(tcTable),128) ;
 					INTO ARRAY laIndexes
 				lnIndex_Count	= _TALLY
 
@@ -22283,7 +22286,7 @@ DEFINE CLASS CL_DBC_INDEXES_DB AS CL_DBC_COL_BASE
 						loIndex = CREATEOBJECT("CL_DBC_INDEX_DB")
 						loIndex.read_BinDataToProperties( tcTable + '.' + laIndexes(m.I) )
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( loIndex, PADR(loIndex._Name,128) )
+						.ADD( loIndex, PADR(LOWER(loIndex._Name),128) )
 					ENDFOR
 				ENDIF
 
@@ -22512,7 +22515,7 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 							loView = CREATEOBJECT("CL_DBC_VIEW")
 							loView.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 							*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-							.ADD( loView, PADR(loView._Name,128) )
+							.ADD( loView, PADR(LOWER(loView._Name),128) )
 
 						OTHERWISE	&& Otro valor
 							*-- No hay otros valores
@@ -22626,14 +22629,20 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 					EXIT
 				ENDIF
 
-				lnView_Count	= ADBOBJECTS( laViews, "VIEW" )
-
+				*LG lnView_Count	= ADBOBJECTS( laViews, "VIEW" )
+				SELECT CAST(ALLTRIM(ObjectName) as varchar(128)) ;
+					FROM TablaBin ;
+					WHERE UPPER(ObjectType) = 'VIEW' ;
+					ORDER BY 1 ;
+					INTO ARRAY laViews
+				lnView_Count	= _TALLY
+ 
 				IF lnView_Count > 0
 					FOR I = 1 TO lnView_Count
 						loView = CREATEOBJECT("CL_DBC_VIEW")
 						loView.read_BinDataToProperties( laViews(m.I) )
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( loView, PADR(loView._Name,128) )
+						.ADD( loView, PADR(LOWER(loView._Name),128) )
 					ENDFOR
 				ENDIF
 
@@ -22834,7 +22843,6 @@ DEFINE CLASS CL_DBC_VIEW AS CL_DBC_BASE
 		* toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
 		*---------------------------------------------------------------------------------------------------
 		LPARAMETERS tcView, toFoxBin2Prg
-
 		#IF .F.
 			LOCAL toFoxBin2Prg AS c_foxbin2prg OF 'FOXBIN2PRG.PRG'
 		#ENDIF
@@ -23089,7 +23097,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 							IF .n_Campos = 0 THEN
 								*-- MODO LEGACY: Cuando no existe tag de ordenamiento de campos, se agregan en el orden que se leen
 								*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-								.ADD( loField, PADR(loField._Name,128) )
+								.ADD( loField, PADR(LOWER(loField._Name),128) )
 							ELSE
 								lnPos	= ASCAN( .a_Campos, loField._Name, 1, 0, 1, 1+2+4+8 )
 								.a_Campos( lnPos, 2)	= loField
@@ -23103,7 +23111,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 					*-- Restablezco el orden de los campos (Solo si n_Campos > 0, que significa que tiene el nuevo tag especial de orden)
 					FOR lnPos = 1 TO .n_Campos
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( .a_Campos( lnPos, 2), PADR(.a_Campos( lnPos, 1),128) )
+						.ADD( .a_Campos( lnPos, 2), PADR(LOWER(.a_Campos( lnPos, 1)),128) )
 					ENDFOR
 				ENDWITH && THIS
 			ENDIF
@@ -23292,7 +23300,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 				_TALLY	= 0
 				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
 					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
-					AND TB2.ObjectName = PADR(LOWER(tcView),128) ;
+					AND LOWER(TB2.ObjectName) = PADR(LOWER(tcView),128) ;
 					INTO ARRAY laFields
 				lnField_Count	= _TALLY
 
@@ -23301,7 +23309,7 @@ DEFINE CLASS CL_DBC_FIELDS_VW AS CL_DBC_COL_BASE
 						loField = CREATEOBJECT("CL_DBC_FIELD_VW")
 						loField.read_BinDataToProperties( tcView, laFields(m.I) )
 						*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-						.ADD( loField, PADR(loField._Name,128) )
+						.ADD( loField, PADR(LOWER(loField._Name),128) )
 					ENDFOR
 				ENDIF
 
@@ -23578,7 +23586,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 
 							TRY
 								*-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
-								.ADD( loRelation, PADR(loRelation._Name,128) )
+								.ADD( loRelation, PADR(LOWER(loRelation._Name),128) )
 							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
 								*-- Saltear este error, porque implica que la relación está duplicada
 							ENDTRY
@@ -23700,7 +23708,7 @@ DEFINE CLASS CL_DBC_RELATIONS AS CL_DBC_COL_BASE
 							loRelation	= CREATEOBJECT('CL_DBC_RELATION')
 							loRelation.read_BinDataToProperties( @laRelations, m.I )
 							TRY
-								.ADD( loRelation, loRelation._Name )
+								.ADD( loRelation, PADR(LOWER(loRelation._Name),128) )
 							CATCH TO loEx WHEN loEx.ERRORNO = 2062	&& The specified Key already exists.
 								*-- Saltear este error, porque implica que la relación está duplicada
 							ENDTRY
