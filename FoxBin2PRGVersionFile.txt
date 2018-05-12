@@ -21,6 +21,9 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
 
+2018-05-12  v1.19.51.1
+- Bug Fix: If capitalization is used on a DBC view info, then related information is not exported correctly or entirely, so could be lost (SkySurfer1)
+
 2018-03-24  v1.19.51
 - Add LOG info about config.fpw used and CodePage
 - Enhanced HELP dialog info when running FoxBin2Prg with double-click
