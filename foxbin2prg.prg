@@ -215,7 +215,8 @@
 * 15/03/2018	FDBOZZO		v1.19.50.3	Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic)
 * 16/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de macros (.FKY)
 * 25/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de memoria (.MEM)
-* 05/05/2018	SSF1&FDB		v1.19.51.1	Bug Fix: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (SkySurfer1)
+* 05/05/2018	SSF1&FDB	v1.19.51.1	Bug Fix: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (SkySurfer1)
+* 20/06/2018	FDBOZZO		v1.19.51.2	Bug Fix: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Jairo Argüelles/Juan C.Perdomo)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -340,6 +341,7 @@
 * 12/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Arreglado en v1.19.50.1)
 * 15/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Arreglado en v1.19.50.3)
 * 05/05/2018	SkySurfer1			Reporte Bug v1.19.51: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (Arreglado en v1.19.51.1)
+* 20/06/2018	Jairo A/Juan CP		Reporte Bug v1.19.51: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Arreglado en v1.19.51.2)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -17445,6 +17447,11 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				IF NOT EMPTY(lc_DBC_Name) AND ADIR(laDirInfo, FULLPATH(lc_DBC_Name, .c_InputFile)) = 1
 					loDBC._DBC			= FULLPATH(lc_DBC_Name, .c_InputFile)
 					llDBCEventsEnabled	= loDBC.DBGETPROP(lc_DBC_Name,"DATABASE","DBCEvents")
+					
+					* llDBCEventsEnabled no siempre devuelve .T./.F., a veces devuelve ""
+					IF EMPTY(llDBCEventsEnabled)
+						llDBCEventsEnabled	= .F.
+					ENDIF
 
 					IF llDBCEventsEnabled
 						IF NOT loDBC.DBSETPROP(lc_DBC_Name,"DATABASE","DBCEvents",.F.)
