@@ -3,7 +3,7 @@ Lparameters toUpdateInfo
 Local lcNote
 With toUpdateInfo
     .VersionNumber        = 'v1.19.51'
-    .VersionDate          = Date(2018,03,24)
+    .VersionDate          = Date(2018,06,20)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -15,11 +15,13 @@ Developed by Fernando D. Bozzo - GitHub: https://github.com/fdbozzo/foxbin2prg
 
 FoxBin2Prg is a 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
 
-Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY
+Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+2018-06-20  v1.19.51.2
+- Bug Fix: When converting to text a DBF that belongs to a DBC with events disabled, conversion fails (Jairo Argüelles / Juan C. Perdomo)
 
 2018-05-12  v1.19.51.1
 - Bug Fix: If capitalization is used on a DBC view info, then related information is not exported correctly or entirely, so could be lost (SkySurfer1)
