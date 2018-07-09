@@ -217,6 +217,7 @@
 * 25/03/2018	FDBOZZO		v1.19.51	Mejora: Agregado soporte para archivos de memoria (.MEM)
 * 05/05/2018	SSF1&FDB	v1.19.51.1	Bug Fix: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (SkySurfer1)
 * 20/06/2018	FDBOZZO		v1.19.51.2	Bug Fix: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Jairo Argüelles/Juan C.Perdomo)
+* 09/07/2018	FDBOZZO		v1.19.51.3	Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -342,6 +343,7 @@
 * 15/03/2018	Darko Kezic			Reporte Bug v1.19.50: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Arreglado en v1.19.50.3)
 * 05/05/2018	SkySurfer1			Reporte Bug v1.19.51: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (Arreglado en v1.19.51.1)
 * 20/06/2018	Jairo A/Juan CP		Reporte Bug v1.19.51: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Arreglado en v1.19.51.2)
+* 09/07/2018	KIRIDES				Reporte Bug v1.19.51: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (Se arregla en v1.19.51.3)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6469,15 +6471,11 @@ DEFINE CLASS c_conversor_base AS Custom
 
 	PROCEDURE isIndicatedToken
 		LPARAMETERS tcLine, ta_ID_Bloques, tnLen_IDFinBQ, X, tnIniFin
-		LOCAL llEncontrado, lcWord, lcLine
+		LOCAL llEncontrado, lcWord, lcWord2, lcLine, lnWordCount
 
 		TRY
 			*-- Pre-normalización
 			lcLine	= tcLine
-
-			*IF LEFT(lcLine,1) == '#'
-			*	lcLine	= CHRTRAN( lcLine, ' ', '' )	&& Quito los espacios a lo que comience con #
-			*ENDIF
 
 			IF tnIniFin = 1
 				*-- TOKENS DE INICIO
@@ -6486,15 +6484,30 @@ DEFINE CLASS c_conversor_base AS Custom
 					lcWord	= UPPER( ALLTRIM(GETWORDNUM(lcLine,1) ) )
 
 					IF ta_ID_Bloques(m.X,1) == 'TEXT' THEN
-						lcLine	= UPPER( lcLine ) + ' '
+						lcLine		= UPPER( lcLine ) + ' '
+						lnWordCount	= GETWORDCOUNT(lcLine)
+
+						IF lnWordCount >= 2
+							lcWord2	= ALLTRIM(GETWORDNUM(lcLine,2) )
+						ENDIF
 
 						DO CASE
 						CASE NOT lcWord == 'TEXT'
 							EXIT
 
-						CASE UPPER( LEFT( CHRTRAN( lcLine, ' ', '' ), 5 ) ) == 'TEXT='
-							EXIT
+						*CASE UPPER( LEFT( CHRTRAN( lcLine, ' ', '' ), 5 ) ) == 'TEXT='
+						*	EXIT
+						CASE lnWordCount >= 2
+							IF lcWord2 == "TO"
+								* OK, es TEXT TO...
+							ELSE
+								* Luego de TEXT sigue cualquier otra cosa, así que puede ser
+								* un campo, variable, etc, que lo han llamado TEXT.
+								EXIT
+							ENDIF
 
+						OTHERWISE
+							* OK, es TEXT sin más.
 						ENDCASE
 					ENDIF
 
