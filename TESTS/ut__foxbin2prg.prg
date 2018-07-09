@@ -1533,6 +1533,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 
 	*******************************************************************************************************************************************
+	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__github_issues_vcx__ValidarEl_VC2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
+		#IF .F.
+			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
+		#ENDIF
+
+		THIS.Evaluate_TX2_Output_Test( 'github_issues.vcx' )
+
+	ENDFUNC
+
+
+	*******************************************************************************************************************************************
 	FUNCTION Deberia_Ejecutar_FOXBIN2PRG_Para__test_report_frx__ValidarEl_FR2_GeneradoConElOriginal_Y_NoEncontrarDiferencias
 		#IF .F.
 			PUBLIC oFXU_LIB AS CL_FXU_CONFIG OF 'TESTS\fxu_lib_objetos_y_funciones_de_soporte.PRG'
