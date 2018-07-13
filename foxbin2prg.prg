@@ -218,6 +218,7 @@
 * 05/05/2018	SSF1&FDB	v1.19.51.1	Bug Fix: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (SkySurfer1)
 * 20/06/2018	FDBOZZO		v1.19.51.2	Bug Fix: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Jairo Argüelles/Juan C.Perdomo)
 * 09/07/2018	FDBOZZO		v1.19.51.3	Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES)
+* 10/07/2018	FDBOZZO		v1.19.51.4	Bug Fix: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Jochen Kauz)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -344,6 +345,7 @@
 * 05/05/2018	SkySurfer1			Reporte Bug v1.19.51: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (Arreglado en v1.19.51.1)
 * 20/06/2018	Jairo A/Juan CP		Reporte Bug v1.19.51: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Arreglado en v1.19.51.2)
 * 09/07/2018	KIRIDES				Reporte Bug v1.19.51: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (Se arregla en v1.19.51.3)
+* 10/07/2018	Jochen Kauz			Reporte Bug v1.19.51: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Se arregla en v1.19.51.3)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -7552,8 +7554,10 @@ DEFINE CLASS c_conversor_base AS Custom
 		EXTERNAL ARRAY taPropsAndValues
 
 		TRY
-			LOCAL I, X, lnArrayCols, laPropsAndValues(1,2), lcPropName, lcSortedMemo, lcMethods
+			LOCAL I, X, lnArrayCols, laPropsAndValues(1,2), lcPropName, lcSortedMemo, lcMethods ;
+				, lnSelect, lcObjName
 			lnArrayCols	= ALEN( taPropsAndValues, 2 )
+			lnSelect	= SELECT()
 			DIMENSION laPropsAndValues( tnPropsAndValues_Count, lnArrayCols )
 			ACOPY( taPropsAndValues, laPropsAndValues )
 
@@ -7561,42 +7565,86 @@ DEFINE CLASS c_conversor_base AS Custom
 				IF m.tnSortType > 0
 					* CON SORT:
 					* - A las que no tienen '.' les pongo 'A' por delante, y al resto 'B' por delante para que queden al final
+
+					* ATENCIÓN:  10/07/2018
+					* Cuando hay ADD OBJECT multicontenedor (obj.obj.obj...), el reordenamiento
+					* puede producir daños colaterales, como objetos mal colocados.
+					* (Era de esperar: No todo se puede ordenar alfabéticamente)
+					* Un solución de compromiso podría ser al menos mantener juntos los objetos de mismo nombre,
+					* que en la práctica pueden estar todos mezclados. Al menos eso no rompería nada.
+					* VER: https://github.com/fdbozzo/foxbin2prg/issues/28
+					*
+					* PASO 1: Obtener los nombres únicos y asignarles un código de orden
+					CREATE CURSOR C_OBJ (objName C(50), iOrder I AUTOINC)
+					INDEX ON objname TAG objname
+
+					* PASO 2: Configurar las prioridades de ordenamiento (primero props, luego objs)
 					FOR I = 1 TO m.tnPropsAndValues_Count
 						IF '.' $ laPropsAndValues(m.I,1)
 							IF m.tnSortType = 2
-								laPropsAndValues(m.I,1)	= 'B' + JUSTSTEM(laPropsAndValues(m.I,1)) + '.' ;
+								* Genera obj+props para BIN
+								lcObjName	= GETWORDNUM(laPropsAndValues(m.I,1), 1, '.')
+								
+								IF NOT SEEK(LOWER(lcObjName), "C_OBJ")
+									INSERT INTO C_OBJ (objName) VALUES (LOWER(lcObjName))
+								ENDIF
+								
+								laPropsAndValues(m.I,1)	= 'B' + PADL(C_OBJ.iOrder,3,'0') ;
+									+ JUSTSTEM(laPropsAndValues(m.I,1)) + '.' ;
+									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', JUSTEXT(laPropsAndValues(m.I,1)) )
+								
+								*laPropsAndValues(m.I,1)	= 'B000' + lcObjName + '.' ;
 									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', JUSTEXT(laPropsAndValues(m.I,1)) )
 							ELSE
-								laPropsAndValues(m.I,1)	= 'B' + laPropsAndValues(m.I,1)
+								* Genera obj+props para TX2
+								lcObjName	= GETWORDNUM(laPropsAndValues(m.I,1), 1, '.')
+								
+								IF NOT SEEK(LOWER(lcObjName), "C_OBJ")
+									INSERT INTO C_OBJ (objName) VALUES (LOWER(lcObjName))
+								ENDIF
+								
+								laPropsAndValues(m.I,1)	= 'B' + PADL(C_OBJ.iOrder,3,'0') ;
+									+ JUSTSTEM(laPropsAndValues(m.I,1)) + '.' ;
+									+ JUSTEXT(laPropsAndValues(m.I,1))
+								
+								*laPropsAndValues(m.I,1)	= 'B' + PADL(I,3,'0') + laPropsAndValues(m.I,1)
 							ENDIF
 						ELSE
 							IF m.tnSortType = 2
+								* Genera obj+props para BIN
 								laPropsAndValues(m.I,1)	= .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', laPropsAndValues(m.I,1) )
 							ELSE
-								laPropsAndValues(m.I,1)	= 'A' + laPropsAndValues(m.I,1)
+								* Genera obj+props para TX2
+								laPropsAndValues(m.I,1)	= 'A000' + laPropsAndValues(m.I,1)
 							ENDIF
 						ENDIF
 					ENDFOR
 
+					* Paso 3: Ordenar según la prioridad previa
 					IF .l_PropSort_Enabled
 						ASORT( laPropsAndValues, 1, -1, 0, 1)
 					ENDIF
 
 
+					* Paso 4: Quitar metadatos y rearmar array
 					FOR I = 1 TO m.tnPropsAndValues_Count
 						*-- Quitar caracteres agregados antes del SORT
 						IF '.' $ laPropsAndValues(m.I,1)
 							IF m.tnSortType = 2
-								taPropsAndValues(m.I,1)	= JUSTSTEM( SUBSTR( laPropsAndValues(m.I,1), 2 ) ) + '.' ;
+								* Genera obj+props para BIN
+								taPropsAndValues(m.I,1)	= JUSTSTEM( SUBSTR( laPropsAndValues(m.I,1), 2+3 ) ) + '.' ;
 									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', JUSTEXT(laPropsAndValues(m.I,1)) )
 							ELSE
-								taPropsAndValues(m.I,1)	= SUBSTR( laPropsAndValues(m.I,1), 2 )
+								* Genera obj+props para TX2
+								taPropsAndValues(m.I,1)	= SUBSTR( laPropsAndValues(m.I,1), 2+3 )
 							ENDIF
 						ELSE
 							IF m.tnSortType = 2
+								* Genera obj+props para BIN
 								taPropsAndValues(m.I,1)	= .sortPropsAndValues_SetAndGetSCXPropNames( 'GETNAME', laPropsAndValues(m.I,1) )
 							ELSE
-								taPropsAndValues(m.I,1)	= SUBSTR( laPropsAndValues(m.I,1), 2 )
+								* Genera obj+props para TX2
+								taPropsAndValues(m.I,1)	= SUBSTR( laPropsAndValues(m.I,1), 2+3 )
 							ENDIF
 						ENDIF
 
@@ -7657,6 +7705,8 @@ DEFINE CLASS c_conversor_base AS Custom
 		FINALLY
 			RELEASE taPropsAndValues, tnPropsAndValues_Count, tnSortType ;
 				, I, X, lnArrayCols, laPropsAndValues, lcPropName, lcSortedMemo, lcMethods
+			USE IN (SELECT("C_OBJ"))
+			SELECT (lnSelect)
 		ENDTRY
 
 		RETURN
