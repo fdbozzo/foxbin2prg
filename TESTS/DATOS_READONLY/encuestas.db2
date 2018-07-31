@@ -5,10 +5,11 @@
 *< FOXBIN2PRG: Version="1.19" SourceFile="encuestas.dbf" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
 
+
 <TABLE>
 	<MemoFile></MemoFile>
 	<CodePage>1252</CodePage>
-	<LastUpdate>2014/01/31</LastUpdate>
+	<LastUpdate></LastUpdate>
 	<Database></Database>
 	<FileType>0x00000030</FileType>
 	<FileType_Descrip>Visual FoxPro</FileType_Descrip>
@@ -116,4 +117,28 @@
 		</FIELD>
 	</FIELDS>
 
+
+
+	<RECORDS>
+
+		<RECORD>
+			<PROMOTOR>PEPE</PROMOTOR>
+			<IDENC>id1</IDENC>
+			<CALIFIC>Q</CALIFIC>
+			<FECHA>1969/11/25</FECHA>
+			<RESULTADO></RESULTADO>
+		</RECORD>
+
+		<RECORD>
+			<PROMOTOR>PEPE</PROMOTOR>
+			<IDENC>id2</IDENC>
+			<CALIFIC>NQ</CALIFIC>
+			<FECHA>1969/11/25</FECHA>
+			<RESULTADO></RESULTADO>
+		</RECORD>
+
+	</RECORDS>
+
+
 </TABLE>
+

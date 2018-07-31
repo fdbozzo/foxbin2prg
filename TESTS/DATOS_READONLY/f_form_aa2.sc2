@@ -27,6 +27,14 @@ DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx"
 	Left = (2)
 	Name = "F_form_aa1"
 	Top = (4)
+	Cl_image1.Height = 104
+	Cl_image1.Name = "Cl_image1"
+	Cl_image1.Width = 212
+	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	cmdCapturar.Name = "cmdCapturar"
+	Label1.Name = "Label1"
+	Label2.Name = "Label2"
 	Cl_grid1.AllowAddNew = .F.
 	Cl_grid1.AllowAutoColumnFit = 0
 	Cl_grid1.AllowCellSelection = .T.
@@ -403,17 +411,6 @@ DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx"
 	Cl_grid1.View = 0
 	Cl_grid1.Visible = .T.
 	Cl_grid1.WhatsThisHelpID = -1
-	Cl_image1.Height = 104
-	Cl_image1.Name = "Cl_image1"
-	Cl_image1.Width = 212
-	cmdCapturar.Name = "cmdCapturar"
-	Edit1.Name = "Edit1"
-	Image1.Height = 104
-	Image1.Name = "Image1"
-	Image1.Width = 212
-	Label1.Name = "Label1"
-	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 	pgf.ActivePage = 2
 	pgf.Anchor = 0
 	pgf.ColorSource = 4
@@ -1327,5 +1324,8 @@ DEFINE CLASS f_form_aa1 AS f_form_aa OF "lib_controles.vcx"
 	pgf.Visible = .T.
 	pgf.WhatsThisHelpID = -1
 	pgf.Width = 268
+	Image1.Height = 104
+	Image1.Name = "Image1"
+	Image1.Width = 212
 
 ENDDEFINE

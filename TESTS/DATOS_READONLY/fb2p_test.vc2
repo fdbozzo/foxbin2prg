@@ -4,7 +4,6 @@
 *--------------------------------------------------------------------------------------------------------------------------------------------------------
 *< FOXBIN2PRG: Version="1.19" SourceFile="fb2p_test.vcx" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
-
 *
 *< LIBCOMMENT: Comentario principal de "fb2p_test.vcx" />
 *
@@ -54,8 +53,8 @@ DEFINE CLASS cl_form AS form OLEPUBLIC		&& mi OLE server DLL
 		*p: _memberdata		&& XML Metadata for customizable properties
 	*</DefinedPropArrayMethod>
 
-	HIDDEN chidden,ahidden
-	PROTECTED cprotected,aprotected
+	HIDDEN ahidden,chidden
+	PROTECTED aprotected,cprotected
 	Caption = "Form"
 	chidden = 		&& Prop.Hidden
 	cprotected = 		&& Prop.Protegida

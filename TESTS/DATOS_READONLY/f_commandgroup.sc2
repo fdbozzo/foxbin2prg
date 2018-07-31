@@ -34,14 +34,14 @@ DEFINE CLASS f_base1 AS f_base OF "lib_controles.vcx"
 
 	DoCreate = .T.
 	Name = "F_base1"
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
 	Edit1.Value = <fb2p_value>* En los OptionGroup subclasados, cuando el Option de la clase de base tiene Autosize=.T. y la instancia tiene Autosize=.F., ocurre esto:&#13;   - Los option normales deben mantener su longitud y apariencia nuevos&#13;   - Los option graficos deben mantener su longitud y apariencia, pero pierden en height (bug de VFP)&#13;* En los OptionGroup normales, no hay problemas y se deben mantener igual siempre&#13;&#13;* RECOMENDACIÓN: No usar Autosize=.T. en una clase de base</fb2p_value>
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "COMMANDGROUP NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "COMMANDGROUP SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_commandbutton1' AS cl_commandbutton WITH ;
 		Alignment = 2, ;

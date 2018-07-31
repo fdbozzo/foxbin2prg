@@ -187,16 +187,16 @@ DEFINE CLASS formset AS formset
 		WindowState = 0, ;
 		WindowType = 0, ;
 		ZoomBox = .F., ;
-		cmdCapturar.Name = "cmdCapturar", ;
-		cmdCapturar.RightToLeft = .F., ;
 		Edit1.Name = "Edit1", ;
 		Edit1.RightToLeft = .F., ;
+		Label3.Name = "Label3", ;
+		Label3.RightToLeft = .F., ;
+		cmdCapturar.Name = "cmdCapturar", ;
+		cmdCapturar.RightToLeft = .F., ;
 		Label1.Name = "Label1", ;
 		Label1.RightToLeft = .F., ;
 		Label2.Name = "Label2", ;
-		Label2.RightToLeft = .F., ;
-		Label3.Name = "Label3", ;
-		Label3.RightToLeft = .F.
+		Label2.RightToLeft = .F.
 		*< END OBJECT: ClassLib="lib_controles.vcx" BaseClass="form" />
 
 	ADD OBJECT 'F_base1.Cl_grid1' AS cl_grid WITH ;

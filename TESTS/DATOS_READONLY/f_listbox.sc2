@@ -35,13 +35,13 @@ DEFINE CLASS f_listbox_test AS f_base OF "lib_controles.vcx"
 	Left = 0
 	Name = "F_Listbox_Test"
 	Top = 0
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "LISTBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "LISTBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_ListBox1' AS cl_listbox WITH ;
 		Anchor = 0, ;
@@ -508,7 +508,7 @@ DEFINE CLASS f_listbox_test AS f_base OF "lib_controles.vcx"
 		WhatsThisHelpID = -1, ;
 		Width = 224
 		*< END OBJECT: BaseClass="listbox" />
-
+	
 	PROCEDURE Cl_ListBox1.Init
 		this.AddListItem('Este es el valor.A1')
 		this.AddListItem('Este es el valor.A2', this.NewItemId, 2)

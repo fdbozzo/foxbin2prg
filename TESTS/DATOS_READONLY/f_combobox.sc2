@@ -38,13 +38,13 @@ DEFINE CLASS f_base1 AS f_base OF "lib_controles.vcx"
 
 	DoCreate = .T.
 	Name = "F_base1"
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "COMBOBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "COMBOBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_ComboDropdown1' AS cl_combobox WITH ;
 		Alignment = 0, ;
@@ -1111,7 +1111,7 @@ DEFINE CLASS f_base1 AS f_base OF "lib_controles.vcx"
 		WhatsThisHelpID = -1, ;
 		Width = 200
 		*< END OBJECT: BaseClass="combobox" />
-
+	
 	PROCEDURE Cl_ComboDropdown1.Init
 		this.AddListItem('Este es el valor.A1')
 		this.AddListItem('Este es el valor.A2', this.NewItemId, 2)
