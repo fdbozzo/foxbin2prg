@@ -47,13 +47,13 @@ DEFINE CLASS f_textbox_test AS f_base OF "lib_controles.vcx"
 	Left = 0
 	Name = "F_Textbox_Test"
 	Top = 0
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "TEXTBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "TEXTBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_editbox1' AS cl_editbox WITH ;
 		AddLineFeeds = .T., ;

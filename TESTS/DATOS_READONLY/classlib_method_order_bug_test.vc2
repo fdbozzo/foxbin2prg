@@ -137,7 +137,7 @@ DEFINE CLASS grdbase AS grid
 
 ENDDEFINE
 
-DEFINE CLASS grdgeneral AS grdbase OF "classlib.vcx" 
+DEFINE CLASS grdgeneral AS grdbase OF "classlib_method_order_bug_test.vcx" 
  	*< CLASSDATA: Baseclass="grid" Timestamp="" Scale="Pixels" Uniqueid="" />
 
 	Name = "grdgeneral"

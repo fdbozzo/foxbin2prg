@@ -1604,13 +1604,13 @@ DEFINE CLASS f_checkbox AS f_base OF "lib_controles.vcx"
 	Left = 0
 	Name = "f_checkbox"
 	Top = 1
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "CHECKBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "CHECKBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Check1' AS checkbox WITH ;
 		Alignment = 0, ;
@@ -2413,18 +2413,18 @@ DEFINE CLASS f_combobox AS f_base OF "lib_controles.vcx"
 
 	DoCreate = .T.
 	Name = "f_combobox"
-	Command2.Name = "Command2"
-	Command2.TabIndex = 1
 	Edit1.Name = "Edit1"
 	Edit1.TabIndex = 2
+	Label3.Name = "Label3"
+	Label3.TabIndex = 3
+	Command2.Name = "Command2"
+	Command2.TabIndex = 1
 	Label1.Caption = "COMBOBOX NORMAL"
 	Label1.Name = "Label1"
 	Label1.TabIndex = 4
 	Label2.Caption = "COMBOBOX SUBCLASADOS"
 	Label2.Name = "Label2"
 	Label2.TabIndex = 5
-	Label3.Name = "Label3"
-	Label3.TabIndex = 3
 
 	ADD OBJECT 'Cl_ComboDropdown1' AS cl_combobox WITH ;
 		Alignment = 0, ;
@@ -3639,13 +3639,13 @@ DEFINE CLASS f_commandgroup AS f_base OF "lib_controles.vcx"
 	Left = 0
 	Name = "f_commandgroup"
 	Top = 0
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "COMMANDGROUP NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "COMMANDGROUP SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_commandgroup1' AS cl_commandgroup WITH ;
 		Anchor = 0, ;
@@ -5028,18 +5028,25 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
-	cmdCapturar.Height = 27
-	cmdCapturar.Left = 764
-	cmdCapturar.Name = "cmdCapturar"
-	cmdCapturar.RightToLeft = .F.
-	cmdCapturar.Top = 392
-	cmdCapturar.Width = 212
 	Edit1.Height = 144
 	Edit1.Left = 764
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
 	Edit1.Top = 32
 	Edit1.Width = 212
+	Label3.BackColor = 128,255,128
+	Label3.Height = 17
+	Label3.Left = 764
+	Label3.Name = "Label3"
+	Label3.RightToLeft = .F.
+	Label3.Top = 8
+	Label3.Width = 212
+	cmdCapturar.Height = 27
+	cmdCapturar.Left = 764
+	cmdCapturar.Name = "cmdCapturar"
+	cmdCapturar.RightToLeft = .F.
+	cmdCapturar.Top = 392
+	cmdCapturar.Width = 212
 	Label1.BackColor = 128,255,128
 	Label1.Caption = "CONTROLES"
 	Label1.Height = 17
@@ -5056,13 +5063,6 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	Label2.RightToLeft = .F.
 	Label2.Top = 8
 	Label2.Width = 460
-	Label3.BackColor = 128,255,128
-	Label3.Height = 17
-	Label3.Left = 764
-	Label3.Name = "Label3"
-	Label3.RightToLeft = .F.
-	Label3.Top = 8
-	Label3.Width = 212
 
 	ADD OBJECT 'Cl_grid1' AS cl_grid WITH ;
 		AllowAddNew = .F., ;
@@ -7827,18 +7827,25 @@ DEFINE CLASS f_form_aa_ AS f_base OF "lib_controles.vcx"
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
-	cmdCapturar.Height = 27
-	cmdCapturar.Left = 764
-	cmdCapturar.Name = "cmdCapturar"
-	cmdCapturar.RightToLeft = .F.
-	cmdCapturar.Top = 392
-	cmdCapturar.Width = 212
 	Edit1.Height = 356
 	Edit1.Left = 764
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
 	Edit1.Top = 32
 	Edit1.Width = 212
+	Label3.BackColor = 128,255,128
+	Label3.Height = 17
+	Label3.Left = 764
+	Label3.Name = "Label3"
+	Label3.RightToLeft = .F.
+	Label3.Top = 8
+	Label3.Width = 212
+	cmdCapturar.Height = 27
+	cmdCapturar.Left = 764
+	cmdCapturar.Name = "cmdCapturar"
+	cmdCapturar.RightToLeft = .F.
+	cmdCapturar.Top = 392
+	cmdCapturar.Width = 212
 	Label1.BackColor = 128,255,128
 	Label1.Caption = "CONTROLES"
 	Label1.Height = 17
@@ -7855,13 +7862,6 @@ DEFINE CLASS f_form_aa_ AS f_base OF "lib_controles.vcx"
 	Label2.RightToLeft = .F.
 	Label2.Top = 8
 	Label2.Width = 460
-	Label3.BackColor = 128,255,128
-	Label3.Height = 17
-	Label3.Left = 764
-	Label3.Name = "Label3"
-	Label3.RightToLeft = .F.
-	Label3.Top = 8
-	Label3.Width = 212
 
 	ADD OBJECT 'Cl_grid1' AS cl_grid WITH ;
 		AllowAddNew = .F., ;
@@ -10519,18 +10519,18 @@ DEFINE CLASS f_form_controles AS f_base OF "lib_controles.vcx"
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
-	Command2.Name = "Command2"
-	Command2.RightToLeft = .F.
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
+	Label3.Name = "Label3"
+	Label3.RightToLeft = .F.
+	Command2.Name = "Command2"
+	Command2.RightToLeft = .F.
 	Label1.Caption = "CONTROL NORMAL"
 	Label1.Name = "Label1"
 	Label1.RightToLeft = .F.
 	Label2.Caption = "CONTROL SUBCLASADOS"
 	Label2.Name = "Label2"
 	Label2.RightToLeft = .F.
-	Label3.Name = "Label3"
-	Label3.RightToLeft = .F.
 
 	ADD OBJECT 'Cl_image1' AS cl_image WITH ;
 		Anchor = 0, ;
@@ -13402,13 +13402,13 @@ DEFINE CLASS f_listbox AS f_base OF "lib_controles.vcx"
 
 	DoCreate = .T.
 	Name = "f_listbox"
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "LISTBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "LISTBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_ListBox1' AS cl_listbox WITH ;
 		Anchor = 0, ;
@@ -13962,14 +13962,14 @@ DEFINE CLASS f_optiongroup AS f_base OF "lib_controles.vcx"
 	Name = "f_optiongroup"
 	Top = 0
 	Width = 819
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
 	Edit1.Value = <fb2p_value>* En los OptionGroup subclasados, cuando el Option de la clase de base tiene Autosize=.T. y la instancia tiene Autosize=.F., ocurre esto:&#13;   - Los option normales deben mantener su longitud y apariencia nuevos&#13;   - Los option graficos deben mantener su longitud y apariencia, pero pierden en height (bug de VFP)&#13;* En los OptionGroup normales, no hay problemas y se deben mantener igual siempre&#13;&#13;* RECOMENDACIÓN: No usar Autosize=.T. en una clase de base</fb2p_value>
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "OPTIONGROUP NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "OPTIONGROUP SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_optiongroup1' AS cl_optiongroup WITH ;
 		Anchor = 0, ;
@@ -15186,13 +15186,13 @@ DEFINE CLASS f_textbox AS f_base OF "lib_controles.vcx"
 	Left = 0
 	Name = "f_textbox"
 	Top = 0
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "TEXTBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "TEXTBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_textbox1' AS cl_textbox WITH ;
 		Alignment = 3, ;

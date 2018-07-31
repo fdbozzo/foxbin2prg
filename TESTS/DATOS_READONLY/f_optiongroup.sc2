@@ -41,13 +41,13 @@ DEFINE CLASS f_optiongroup_test AS f_base OF "lib_controles.vcx"
 	Name = "F_OptionGroup_Test"
 	Top = 0
 	Width = 819
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "OPTIONGROUP NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "OPTIONGROUP SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Cl_option1' AS cl_option WITH ;
 		Alignment = 0, ;

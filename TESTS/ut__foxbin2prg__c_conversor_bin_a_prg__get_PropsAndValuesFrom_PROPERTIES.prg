@@ -143,8 +143,10 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 			Y el 3!
 			<<SPACE(2)>>
 			Name = "c1"
+			Page2.Name = "pagPage2"
 			Page2.Caption = "Page2"
-			Page1.Name = "Page1"
+			Page1.Name = "pagPage1"
+			Page1.Caption = "Page1"
 		ENDTEXT
 
 		lcMemo = STRTRAN( STRTRAN( lcMemo, '&#13;', CHR(13) ), '&#10;', CHR(10) )
@@ -152,7 +154,8 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 
 		*-- DATOS ESPERADOS
 		STORE 0 TO lnCodError_Esperado
-		DIMENSION laPropsAndValues_Esperado(9,2)
+		lnPropsAndValues_Count_Esperado	= 11
+		DIMENSION laPropsAndValues_Esperado(lnPropsAndValues_Count_Esperado,2)
 		laPropsAndValues_Esperado		= ''
 		laPropsAndValues_Esperado( 1,1)	= 'Height'
 		laPropsAndValues_Esperado( 1,2)	= '2.73'
@@ -169,11 +172,14 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 		laPropsAndValues_Esperado( 6,2)	= '27.40'
 		laPropsAndValues_Esperado( 7,1)	= '_memberdata'
 		laPropsAndValues_Esperado( 7,2)	= '<VFPData><memberdata name="mimetodo" display="miMetodo"/></VFPData>'
-		laPropsAndValues_Esperado( 8,1)	= 'Page1.Name'
-		laPropsAndValues_Esperado( 8,2)	= '"Page1"'
-		laPropsAndValues_Esperado( 9,1)	= 'Page2.Caption'
-		laPropsAndValues_Esperado( 9,2)	= '"Page2"'
-		lnPropsAndValues_Count_Esperado	= 9
+		laPropsAndValues_Esperado( 8,1)	= 'Page2.Caption'
+		laPropsAndValues_Esperado( 8,2)	= '"Page2"'
+		laPropsAndValues_Esperado( 9,1)	= 'Page2.Name'
+		laPropsAndValues_Esperado( 9,2)	= '"pagPage2"'
+		laPropsAndValues_Esperado(10,1)	= 'Page1.Caption'
+		laPropsAndValues_Esperado(10,2)	= '"Page1"'
+		laPropsAndValues_Esperado(11,1)	= 'Page1.Name'
+		laPropsAndValues_Esperado(11,2)	= '"pagPage1"'
 
 		TEXT TO lcMemo_Esperado TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 			Height = 2.73
@@ -190,8 +196,10 @@ DEFINE CLASS ut__foxbin2prg__c_conversor_bin_a_prg__get_PropsAndValuesFrom_PROPE
 			_memberdata = <VFPData>
 			<<>>		<memberdata name="mimetodo" display="miMetodo"/>
 			<<>>		</VFPData>
-			Page1.Name = "Page1"
 			Page2.Caption = "Page2"
+			Page2.Name = "pagPage2"
+			Page1.Caption = "Page1"
+			Page1.Name = "pagPage1"
 
 		ENDTEXT
 

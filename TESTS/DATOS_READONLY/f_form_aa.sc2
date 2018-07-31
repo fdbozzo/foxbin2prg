@@ -152,18 +152,25 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	WindowState = 0
 	WindowType = 0
 	ZoomBox = .F.
-	cmdCapturar.Height = 27
-	cmdCapturar.Left = 764
-	cmdCapturar.Name = "cmdCapturar"
-	cmdCapturar.RightToLeft = .F.
-	cmdCapturar.Top = 392
-	cmdCapturar.Width = 212
 	Edit1.Height = 144
 	Edit1.Left = 764
 	Edit1.Name = "Edit1"
 	Edit1.RightToLeft = .F.
 	Edit1.Top = 32
 	Edit1.Width = 212
+	Label3.BackColor = 128,255,128
+	Label3.Height = 17
+	Label3.Left = 764
+	Label3.Name = "Label3"
+	Label3.RightToLeft = .F.
+	Label3.Top = 8
+	Label3.Width = 212
+	cmdCapturar.Height = 27
+	cmdCapturar.Left = 764
+	cmdCapturar.Name = "cmdCapturar"
+	cmdCapturar.RightToLeft = .F.
+	cmdCapturar.Top = 392
+	cmdCapturar.Width = 212
 	Label1.BackColor = 128,255,128
 	Label1.Caption = "CONTROLES"
 	Label1.Height = 17
@@ -180,13 +187,6 @@ DEFINE CLASS f_form_aa AS f_base OF "lib_controles.vcx"
 	Label2.RightToLeft = .F.
 	Label2.Top = 8
 	Label2.Width = 460
-	Label3.BackColor = 128,255,128
-	Label3.Height = 17
-	Label3.Left = 764
-	Label3.Name = "Label3"
-	Label3.RightToLeft = .F.
-	Label3.Top = 8
-	Label3.Width = 212
 
 	ADD OBJECT 'Cl_grid1' AS cl_grid WITH ;
 		AllowAddNew = .F., ;

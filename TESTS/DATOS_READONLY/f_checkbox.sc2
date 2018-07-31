@@ -40,13 +40,13 @@ DEFINE CLASS f_base1 AS f_base OF "lib_controles.vcx"
 	Left = 0
 	Name = "F_base1"
 	Top = 0
-	Command2.Name = "Command2"
 	Edit1.Name = "Edit1"
+	Label3.Name = "Label3"
+	Command2.Name = "Command2"
 	Label1.Caption = "CHECKBOX NORMAL"
 	Label1.Name = "Label1"
 	Label2.Caption = "CHECKBOX SUBCLASADOS"
 	Label2.Name = "Label2"
-	Label3.Name = "Label3"
 
 	ADD OBJECT 'Check1' AS checkbox WITH ;
 		Alignment = 0, ;
