@@ -2888,6 +2888,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				lcInputFile_Type	= ''
 				.l_Error			= .F.
 				tcType				= UPPER( EVL(tcType,'') )
+				llEscKeyRestored	= .T.
 				.declareDLL()
 
 				IF THIS.l_CancelWithEscKey THEN
@@ -2895,6 +2896,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					lcOldOnEscape	= ON("Escape")
 					ON ESCAPE ERROR 1799
 					SET ESCAPE ON
+					llEscKeyRestored	= .F.
 				ENDIF
 
 				DO CASE
@@ -3441,7 +3443,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 			ENDWITH && THIS
 
 		CATCH TO toEx
-			IF THIS.l_CancelWithEscKey THEN
+			IF NOT llEscKeyRestored AND THIS.l_CancelWithEscKey THEN
 				IF EMPTY(lcOldOnEscape)
 					ON ESCAPE
 				ELSE
@@ -3504,6 +3506,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ELSE
 					SET ESCAPE &lcOldSetEscape.
 				ENDIF
+				llEscKeyRestored = .T.
 			ENDIF
 
 			IF VARTYPE(loLang) <> 'O' THEN
@@ -6497,8 +6500,8 @@ DEFINE CLASS c_conversor_base AS Custom
 						CASE NOT lcWord == 'TEXT'
 							EXIT
 
-						*CASE UPPER( LEFT( CHRTRAN( lcLine, ' ', '' ), 5 ) ) == 'TEXT='
-						*	EXIT
+							*CASE UPPER( LEFT( CHRTRAN( lcLine, ' ', '' ), 5 ) ) == 'TEXT='
+							*	EXIT
 						CASE lnWordCount >= 2
 							IF lcWord2 == "TO"
 								* OK, es TEXT TO...
@@ -7575,8 +7578,8 @@ DEFINE CLASS c_conversor_base AS Custom
 					* VER: https://github.com/fdbozzo/foxbin2prg/issues/28
 					*
 					* PASO 1: Obtener los nombres únicos y asignarles un código de orden
-					CREATE CURSOR C_OBJ (objName C(50), iOrder I AUTOINC)
-					INDEX ON objname TAG objname
+					CREATE CURSOR C_OBJ (OBJNAME C(50), IORDER I AUTOINC)
+					INDEX ON OBJNAME TAG OBJNAME
 
 					* PASO 2: Configurar las prioridades de ordenamiento (primero props, luego objs)
 					FOR I = 1 TO m.tnPropsAndValues_Count
@@ -7584,29 +7587,29 @@ DEFINE CLASS c_conversor_base AS Custom
 							IF m.tnSortType = 2
 								* Genera obj+props para BIN
 								lcObjName	= GETWORDNUM(laPropsAndValues(m.I,1), 1, '.')
-								
+
 								IF NOT SEEK(LOWER(lcObjName), "C_OBJ")
-									INSERT INTO C_OBJ (objName) VALUES (LOWER(lcObjName))
+									INSERT INTO C_OBJ (OBJNAME) VALUES (LOWER(lcObjName))
 								ENDIF
-								
-								laPropsAndValues(m.I,1)	= 'B' + PADL(C_OBJ.iOrder,3,'0') ;
+
+								laPropsAndValues(m.I,1)	= 'B' + PADL(C_OBJ.IORDER,3,'0') ;
 									+ JUSTSTEM(laPropsAndValues(m.I,1)) + '.' ;
 									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', JUSTEXT(laPropsAndValues(m.I,1)) )
-								
+
 								*laPropsAndValues(m.I,1)	= 'B000' + lcObjName + '.' ;
-									+ .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', JUSTEXT(laPropsAndValues(m.I,1)) )
+								+ .sortPropsAndValues_SetAndGetSCXPropNames( 'SETNAME', JUSTEXT(laPropsAndValues(m.I,1)) )
 							ELSE
 								* Genera obj+props para TX2
 								lcObjName	= GETWORDNUM(laPropsAndValues(m.I,1), 1, '.')
-								
+
 								IF NOT SEEK(LOWER(lcObjName), "C_OBJ")
-									INSERT INTO C_OBJ (objName) VALUES (LOWER(lcObjName))
+									INSERT INTO C_OBJ (OBJNAME) VALUES (LOWER(lcObjName))
 								ENDIF
-								
-								laPropsAndValues(m.I,1)	= 'B' + PADL(C_OBJ.iOrder,3,'0') ;
+
+								laPropsAndValues(m.I,1)	= 'B' + PADL(C_OBJ.IORDER,3,'0') ;
 									+ JUSTSTEM(laPropsAndValues(m.I,1)) + '.' ;
 									+ JUSTEXT(laPropsAndValues(m.I,1))
-								
+
 								*laPropsAndValues(m.I,1)	= 'B' + PADL(I,3,'0') + laPropsAndValues(m.I,1)
 							ENDIF
 						ELSE
@@ -17510,7 +17513,7 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 				IF NOT EMPTY(lc_DBC_Name) AND ADIR(laDirInfo, FULLPATH(lc_DBC_Name, .c_InputFile)) = 1
 					loDBC._DBC			= FULLPATH(lc_DBC_Name, .c_InputFile)
 					llDBCEventsEnabled	= loDBC.DBGETPROP(lc_DBC_Name,"DATABASE","DBCEvents")
-					
+
 					* llDBCEventsEnabled no siempre devuelve .T./.F., a veces devuelve ""
 					IF EMPTY(llDBCEventsEnabled)
 						llDBCEventsEnabled	= .F.
@@ -21957,7 +21960,7 @@ DEFINE CLASS CL_DBC_FIELDS_DB AS CL_DBC_COL_BASE
 				STORE NULL TO loField
 				STORE 0 TO I, lnField_Count
 				_TALLY	= 0
-				
+
 				SELECT LOWER(TB.ObjectName) FROM TABLABIN TB ;
 					INNER JOIN TABLABIN TB2 ON STR(TB.ParentId)+TB.ObjectType = STR(TB2.ObjectID)+PADR('Field',10) ;
 					AND LOWER(TB2.ObjectName) = PADR(LOWER(tcTable),128) ;
@@ -22701,12 +22704,12 @@ DEFINE CLASS CL_DBC_VIEWS AS CL_DBC_COL_BASE
 
 				*LG lnView_Count	= ADBOBJECTS( laViews, "VIEW" )
 				SELECT CAST(ALLTRIM(ObjectName) as varchar(128)) ;
-					FROM TablaBin ;
+					FROM TABLABIN ;
 					WHERE UPPER(ObjectType) = 'VIEW' ;
 					ORDER BY 1 ;
 					INTO ARRAY laViews
 				lnView_Count	= _TALLY
- 
+
 				IF lnView_Count > 0
 					FOR I = 1 TO lnView_Count
 						loView = CREATEOBJECT("CL_DBC_VIEW")
@@ -30262,7 +30265,7 @@ DEFINE CLASS CL_MEMVAR AS CL_COL_BASE
 	*	Byte Offset Description
 	*	----------- -------------------------------------------------------------------------------------------------
 	*	0 - 10      NULL terminated VarName. If VarName is empty, then VarName starts at offset 32
-	*	11          VarType (A,C,N,Y,B,F,I,Q,D,T,L,0). If VarType is lowercase, then next VarName 
+	*	11          VarType (A,C,N,Y,B,F,I,Q,D,T,L,0). If VarType is lowercase, then next VarName
 	*	            begins with 2 bytes for VarName length.
 	*	12 - 15     Reserved
 	*	16          Value length
@@ -30270,7 +30273,7 @@ DEFINE CLASS CL_MEMVAR AS CL_COL_BASE
 	*	18 - 24     Reserved
 	*	25          0x00 if it is an array element, 0x03 if it isn't an array element
 	*	26 - 31     Reserved
-	*	32 - n      If VarName (offset 0-10) is NULL then goto TABLE 1, If VarType=A then continue in TABLE 2, 
+	*	32 - n      If VarName (offset 0-10) is NULL then goto TABLE 1, If VarType=A then continue in TABLE 2,
 	*	            if VarType=0 then continue in TABLE 3, else continue in TABLE 4
 	*	...
 	*	eof         Last character is EOF (0x1A) character
@@ -30282,7 +30285,7 @@ DEFINE CLASS CL_MEMVAR AS CL_COL_BASE
 	*	----------- -------------------------------------------------------------------------------------------------
 	*	32 - 33     VarName length
 	*	34 - n      VarName
-	*	n  + 1      Next TABLE: If VarType=A then continue in TABLE 2, if VarType=0 then continue in TABLE 3, 
+	*	n  + 1      Next TABLE: If VarType=A then continue in TABLE 2, if VarType=0 then continue in TABLE 3,
 	*	            else continue in TABLE 4
 	*	----------- -------------------------------------------------------------------------------------------------
 
@@ -30307,7 +30310,7 @@ DEFINE CLASS CL_MEMVAR AS CL_COL_BASE
 	*	TABLE 4 - NORMAL VALUE STRUCTURE
 	*	Byte Offset Description
 	*	----------- -------------------------------------------------------------------------------------------------
-	*	n - x       Value of length "value length". If ValTye is a Char type then Value length is the value's width, 
+	*	n - x       Value of length "value length". If ValTye is a Char type then Value length is the value's width,
 	*	            else the width is 8 for numbers and dates
 	*	x           Next Variable structure, or EOF (0x1A)
 	*	----------- -------------------------------------------------------------------------------------------------
