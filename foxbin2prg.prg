@@ -1,8 +1,8 @@
 *---------------------------------------------------------------------------------------------------
-* Módulo.........: FOXBIN2PRG.PRG - PARA VISUAL FOXPRO 9.0
-* Autor..........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com) - http://fdbozzo.blogspot.com
+* Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
+* Author.........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com) - http://fdbozzo.blogspot.com
 * Project info...: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
-* Fecha creación.: 04/11/2013
+* Creation Date..: 2013/11/04
 *
 * LICENCE:
 * This work is licensed under the Creative Commons Attribution 4.0 International License.
