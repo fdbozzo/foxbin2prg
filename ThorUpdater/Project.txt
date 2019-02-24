@@ -1,5 +1,5 @@
 appName = FoxBin2Prg
 appID = FoxBin2Prg
-majorVersion = 1.19.51.4
+majorVersion = 1.19.51.5
 excludeFiles = *.bak,*.bat,*.fxp,*.tbk,*.tmp,*.dat,*.log,*.cvp,README.md,.gitignore,*.zip*,*.7z*,*- copia.*,*.private.*,test_*.*,xx*.*,*.lnk,vfp_init.*,tmp*.*,*.err, *.conflict.*, *.private.*
 excludeFolders = *.plastic*,*ThorUpdater*,*Documentacion*,*foxunit*,*foxunit_*,*pruebas varias*,*versiones*,*datos_test*

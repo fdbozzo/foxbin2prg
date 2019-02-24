@@ -54,10 +54,10 @@ try
         # Read in the update file
         $date = Get-Date
         $file = $appID + 'Version.txt'
-        (Get-Content ThorUpdater\Version.txt).
-            Replace('date()', 'date(' + $date.Year + ',' + $date.Month + ',' + $date.Day + ')').
-            Replace('APPNAME', $appName).
-            Replace('MAJORVERSION', $majorVersion) |
+        (Get-Content ThorUpdater\Version.txt)
+            .Replace('date()', 'date(' + $date.Year + ',' + $date.Month + ',' + $date.Day + ')')
+            .Replace('APPNAME', $appName)
+            .Replace('MAJORVERSION', $majorVersion) |
             Set-Content ThorUpdater\$file
         Write-Host "Update creation successful"
     }

@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.51'
-    .VersionDate          = Date(2018,07,13)
+    .VersionNumber        = 'v1.19.51.5'
+    .VersionDate          = Date(2019,02,24)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -20,6 +20,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 Change History -------------------------------------------------------------
+
+2019-02-24  v1.19.51.5
+- Enhancement: Make FoxBin2Prg more COM friendly when using ESC key (Tracy Pearson)
 
 2018-07-13  v1.19.51.4
 - Bug Fix: The alphabetic ordering of ADD OBJECT's objects can cause that some objects be created in erroneous order, causing unexpected behavior (Jochen Kauz) [https://github.com/fdbozzo/foxbin2prg/issues/28]
