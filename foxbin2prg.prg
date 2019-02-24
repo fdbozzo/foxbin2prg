@@ -219,6 +219,7 @@
 * 20/06/2018	FDBOZZO		v1.19.51.2	Bug Fix: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Jairo Argüelles/Juan C.Perdomo)
 * 09/07/2018	FDBOZZO		v1.19.51.3	Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES)
 * 10/07/2018	FDBOZZO		v1.19.51.4	Bug Fix: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Jochen Kauz)
+* 14/02/2019	TRACY_P		v1.19.51.5	Enhancement: Make FoxBin2Prg more COM friendly when using ESC key (Tracy Pearson)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
