@@ -1,7 +1,7 @@
 DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase.prg
 
 	#IF .F.
-		LOCAL THIS AS ft__foxbin2prg__c_conversor_prg_a_mnx OF ft__foxbin2prg__c_conversor_prg_a_mnx.PRG
+		LOCAL THIS AS ft__foxbin2prg__c_conversor_prg_a_mnx OF ft__foxbin2prg__c_conversor_prg_a_mnx.prg
 	#ENDIF
 
 	#DEFINE C_FB2P_VALUE_I		'<fb2p_value>'
@@ -111,24 +111,39 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Regenero el DBC
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
 			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
 			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
-			
-			
+
+
 			*-- Visualización de valores
 			THIS.messageout( 'Bytes MN3: ' + TRANSFORM(LEN(lcMN3)) )
 			THIS.messageout( 'Bytes MN2: ' + TRANSFORM(LEN(lcMN2)) )
 
-			
+
 			*-- Evaluación de valores
 			this.assertequals( lcMN2, lcMN3, '[Comparación MN2 y MN3]' )
 
@@ -171,24 +186,40 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Regenero el DBC
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
+
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
 			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
 			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
-			
-			
+
+
 			*-- Visualización de valores
 			THIS.messageout( 'Bytes MN3: ' + TRANSFORM(LEN(lcMN3)) )
 			THIS.messageout( 'Bytes MN2: ' + TRANSFORM(LEN(lcMN2)) )
 
-			
+
 			*-- Evaluación de valores
 			this.assertequals( lcMN2, lcMN3, '[Comparación MN2 y MN3]' )
 
@@ -231,24 +262,40 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Regenero el DBC
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
+
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
 			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
 			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
-			
-			
+
+
 			*-- Visualización de valores
 			THIS.messageout( 'Bytes MN3: ' + TRANSFORM(LEN(lcMN3)) )
 			THIS.messageout( 'Bytes MN2: ' + TRANSFORM(LEN(lcMN2)) )
 
-			
+
 			*-- Evaluación de valores
 			this.assertequals( lcMN2, lcMN3, '[Comparación MN2 y MN3]' )
 
@@ -291,24 +338,40 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Regenero el DBC
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
+
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
 			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
 			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
-			
-			
+
+
 			*-- Visualización de valores
 			THIS.messageout( 'Bytes MN3: ' + TRANSFORM(LEN(lcMN3)) )
 			THIS.messageout( 'Bytes MN2: ' + TRANSFORM(LEN(lcMN2)) )
 
-			
+
 			*-- Evaluación de valores
 			this.assertequals( lcMN2, lcMN3, '[Comparación MN2 y MN3]' )
 
@@ -351,24 +414,40 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_prg_a_mnx AS FxuTestCase OF FxuTestCase
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT(lc_File,'*') )
 
 			*-- Genero el DC2
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Regenero el DBC
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MN2'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Renombro el DC2 a DC3 (ORIGINAL)
 			RENAME (FORCEEXT(lc_OutputFile,'MN2')) TO (FORCEEXT(lc_OutputFile,'MN3'))
+
 			*-- Genero el DC2 desde el DBC regenerado
-			loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile,'MNX'), '', '', '', '1', '0', '1',.F.,.F.,.T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*-- Comparo los MN2 y MN3
 			lnLenHeader	= LEN( loCnv.get_PROGRAM_HEADER() )
 			lcMN2	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN2') ), lnLenHeader )
 			lcMN3	= SUBSTR( FILETOSTR( FORCEEXT(lc_OutputFile,'MN3') ), lnLenHeader )
-			
-			
+
+
 			*-- Visualización de valores
 			THIS.messageout( 'Bytes MN3: ' + TRANSFORM(LEN(lcMN3)) )
 			THIS.messageout( 'Bytes MN2: ' + TRANSFORM(LEN(lcMN2)) )
 
-			
+
 			*-- Evaluación de valores
 			this.assertequals( lcMN2, lcMN3, '[Comparación MN2 y MN3]' )
 

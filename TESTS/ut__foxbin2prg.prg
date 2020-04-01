@@ -314,8 +314,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -395,8 +404,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, 'LBX' ) )
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, 'LBT' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( lc_OutputFile2, '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( lc_OutputFile2, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -472,8 +490,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( lc_OutputFile2, '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( lc_OutputFile2, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -555,8 +582,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
@@ -640,8 +676,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_OutputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
@@ -735,8 +780,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -819,8 +873,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -904,7 +967,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
 
 			*-- Comparo resultados
@@ -962,8 +1030,17 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			SELECT 0
 			USE (lc_InputFile) SHARED AGAIN NOUPDATE ALIAS ARCHIVOBIN_IN
@@ -1104,16 +1181,32 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			CLEAR CLASSLIB (lcLib)
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero BIN
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero BIN
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR(), '1', '0' )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero BMP con libreria regenerada
 			SET CLASSLIB TO (lcLib) ADDITIVE
@@ -1374,7 +1467,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			COPY FILE (lc_OutputFileTx2) TO (lc_OutputFileBak)
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			lnNulls		= OCCURS( CHR(0), FILETOSTR( lc_OutputFileTx2 ) )
 
 			*-- Comparo resultados
@@ -1431,7 +1529,12 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			COPY FILE (lc_OutputFileTx2) TO (lc_OutputFileBak)
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			lnNulls		= OCCURS( CHR(0), FILETOSTR( lc_OutputFileTx2 ) )
 
 			*-- Comparo resultados
@@ -1493,13 +1596,25 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			COPY FILE (lc_OutputFileTx2) TO (lc_OutputFileBak)
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero BIN
-			loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_OutputFile),2 ) + '2' ), .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Comparo resultados
 			THIS.messageout( "Se compara el archivo de texto generado con el original luego de 2 regeneraciones, para saber si hay cambios" )
@@ -1645,7 +1760,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, '*' ) )
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Comparo resultados
 			THIS.messageout( "Respuesta esperada = .T." )
@@ -1702,7 +1821,11 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, '*' ) )
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Comparo resultados
 			THIS.messageout( "Respuesta esperada = .T." )
@@ -1781,10 +1904,18 @@ DEFINE CLASS ut__foxbin2prg AS FxuTestCase OF FxuTestCase.prg
 			*loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
 
 			*-- Genero BIN
-			loCnv.execute( lc_OutputFileTx2, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFileTx2, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Genero TX2
-			loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+			lnCodError = loCnv.execute( lc_OutputFile, .F., .F., .F., '1', '0', '1', '', '', .T., '', SYS(5)+CURDIR() )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
 
 			*-- Comparo resultados
 			THIS.messageout( "Se compara el archivo de texto generado con el original luego de 2 regeneraciones, para saber si hay cambios" )

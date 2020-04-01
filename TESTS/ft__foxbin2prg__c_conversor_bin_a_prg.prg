@@ -119,7 +119,12 @@ DEFINE CLASS ft__foxbin2prg__c_conversor_bin_a_prg AS FxuTestCase OF FxuTestCase
 
 			oFXU_LIB.copiarArchivosParaTest( FORCEEXT( lc_File, LEFT( JUSTEXT(lc_File),2 ) + '?' ) )
 
-			loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+			lnCodError = loCnv.execute( lc_OutputFile, '', '', '', '1', '0', '1', '', '', .T. )
+
+			IF lnCodError > 0
+				ERROR (loCnv.c_TextErr)
+			ENDIF
+
 			*loCnv.execute( FORCEEXT(lc_OutputFile, LEFT( JUSTEXT(lc_File),2 ) + '2' ), '', '', '', '1', '0', '1', '', '', .T. )
 			THIS.Evaluate_results( loEx, lnCodError_Esperado )
 
