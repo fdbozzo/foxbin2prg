@@ -221,6 +221,7 @@
 * 10/07/2018	FDBOZZO		v1.19.51.4	Bug Fix: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Jochen Kauz)
 * 14/02/2019	TRACY_P		v1.19.51.5	Enhancement: Make FoxBin2Prg more COM friendly when using ESC key (Tracy Pearson)
 * 01/04/2020	RHARRIS		v1.19.51.6	Bug Fix: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Ryan Harris)
+* 01/04/2020	FDBOZZO		v1.19.51.6	Bug Fix: Incompatible with VFPA (#36) (Eric Selje)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -349,6 +350,7 @@
 * 09/07/2018	KIRIDES				Reporte Bug v1.19.51: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (Se arregla en v1.19.51.3)
 * 10/07/2018	Jochen Kauz			Reporte Bug v1.19.51: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Se arregla en v1.19.51.3)
 * 31/03/2020	Ryan Harris			Reporte Bug v1.19.51: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Se arregla en v1.19.51.6)
+* 13/11/2019	Eric Selje			Reporte Bug v1.19.51: Incompatible with VFPA (#36) (Se arregla en v1.19.51.6)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2864,7 +2866,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File
+			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File, lnVFPVersion
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
@@ -2892,6 +2894,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.l_Error			= .F.
 				tcType				= UPPER( EVL(tcType,'') )
 				llEscKeyRestored	= .T.
+				lnVFPVersion		= VERSION(5)
 				.declareDLL()
 
 				IF THIS.l_CancelWithEscKey THEN
@@ -2903,7 +2906,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDIF
 
 				DO CASE
-				CASE VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+				CASE lnVFPVersion = 900 AND INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+					ERROR loLang.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+
+				CASE lnVFPVersion < 900
 					ERROR loLang.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
 
 				CASE '\' $ tcType
@@ -2913,6 +2919,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 						+ loLang.C_ALLOWED_VALUES_ARE_LOC + ': ' + CR_LF ;
 						+ '*, *-, -BIN2PRG, -PRG2BIN, -SHOWMSG, -SIMERR_I0, -SIMERR_I1, -SIMERR_O1'
 
+				OTHERWISE
+					* OK all versions from 900(3504) and up. For VFPA Guys :)
 				ENDCASE
 
 				DO CASE
