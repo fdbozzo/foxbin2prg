@@ -36,6 +36,22 @@ DEFINE CLASS cl_commandgroup AS commandgroup 		&& Descripción de cl_CommandGroup
 
 ENDDEFINE
 
+DEFINE CLASS cl_cust_rsv_kwd AS custom 
+ 	*< CLASSDATA: Baseclass="custom" Timestamp="" Scale="Pixels" Uniqueid="" />
+
+	*<DefinedPropArrayMethod>
+		*p: nota
+		*p: note		&& Reserved keyword
+	*</DefinedPropArrayMethod>
+
+	Height = 53
+	Name = "cl_cust_rsv_kwd"
+	nota = 
+	note = 		&& Reserved keyword
+	Width = 135
+
+ENDDEFINE
+
 DEFINE CLASS cl_form AS form OLEPUBLIC		&& mi OLE server DLL
  	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="Pixels" Uniqueid="" ProjectClassIcon="bmps\container.ico" ClassIcon="bmps\container.ico" />
 

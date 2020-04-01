@@ -224,6 +224,7 @@
 * 01/04/2020	FDBOZZO		v1.19.51.6	Bug Fix: Incompatible with VFPA (#36) (Eric Selje)
 * 01/04/2020	DH			v1.19.51	Bug Fix: Manejo de AutoIncrement incompatible con Project Explorer (Dan Lauer)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
+* 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -351,6 +352,7 @@
 * 20/06/2018	Jairo A/Juan CP		Reporte Bug v1.19.51: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Arreglado en v1.19.51.2)
 * 09/07/2018	KIRIDES				Reporte Bug v1.19.51: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (Se arregla en v1.19.51.3)
 * 10/07/2018	Jochen Kauz			Reporte Bug v1.19.51: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Se arregla en v1.19.51.3)
+* 14/03/2019	Tracy Pearson		Reporte Bug v1.19.51: No se respetan las propiedades de VCX/SCX con nombre "note" (Se arregla en v1.19.51.6)
 * 18/04/2019	DAJU78				Reporte Bug v1.19.51: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (Se arregla en v1.19.51.6)
 * 19/07/2019	Dan Lauer			Reporte Bug v1.19.51: Manejo de AutoIncrement incompatible con Project Explorer (Arreglado en v1.19.49.6, con solución de Doug Hennnig)
 * 13/11/2019	Eric Selje			Reporte Bug v1.19.51: Incompatible with VFPA (#36) (Se arregla en v1.19.51.6)
@@ -7219,7 +7221,10 @@ DEFINE CLASS c_conversor_base AS Custom
 			CASE LEFT(tcLine,2) == '*<'
 				tcComment	= tcLine
 
-			CASE EMPTY(tcLine) OR LEFT(tcLine, 1) == '*' OR UPPER(LEFT(tcLine + ' ', 5)) == 'NOTE ' && Vacía o Comentarios
+			CASE EMPTY(tcLine) OR LEFT(tcLine, 1) == '*' ;
+					OR UPPER(LEFT(tcLine + ' ', 5)) == 'NOTE ' ; && Vacía o Comentarios
+					AND NOT UPPER(LEFT(tcLine + ' ', 6)) == 'NOTE =' && Excluir asignaciones
+				*
 				lllineIsOnlyCommentAndNoMetadata = .T.
 
 			ENDCASE
