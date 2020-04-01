@@ -220,6 +220,7 @@
 * 09/07/2018	FDBOZZO		v1.19.51.3	Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES)
 * 10/07/2018	FDBOZZO		v1.19.51.4	Bug Fix: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Jochen Kauz)
 * 14/02/2019	TRACY_P		v1.19.51.5	Enhancement: Make FoxBin2Prg more COM friendly when using ESC key (Tracy Pearson)
+* 01/04/2020	RHARRIS		v1.19.51.6	Bug Fix: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Ryan Harris)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -347,6 +348,7 @@
 * 20/06/2018	Jairo A/Juan CP		Reporte Bug v1.19.51: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Arreglado en v1.19.51.2)
 * 09/07/2018	KIRIDES				Reporte Bug v1.19.51: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (Se arregla en v1.19.51.3)
 * 10/07/2018	Jochen Kauz			Reporte Bug v1.19.51: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Se arregla en v1.19.51.3)
+* 31/03/2020	Ryan Harris			Reporte Bug v1.19.51: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Se arregla en v1.19.51.6)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -10424,7 +10426,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 						IF toFoxBin2Prg.l_ProcessFiles THEN
 							toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Class )
-							C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + FILETOSTR( lcInputFile_Class )
 						ENDIF
 					ENDFOR
 
@@ -10925,7 +10927,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						ENDIF
 
 						toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Class )
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + FILETOSTR( lcInputFile_Class )
 					ENDFOR
 
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
