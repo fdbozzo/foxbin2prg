@@ -220,6 +220,11 @@
 * 09/07/2018	FDBOZZO		v1.19.51.3	Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES)
 * 10/07/2018	FDBOZZO		v1.19.51.4	Bug Fix: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Jochen Kauz)
 * 14/02/2019	TRACY_P		v1.19.51.5	Enhancement: Make FoxBin2Prg more COM friendly when using ESC key (Tracy Pearson)
+* 01/04/2020	RHARRIS		v1.19.51.6	Bug Fix: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Ryan Harris)
+* 01/04/2020	FDBOZZO		v1.19.51.6	Bug Fix: Incompatible with VFPA (#36) (Eric Selje)
+* 01/04/2020	DH			v1.19.51	Bug Fix: Manejo de AutoIncrement incompatible con Project Explorer (Dan Lauer)
+* 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
+* 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -347,6 +352,11 @@
 * 20/06/2018	Jairo A/Juan CP		Reporte Bug v1.19.51: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Arreglado en v1.19.51.2)
 * 09/07/2018	KIRIDES				Reporte Bug v1.19.51: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (Se arregla en v1.19.51.3)
 * 10/07/2018	Jochen Kauz			Reporte Bug v1.19.51: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Se arregla en v1.19.51.3)
+* 14/03/2019	Tracy Pearson		Reporte Bug v1.19.51: No se respetan las propiedades de VCX/SCX con nombre "note" (Se arregla en v1.19.51.6)
+* 18/04/2019	DAJU78				Reporte Bug v1.19.51: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (Se arregla en v1.19.51.6)
+* 19/07/2019	Dan Lauer			Reporte Bug v1.19.51: Manejo de AutoIncrement incompatible con Project Explorer (Arreglado en v1.19.49.6, con solución de Doug Hennnig)
+* 13/11/2019	Eric Selje			Reporte Bug v1.19.51: Incompatible with VFPA (#36) (Se arregla en v1.19.51.6)
+* 31/03/2020	Ryan Harris			Reporte Bug v1.19.51: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Se arregla en v1.19.51.6)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -2862,7 +2872,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		*--------------------------------------------------------------------------------------------------------------
 		LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx AS EXCEPTION, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File
+			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File, lnVFPVersion
 
 		TRY
 			LOCAL I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
@@ -2890,6 +2900,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.l_Error			= .F.
 				tcType				= UPPER( EVL(tcType,'') )
 				llEscKeyRestored	= .T.
+				lnVFPVersion		= VERSION(5)
 				.declareDLL()
 
 				IF THIS.l_CancelWithEscKey THEN
@@ -2901,7 +2912,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 				ENDIF
 
 				DO CASE
-				CASE VERSION(5) < 900 OR INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+				CASE lnVFPVersion = 900 AND INT( VAL( SUBSTR( VERSION(4), RAT('.', VERSION(4)) + 1 ) ) ) < 3504
+					ERROR loLang.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
+
+				CASE lnVFPVersion < 900
 					ERROR loLang.C_INCORRECT_VFP9_VERSION__MISSING_SP1_LOC
 
 				CASE '\' $ tcType
@@ -2911,6 +2925,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 						+ loLang.C_ALLOWED_VALUES_ARE_LOC + ': ' + CR_LF ;
 						+ '*, *-, -BIN2PRG, -PRG2BIN, -SHOWMSG, -SIMERR_I0, -SIMERR_I1, -SIMERR_O1'
 
+				OTHERWISE
+					* OK all versions from 900(3504) and up. For VFPA Guys :)
 				ENDCASE
 
 				DO CASE
@@ -7205,7 +7221,10 @@ DEFINE CLASS c_conversor_base AS Custom
 			CASE LEFT(tcLine,2) == '*<'
 				tcComment	= tcLine
 
-			CASE EMPTY(tcLine) OR LEFT(tcLine, 1) == '*' OR UPPER(LEFT(tcLine + ' ', 5)) == 'NOTE ' && Vacía o Comentarios
+			CASE EMPTY(tcLine) OR LEFT(tcLine, 1) == '*' ;
+					OR UPPER(LEFT(tcLine + ' ', 5)) == 'NOTE ' ; && Vacía o Comentarios
+					AND NOT UPPER(LEFT(tcLine + ' ', 6)) == 'NOTE =' && Excluir asignaciones
+				*
 				lllineIsOnlyCommentAndNoMetadata = .T.
 
 			ENDCASE
@@ -10424,7 +10443,7 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 
 						IF toFoxBin2Prg.l_ProcessFiles THEN
 							toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Class )
-							C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + FILETOSTR( lcInputFile_Class )
 						ENDIF
 					ENDFOR
 
@@ -10925,7 +10944,7 @@ DEFINE CLASS c_conversor_prg_a_scx AS c_conversor_prg_a_bin
 						ENDIF
 
 						toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Class )
-						C_FB2PRG_CODE	= C_FB2PRG_CODE + FILETOSTR( lcInputFile_Class )
+						C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + FILETOSTR( lcInputFile_Class )
 					ENDFOR
 
 					lnCodeLines			= ALINES( laCodeLines, C_FB2PRG_CODE )
@@ -12768,7 +12787,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 					ENDIF
 
 					*-- Nombre, Tipo
-					lcFieldDef	= lcFieldDef + loField._Name + ' ' + loField._Type
+					lcFieldDef	= lcFieldDef + '"' + loField._Name + '" ' + loField._Type
 
 					*-- Longitud
 					IF INLIST( loField._Type, 'C', 'N', 'F', 'Q', 'V' )
@@ -19156,7 +19175,8 @@ DEFINE CLASS CL_PROJECT AS CL_COL_BASE
 				._MinorVer			= .parseNullTerminatedValue( @tcDevInfo, 1758, 4 )
 				._Revision			= .parseNullTerminatedValue( @tcDevInfo, 1763, 4 )
 				._LanguageID		= .parseNullTerminatedValue( @tcDevInfo, 1768, 19 )
-				._AutoIncrement		= IIF( SUBSTR( tcDevInfo, 1788, 1 ) = CHR(1), '1', '0' )
+				*._AutoIncrement		= IIF( SUBSTR( tcDevInfo, 1788, 1 ) = CHR(1), '1', '0' )
+				._AutoIncrement		= TRANSFORM(ASC(SUBSTR(tcDevInfo, 1788, 1)))	&& Proposed by Doug Hennig
 			ENDWITH && THIS
 
 		CATCH TO loEx
