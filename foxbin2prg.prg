@@ -228,6 +228,7 @@
 
 *  14/02/21		Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
 *										minor translations
+*  14/02/21		Lutz Scheffler			conversion prg -> dbf, fields with .NULL. value are incorectly recreated
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -25128,8 +25129,20 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 
 							lcFieldType		= loField._Type
 							llNoCPTran		= CAST( loField._NoCPTran as Logical)
+*!*	Changed by: Lutz Scheffler 14.2.2021
+*!*	change date="{^2021-02-14,20:35:00}"
+* Does not recreate .NULL. Field values
+* CAST(.. does not tronsform ".NULL." to .NULL.
+* so we test field for NULL flag and is cValue is ".NULL.", we use .NULL.
 
+							llNull			= CAST( loField._Null as Logical)
+							
 							DO CASE
+							CASE m.llNull AND UPPER(m.lcValue)=='.NULL.'		&& .NULL.
+								luValue = .NULL.
+
+*!*	/Changed by: Lutz Scheffler 14.2.2021
+
 							CASE lcFieldType == 'L'	&& Logical (Boolean)
 								luValue = CAST(lcValue as Logical)
 
