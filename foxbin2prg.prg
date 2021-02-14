@@ -226,8 +226,9 @@
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
 
-*  14/02/21		Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
+*  14/02/2021	Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
 *										minor translations
+*  14/02/2021	Lutz Scheffler			inserted option UseFilesPerDBC to split DBC processing from vcx / scx
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -766,6 +767,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="l_stdouthabilitado" display="l_StdOutHabilitado"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
+		+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
 		+ [<memberdata name="n_fb2prg_version" display="n_FB2PRG_Version"/>] ;
@@ -856,6 +858,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
 	n_UseClassPerFile 				= 0
+	n_UseFilesPerDBC				= 0
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
@@ -1292,6 +1295,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.n_UseClassPerFile
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_UseClassPerFile, THIS.n_UseClassPerFile )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE n_UseFilesPerDBC_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_UseFilesPerDBC
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_UseFilesPerDBC, THIS.n_UseFilesPerDBC )
 		ENDIF
 	ENDPROC
 
@@ -2140,7 +2152,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ELSE
 						.writeLog( '> ' + UPPER(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path )
 						lo_CFG	= CREATEOBJECT('CL_CFG')
-
 						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
 						.n_CFG_Actual  	= lo_Configuration.Count
 
@@ -2256,6 +2267,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 							IF INLIST( lcValue, '0', '1', '2' ) THEN
 								lo_CFG.n_UseClassPerFile	= INT( VAL(lcValue) )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > UseClassPerFile:            ' + TRANSFORM(lcValue) )
+							ENDIF
+
+						CASE LEFT( laConfig(m.I), 15 ) == LOWER('UseFilesPerDBC:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 16 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.n_UseFilesPerDBC	= INT( VAL(lcValue) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > UseFilesPerDBC:             ' + TRANSFORM(lcValue) )
 							ENDIF
 
 						CASE LEFT( laConfig(m.I), 18 ) == LOWER('ClassPerFileCheck:')
@@ -2469,6 +2487,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'l_NoTimestamps:               ' + TRANSFORM(.l_NoTimestamps) )
 				.writeLog( C_TAB + 'l_ClearUniqueID:              ' + TRANSFORM(.l_ClearUniqueID) )
 				.writeLog( C_TAB + 'n_UseClassPerFile:            ' + TRANSFORM(.n_UseClassPerFile) )
+				.writeLog( C_TAB + 'n_UseFilesPerDBC:             ' + TRANSFORM(.n_UseFilesPerDBC) )
 				.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + TRANSFORM(.l_ClassPerFileCheck) )
 				.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
 				.writeLog( C_TAB + 'n_RedirectClassType:          ' + TRANSFORM(.n_RedirectClassType) )
@@ -17774,7 +17793,7 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 					C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
 					*-- Header
-					IF toFoxBin2Prg.n_UseClassPerFile > 0 THEN
+					IF toFoxBin2Prg.n_UseFilesPerDBC > 0 THEN
 						.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, .F., .F., @lcExternalHeader )
 
 						*-- Connections
@@ -17861,8 +17880,9 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 					*toDatabase	= lcCodigo
 				ELSE
 
-					IF toFoxBin2Prg.n_UseClassPerFile > 0 THEN
+					IF toFoxBin2Prg.n_UseFilesPerDBC > 0 THEN
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
+
 						FOR I = 1 TO lnClassCount
 							* lcOutputFile = '<path>DBCName' + '.' + 'MemberType' + '.' + 'MemberName' + '.' + 'dc2'
 							lcOutputFile	= ADDBS( JUSTPATH( .c_OutputFile ) ) + JUSTSTEM( .c_OutputFile ) + '.' + laClasses(m.I,3) + '.' + laClasses(m.I,1) + '.' + JUSTEXT( .c_OutputFile )
@@ -20833,7 +20853,7 @@ DEFINE CLASS CL_DBC AS CL_DBC_BASE
 					<<>>	<<C_STORED_PROC_F>>
 				ENDTEXT
 
-				IF NOT toFoxBin2Prg.n_UseClassPerFile > 0 THEN
+				IF NOT toFoxBin2Prg.n_UseFilesPerDBC > 0 THEN
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<lcConnections>>
 						<<lcTables>>
@@ -28513,6 +28533,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
+		+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
 		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
@@ -28554,6 +28575,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	l_RemoveNullCharsFromCode		= NULL
 	l_RemoveZOrderSetFromProps		= NULL
 	n_UseClassPerFile				= NULL
+	n_UseFilesPerDBC				= NULL
 	l_ClassPerFileCheck				= NULL
 	n_ExtraBackupLevels				= NULL
 	c_VC2							= NULL
@@ -28605,6 +28627,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
+			.n_UseFilesPerDBC				= toParentCFG.n_UseFilesPerDBC
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
 			.c_VC2							= toParentCFG.c_VC2
@@ -28853,8 +28876,14 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
+						<<>>-- DBC options
+						<<>>-- File per DBC options (UseFilesPerDBC: 1)
+						<<>>UseFilesPerDBC: 0            && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                             && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                             && 1 creates a file.dc2 with DBC properties
+						<<>>                             &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
@@ -29018,8 +29047,15 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
+						<<>>-- DBC options
+						<<>>-- File per DBC options (UseFilesPerDBC: 0)
+						<<>>UseFilesPerDBC: 0            && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                             && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                             && 1 creates a file.dc2 with DBC properties
+						<<>>                             &&   and additional DBC files per DBC item (stored-proc, table, ..)
+						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
@@ -29183,8 +29219,15 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
+						<<>>-- DBC options
+						<<>>-- File per DBC options (UseFilesPerDBC: 0)
+						<<>>UseFilesPerDBC: 0            && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                             && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                             && 1 creates a file.dc2 with DBC properties
+						<<>>                             &&   and additional DBC files per DBC item (stored-proc, table, ..)
+						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
@@ -29348,8 +29391,15 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
+						<<>>-- DBC options
+						<<>>-- File per DBC options (UseFilesPerDBC: 0)
+						<<>>UseFilesPerDBC: 0            && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                             && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                             && 1 creates a file.dc2 with DBC properties
+						<<>>                             &&   and additional DBC files per DBC item (stored-proc, table, ..)
+						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
