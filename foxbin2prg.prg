@@ -230,7 +230,7 @@
 *										minor translations
 *  14/02/2021	Lutz Scheffler			conversion prg -> dbf, fields with .NULL. value are incorectly recreated
 *  15/02/2021	Lutz Scheffler			processing directory, flush log file after loop instead of file
-*  xx/02/2021	Lutz Scheffler	proposed:	conversion prg -> vcx, files per class could create one class multiple times
+*  16/02/2021	Lutz Scheffler			conversion prg -> vcx, files per class could create one class multiple times
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3276,7 +3276,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 *!*	Changed by: Lutz Scheffler 15.2.2021
 *!*	change date="{^2021-02-15,06:57:00}"
 * flushing the log after each file let us only see last file
-* .writeLog_Flush() moved after ENDFOR
+* why ever, it should be appended, but we simply move
+* .writeLog_Flush() after ENDFOR
 
 *								.writeLog_Flush()
 
@@ -3345,7 +3346,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 *!*	Changed by: Lutz Scheffler 15.2.2021
 *!*	change date="{^2021-02-15,06:57:00}"
 * flushing the log after each file let us only see last file
-* .writeLog_Flush() moved after ENDFOR
+* why ever, it should be appended, but we simply move
+* .writeLog_Flush() after ENDFOR
 
 *								.writeLog_Flush()
 
@@ -10385,6 +10387,9 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile, llReplaceClass, lnRow ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				
+			LOCAL;
+			 lnDots AS NUMBER
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
@@ -10426,9 +10431,27 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						lcInputFile			= .c_InputFile
 					ENDIF
 
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,16:09:00}"
+* problem with classes declared in multiple files, looks like merge problem of git
+* creates multiple classes in VCX
+* the problem is ADIR(laFiles,Name+".*.ext") will return files with AT LEAST 2 dots
+* so we simply remove files with to many dots
+					lnDots = OCCURS('.',m.lcInputFile)
+
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 
 					IF lnFileCount > 1
+						FOR i = m.lnFileCount TO 1 STEP -1
+							IF OCCURS('.',laFiles(i,1))>m.lnDots THEN
+								ADEL(laFiles,i)							 
+								lnFileCount = m.lnFileCount-1
+							ENDIF &&OCCURS('.',laFiles(i,1))>m.lnDots 
+						NEXT
+						DIMENSION;
+						 laFiles(EVL(lnFileCount,1),ALEN(laFiles,2))
+*!*	/Changed by: Lutz Scheffler 15.2.2021
+
 						ASORT( laFiles, 1, 0, 0, 1)
 					ENDIF
 
