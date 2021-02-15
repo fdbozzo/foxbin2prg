@@ -235,7 +235,6 @@
 * mods
 *  14/02/2021	Lutz Scheffler			inserted option UseFilesPerDBC to split DBC processing from vcx / scx
 *  xx/xx/2021	Lutz Scheffler			inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
-*  xx/xx/2021	Lutz Scheffler			inserted option UseDBFPerDBC to create tables by selecting DBC only
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
@@ -779,7 +778,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 		+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 		+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
 		+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
-		+ [<memberdata name="n_usedbfperdbc" display="n_UseDBFPerDBC"/>] ;
 ;&& /SF
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
@@ -875,7 +873,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 	n_UseFilesPerDBC				= 0
 	l_RedirectFilePerDBCToMain		= .F.
 	l_ItemPerDBCCheck				= .F.
-	n_UseDBFPerDBC					= 0
 * /SF
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
@@ -1341,15 +1338,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.l_ItemPerDBCCheck
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).l_ItemPerDBCCheck, THIS.l_ItemPerDBCCheck )
-		ENDIF
-	ENDPROC
-
-
-	PROCEDURE n_UseDBFPerDBC_ACCESS
-		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
-			RETURN THIS.n_UseDBFPerDBC
-		ELSE
-			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_UseDBFPerDBC, THIS.n_UseDBFPerDBC )
 		ENDIF
 	ENDPROC
 * /SF
@@ -2337,13 +2325,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 								lo_CFG.l_ItemPerDBCCheck	= ( TRANSFORM(lcValue) == '1' )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > ItemPerDBCCheck:            ' + TRANSFORM(lcValue) )
 							ENDIF
-
-						CASE LEFT( laConfig(m.I), 13 ) == LOWER('UseDBFPerDBC:')
-							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 14 ) )
-							IF INLIST( lcValue, '0', '1' ) THEN
-								lo_CFG.n_UseDBFPerDBC	= INT( VAL(lcValue) )
-								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > UseDBFPerDBC:               ' + TRANSFORM(lcValue) )
-							ENDIF
 * /SF
 
 						CASE LEFT( laConfig(m.I), 18 ) == LOWER('ClassPerFileCheck:')
@@ -2561,7 +2542,6 @@ DEFINE CLASS c_foxbin2prg AS Session
 				.writeLog( C_TAB + 'n_UseFilesPerDBC:             ' + TRANSFORM(.n_UseFilesPerDBC) )
 				.writeLog( C_TAB + 'l_RedirectFilePerDBCToMain:   ' + TRANSFORM(.l_RedirectFilePerDBCToMain) )
 				.writeLog( C_TAB + 'l_ItemPerDBCCheck:            ' + TRANSFORM(.l_ItemPerDBCCheck) )
-				.writeLog( C_TAB + 'n_UseDBFPerDBC                ' + TRANSFORM(.n_UseDBFPerDBC) )
 * /SF
 				.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + TRANSFORM(.l_ClassPerFileCheck) )
 				.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + TRANSFORM(.l_RedirectClassPerFileToMain) )
@@ -17906,14 +17886,6 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 							laClasses(lnClassCount,2)	= loTable._ToText
 							laClasses(lnClassCount,3)	= 'table'
 							.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, laClasses(lnClassCount,1), laClasses(lnClassCount,3), @lcExternalHeader )
-
-							IF toFoxBin2Prg.n_UseDBFPerDBC > 0;
-							;	&& and not directory mode
-							 THEN
-* not directory mode, because directory will see the DBFs too
-* pjx will not hold the DBFs, just the DBC, so run
-							ENDIF &&toFoxBin2Prg.n_UseDBFPerDBC > 0 
-
 						ENDFOR
 
 						*-- Views
@@ -28649,7 +28621,6 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 		+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
 		+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
-		+ [<memberdata name="n_usedbfperdbc" display="n_UseDBFPerDBC"/>] ;
 ; && /SF 
 		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
@@ -28696,7 +28667,6 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	n_UseFilesPerDBC				= NULL
 	l_RedirectFilePerDBCToMain		= NULL
 	l_ItemPerDBCCheck				= NULL
-    n_UseDBFPerDBC					= NULL
 * /SF 
 	l_ClassPerFileCheck				= NULL
 	n_ExtraBackupLevels				= NULL
@@ -28753,7 +28723,6 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.n_UseFilesPerDBC				= toParentCFG.n_UseFilesPerDBC
 			.l_RedirectFilePerDBCToMain		= toParentCFG.l_RedirectFilePerDBCToMain
 			.l_ItemPerDBCCheck				= toParentCFG.l_ItemPerDBCCheck
-			.n_UseDBFPerDBC					= toParentCFG.n_UseDBFPerDBC
 * /SF 
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
@@ -29012,10 +28981,6 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
 						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-						<<>>- Tables per DBC options (UseDBFPerDBC: 1)
-						<<>>UseDBFPerDBC: 0                && 0=Do not auto create text files for tables, 1=Auto create multiple file.table.*.db2 files
-						<<>>                               && db2 will be created only if DBF_Conversion_Support is set appropriate
-						<<>>                               && will be ignored in a per-folder scenario, since DBF_Conversion_Support will run anyway
 						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
@@ -29191,10 +29156,6 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
 						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-						<<>>- Tables per DBC options (UseDBFPerDBC: 1)
-						<<>>UseDBFPerDBC: 0                && 0=Do not auto create text files for tables, 1=Auto create multiple file.table.*.db2 files
-						<<>>                               && db2 will be created only if DBF_Conversion_Support is set appropriate
-						<<>>                               && will be ignored in a per-folder scenario, since DBF_Conversion_Support will run anyway
 						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
@@ -29370,10 +29331,6 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
 						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-						<<>>- Tables per DBC options (UseDBFPerDBC: 1)
-						<<>>UseDBFPerDBC: 0                && 0=Do not auto create text files for tables, 1=Auto create multiple file.table.*.db2 files
-						<<>>                               && db2 will be created only if DBF_Conversion_Support is set appropriate
-						<<>>                               && will be ignored in a per-folder scenario, since DBF_Conversion_Support will run anyway
 						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
@@ -29549,10 +29506,6 @@ DEFINE CLASS CL_LANG AS Custom
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
 						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-						<<>>- Tables per DBC options (UseDBFPerDBC: 1)
-						<<>>UseDBFPerDBC: 0                && 0=Do not auto create text files for tables, 1=Auto create multiple file.table.*.db2 files
-						<<>>                               && db2 will be created only if DBF_Conversion_Support is set appropriate
-						<<>>                               && will be ignored in a per-folder scenario, since DBF_Conversion_Support will run anyway
 						<<>>
 						<<>>-- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
