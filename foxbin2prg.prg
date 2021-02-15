@@ -226,9 +226,11 @@
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
 
-*  14/02/21		Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
+*  14/02/2021	Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
 *										minor translations
-*  14/02/21		Lutz Scheffler			conversion prg -> dbf, fields with .NULL. value are incorectly recreated
+*  14/02/2021	Lutz Scheffler			conversion prg -> dbf, fields with .NULL. value are incorectly recreated
+*  15/02/2021	Lutz Scheffler			processing directory, flush log file after loop instead of file
+*  16/02/2021	Lutz Scheffler			conversion prg -> vcx, files per class could create one class multiple times
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3271,7 +3273,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', m.I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-								.writeLog_Flush()
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,06:57:00}"
+* flushing the log after each file let us only see last file
+* why ever, it should be appended, but we simply move
+* .writeLog_Flush() after ENDFOR
+
+*								.writeLog_Flush()
 
 								DO CASE
 								CASE lnCodError = 1799	&& Conversion Cancelled
@@ -3281,6 +3289,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 									.doWriteErrorLog( @toEx )
 								ENDCASE
 							ENDFOR && I = 1 TO lnFileCount
+							.writeLog_Flush()
+*!*	/Changed by: Lutz Scheffler 15.2.2021
 
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
@@ -3322,6 +3332,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 							.get_FilesFromDirectory( tc_InputFile, @laFiles, @lnFileCount )
 
+
 							FOR I = 1 TO lnFileCount
 								toModulo	= NULL
 								lcFile		= laFiles(m.I)
@@ -3332,7 +3343,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', m.I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-								.writeLog_Flush()
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,06:57:00}"
+* flushing the log after each file let us only see last file
+* why ever, it should be appended, but we simply move
+* .writeLog_Flush() after ENDFOR
+
+*								.writeLog_Flush()
 
 								DO CASE
 								CASE lnCodError = 1799	&& Conversion Cancelled
@@ -3342,6 +3359,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 									.doWriteErrorLog( @toEx )
 								ENDCASE
 							ENDFOR && I = 1 TO lnFileCount
+							.writeLog_Flush()
+*!*	/Changed by: Lutz Scheffler 15.2.2021
 
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
@@ -4558,14 +4577,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE get_FilesFromDirectory
-		LPARAMETERS tcDir, taFiles, lnFileCount
+		LPARAMETERS tcDir, taFiles, tnFileCount
 		EXTERNAL ARRAY taFiles
 
 		LOCAL laFiles(1), I, lnFiles ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-		IF TYPE("ALEN(laFiles)") # "N" OR EMPTY(lnFileCount)
-			lnFileCount = 0
+		IF TYPE("ALEN(laFiles)") # "N" OR EMPTY(tnFileCount)
+			tnFileCount = 0
 			DIMENSION taFiles(1)
 		ENDIF
 
@@ -4582,9 +4601,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					IF SUBSTR( laFiles(m.I,5), 5, 1 ) == 'D'
 						LOOP
 					ENDIF
-					lnFileCount	= lnFileCount + 1
-					DIMENSION taFiles(lnFileCount)
-					taFiles(lnFileCount)	= tcDir + laFiles(m.I,1)
+
+					tnFileCount	= tnFileCount + 1
+					DIMENSION taFiles(tnFileCount)
+					taFiles(tnFileCount)	= tcDir + laFiles(m.I,1)
 				ENDFOR
 
 				*-- Busco los subdirectorios
@@ -10367,6 +10387,9 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile, llReplaceClass, lnRow ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				
+			LOCAL;
+			 lnDots AS NUMBER
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
@@ -10408,9 +10431,27 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						lcInputFile			= .c_InputFile
 					ENDIF
 
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,16:09:00}"
+* problem with classes declared in multiple files, looks like merge problem of git
+* creates multiple classes in VCX
+* the problem is ADIR(laFiles,Name+".*.ext") will return files with AT LEAST 2 dots
+* so we simply remove files with to many dots
+					lnDots = OCCURS('.',m.lcInputFile)
+
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 
 					IF lnFileCount > 1
+						FOR i = m.lnFileCount TO 1 STEP -1
+							IF OCCURS('.',laFiles(i,1))>m.lnDots THEN
+								ADEL(laFiles,i)							 
+								lnFileCount = m.lnFileCount-1
+							ENDIF &&OCCURS('.',laFiles(i,1))>m.lnDots 
+						NEXT
+						DIMENSION;
+						 laFiles(EVL(lnFileCount,1),ALEN(laFiles,2))
+*!*	/Changed by: Lutz Scheffler 15.2.2021
+
 						ASORT( laFiles, 1, 0, 0, 1)
 					ENDIF
 
