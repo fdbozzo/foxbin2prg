@@ -6254,7 +6254,9 @@ DEFINE CLASS c_conversor_base AS Custom
 		SET SAFETY OFF
 		SET MULTILOCKS ON
 		SET TABLEPROMPT OFF
-		SET BLOCKSIZE TO 0
+* SF deactivated to keep standard
+*		SET BLOCKSIZE TO 0
+* /SF
 		SET EXACT ON
 		IF NOT EMPTY( ON("ESCAPE") ) THEN
 			SET ESCAPE ON
@@ -12960,6 +12962,7 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 							lcIndex	= lcIndex + ' ' + STRTRAN( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
 						ENDIF
 					ENDIF
+
 
 					&lcIndex.
 				ENDFOR
