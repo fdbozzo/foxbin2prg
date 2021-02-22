@@ -12,9 +12,12 @@ This project is part of VFPX.
 ----
 # FoxBin2Prg - Usage in command line style
 FoxBin2Prg might be used as an EXE either from Windows or VFP, or as as prg from inside VFP.
+Additional it might be integrated as an VFP Object using the [Object version](./FoxBin2Prg_Object.md).   
 Since the EXE is basically the prg packed with some controling files, the way to call it ist mostly similar.
 The knowledge of differences in calling, DO .. WITH syntax separating parameters with ","  and the DOS way off calling will be assumed.
-Do to the similarity of the call, the prg version takes all parameters as strings too.
+Do the similarity of the call, the prg version takes all parameters as strings too.
+
+For settings and other realted stuff see [Internals](./FoxBin2Prg_Internals.md).
 ## Main differences
 ### EXE
 The exe contains the mos controling structures and the program itself.
@@ -39,12 +42,12 @@ Remember that using the prg style, parameters must be wrapped in string delimite
 #### Note
 Do to the compatibility with VSS the usage of _cInputFile_ and _cType_ is odd.
 #### Important note:
-<div style="background-color: gold;"> When you process a directory, it is used as the base for the compilation of binaries,
+<span style="background-color: gold;"> When you process a directory, it is used as the base for the compilation of binaries,
 and because of this, never process more than one directory in the same process,
 because the compilation may not be ok. To process more than one directory (or project),
-just select and process each one independently, in parallel if you like, but in different processes.</div>
+just select and process each one independently, in parallel if you like, but in different processes.</span>
 
-### Usage #1
+### Usage 1
 `FoxBin2Prg.EXE [-c cOutputFile] [-t cOutputFile]`
 
 | Parameter | Description |
@@ -52,7 +55,7 @@ just select and process each one independently, in parallel if you like, but in 
 | none | Call Info screen |
 | -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
 | -t | creates a template table-config-file _cOutputFile_ ( like _Tabellenname_.dbf.cfg ) |
-### Usage #2
+### Usage 2
 `FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File] ] ] ] ] ] ] ] ] ] ]`
 
 | Parameter | Value (_Default_) | Description |
@@ -76,7 +79,7 @@ just select and process each one independently, in parallel if you like, but in 
 | cRecompile | 0, _1_ | Indicates recompile ('1') the binary once regenerated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
 |  | path | The binary is compiled from this path |
 | cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
-| cCFG_File | 0, _1_ | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
+| cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
 #### Note #1
 The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:   
 `PRG2BIN-INTERACTIVE`   
@@ -86,6 +89,8 @@ On any combination of (_BIN2PRG_, _PRG2BIN_, _INTERACTIVE_, _SHOWMSG_) separated
 This is useful when used as EXE dealing with Windows shortcuts,
 on which fixed parameters must be in the shortcut.   
 The filename is an external variable parameter received when SendingTo FoxBin2Prg with right-click on File Manager.
+## Return values
+Return value via _ErrorLevel_ is 0=OK, 1=Error.
 ## Examples
 ### Using the "EXE" version: (useful for calling from 3rd.party programs)
 

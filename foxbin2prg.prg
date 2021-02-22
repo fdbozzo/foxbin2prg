@@ -3040,7 +3040,7 @@ Define Class c_foxbin2prg As Session
 *--------------------------------------------------------------------------------------------------------------
 		Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx As Exception, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File, lnVFPVersion
+			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File
 
 		Try
 				Local I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
@@ -3053,7 +3053,8 @@ Define Class c_foxbin2prg As Session
 					, loFrm_Interactive	As frm_interactive Of 'FOXBIN2PRG.PRG' ;
 					, loFrm_Main As frm_main Of 'FOXBIN2PRG.PRG' ;
 					, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG' ;
-					, loWSH As WScript.Shell
+					, loWSH As WScript.Shell ;
+					, lnVFPVersion
 
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 					lc_OldSetNotify	= Set("Notify")
@@ -29231,9 +29232,9 @@ Define Class CL_LANG As Custom
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
-						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
@@ -29421,9 +29422,9 @@ Define Class CL_LANG As Custom
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
-						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
@@ -29624,7 +29625,7 @@ Define Class CL_LANG As Custom
 						<<>>Debug: 0                       && 0=Individuelles Logging ist aus 1= Individuelles Log per Datei <Datei>.Log
 						<<>>BodyDevInfo: 0                 && 0=DevInfo im body-pjx-Datensatz wird nicht erhalten], 1=DevInfo wird erhalten
 						<<>>ExtraBackupLevels: 1           && Anzahl der Backup-Ebenen der Binärdateien 0=kein Backup, 1=<Datei>.BAK, n>1= n-Backup-Ebenen, <Datei>.n.BAK
-						<<>>ClearUniqueID: 1               && 0=Erhalte die Unique  ID, 1=Lösche Unique ID. Nützlich für Diff und Merge
+						<<>>ClearUniqueID: 1               && 0=Erhalte die Unique ID in den Text-Dateien, 1=Lösche Unique ID. Nützlich für Diff und Merge
 						<<>>ClearDBFLastUpdate: 1          && 0=Erhalte DBF LastUpdate, 1=Lösche DBF LastUpdate. Nützlich für Diff und Merge
 						<<>>OptimizeByFilestamp: 0         && 0=Aus, 1=Optimierte Erzeugung der Binärdateien in Abhängigkeit vom Zeitstempel. Gefährlich beim Arbeiten mit Zweigen!
 						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche NULL (CHR(0)) Zeichen aus dem Quellcode
@@ -29844,9 +29845,9 @@ Define Class CL_LANG As Custom
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
-						<<>>ClearUniqueID: 1               && 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-						<<>>OptimizeByFilestamp: 0         && Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
