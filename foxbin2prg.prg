@@ -644,7 +644,7 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0 Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_I0','-'+tc_InputFile) > 0 Or Atc('-SIMERR_I1','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_O1','-'+tc_InputFile) > 0;
-		OR Atc('-C','-'+tc_InputFile) > 0 OR Atc('-T','-'+tc_InputFile) > 0 Then
+		OR UPPER(tc_InputFile)=='-C' OR UPPER(tc_InputFile)=='-T' Then
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
@@ -29192,12 +29192,12 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c FileName] [-t FileName]
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c creates a template config-file <FileName> (like FOXBIN2PRG.CFG)
-						<<>>-t creates a template table-config-file <FileName> (like <Tabellenname>.dbf.cfg)
+						<<>>-c creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
@@ -29206,12 +29206,13 @@ Define Class CL_LANG As Custom
 						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
 						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
 						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>  VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
 						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
 						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
 						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
 						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
 						<<>>cDontShowErrors: '1' for NOT showing errors
-						<<>>cDebug: '1' for generating process LOGs
+						<<>>cDebug: '1' for generating process LOGs, stop on errors
 						<<>>cDontShowProgress: '1' for NOT showing the process window
 						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
 						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
@@ -29381,12 +29382,12 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c FileName] [-t FileName]
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c creates a template config-file <FileName> (like FOXBIN2PRG.CFG)
-						<<>>-t creates a template table-config-file <FileName> (like <Tabellenname>.dbf.cfg)
+						<<>>-c creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
@@ -29395,12 +29396,13 @@ Define Class CL_LANG As Custom
 						<<>>- Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2
 						<<>>- Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN
 						<<>>- En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
+						<<>>  VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
 						<<>>cType: En modo compatibilidad con SCCAPI (VSS) es el Tipo de archivo de entrada.
 						<<>>- Si indica '*' o '*-' y tc_InputFile es un PJX, se procesa todo el proyecto
 						<<>>cTextName = Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
 						<<>>lGenText: .T.=Genera Texto, .F.=Genera Binario. Solo para compatibilidad con SCCAPI (VSS)
 						<<>>cDontShowErrors: '1' para NO mostrar errores
-						<<>>cDebug: '1' para generar LOGs del proceso
+						<<>>cDebug: '1' para generar LOGs del proceso, stop on errors
 						<<>>cDontShowProgress: '1' para NO mostrar la ventana de progreso
 						<<>>cOriginalFileName: Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar el nombre correcto en la cabecera de la versión texto
 						<<>>cRecompile: Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)
@@ -29572,12 +29574,12 @@ Define Class CL_LANG As Custom
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
 						<<>>################################################################################################################
-						<<>>FOXBIN2PRG.EXE [-c FileName] [-t FileName]
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
 						<<>>
 						<<>>-- Parameter:
 						<<>>Keine Parameter:   Startet dieses Formular
-						<<>>-c                 Erzeugt eine Vorlage <FileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
-						<<>>-t                 Erzeugt eine Vorlage <FileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
+						<<>>-c                 Erzeugt eine Vorlage <OutFileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
+						<<>>-t                 Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>****************************************************************************************************************
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
@@ -29587,12 +29589,13 @@ Define Class CL_LANG As Custom
 						<<>>                    - wenn 'BIN2PRG' spezifiziert ist, wird das Verzeichnis in cType (!!) zum Erstellen der Textdateien genutzt
 						<<>>                    - wenn 'PRG2BIN' spezifiziert ist, wird das Verzeichnis in cType (!!) zum Erstellen der Binärdateien genutzt
 						<<>>                    - Im SCCAPI (VSS) Kompatibilitätsmodus, wird dies zur Abfrage der Unterstützung der Umwandlung für den genannten Dateityp genutzt
+						<<>>                      VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
 						<<>>cType:             Im SCCAPI (VSS) Kompatibilitätsmodus wird hier der Dateityp der Input-Datei festgelegt
 						<<>>                    - Wird hier '*' oder '*-' angegeben, und tc_InputFile ist ein PJX, werden alle Dateien im PJX konvertiert
 						<<>>cTextName:         Text Dateiname. Nur im SCCAPI (VSS) Kompatibilitätsmodus.
 						<<>>lGenText:          .T.=Erzeuge Text, .F.=Erzeuge Binary. Nur im SCCAPI (VSS) Kompatibilitätsmodus.
 						<<>>cDontShowErrors:   '1' Unterdrückt die Anzeige von Fehlern
-						<<>>cDebug:            '1' Erzeugt LOG Dateien
+						<<>>cDebug:            '1' Erzeugt LOG Dateien, Halte bei Fehlern an
 						<<>>cDontShowProgress: '1' Zeige kein Fortschrittsfenster
 						<<>>cOriginalFileName: Falls als Inputdatei eine temporäre Datei genutz wird, kann hier fürden Kopf der Textdatei der richtige Name angegeben werden.
 						<<>>cRecompile:        '1' Die erzeugten Binädateien werden nach dem Erzeugen kompiliert. Eine Pfadangabe (d.h., die des Projektes) ist möglich.
@@ -29802,12 +29805,12 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c FileName] [-t FileName]
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c creates a template config-file <FileName> (like FOXBIN2PRG.CFG)
-						<<>>-t creates a template table-config-file <FileName> (like <Tabellenname>.dbf.cfg)
+						<<>>-c creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
@@ -29816,12 +29819,13 @@ Define Class CL_LANG As Custom
 						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
 						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
 						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>  VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
 						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
 						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
 						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
 						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
 						<<>>cDontShowErrors: '1' for NOT showing errors
-						<<>>cDebug: '1' for generating process LOGs
+						<<>>cDebug: '1' for generating process LOGs, stop on errors
 						<<>>cDontShowProgress: '1' for NOT showing the process window
 						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
 						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)

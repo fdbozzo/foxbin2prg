@@ -10,7 +10,7 @@ As far as possible these are the original documents. Changes are added where fun
 This project is part of VFPX. 
 
 ----
-# FoxBin21Prg - a Binary to Text converter for MS Visual Foxpro 9, SP1
+# FoxBin2Prg - a Binary to Text converter for MS Visual Foxpro 9, SP1
 ## Source
 Original repository at https://github.com/fdbozzo/foxbin2prg,
 this is a fork available on https://github.com/lscheffler/foxbin2prg/tree/fork
