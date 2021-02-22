@@ -11,7 +11,7 @@
     Thank you for your support!
 
 ## <span style="background-color: gold;">Remark</span>
-<span style="background-color: lemonchiffon;">There is an extended [documentation](./documentacion/github/FoxBin2prg.md) available.
+<span style="background-color: lemonchiffon;">There is an extended [documentation](./Documentacion/github/FoxBin2prg.md) available.
 </span>
 
 ## ENGLISH/ESPAÑOL 
