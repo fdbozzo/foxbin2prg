@@ -28,7 +28,9 @@ like PlasticSCM, Git, Subversion, and the like.
 Special remark on Merge operation is made, because it is the most difficult and more used operation when working with SCM tools,
 and this require that generated text files can be manipulated manually or automatically.
 
-_**Note: You came from Visual SourceSafe and have the .pjm but not the real pjx project?**_   
+#### Note:
+**You came from Visual SourceSafe and have the .pjm but not the real pjx project?**   
+
 No problem, just convert the .pjm to .pjx/.pjt sending to FoxBin2Prg, and it generates the real project again.
 ## Configuration file
 It is possible to create a template with all options and comments via `FoxBin2Prg.EXE -c cOutputFile`. See [command line](./FoxBin2Prg_Run.md).   
@@ -38,40 +40,40 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 
 | FoxBin2Prg.cfg keywords | Value (_Default_) | Description |
 | ----- | ----- | ----- |
-| extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that. For example you can change pj2 to pja using this: "extension: pj2=pja" for making it SourceSafe (sccapi v1) compatible |
+| extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that.<br/>For example you can change pj2 to pja using this: "extension: pj2=pja" for making it SourceSafe (sccapi v1) compatible |
 | DontShowProgress | 0 | **Deprecated**. Replaced by ShowProgressbar option from v1.19.40 |
-| ShowProgressbar | 0, _1_, 2 | 1=Always show a progress bar, 2=Only show it when processing multiple-files, 0=Don't show progressbar |
-| DontShowErrors | _0_, 1 | By default, show message errors in a modal messagebox. Specify "1" if don't want to show errors |
+| ShowProgressbar | 0, _1_, 2 | 1=Always show a progress bar,<br/>2=Only show it when processing multiple-files,<br/>0=Don't show progressbar |
+| DontShowErrors | _0_, 1 | By default, show message errors in a modal messagebox.<br/>Specify "1" if don't want to show errors |
 | NoTimestamps | 0, _1_ | By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on binaries and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files |
-| Debug | _0_, 1, 2 | By default, don't generate individual <file>.Log with process hints. Activate with "1" to find possible error causes and for debugging, "2" is special logging |
-| ExtraBackupLevels | 0, _1_, n | By default, one .BAK file is created. With this setting you can make more .N.BAK files, or none at all using 0 |
-| ClearUniqueID | 0, _1_ | 0=Keep UniqueID, 1=Clear Unique ID. Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
-| OptimizeByFilestamp | _0_, 1 | 0=Don't optimize (always regenerate), 1=Optimize (regenerate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately |
-| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code / 0=Leave NULLs in source code |
-| RemoveZOrderSetFromProps | _0_, 1 | 1=Remove ZOrderSet from the properties / 0=Leave ZOrderSet in the properties |
+| Debug | _0_, 1, 2 | By default, don't generate individual <file>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
+| ExtraBackupLevels | 0, _1_, n | By default, one _filename_.BAK file is created.<br/>With this setting you can make more _filename_.n.BAK files,<br/>or none at all using 0 |
+| ClearUniqueID | 0, _1_ | 0=Keep UniqueID,<br/>1=Clear Unique ID.<br/>Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
+| OptimizeByFilestamp | _0_, 1 | 0=Don't optimize (always regenerate),<br/>1=Optimize (regenerate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
+| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code,<br/>0=Leave NULLs in source code |
+| RemoveZOrderSetFromProps | _0_, 1 | 1=Remove ZOrderSet from the properties,<br/>0=Leave ZOrderSet in the properties |
 | XXX_Conversion_Support | n | Defines the conversion operation per filetype |
-| | | For code:<br/> 0=No support, 1=Generate (Diff), 2=Generate _Text_ ond _Bin_ (Merge) |
-| | | For complex data:<br/> (PJX / DBC / DBF): 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) |
-| PJX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional ((Merge/Only Structure!), 4=Generate _Text_ with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) and bin) support activated |
+| | | For code:<br/> 0=No support,<br/>1=Generate (Diff),<br/>2=Generate _Text_ ond _Bin_ (Merge) |
+| | | For complex data:<br/> (PJX / DBC / DBF): 0=No support,<br/>1=Generate Header TXT only (Diff),<br/>2=Generate Header TXT and BIN (Merge/Only Structure!),<br/>4=Generate TXT with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
+| PJX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional ((Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) and bin) support activated |
 | VCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
 | SCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
 | FRX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
 | LBX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
 | MNX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
 | DBC_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated. The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!. A value of 4 is used to export Structure and Data, but exported data is not imported again. A value of 8 is used for bidirectional support (No General fields!). |
-| DBF_Conversion_Included | * | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf. See below. |
-| DBF_Conversion_Excluded | | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf See below. |
-| UseFilesPerDBC | _0_, 1 | 0=One database dc2 file, 1=Multiple file.\*.\*.dc2 files
-| | | 0 creates only a file.dc2 with all DBC (file) data
-| | | 1 creates a file.dc2 with DBC properties
-| | | and additional DBC files per DBC item (stored-proc, table, ..)
-| | | Note: recration only if RedirectFilePerDBCToMain is 1
-| RedirectFilePerDBCToMain | _0_, 1 | 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
-| ItemPerDBCCheck | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-| DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default), 1=Include deleted records
-| UseClassPerFile | _0_, 1 | 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files|
+| DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated.<br/>The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!.<br/>A value of 4 is used to export Structure and Data, but exported data is not imported again.<br/>A value of 8 is used for bidirectional support (No General fields!). <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
+| DBF_Conversion_Included | * | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records). |
+| DBF_Conversion_Excluded | | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records). |
+| UseFilesPerDBC | _0_, 1 | 0=One database dc2 file, 1=Multiple file.\*.\*.dc2 files.<br/>See [Create File-Per-DBC](#create file-per-dbc) |
+| | | 0 creates only a file.dc2 with all DBC (file) data |
+| | | 1 creates a file.dc2 with DBC properties |
+| | | and additional DBC files per DBC item (stored-proc, table, ..) |
+| | | Note: recration only if RedirectFilePerDBCToMain is 1 |
+| RedirectFilePerDBCToMain | _0_, 1 | 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2 |
+| ItemPerDBCCheck | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion |
+| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default) <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
+| DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default), 1=Include deleted records <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
+| UseClassPerFile | _0_, 1 | 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files<br/> See [Create Class-Per-File](#create-class-per-file) |
 | RedirectClassPerFileToMain | _0_, 1 | 0=Don't redirect to file.vc2, 1=Redirect to file.vc2 when selecting file.class.vc2 |
 | ClassPerFileCheck | _0_, 1 | 0=Don't check file.class.vc2 inclusion, 1=Check file.class.vc2 inclusion |
 | ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
@@ -87,11 +89,11 @@ These are the Table.dbf.cfg configuration file settings and their meaning:
 
 | FoxBin2Prg.cfg keywords | Value | Description |
 | ----- | ----- | ----- |
-| DBF_Conversion_Support | 0, 1, 2, 4, 8 | 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) |
-| DBF_Conversion_Order | c_Expression | | Field expresion. ie: name+str(age,3) |
-| DBF_Conversion_Condition | c_Expression | Logical expression. ie: age > 10 AND NOT DELETED() |
-| DBF_BinChar_Base64 | 0, 1 | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform |
-| DBF_IncludeDeleted | 0, 1 | 0=Do not include deleted records, 1=Include deleted records |
+| DBF_Conversion_Support | 0, 1, 2, 4, 8 | 0=No support,<br/>1=Generate Header TXT only (Diff),<br/>2=Generate Header TXT and BIN (Merge/Only Structure!),<br/>4=Generate TXT with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
+| DBF_Conversion_Order | c_Expression | Field expresion (For _INDEX ON_). ie: name+str(age,3),<br/>Empty means no sort order. <br/> usefull only if _DBF_Conversion_Support_>0 |
+| DBF_Conversion_Condition | c_Expression | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all files, except _DBF_IncludeDeleted_ <br/> usefull only if _DBF_Conversion_Support_>0  |
+| DBF_BinChar_Base64 | 0, 1 | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform <br/> usefull only if _DBF_Conversion_Support_>2  |
+| DBF_IncludeDeleted | 0, 1 | 0=Do not include deleted records,<br/>1=Include deleted records <br/> usefull only if _DBF_Conversion_Support_>2  |
 
 For defaults, see [Configuration file](#configuration-file).
  
@@ -104,20 +106,21 @@ _Text_ files keep lists of objects and their metadata in a special OBJECTDATA ta
 in which the order of the list is the ZOrder of the object, like this example:
 ````
 DEFINE CLASS cnt_controls AS container 		&& "cnt_controls" class description
- 	*< CLASSDATA: Baseclass="container" Timestamp="" Scale="Pixels" Uniqueid="" />
+ *< CLASSDATA: Baseclass="container" Timestamp="" Scale="Pixels" Uniqueid="" />
 
-	*-- OBJECTDATA items order determines ZOrder 
-	*< OBJECTDATA: ObjPath="Check2" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Check4" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Label_h" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Textbox_h" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Check1" UniqueID="" Timestamp="" />
-	*< OBJECTDATA: ObjPath="Check3" UniqueID="" Timestamp="" />
+ *-- OBJECTDATA items order determines ZOrder 
+ * < OBJECTDATA: ObjPath="Check2" UniqueID="" Timestamp="" />
+ * < OBJECTDATA: ObjPath="Check4" UniqueID="" Timestamp="" />
+ * < OBJECTDATA: ObjPath="Label_h" UniqueID="" Timestamp="" />
+ * < OBJECTDATA: ObjPath="Textbox_h" UniqueID="" Timestamp="" />
+ * < OBJECTDATA: ObjPath="Check1" UniqueID="" Timestamp="" />
+ * < OBJECTDATA: ObjPath="Check3" UniqueID="" Timestamp="" />
 ````
-
 This way, you can rearrange the items to alter their ZOrder, and this does auto-renumbering when regenerating binaries.
 ### RemoveZOrderSetFromProps setting
-_**Note:** The ZOrderSet property is not shown in VFP Properties editor_   
+#### Note:
+The ZOrderSet property is not shown in VFP Properties editor.
+   
 Starting at v1.19.43 there is a new configuration setting named RemoveZOrderSetFromProps,
 that can be used to automatically remove this property from the objects, if enabled with 1.   
 This property keep the order of the inherited controls used on visual classes using a numeric value like the Tabstop property,
@@ -125,7 +128,9 @@ but this property is not shown to the user and sometimes their value is duplicat
 or form, some control(s) get their order swapped, so when reopening the visual class some objects that should appear on top
 are on botton and vice versa.
 
-_**VFP ZOrder bug and fix:** Sometimes you can see that some objects are reordered every time you save a visual form/class
+##### VFP ZOrder bug and fix:
+Sometimes you can see that some objects are reordered every time you save a visual form/class
+
 and regenerate the _Text_ file. This is caused because in some situations VFP can loose the tracking to some ZOrders,
 and duplicate them. To **fix** this problem, you just need to open your visual form/class,
 reorder manually the offending objects to force VFP to assign a new ZOrder value and regenerate the _Text_ file.
@@ -133,6 +138,7 @@ You can see (only in the _Text_ file or inside the vcx/vct) that the property is
 before fixing it. Another solution, starting at v1.19.43, is using RemoveZOrderSetFromProps:1 in foxbin2prg.cfg file to
 remove this from the properties. A better solution is using this setting only in a specific directory used to fix this
 kind of problems. In any case, for this setting to work properly, you need to regenerate the binary_
+
 ### DBC ordered fields
 Starting from v1.19.42 the members of the DBC are ordered alphabetically, including fields of DBFs and Views, Connections, Tables,
 Views and Relations. All this to minimize the differences when diffing DBCs that have constant changes.
@@ -180,7 +186,10 @@ and open it as a table to see all the properties of all the classes of the same 
 For these two cases, and starting from v1.19.22, I've created several `"props_*"` files with ordering by class for the 1st case,
 and a list with all in it (`"props_all.txt"`) for the second case, so in case of any problems,
 rearranging some props will be an easy thing.   
-_**Warning:** These `"props_**"` files are necessary in the foxbin2prg install directory.
+
+#### Warning:
+These `"props_**"` files are necessary in the foxbin2prg install directory.
+
 It's recommended to use the EXE version that have all files included and is faster._   
 Several Unit Tests (in TESTS directory) are made to make the best effort to cover the most typical use cases.
 There is also an Excel spreedsheet with the compilation of properties of each class with the order that FoxPro uses internally,
@@ -211,10 +220,11 @@ could be using the default setting **`"DBF_Conversion_Support: 1"`** and using *
 and some tables with their data exported for easy diffing with previous versions,
 or even use **`"DBF_Conversion_Support: 8"`** (available since v1.19.47) for bidirectional support of data import/export.   
 
-**FoxBin2prg.cfg (Main CFG or Directory CFG)**
+### Order and range of records
+**FoxBin2prg.cfg (Main CFG, Directory CFG or Table CFG)**  
 New foxbin2prg.cfg options for filtering tables from conversion using one or multiple conbinations of filemasks.
 
-**Syntax:**
+##### Syntax:
 ````
 "DBF_Conversion_Included: <filemask>[ ,<filemask> [ , ... ](-,_filemask_-[-,-...-) ]"
 "DBF_Conversion_Excluded: <filemask>[ ,<filemask> [ , ... ](-,_filemask_-[-,-...-) ]"
@@ -225,17 +235,19 @@ Example of multiple file masks (separte with ","):
 "DBF_Conversion_Included: PET**.**, ??ME.DBF, ???.DBF, ?.**"
 ````
 
-**New <filename.dbf.cfg> configuration options**
+### Configuration per table
+New <filename.dbf.cfg> configuration options. See [Configuration file per table](#configuration-file-per-table).
+	
 These options can be used in any combination inside a dbf particular cfg file,
 if you create a text file using your dbf filename and adding ".cfg".
 
-**Syntax for filename.dbf.cfg contents:**
+#### Syntax for filename.dbf.cfg contents:
 ````
 "DBF_Conversion_Support: <4 for export only or 8 for bidirectional support>"
 "DBF_Conversion_Order: <C_Expression>"
 "DBF_Conversion_Condition: <C_Expression>"
 ````
-**Example: customers.dbf.cfg**
+#### Example: customers.dbf.cfg
 ````
 "DBF_Conversion_Support: 4"
 "DBF_Conversion_Order: cust_no"
@@ -249,7 +261,7 @@ is converted to DBF.
 The main purpose of FoxBin2Prg is to be used for Diff and Merge with a SCM tool, so in this scenario the data is not needed,
 but there are use cases where exporting, importing or manipulating data is needed while making the conversions, and for those cases are this properties.
 
-This is a sample program:
+#### This is a sample program:
 ````
 *-- DEMO HOOK FOR PROCESSING DBFs AND DB2
 LOCAL oFB AS 'c_foxbin2prg' OF 'c:\desa\foxbin2prg\foxbin2prg.prg'
@@ -284,13 +296,17 @@ ENDPROC
 ### Language Support for messages
 
 As for version v1.19.38 FoxBin2Prg messages are available natively on Spanish, English, German and French.   
-_**Note:** The messages on vbs scripts are not translated (are very few), just the FoxPro ones,
-which have +90% of the messages._   
+
+#### Note:
+The messages on vbs scripts are not translated (are very few), just the FoxPro ones,
+which have +90% of the messages.
+
 **Want to collaborate translating the messages to your language so others can use it?**
 Just copy the english translation CASE in the final section in FoxBin2Prg.PRG to a new CASE
 with your country code and translate the messages (can be done in 20 minutes or less),
 and send it to me. I will include it in the next release ;-)    
-_**Note:** .h language files are not supported anymore, and are now implemented inside foxbin2prg,
+#### Note:
+.h language files are not supported anymore, and are now implemented inside foxbin2prg,
 in the `"C_LANG"` class at the end of the PRG_
 
 ### Multi-config (config per directory)
@@ -298,7 +314,8 @@ Starting at version v1.19.25 FoxBin2Prg allow configuration per directory,
 overriding the main configuration of FoxBin2Prg directory.
 The override is by each setting, so you can reconfigure one or more settings and the
 remaining settings are inherited from main CFG.   
-_**New:**_ From v1.19.42 CFGs are inherited between directories from parent to child,
+#### New:
+From v1.19.42 CFGs are inherited between directories from parent to child,
 so if you have all your developments under, let's say, `"c:\devs"` directory and subdirs,
 de CFG in `"c:\devs"` will be inherited on subdirs, and settings can be overriden one by one if you want to.
 This inheritance saves a lot of time and minimizes the CFGs needed `":)"`
@@ -322,13 +339,11 @@ Debug messages are translated (+90% of debug messages), but capitalization proce
 and are available just in Spanish (-10% of debug messages).
 
 ### Create Class-Per-File
-
 Starting at v1.19.37 you can configure foxbin2prg to generate one class per file using TwoFox naming style "basefile.class.vc2"
 with the value "1"
 To configure this, you must first enable it in foxbin2prg.cfg file:
 ````
-*UseClassPerFile: 1   && 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files,
-including DBC members
+*UseClassPerFile: 1   && 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files
 ````
 In example, if you have a classlib "mylib.vcx" with 3 classes inside (`"cl_1, cl_2, cl_3"`) then this files are generated:
 
@@ -337,8 +352,10 @@ In example, if you have a classlib "mylib.vcx" with 3 classes inside (`"cl_1, cl
   - mylib.cl_2.vc2
   - mylib.cl_3.vc2
 
-_**Recommended new setting:**_ Starting at v1.19.42 you can configure foxbin2prg to generate one class per file
-using the naming style "basefile._baseclass_.class.vc2" with the new value "2" and including DBC members as well.
+#### Recommended new setting:
+Starting at v1.19.42 you can configure foxbin2prg to generate one class per file.
+using the naming style "basefile._baseclass_.class.vc2" with the new value "2".
+
 To configure this, you must first enable it in foxbin2prg.cfg file:
 ````
 *UseClassPerFile: 2  && 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files,
@@ -358,15 +375,54 @@ mydbc.connection.cnx_oracle.dc2
 mydbc.table.customers.dc2
 mydbc.view.vw_products.dc2
 ````
-**Complementary options for the UseClassPerFile setting**
+#### Complementary options for the UseClassPerFile setting
 
-_**RedirectClassPerFileToMain**:_ Configuring this setting to 1 will redirect any selection of file.class.vc2
+##### RedirectClassPerFileToMain:
+Configuring this setting to 1 will redirect any selection of file.class.vc2
 to the main file.vc2 file, which will not let you generate individual vcx files by mistake.   
-_**ClassPerFileCheck**:_  Configuring this setting to 1 will check the inclusion of all file.class.vc2 files
+
+##### ClassPerFileCheck:
+Configuring this setting to 1 will check the inclusion of all file.class.vc2 files
 annotated on file.vc2 main file, otherwise no checking is made and when reconstructing the vcx/scx all files
 containing the file.class.ext naming will be included in the binary (useful when you want to add external classes to the library)    
-_**Note:** If you dont use the Redirect setting, an individual vcx/scx file will be generated.
+
+#### Note:
+If you dont use the Redirect setting, an individual vcx/scx file will be generated.
 This can be useful if you want to divide a big library in smaller pieces_
+
+#### Note:
+This is true for SCX files as well. SCX Files may contain a form and a dataenvironment.
+It will create sc2 files.
+
+### Create File-Per-DBC
+
+Starting at vn.nn.nn you can configure foxbin2prg to generate one file per dbc item using naming style "DatabaseName.item.name.dc2"
+with the value "1"
+To configure this, you must first enable it in foxbin2prg.cfg file:
+````
+*UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+````
+In example, if you have a classlib "MyData.dbc" with 3 tables inside (`"tl_1, tl_2, tl_3"`) and stored procedures.
+Then this files are generated:
+
+- MyData.vc2 => Header file, with all database settings and conforming items annotated inside
+  - MyData.database.storedproceduressource.dc2 -> stored procedures
+  - MyData.table.tl_1.dc2
+  - MyData.table.tl_2.dc2
+  - MyData.table.tl_3.dc2
+
+#### Complementary options for the UseFilesPerDBC setting
+##### RedirectFilePerDBCToMain
+`*RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2`   
+Configuring this setting to 1 will redirect any selection of DataBaseName.*.dc2
+to the main DataBaseName.dc2 file, which will not let you generate individual DBC files by mistake.   
+##### ItemPerDBCCheck
+`*ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion`   
+Configuring this setting to 1 will check the inclusion of all DataBaseName.*.dc2 files
+annotated on DataBaseName.dc2 main file, otherwise no checking is made and when reconstructing the dbc files
+#### Note:
+If you dont use the Redirect setting, an individual dbc file will be generated.
+There is no real use of this.
 
 ### FoxBin2Prg API
 With v1.19.42 version started an enhanced API support, making public methods that where only for internal use up to now.   
@@ -416,9 +472,9 @@ loCnv.evaluateConfiguration( '', '', '', '', '', '', '', '', <Path>, 'D' )
 ? loCnv.hasSupport_Bin2Prg("<Path>\file.vcx")
 ? loCnv.hasSupport_Bin2Prg("<Path>\file.ppt")
 ````
-_**Note:** If you query for support in different subdirectories,
+#### Note:
+If you query for support in different subdirectories,
 then you need to call `"evaluateConfiguration()"` method for refreshing the CFG info that is used by those methods._
-
 
 Clear the cache of processed files for allowing reprocessing a file:
 ````
@@ -430,7 +486,8 @@ oCFG = loCnv.get_DirSettings( "c:\developments\projects\myproj_1" )
 ? oCFG.n_UseClassPerFile
 ? oCFG.DBF_Conversion_Support
 ````
-_**Note:** `"get_DirSettings()"` method internally calls `"evaluateConfiguration()"`
+#### Note:
+`"get_DirSettings()"` method internally calls `"evaluateConfiguration()"`
 method for refreshing the CFG info before returning the CFG object._
 
 
@@ -449,25 +506,24 @@ FOR I = 1 TO oMod.Count && oMod.Count is the total count of files in the PJX
 ENDFOR
 ````
 
-
 This is a list of available methods and properties:
 
-| Method()/Property | Syntax | Description |
-| -| - | - |
-| execute | loCnv.execute( cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,oModule [,oEx [,lRelanzarError [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cCFG_File](,cType-[,cTextName-[,lGenText-[,cDontShowErrors-[,cDebug-[,cDontShowProgress-[,oModule-[,oEx-[,lRelanzarError-[,cOriginalFileName-[,cRecompile-[,cNoTimestamps-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cCFG_File) ] ] ] ] ] ] ] ] ] ] ] ] ] ] ) | Main execution method to start a conversion |
-| conversionSupportType | loCnv.conversionSupportType( cFilename ) | Return de code of the support type (0,1,2,4,8) |
-| get_DBF_Configuration | loCnv.get_DBF_Configuration( cInputFile, @oOutDbfCfg ) | Returns 1 if a CFG is found for the indicated DBF, or 0 if not  |
-| hasSupport_Bin2Prg | loCnv.hasSupport_Bin2Prg( cFilename.ext | cExt ) | Returns .T. if there is support for converting the file or filetype indicated to text |
-| hasSupport_Prg2Bin | loCnv.hasSupport_Prg2Bin( cFilename.ext | cExt ) | Returns .T. if there is support for converting the file or filetype indicated to binary |
-| evaluateConfiguration | loCnv.evaluateConfiguration( cDontShowProgress [,cDontShowErrors [,cNoTimestamps [,cDebug [,cRecompile [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cInputFile [,cInputFileTypeType [,cCFG_File](,cDontShowErrors-[,cNoTimestamps-[,cDebug-[,cRecompile-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cInputFile-[,cInputFileTypeType-[,cCFG_File) ] ] ] ] ] ] ] ] ) | Forces foxbin to process the directory indicated in the cInputFile and update any CFG in the directory or their parents |
-| loadProgressbarForm | loCnv.loadProgressbarForm() | Load and show the progressbar form as upper level window |
-| unloadProgressbarForm | loCnv.unloadProgressbarForm() | Hide and unload the progressbar form |
-| updateProgressbar | loCnt.updateProgressbar( cText, nValue, nTotal, nType ) | Update the progressbar and the message. nType indicates which progressbar to update, being 0=1st PB and 1=2nd PB |
-| get_DirSettings | loCnv.get_DirSettings( cDir ) | Returns a CFG object with the settings that are applied on the indicated directory |
-| get_Ext2FromExt | loCnv.get_Ext2FromExt( cExt ) | Returns the text extension corresponding to the binary extension indicated |
-| get_Processed | loCnv.get_Processed( @aProcessed, cFileMask ) | Returns an array with the status of the files being processed or that will be processed in no-real-process-mode if you set `"l_ProcessFiles=.F."` before the call. Columns returned are 6: `"cFile, cInOutType, cProcessed, cHasErrors, cSupported, cExpanded"` |
-| clearProcessedFiles | loCnv.clearProcessedFiles() | Clear the statistics and the cache about processed files. If a file was processed and is already processed, being not cached will force to process it again |
-| wasProcessed | loCnv.wasProcessed( cFile ) | Returns .T. if the fullpath-file was processed, searching in the internal cache |
+| Method()/Property<br/>Syntax | Description |
+| -| - |
+| **execute**<br/>loCnv.execute( cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,oModule [,oEx [,lRelanzarError [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cCFG_File](,cType-[,cTextName-[,lGenText-[,cDontShowErrors-[,cDebug-[,cDontShowProgress-[,oModule-[,oEx-[,lRelanzarError-[,cOriginalFileName-[,cRecompile-[,cNoTimestamps-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cCFG_File) ] ] ] ] ] ] ] ] ] ] ] ] ] ] ) | Main execution method to start a conversion |
+| **conversionSupportType**<br/>loCnv.conversionSupportType( cFilename ) | Return de code of the support type (0,1,2,4,8) |
+| **get_DBF_Configuration**<br/>loCnv.get_DBF_Configuration( cInputFile, @oOutDbfCfg ) | Returns 1 if a CFG is found for the indicated DBF, or 0 if not  |
+| **hasSupport_Bin2Prg**<br/>loCnv.hasSupport_Bin2Prg( cFilename.ext )<br/>loCnv.hasSupport_Bin2Prg( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to text |
+| **hasSupport_Prg2Bin**<br/>loCnv.hasSupport_Prg2Bin( cFilename.ext )<br/>loCnv.hasSupport_Prg2Bin( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to binary |
+| **evaluateConfiguration**<br/>loCnv.evaluateConfiguration( cDontShowProgress [,cDontShowErrors [,cNoTimestamps [,cDebug [,cRecompile [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cInputFile [,cInputFileTypeType [,cCFG_File](,cDontShowErrors-[,cNoTimestamps-[,cDebug-[,cRecompile-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cInputFile-[,cInputFileTypeType-[,cCFG_File) ] ] ] ] ] ] ] ] ) | Forces foxbin to process the directory indicated in the cInputFile and update any CFG in the directory or their parents |
+| **loadProgressbarForm**<br/>loCnv.loadProgressbarForm() | Load and show the progressbar form as upper level window |
+| **unloadProgressbarForm**<br/>loCnv.unloadProgressbarForm() | Hide and unload the progressbar form |
+| **updateProgressbar**<br/>loCnt.updateProgressbar( cText, nValue, nTotal, nType ) | Update the progressbar and the message. nType indicates which progressbar to update, being 0=1st PB and 1=2nd PB |
+| **get_DirSettings**<br/>loCnv.get_DirSettings( cDir ) | Returns a CFG object with the settings that are applied on the indicated directory |
+| **get_Ext2FromExt**<br/>loCnv.get_Ext2FromExt( cExt ) | Returns the text extension corresponding to the binary extension indicated |
+| **get_Processed**<br/>loCnv.get_Processed( @aProcessed, cFileMask ) | Returns an array with the status of the files being processed or that will be processed in no-real-process-mode if you set `"l_ProcessFiles=.F."` before the call. Columns returned are 6: `"cFile, cInOutType, cProcessed, cHasErrors, cSupported, cExpanded"` |
+| **clearProcessedFiles**<br/>loCnv.clearProcessedFiles() | Clear the statistics and the cache about processed files. If a file was processed and is already processed, being not cached will force to process it again |
+| **wasProcessed**<br/>loCnv.wasProcessed( cFile ) | Returns .T. if the fullpath-file was processed, searching in the internal cache |
 
 This is the translation table of old method names up to v1.19.41 and the new names:
 
@@ -480,7 +536,8 @@ This is the translation table of old method names up to v1.19.41 and the new nam
 | cargar_frm_avance | loadProgressbarForm |
 | descargar_frm_avance | unloadProgressbarForm |
 
-_**Note:** Any method or property not documented in this help, could be renamed, changed or deleted, so please, do not use it_
+#### Note:
+Any method or property not documented in this help, could be renamed, changed or deleted, so please, do not use it_
 
 ### Log to StdOut
 
@@ -515,7 +572,8 @@ and checkin because a merge operation.
 When you work with the VFP 9 IDE, you modify the binary files (forms, classlib and the like),
 then you checkin your modifications, but before doing this you regenerate the _Text_ files +just for the changed binaries+,
 and once you have all the boundles of bins/_Text_, you checkin them.   
-_**Note:** If any binary doesn't have the corresponding _Text_ file,
+#### Note:
+If any binary doesn't have the corresponding _Text_ file,
 it can be because it is in use (close opened bin and CLEAR ALL at VFP command window),
 or because you really haven't made any changes to the code,
 in which case you should undo the changes to the binaries that don't have their _Text_ files using the "undo" option
@@ -526,9 +584,12 @@ When you merge a branch, you work on _Text_ files seeing and merging differences
 When you have done with the merge you need to checkin, but before this,
 you need to regenerate the binaries (forms, classlib, etc) just from the _Text_ files merged, to sync their code.
 Once you have done, then you checkin the boundle of bins/_Text_.   
-_**Note:** If at the end of a merge operation there are binaries left, you need to choose the "workspace binaries",
+#### Note:
+If at the end of a merge operation there are binaries left, you need to choose the "workspace binaries",
 because anyway you will regenerate them later from their _Text_ files._
 
 For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 **> [FoxBin2Prg and use with SCM tools](FoxBin2Prg-and-use-with-SCM-tools)**
 
+----
+Last changed: _Pungenday, 53 Chaos 3187_

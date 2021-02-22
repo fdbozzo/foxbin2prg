@@ -65,7 +65,7 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
 | cBackupLevels | 0, _1_, .. | "0" no Bakup, "1", one level _filename_.bak, "n" n levels of Backup _filename_.n.bak |
 | cClearUniqueID | 0, _1_ | 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge |
-| cOptimizeByFilestamp | _0_, 1 | 1=Optimize file regeneration depending on file timestamp. <span style="background-color: gold;">Dangerous while working with branches!</span> |
+| cOptimizeByFilestamp | _0_, 1 | 1=Optimize file regeneration depending on file timestamp.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
 | cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
 |  | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation. |
 #### Note #1
@@ -79,3 +79,5 @@ The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:
 ## Return values
 Return value is 0=OK, 1=Error.
 
+----
+Last changed: _Pungenday, 53 Chaos 3187_

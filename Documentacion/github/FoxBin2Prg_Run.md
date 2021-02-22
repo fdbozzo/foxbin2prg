@@ -125,3 +125,6 @@ FoxBin2Prg - Binary2Text.lnk  <path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"
 FoxBin2Prg - Text2Binary.lnk  <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"
 FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 ```
+
+----
+Last changed: _Pungenday, 53 Chaos 3187_

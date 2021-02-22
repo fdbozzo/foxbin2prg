@@ -1,5 +1,21 @@
-![](FoxBin2Prg Full Change History_38236)
-**![](FoxBin2Prg Full Change History_vfpxreleasesmall.png) [release:Latest Release of FoxBin2prg (Download/Descarga)](116407)**
+# Purpose of this document
+This document is an attempt to recreate the original documentation of FoxBin2Prg out of CodePlex.  
+I found the documentation on [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/blob/master/README.md) a bit brief. For a short what and why, see there.
+
+The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project. Pictures are taken from the original project.  
+As far as possible these are the original documents. Changes are added where functionality is changed.
+
+----
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of VFPX. 
+
+----
+# FoxBin2Prg - Change log
+## <span style="background-color: gold;">Remark</span>
+<span style="background-color: lemonchiffon;">There is no resent relase,  just download or clone from gitlab.</span>  
+![Picture](pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [https://github.com/fdbozzo/foxbin2prg](https://github.com/fdbozzo/foxbin2prg)   
+
+<span style="background-color: lemonchiffon;">The changes since 2016/07/24 are a copy out of FoxBin2Prg.prg. If somebody likes to translate, feel free.</span>  
 
 ## FoxBin2Prg Full Change History
 
@@ -9,7 +25,58 @@ It's my way of thanking them for their contribution.
 
 _**Note:** you can click on the version number for downloading this version from GitHub, or you can get all the code history directly from the GitHub repository, which is more easy to search._
 
-|| Rel.Date || Developer || Ver# || Details ||
+| Rel.Date | Developer | Ver# | Details |
+| - | - | - | - |
+| 21/02/2021 | Lutz Scheffler | | added option to create config file template |
+| | Lutz Scheffler | | German translation improved |
+| 20/02/2021 | Lutz Scheffler | | inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
+| 19/02/2021 | Lutz Scheffler | | inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
+| | Lutz Scheffler | | the three above are straight forward, so no extra comment ar within the code |
+| 15/02/2021 | Lutz Scheffler | | inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
+| | Lutz Scheffler | | inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
+| 14/02/2021 | Lutz Scheffler | | inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
+| **mods** | | | **in this fork (above)**  | 
+| 16/02/2021 | Lutz Scheffler | | conversion prg -> vcx, files per class could create one class multiple times |
+| 15/02/2021 | Lutz Scheffler | | processing directory, flush log file after loop instead of file |
+| 14/02/2021 | Lutz Scheffler | | conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
+| | Lutz Scheffler | | minor translations |
+| | Lutz Scheffler | | conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
+| **fixes** | | | **in this fork (above)**  |
+| - | - | ---fork--- | - |
+| 01/04/2020 | FDBOZZO | v1.19.51 | Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson) |
+| | FDBOZZO | v1.19.51 | Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78) |
+| | DH | v1.19.51 | Bug Fix: Manejo de AutoIncrement incompatible con Project Explorer (Dan Lauer) |
+| | FDBOZZO | v1.19.51.6 | Bug Fix: Incompatible with VFPA (#36) (Eric Selje) |
+| | RHARRIS | v1.19.51.6 | Bug Fix: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Ryan Harris) |
+| 14/02/2019 | TRACY_P | v1.19.51.5 | Enhancement: Make FoxBin2Prg more COM friendly when using ESC key (Tracy Pearson) |
+| 10/07/2018 | FDBOZZO | v1.19.51.4 | Bug Fix: El ordenamiento alfabético de los objetos de los ADD OBJECT puede causar que algunos objetos se creen en el orden erróneo, provocando comportamientos inesperados (Jochen Kauz) |
+| 09/07/2018 | FDBOZZO | v1.19.51.3 | Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES) |
+| 20/06/2018 | FDBOZZO | v1.19.51.2 | Bug Fix: Cuando se exporta un DBF que pertenece a un DBC sin eventos, falla (Jairo Argüelles/Juan C.Perdomo) |
+| 05/05/2018 | SSF1&FDB | v1.19.51.1 | Bug Fix: Si se usa capitalización en la información de las vistas, entonces la información relacionada no se exporta correctamente o completamente y puede perderse (SkySurfer1) |
+| 25/03/2018 | FDBOZZO | v1.19.51 | Mejora: Agregado soporte para archivos de memoria (.MEM) |
+| 16/03/2018 | FDBOZZO | v1.19.51 | Mejora: Agregado soporte para archivos de macros (.FKY) |
+| 15/03/2018 | FDBOZZO | v1.19.50.3 | Bug Fix: Cuando se agregan archivos de texto no-VFP, como html,css,etc, en la sección de Text del proyecto, FoxBin2Prg no mantiene esta selección al regenerar el PJX, dejándolos en la sección Files (Darko Kezic) |
+| 12/03/2018 | FDBOZZO | v1.19.50.1 | Bug Fix: Cuando se usa la equivalencia "extension: pj2=pjm" se debe manejar el pjm como un pj2 y no como un pjm de SourceSafe (Darko Kezic) |
+| 03/03/2018 | FDBOZZO | v1.19.50 | Mejora: Permitir exportar a texto la información de DBFs cuya apertura está protegida por eventos del DBC |
+| | FDBOZZO | v1.19.50 | Mejora: Nueva opción de configuración "PRG_Compat_Level": 0=Legacy, 1=Usar HELPSTRING para comentarios de métodos de clase en vez de "&&" |
+| | FDBOZZO | v1.19.50 | Mejora: La información DevInfo de los PJX estará inhabilitada por defecto y se podrá activar con el nuevo switch BodyDevInfo |
+| 30/01/2018 | FDBOZZO | v1.19.49.8 | Bug Fix: Cuando se convierte a texto una libreria corrupta con registros duplicados, se genera el error "The specified key already exists" (Kirides) |
+| 11/01/2018 | FDBOZZO | v1.19.49.7 | Bug Fix: Cuando se convierte la estructura de un DBF puede dar error si existe un campo llamado I o X (Francisco Prieto) |
+| 04/01/2018 | FDBOZZO | v1.19.49.6 | Bug Fix vcx/scx: Cuando se regenera la propiedad \_MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Doug Hennnig) |
+| | FDBOZZO | v1.19.49.6 | Bug Fix vcx/scx: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Doug Hennig) |
+| 20/12/2017 | DH&FDBOZZO | v1.19.49.5 | Bug Fix dbf: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Doug Hennig) |
+| 04/12/2017 | FDBOZZO | v1.19.49.4 | Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Lutz Scheffler) |
+| 03/12/2017 | JS&FDBOZZO | v1.19.49.3 | Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager) |
+| 02/12/2017 | FDBOZZO | v1.19.49.2 | Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Lutz Scheffler) |
+| 25/06/2017 | FDBOZZO | v1.19.49.1 | Bug Fix tx2 v1.19.49: El campo DEVINFO usado en los PJX se estaba usando en los demás binarios, dando errores |
+| 12/04/2017 | DH&FDBOZZO | v1.19.49 | Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig) |
+| 11/04/2017 | FDBOZZO | v1.19.49 | Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler) |
+| | FDBOZZO | v1.19.49 | Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa) |
+| 28/03/2017 | FDBOZZO | v1.19.49 | Mejora vcx: Implementada sintaxis para importar o exportar clases individuales usando "classlibrary.vcx::classname::import" y "classlibrary.vcx::classname::export" |
+| 26/03/2017 | FDBOZZO | v1.19.49 | Mejora cfg: Se permite indicar un archivo CFG por parámetro de cualquier directorio para anular los CFG predeterminados de los subdirectorios, para casos especiales donde sea necesario |
+| 25/03/2017 | FDBOZZO | v1.19.49 | Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Lutz Scheffler) |
+| 23/03/2017 | FDBOZZO | v1.19.49 | Bug Fix vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler) |
+| - | - | ---from github--- |- |
 | 2016/07/24 (dl=2342+32) | FDBOZZO | [v1.19.48](https://github.com/fdbozzo/foxbin2prg/archive/v1.19.48.zip) | **Bug Fix**: ControlSource of OLE Objects containing quotes are not well regenerated from FR2 (Nathan Brown) |
 | | FDBOZZO | Preview-5 | **Bug Fix**: When a binary is regenerated from a PJ2 file containing files with parenthesis and spaces, the error "Error 36, Command contains unrecognized phrase/keyword" occurs (Nathan Brown) |
 | | FDBOZZO | Preview-4 | **Defect Fix**: When fixing the multi-line memo bug, introduced a new defect on which a single-line memo is not decoded correctly (Nathan Brown) |

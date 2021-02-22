@@ -1,15 +1,45 @@
+# Purpose of this document
+This document is an attempt to recreate the original documentation of FoxBin2Prg out of CodePlex.  
+I found the documentation on [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/blob/master/README.md) a bit brief. For a short what and why, see there.
+
+The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project. Pictures are taken from the original project.  
+As far as possible these are the original documents. Changes are added where functionality is changed.
+
+----
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of VFPX. 
+
+----
+# FoxBin2Prg - SCM
+## <span style="background-color: gold;">Remark</span>
+<span style="background-color: lemonchiffon;">**This is article is a stub.** If you like to use this tool with non SCM tools like [_git_](git-scm.com/),
+have a look on [VFPX](https://vfpx.github.io/projects/), there are some that integrate _git_ and _FoxBin2Prg_ into VFP IDE.</span>
+
 ## First, a short mention on SourceSafe
 
 For those who keep using it, I recommend running away from it to any other modern SCM out there.
-Main reason is that Microsoft doesn't support it anymore, which last version was released in 2005 (Visual SourceSafe 2005, that many people didn't know of) and a lot of people keep using the version that came with Visual Studio 6, released in 1998! (more or less)
+Main reason is that Microsoft doesn't support it anymore,
+which last version was released in 2005 (Visual SourceSafe 2005, that many people didn't know of) and a lot of people keep using the version that came with Visual Studio 6, released in 1998! (more or less).   
+(It was nice in the time there was nothing different on Win, in special not this tool.)
 
-It have a big scalability problem, doesn't guarantee the history integrity and it is not client-server, which is crucial on any modern SCM. It's simply too easy to mess with the history and delete files from it manually, or have a corrupted database because a number of reasons, as virus on some client PC, hardware problems or network problems, and in many cases this errors are irrecoverable.
+It have a big scalability problem, doesn't guarantee the history integrity and it is not client-server,
+which is crucial on any modern SCM.
+It's simply too easy to mess with the history and delete files from it manually,
+or have a corrupted database because a number of reasons, as virus on some client PC,
+hardware problems or network problems, and in many cases this errors are irrecoverable.   
+Try to run it on a cheap NAS, it's nothing then a pain.
 
-If, despite the warning, you have no other choice that keep using it, then you must know that FoxBin2Prg have integration with it, thanks to the configuration file foxbin2prg.cfg and the capability to change default extensions from tx2 to txa (sc2>sca, and so on). In fact you can merge binaries as you probably have never seen :-)
+If, despite the warning, you have no other choice that keep using it,
+then you must know that FoxBin2Prg have integration with it,
+thanks to the configuration file foxbin2prg.cfg and the capability to change default extensions from tx2 to txa (sc2>sca, and so on).
+In fact you can merge binaries as you probably have never seen :-)
 
 ----
 
-People that came from SourceSafe, often tends to think of SCM tools as repositories of code because of the limitations everybody that used SourceSafe knows, but the reality is that a SCM tool is much more than a repository of code, using a SCM tool with FoxBin2Prg you:
+People that came from SourceSafe, often tends to think of SCM tools as repositories of code,
+because of the limitations everybody that used SourceSafe knows,
+but the reality is that a SCM tool is much more than a repository of code,
+using a SCM tool with FoxBin2Prg you:
 
 * Can Manage the life cycle of an application
 * Can compare the binaries, using prg-style representations, to know what have changed at any time in the history of the application
@@ -24,13 +54,21 @@ People that came from SourceSafe, often tends to think of SCM tools as repositor
 * Can be free of privative formats and use something else that can be used with more than one SCM tool. SourceSafe is the only that understand SourceSafe, so you are a prisoner
 * In summary, you are in control of all aspects of a VFP system and there releases and changes
 
-This documentation is to help configure FoxBin2Prg with some modern SCM tools, beginning with the SCM tool I'm using (PlasticSCM) from middle 2013 and that I personally think is the most advanced SCM tool y know until now.
+This documentation is to help configure FoxBin2Prg with some modern SCM tools,
+beginning with the SCM tool I'm using (PlasticSCM) from middle 2013
+and that I personally think is the most advanced SCM tool y know until now.
 
-In this first quick-guide I will explain what is PlasticSCM, how to configure and how to begin working with Visual FoxPro 9 projects using branch-per-task.
+In this first quick-guide I will explain what is PlasticSCM,
+how to configure and how to begin working with Visual FoxPro 9 projects using branch-per-task.
 
 **Part of this guide can be used with any modern SCM tool, and over time I can add documentation or links for using FoxBin2Prg with other SCM tools.**
 
-If you already are using FoxBin2Prg with another SCM tool, feel free to share how you are using it so others can benefit.
+If you already are using FoxBin2Prg with another SCM tool,
+feel free to share how you are using it so others can benefit.
 
 
 ## > [Using FoxBin2Prg with PlasticSCM](Using-FoxBin2Prg-with-PlasticSCM)
+
+
+----
+Last changed: _Pungenday, 53 Chaos 3187_
