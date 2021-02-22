@@ -6298,7 +6298,7 @@ Define Class frm_main As Form
 				Endif
 
 				Thisform.edt_help.Value		= loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC+;
-					loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg+;
+					STRTRAN(loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg,'&'+'&','')+;
 					loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg
 
 			Endif
@@ -29197,28 +29197,28 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-t creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
-						<<>>cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process
-						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
-						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
-						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
-						<<>>  VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
-						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
-						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
-						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
-						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
-						<<>>cDontShowErrors: '1' for NOT showing errors
-						<<>>cDebug: '1' for generating process LOGs, stop on errors
+						<<>>cFileSpec.Ext:     Full name (fullpath) of the file to convert or directory name to process
+						<<>>                     - If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
+						<<>>                     - If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
+						<<>>                     - In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>                       VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
+						<<>>cType:             In SCCAPI (VSS) compatibility mode indicates the input file type.
+						<<>>                        - If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
+						<<>>cTextName          = Text filename. Only for SCCAPI (VSS) compatibility mode.
+						<<>>lGenText:          .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
+						<<>>cDontShowErrors:   '1' for NOT showing errors
+						<<>>cDebug:            '1' for generating process LOGs, stop on errors
 						<<>>cDontShowProgress: '1' for NOT showing the process window
 						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
-						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
-						<<>>cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')
-						<<>>cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>cRecompile:        Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
+						<<>>cNoTimestamps:     Indicates if timestamp must be cleared ('1' or empty) or not ('0')
+						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29249,7 +29249,7 @@ Define Class CL_LANG As Custom
 						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
@@ -29283,12 +29283,12 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg)
-						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-						<<>>DBF_Conversion_Order: <C_Expression>        && Field expresion. ie: name+str(age,3)
-						<<>>DBF_Conversion_Condition: <C_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records (default), 1=Include deleted records
+						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
+						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
@@ -29387,28 +29387,28 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-t creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Detalle de parámetros:
-						<<>>cFileSpec.Ext: Nombre completo (fullpath) del archivo a convertir o del directorio a procesar
-						<<>>- Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2
-						<<>>- Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN
-						<<>>- En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
-						<<>>  VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
-						<<>>cType: En modo compatibilidad con SCCAPI (VSS) es el Tipo de archivo de entrada.
-						<<>>- Si indica '*' o '*-' y tc_InputFile es un PJX, se procesa todo el proyecto
-						<<>>cTextName = Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
-						<<>>lGenText: .T.=Genera Texto, .F.=Genera Binario. Solo para compatibilidad con SCCAPI (VSS)
-						<<>>cDontShowErrors: '1' para NO mostrar errores
-						<<>>cDebug: '1' para generar LOGs del proceso, stop on errors
+						<<>>cFileSpec.Ext:     Nombre completo (fullpath) del archivo a convertir o del directorio a procesar
+						<<>>                   - Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2
+						<<>>                   - Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN
+						<<>>                   - En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
+						<<>>                     VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
+						<<>>cType:             En modo compatibilidad con SCCAPI (VSS) es el Tipo de archivo de entrada.
+						<<>>                    - i indica '*' o '*-' y tc_InputFile es un PJX, se procesa todo el proyecto
+						<<>>cTextName          = Nombre del archivo texto. (Solo para compatibilidad con Visual SourceSafe)
+						<<>>lGenText:          .T.=Genera Texto, .F.=Genera Binario. Solo para compatibilidad con SCCAPI (VSS)
+						<<>>cDontShowErrors:   '1' para NO mostrar errores
+						<<>>cDebug:            '1' para generar LOGs del proceso, stop on errors
 						<<>>cDontShowProgress: '1' para NO mostrar la ventana de progreso
 						<<>>cOriginalFileName: Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar el nombre correcto en la cabecera de la versión texto
-						<<>>cRecompile: Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)
-						<<>>cNoTimestamps: Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
-						<<>>cCFG_File: Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
+						<<>>cRecompile:        Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)
+						<<>>cNoTimestamps:     Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
+						<<>>cCFG_File:         Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29439,7 +29439,7 @@ Define Class CL_LANG As Custom
 						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
@@ -29473,12 +29473,12 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<>>-- Archivo de configuración individual para DBF (sintaxis: archivo.dbf.cfg)
+						<<>>-- Archivo de configuración individual para DBF (sintaxis: archivo.dbf.cfg) Defaults see FoxBin2prg.cfg
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && Ver esta misma configuración más arriba
-						<<>>DBF_Conversion_Order: <C_Expression>        && Expresión de campo. ej: nombre+str(edad,3)
-						<<>>DBF_Conversion_Condition: <C_Expression>    && Expresión lógica. ej: edad > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records (default), 1=Include deleted records
+						<<>>DBF_Conversion_Order: <c_Expression>        && Expresión de campo. ej: nombre+str(edad,3)
+						<<>>DBF_Conversion_Condition: <c_Expression>    && Expresión lógica. ej: edad > 10 AND NOT DELETED()
+						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
@@ -29636,7 +29636,6 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Konvertierungs Optionen:
-						<<>>-- Konvertierungs Optionen:
 						<<>>PJX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
 						<<>>VCX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
 						<<>>SCX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
@@ -29697,20 +29696,20 @@ Define Class CL_LANG As Custom
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
-						<<>>-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle)
+						<<>>-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=Aus
 						<<>>                                            && 1=Erzeuge Textdatei nur für Struktur (Diff)
 						<<>>                                            && 2=Erzeuge Text- und Binärdatei nur für Struktur (Merge)
 						<<>>                                            && 4=Erzeuge Textdatei nur für Struktur und Daten (Diff)
 						<<>>                                            && 8=Erzeuge Text- und Binärdatei nur für Struktur und Daten (Merge)
-						<<>>DBF_Conversion_Order: <C_Expression>        && Optional, Reihenfolge der Datensätze. Ausdruck für INDEX ON. ie: name+str(age,3)
+						<<>>DBF_Conversion_Order: <c_Expression>        && Optional, Reihenfolge der Datensätze. Ausdruck für INDEX ON. ie: name+str(age,3)
 						<<>>                                            && leer: normale Reihenfolge
-						<<>>DBF_Conversion_Condition: <C_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
+						<<>>DBF_Conversion_Condition: <c_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
 						<<>>                                            && leer: Alle, außer DBF_IncludeDeleted
-						<<>>DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus (default)
+						<<>>DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
 						<<>>                                            &&   Dies entspricht dem Flag 4096 in CursorToXML()
 						<<>>                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
-						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze (default), 1=Mit gelöschten Datensätzen
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze, 1=Mit gelöschten Datensätzen
 						<<>>                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>
 							ENDTEXT
@@ -29810,28 +29809,28 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-t creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
-						<<>>cFileSpec.Ext: Full name (fullpath) of the file to convert or directory name to process
-						<<>>- If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
-						<<>>- If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
-						<<>>- In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
-						<<>>  VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
-						<<>>cType: In SCCAPI (VSS) compatibility mode indicates the input file type.
-						<<>>- If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
-						<<>>cTextName = Text filename. Only for SCCAPI (VSS) compatibility mode.
-						<<>>lGenText: .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
-						<<>>cDontShowErrors: '1' for NOT showing errors
-						<<>>cDebug: '1' for generating process LOGs, stop on errors
+						<<>>cFileSpec.Ext:     Full name (fullpath) of the file to convert or directory name to process
+						<<>>                     - If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
+						<<>>                     - If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
+						<<>>                     - In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
+						<<>>                       VSS Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class
+						<<>>cType:             In SCCAPI (VSS) compatibility mode indicates the input file type.
+						<<>>                        - If specified '*' or '*-' and tc_InputFile is a PJX, all project files are processed
+						<<>>cTextName          = Text filename. Only for SCCAPI (VSS) compatibility mode.
+						<<>>lGenText:          .T.=Generates Text, .F.=Regenerates Binary. Only for SCCAPI (VSS) compatibility mode.
+						<<>>cDontShowErrors:   '1' for NOT showing errors
+						<<>>cDebug:            '1' for generating process LOGs, stop on errors
 						<<>>cDontShowProgress: '1' for NOT showing the process window
 						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
-						<<>>cRecompile: Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
-						<<>>cNoTimestamps: Indicates if timestamp must be cleared ('1' or empty) or not ('0')
-						<<>>cCFG_File: Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>cRecompile:        Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
+						<<>>cNoTimestamps:     Indicates if timestamp must be cleared ('1' or empty) or not ('0')
+						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29862,7 +29861,7 @@ Define Class CL_LANG As Custom
 						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
@@ -29896,12 +29895,12 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
-						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg)
-						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-						<<>>DBF_Conversion_Order: <C_Expression>        && Field expresion. ie: name+str(age,3)
-						<<>>DBF_Conversion_Condition: <C_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records (default), 1=Include deleted records
+						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
+						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
