@@ -589,7 +589,7 @@ If at the end of a merge operation there are binaries left, you need to choose t
 because anyway you will regenerate them later from their _Text_ files._
 
 For options on integrating FoxBin2Prg with SCM tools, look at this topic:
-**> [FoxBin2Prg and use with SCM tools](FoxBin2Prg-and-use-with-SCM-tools)**
+**> [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)**
 
 ----
 Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
