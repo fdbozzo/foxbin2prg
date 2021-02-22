@@ -87,11 +87,11 @@ These are the Table.dbf.cfg configuration file settings and their meaning:
 
 | FoxBin2Prg.cfg keywords | Value | Description |
 | ----- | ----- | ----- |
-| DBF_Conversion_Support | 0, 1, 2, 4, 8 | 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-| DBF_Conversion_Order | c_Expression | | Field expresion. ie: name+str(age,3)
-| DBF_Conversion_Condition | c_Expression | Logical expression. ie: age > 10 AND NOT DELETED()
-| DBF_BinChar_Base64 | 0, 1 | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-| DBF_IncludeDeleted | 0, 1 | 0=Do not include deleted records, 1=Include deleted records
+| DBF_Conversion_Support | 0, 1, 2, 4, 8 | 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) |
+| DBF_Conversion_Order | c_Expression | | Field expresion. ie: name+str(age,3) |
+| DBF_Conversion_Condition | c_Expression | Logical expression. ie: age > 10 AND NOT DELETED() |
+| DBF_BinChar_Base64 | 0, 1 | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform |
+| DBF_IncludeDeleted | 0, 1 | 0=Do not include deleted records, 1=Include deleted records |
 
 For defaults, see [Configuration file](#configuration-file).
  
