@@ -52,12 +52,16 @@ The extensions may be reconfigured to be compatible with SCCAPI (just tested wit
 ![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
 ## Usage
 FoxBin2Prg can be used in tree ways:
-1. EXE version: (Recommended and fastest)   
+1. [EXE version](./FoxBin2Prg_Run.md): (Recommended and fastest)   
    - All-inclusive, you just need foxbin2prg.exe and filename_caps.exe/cfg.   
    - Runs from windows
-1. PRG version:   
+1. [PRG version](./FoxBin2Prg_Run.md):   
    - You need various files: foxbin2prg.prg, all the props*.txt files and filename_caps.exe/cfg.
    - Runs out of VFP IDE, no problems mixing VFP 9 and VFPA
-1. Object version
+1. [Object version](./FoxBin2Prg_Object.md):
    - Usable out of own code
    - expandable
+## Keep reading:
+- [FoxBin2Prg Internals and Configuration](./FoxBin2Prg_Internals.md)
+- [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)
+- [FoxBin2Prg Full Change History](./FoxBin2Prg_Changes.md)
