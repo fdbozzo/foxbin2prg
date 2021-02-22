@@ -80,4 +80,4 @@ The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:
 Return value is 0=OK, 1=Error.
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_
+Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

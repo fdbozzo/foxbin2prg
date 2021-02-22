@@ -67,3 +67,6 @@ FoxBin2Prg can be used in tree ways:
 - [FoxBin2Prg Internals and Configuration](./FoxBin2Prg_Internals.md)
 - [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)
 - [FoxBin2Prg Full Change History](./FoxBin2Prg_Changes.md)
+
+----
+Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

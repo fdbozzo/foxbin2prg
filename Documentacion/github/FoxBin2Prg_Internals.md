@@ -592,4 +592,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 **> [FoxBin2Prg and use with SCM tools](FoxBin2Prg-and-use-with-SCM-tools)**
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_
+Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
