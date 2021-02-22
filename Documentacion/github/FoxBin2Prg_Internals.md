@@ -592,4 +592,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 **> [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)**
 
 ----
-[Igel_Fox](./pictures/Igel_Fox2.png)Last changed: _Pungenday, 53 Chaos 3187_ ![VFPX](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _Pungenday, 53 Chaos 3187_ ![VFPX](./pictures/vfpxpoweredby_alternative.gif)
