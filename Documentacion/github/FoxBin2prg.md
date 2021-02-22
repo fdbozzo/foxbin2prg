@@ -48,6 +48,16 @@ for which a _Text_ version is generated with pj2, sc2, vc2, fr2, lb2, dc2, db2 a
 The extensions may be reconfigured to be compatible with SCCAPI (just tested with SourceSafe).
 
 ##### Example
-![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
-![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
+![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
+![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
 ## Usage
+FoxBin2Prg can be used in tree ways:
+1. EXE version: (Recommended and fastest)   
+   - All-inclusive, you just need foxbin2prg.exe and filename_caps.exe/cfg.   
+   - Runs from windows
+1. PRG version:   
+   - You need various files: foxbin2prg.prg, all the props*.txt files and filename_caps.exe/cfg.
+   - Runs out of VFP IDE, no problems mixing VFP 9 and VFPA
+1. Object version
+   - Usable out of own code
+   - expandable
