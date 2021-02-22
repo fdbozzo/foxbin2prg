@@ -10,6 +10,9 @@
 
     Thank you for your support!
 
+## <span style="background-color: gold;">Remark</span>
+<span style="background-color: lemonchiffon;">There is an extended [documentation](./documentacion/github/FoxBin2prg.md) available.
+</span>
 
 ## ENGLISH/ESPAÑOL 
 
@@ -18,7 +21,7 @@
 ### What is FOXBIN2PRG?
 It is a program intended to be used with **SCM tools** (Source Code Managers, like VSS, CVS, SVN) and *DVCS tools* (Version Control Systems such as Git, Mercurial, Plastic, and others), or as **standalone** program for **Diff** (viewing differences) and **Merge** operations. Foxbin2prg can substitute for **SccText/X**, **TwoFox** and others, and enhance their functionality, generating bidirectional PRG-Style versions of Foxpro binary files that allow recreating the original binary file.
 
-**Advantages:**
+#### Advantages:
 
 * It generates "PRG" _style_ text files from Foxpro binary files for use in SCM and VCS systems and for visual comparison.
 
@@ -40,7 +43,7 @@ It is a program intended to be used with **SCM tools** (Source Code Managers, li
 
 The program supports conversions between PJX,SCX,VCX,FRX,LBX,DBC,DBF and MNX files, for which it generates TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2,DB2 and MN2. If you want, the created text file extensions can be reconfigured to be compatibilize with SourceSafe.
 
-__Here is an example of a FOXBIN2PRG.CFG configuration file if you need to change extensions for using it with a specific VSS (SourceSafe)__
+#### Here is an example of a FOXBIN2PRG.CFG configuration file if you need to change extensions for using it with a specific VSS (SourceSafe)
 ```
 extension: SC2=SCA
 extension: VC2=VCA
@@ -53,9 +56,12 @@ extension: DC2=DCA
 ```
 
 ### USE:
-```dbase
+```
 DO FOXBIN2PRG.PRG WITH "<path>\archivo.scx"		==> Generates the TEXT version sc2 extension
 DO FOXBIN2PRG.PRG WITH "<path>\archivo.sc2"		==> Regenerates the binary version with scx extension
+
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"		==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"	==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
 ### USEFUL SETUP:
@@ -152,3 +158,5 @@ Este programa es Open Source y "libre", y como tal no ofrezco garantías de que 
 ### LICENCIA:
 Esta obra está sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons. Para ver una copia de esta licencia, visite http://creativecommons.org/licenses/by-sa/4.0/deed.es_ES.
 
+----
+Last changed: _Pungenday, 53 Chaos 3187_

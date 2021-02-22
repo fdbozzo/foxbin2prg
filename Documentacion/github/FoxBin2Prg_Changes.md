@@ -12,8 +12,13 @@ This project is part of VFPX.
 ----
 # FoxBin2Prg - Change log
 ## <span style="background-color: gold;">Remark</span>
-<span style="background-color: lemonchiffon;">There is no resent relase,  just download or clone from gitlab.</span>  
-![Picture](pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [https://github.com/fdbozzo/foxbin2prg](https://github.com/fdbozzo/foxbin2prg)   
+<span style="background-color: lemonchiffon;">
+ I see not what is inside the archive, so just clone, fork or download from gitlab.
+ The links on the version numbers are working.
+</span>
+ 
+![Picture]("pictures/FoxBin2Prg Full Change History_vfpxreleasesmall.png") [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
+![Picture]("pictures/FoxBin2Prg Full Change History_vfpxreleasesmall.png") [This fork](https://github.com/lscheffler/foxbin2prg/tree/fork_mod)   
 
 <span style="background-color: lemonchiffon;">The changes since 2016/07/24 are a copy out of FoxBin2Prg.prg. If somebody likes to translate, feel free.</span>  
 
@@ -25,7 +30,7 @@ It's my way of thanking them for their contribution.
 
 _**Note:** you can click on the version number for downloading this version from GitHub, or you can get all the code history directly from the GitHub repository, which is more easy to search._
 
-| Rel.Date | Developer | Ver# | Details |
+| Rel.Date | Developer | Version | Details |
 | - | - | - | - |
 | 21/02/2021 | Lutz Scheffler | | added option to create config file template |
 | | Lutz Scheffler | | German translation improved |
@@ -350,4 +355,5 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | v1.1 | - Bug fixes |
 | 2013/11/22 | FDBOZZO | v1.0 | - Initial creation of clases on prg and support of VCX/SCX/PJX files |
 
-
+----
+Last changed: _Pungenday, 53 Chaos 3187_
