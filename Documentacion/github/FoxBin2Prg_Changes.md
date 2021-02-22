@@ -17,8 +17,8 @@ This project is part of VFPX.
  The links on the version numbers are working.
 </span>
  
-![Picture]("pictures/FoxBin2Prg Full Change History_vfpxreleasesmall.png") [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
-![Picture]("pictures/FoxBin2Prg Full Change History_vfpxreleasesmall.png") [This fork](https://github.com/lscheffler/foxbin2prg/tree/fork_mod)   
+![Picture](pictures/FoxBin2Prg_Full_Change History_vfpxreleasesmall.png) [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
+![Picture](pictures/FoxBin2Prg_Full_Change History_vfpxreleasesmall.png) [This fork](https://github.com/lscheffler/foxbin2prg/tree/fork_mod)   
 
 <span style="background-color: lemonchiffon;">The changes since 2016/07/24 are a copy out of FoxBin2Prg.prg. If somebody likes to translate, feel free.</span>  
 
