@@ -25,7 +25,7 @@ and **DVCS** tools (like git, Mercurial, Plastic, and others),
 or as **standalone** program for _Diff_ (viewing differences) and _Merge_ operations,
 that pretends to substitute _SccText/X_ and _TwoFox_ and enhance their functionality,
 generating bidirectional PRG-Style versions that allow recreating the original binary file.  
-#### Advantages:
+### Advantages:
 
 - It generates _Text_ style programs (not compilable), for visual comparison out of FoxPros table based code.
 - It enables the change of the _Text_ version as easy as modifying a PRG
@@ -47,9 +47,10 @@ Currently supports the conversion between PJX, SCX, VCX, FRX, LBX, DBC, DBF and 
 for which a _Text_ version is generated with pj2, sc2, vc2, fr2, lb2, dc2, db2 and mn2 extensions.
 The extensions may be reconfigured to be compatible with SCCAPI (just tested with SourceSafe).
 
-##### Example
+### Example
 ![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
 ![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
+
 ## Usage
 FoxBin2Prg can be used in tree ways:
 1. [EXE version](./FoxBin2Prg_Run.md): (Recommended and fastest)   
@@ -61,6 +62,7 @@ FoxBin2Prg can be used in tree ways:
 1. [Object version](./FoxBin2Prg_Object.md):
    - Usable out of own code
    - expandable
+
 ## Keep reading:
 - [FoxBin2Prg Internals and Configuration](./FoxBin2Prg_Internals.md)
 - [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)
