@@ -38,31 +38,44 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 
 | FoxBin2Prg.cfg keywords | Value (_Default_) | Description |
 | ----- | ----- | ----- |
-| extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that. For example you can change pj2 to pja using this: +`"extension: pj2=pja"`+ for making it SourceSafe (sccapi v1) compatible |
-| DontShowProgress: | 0 | Deprecated. Replaced by ShowProgressbar option from v1.19.40 |
-| ShowProgressbar: | 1 | 1=Always show a progress bar, 2=Only show it when processing multiple-files, 0=Don't show progressbar |
-| DontShowErrors: | 0 | By default, show message errors in a modal messagebox. Specify "1" if don't want to show errors |
-| NoTimestamps: | 1 | By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on binaries and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files |
-| Debug: | 0 | By default, don't generate individual <file>.Log with process hints. Activate with "1" to find possible error causes and for debugging |
-| ExtraBackupLevels: | 1 | By default, one .BAK file is created. With this setting you can make more .N.BAK files, or none at all using 0 |
-| ClearUniqueID: | 1 | 0=Keep UniqueID, 1=Clear Unique ID. Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
-| OptimizeByFilestamp: | 0 | 0=Don't optimize (always regenerate), 1=Optimize (regenerate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately |
-| RemoveNullCharsFromCode: | 1 | 1=Drop NULL chars from source code / 0=Leave NULLs in source code |
-| RemoveZOrderSetFromProps: | 0 | 1=Remove ZOrderSet from the properties / 0=Leave ZOrderSet in the properties |
-| XXX_Conversion_Support: | N | Where N is: 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and _Bin_ (Merge), 4=Generate TXT with DATA for DIFF (DBF only) |
-| PJX_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| VCX_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| SCX_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| FRX_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| LBX_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| MNX_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| DBC_Conversion_Support: | 2 | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
-| DBF_Conversion_Support: | 1 | Default value is 1 - just _Text_ support activated. The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!. A value of 4 is used to export Structure and Data, but exported data is not imported again. A value of 8 is used for bidirectional support (No General fields!). |
-| UseClassPerFile: | 0 | 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files, including DBC members |
-| RedirectClassPerFileToMain: | 0 | 0=Don't redirect to file.vc2, 1=Redirect to file.vc2 when selecting file.class.vc2 |
-| ClassPerFileCheck: | 0 | 0=Don't check file.class.vc2 inclusion, 1=Check file.class.vc2 inclusion |
-| ClearDBFLastUpdate: | 1 | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
-| Language: | (auto) | Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC `"[DEFAULT](DEFAULT)"` (using VERSION(3)) |
+| extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that. For example you can change pj2 to pja using this: "extension: pj2=pja" for making it SourceSafe (sccapi v1) compatible |
+| DontShowProgress | 0 | **Deprecated**. Replaced by ShowProgressbar option from v1.19.40 |
+| ShowProgressbar | 0, _1_, 2 | 1=Always show a progress bar, 2=Only show it when processing multiple-files, 0=Don't show progressbar |
+| DontShowErrors | _0_, 1 | By default, show message errors in a modal messagebox. Specify "1" if don't want to show errors |
+| NoTimestamps | 0, _1_ | By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on binaries and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files |
+| Debug | _0_, 1, 2 | By default, don't generate individual <file>.Log with process hints. Activate with "1" to find possible error causes and for debugging, "2" is special logging |
+| ExtraBackupLevels | 0, _1_, n | By default, one .BAK file is created. With this setting you can make more .N.BAK files, or none at all using 0 |
+| ClearUniqueID | 0, _1_ | 0=Keep UniqueID, 1=Clear Unique ID. Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
+| OptimizeByFilestamp | _0_, 1 | 0=Don't optimize (always regenerate), 1=Optimize (regenerate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately |
+| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code / 0=Leave NULLs in source code |
+| RemoveZOrderSetFromProps | _0_, 1 | 1=Remove ZOrderSet from the properties / 0=Leave ZOrderSet in the properties |
+| XXX_Conversion_Support | n | Defines the conversion operation per filetype |
+| | | For code:<br/> 0=No support, 1=Generate (Diff), 2=Generate _Text_ ond _Bin_ (Merge) |
+| | | For complex data:<br/> (PJX / DBC / DBF): 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) |
+| PJX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional ((Merge/Only Structure!), 4=Generate _Text_ with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) and bin) support activated |
+| VCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
+| SCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
+| FRX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
+| LBX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
+| MNX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
+| DBC_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and bin) support activated |
+| DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated. The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!. A value of 4 is used to export Structure and Data, but exported data is not imported again. A value of 8 is used for bidirectional support (No General fields!). |
+| DBF_Conversion_Included | * | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf. See below. |
+| DBF_Conversion_Excluded | | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf See below. |
+| UseFilesPerDBC | _0_, 1 | 0=One database dc2 file, 1=Multiple file.\*.\*.dc2 files
+| | | 0 creates only a file.dc2 with all DBC (file) data
+| | | 1 creates a file.dc2 with DBC properties
+| | | and additional DBC files per DBC item (stored-proc, table, ..)
+| | | Note: recration only if RedirectFilePerDBCToMain is 1
+| RedirectFilePerDBCToMain | _0_, 1 | 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+| ItemPerDBCCheck | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
+| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+| DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default), 1=Include deleted records
+| UseClassPerFile | _0_, 1 | 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files|
+| RedirectClassPerFileToMain | _0_, 1 | 0=Don't redirect to file.vc2, 1=Redirect to file.vc2 when selecting file.class.vc2 |
+| ClassPerFileCheck | _0_, 1 | 0=Don't check file.class.vc2 inclusion, 1=Check file.class.vc2 inclusion |
+| ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
+| Language | _(auto)_, EN, FR, ES, DE | Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) |
 
 ## Configuration file per table
 Those configuration files are valid for a single table only. The idea is to have special settings for single tables.   
@@ -72,9 +85,16 @@ The options in the template (or in the config that ships with FoxBin2Prg) are co
 To activate an option remove the asterix and set appropriate value.   
 These are the Table.dbf.cfg configuration file settings and their meaning:
 
-| FoxBin2Prg.cfg keywords and Defaults | Value (_Default_) | Description |
+| FoxBin2Prg.cfg keywords | Value | Description |
 | ----- | ----- | ----- |
+| DBF_Conversion_Support | 0, 1, 2, 4, 8 | 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+| DBF_Conversion_Order | c_Expression | | Field expresion. ie: name+str(age,3)
+| DBF_Conversion_Condition | c_Expression | Logical expression. ie: age > 10 AND NOT DELETED()
+| DBF_BinChar_Base64 | 0, 1 | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+| DBF_IncludeDeleted | 0, 1 | 0=Do not include deleted records, 1=Include deleted records
 
+For defaults, see [Configuration file](#configuration-file).
+ 
 ## FoxBin2Prg Internals
 ### ZOrder
 In _Text_ files and starting from v1.19.12, the ZOrder,
