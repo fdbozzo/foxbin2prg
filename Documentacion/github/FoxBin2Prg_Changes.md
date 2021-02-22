@@ -32,11 +32,12 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 21/02/2021 | Lutz Scheffler | | added option to create config file template |
+| 21/02/2021 | Lutz Scheffler | | Documentation from CodePlex integrated |
+| | Lutz Scheffler | | added option to create config file template |
+| | Lutz Scheffler | | Info screen-doc improved |
 | | Lutz Scheffler | | German translation improved |
 | 20/02/2021 | Lutz Scheffler | | inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
 | 19/02/2021 | Lutz Scheffler | | inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
-| | Lutz Scheffler | | the three above are straight forward, so no extra comment ar within the code |
 | 15/02/2021 | Lutz Scheffler | | inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
 | | Lutz Scheffler | | inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
 | 14/02/2021 | Lutz Scheffler | | inserted option UseFilesPerDBC to split DBC processing from vcx / scx |

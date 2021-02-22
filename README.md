@@ -1,3 +1,57 @@
+# FoxBin2Prg v1.19.xx - Binary/Text Converting program for Microsoft Visual FoxPro 9
+![](https://vfpx.github.io/images/vfpxbanner_small.gif)
+## <span style="background-color: gold;">This fork</span>
+<span style="background-color: lemonchiffon;"> This is a fork of [Fernando D. Bozzo](https://github.com/fdbozzo) [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/).  
+It's main purpose it's to fix some bugs and recreate the documentation this project had on CodePlex.   
+There was a need of some functionality too. Some off the mods may ore may not seen as bug fixes.   </span>
+
+<span style="background-color: lemonchiffon;"> To get the new settings in config file, use the new create-a-template function:</span>
+
+```
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
+```
+
+<span style="background-color: lemonchiffon;"> The major break is the split of the handling of DBC from VCX/SCX.
+If DBC's where splited into single files using _UseClassPerFile_,
+the new settings around _UseFilesPerDBC_ must be used. See [Intenals](./Documentacion/github/FoxBin2prg_Internals.md#configuration-file).  
+
+<span style="background-color: lemonchiffon;"> The function _DBF_BinChar_Base64: 0_ must be handled with care too.
+Tables must converted to _Text_ according. **It's not recommended for running projects.**</span>   
+
+<span style="background-color: lemonchiffon;">The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions.
+</span>   
+
+<span style="background-color: lemonchiffon;"> It's a good idea to have the FoxBin2Prg.cfg per projekt and and source control anyway, old commits / versions would have the old config. 
+So teh settings would fit the data.</span>   
+	
+### <span style="background-color: gold;">Fixes (fixes only are in the fork branch of this repo)</span>
+
+| Details |
+| - |
+| conversion prg -> vcx, files per class could create one class multiple times |
+| processing directory, flush log file after loop instead of file |
+| conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
+| minor translations |
+| conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
+### <span style="background-color: gold;">Mods</span>
+
+| Details |
+| - |
+| Documentation from CodePlex integrated |
+| German translation improved |
+| Info screen-doc improved |
+| inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
+| inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
+| inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
+| inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
+| inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
+
+<span style="background-color: lemonchiffon;"> There is a the reworked [documentation](./Documentacion/github/FoxBin2prg.md) from CodePlex available.</span>
+
+---
+---
+
 ## FoxBin2Prg v1.19.xx - Binary/Text Conversor for Microsoft Visual FoxPro 9
 
 ### Fernando D. Bozzo
@@ -9,10 +63,6 @@
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
     Thank you for your support!
-
-## <span style="background-color: gold;">Remark</span>
-<span style="background-color: lemonchiffon;">There is an extended [documentation](./Documentacion/github/FoxBin2prg.md) available.
-</span>
 
 ## ENGLISH/ESPAÑOL 
 
@@ -57,11 +107,11 @@ extension: DC2=DCA
 
 ### USE:
 ```
-DO FOXBIN2PRG.PRG WITH "<path>\archivo.scx"		==> Generates the TEXT version sc2 extension
-DO FOXBIN2PRG.PRG WITH "<path>\archivo.sc2"		==> Regenerates the binary version with scx extension
+DO FOXBIN2PRG.PRG WITH "<path>\archivo.scx"     ==> Generates the TEXT version sc2 extension
+DO FOXBIN2PRG.PRG WITH "<path>\archivo.sc2"     ==> Regenerates the binary version with scx extension
 
-DO FOXBIN2PRG.PRG WITH "-c","template.cfg"		==> Generates a template for FoxBin2Prg.cfg config file with newest settings
-DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"	==> Generates a template for table.dbf.cfg per table config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
 ### USEFUL SETUP:

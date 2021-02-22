@@ -1,0 +1,12 @@
+# we use the exclude-all-include-special approach, easier then excluding any odd stuff later
+#exclude general
+*.*
+
+#include general
+#grafics
+!*.gif
+!*.png
+
+#include special
+#default git
+!*.gitignore

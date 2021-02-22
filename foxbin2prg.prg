@@ -236,10 +236,12 @@
 *  14/02/2021	Lutz Scheffler			inserted option UseFilesPerDBC to split DBC processing from vcx / scx
 *  15/02/2021	Lutz Scheffler			inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
 *  15/02/2021	Lutz Scheffler			inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
-*										the three above are straight forward, so no extra comment ar within the code
+*										the three above are straight forward, so no extra comment are within the code
 *  19/02/2021	Lutz Scheffler			inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way
 *  20/02/2021	Lutz Scheffler			inserted option DBF_IncludeDeleted to allow including deleted records of DBF
 *  21/02/2021	Lutz Scheffler			German translation improved
+*  21/02/2021	Lutz Scheffler			Info screen-doc improved
+*  21/02/2021	Lutz Scheffler			added option to create config file template
 *  21/02/2021	Lutz Scheffler			added option to create config file template
 
 
