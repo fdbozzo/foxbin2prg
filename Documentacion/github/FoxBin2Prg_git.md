@@ -17,11 +17,11 @@ See [Use with SCM tools](./FoxBin2Prg_SCM.md)
 
 ## Introduction
 As we all know, there is a whole bunch of tools that we might use to colaborate and to version our work.  
-Since I use git I try to point out what I do to do a fast and comfortable work.   
+Since I use git I try to point out what I do to do as fast and comfortable work.   
 This document gives no workflow, in special not a workflow of git. There is no wrong or right.   
 If you are not fimilar with git, please read through this first, there are minor settings that might help a bit on later work.
 
-Please note, if you come from an SCM system, git feels very odd. It's a complete different idea of thinking.
+Please note, if you come from a SCM system, git feels very odd. It's a complete different idea of thinking.
 Do yourself the favour, on [git-scm](https://git-scm.com/doc) you find _pro git_. Read and work at least through the first three chapters.
 **No matter, if you are using git on bash or GUI**
 
@@ -29,7 +29,7 @@ For almost anything you don't need a server, even for colaborating a storage is 
 I use a server - a self hosted copy of gitlab - but this basically for access restrictions and remote work. 
 
 Do not hesitate to try anything. Always remember, git is just a couple of files inside your project folder.
-Copy'n'Paste on Explorer might save the day.
+CTRL+C, CTRL+V on Explorer might save the day. ;)
 
 ## Requirements
 ### #1
@@ -61,22 +61,27 @@ I'm somehow into the [Bin 2 Text extension](https://github.com/lscheffler/bin2te
 
 A nice graphical compare / mergetool is nice too have - check if and how to integrate first,
 and also if the code mokey creating the interface understands git.
-Some try to use it like SCM what, ends up odd.
+Some try to use it like SCM, what ends up odd.
 
 ## Recomendations
+#### Short about git
 The first one must understand here, git is set up to deal with text based files.
-It's a Linux tool developed to deal wiht the Kernel code.  
-So storing binaries into it, is something one should avoid as far as possible.
+It's a Linux tool developed to deal with the Kernel code.  
+Highly sophisticated, neat, fast.  
+So storing binaries into it is something one should avoid as far as possible.
 
 There is stuff where on might not circumvent it - like pictures.
 
+#### Text representation of VFP's binaries
 And there is the oddness of VFP sources. Storing those to git is as wrong as it could be.
 - Bloat of the repo
 - No trace of changes
 - Not mergeable
 
-And if there is one what is realy cool on skipping locking servers, its colaboarting. Even on VCX's.
+And if there is one what is realy cool on skipping locking servers, it's colaboarting.
+Even on VCX's.
 
+#### Solution
 With thanks to Fernando **FoxBin2Prg** comes into play.  
 One might be reluctant to dropping the binaries - but I do for years and it works like a charm.
 Do not play around with text-to-look-up-changes ideas storing both _Text_ and _Binary_.
@@ -87,10 +92,40 @@ git would even allow to hook FoxBin2Prg to run after some git operations, but th
 
 I try to show what to set to keep it running as _Text_ - only storage.
 
+#### Class libraries
+I know there is a lot how to store a class. Microseconds here and there. 
+Folks, hardware is cheap. There is no sense in counting ticks and bits any more. I'm grown up that way, but.  
+Dealing with the FoxBin2Prg.prg is the limit.
+If I imagine to have one of my larger vcx's like this in a merge view - no.
+
+Just split up the vcx's into single classes. It's like a charm on merge and diff.
+Also on blame.   
+I you go for the _lib.baseclass.classname.vc2_ or _lib.classname.vc2_ style is a matter of taste.
+I can see baseclass on classname, so there is not much value, other might think different.
+But split into classes makes life easy.   
+
+#### Forms
+Side effect is that SCX will be split into 3 files too.
+I have no idea if there is some use of it - I just do classes.
+If you like it separated from VCX - let me know.
+
+#### Databases
+Splitting DBC is possible too. My approach does not touch the DBC _structure_ (it's meta data only) in the source over decades, so there is little use. 
+So I've added an option to inhibit splitting DBC while splitting VCX/SCX.   
+Storing as _Text_ is a long term goal - the fork is about some of the problems.
+
+#### Tables
+Storing as _Text_ is a long term goal - the fork is about some of the problems.
+Since nobody brought up the .NULL. problem, it looks like it's not commonly used.
+Depends on the data used. (And if there is any sense in merging.)
+
+#### Others
+All the other table-based-sources of VFP work seamless as _Text_. No fuzz.
+
 ### git settings
 Assuming you do a fresh install of git, you will be asked questions over questions. The most you left unchanged.   
-The one I recommend is the dealing with line endings. You know all the odd uses of LF and FF. 
-_git for windows_ offers to alter this while dealing with your files. I recommend not, just "Check in as is, check out as is".
+The one I recommend is the dealing with line endings. You know all the odd uses of LF and CR. 
+_git for windows_ offers to alter this while dealing with your files. I recommend not. Just "Check in as is, check out as is".
 This will keep your files, and any modern editor or WEB UI will not care anyway.   
 If you missed on install - just install again.
 
@@ -103,12 +138,13 @@ It's your taste to install 64 or 32 bit versions. Calling 64bit from the fox is 
 If you don't have no other needs, use 32bit.
 
 ### gitignore
-The _.gitignore_ file controls, which files **go not** into the git repository by default. It goes by folder with inheritance.
+The _.gitignore_ file controls which files **go not** into the git repository by default. It goes by folder with inheritance.
+If you undstand the inheritance of .gitignore, you grok FoXBin2Prg.cfg and vice versa. Very close.
 
 But git would not be git if one could not teach .gitignore to define the files **included**.
 Again, see pro-git.
 
-Creating the file might be a bit odd on MS Windows (Windows dislikes just extension), but created once most editors will not complain.
+Creating the file might be a bit odd on MS Windows (Windows dislikes just extension). Created once, most editors will not complain.
 In case, just open the bash in your projects base folder (Explorer, context menu) and enter `touch .gitignore`.
 
 An example for _Text_ only use.
@@ -161,6 +197,7 @@ An example for _Text_ only use.
 #default git
 !*.gitignore
 !/desktop.ini
+#desktop.ini. usless? no! it keeeps the folder icon!
 
 #diverse
 !*.reg
@@ -179,6 +216,7 @@ Also this approach ignores any bak / log / tmp / err files by default.
 ### config
 The config of FoxBin2Prg using FoxBin2Prg.cfg files is relative simple. As you might see above, I carry the file within the repo.   
 The good on this is, if I change my mind and alter settings in it, FoxBin2PRG will find the setting that fit to the data on each commit.
+If I have to checkout old stuff.
 
 ````
 *################################################################################################################
@@ -244,17 +282,17 @@ The good on this is, if I change my mind and alter settings in it, FoxBin2PRG wi
 *extension: db2=dba
 *extension: dc2=dca
 *-- Additional extensions
-*extension: fk2=fkx			   && FKY
-*extension: me2=fkx			   && MEM
+*extension: fk2=fkx            && FKY
+*extension: me2=fkx            && MEM
 
 *Settings changed
 *----------------
-UseClassPerFile: 2				&& 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-RedirectClassPerFileToMain: 1	&& 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-DBF_Conversion_Support: 0		&& 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-DBC_Conversion_Support: 0		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+UseClassPerFile: 2              && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
+RedirectClassPerFileToMain: 1   && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+DBF_Conversion_Support: 0       && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+DBC_Conversion_Support: 0       && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 ````
-All use off this are the last four lines. But I like to keep the template.
+All use off this are the last four lines. But I like to keep the template (recent as version 1.20.0).
 - Using single classes - because it's much more easy to merge a single class then a whole library.
 - A single class selected might be added to the VCX
 - Turn off DBC and DBF conversion
