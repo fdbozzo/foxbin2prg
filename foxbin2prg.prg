@@ -233,6 +233,7 @@
 *  15/02/2021	Lutz Scheffler			processing directory, flush log file after loop instead of file
 *  16/02/2021	Lutz Scheffler			conversion prg -> vcx, files per class could create one class multiple times
 * mods
+*  23/02/2021	Lutz Scheffler			inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
 *  14/02/2021	Lutz Scheffler			inserted option UseFilesPerDBC to split DBC processing from vcx / scx
 *  15/02/2021	Lutz Scheffler			inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
 *  15/02/2021	Lutz Scheffler			inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
@@ -834,6 +835,7 @@ Define Class c_foxbin2prg As Session
 
 
 *!*	;&& SF
+*!*			+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
 *!*			+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 *!*			+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
 *!*			+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
@@ -893,7 +895,8 @@ Define Class c_foxbin2prg As Session
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
-	n_UseFilesPerDBC				= 0
+    l_OldFilesPerDBC                = .T.
+    n_UseFilesPerDBC				= 0
 	l_RedirectFilePerDBCToMain		= .F.
 	l_ItemPerDBCCheck				= .F.
 	l_DBF_BinChar_Base64 			= .T.
@@ -1344,6 +1347,15 @@ Define Class c_foxbin2prg As Session
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
+	Procedure l_OldFilesPerDBC_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_OldFilesPerDBC
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_OldFilesPerDBC, This.l_OldFilesPerDBC )
+		Endif
+	Endproc
+
+
 	Procedure n_UseFilesPerDBC_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_UseFilesPerDBC
@@ -2344,35 +2356,54 @@ Define Class c_foxbin2prg As Session
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > OptimizeByFilestamp:        ' + Transform(lcValue) )
 									Endif
 
-								Case Left( laConfig(m.I), 16 ) == Lower('UseClassPerFile:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
-									If Inlist( lcValue, '0', '1', '2' ) Then
-										lo_CFG.n_UseClassPerFile	= Int( Val(lcValue) )
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseClassPerFile:            ' + Transform(lcValue) )
-									Endif
-
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
-								Case Left( laConfig(m.I), 15 ) == Lower('UseFilesPerDBC:')
+								Case Left( laConfig(m.I), 16 ) == Lower('UseClassPerFile:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
+									If Inlist( lcValue, '0', '1', '2' ) Then
+										lo_CFG.n_UseClassPerFile	= Int( Val(lcValue) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseClassPerFile:            ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.n_UseFilesPerDBC				= lo_CFG.n_UseClassPerFile
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => UseFilesPerDBC:           ' + Transform(lcValue) )
+										endif
+									Endif
+
+								Case Left( laConfig(m.I), 15 ) == Lower('OldFilesPerDBC:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 16 ) )
 									If Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_OldFilesPerDBC	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > OldFilesPerDBC:             ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.n_UseFilesPerDBC				= lo_CFG.n_UseClassPerFile
+											lo_CFG.l_RedirectFilePerDBCToMain	= lo_CFG.l_RedirectClassPerFileToMain
+											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> UseFilesPerDBC:           ' + Transform(lcValue) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> RedirectFilePerDBCToMain: ' + Transform(lcValue) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> ItemPerDBCCheck:          ' + Transform(lcValue) )
+										endif
+									Endif
+
+								Case Left( laConfig(m.I), 15 ) == Lower('UseFilesPerDBC:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 16 ) )
+									If lo_CFG.l_OldFilesPerDBC AND Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.n_UseFilesPerDBC	= Int( Val(lcValue) )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseFilesPerDBC:             ' + Transform(lcValue) )
 									Endif
 
 								Case Left( laConfig(m.I), 25 ) == Lower('RedirectFilePerDBCToMain:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 26 ) )
-									If Inlist( lcValue, '0', '1' ) Then
+									If lo_CFG.l_OldFilesPerDBC AND Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_RedirectFilePerDBCToMain	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectFilePerDBCToMain:   ' + Transform(lcValue) )
 									Endif
 
 								Case Left( laConfig(m.I), 16 ) == Lower('ItemPerDBCCheck:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
-									If Inlist( lcValue, '0', '1' ) Then
+									If lo_CFG.l_OldFilesPerDBC AND Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_ItemPerDBCCheck	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ItemPerDBCCheck:            ' + Transform(lcValue) )
 									Endif
@@ -2390,13 +2421,16 @@ Define Class c_foxbin2prg As Session
 										lo_CFG.l_DBF_IncludeDeleted	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_IncludeDeleted:         ' + Transform(lcValue) )
 									Endif
-*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 								Case Left( laConfig(m.I), 18 ) == Lower('ClassPerFileCheck:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_ClassPerFileCheck	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClassPerFileCheck:          ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => ItemPerDBCCheck:          ' + Transform(lcValue) )
+										endif
 									Endif
 
 								Case Left( laConfig(m.I), 27 ) == Lower('RedirectClassPerFileToMain:')
@@ -2404,7 +2438,12 @@ Define Class c_foxbin2prg As Session
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_RedirectClassPerFileToMain	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.l_RedirectFilePerDBCToMain	= lo_CFG.l_RedirectClassPerFileToMain
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => RedirectFilePerDBCToMain: ' + Transform(lcValue) )
+										endif
 									Endif
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 								Case Left( laConfig(m.I), 18 ) == Lower('RedirectClassType:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
@@ -2608,6 +2647,7 @@ Define Class c_foxbin2prg As Session
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
+					.writeLog( C_TAB + 'l_OldFilesPerDBC:             ' + Transform(.l_OldFilesPerDBC) )
 					.writeLog( C_TAB + 'n_UseFilesPerDBC:             ' + Transform(.n_UseFilesPerDBC) )
 					.writeLog( C_TAB + 'l_RedirectFilePerDBCToMain:   ' + Transform(.l_RedirectFilePerDBCToMain) )
 					.writeLog( C_TAB + 'l_ItemPerDBCCheck:            ' + Transform(.l_ItemPerDBCCheck) )
@@ -28874,6 +28914,7 @@ Define Class CL_CFG As Custom
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
 		; && SF
+	+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
 	+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 		+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
 		+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
@@ -28927,6 +28968,7 @@ Define Class CL_CFG As Custom
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
 *!*	/Changed by: Lutz Scheffler 21.02.2021
+    l_OldFilesPerDBC				= Null
 	n_UseFilesPerDBC				= Null
 	l_RedirectFilePerDBCToMain		= Null
 	l_ItemPerDBCCheck				= Null
@@ -28989,6 +29031,7 @@ Define Class CL_CFG As Custom
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
+            .l_OldFilesPerDBC               = toParentCFG.l_OldFilesPerDBC
 			.n_UseFilesPerDBC				= toParentCFG.n_UseFilesPerDBC
 			.l_RedirectFilePerDBCToMain		= toParentCFG.l_RedirectFilePerDBCToMain
 			.l_ItemPerDBCCheck				= toParentCFG.l_ItemPerDBCCheck
@@ -29250,13 +29293,19 @@ Define Class CL_LANG As Custom
 						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+						<<>>MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+
 						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
 						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
 						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
 						<<>>                               && 1 creates a file.dc2 with DBC properties
@@ -29281,6 +29330,9 @@ Define Class CL_LANG As Custom
 						<<>>extension: mn2=mna
 						<<>>extension: db2=dba
 						<<>>extension: dc2=dca
+						<<>>-- Additional extensions
+						<<>>extension: fk2=fkx			   && FKY
+						<<>>extension: me2=fkx			   && MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29440,6 +29492,8 @@ Define Class CL_LANG As Custom
 						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+						<<>>MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
@@ -29447,6 +29501,9 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
 						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
 						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
 						<<>>                               && 1 creates a file.dc2 with DBC properties
@@ -29471,6 +29528,9 @@ Define Class CL_LANG As Custom
 						<<>>extension: mn2=mna
 						<<>>extension: db2=dba
 						<<>>extension: dc2=dca
+						<<>>-- Additional extensions
+						<<>>extension: fk2=fkx			   && FKY
+						<<>>extension: me2=fkx			   && MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29644,6 +29704,8 @@ Define Class CL_LANG As Custom
 						<<>>FRX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
 						<<>>LBX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
+						<<>>FKY_Conversion_Support: 1      && 0=Aus, 1=Erzeuge nur Textdatei (Diff)
+						<<>>MEM_Conversion_Support: 1      && 0=Aus, 1=Erzeuge nur Textdatei (Diff)
 						<<>>DBC_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
 						<<>>DBF_Conversion_Support: 1      && 0=Aus
 						<<>>                               && 1=Erzeuge Textdatei nur für Struktur (Diff)
@@ -29659,6 +29721,9 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Optionen für DBC
 						<<>>- Optionen für Datei per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Die unten stehenden DBC Optionen werden aktiviert, 0=Die UseClassPerFile settings werden genutzt.
+						<<>>                               &&   Die unten stehenden Optionen werden nur gelesen, wenn OldFilesPerDBC vorher 1 ist!
+						<<>>                               &&   Wird OldFilesPerDBC wieder auf 0 gesetzt, gehen diese Einstellungen verloren.
 						<<>>UseFilesPerDBC: 0              && 0=Erzeuge eine dc2 Datei, 1=Erzeuge mehrfache Dateien.*.*.dc2
 						<<>>                               && 0 Erzeugt eine Datei <Datenbank>.db2 mit allem Inhalt der DBC
 						<<>>                               && 1 Erzeugt eine Datei <Datenbank>.dc2 mit den Eigenschaften der Datenbank
@@ -29693,6 +29758,9 @@ Define Class CL_LANG As Custom
 						<<>>extension: mn2=mna
 						<<>>extension: db2=dba
 						<<>>extension: dc2=dca
+						<<>>-- Zusätzliche Endungen
+						<<>>extension: fk2=fkx			   && FKY
+						<<>>extension: me2=fkx			   && MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29862,6 +29930,8 @@ Define Class CL_LANG As Custom
 						<<>>FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+						<<>>FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+						<<>>MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 						<<>>DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
@@ -29869,6 +29939,9 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
 						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
 						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
 						<<>>                               && 1 creates a file.dc2 with DBC properties
@@ -29893,6 +29966,9 @@ Define Class CL_LANG As Custom
 						<<>>extension: mn2=mna
 						<<>>extension: db2=dba
 						<<>>extension: dc2=dca
+						<<>>-- Additional extensions
+						<<>>extension: fk2=fkx			   && FKY
+						<<>>extension: me2=fkx			   && MEM
 						<<>>
 						<<>>
 							ENDTEXT

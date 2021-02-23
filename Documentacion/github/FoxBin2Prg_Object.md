@@ -1,20 +1,24 @@
-# Purpose of this document
-This document is an attempt to recreate the original documentation of FoxBin2Prg out of CodePlex.  
-I found the documentation on [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/blob/master/README.md) a bit brief. For a short what and why, see there.
+# Usage in object style
+Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
-The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project. Pictures are taken from the original project.  
-As far as possible these are the original documents. Changes are added where functionality is changed.
-
-----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of VFPX. 
-
-----
-# FoxBin2Prg - Usage in object style
+## Purpose of this document
 FoxBin2Prg might be used as an EXE either from Windows or VFP, or as as prg from inside VFP in a [command line](./FoxBin2Prg_Run.md) way.  
 This document deals with the integration as an VFP Object using VFP based objects.
 
 For settings, API and other realted stuff see [Internals](./FoxBin2Prg_Internals.md).
+
+The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project.   
+Pictures are taken from the original project.  
+As far as possible these are the original documents. Changes are added where functionality is changed.
+
+----
+## Table of contents
+- [Usage](#usage)
+   - [Instantiating](#instantiating)
+   - [Execute](#execute)
+- [Return values](#return-values)
+
+----
 ## Usage
 ### Instantiating
 Basically, the instantiating of FoxBinPrg is straight forward:
@@ -32,7 +36,8 @@ LOCAL loCnv AS c_foxbin2prg OF "FOXBIN2PRG.PRG"
 loCnv = NEWOBJECT("c_foxbin2prg", "<Path>\FOXBIN2PRG.PRG")
 loCnv.execute( <params> )
 ```
-### Execute()
+
+### Execute
 Transforming file(s) works like   
 `obj.execute(cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,oModule [,oEx [,lRelanzarError [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cCFG_File] ] ] ] ] ] ] ] ] ] ] ] ] ] ])`   
 A lot of the parameters are the same as calling the [command line](./FoxBin2Prg_Run.md),
@@ -52,7 +57,7 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | | \*\- | If _cInputFile_ is a project (pj[x2]) all files of the project, **excluding** the pjx, will be processed. The extension defines direction of operation. |
 | | d, D, K, B, M, R, V | SCCAPI (SCCTEXT.PRG) compatibility mode, query the conversion support for the file type specified <br /> Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class |
 | cTextName | Text filename. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. File to use. |
-| lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. .T.=Generates Text, .F.=Regenerates Binary. <br/> **Note:** _cType_ have predominance over _lGenText_ |
+| lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. .T.=Generates Text, .F.=Generates Binary. <br/> **Note:** _cType_ have predominance over _lGenText_ |
 | cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX |
 | cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log. |
 | cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing |
@@ -60,7 +65,7 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | oEx | | Exception object, return for errorhandling |
 | lRelanzarError | .T.. _.F._ | Throw error to caller of _.Execute()_ |
 | cOriginalFileName | text | used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version |
-| cRecompile | 0, _1_ | Indicates recompile ('1') the binary once regenerated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
+| cRecompile | 0, _1_ | Indicates recompile ('1') the binary once generated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
 |  | path | The binary is compiled from this path |
 | cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
 | cBackupLevels | 0, _1_, .. | "0" no Bakup, "1", one level _filename_.bak, "n" n levels of Backup _filename_.n.bak |
@@ -68,16 +73,23 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | cOptimizeByFilestamp | _0_, 1 | 1=Optimize file regeneration depending on file timestamp.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
 | cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
 |  | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation. |
-#### Note #1
+
+#### Note
 The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:   
 `PRG2BIN-INTERACTIVE`   
 `BIN2PRG-INTERACTIVE-SHOWMSG`
-#### Note #2:
+
+#### Note
 - The swap of _cInputFile_ and _cType_ is not possible here.
 - Setting _cInputFile_ and _cType_ appropriate, info screen and generation of configuration templates is possible too. See [command line](./FoxBin2Prg_Run.md#usage_1)
 - While possibe, the SCCAPI (SCCTEXT.PRG) compatibility mode is more an idea of the [command line](./FoxBin2Prg_Run.md).
+
 ## Return values
 Return value is 0=OK, 1=Error.
+
+----
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of VFPX. 
 
 ----
 Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

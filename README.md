@@ -1,77 +1,45 @@
-# FoxBin2Prg v1.19.xx - Binary/Text Converting program for Microsoft Visual FoxPro 9
-![](https://vfpx.github.io/images/vfpxbanner_small.gif)
-## <span style="background-color: gold;">This fork</span>
-<span style="background-color: lemonchiffon;"> This is a fork of [Fernando D. Bozzo](https://github.com/fdbozzo) [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/).  
-It's main purpose it's to fix some bugs and recreate the documentation this project had on CodePlex.   
-There was a need of some functionality too. Some off the mods may ore may not seen as bug fixes.   </span>
+# FoxBin2Prg v1.20.01
+**Binary/Text Converting program for Microsoft Visual FoxPro**
 
-<span style="background-color: lemonchiffon;"> To get the new settings in config file, use the new create-a-template function:</span>
+## Lutz Scheffler
+![VFPX Logo](https://vfpx.github.io/images/vfpxbanner_small.gif)
 
-```
-DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
-DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
-```
+## Why this fork?
+This is a fork of [Fernando D. Bozzo](https://github.com/fdbozzo) [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/).  
+It's main purpose it's to fix some bugs and add some new functions. It looks like Fernando does not longer maintain FoxBin2Prg,
+ so, with his permission, I introduce this fork to [VFPX](https://vfpx.github.io/) ![VFPX Picture](./pictures/vfpxpoweredby_alternative.gif).
 
-<span style="background-color: lemonchiffon;"> The major break is the split of the handling of DBC from VCX/SCX.
-If DBC's where splited into single files using _UseClassPerFile_,
-the new settings around _UseFilesPerDBC_ must be used. See [Intenals](./Documentacion/github/FoxBin2prg_Internals.md#configuration-file).  
-
-<span style="background-color: lemonchiffon;"> The function _DBF_BinChar_Base64: 0_ must be handled with care too.
-Tables must converted to _Text_ according. **It's not recommended for running projects.**</span>   
-
-<span style="background-color: lemonchiffon;">The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions.
-</span>   
-
-<span style="background-color: lemonchiffon;"> It's a good idea to have the FoxBin2Prg.cfg per projekt and and source control anyway, old commits / versions would have the old config. 
-So teh settings would fit the data.</span>   
-	
-### <span style="background-color: gold;">Fixes (fixes only are in the fork branch of this repo)</span>
-
-| Details |
-| - |
-| conversion prg -> vcx, files per class could create one class multiple times |
-| processing directory, flush log file after loop instead of file |
-| conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
-| minor translations |
-| conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
-### <span style="background-color: gold;">Mods</span>
-
-| Details |
-| - |
-| Documentation from CodePlex integrated |
-| German translation improved |
-| Info screen-doc improved |
-| inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
-| inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
-| inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
-| inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
-| inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
-
-<span style="background-color: lemonchiffon;"> There is a the reworked [documentation](./Documentacion/github/FoxBin2prg.md) from CodePlex available.</span>
+I do not maintain the spanish documentation - it would fade. So just check Fernados repo for this information.   
+A quick run is [introduced](#use-foxbin2prg), more [complex](./Documentacion/github/FoxBin2prg_Run.md#usage-1), and a large [documentation](./Documentacion/github/FoxBin2prg.md) exists too.
+Remember yourself to compile the exe first.   
+For a quick few of the changes made by the fork, see [Changes by the fork](#changes-by-the-fork).
 
 ---
 ---
 
-## FoxBin2Prg v1.19.xx - Binary/Text Conversor for Microsoft Visual FoxPro 9
 
-### Fernando D. Bozzo
-
-![](https://vfpx.github.io/images/vfpxbanner_small.gif)
-
+If you like to see Fernandos blog, or value his work:   
 - Blog: http://fdbozzo.blogspot.com.es/
-- Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
     Thank you for your support!
 
-## ENGLISH/ESPAÑOL 
+---
+---
+If you like to value my work, support the Geeks at https://virtualfoxfest.com/ or www.swfox.net.  
+I also do not reject invitations to beer, Next autumn in Gilbert.
 
-### ENGLISH
+---
+---
 
-### What is FOXBIN2PRG?
-It is a program intended to be used with **SCM tools** (Source Code Managers, like VSS, CVS, SVN) and *DVCS tools* (Version Control Systems such as Git, Mercurial, Plastic, and others), or as **standalone** program for **Diff** (viewing differences) and **Merge** operations. Foxbin2prg can substitute for **SccText/X**, **TwoFox** and others, and enhance their functionality, generating bidirectional PRG-Style versions of Foxpro binary files that allow recreating the original binary file.
+## What is FOXBIN2PRG?
+It is a program intended to be used with **SCM tools** (Source Code Managers, like VSS, CVS, SVN)
+and *DVCS tools* (Version Control Systems such as Git, Mercurial, Plastic, and others),
+or as **standalone** program for **Diff** (viewing differences) and **Merge** operations.
+Foxbin2prg can substitute for **SccText/X**, **TwoFox** and others,
+and enhance their functionality, generating bidirectional PRG-Style versions of Foxpro binary files that allow recreating the original binary file.
 
-#### Advantages:
+## Advantages:
 
 * It generates "PRG" _style_ text files from Foxpro binary files for use in SCM and VCS systems and for visual comparison.
 
@@ -93,7 +61,9 @@ It is a program intended to be used with **SCM tools** (Source Code Managers, li
 
 The program supports conversions between PJX,SCX,VCX,FRX,LBX,DBC,DBF and MNX files, for which it generates TEXT versions with extension PJ2,SC2,VC2,FR2,LB2,DC2,DB2 and MN2. If you want, the created text file extensions can be reconfigured to be compatibilize with SourceSafe.
 
-#### Here is an example of a FOXBIN2PRG.CFG configuration file if you need to change extensions for using it with a specific VSS (SourceSafe)
+## Examples
+### Redefine extensions of _Text_ 
+Here is an example of a FOXBIN2PRG.CFG configuration file if you need to change extensions for using it with a specific VSS (SourceSafe)
 ```
 extension: SC2=SCA
 extension: VC2=VCA
@@ -105,7 +75,7 @@ extension: DB2=DBA
 extension: DC2=DCA
 ```
 
-### USE:
+### Use FoxBin2Prg
 ```
 DO FOXBIN2PRG.PRG WITH "<path>\archivo.scx"     ==> Generates the TEXT version sc2 extension
 DO FOXBIN2PRG.PRG WITH "<path>\archivo.sc2"     ==> Regenerates the binary version with scx extension
@@ -114,99 +84,117 @@ DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
-### USEFUL SETUP:
+### Use with MS Windows SendTo
 You can create up to three different shortcuts pointing to FoxBin2Prg.exe and in your "SendTo" folder in your Windows profile. This allows you to "send" a selected file (pjx,pj2,etc) to the selected option, and make on-the-fly conversions. (Make sure you have the option for seeing known file extensions turned on!):
 
-Shortcut Name                | Right-click/Properties/destination          | What you can do with this option
----------------------------- | ------------------------------------------- | --------------------------------
-FoxBin2Prg - Binary2Text.lnk | <path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"     | Process directories or individual files
-FoxBin2Prg - Text2Binary.lnk | <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"     | Process directories or individual files
-FoxBin2Prg.lnk               | <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG" | Process individual files or directories asking what to convert
+#### Process directories or individual files to _Text_
+- Name:  
+  `FoxBin2Prg - Binary2Text.lnk`   
+- Right-click/Properties/destination_    
+  `<path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"` 
+#### Process directories or individual files to _Binary_
+- Name:  
+  `FoxBin2Prg - Text2Binary.lnk`   
+- Right-click/Properties/destination_    
+  `<path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"` 
+#### Process individual files or directories asking what to convert
+- Name:  
+  `FoxBin2Prg.lnk`   
+- Right-click/Properties/destination_    
+  `<path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"` 
 
-*How to use them*: Select a file, right-click, SendTo -> FoxBin2Prg
+##### How to use the links
+Select a file, right-click, SendTo -> FoxBin2Prg
 
-### LOCALIZATION:
+## LOCALIZATION:
 Is automatic starting at v1.19.38 (Languages: EN,ES,FR,DE)
 
 
-### FINAL NOTE:
-This program is Open Source and "libre", and I don't make any guaranties that it fulfills your expectations or that it will be free of bugs. I will try to fix bugs if my obligations let me do it.
+## FINAL NOTE:
+This program is Open Source and "libre", and I don't make any guaranties that it fulfills your expectations or that it will be free of bugs.
+I will try to fix bugs if my obligations let me do it.
 
-### Project info and updates: 
+## Project info and updates: 
 
-Fernando D. Bozzo's repository at Github: https://github.com/fdbozzo/foxbin2prg
+Fernando D. Bozzo's repository at Github: https://github.com/fdbozzo/foxbin2prg   
+Lutz Scheffler's repository at Github: https://github.com/lscheffler/foxbin2prg
 
-### LICENCE:
+## LICENCE:
 This work is licensed under the Creative Commons Attribution 4.0 International License.
 To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
 
-## ESPAÑOL
 ---
+---
+## Changes by this fork 
+To get the new settings in config file, use the new create-a-template function:
 
-### ¿Que es FOXBIN2PRG?
-Es un programa pensado para ser utilizado con herramientas SCM (Administradores de Control de Código Fuente, como VSS, CVS, SVN) y herramientas DVCS (como Git, Mercurial, Plastic, and others), o como programa independiente, para hacer operaciones de Diff (ver diferencias) y Merge (mezclar cambios), que pretende sustituir a SccText/X y TwoFox y mejorar sus funcionalidades, generando versiones de texto estilo-PRG que permiten recrear el binario original.
-
-**Ventajas:**
-
-* Genera archivos estilo "PRG" (no compilables), para comparación visual
-* Permite hacer cambios en la versión Texto tan fácil como modificar PRG
-* Todo el código de programa está en un solo PRG, para simplificar su mantenimiento
-* Con las versiones Texto puedes regenerar los binarios originales, así que es útil como backup
-* Las extensiones usadas son configurables si se crea el archivo FOXBIN2PRG.CFG
-* Los métodos y propiedades de la versión Texto son ordenados alfabéticamente para acilitar su comparación
-* Puede usar el seteo "UseClassPerFile" para crear archivos individuales por clase o miembro de DBC
-* Aproveche la API usando foxbin2prg como un objeto
-* Tiene compatibilidad con el SccText/X a nivel de parámetros, así puede ser usado como sustituto con SourceSafe
-* Productividad: Puedes crear un acceso directo en la carpeta "SendTo" de tu Perfil de Windows, así puedes "enviar" el archivo seleccionado (pjx,pj2,etc) a Foxbin2prg.exe y a los scripts vbs incluidos, y hacer conversiones al vuelo
-* Modifique los archivos TX2 estilo-prg con MODIFY COMMAND (sin compilar) para ver la sintaxis coloreada, o incluso usar el Document View para navegar los procedimientos
-* Recupere sus proyectos SourceSafe (.pjx) desde sus archivos .pjm 
-
-Actualmente soporta las conversiones de archivos PJX,SCX,VCX,FRX,LBX,DBC,DBF y MNX para los que genera las versiones TEXTO con extensión PJ2,SC2,VC2,FR2,LB2,DC2,DB2 y MN2, que pueden reconfigurarse para compatibilizar con SourceSafe. 
-
-__Ejemplo del archivo de configuración FOXBIN2PRG.CFG si se necesitan cambiar las extensiones para VSS (SourceSafe)__
 ```
-extension: SC2=SCA
-extension: VC2=VCA
-extension: PJ2=PJA
-extension: MN2=MNA
-extension: FR2=FRA
-extension: LB2=LBA
-extension: DB2=DBA
-extension: DC2=DCA
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
-### USO:
-```
-DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.scx" ==> Genera la versión TEXTO con extensión sc2 
-DO FOXBIN2PRG.PRG WITH "<ruta>\archivo.sc2" ==> Regenera la versión binaria con extensión scx 
-```
+### Exe file
+Removed exe file. Just a bloat of teh repo, any disciple of the Fox know how to create, if in need.
+The prg works anyway.
 
-### CONFIGURACIÓN UTIL:
-Se puede crear 3 accesos directos de FoxBin2Prg.exe y moverlos a la carpeta "SendTo" de su perfil de usuario Windows, para poder "enviar" el archivo elegido (pjx,pj2,etc) a la opción seleccionada, y así hacer conversiones al vuelo, luego puede renombrar y modificar esos accesos directos como sigue (asegúrese de que puede ver las extensiones del sistema): 
+### Split of container files
+VCX, SCX and DBC are container that hold different items. There is was a single option to split them.   
+The split of DBC the same way like VCX/SCX might not be the best choice under all circumstances.  
+New option _OldFilesPerDBC_ is set 1, _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ might be used to set the handling of the DBC.   
+Note that those options will be ignored, if _OldFilesPerDBC_ is 0 (default).   
+**Check that changes will be reflected on running projects.**   
+See [Internals](./Documentacion/github/FoxBin2prg_Internals.md#configuration-file).  
+
+### Tanscoding of table fields with NoCPTrans
+The function _DBF_BinChar_Base64: 0_ must be handled with care too.
+Tables must converted to _Text_ according. **It's not recommended for running projects. Handle with extra care otherwise.**
+
+### Inclusion of deleted records
+Sometimes information left in deleted (table) records is still valuable information.
+The new option _DBF_IncludeDeleted_ allows to keep those records throug conversion.   
+The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files.
+
+#### Recomendation
+It's a good idea to have the _FoxBin2Prg.cfg_ per projekt and and source control,
+old commits / versions would have the old config.  
+So the settings would fit the data and FoxBin2Prg could generate according to it.
+	
+### Fixes
+Fixes only are in the fork branch of this repo.
+
+| Details |
+| - |
+| Added MEM and FKY options to config template and internal dokumentation |
+| Conversion prg -> vcx, files per class could create one class multiple times |
+| Processing directory, flush log file after loop instead of file |
+| Conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
+| Minor translations |
+| Conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
+
+### Features
+
+| Details |
+| - |
+| [Documentation](./Documentacion/github/FoxBin2prg.md) reworked. |
+| German translation improved |
+| Info screen-doc improved |
+| Inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
+| Inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
+| Inserted option OldFilesPerDBC to control split of DBC, the options below are controled by this |
+| Inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
+| Inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
+| Inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
 
 
-Nombre                       | Click-Derecho/Propiedades/destino           | Qué puede hacer con esta opción
----------------------------- | ------------------------------------------- | -------------------------------
-FoxBin2Prg - Binary2Text.lnk | <ruta>\foxbin2prg.exe "BIN2PRG-SHOWMSG"     | Procesar directorios o archivos individuales
-FoxBin2Prg - Text2Binary.lnk | <ruta>\foxbin2prg.exe "PRG2BIN-SHOWMSG"     | Procesar directorios o archivos individuales
-FoxBin2Prg.lnk               | <ruta>\foxbin2prg.exe "INTERACTIVE-SHOWMSG" | Procesar archivos individuales o directorios preguntando qué convertir
+---
+---
+# Folder information
+Project to generate text representations of VFP binary sources for source control
 
+## ./
+This folder containes the files necessary to run FoxBin2Prg.prg or to create the FoxBin2Prg.exe
 
-Por ejemplo: Seleccionar un archivo, click-derecho, Enviar A -> FoxBin2Prg 
-
-
-### LOCALIZACIÓN:
-Es automática desde la v1.19.38 (Lenguajes: EN,ES,FR,DE) 
-
-
-### NOTA FINAL:
-Este programa es Open Source y "libre", y como tal no ofrezco garantías de que cumpla con sus espectativas o de que está libre de fallos, que intentaré solucionar si me reporta y mis obligaciones me lo permiten. 
-
-<p>Información del proyecto y actualizaciones: <a href="https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg">https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg</a></p>
-
-
-### LICENCIA:
-Esta obra está sujeta a la licencia Reconocimiento-CompartirIgual 4.0 Internacional de Creative Commons. Para ver una copia de esta licencia, visite http://creativecommons.org/licenses/by-sa/4.0/deed.es_ES.
+For usage see [documentation](./Documentacion/github/FoxBin2prg.md)
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_
+Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
