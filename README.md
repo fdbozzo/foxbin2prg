@@ -4,11 +4,11 @@
 
 ![](https://vfpx.github.io/images/vfpxbanner_small.gif)
 
-- Blog: http://fdbozzo.blogspot.com.es/
-- Project info: https://vfpx.codeplex.com/wikipage?title=FoxBin2Prg
-- [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
+Blog: http://fdbozzo.blogspot.com.es/
 
-    Thank you for your support!
+[![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted)  
+
+Thank you for your support!
 
 
 ## ENGLISH/ESPAÑOL 
@@ -79,6 +79,14 @@ This program is Open Source and "libre", and I don't make any guaranties that it
 ### Project info and updates: 
 
 Fernando D. Bozzo's repository at Github: https://github.com/fdbozzo/foxbin2prg
+
+### Update History
+
+#### 2021-03-02
+
+* Added support for writing to a different folder than the source code
+* Added a new HomeDir configuration setting: 0 = don't save HomeDir in PJ2, 1 (the default) = save HomeDir in PJ2
+* Changed version to 1.20.00
 
 ### LICENCE:
 This work is licensed under the Creative Commons Attribution 4.0 International License.

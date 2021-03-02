@@ -225,6 +225,8 @@
 * 01/04/2020	DH			v1.19.51	Bug Fix: Manejo de AutoIncrement incompatible con Project Explorer (Dan Lauer)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
+* 2021-03-02	DH			v1.20		Enhancement: added support for writing to a different folder than the source code (Doug Hennig)
+* 2021-03-02	DH			v1.20		Enhancement: added configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -391,11 +393,12 @@
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 * tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
 * tcCFG_File				(v? IN    ) Indica si se debe usar un archivo de configuración distinto al predeterminado
+* tcOutputFolder			(v? IN    ) The output folder to write to (optional: if it isn't specified, the same folder as the source is used)
 *---------------------------------------------------------------------------------------------------
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
 LPARAMETERS tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName ;
-	, tcRecompile, tcNoTimestamps, tcCFG_File
+	, tcRecompile, tcNoTimestamps, tcCFG_File, tcOutputFolder
 
 *-- NO modificar! / Do NOT change!
 #DEFINE C_CMT_I						'*--'
@@ -630,6 +633,9 @@ ENDIF
 TRY
 	loEx	= NULL
 	loCnv	= CREATEOBJECT("c_foxbin2prg")
+	if not empty(tcOutputFolder)
+		loCnv.cOutputFolder = tcOutputFolder
+	endif not empty(tcOutputFolder)
 	lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
 		, tcDontShowProgress, NULL, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
 		, .F., .F., .F., tcCFG_File )
@@ -809,8 +815,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	DIMENSION a_ProcessedFiles(1, 6)
 	PROTECTED n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 	*--
-	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.51'
+	n_FB2PRG_Version				= 1.20
+	c_FB2PRG_Version_Real			= '1.20.00'
 	*--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -907,7 +913,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 	DBC_Conversion_Support			= 2
 	DBF_Conversion_Included			= ''
 	DBF_Conversion_Excluded			= ''
-
+	cOutputFolder					= ''			&& the folder to write files to (blank = same folder as source file)
+	n_HomeDir						= 1				&& 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2
 
 	PROCEDURE INIT
 		LPARAMETERS tcCFG_File, tcCancelWithEscKey
@@ -1595,6 +1602,15 @@ DEFINE CLASS c_foxbin2prg AS Session
 			RETURN THIS.n_PRG_Compat_Level
 		ELSE
 			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_PRG_Compat_Level, THIS.n_PRG_Compat_Level )
+		ENDIF
+	ENDPROC
+
+
+	PROCEDURE n_HomeDir_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_HomeDir
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_HomeDir, THIS.n_HomeDir )
 		ENDIF
 	ENDPROC
 
@@ -2398,6 +2414,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 							IF INLIST( lcValue, '0', '1' ) THEN
 								lo_CFG.n_BodyDevInfo	= INT( VAL( lcValue ) )
 								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > BodyDevInfo:                ' + TRANSFORM(lo_CFG.n_BodyDevInfo) )
+							ENDIF
+
+						CASE LEFT( laConfig(m.I), 8 ) == LOWER('HomeDir:')
+							lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 9 ) )
+							IF INLIST( lcValue, '0', '1' ) THEN
+								lo_CFG.n_HomeDir	= INT( VAL( lcValue ) )
+								.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > HomeDir:                ' + TRANSFORM(lo_CFG.n_HomeDir) )
 							ENDIF
 
 						CASE LEFT( laConfig(I), 17 ) == LOWER('PRG_Compat_Level:')
@@ -4152,6 +4175,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ERROR (TEXTMERGE(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 
 				ENDCASE
+
+				loConversor.cOutputFolder = This.cOutputFolder
 
 				*-- Optimización: Comparación de los timestamps de InputFile y OutputFile para saber
 				*-- si el OutputFile se debe regenerar o no.
@@ -6217,7 +6242,7 @@ DEFINE CLASS c_conversor_base AS Custom
 	c_ClaseActual			= ''
 	oFSO					= NULL
 	n_Methods_LineNo		= 0			&& Número de línea del error dentro de "Methods"
-
+	cOutputFolder			= ''
 
 
 	PROCEDURE INIT
@@ -11373,6 +11398,9 @@ DEFINE CLASS c_conversor_prg_a_pjx AS c_conversor_prg_a_bin
 
 			WITH THIS AS c_conversor_prg_a_pjx OF 'FOXBIN2PRG.PRG'
 				STORE NULL TO loFile, loServerHead
+				if empty(toProject._HomeDir)
+					toProject._HomeDir = justpath(THIS.c_OutputFile)
+				endif empty(toProject._HomeDir)
 				toProject._HomeDir	= CHRTRAN( toProject._HomeDir, ['], [] )
 				toProject._SccData	= CHR(3) + CHR(0) + CHR(1) + REPLICATE( CHR(0), 651 )
 
@@ -15567,6 +15595,10 @@ DEFINE CLASS c_conversor_bin_a_prg AS c_conversor_base
 			LOCAL lcExpanded, llFileExists, lnBytes, lcOutputFile, laDirFile(1,5) ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
+			if not empty(This.cOutputFolder)
+				tcOutputFile = forcepath(tcOutputFile, This.cOutputFolder)
+			endif not empty(This.cOutputFolder)
+
 			lcExpanded	= IIF( '.' $ JUSTSTEM(tcOutputFile), 'X1', 'X0' )
 
 			*-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -16485,9 +16517,17 @@ DEFINE CLASS c_conversor_pjx_a_prg AS c_conversor_bin_a_prg
 
 
 					*-- Generación del proyecto
+					if toFoxBin2Prg.n_HomeDir = 1
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+							<<>>*<.HomeDir = <<loProject._HomeDir>> />
+						ENDTEXT
+					else
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+						ENDTEXT
+					endif toFoxBin2Prg.n_HomeDir = 1
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_BUILDPROJ_I>>
-						<<>>*<.HomeDir = <<loProject._HomeDir>> />
 						<<>>
 						FOR EACH loProject IN _VFP.Projects FOXOBJECT
 						<<>>	loProject.Close()
@@ -17045,9 +17085,17 @@ DEFINE CLASS c_conversor_pjm_a_prg AS c_conversor_bin_a_prg
 				WITH THIS AS c_conversor_pjm_a_prg OF 'FOXBIN2PRG.PRG'
 
 					*-- Generación del proyecto
+					if toFoxBin2Prg.n_HomeDir = 1
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+							<<>>*<.HomeDir = <<loProject._HomeDir>> />
+						ENDTEXT
+					else
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+						ENDTEXT
+					endif toFoxBin2Prg.n_HomeDir = 1
 					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_BUILDPROJ_I>>
-						<<>>*<.HomeDir = <<loProject._HomeDir>> />
 						<<>>
 						FOR EACH loProject IN _VFP.Projects FOXOBJECT
 						<<>>	loProject.Close()
@@ -28472,6 +28520,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
 		+ [<memberdata name="n_bodydevinfo" display="n_BodyDevInfo"/>] ;
+		+ [<memberdata name="n_homedir" display="n_HomeDir"/>] ;
 		+ [<memberdata name="l_notimestamps" display="l_NoTimestamps"/>] ;
 		+ [<memberdata name="n_optimizebyfilestamp" display="n_OptimizeByFilestamp"/>] ;
 		+ [<memberdata name="n_excludedbfautoincnextval" display="n_ExcludeDBFAutoincNextval"/>] ;
@@ -28548,6 +28597,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 	DBC_Conversion_Support			= NULL
 	c_BackgroundImage				= NULL
 	n_PRG_Compat_Level				= NULL
+	n_HomeDir						= NULL
 
 
 	PROCEDURE CopyFrom
@@ -28599,6 +28649,7 @@ DEFINE CLASS CL_CFG AS CUSTOM
 			.DBC_Conversion_Support			= toParentCFG.DBC_Conversion_Support
 			.c_BackgroundImage				= toParentCFG.c_BackgroundImage
 			.n_PRG_Compat_Level				= toParentCFG.n_PRG_Compat_Level
+			.n_HomeDir						= toParentCFG.n_HomeDir
 		ENDWITH
 	ENDPROC
 
