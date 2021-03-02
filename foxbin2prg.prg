@@ -225,6 +225,12 @@
 * 01/04/2020	DH			v1.19.51	Bug Fix: Manejo de AutoIncrement incompatible con Project Explorer (Dan Lauer)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
+
+*  14/02/2021	Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
+*										minor translations
+*  14/02/2021	Lutz Scheffler			conversion prg -> dbf, fields with .NULL. value are incorectly recreated
+*  15/02/2021	Lutz Scheffler			processing directory, flush log file after loop instead of file
+*  16/02/2021	Lutz Scheffler			conversion prg -> vcx, files per class could create one class multiple times
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -852,7 +858,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 	l_RemoveNullCharsFromCode		= .T.
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
-	n_UseClassPerFile				= 0
+	n_UseClassPerFile 				= 0
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
@@ -2137,6 +2143,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 					ELSE
 						.writeLog( '> ' + UPPER(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path )
 						lo_CFG	= CREATEOBJECT('CL_CFG')
+
 						lo_Configuration.Add( lo_CFG, lc_CFG_Path )
 						.n_CFG_Actual  	= lo_Configuration.Count
 
@@ -3266,7 +3273,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', m.I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-								.writeLog_Flush()
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,06:57:00}"
+* flushing the log after each file let us only see last file
+* why ever, it should be appended, but we simply move
+* .writeLog_Flush() after ENDFOR
+
+*								.writeLog_Flush()
 
 								DO CASE
 								CASE lnCodError = 1799	&& Conversion Cancelled
@@ -3276,6 +3289,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 									.doWriteErrorLog( @toEx )
 								ENDCASE
 							ENDFOR && I = 1 TO lnFileCount
+							.writeLog_Flush()
+*!*	/Changed by: Lutz Scheffler 15.2.2021
 
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
@@ -3317,6 +3332,7 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 							.get_FilesFromDirectory( tc_InputFile, @laFiles, @lnFileCount )
 
+
 							FOR I = 1 TO lnFileCount
 								toModulo	= NULL
 								lcFile		= laFiles(m.I)
@@ -3327,7 +3343,13 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 								.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', m.I, lnFileCount, 0 )
 								lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-								.writeLog_Flush()
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,06:57:00}"
+* flushing the log after each file let us only see last file
+* why ever, it should be appended, but we simply move
+* .writeLog_Flush() after ENDFOR
+
+*								.writeLog_Flush()
 
 								DO CASE
 								CASE lnCodError = 1799	&& Conversion Cancelled
@@ -3337,6 +3359,8 @@ DEFINE CLASS c_foxbin2prg AS Session
 									.doWriteErrorLog( @toEx )
 								ENDCASE
 							ENDFOR && I = 1 TO lnFileCount
+							.writeLog_Flush()
+*!*	/Changed by: Lutz Scheffler 15.2.2021
 
 							.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 							EXIT
@@ -4553,14 +4577,14 @@ DEFINE CLASS c_foxbin2prg AS Session
 
 
 	PROCEDURE get_FilesFromDirectory
-		LPARAMETERS tcDir, taFiles, lnFileCount
+		LPARAMETERS tcDir, taFiles, tnFileCount
 		EXTERNAL ARRAY taFiles
 
 		LOCAL laFiles(1), I, lnFiles ;
 			, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
 
-		IF TYPE("ALEN(laFiles)") # "N" OR EMPTY(lnFileCount)
-			lnFileCount = 0
+		IF TYPE("ALEN(laFiles)") # "N" OR EMPTY(tnFileCount)
+			tnFileCount = 0
 			DIMENSION taFiles(1)
 		ENDIF
 
@@ -4577,9 +4601,10 @@ DEFINE CLASS c_foxbin2prg AS Session
 					IF SUBSTR( laFiles(m.I,5), 5, 1 ) == 'D'
 						LOOP
 					ENDIF
-					lnFileCount	= lnFileCount + 1
-					DIMENSION taFiles(lnFileCount)
-					taFiles(lnFileCount)	= tcDir + laFiles(m.I,1)
+
+					tnFileCount	= tnFileCount + 1
+					DIMENSION taFiles(tnFileCount)
+					taFiles(tnFileCount)	= tcDir + laFiles(m.I,1)
 				ENDFOR
 
 				*-- Busco los subdirectorios
@@ -10362,6 +10387,9 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 				, laLineasExclusion(1), lnBloquesExclusion, I, lcClassName, lnIDInputFile, llReplaceClass, lnRow ;
 				, loClase AS CL_CLASE OF 'FOXBIN2PRG.PRG' ;
 				, loLang as CL_LANG OF 'FOXBIN2PRG.PRG'
+				
+			LOCAL;
+			 lnDots AS NUMBER
 
 			WITH THIS AS c_conversor_prg_a_vcx OF 'FOXBIN2PRG.PRG'
 				STORE 0 TO lnCodError, lnCodeLines
@@ -10403,9 +10431,27 @@ DEFINE CLASS c_conversor_prg_a_vcx AS c_conversor_prg_a_bin
 						lcInputFile			= .c_InputFile
 					ENDIF
 
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,16:09:00}"
+* problem with classes declared in multiple files, looks like merge problem of git
+* creates multiple classes in VCX
+* the problem is ADIR(laFiles,Name+".*.ext") will return files with AT LEAST 2 dots
+* so we simply remove files with to many dots
+					lnDots = OCCURS('.',m.lcInputFile)
+
 					lnFileCount			= ADIR( laFiles, lcInputFile, "", 1 )
 
 					IF lnFileCount > 1
+						FOR i = m.lnFileCount TO 1 STEP -1
+							IF OCCURS('.',laFiles(i,1))>m.lnDots THEN
+								ADEL(laFiles,i)							 
+								lnFileCount = m.lnFileCount-1
+							ENDIF &&OCCURS('.',laFiles(i,1))>m.lnDots 
+						NEXT
+						DIMENSION;
+						 laFiles(EVL(lnFileCount,1),ALEN(laFiles,2))
+*!*	/Changed by: Lutz Scheffler 15.2.2021
+
 						ASORT( laFiles, 1, 0, 0, 1)
 					ENDIF
 
@@ -13020,7 +13066,6 @@ DEFINE CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
 ENDDEFINE	&& CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
-
 
 
 DEFINE CLASS c_conversor_prg_a_dbc AS c_conversor_prg_a_bin
@@ -17482,183 +17527,212 @@ DEFINE CLASS c_conversor_dbf_a_prg AS c_conversor_bin_a_prg
 		#ENDIF
 		DODEFAULT( @toModulo, @toEx, @toFoxBin2Prg )
 
-		TRY
-			WITH THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
-				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
-					.write_OutputFile( '', .c_OutputFile, @toFoxBin2Prg )
-					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
-				ENDIF
+*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	change date="{^2021-02-11,08:50:00}"
+* If toFoxBin2Prg.l_ProcessFiles is not true
+* and the try block was exited
+* the stuff below was never instatiated
 
-				LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
-					, lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
-					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC ;
-					, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
-					, llDBCEventsEnabled ;
-					, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
-					, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
-					, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
-					, loFSO AS Scripting.FileSystemObject ;
-					, loTextStream AS Scripting.TextStream ;
-					, loDBC AS CL_DBC OF 'FOXBIN2PRG.PRG'
+*so the whole try / catch block should not run
 
-				loLang			= _SCREEN.o_FoxBin2Prg_Lang
-				loFSO			= toFoxBin2Prg.o_FSO
-				STORE NULL TO loTable, loDBFUtils
-				STORE 0 TO lnCodError
-				loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
-				loDBC				= CREATEOBJECT('CL_DBC')
+		IF NOT toFoxBin2Prg.l_ProcessFiles THEN 
+			THIS.write_OutputFile( '', THIS.c_OutputFile, @toFoxBin2Prg )
+		ELSE  &&NOT toFoxBin2Prg.l_ProcessFiles
+*!*	/Changed by: Lutz Scheffler 11.2.2021
 
-				*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
-				.updateProgressbar( 'Scanning DBF Structure...', 1, 3, 1 )
+			TRY
+				WITH THIS AS c_conversor_dbf_a_prg OF 'FOXBIN2PRG.PRG'
+*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	change date="{^2021-02-11,08:50:00}"
+*moved up:
+*				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
+*					.write_OutputFile( '', .c_OutputFile, @toFoxBin2Prg )
+*					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
+*				ENDIF
+*!*	/Changed by: Lutz Scheffler 11.2.2021
 
-				*-- Include
-				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Included) AND NOT toFoxBin2Prg.DBF_Conversion_Included == '*' ;
-						AND NOT toFoxBin2Prg.filenameFoundInFilter( JUSTFNAME(.c_InputFile), toFoxBin2Prg.DBF_Conversion_Included )
-					toFoxBin2Prg.writeLog('  ' + JUSTFNAME(.c_InputFile) + ' no está en el filtro DBF_Conversion_Included (' + toFoxBin2Prg.DBF_Conversion_Included + ')' )
-					EXIT
-				ENDIF
+					LOCAL lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
+						, lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
+						, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC ;
+						, lc_DBC_Name, lnDataSessionID, lnSelect, laDirInfo(1,5) ;
+						, llDBCEventsEnabled ;
+						, loTable AS CL_DBF_TABLE OF 'FOXBIN2PRG.PRG' ;
+						, loDBFUtils AS CL_DBF_UTILS OF 'FOXBIN2PRG.PRG' ;
+						, loLang as CL_LANG OF 'FOXBIN2PRG.PRG' ;
+						, loFSO AS Scripting.FileSystemObject ;
+						, loTextStream AS Scripting.TextStream ;
+						, loDBC AS CL_DBC OF 'FOXBIN2PRG.PRG'
 
-				*-- Exclude
-				IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Excluded) ;
-						AND toFoxBin2Prg.filenameFoundInFilter( JUSTFNAME(.c_InputFile), toFoxBin2Prg.DBF_Conversion_Excluded )
-					toFoxBin2Prg.writeLog('  ' + JUSTFNAME(.c_InputFile) + ' está en el filtro DBF_Conversion_Excluded (' + toFoxBin2Prg.DBF_Conversion_Excluded + ')' )
-					EXIT
-				ENDIF
+					loLang			= _SCREEN.o_FoxBin2Prg_Lang
+					loFSO			= toFoxBin2Prg.o_FSO
+					STORE NULL TO loTable, loDBFUtils
+					STORE 0 TO lnCodError
+					loDBFUtils			= CREATEOBJECT('CL_DBF_UTILS')
+					loDBC				= CREATEOBJECT('CL_DBC')
 
-				loDBFUtils.getDBFmetadata( .c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
-				lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
-				lnDatabases_Count	= ADATABASES(laDatabases)
+					*-- EVALUAR OPCIONES ESPECÍFICAS DE DBF
+					.updateProgressbar( 'Scanning DBF Structure...', 1, 3, 1 )
 
-				* Si la tabla pertenece a un DBC, desactivar temporalmente los eventos
-				IF NOT EMPTY(lc_DBC_Name) AND ADIR(laDirInfo, FULLPATH(lc_DBC_Name, .c_InputFile)) = 1
-					loDBC._DBC			= FULLPATH(lc_DBC_Name, .c_InputFile)
-					llDBCEventsEnabled	= loDBC.DBGETPROP(lc_DBC_Name,"DATABASE","DBCEvents")
-
-					* llDBCEventsEnabled no siempre devuelve .T./.F., a veces devuelve ""
-					IF EMPTY(llDBCEventsEnabled)
-						llDBCEventsEnabled	= .F.
+					*-- Include
+					IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Included) AND NOT toFoxBin2Prg.DBF_Conversion_Included == '*' ;
+							AND NOT toFoxBin2Prg.filenameFoundInFilter( JUSTFNAME(.c_InputFile), toFoxBin2Prg.DBF_Conversion_Included )
+						toFoxBin2Prg.writeLog('  ' + JUSTFNAME(.c_InputFile) + ' no está en el filtro DBF_Conversion_Included (' + toFoxBin2Prg.DBF_Conversion_Included + ')' )
+						EXIT
 					ENDIF
 
-					IF llDBCEventsEnabled
-						IF NOT loDBC.DBSETPROP(lc_DBC_Name,"DATABASE","DBCEvents",.F.)
+					*-- Exclude
+					IF NOT EMPTY(toFoxBin2Prg.DBF_Conversion_Excluded) ;
+							AND toFoxBin2Prg.filenameFoundInFilter( JUSTFNAME(.c_InputFile), toFoxBin2Prg.DBF_Conversion_Excluded )
+						toFoxBin2Prg.writeLog('  ' + JUSTFNAME(.c_InputFile) + ' está en el filtro DBF_Conversion_Excluded (' + toFoxBin2Prg.DBF_Conversion_Excluded + ')' )
+						EXIT
+					ENDIF
+
+					loDBFUtils.getDBFmetadata( .c_InputFile, @ln_HexFileType, @ll_FileHasCDX, @ll_FileHasMemo, @ll_FileIsDBC, @lc_DBC_Name )
+					lc_FileTypeDesc		= loDBFUtils.fileTypeDescription(ln_HexFileType)
+					lnDatabases_Count	= ADATABASES(laDatabases)
+
+					* Si la tabla pertenece a un DBC, desactivar temporalmente los eventos
+					IF NOT EMPTY(lc_DBC_Name) AND ADIR(laDirInfo, FULLPATH(lc_DBC_Name, .c_InputFile)) = 1
+						loDBC._DBC			= FULLPATH(lc_DBC_Name, .c_InputFile)
+						llDBCEventsEnabled	= loDBC.DBGETPROP(lc_DBC_Name,"DATABASE","DBCEvents")
+
+						* llDBCEventsEnabled no siempre devuelve .T./.F., a veces devuelve ""
+						IF EMPTY(llDBCEventsEnabled)
 							llDBCEventsEnabled	= .F.
 						ENDIF
+
+						IF llDBCEventsEnabled
+							IF NOT loDBC.DBSETPROP(lc_DBC_Name,"DATABASE","DBCEvents",.F.)
+								llDBCEventsEnabled	= .F.
+							ENDIF
+						ENDIF
 					ENDIF
-				ENDIF
 
-				USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
-				lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
-				.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
+					USE (.c_InputFile) SHARED AGAIN NOUPDATE ALIAS TABLABIN
+					lnDataSessionID	= toFoxBin2Prg.DATASESSIONID
+					.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
 
-				C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+					C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
-				*-- Header
-				loTable			= CREATEOBJECT('CL_DBF_TABLE')
+					*-- Header
+					loTable			= CREATEOBJECT('CL_DBF_TABLE')
 
-				*-- Exportación de estructura y datos (para Diff solamente)
-				ERASE (.c_OutputFile + '.TMP' )
-				loTextStream	= loFSO.CreateTextFile(.c_OutputFile + '.TMP' )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
-				toFoxBin2Prg.o_TextStream = loTextStream
+					*-- Exportación de estructura y datos (para Diff solamente)
+					ERASE (.c_OutputFile + '.TMP' )
+					loTextStream	= loFSO.CreateTextFile(.c_OutputFile + '.TMP' )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
+					toFoxBin2Prg.o_TextStream = loTextStream
 
-				IF toFoxBin2Prg.n_FileHandle = -1 THEN
-					ERROR 102, (.c_OutputFile)
-				ENDIF
+					IF toFoxBin2Prg.n_FileHandle = -1 THEN
+						ERROR 102, (.c_OutputFile)
+					ENDIF
 
-				loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
-				loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
-				loTextStream.Close()
+					loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
+					loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
+					loTextStream.Close()
+
+					DO CASE
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
+						ERROR 'InputFile Error Simulation'
+					CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
+						.writeErrorLog( '*** SIMULATED ERROR' )
+					ENDCASE
+
+					IF .l_Error
+						.writeLog( '*** ERRORS found - Generation Cancelled' )
+						EXIT
+					ENDIF
+
+					toFoxBin2Prg.updateProcessedFile()
+
+
+					*-- Genero el DB2, renombrando el TMP
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
+					IF .l_Test
+						toModulo	= C_FB2PRG_CODE
+					ELSE
+						DO CASE
+						CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
+							ERASE (.c_OutputFile + '.TMP')
+							*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
+							lcOutputFile	= .c_OutputFile
+							.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
+						CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
+								AND toFoxBin2Prg.changeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
+								AND NOT toFoxBin2Prg.renameTmpFile2Tx2File( .c_OutputFile )
+							*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
+							ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
+						ENDCASE
+					ENDIF
+
+
+					*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
+					IF NOT EMPTY(toFoxBin2Prg.run_AfterCreate_DB2)
+						lnSelect	= SELECT()
+						DO (toFoxBin2Prg.run_AfterCreate_DB2) WITH (lnDataSessionID), (.c_OutputFile), (loTable)
+						SET DATASESSION TO (lnDataSessionID)	&& Por las dudas externamente se cambie
+						SELECT (lnSelect)
+					ENDIF
+
+				ENDWITH && THIS
+
+
+			CATCH TO toEx
+				THIS.set_UserValue(@toEx)
 
 				DO CASE
-				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I1'
-					ERROR 'InputFile Error Simulation'
-				CASE toFoxBin2Prg.c_SimulateError = 'SIMERR_I0'
-					.writeErrorLog( '*** SIMULATED ERROR' )
+				CASE toEx.ERRORNO = 13 && Alias not found
+					toEx.USERVALUE = toEx.USERVALUE + TEXTMERGE(loLang.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC)
+
+					*!*	CASE toEx.ErrorNo = 1976 && Cannot resolve backlink
+					*!*		toEx.UserValue = 'WARNING!!' + CR_LF ;
+					*!*			+ "MAY BE DATABASE FIELDS DOESN'T" ;
+					*!*			+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.field tag keyname)' + CR_LF + CR_LF ;
+					*!*			+ '¡¡ATENCIÓN!!' + CR_LF ;
+					*!*			+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
+					*!*			+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
+
 				ENDCASE
-
-				IF .l_Error
-					.writeLog( '*** ERRORS found - Generation Cancelled' )
-					EXIT
+				IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
+					SET STEP ON
 				ENDIF
 
-				toFoxBin2Prg.updateProcessedFile()
+				THROW
 
+			FINALLY
+				USE IN (SELECT("TABLABIN"))
+				THIS.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
 
-				*-- Genero el DB2, renombrando el TMP
-				.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_DB2 + '...', 3, 3, 1 )
-				IF .l_Test
-					toModulo	= C_FB2PRG_CODE
-				ELSE
-					DO CASE
-					CASE ADIR(laDirInfo, .c_OutputFile) > 0 AND toFoxBin2Prg.comparedFilesAreEqual( .c_OutputFile + '.TMP', .c_OutputFile ) = 1
-						ERASE (.c_OutputFile + '.TMP')
-						*.writeLog( 'El archivo de salida [' + .c_OutputFile + '] no se sobreescribe por ser igual al generado.' )
-						lcOutputFile	= .c_OutputFile
-						.writeLog( C_TAB + C_TAB + '* ' + TEXTMERGE(loLang.C_OUTPUT_FILE_IS_NOT_OVERWRITEN_LOC) )
-					CASE toFoxBin2Prg.doBackup( .F., .T., '', '', '' ) ;
-							AND toFoxBin2Prg.changeFileAttribute( .c_OutputFile + '.TMP', '-R' ) > 0 ;
-							AND NOT toFoxBin2Prg.renameTmpFile2Tx2File( .c_OutputFile )
-						*ERROR 'No se puede generar el archivo [' + .c_OutputFile + '] porque es ReadOnly'
-						ERROR (TEXTMERGE(loLang.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC))
-					ENDCASE
+				IF VARTYPE(loTextStream) = "O" THEN
+					loTextStream.Close()
 				ENDIF
 
+				*-- Cierro DBC
+				FOR I = 1 TO ADATABASES(laDatabases2)
+					IF ASCAN( laDatabases, laDatabases2(m.I), 1, 0, 0, 1+2+4 ) = 0
+						SET DATABASE TO (laDatabases2(m.I))
+						CLOSE DATABASES
+						EXIT
+					ENDIF
+				ENDFOR
 
-				*-- Hook para permitir ejecución externa (por ejemplo, para exportar datos)
-				IF NOT EMPTY(toFoxBin2Prg.run_AfterCreate_DB2)
-					lnSelect	= SELECT()
-					DO (toFoxBin2Prg.run_AfterCreate_DB2) WITH (lnDataSessionID), (.c_OutputFile), (loTable)
-					SET DATASESSION TO (lnDataSessionID)	&& Por las dudas externamente se cambie
-					SELECT (lnSelect)
-				ENDIF
+				STORE NULL TO loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
+*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	change date="{^2021-02-11,08:50:00}"
+* Release different, parts moved outsidef IF .. ENDIF
+				RELEASE loTextStream ;
+					, lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
+					, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
+					, loTable, loDBFUtils
+			ENDTRY
+*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	change date="{^2021-02-11,08:50:00}"
+* so the whole try / catch block should not run if in simulation
 
-			ENDWITH && THIS
+		ENDIF  &&NOT toFoxBin2Prg.l_ProcessFiles
 
-
-		CATCH TO toEx
-			THIS.set_UserValue(@toEx)
-
-			DO CASE
-			CASE toEx.ERRORNO = 13 && Alias not found
-				toEx.USERVALUE = toEx.USERVALUE + TEXTMERGE(loLang.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC)
-
-				*!*	CASE toEx.ErrorNo = 1976 && Cannot resolve backlink
-				*!*		toEx.UserValue = 'WARNING!!' + CR_LF ;
-				*!*			+ "MAY BE DATABASE FIELDS DOESN'T" ;
-				*!*			+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.field tag keyname)' + CR_LF + CR_LF ;
-				*!*			+ '¡¡ATENCIÓN!!' + CR_LF ;
-				*!*			+ 'ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on ' ;
-				*!*			+ UPPER(JUSTSTEM(THIS.c_InputFile)) + '.campo tag nombreclave)'
-
-			ENDCASE
-			IF THIS.n_Debug > 0 AND _VFP.STARTMODE = 0
-				SET STEP ON
-			ENDIF
-
-			THROW
-
-		FINALLY
-			USE IN (SELECT("TABLABIN"))
-			THIS.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
-
-			IF VARTYPE(loTextStream) = "O" THEN
-				loTextStream.Close()
-			ENDIF
-
-			*-- Cierro DBC
-			FOR I = 1 TO ADATABASES(laDatabases2)
-				IF ASCAN( laDatabases, laDatabases2(m.I), 1, 0, 0, 1+2+4 ) = 0
-					SET DATABASE TO (laDatabases2(m.I))
-					CLOSE DATABASES
-					EXIT
-				ENDIF
-			ENDFOR
-
-			STORE NULL TO loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
-			RELEASE toModulo, toEx, toFoxBin2Prg, loTextStream ;
-				, lnCodError, laDatabases, lnDatabases_Count, laDatabases2, lnLen, lc_FileTypeDesc ;
-				, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
-				, loTable, loDBFUtils
-		ENDTRY
+* Release  from above
+		RELEASE toModulo, toEx, toFoxBin2Prg, loTextStream ;
+*!*	/Changed by: Lutz Scheffler 11.2.2021
 
 		RETURN
 	ENDPROC
@@ -17828,9 +17902,9 @@ DEFINE CLASS c_conversor_dbc_a_prg AS c_conversor_bin_a_prg
 					*ENDFOR
 					*toDatabase	= lcCodigo
 				ELSE
+
 					IF toFoxBin2Prg.n_UseClassPerFile > 0 THEN
 						.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
-
 						FOR I = 1 TO lnClassCount
 							* lcOutputFile = '<path>DBCName' + '.' + 'MemberType' + '.' + 'MemberName' + '.' + 'dc2'
 							lcOutputFile	= ADDBS( JUSTPATH( .c_OutputFile ) ) + JUSTSTEM( .c_OutputFile ) + '.' + laClasses(m.I,3) + '.' + laClasses(m.I,1) + '.' + JUSTEXT( .c_OutputFile )
@@ -25096,8 +25170,20 @@ DEFINE CLASS CL_DBF_RECORD AS CL_CUS_BASE
 
 							lcFieldType		= loField._Type
 							llNoCPTran		= CAST( loField._NoCPTran as Logical)
+*!*	Changed by: Lutz Scheffler 14.2.2021
+*!*	change date="{^2021-02-14,20:35:00}"
+* Does not recreate .NULL. Field values
+* CAST(.. does not tronsform ".NULL." to .NULL.
+* so we test field for NULL flag and is cValue is ".NULL.", we use .NULL.
 
+							llNull			= CAST( loField._Null as Logical)
+							
 							DO CASE
+							CASE m.llNull AND UPPER(m.lcValue)=='.NULL.'		&& .NULL.
+								luValue = .NULL.
+
+*!*	/Changed by: Lutz Scheffler 14.2.2021
+
 							CASE lcFieldType == 'L'	&& Logical (Boolean)
 								luValue = CAST(lcValue as Logical)
 
@@ -29067,7 +29153,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_CACHING_CONFIG_FOR_DIRECTORY_LOC								= "Caching Config für Verzeichnis"
 					.C_CANT_GENERATE_FILE_BECAUSE_IT_IS_READONLY_LOC				= "Kann Datei [<<THIS.c_OutputFile>>] nicht generieren, da sie schreibgeschützt ist"
 					.C_CLASSPERFILE_OPTIMIZATION_BASE_ALREADY_PROCESSED_LOC			= "Optimierung: Grund Datei [<<JUSTFNAME(.c_InputFile)>>] Schon verarbeitet, das Überspringen Verarbeitung der Datei [<<tc_InputFile>>]"
-					.C_CONFIGFILE_LOC												= "Benutze Konfigurationsdatei:"
+					.C_CONFIGFILE_LOC												= "Benutzte Konfigurationsdatei:"
 					.C_CONVERSION_CANCELLED_BY_USER_LOC								= "Konvertierung durch den Benutzer abgebrochen"
 					.C_CONVERT_ALL_FILES_IN_A_PROJECT_LOC							= "alle Dateien in einem Projekt zu konvertieren"
 					.C_CONVERT_FOLDER_LOC											= "Konvertieren Verzeichnis"
@@ -29205,7 +29291,7 @@ DEFINE CLASS CL_LANG AS Custom
 					.C_PROCESSING_LOC												= "Bearbeite Datei"
 					.C_PROCESS_PROGRESS_LOC											= "Bearbeitungsfortschritt:"
 					.C_PROPERTY_NAME_NOT_RECOGNIZED_LOC								= "Eigenschaft [<<TRANSFORM(tnPropertyID)>>] nicht erkannt."
-					.C_READING_CFG_VALUES_FROM_DISK_LOC								= "LESEWERTE CFG-DATEI AUF DER FESTPLATTE"
+					.C_READING_CFG_VALUES_FROM_DISK_LOC								= "Gelesene Werte der CFG-DATEI von der Festplatte"
 					.C_REPORT_NOT_IN_VFP9_FORMAT_LOC								= "Report [<<THIS.c_InputFile>>] ist NICHT in VFP 9 Format! - Bitte zuerst nach VFP 9 konvertieren mit MODIFY REPORT '<<THIS.c_InputFile>>'"
 					.C_REQUESTING_CAPITALIZATION_OF_FILE_LOC						= "- Forder Großschreibung für Datei [<<tcFileName>>] an"
 					.C_SCANNING_FILE_AND_DIR_INFO_LOC								= "Scanne Datei- und Verzeichnisinformationen für"
