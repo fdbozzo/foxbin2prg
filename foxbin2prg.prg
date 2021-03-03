@@ -36,6 +36,8 @@
 *		DO FOXBIN2PRG.PRG WITH "<path>\FILE.PJX"	&& Genera "<path>\FILE.PJ2" (BIN TO PRG CONVERSION)
 *		DO FOXBIN2PRG.PRG WITH "<path>\FILE.PJ2"	&& Genera "<path>\FILE.PJX" (PRG TO BIN CONVERSION)
 *
+*		DO FOXBIN2PRG.PRG WITH "-c", cOutputFile	&& Generate a configuration (FoxBin2Prg.cfg) template
+*
 *---------------------------------------------------------------------------------------------------
 * <HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 * 04/11/2013	FDBOZZO		v1.0		Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
@@ -230,6 +232,18 @@
 * 15/02/2021	LScheffler	v1.19.53	Bug Fix: processing directory, flush log file after loop instead of file
 * 16/02/2021	LScheffler	v1.19.53	Bug Fix: conversion prg -> vcx, files per class could create one class multiple times
 * 03/03/2021	LScheffler	v1.19.54	Bug Fix: DBF_Conversion_Condition, problem with macro expansion
+* 14/02/2021	LScheffler	v1.21.02	Enhancement: inserted option UseFilesPerDBC to split DBC processing from vcx / scx
+* 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
+* 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
+*													 the three above are straight forward, so no extra comment are within the code
+* 19/02/2021	LScheffler	v1.21.02	Enhancement: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way
+* 20/02/2021	LScheffler	v1.21.02	Enhancement: inserted option DBF_IncludeDeleted to allow including deleted records of DBF
+* 21/02/2021	LScheffler	v1.21.02	Enhancement: German translation improved
+* 21/02/2021	LScheffler	v1.21.02	Enhancement: Info screen-doc improved
+* 21/02/2021	LScheffler	v1.21.02	Enhancement: added option to create config file template
+* 23/02/2021	LScheffler	v1.21.02	Enhancement: inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
+
+
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -541,6 +555,8 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_RECORDS_F					'</RECORDS>'
 #Define C_RECORD_I					'<RECORD>'	&& *** FDBOZZO 2016/06/06: Quitado el REGNUM para evitar diferencias innecesarias
 #Define C_RECORD_F					'</RECORD>'
+#Define C_DEL_RECORD_I				'<DELRECORD>'	&& *** Lutz Scheffler 2021/02/20: Deleted Record, just mark like this, no fuzz with field name
+#Define C_DEL_RECORD_F				'</DELRECORD>'
 #Define C_RECNO_I					'<RECNO>'
 #Define C_RECNO_F					'</RECNO>'
 
@@ -622,15 +638,20 @@ Local lnResp, loEx As Exception
 tc_InputFile	= Evl(tc_InputFile,'')
 tcType			= Evl(tcType,'')
 
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,18:44:00}"
+* added option to create config files
 If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 ;
 		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0 Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_I0','-'+tc_InputFile) > 0 Or Atc('-SIMERR_I1','-'+tc_InputFile) > 0 ;
-		OR Atc('-SIMERR_O1','-'+tc_InputFile) > 0 Then
+		OR Atc('-SIMERR_O1','-'+tc_InputFile) > 0;
+		OR UPPER(tc_InputFile)=='-C' OR UPPER(tc_InputFile)=='-T' Then
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
 	Release pcParamX
 Endif
+*!*	/Changed by: Lutz Scheffler 15.2.2021
 
 Try
 		loEx	= Null
@@ -811,11 +832,20 @@ Define Class c_foxbin2prg As Session
 		+ [</VFPData>]
 
 
+*!*	;&& SF -> String to long
+*!*			+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
+*!*			+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
+*!*			+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
+*!*			+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
+*!*			+ [<memberdata name="l_dbf_binchar_base64" display="l_DBF_BinChar_Base64"/>] ;
+*!*			+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
+*!*	;&& /SF
+
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
-	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.54.1'
+	n_FB2PRG_Version				= 1.21
+	c_FB2PRG_Version_Real			= '1.21.02'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -858,6 +888,18 @@ Define Class c_foxbin2prg As Session
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
 	n_UseClassPerFile 				= 0
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - splitt of DBC separated from VCX/SCX
+* - new operations of DBF
+    l_OldFilesPerDBC                = .T.
+    n_UseFilesPerDBC				= 0
+	l_RedirectFilePerDBCToMain		= .F.
+	l_ItemPerDBCCheck				= .F.
+	l_DBF_BinChar_Base64 			= .T.
+	l_DBF_IncludeDeleted            = .F.
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
@@ -1296,6 +1338,66 @@ Define Class c_foxbin2prg As Session
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_UseClassPerFile, This.n_UseClassPerFile )
 		Endif
 	Endproc
+
+
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - splitt of DBC separated from VCX/SCX
+* - new operations of DBF
+	Procedure l_OldFilesPerDBC_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_OldFilesPerDBC
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_OldFilesPerDBC, This.l_OldFilesPerDBC )
+		Endif
+	Endproc
+
+
+	Procedure n_UseFilesPerDBC_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_UseFilesPerDBC
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_UseFilesPerDBC, This.n_UseFilesPerDBC )
+		Endif
+	Endproc
+
+
+	Procedure l_RedirectFilePerDBCToMain_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_RedirectFilePerDBCToMain
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_RedirectFilePerDBCToMain, This.l_RedirectFilePerDBCToMain )
+		Endif
+	Endproc
+
+
+	Procedure l_ItemPerDBCCheck_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_ItemPerDBCCheck
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_ItemPerDBCCheck, This.l_ItemPerDBCCheck )
+		Endif
+	Endproc
+
+
+	Procedure l_DBF_BinChar_Base64_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_DBF_BinChar_Base64
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_DBF_BinChar_Base64, This.l_DBF_BinChar_Base64 )
+		Endif
+	Endproc
+
+
+	Procedure l_DBF_IncludeDeleted_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_DBF_IncludeDeleted
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_DBF_IncludeDeleted, This.l_DBF_IncludeDeleted )
+		Endif
+	Endproc
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 
 	Procedure l_RedirectClassPerFileToMain_ACCESS
@@ -2252,19 +2354,81 @@ Define Class c_foxbin2prg As Session
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > OptimizeByFilestamp:        ' + Transform(lcValue) )
 									Endif
 
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - splitt of DBC separated from VCX/SCX
+* - new operations of DBF
 								Case Left( laConfig(m.I), 16 ) == Lower('UseClassPerFile:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
 									If Inlist( lcValue, '0', '1', '2' ) Then
 										lo_CFG.n_UseClassPerFile	= Int( Val(lcValue) )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseClassPerFile:            ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.n_UseFilesPerDBC				= lo_CFG.n_UseClassPerFile
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => UseFilesPerDBC:           ' + Transform(lcValue) )
+										endif
 									Endif
 
+								Case Left( laConfig(m.I), 15 ) == Lower('OldFilesPerDBC:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 16 ) )
+									If Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_OldFilesPerDBC	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > OldFilesPerDBC:             ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.n_UseFilesPerDBC				= lo_CFG.n_UseClassPerFile
+											lo_CFG.l_RedirectFilePerDBCToMain	= lo_CFG.l_RedirectClassPerFileToMain
+											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> UseFilesPerDBC:           ' + Transform(lcValue) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> RedirectFilePerDBCToMain: ' + Transform(lcValue) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> ItemPerDBCCheck:          ' + Transform(lcValue) )
+										endif
+									Endif
+
+								Case Left( laConfig(m.I), 15 ) == Lower('UseFilesPerDBC:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 16 ) )
+									If lo_CFG.l_OldFilesPerDBC AND Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.n_UseFilesPerDBC	= Int( Val(lcValue) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseFilesPerDBC:             ' + Transform(lcValue) )
+									Endif
+
+								Case Left( laConfig(m.I), 25 ) == Lower('RedirectFilePerDBCToMain:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 26 ) )
+									If lo_CFG.l_OldFilesPerDBC AND Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_RedirectFilePerDBCToMain	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectFilePerDBCToMain:   ' + Transform(lcValue) )
+									Endif
+
+								Case Left( laConfig(m.I), 16 ) == Lower('ItemPerDBCCheck:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
+									If lo_CFG.l_OldFilesPerDBC AND Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_ItemPerDBCCheck	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ItemPerDBCCheck:            ' + Transform(lcValue) )
+									Endif
+
+								Case Left( laConfig(m.I), 19 ) == Lower('DBF_BinChar_Base64:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
+									If Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_DBF_BinChar_Base64	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_BinChar_Base64:         ' + Transform(lcValue) )
+									Endif
+
+								Case Left( laConfig(m.I), 19 ) == Lower('DBF_IncludeDeleted:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
+									If Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_DBF_IncludeDeleted	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_IncludeDeleted:         ' + Transform(lcValue) )
+									Endif
 
 								Case Left( laConfig(m.I), 18 ) == Lower('ClassPerFileCheck:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_ClassPerFileCheck	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClassPerFileCheck:          ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => ItemPerDBCCheck:          ' + Transform(lcValue) )
+										endif
 									Endif
 
 								Case Left( laConfig(m.I), 27 ) == Lower('RedirectClassPerFileToMain:')
@@ -2272,7 +2436,12 @@ Define Class c_foxbin2prg As Session
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_RedirectClassPerFileToMain	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectClassPerFileToMain: ' + Transform(lcValue) )
+										IF !lo_CFG.l_OldFilesPerDBC THEN
+											lo_CFG.l_RedirectFilePerDBCToMain	= lo_CFG.l_RedirectClassPerFileToMain
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => RedirectFilePerDBCToMain: ' + Transform(lcValue) )
+										endif
 									Endif
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 								Case Left( laConfig(m.I), 18 ) == Lower('RedirectClassType:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
@@ -2471,6 +2640,18 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_NoTimestamps:               ' + Transform(.l_NoTimestamps) )
 					.writeLog( C_TAB + 'l_ClearUniqueID:              ' + Transform(.l_ClearUniqueID) )
 					.writeLog( C_TAB + 'n_UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - splitt of DBC separated from VCX/SCX
+* - new operations of DBF
+					.writeLog( C_TAB + 'l_OldFilesPerDBC:             ' + Transform(.l_OldFilesPerDBC) )
+					.writeLog( C_TAB + 'n_UseFilesPerDBC:             ' + Transform(.n_UseFilesPerDBC) )
+					.writeLog( C_TAB + 'l_RedirectFilePerDBCToMain:   ' + Transform(.l_RedirectFilePerDBCToMain) )
+					.writeLog( C_TAB + 'l_ItemPerDBCCheck:            ' + Transform(.l_ItemPerDBCCheck) )
+					.writeLog( C_TAB + 'l_DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
+					.writeLog( C_TAB + 'l_DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 					.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + Transform(.l_ClassPerFileCheck) )
 					.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + Transform(.l_RedirectClassPerFileToMain) )
 					.writeLog( C_TAB + 'n_RedirectClassType:          ' + Transform(.n_RedirectClassType) )
@@ -2661,6 +2842,27 @@ Define Class c_foxbin2prg As Session
 							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Support: ' + Transform(to_out_DBF_CFG.DBF_Conversion_Support) )
 						Endif
 
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF
+*!*	/Changed by: Lutz Scheffler 21.02.2021
+					Case Left( lcConfigItem, 20 ) == Lower('DBF_BinChar_Base64:')
+						If Inlist( laConfig(m.I), '0', '1' ) Then
+							to_out_DBF_CFG.l_DBF_BinChar_Base64  	= ( Transform(laConfig(m.I)) == '1' )
+							If tlGenerateLog Then
+								This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_BinChar_Base64:     ' + Transform(to_out_DBF_CFG.l_DBF_BinChar_Base64) )
+							Endif
+						Endif
+
+					Case Left( lcConfigItem, 20 ) == Lower('DBF_IncludeDeleted:')
+						If Inlist( laConfig(m.I), '0', '1' ) Then
+							to_out_DBF_CFG.l_DBF_IncludeDeleted  	= ( Transform(laConfig(m.I)) == '1' )
+							If tlGenerateLog Then
+								This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_IncludeDeleted:     ' + Transform(to_out_DBF_CFG.l_DBF_IncludeDeleted) )
+							Endif
+						Endif
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 				Endcase
 			Endfor
 
@@ -3075,6 +3277,17 @@ Define Class c_foxbin2prg As Session
 							loFrm_Main.Show()
 							Read Events
 							lnCodError	= 0
+*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	change date="{^2021-02-15,18:44:00}"
+* added option to create config files
+						Case UPPER( tcType )=='-C' AND VARTYPE( tc_InputFile )='C'
+							loLang			= _Screen.o_FoxBin2Prg_Lang
+							STRTOFILE( STRTRAN( '*' + STRTRAN( loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), tc_InputFile )
+
+						Case UPPER( tcType )=='-T' AND VARTYPE( tc_InputFile )='C'
+							loLang			= _Screen.o_FoxBin2Prg_Lang
+							STRTOFILE( STRTRAN( STRTRAN( '*' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), tc_InputFile )
+*!*	/Changed by: Lutz Scheffler 15.2.2021
 
 						Otherwise
 *-- EJECUCIÓN NORMAL
@@ -3913,17 +4126,25 @@ Define Class c_foxbin2prg As Session
 						lcForceAttribs	= lcForceAttribs + '-R'
 					Endif
 
-*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
-					If .n_UseClassPerFile > 0 And .l_RedirectClassPerFileToMain ;
-							OR Not Empty(.c_ClassToConvert)
+*!*	Changed by: Lutz Scheffler 03.03.2021
+*!*	change date="{^2021-03-03,11:38:00}"
+* Added option for DBC split
+
+*-- OPTIMIZACIÓN VC2/SC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
+					If Inlist(lcExtension,"SCX","VCX",.c_VC2,.c_SC2);
+					        AND (.n_UseClassPerFile > 0 And .l_RedirectClassPerFileToMain ;
+							OR Not Empty(.c_ClassToConvert))
 
 						Do Case
+* SF
+* n_RedirectClassType looks like lavacode. At least I see not where it set, except in cfg file, not documented in cfg Files
 							Case .n_RedirectClassType = 1 Or Not Empty(.c_ClassToConvert) && Redireccionar solo esta clase
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
 									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
 								Endif
+* /SF
 
 							Case .n_UseClassPerFile = 1 And Inlist(lcExtension,.c_VC2,.c_SC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
@@ -3936,8 +4157,8 @@ Define Class c_foxbin2prg As Session
 								If '.' $ Juststem(.c_InputFile)
 									.c_InputFile	= lc_BaseFile
 								Endif
-
-							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2) Or lcExtension = .c_DC2
+** SF, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
+							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
@@ -3951,6 +4172,28 @@ Define Class c_foxbin2prg As Session
 
 						Endcase
 					Endif
+
+*****************************
+
+*-- OPTIMIZACIÓN DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
+					If Inlist(lcExtension,"DBC",.c_DC2);
+					        AND .n_UseFilesPerDBC > 0 And .l_RedirectFilePerDBCToMain;
+							AND .n_UseFilesPerDBC = 1
+
+						If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+							lc_BaseFile	= .c_InputFile
+						Else
+							lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem( Juststem(.c_InputFile) ) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+						Endif
+
+*-- Verifico si se debe forzar la redirección al archivo principal
+						If '.' $ Juststem(.c_InputFile)
+							.c_InputFile	= lc_BaseFile
+						Endif
+
+					Endif
+
+*!*	/Changed by: Lutz Scheffler 03.03.2021
 
 					Erase ( .c_InputFile + '.ERR' )
 
@@ -4935,6 +5178,9 @@ Define Class c_foxbin2prg As Session
 		Return
 	Endproc
 
+	Procedure errOut
+*-- DEVOLUCIÓN DE SALIDA A ERROUT (-12)
+		Lparameters tcTexto
 
 	Procedure stdOut
 *-- DEVOLUCIÓN DE SALIDA A STDOUT (-11)
@@ -6151,6 +6397,7 @@ Define Class frm_main As Form
 
 Enddefine
 
+Enddefine
 
 
 Define Class c_conversor_base As Custom
@@ -7164,6 +7411,110 @@ Define Class c_conversor_base As Custom
 								Dimension taBloquesExclusion(tnBloquesExclusion,2)
 								taBloquesExclusion(tnBloquesExclusion,1)	= m.I
 								taLineasExclusion(m.I)	= .T.
+*--
+								Loop
+							Endif
+
+							lcLine		= Upper( Left( lcLine,1 ) ) + Upper( Ltrim( Substr( lcLine, 2 ) ) )
+							lnPrimerID	= 0
+
+							For X = 1 To lnID_Bloques_Count
+								lnLen_IDFinBQ	= Len( ta_ID_Bloques(m.X,2) )
+								If .isIndicatedToken( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, m.X, 1 ) ;
+										AND Not .currentLineIsPreviousLineContinuation( @taCodeLines, m.I )
+									lnPrimerID		= m.X
+									lnAnidamientos	= 1
+									Exit
+								Endif
+							Endfor
+
+							If lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
+								tnBloquesExclusion		= tnBloquesExclusion + 1
+								Dimension taBloquesExclusion(tnBloquesExclusion,2)
+								taBloquesExclusion(tnBloquesExclusion,1)	= m.I
+								taLineasExclusion(m.I)	= .T.
+
+* Búsqueda del ID de fin de bloque
+								For I = m.I + 1 To tnCodeLines
+* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
+*lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(m.I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
+*lcLine		= LTRIM( CHRTRAN( taCodeLines(m.I), CHR(9), ' ' ) )
+									lcLine		= Ltrim( taCodeLines(m.I), 0, Chr(9), ' ' )
+									taLineasExclusion(m.I)	= .T.
+
+									If .lineIsOnlyCommentAndNoMetadata( @lcLine )
+										Loop
+									Endif
+
+									lcLine		= Upper( Left( lcLine,1 ) ) + Upper( Ltrim( Substr( lcLine, 2 ) ) )
+
+									Do Case
+										Case lnPrimerID = 1 And .isIndicatedToken( @lcLine, @ta_ID_Bloques, 0, m.X, 1 ) ;
+												AND Not .currentLineIsPreviousLineContinuation( @taCodeLines, m.I )
+*-- Busca el primer marcador (#IF) NOTA: No busco [TEXT] porque no se pueden anidar.
+											lnAnidamientos	= lnAnidamientos + 1
+
+										Case .isIndicatedToken( @lcLine, @ta_ID_Bloques, 0, m.X, 2 )
+*-- Busca el segundo marcador (#ENDIF o ENDTEXT)
+											lnAnidamientos	= lnAnidamientos - 1
+
+											If lnAnidamientos = 0
+												taBloquesExclusion(tnBloquesExclusion,2)	= m.I
+												Exit
+											Endif
+									Endcase
+								Endfor
+
+*-- Validación
+								If Empty(taBloquesExclusion(tnBloquesExclusion,2))
+*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
++ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
++ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
+									.n_Methods_LineNo = taBloquesExclusion(tnBloquesExclusion,1)
+									Error (Textmerge(loLang.C_END_MARKER_NOT_FOUND_LOC))
+								Endif
+							Endif
+						Endfor
+					Endwith && THIS
+				Endif
+
+			Catch To loEx
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
+
+				Throw
+
+			Finally
+				Release taCodeLines, tnCodeLines, ta_ID_Bloques, taLineasExclusion, tnBloquesExclusion, taBloquesExclusion, loLang ;
+					, lnBloques, I, X, lnPrimerID, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
+		Endtry
+
+		Return
+	Endproc
+
+
+
+	Procedure excludedLine
+		Lparameters tn_Linea, tnBloquesExclusion, taLineasExclusion
+
+		Return taLineasExclusion(tn_Linea)
+	Endproc
+
+
+
+	Procedure lineIsOnlyCommentAndNoMetadata
+*---------------------------------------------------------------------------------------------------
+* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* tcLine						(!@ IN/OUT) Línea a separar del comentario
+* tcComment						(@?    OUT) Comentario
+* tlDoNotSeparateLineAndComment	(v? IN    ) Indica o separar la línea de código del comentario
+* tlDeepCommentAnalysis			(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
+*---------------------------------------------------------------------------------------------------
+* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
+*---------------------------------------------------------------------------------------------------
+		Lparameters tcLine As String, tcComment As String, tlDoNotSeparateLineAndComment As Boolean, tlDeepCommentAnalysis As Boolean
+		Local lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
 * Búsqueda del ID de fin de bloque
 								For I = m.I + 1 To tnCodeLines
@@ -7271,7 +7622,16 @@ Define Class c_conversor_base As Custom
 		Return lllineIsOnlyCommentAndNoMetadata
 	Endproc
 
+	Procedure normalizeAssignment
+		Lparameters tcAsignacion, tcComentario
+		Local lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
 
+		With This As c_conversor_base Of 'FOXBIN2PRG.PRG'
+			.get_SeparatedPropAndValue( @tcAsignacion, @lcPropName, @lcValor )
+			tcComentario	= ''
+			.normalizePropertyValue( @lcPropName, @lcValor, @tcComentario )
+			tcAsignacion	= lcPropName + ' = ' + lcValor
+		Endwith
 
 	Procedure loadModule
 *---------------------------------------------------------------------------------------------------
@@ -7291,6 +7651,13 @@ Define Class c_conversor_base As Custom
 		Return
 	Endproc
 
+			Case Left( tcValue, C_LEN_FB2P_VALUE_I ) == C_FB2P_VALUE_I
+*-- Valor especial Fox con cabecera CHR(1): Debo quitarla y normalizar el valor
+				tcValue	= C_FB2P_VALUE_I ;
+					+ Strtran( Strtran( Strtran( Strtran( ;
+					STREXTRACT( tcValue, C_FB2P_VALUE_I, C_FB2P_VALUE_F, 1, 1 ) ;
+					, CR_LF, '&#13+10;' ), C_CR, '&#13;' ), C_LF, '&#10;' ), '&#13+10;', CR_LF ) ;
+					+ C_FB2P_VALUE_F
 
 
 	Procedure normalizeAssignment
@@ -7309,6 +7676,16 @@ Define Class c_conversor_base As Custom
 	Endproc
 
 
+	Procedure normalizeXMLValue
+		Lparameters tcValor
+*-- NORMALIZA EL TEXTO INDICADO, COMPRIMIENDO LOS SÍMBOLOS XML ESPECIALES.
+		tcValor = Strtran(tcValor, Chr(38), Chr(38) + 'amp;')	&& reemplaza &  por  &amp;		&&
+		tcValor = Strtran(tcValor, Chr(39), Chr(38) + 'apos;')	&& reemplaza '  por  &apos;		&&
+		tcValor = Strtran(tcValor, Chr(34), Chr(38) + 'quot;')	&& reemplaza "  por  &quot;		&&
+		tcValor = Strtran(tcValor, '<', Chr(38) + 'lt;') 		&&  reemplaza <  por  &lt;		&&
+		tcValor = Strtran(tcValor, '>', Chr(38) + 'gt;')		&&  reemplaza >  por  &gt;		&&
+		tcValor = Strtran(tcValor, Chr(13)+Chr(10), Chr(10))	&& reeemplaza CR+LF por LF
+		tcValor = Chrtran(tcValor, Chr(13), Chr(10))			&& reemplaza CR por LF
 
 	Procedure normalizePropertyValue
 *-- Este método se ejecuta cuando se genera el tx2 desde el binario
@@ -7399,6 +7776,10 @@ Define Class c_conversor_base As Custom
 		Return Int(tnTimeStamp)
 	Endfunc
 
+							#Else
+								Do Case
+									Case .c_ClaseActual == 'checkbox'
+										lnPos	= Ascan( .a_SpecialProps_Chk, lcPropName, 1, 0, 1, 1+2+4 )
 
 	Procedure set_UserValue
 		Lparameters toEx As Exception
@@ -10363,12 +10744,27 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 		Endcase
 	Endproc
 
+					toModulo._Clases(lnItem)._Checked = .T.
+				Endfor
 
+			Case toFoxBin2Prg.n_UseClassPerFile = 2 And toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
+*-- El nuevo ClassPerFile, con nomenclatura 'Libreria.ClaseBase.NombreClase.vc2'
+				For I = 1 To toModulo._ExternalClasses_Count
+					lnItem	= 0
 
 Enddefine
 
+					If lnItem = 0 Then
+						lcClaseExterna	= Forcepath( Juststem(toFoxBin2Prg.c_InputFile) + '.' + toModulo._ExternalClasses(m.I,1) + '.' + Justext(toFoxBin2Prg.c_InputFile), Justpath(toFoxBin2Prg.c_InputFile) )
+*ERROR 'No se ha encontrado la clase externa [' + toModulo._ExternalClasses(m.I,1) + '] en el archivo [' + toFoxBin2Prg.c_InputFile + ']'
+						Error ( loLang.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC + ' [' + lcClaseExterna + ']' )
+					Endif
 
+					toModulo._Clases(lnItem)._Checked = .T.
+				Endfor
 
+		Endcase
+	Endproc
 
 Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 	#If .F.
@@ -11532,6 +11928,9 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 					toFoxBin2Prg.updateProcessedFile()
 				Endwith && THIS
 
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
 
 			Catch To loEx
 				lnCodError	= loEx.ErrorNo
@@ -12244,6 +12643,9 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 					.writeBinaryFile( @toReport, @toFoxBin2Prg )
 				Endwith && THIS
 
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
 
 			Catch To loEx
 				lnCodError	= loEx.ErrorNo
@@ -12643,9 +13045,12 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 		Return llBloqueEncontrado
 	Endproc
 
+		Return llBloqueEncontrado
+	Endproc
 
 Enddefine	&& CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
+Enddefine	&& CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 
 Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
@@ -12750,7 +13155,15 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					If llImportData And lnCodeLines > 1 And toTable._I > 1 Then
 *-- Identifico los registros de la tabla y los agrego
 						I = toTable._I - 1
-						toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @m.I, lnCodeLines, @toFoxBin2Prg )
+
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF
+						toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @m.I, lnCodeLines, @toFoxBin2Prg,;
+							IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_BinChar_Base64, m.toFoxBin2Prg.l_DBF_BinChar_Base64 ), m.toFoxBin2Prg.l_DBF_BinChar_Base64 ),;
+							IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_IncludeDeleted, m.toFoxBin2Prg.l_DBF_IncludeDeleted ), m.toFoxBin2Prg.l_DBF_IncludeDeleted ) )
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 					Endif
 
@@ -13129,7 +13542,7 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 					toDatabase			= Createobject('CL_DBC')
 					lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
-					If toFoxBin2Prg.n_UseClassPerFile > 0 And toFoxBin2Prg.l_RedirectClassPerFileToMain
+					If toFoxBin2Prg.n_UseFilesPerDBC > 0 And toFoxBin2Prg.l_RedirectFilePerDBCToMain
 						C_FB2PRG_CODE		= Filetostr( .c_InputFile )
 						lnCodeLines			= Alines( laCodeLines, C_FB2PRG_CODE )
 						C_FB2PRG_CODE		= ''
@@ -13429,7 +13842,7 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 
 					If tnCodeLines > 1
 
-						If toFoxBin2Prg.n_UseClassPerFile > 0 And toFoxBin2Prg.l_RedirectClassPerFileToMain
+						If toFoxBin2Prg.n_UseFilesPerDBC > 0 And toFoxBin2Prg.l_RedirectFilePerDBCToMain
 						Else
 							llEXTERNAL_MEMBER_Completed	= .T.
 						Endif
@@ -13563,7 +13976,7 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 		loLang			= _Screen.o_FoxBin2Prg_Lang
 
 *-- Verificación de los Miembros, si son Externos y se indicó chequearlos
-		If toFoxBin2Prg.n_UseClassPerFile > 0 And toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
+		If toFoxBin2Prg.n_UseFilesPerDBC > 0 And toFoxBin2Prg.l_ItemPerDBCCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
 			For I = 1 To toDatabase._ExternalClasses_Count
 				lnItem	= 0
 
@@ -16032,6 +16445,8 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 
 					toFoxBin2Prg.updateProcessedFile()
 
+					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_VC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
+					lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 *-- Genero el VC2
 					lnStep			= lnStep + 1
@@ -17833,7 +18248,7 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + toDatabase.toText(@toFoxBin2Prg)
 
 *-- Header
-						If toFoxBin2Prg.n_UseClassPerFile > 0 Then
+						If toFoxBin2Prg.n_UseFilesPerDBC > 0 Then
 							.write_EXTERNAL_MEMBER_HEADER( @toFoxBin2Prg, .F., .F., @lcExternalHeader )
 
 *-- Connections
@@ -17920,7 +18335,7 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 *toDatabase	= lcCodigo
 					Else
 
-						If toFoxBin2Prg.n_UseClassPerFile > 0 Then
+						If toFoxBin2Prg.n_UseFilesPerDBC > 0 Then
 							.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 							For I = 1 To lnClassCount
@@ -17939,6 +18354,8 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 					Endif
 				Endwith && THIS
 
+			Catch To toEx
+				This.set_UserValue(@toEx)
 
 			Catch To toEx
 				This.set_UserValue(@toEx)
@@ -20893,7 +21310,7 @@ Define Class CL_DBC As CL_DBC_BASE
 					<<>>	<<C_STORED_PROC_F>>
 					ENDTEXT
 
-					If Not toFoxBin2Prg.n_UseClassPerFile > 0 Then
+					If Not toFoxBin2Prg.n_UseFilesPerDBC > 0 Then
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<lcConnections>>
 						<<lcTables>>
@@ -21679,6 +22096,7 @@ Define Class CL_DBC_TABLE As CL_DBC_BASE
 		Return llBloqueEncontrado
 	Endproc
 
+		Endtry
 
 	Procedure toText
 *---------------------------------------------------------------------------------------------------
@@ -22851,6 +23269,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 		Return lnView_Count
 	Endproc
 
+				Throw
 
 Enddefine
 
@@ -24159,8 +24578,10 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 * I							(!@ IN/OUT) Número de línea en análisis
 * tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 * toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
+* tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
+* tl_DBF_IncludeDeleted		out of settings (folder or per-file) Include deleted records
 *---------------------------------------------------------------------------------------------------
-		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFoxBin2Prg
+		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFoxBin2Prg, tl_DBF_BinChar_Base64, tl_DBF_IncludeDeleted
 
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, llFieldsEvaluated, llIndexesEvaluated ;
@@ -24206,8 +24627,13 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 									Endif
 
 									loRecords	= ._Records
-									loRecords.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, ._Fields, @toFoxBin2Prg )
-
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF
+									loRecords.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, ._Fields, @toFoxBin2Prg,;
+										tl_DBF_BinChar_Base64, tl_DBF_IncludeDeleted )
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 								Otherwise	&& Otro valor
 *-- Estructura a reconocer:
 * 	<tagname>ID<tagname>
@@ -24338,7 +24764,14 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 					loRecords	= This._Records
 *FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 					loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
-					loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg)
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF
+					loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg,;
+						IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_BinChar_Base64, m.toFoxBin2Prg.l_DBF_BinChar_Base64 ), m.toFoxBin2Prg.l_DBF_BinChar_Base64 ),;
+						IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_IncludeDeleted, m.toFoxBin2Prg.l_DBF_IncludeDeleted ), m.toFoxBin2Prg.l_DBF_IncludeDeleted ))
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 					lcText	= ''
 				Endif
 
@@ -24959,8 +25392,10 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 * tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
 * toFields					(@! IN    ) Estructura de los campos
 * toFoxBin2Prg				(@! IN    ) Referencia de toFoxBin2Prg
+* tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
+* tl_DBF_IncludeDeleted		out of settings (folder or per-file) Include deleted records
 *---------------------------------------------------------------------------------------------------
-		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFields, toFoxBin2Prg
+		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFields, toFoxBin2Prg, tl_DBF_BinChar_Base64, tl_DBF_IncludeDeleted
 
 		#If .F.
 			Local toFields As CL_DBF_FIELDS Of 'FOXBIN2PRG.PRG'
@@ -24996,13 +25431,31 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 								Case '<RECORD' $ tcLine
 									Append Blank
 
-									loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, @toFields )
+									loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, @toFields, tl_DBF_BinChar_Base64 )
 
 									If Mod(m.I,1000) = 0 Then
 										toFoxBin2Prg.updateProgressbar( 'Importing DBF Data... ' + Transform(m.I) + '/' + Transform(tnCodeLines) + '', 1+(m.I/tnCodeLines), 3, 2 )
 										DoEvents
 *FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 									Endif
+
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF, handle include of deleted records
+*!*	/Changed by: Lutz Scheffler 21.02.2021
+								Case m.tl_DBF_IncludeDeleted And '<DELRECORD' $ tcLine
+									Append Blank
+									loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, @toFields, tl_DBF_BinChar_Base64 )
+
+									Delete
+
+									If Mod(m.I,1000) = 0 Then
+										toFoxBin2Prg.updateProgressbar( 'Importing DBF Data... ' + Transform(m.I) + '/' + Transform(tnCodeLines) + '', 1+(m.I/tnCodeLines), 3, 2 )
+										DoEvents
+*FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
+									Endif
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 								Otherwise	&& Otro valor
 *-- No hay otros valores
@@ -25044,8 +25497,10 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 * tnField_Count					(v! IN    ) Cantidad de campos
 * tc_DBF_Conversion_Condition	(v? IN    ) Condición de filtro para la conversión. Solo se exporta lo que la cumpla.
 * toFoxBin2Prg					(@! IN    ) Referencia de toFoxBin2Prg
+* tl_DBF_BinChar_Base64			out of settings (folder or per-file) Transform NocPTrans fields base64
+* tl_DBF_IncludeDeleted			out of settings (folder or per-file) Include deleted records
 *---------------------------------------------------------------------------------------------------
-		Lparameters taFields, tnField_Count, tc_DBF_Conversion_Condition, toFoxBin2Prg
+		Lparameters taFields, tnField_Count, tc_DBF_Conversion_Condition, toFoxBin2Prg, tl_DBF_BinChar_Base64, tl_DBF_IncludeDeleted
 
 		External Array taFields
 
@@ -25057,6 +25512,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 				Local lcText, loEx As Exception, I, lnReccount ;
 					, loRecord As CL_DBF_RECORD Of 'FOXBIN2PRG.PRG' ;
 					, loTextStream As Scripting.TextStream
+				Local lcOldDeleted As String
 
 				lcText		= ''
 				I			= 0
@@ -25077,10 +25533,20 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 					tc_DBF_Conversion_Condition	= '.T.'
 				Endif
 
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF, handle include of deleted records
+				lcOldDeleted = Set("Deleted")
+				If m.tl_DBF_IncludeDeleted Then
+					Set Deleted Off
+				Endif
+*!*	/Changed by: Lutz Scheffler 21.02.2021
+
 *!*	Changed by: Lutz Scheffler 01.03.2021
 *!*	change date="{^2021-03-01,12:45:00}"
 * failure with macro substitution<br/>
-* for wharever raeson, macro substitution failed
+* for wharever reason, macro substitution failed
 * EVALUATE() should do
 *				Scan For &tc_DBF_Conversion_Condition.
 				Scan For EVALUATE(m.tc_DBF_Conversion_Condition)
@@ -25088,7 +25554,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 
 					I	= m.I + 1
 
-					lcText	= loRecord.toText(@taFields, tnField_Count )
+					lcText	= loRecord.toText(@taFields, tnField_Count, tl_DBF_BinChar_Base64 )
 
 *FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 					loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
@@ -25098,6 +25564,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 *FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 					Endif
 				Endscan
+				Set Deleted &lcOldDeleted.
 
 				toFoxBin2Prg.updateProgressbar( 'Data exported! ', 1+(lnReccount/lnReccount), 3, 2 )
 				lcText	= ''
@@ -25163,8 +25630,17 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 * I							(@! IN/OUT) Número de línea en análisis
 * tnCodeLines				(@! IN    ) Cantidad de líneas del programa analizado
 * toFields					(@! IN    ) Estructura de los campos
+* tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
 *---------------------------------------------------------------------------------------------------
-		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFields
+
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* general note:
+* - added code to handle NoCPTrans coding with or without basr64, just like the flag 4096 of CURSORTOXML
+* - added code parse out deleted records.
+*   deleted records should only occur if calling method sends them, so we just accept
+
+		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFields, tl_DBF_BinChar_Base64
 
 		#If .F.
 			Local toFields As CL_DBF_FIELDS Of 'FOXBIN2PRG.PRG'
@@ -25175,7 +25651,13 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 					, loField As CL_DBF_FIELD Of 'FOXBIN2PRG.PRG'
 				Store '' To lcFieldName, lcValue
 
-				If '<RECORD' $ tcLine
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF, handle include of deleted records
+* Note, the inclusion of records deleted is done in the method calling, so here it will just be read
+				If '<RECORD' $ tcLine Or '<DELRECORD' $ tcLine
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 					llBloqueEncontrado	= .T.
 
 					With This As CL_DBF_RECORD Of 'FOXBIN2PRG.PRG'
@@ -25189,6 +25671,15 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								Case C_RECORD_F $ tcLine	&& Fin
 									Exit
 
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF, handle include of deleted records
+* just end-of-record deleted
+								Case C_DEL_RECORD_F $ tcLine	&& Fin
+									Exit
+
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 								Otherwise	&& Campo de RECORD
 *-- Estructura a reconocer:
 *	<fieldName>VALOR</fieldName>
@@ -25226,16 +25717,18 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 											luValue		= Strconv(lcValue,14)
 
 										Case lcFieldType == 'V'	&& Varchar
-											If llNoCPTran Then
+											If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
+*-- SF: might, not must, see XMLTOCURSOR, flag 4096
 												luValue		= Strconv(lcValue,14)
 											Else
 												luValue = .Decode(lcValue)
 											Endif
 
 										Case lcFieldType == 'M'	&& Memo
-											If llNoCPTran Then
+											If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
+*-- SF: might, not must, see XMLTOCURSOR, flag 4096
 												luValue		= Strconv(lcValue,14)
 											Else
 												If llOneLineOnly And Atc('<![CDATA[', lcValue) = 0
@@ -25278,7 +25771,10 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 											luValue = Cast(lcValue As Numeric)
 
 										Otherwise	&& Asume 'C'	&& Character
-											If llNoCPTran Then
+											If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
+*-- If NoCPTran, then must encode in b64binary
+*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+
 *-- If NoCPTran, then must encode in b64binary
 												luValue		= Strconv(lcValue,14)
 											Else
@@ -25324,8 +25820,15 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 * PARÁMETROS:				(!=Obligatorio | ?=Opcional) (@=Pasar por referencia | v=Pasar por valor) (IN/OUT)
 * taFields					(@! IN    ) Array de información de campos
 * tnField_Count				(@! IN    ) Cantidad de campos
+* tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
 *---------------------------------------------------------------------------------------------------
-		Lparameters taFields, tnField_Count
+* SF, Analyse, calling method decides if deleted records will be included, we just process
+
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* general note:
+* - added code to handle NoCPTrans coding with or without base64, just like the flag 4096 of CURSORTOXML
+		Lparameters taFields, tnField_Count, tl_DBF_BinChar_Base64
 
 		External Array taFields
 
@@ -25336,8 +25839,19 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 
 				With This As CL_DBF_RECORD Of 'FOXBIN2PRG.PRG'
 *** FDBOZZO 2014/07/15: New "num" property invalidates the use of REGNUM field
-					lcStartTag = C_RECORD_I
-					lcEndTag   = C_RECORD_F
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - new operations of DBF, handle include of deleted records
+* Note: used in the TEXTEMERGEs for start and end tag below, not extra commented
+					If Deleted() Then
+						lcStartTag = C_DEL_RECORD_I
+						lcEndTag   = C_DEL_RECORD_F
+					Else
+						lcStartTag = C_RECORD_I
+						lcEndTag   = C_RECORD_F
+					Endif
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 
 					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>		<<m.lcStartTag>>
@@ -25364,24 +25878,27 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 									luValue		= Strconv(luValue,13)
 
 								Case lcFieldType == 'V'	&& Varchar
-									If llNoCPTran Then
+									If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
+*-- SF: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
 										luValue = .Encode(luValue)
 									Endif
 
 								Case lcFieldType $ 'C'	&& Character
-									If llNoCPTran Then
+									If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
+*-- SF: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
 										luValue = .Encode(Rtrim(luValue))
 									Endif
 
 								Case lcFieldType $ 'M'	&& Memo
-									If llNoCPTran Then
+									If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
+*-- SF: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
 										luValue = .Encode(Rtrim(luValue), .T.)
@@ -25661,6 +26178,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 		Endif
 	Endproc
 
+			Endtry
 
 
 	Procedure getRowServerInfo
@@ -28599,7 +29117,15 @@ Define Class CL_CFG As Custom
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
-		+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
+		; && SF
+	+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
+	+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
+		+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
+		+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
+		+ [<memberdata name="l_dbf_binchar_base64" display="l_DBF_BinChar_Base64"/>] ;
+		+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
+		; && /SF
+	+ [<memberdata name="pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="vcx_conversion_support" display="VCX_Conversion_Support"/>] ;
 		+ [<memberdata name="scx_conversion_support" display="SCX_Conversion_Support"/>] ;
 		+ [<memberdata name="frx_conversion_support" display="FRX_Conversion_Support"/>] ;
@@ -28640,6 +29166,19 @@ Define Class CL_CFG As Custom
 	l_RemoveNullCharsFromCode		= Null
 	l_RemoveZOrderSetFromProps		= Null
 	n_UseClassPerFile				= Null
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - splitt of DBC separated from VCX/SCX
+* - new operations of DBF
+*!*	/Changed by: Lutz Scheffler 21.02.2021
+    l_OldFilesPerDBC				= Null
+	n_UseFilesPerDBC				= Null
+	l_RedirectFilePerDBCToMain		= Null
+	l_ItemPerDBCCheck				= Null
+	l_DBF_BinChar_Base64            = Null
+	l_DBF_IncludeDeleted            = Null
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 	l_ClassPerFileCheck				= Null
 	n_ExtraBackupLevels				= Null
 	c_VC2							= Null
@@ -28691,6 +29230,18 @@ Define Class CL_CFG As Custom
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
+*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	change date="{^2021-02-21,10:57:00}"
+* additional options controlling
+* - splitt of DBC separated from VCX/SCX
+* - new operations of DBF
+            .l_OldFilesPerDBC               = toParentCFG.l_OldFilesPerDBC
+			.n_UseFilesPerDBC				= toParentCFG.n_UseFilesPerDBC
+			.l_RedirectFilePerDBCToMain		= toParentCFG.l_RedirectFilePerDBCToMain
+			.l_ItemPerDBCCheck				= toParentCFG.l_ItemPerDBCCheck
+			.l_DBF_BinChar_Base64			= toParentCFG.l_DBF_BinChar_Base64
+			.l_DBF_IncludeDeleted			= toParentCFG.l_DBF_IncludeDeleted
+*!*	/Changed by: Lutz Scheffler 21.02.2021
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
 			.c_VC2							= toParentCFG.c_VC2
@@ -28891,6 +29442,13 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>No parameter: Calls this info screen
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
@@ -28950,23 +29508,39 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 
 						<<>>
-						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>-- DBC options
+						<<>>- File per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                               && 1 creates a file.dc2 with DBC properties
+						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
+						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
+						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
+						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
+						<<>>
+						<<>>-- CLASS and FORM options
+						<<>>- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text file to PJX
+						<<>>extension: vc2=vca			   && Text file to VCX
+						<<>>extension: sc2=sca			   && Text file to SCX
+						<<>>extension: fr2=fra			   && Text file to FRX
+						<<>>extension: lb2=lba			   && Text file to LBX
+						<<>>extension: mn2=mna			   && Text file to MNX
+						<<>>extension: db2=dba			   && Text file to DBF
+						<<>>extension: dc2=dca			   && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text file to FKY
+						<<>>extension: me2=fkx			   && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -28975,6 +29549,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
@@ -29069,6 +29645,13 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>No parameter: Calls this info screen
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Detalle de parámetros:
@@ -29127,23 +29710,39 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
-						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
+						<<>>-- DBC options
+						<<>>- File per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                               && 1 creates a file.dc2 with DBC properties
+						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
+						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
+						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
+						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
+						<<>>
+						<<>>-- CLASS and FORM options
+						<<>>- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text file to PJX
+						<<>>extension: vc2=vca			   && Text file to VCX
+						<<>>extension: sc2=sca			   && Text file to SCX
+						<<>>extension: fr2=fra			   && Text file to FRX
+						<<>>extension: lb2=lba			   && Text file to LBX
+						<<>>extension: mn2=mna			   && Text file to MNX
+						<<>>extension: db2=dba			   && Text file to DBF
+						<<>>extension: dc2=dca			   && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text file to FKY
+						<<>>extension: me2=fkx			   && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29152,6 +29751,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && Ver esta misma configuración más arriba
 						<<>>DBF_Conversion_Order: <c_Expression>        && Expresión de campo. ej: nombre+str(edad,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Expresión lógica. ej: edad > 10 AND NOT DELETED()
+						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
@@ -29248,6 +29849,14 @@ Define Class CL_LANG As Custom
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
 						<<>>################################################################################################################
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter:
+						<<>>Keine Parameter:   Startet dieses Formular
+						<<>>-c                 Erzeugt eine Vorlage <OutFileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
+						<<>>-t                 Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
+						<<>>
+						<<>>****************************************************************************************************************
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter:
@@ -29298,7 +29907,7 @@ Define Class CL_LANG As Custom
 						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche NULL (CHR(0)) Zeichen aus dem Quellcode
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Aus, 1=Entferne ZOrderSet Eigenschaft von Objekten
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
-						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen wert aus der Textdate der Datenbank (db2)
+						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen Wert aus der Textdate der Datenbank (db2)
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Nutze HELPSTRING als Class Procedure Kommentar
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -29324,6 +29933,21 @@ Define Class CL_LANG As Custom
 						<<>>                               && Leer=Keine Datei auschließen
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>-- Optionen für DBC
+						<<>>- Optionen für Datei per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Die unten stehenden DBC Optionen werden aktiviert, 0=Die UseClassPerFile settings werden genutzt.
+						<<>>                               &&   Die unten stehenden Optionen werden nur gelesen, wenn OldFilesPerDBC vorher 1 ist!
+						<<>>                               &&   Wird OldFilesPerDBC wieder auf 0 gesetzt, gehen diese Einstellungen verloren.
+						<<>>UseFilesPerDBC: 0              && 0=Erzeuge eine dc2 Datei, 1=Erzeuge mehrfache Dateien.*.*.dc2
+						<<>>                               && 0 Erzeugt eine Datei <Datenbank>.db2 mit allem Inhalt der DBC
+						<<>>                               && 1 Erzeugt eine Datei <Datenbank>.dc2 mit den Eigenschaften der Datenbank
+						<<>>                               &&   und zusätzlich eine Datei für jedes Item der Datenbank (Gespeicherte Prozeduren, Tabellen, Views, ..)
+						<<>>                               &&   Achtung! Diese Dateien werden nur dann in die Binädatei einbezogen, wenn RedirectFilePerDBCToMain 1 ist
+						<<>>RedirectFilePerDBCToMain 0     && Originale Dokumntation: 0=Keine Umlenkung, 1=Erzeuge <Datenbank>.dbc, wenn <Datenbank>.item.*.dc2 gewählt wurde
+						<<>>                               &&   Die Bimär-Datenbank wird nur dann automatisch zusammen gefügt, wenn diese Option 1 ist!
+						<<>>ItemPerDBCCheck: 0             && 0=Aus, 1=Teste, ob <Datenbank>.item.*.dc2 einbezogen wird.
+						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Optionen für DBF (Transformation der DBF)
 						<<>>DBF_BinChar_Base64: 1          && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus (default)
 						<<>>                               &&   Dies entspricht dem Flag 4096 in CursorToXML()
@@ -29332,25 +29956,27 @@ Define Class CL_LANG As Custom
 						<<>>                               &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
-						<<>>-- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
-						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2 gilt auch für DBC
+						<<>>
+						<<>>-- Optionen für CLASS und FORM
+						<<>>- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
+						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Beispiel für geänderte Textdatei Endungen, hier für SourceSafe Kompatibiltät:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text Datei für PJX
+						<<>>extension: vc2=vca			   && Text Datei für VCX
+						<<>>extension: sc2=sca			   && Text Datei für SCX
+						<<>>extension: fr2=fra			   && Text Datei für FRX
+						<<>>extension: lb2=lba			   && Text Datei für LBX
+						<<>>extension: mn2=mna			   && Text Datei für MNX
+						<<>>extension: db2=dba			   && Text Datei für DBF
+						<<>>extension: dc2=dca			   && Text Datei für DBC
 						<<>>-- Zusätzliche Endungen
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text Datei für FKY
+						<<>>extension: me2=fkx			   && Text Datei für MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29366,6 +29992,11 @@ Define Class CL_LANG As Custom
 						<<>>                                            && leer: normale Reihenfolge
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
 						<<>>                                            && leer: Alle, außer DBF_IncludeDeleted
+						<<>>DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
+						<<>>                                            &&   Dies entspricht dem Flag 4096 in CursorToXML()
+						<<>>                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze, 1=Mit gelöschten Datensätzen
+						<<>>                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG arbeitet nur für Visual FoxPro 9.0!"
@@ -29460,6 +30091,13 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>No parameter: Calls this info screen
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
@@ -29518,23 +30156,39 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
-						<<>>-- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC
+						<<>>-- DBC options
+						<<>>- File per DBC options (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
+						<<>>                               && 1 creates a file.dc2 with DBC properties
+						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
+						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
+						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
+						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
+						<<>>
+						<<>>-- CLASS and FORM options
+						<<>>- Class per file options (UseClassPerFile: 1)
+						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text file to PJX
+						<<>>extension: vc2=vca			   && Text file to VCX
+						<<>>extension: sc2=sca			   && Text file to SCX
+						<<>>extension: fr2=fra			   && Text file to FRX
+						<<>>extension: lb2=lba			   && Text file to LBX
+						<<>>extension: mn2=mna			   && Text file to MNX
+						<<>>extension: db2=dba			   && Text file to DBF
+						<<>>extension: dc2=dca			   && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text file to FKY
+						<<>>extension: me2=fkx			   && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29543,6 +30197,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
+						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
@@ -29607,6 +30263,8 @@ Define Class CL_DBF_CFG As Custom
 		+ [<memberdata name="dbf_conversion_order" display="DBF_Conversion_Order"/>] ;
 		+ [<memberdata name="dbf_conversion_condition" display="DBF_Conversion_Condition"/>] ;
 		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
+		+ [<memberdata name="l_dbf_binchar_base64" display="l_DBF_BinChar_Base64"/>] ;
+		+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
 		+ [</VFPData>]
 
 	#If .F.
@@ -29618,6 +30276,8 @@ Define Class CL_DBF_CFG As Custom
 	DBF_Conversion_Order		= ''
 	DBF_Conversion_Condition	= ''
 	DBF_Conversion_Support		= Null
+	l_DBF_BinChar_Base64        = .Null.
+	l_DBF_IncludeDeleted        = .Null.
 Enddefine
 
 
