@@ -232,16 +232,16 @@
 * 15/02/2021	LScheffler	v1.19.53	Bug Fix: processing directory, flush log file after loop instead of file
 * 16/02/2021	LScheffler	v1.19.53	Bug Fix: conversion prg -> vcx, files per class could create one class multiple times
 * 03/03/2021	LScheffler	v1.19.54	Bug Fix: DBF_Conversion_Condition, problem with macro expansion
-* 14/02/2021	LScheffler	v1.21.02	Enhancement: inserted option UseFilesPerDBC to split DBC processing from vcx / scx
-* 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
-* 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
+* 14/02/2021	LScheffler	v1.19.55	Enhancement: inserted option UseFilesPerDBC to split DBC processing from vcx / scx
+* 15/02/2021	LScheffler	v1.19.55	Enhancement: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
+* 15/02/2021	LScheffler	v1.19.55	Enhancement: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
 *													 the three above are straight forward, so no extra comment are within the code
-* 19/02/2021	LScheffler	v1.21.02	Enhancement: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way
-* 20/02/2021	LScheffler	v1.21.02	Enhancement: inserted option DBF_IncludeDeleted to allow including deleted records of DBF
-* 21/02/2021	LScheffler	v1.21.02	Enhancement: German translation improved
-* 21/02/2021	LScheffler	v1.21.02	Enhancement: Info screen-doc improved
-* 21/02/2021	LScheffler	v1.21.02	Enhancement: added option to create config file template
-* 23/02/2021	LScheffler	v1.21.02	Enhancement: inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
+* 19/02/2021	LScheffler	v1.19.55	Enhancement: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way
+* 20/02/2021	LScheffler	v1.19.55	Enhancement: inserted option DBF_IncludeDeleted to allow including deleted records of DBF
+* 21/02/2021	LScheffler	v1.19.55	Enhancement: German translation improved
+* 21/02/2021	LScheffler	v1.19.55	Enhancement: Info screen-doc improved
+* 21/02/2021	LScheffler	v1.19.55	Enhancement: added option to create config file template
+* 23/02/2021	LScheffler	v1.19.55	Enhancement: inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
 
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -845,7 +845,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.21
-	c_FB2PRG_Version_Real			= '1.21.02'
+	c_FB2PRG_Version_Real			= '1.19.55'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1

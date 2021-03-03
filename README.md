@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.20.01
+# FoxBin2Prg v1.19.55
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -125,7 +125,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 
 ---
 ---
-## Changes by this fork (1.21.02)
+## Changes by this fork (1.19.55)
 To get the new settings in config file, use the new create-a-template function:
 
 ```

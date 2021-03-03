@@ -32,7 +32,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/02/21 | LScheffler | [v1.21.02]() | **Doc**: Documentation from CodePlex integrated |
+| 2021/02/21 | LScheffler | [v1.19.55]() | **Doc**: Documentation from CodePlex integrated |
 | | | | **Feature**: added option to create config file template |
 | | | | **Doc**: Info screen-doc improved |
 | | | | **Doc**: German translation improved |
