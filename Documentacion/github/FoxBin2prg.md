@@ -81,7 +81,7 @@ FoxBin2Prg can be used in tree ways:
 
 ----
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of VFPX. 
+This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
 Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

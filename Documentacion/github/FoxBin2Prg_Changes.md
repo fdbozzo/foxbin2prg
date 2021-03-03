@@ -32,25 +32,21 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 21/02/2021 | Lutz Scheffler | | **Doc**: Documentation from CodePlex integrated |
+| 2021/02/21 | LScheffler | [v1.21.02]() | **Doc**: Documentation from CodePlex integrated |
 | | | | **Feature**: added option to create config file template |
 | | | | **Doc**: Info screen-doc improved |
 | | | | **Doc**: German translation improved |
-| 20/02/2021 | Lutz Scheffler | | **Feature**: inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
-| 19/02/2021 | Lutz Scheffler | | **Feature**: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
-| 15/02/2021 | Lutz Scheffler | | **Feature**: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
+| 2021/02/20 | LScheffler | | **Feature**: inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
+| 2021/02/19 | LScheffler | | **Feature**: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
+| 2021/02/15 | LScheffler | | **Feature**: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
 | | | | **Feature**: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
-| 14/02/2021 | Lutz Scheffler | | **Feature**: inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
-| **mods** | | | **in this fork (above)**  | 
-| 23/02/2021 | Lutz Scheffler | | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
-| 16/02/2021 | Lutz Scheffler | | **Bug Fix**: conversion prg -> vcx, files per class could create one class multiple times |
-| 15/02/2021 | Lutz Scheffler | | **Bug Fix**: processing directory, flush log file after loop instead of file |
-| 14/02/2021 | Lutz Scheffler | | **Bug Fix**: conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
+| 2021/02/14 | LScheffler | | **Feature**: inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
+| 2021/02/23 | LScheffler | [v1.19.54]() | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
+| 2021/02/16 | | | **Bug Fix**: conversion prg -> vcx, files per class could create one class multiple times |
+| 2021/02/15 | LScheffler | [v1.19.53]() | **Bug Fix**: processing directory, flush log file after loop instead of file |
+| 2021/02/14 | LScheffler | [v1.19.52]() | **Bug Fix**: conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
 | | | | **Doc**: minor translations |
 | | | | **Bug Fix**: conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
-| **fixes** | | | **in this fork (above)**  |
-| | | ---fork--- | |
-|:----:|:----:|:----:|:----:|
 | 2020/04/01 | FDBOZZO | [v1.19.51.6](https://github.com/fdbozzo/foxbin2prg/tree/v1.19.51.6) | Add some fixes to existent ut_tests |
 | | | | **Bug Fix**: At least one of the class-per-file files do not have CR_LF at the end, then when assembling the class or form some structures (ENDIF/ENDCASE/ENDDEF/etc) can be joined with the next, making them erroneous (Ryan Harris) |
 | | | | **Bug Fix**: Incompatible with VFPA (#36) (Eric Selje) |
@@ -368,7 +364,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 ----
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of VFPX. 
+This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
 Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

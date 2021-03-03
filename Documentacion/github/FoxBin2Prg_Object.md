@@ -89,7 +89,7 @@ Return value is 0=OK, 1=Error.
 
 ----
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of VFPX. 
+This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
 Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
