@@ -36,6 +36,8 @@
 *		DO FOXBIN2PRG.PRG WITH "<path>\FILE.PJX"	&& Genera "<path>\FILE.PJ2" (BIN TO PRG CONVERSION)
 *		DO FOXBIN2PRG.PRG WITH "<path>\FILE.PJ2"	&& Genera "<path>\FILE.PJX" (PRG TO BIN CONVERSION)
 *
+*		DO FOXBIN2PRG.PRG WITH "-c", cOutputFile	&& Generate a configuration (FoxBin2Prg.cfg) template
+*
 *---------------------------------------------------------------------------------------------------
 * <HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 * 04/11/2013	FDBOZZO		v1.0		Creación inicial de las clases y soporte de los archivos VCX/SCX/PJX
@@ -225,25 +227,20 @@
 * 01/04/2020	DH			v1.19.51	Bug Fix: Manejo de AutoIncrement incompatible con Project Explorer (Dan Lauer)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: La conversión de tablas falla si algún campo contiene una palabra reservada como UNIQUE (DAJU78)
 * 01/04/2020	FDBOZZO		v1.19.51	Bug Fix: No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
-
-* fixes
-*  14/02/2021	Lutz Scheffler			conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
-*										minor translations
-*  14/02/2021	Lutz Scheffler			conversion prg -> dbf, fields with .NULL. value are incorectly recreated
-*  15/02/2021	Lutz Scheffler			processing directory, flush log file after loop instead of file
-*  16/02/2021	Lutz Scheffler			conversion prg -> vcx, files per class could create one class multiple times
-* mods
-*  23/02/2021	Lutz Scheffler			inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
-*  14/02/2021	Lutz Scheffler			inserted option UseFilesPerDBC to split DBC processing from vcx / scx
-*  15/02/2021	Lutz Scheffler			inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
-*  15/02/2021	Lutz Scheffler			inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
-*										the three above are straight forward, so no extra comment are within the code
-*  19/02/2021	Lutz Scheffler			inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way
-*  20/02/2021	Lutz Scheffler			inserted option DBF_IncludeDeleted to allow including deleted records of DBF
-*  21/02/2021	Lutz Scheffler			German translation improved
-*  21/02/2021	Lutz Scheffler			Info screen-doc improved
-*  21/02/2021	Lutz Scheffler			added option to create config file template
-*  21/02/2021	Lutz Scheffler			added option to create config file template
+* 14/02/2021	LScheffler	v1.19.52	Bug Fix: conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
+* 14/02/2021	LScheffler	v1.19.52	Bug Fix: conversion prg -> dbf, fields with .NULL. value are incorectly recreated
+* 15/02/2021	LScheffler	v1.19.53	Bug Fix: processing directory, flush log file after loop instead of file
+* 16/02/2021	LScheffler	v1.19.54	Bug Fix: conversion prg -> vcx, files per class could create one class multiple times
+* 14/02/2021	LScheffler	v1.21.02	Enhancement: inserted option UseFilesPerDBC to split DBC processing from vcx / scx
+* 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
+* 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
+*													 the three above are straight forward, so no extra comment are within the code
+* 19/02/2021	LScheffler	v1.21.02	Enhancement: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way
+* 20/02/2021	LScheffler	v1.21.02	Enhancement: inserted option DBF_IncludeDeleted to allow including deleted records of DBF
+* 21/02/2021	LScheffler	v1.21.02	Enhancement: German translation improved
+* 21/02/2021	LScheffler	v1.21.02	Enhancement: Info screen-doc improved
+* 21/02/2021	LScheffler	v1.21.02	Enhancement: added option to create config file template
+* 23/02/2021	LScheffler	v1.21.02	Enhancement: inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
 
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -834,7 +831,7 @@ Define Class c_foxbin2prg As Session
 		+ [</VFPData>]
 
 
-*!*	;&& SF
+*!*	;&& SF -> String to long
 *!*			+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
 *!*			+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 *!*			+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
@@ -846,8 +843,8 @@ Define Class c_foxbin2prg As Session
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
-	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.51'
+	n_FB2PRG_Version				= 1.21
+	c_FB2PRG_Version_Real			= '1.21.02'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -4151,7 +4148,7 @@ Define Class c_foxbin2prg As Session
 								If '.' $ Juststem(.c_InputFile)
 									.c_InputFile	= lc_BaseFile
 								Endif
-* SF fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
+** SF, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
 							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2) Or lcExtension = .c_DC2
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
@@ -13305,7 +13302,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 Enddefine	&& CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
-* SF, just locate
+* SF, Analyse, just locate
 Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 	#If .F.
 		Local This As c_conversor_prg_a_dbc Of 'FOXBIN2PRG.PRG'
@@ -17865,7 +17862,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 						Endif
 
 						loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
-* SF, call table
+* SF, Analyse, call table
 						loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 
 						loTextStream.Close()
@@ -17992,7 +17989,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 Enddefine
 
 
-* SF just locate
+* SF, Analyse, just locate
 Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 	#If .F.
 		Local This As c_conversor_dbc_a_prg Of 'FOXBIN2PRG.PRG'
@@ -25436,14 +25433,13 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 * toFields					(@! IN    ) Estructura de los campos
 * tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
 *---------------------------------------------------------------------------------------------------
-* SF, added code to alternative prosessing NoCPTrans via tl_DBF_BinChar_Base64
-* SF, added code parse out deleted records.
-*     deleted records should only occur if calling method sends them, so we just accept
 
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * general note:
-* - added code to handle NoCPTrans coding with or without bas64, just like the flag 4096 of CURSORTOXML
+* - added code to handle NoCPTrans coding with or without basr64, just like the flag 4096 of CURSORTOXML
+* - added code parse out deleted records.
+*   deleted records should only occur if calling method sends them, so we just accept
 
 		Lparameters tcLine, taCodeLines, I, tnCodeLines, toFields, tl_DBF_BinChar_Base64
 
@@ -25627,7 +25623,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 * tnField_Count				(@! IN    ) Cantidad de campos
 * tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
 *---------------------------------------------------------------------------------------------------
-* SF, calling method decides if deleted records will be included, we just process
+* SF, Analyse, calling method decides if deleted records will be included, we just process
 
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
