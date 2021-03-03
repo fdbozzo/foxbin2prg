@@ -4158,7 +4158,7 @@ Define Class c_foxbin2prg As Session
 									.c_InputFile	= lc_BaseFile
 								Endif
 ** SF, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
-							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2) Or lcExtension = .c_DC2
+							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
@@ -4177,35 +4177,20 @@ Define Class c_foxbin2prg As Session
 
 *-- OPTIMIZACIÓN DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
 					If Inlist(lcExtension,"DBC",.c_DC2);
-					        AND (.n_UseFilesPerDBC > 0 And .l_RedirectFilePerDBCToMain ;
-							OR Not Empty(.c_ClassToConvert))
+					        AND .n_UseFilesPerDBC > 0 And .l_RedirectFilePerDBCToMain;
+							AND .n_UseFilesPerDBC = 1
 
-						Do Case
-							Case .n_UseFilesPerDBC = 1 And Inlist(lcExtension,.c_VC2,.c_SC2)
-								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
-									lc_BaseFile	= .c_InputFile
-								Else
-									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
-								Endif
+						If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+							lc_BaseFile	= .c_InputFile
+						Else
+							lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem( Juststem(.c_InputFile) ) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+						Endif
 
 *-- Verifico si se debe forzar la redirección al archivo principal
-								If '.' $ Juststem(.c_InputFile)
-									.c_InputFile	= lc_BaseFile
-								Endif
-** SF, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
-							Case .n_UseFilesPerDBC = 2 And Inlist(lcExtension,.c_VC2,.c_SC2) Or lcExtension = .c_DC2
-								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
-									lc_BaseFile	= .c_InputFile
-								Else
-									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem( Juststem(.c_InputFile) ) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
-								Endif
+						If '.' $ Juststem(.c_InputFile)
+							.c_InputFile	= lc_BaseFile
+						Endif
 
-*-- Verifico si se debe forzar la redirección al archivo principal
-								If '.' $ Juststem(.c_InputFile)
-									.c_InputFile	= lc_BaseFile
-								Endif
-
-						Endcase
 					Endif
 
 *!*	/Changed by: Lutz Scheffler 03.03.2021
@@ -29369,23 +29354,24 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
-						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>-- CLASS and FORM options
+						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text file to PJX
+						<<>>extension: vc2=vca			   && Text file to VCX
+						<<>>extension: sc2=sca			   && Text file to SCX
+						<<>>extension: fr2=fra			   && Text file to FRX
+						<<>>extension: lb2=lba			   && Text file to LBX
+						<<>>extension: mn2=mna			   && Text file to MNX
+						<<>>extension: db2=dba			   && Text file to DBF
+						<<>>extension: dc2=dca			   && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text file to FKY
+						<<>>extension: me2=fkx			   && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29570,23 +29556,24 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
-						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>-- CLASS and FORM options
+						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text file to PJX
+						<<>>extension: vc2=vca			   && Text file to VCX
+						<<>>extension: sc2=sca			   && Text file to SCX
+						<<>>extension: fr2=fra			   && Text file to FRX
+						<<>>extension: lb2=lba			   && Text file to LBX
+						<<>>extension: mn2=mna			   && Text file to MNX
+						<<>>extension: db2=dba			   && Text file to DBF
+						<<>>extension: dc2=dca			   && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text file to FKY
+						<<>>extension: me2=fkx			   && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29751,7 +29738,7 @@ Define Class CL_LANG As Custom
 						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche NULL (CHR(0)) Zeichen aus dem Quellcode
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Aus, 1=Entferne ZOrderSet Eigenschaft von Objekten
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
-						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen wert aus der Textdate der Datenbank (db2)
+						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen Wert aus der Textdate der Datenbank (db2)
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Nutze HELPSTRING als Class Procedure Kommentar
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -29786,7 +29773,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 0 Erzeugt eine Datei <Datenbank>.db2 mit allem Inhalt der DBC
 						<<>>                               && 1 Erzeugt eine Datei <Datenbank>.dc2 mit den Eigenschaften der Datenbank
 						<<>>                               &&   und zusätzlich eine Datei für jedes Item der Datenbank (Gespeicherte Prozeduren, Tabellen, Views, ..)
-						<<>>                               &&   Achtung! Diese Dateien werden nmur dann in die Binädatei einbezogen, wenn RedirectFilePerDBCToMain 1 ist
+						<<>>                               &&   Achtung! Diese Dateien werden nur dann in die Binädatei einbezogen, wenn RedirectFilePerDBCToMain 1 ist
 						<<>>RedirectFilePerDBCToMain 0     && Originale Dokumntation: 0=Keine Umlenkung, 1=Erzeuge <Datenbank>.dbc, wenn <Datenbank>.item.*.dc2 gewählt wurde
 						<<>>                               &&   Die Bimär-Datenbank wird nur dann automatisch zusammen gefügt, wenn diese Option 1 ist!
 						<<>>ItemPerDBCCheck: 0             && 0=Aus, 1=Teste, ob <Datenbank>.item.*.dc2 einbezogen wird.
@@ -29800,7 +29787,9 @@ Define Class CL_LANG As Custom
 						<<>>                               &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
-						<<>>-- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
+						<<>>
+						<<>>-- Optionen für CLASS und FORM
+						<<>>- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
 						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
@@ -29808,17 +29797,17 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Beispiel für geänderte Textdatei Endungen, hier für SourceSafe Kompatibiltät:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text Datei für PJX
+						<<>>extension: vc2=vca			   && Text Datei für VCX
+						<<>>extension: sc2=sca			   && Text Datei für SCX
+						<<>>extension: fr2=fra			   && Text Datei für FRX
+						<<>>extension: lb2=lba			   && Text Datei für LBX
+						<<>>extension: mn2=mna			   && Text Datei für MNX
+						<<>>extension: db2=dba			   && Text Datei für DBF
+						<<>>extension: dc2=dca			   && Text Datei für DBC
 						<<>>-- Zusätzliche Endungen
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text Datei für FKY
+						<<>>extension: me2=fkx			   && Text Datei für MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -30013,23 +30002,24 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
-						<<>>-- Class per file options (UseClassPerFile: 1)
+						<<>>-- CLASS and FORM options
+						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja
-						<<>>extension: vc2=vca
-						<<>>extension: sc2=sca
-						<<>>extension: fr2=fra
-						<<>>extension: lb2=lba
-						<<>>extension: mn2=mna
-						<<>>extension: db2=dba
-						<<>>extension: dc2=dca
+						<<>>extension: pj2=pja			   && Text file to PJX
+						<<>>extension: vc2=vca			   && Text file to VCX
+						<<>>extension: sc2=sca			   && Text file to SCX
+						<<>>extension: fr2=fra			   && Text file to FRX
+						<<>>extension: lb2=lba			   && Text file to LBX
+						<<>>extension: mn2=mna			   && Text file to MNX
+						<<>>extension: db2=dba			   && Text file to DBF
+						<<>>extension: dc2=dca			   && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && FKY
-						<<>>extension: me2=fkx			   && MEM
+						<<>>extension: fk2=fkx			   && Text file to FKY
+						<<>>extension: me2=fkx			   && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT

@@ -1,0 +1,11 @@
+# we use the exclude-all-include-special approach, easier then excluding any odd stuff later
+#exclude general
+*.bak
+*.tmp
+/*.dbf
+/*.CDX
+/*.fxp
+/*.fpt
+
+*special, exclude local config
+foxbin2prg.cfg
