@@ -1,65 +1,70 @@
-****************************************************************************************************
-* FOXBIN2PRG v1.19.51.4
-* CONFIGURATION FILE / ARCHIVO DE CONFIGURACIÓN
-****************************************************************************************************
+*################################################################################################################
+*FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+*Version: v1.21.2
+*################################################################################################################
 
-****************************************************************************************************
-* SECTION DOCUMENTATION OF OPTIONS / SECCIÓN DE DOCUMENTACIÓN DE OPCIONES
+*extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+*ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+*DontShowErrors: 0              && Show message errors by default
+*NoTimestamps: 1                && Clear timestamps by default for minimize differences
+*Debug: 0                       && Don't Activate individual <file>.Log by default
+*BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+*ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+*ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+*ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+*OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+*RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+*RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+*Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+*ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+*PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+
+*-- Convertion options:
+*PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+*DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+*DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+*DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+
+*-- DBC options
+*- File per DBC options (UseFilesPerDBC: 1)
+*OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+*                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+*                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+*UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+*                               && 0 creates only a file.dc2 with all DBC (file) data
+*                               && 1 creates a file.dc2 with DBC properties
+*                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
+*                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
+*RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+*ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
+*DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+*DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
+
+*-- CLASS and FORM options
+*- Class per file options (UseClassPerFile: 1)
+*UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
+*RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+*ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+
+*-- Example configuration for SourceSafe compatibility:
+*extension: pj2=pja			   && Text file to PJX
+*extension: vc2=vca			   && Text file to VCX
+*extension: sc2=sca			   && Text file to SCX
+*extension: fr2=fra			   && Text file to FRX
+*extension: lb2=lba			   && Text file to LBX
+*extension: mn2=mna			   && Text file to MNX
+*extension: db2=dba			   && Text file to DBF
+*extension: dc2=dca			   && Text file to DBC
+*-- Additional extensions
+*extension: fk2=fkx			   && Text file to FKY
+*extension: me2=fkx			   && Text file to MEM
+
 *
-* EN: Note: This values have precedence over internal parameters
-* ES: Nota: Estos valores tienen precedencia sobre los parámetros internos
-*
-* DETAIL OF SUPPORTED VALUES / DETALLE DE VALORES SOPORTADOS
-* If no values given, these are the DEFAULTS / Si no se proporcionan valores, estos son los PREDETERMINADOS
-*
-* extension: tx2=newext			&& Default FoxBin2Prg extensions ends in '2' (see at the bottom)
-* ShowProgressbar: 1			&& 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
-* DontShowErrors: 0				&& Show message errors by default
-* NoTimestamps: 1				&& Clear timestamps by default for minimize differences
-* Debug: 0						&& Don't Activate individual <file>.Log by default
-* BodyDevInfo: 0				&& [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
-* ExtraBackupLevels: 1			&& By default 1 BAK is created. With this you can make more .N.BAK, or none
-* ClearUniqueID: 1				&& 0=Keep UniqueID, 1=Clear Unique ID. Useful for Diff and Merge
-* ClearDBFLastUpdate: 1			&& 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-* OptimizeByFilestamp: 0		&& Optimize file regeneration depending on file timestamp
-* RemoveNullCharsFromCode: 1	&& 1=Drop NULL chars from source code
-* RemoveZOrderSetFromProps: 0	&& 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-* Language: (auto)				&& Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-* ExcludeDBFAutoincNextval: 0	&& [0=Do not exclude this value from db2], 1=Exclude this value from db2
-* PRG_Compat_Level: 0			&& [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
-
-*-- CONVERTION OPTIONS / OPCIONES DE CONVERSIÓN
-* PJX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* VCX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* SCX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* FRX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* LBX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* MNX_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* FKY_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff)
-* MEM_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff)
-* DBC_Conversion_Support: 2		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-* DBF_Conversion_Support: 1		&& 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-* DBF_Conversion_Included: *	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-* DBF_Conversion_Excluded:  	&& If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-
-*-- "CLASS PER FILE" OPTIONS (UseClassPerFile: 1)
-* UseClassPerFile: 0			&& 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files including DBC members
-* RedirectClassPerFileToMain: 0	&& 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-* ClassPerFileCheck: 0			&& 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
-*
-* END DOCUMENTATION SECTION / FIN DE LA SECCIÓN DE DOCUMENTACIÓN
-****************************************************************************************************
-
-
-****************************************************************************************************
-* EN: Uncomment for SourceSafe compatibility. You can change the extension on the right side.
-* ES: Descomentar para compatibilidad con SourceSafe. Puede cambiar la extensión del lado derecho.
-*---------------------------------------------------------------------------------------------------
-*extension: pj2=pja
-*extension: vc2=vca
-*extension: sc2=sca
-*extension: fr2=fra
-*extension: lb2=lba
-*extension: mn2=mna
-*extension: db2=dba
-*extension: dc2=dca
