@@ -1,22 +1,25 @@
-# Purpose of this document
-This document is an attempt to recreate the original documentation of FoxBin2Prg out of CodePlex.  
-I found the documentation on [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/blob/master/README.md) a bit brief. For a short what and why, see there.
+# Use with SCM
+Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
-The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project. Pictures are taken from the original project.  
+## Purpose of this document
+Using FoxPin2Prg with SCM.   
+See [use with git](./FoxBin2Prg_git.md)
+
+The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project.   
+Pictures are taken from the original project.  
 As far as possible these are the original documents. Changes are added where functionality is changed.
 
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of VFPX. 
+## Table of contents
+- [Remark](#remark)
+- [A short mention on SourceSafe](#a-short-mention-on-sourcesafe)
 
-----
-# FoxBin2Prg - SCM
-## <span style="background-color: gold;">Remark</span>
-<span style="background-color: lemonchiffon;">**This is article is a stub.** If you like to use this tool with non SCM tools like [_git_](git-scm.com/),
-have a look on [VFPX](https://vfpx.github.io/projects/), there are some that integrate _git_ and _FoxBin2Prg_ into VFP IDE.</span>
+## Remark
+**This is article is a stub.**   
+If you like to use this tool with non SCM tools like [_git_](git-scm.com/),
+have a look on [VFPX](https://vfpx.github.io/projects/), there are some that integrate _git_ and _FoxBin2Prg_ into VFP IDE.
 
-## First, a short mention on SourceSafe
-
+## A short mention on SourceSafe
 For those who keep using it, I recommend running away from it to any other modern SCM out there.
 Main reason is that Microsoft doesn't support it anymore,
 which last version was released in 2005 (Visual SourceSafe 2005, that many people didn't know of) and a lot of people keep using the version that came with Visual Studio 6, released in 1998! (more or less).   
@@ -35,7 +38,6 @@ thanks to the configuration file foxbin2prg.cfg and the capability to change def
 In fact you can merge binaries as you probably have never seen :-)
 
 ----
-
 People that came from SourceSafe, often tends to think of SCM tools as repositories of code,
 because of the limitations everybody that used SourceSafe knows,
 but the reality is that a SCM tool is much more than a repository of code,
@@ -66,8 +68,11 @@ how to configure and how to begin working with Visual FoxPro 9 projects using br
 If you already are using FoxBin2Prg with another SCM tool,
 feel free to share how you are using it so others can benefit.
 
-
-## > [Using FoxBin2Prg with PlasticSCM](Using-FoxBin2Prg-with-PlasticSCM)
+- [Using FoxBin2Prg with PlasticSCM](Using-FoxBin2Prg-with-PlasticSCM)
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of [VFPX](https://vfpx.github.io/).   
+
+----
+Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

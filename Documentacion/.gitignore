@@ -1,7 +1,11 @@
 # we use the exclude-all-include-special approach, easier then excluding any odd stuff later
- #excluded in parent directory, we just add the stuff to include here
+#exclude general
+*.*
 
 #include general
-#grafics
-!*.gif
-!*.png
+# docs
+!*.md
+
+#include special
+#default git
+!*.gitignore
