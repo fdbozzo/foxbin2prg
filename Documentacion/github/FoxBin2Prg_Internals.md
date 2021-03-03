@@ -442,7 +442,7 @@ This is true for SCX files as well. SCX files may contain a form and a dataenvir
 It will create sc2 files.
 
 ### Create File-Per-DBC
-Starting at vn.nn.nn you can configure FoxBin2Prg to generate one _Text_ file per dbc item using naming style "DatabaseName.item.name.dc2"
+Starting at 1.21.02 you can configure FoxBin2Prg to generate one _Text_ file per dbc item using naming style "DatabaseName.item.name.dc2"
 with the value "1"
 To configure this, you must first enable it in foxbin2prg.cfg file:
 ````
@@ -657,4 +657,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

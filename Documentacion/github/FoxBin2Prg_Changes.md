@@ -41,9 +41,10 @@ _**Note:** you can click on the version number for downloading this version from
 | 2021/02/15 | LScheffler | | **Feature**: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
 | | | | **Feature**: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
 | 2021/02/14 | LScheffler | | **Feature**: inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
-| 2021/02/23 | LScheffler | [v1.19.54]() | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
-| 2021/02/16 | | | **Bug Fix**: conversion prg -> vcx, files per class could create one class multiple times |
-| 2021/02/15 | LScheffler | [v1.19.53]() | **Bug Fix**: processing directory, flush log file after loop instead of file |
+| 2021/03/03 | LScheffler | [v1.19.54]() | **Bug Fix**: DBF_Conversion_Condition, problem with macro expansion |
+| 2021/02/23 | LScheffler | [v1.19.53]() | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
+| | | | **Bug Fix**: conversion prg -> vcx, files per class could create one class multiple times |
+| 2021/02/15 | | | **Bug Fix**: processing directory, flush log file after loop instead of file |
 | 2021/02/14 | LScheffler | [v1.19.52]() | **Bug Fix**: conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
 | | | | **Doc**: minor translations |
 | | | | **Bug Fix**: conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
@@ -367,4 +368,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

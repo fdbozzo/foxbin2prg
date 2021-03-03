@@ -125,7 +125,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 
 ---
 ---
-## Changes by this fork 
+## Changes by this fork (1.21.02)
 To get the new settings in config file, use the new create-a-template function:
 
 ```
@@ -164,12 +164,13 @@ Fixes only are in the fork branch of this repo.
 
 | Details |
 | - |
-| Added MEM and FKY options to config template and internal dokumentation |
+| Added MEM and FKY options to config template and internal documentation |
 | Conversion prg -> vcx, files per class could create one class multiple times |
 | Processing directory, flush log file after loop instead of file |
 | Conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
 | Minor translations |
 | Conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
+| DBF_Conversion_Condition, problem with macro expansion |
 
 ### Features
 
@@ -184,6 +185,7 @@ Fixes only are in the fork branch of this repo.
 | Inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
 | Inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
 | Inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
+| added option to create config file template |
 
 
 ---
@@ -197,4 +199,4 @@ This folder containes the files necessary to run FoxBin2Prg.prg or to create the
 For usage see [documentation](./Documentacion/github/FoxBin2prg.md)
 
 ----
-Last changed: _Pungenday, 53 Chaos 3187_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

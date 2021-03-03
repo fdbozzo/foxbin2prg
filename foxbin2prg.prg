@@ -230,7 +230,8 @@
 * 14/02/2021	LScheffler	v1.19.52	Bug Fix: conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
 * 14/02/2021	LScheffler	v1.19.52	Bug Fix: conversion prg -> dbf, fields with .NULL. value are incorectly recreated
 * 15/02/2021	LScheffler	v1.19.53	Bug Fix: processing directory, flush log file after loop instead of file
-* 16/02/2021	LScheffler	v1.19.54	Bug Fix: conversion prg -> vcx, files per class could create one class multiple times
+* 16/02/2021	LScheffler	v1.19.53	Bug Fix: conversion prg -> vcx, files per class could create one class multiple times
+* 03/03/2021	LScheffler	v1.19.54	Bug Fix: DBF_Conversion_Condition, problem with macro expansion
 * 14/02/2021	LScheffler	v1.21.02	Enhancement: inserted option UseFilesPerDBC to split DBC processing from vcx / scx
 * 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx
 * 15/02/2021	LScheffler	v1.21.02	Enhancement: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx
@@ -4125,17 +4126,25 @@ Define Class c_foxbin2prg As Session
 						lcForceAttribs	= lcForceAttribs + '-R'
 					Endif
 
-*-- OPTIMIZACIÓN VC2/SC2/DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
-					If .n_UseClassPerFile > 0 And .l_RedirectClassPerFileToMain ;
-							OR Not Empty(.c_ClassToConvert)
+*!*	Changed by: Lutz Scheffler 03.03.2021
+*!*	change date="{^2021-03-03,11:38:00}"
+* Added option for DBC split
+
+*-- OPTIMIZACIÓN VC2/SC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
+					If Inlist(lcExtension,"SCX","VCX",.c_VC2,.c_SC2);
+					        AND (.n_UseClassPerFile > 0 And .l_RedirectClassPerFileToMain ;
+							OR Not Empty(.c_ClassToConvert))
 
 						Do Case
+* SF
+* n_RedirectClassType looks like lavacode. At least I see not where it set, except in cfg file, not documented in cfg Files
 							Case .n_RedirectClassType = 1 Or Not Empty(.c_ClassToConvert) && Redireccionar solo esta clase
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
 									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
 								Endif
+* /SF
 
 							Case .n_UseClassPerFile = 1 And Inlist(lcExtension,.c_VC2,.c_SC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
@@ -4163,6 +4172,43 @@ Define Class c_foxbin2prg As Session
 
 						Endcase
 					Endif
+
+*****************************
+
+*-- OPTIMIZACIÓN DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
+					If Inlist(lcExtension,"DBC",.c_DC2);
+					        AND (.n_UseFilesPerDBC > 0 And .l_RedirectFilePerDBCToMain ;
+							OR Not Empty(.c_ClassToConvert))
+
+						Do Case
+							Case .n_UseFilesPerDBC = 1 And Inlist(lcExtension,.c_VC2,.c_SC2)
+								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+									lc_BaseFile	= .c_InputFile
+								Else
+									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+								Endif
+
+*-- Verifico si se debe forzar la redirección al archivo principal
+								If '.' $ Juststem(.c_InputFile)
+									.c_InputFile	= lc_BaseFile
+								Endif
+** SF, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
+							Case .n_UseFilesPerDBC = 2 And Inlist(lcExtension,.c_VC2,.c_SC2) Or lcExtension = .c_DC2
+								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+									lc_BaseFile	= .c_InputFile
+								Else
+									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem( Juststem(.c_InputFile) ) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+								Endif
+
+*-- Verifico si se debe forzar la redirección al archivo principal
+								If '.' $ Juststem(.c_InputFile)
+									.c_InputFile	= lc_BaseFile
+								Endif
+
+						Endcase
+					Endif
+
+*!*	/Changed by: Lutz Scheffler 03.03.2021
 
 					Erase ( .c_InputFile + '.ERR' )
 
@@ -25347,7 +25393,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 *!*	Changed by: Lutz Scheffler 01.03.2021
 *!*	change date="{^2021-03-01,12:45:00}"
 * failure with macro substitution<br/>
-* for wharever raeson, macro substitution failed
+* for wharever reason, macro substitution failed
 * EVALUATE() should do
 *				Scan For &tc_DBF_Conversion_Condition.
 				Scan For EVALUATE(m.tc_DBF_Conversion_Condition)
@@ -25628,7 +25674,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * general note:
-* - added code to handle NoCPTrans coding with or without bas64, just like the flag 4096 of CURSORTOXML
+* - added code to handle NoCPTrans coding with or without base64, just like the flag 4096 of CURSORTOXML
 		Lparameters taFields, tnField_Count, tl_DBF_BinChar_Base64
 
 		External Array taFields
