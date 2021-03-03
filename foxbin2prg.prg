@@ -29272,7 +29272,10 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>################################################################################################################
 						<<>>
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -29471,7 +29474,10 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>################################################################################################################
 						<<>>
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -29673,8 +29679,10 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG Konfigurations Optionen: (Wird die Option nicht aufgeführt, ist der Wert im Beispiel der Default)
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>
 						<<>> Achtung, die Konfigurationsdatein werden vererbt.
-					    <<>> 1. Defaultwerte
+					    <<>> 1.  Defaultwerte
 					    <<>> 2., optional FOXBIN2PRG.CFG im Vereichnis aus dem FOXBIN2PRG.EXE startet
 					    <<>> 3., optional FOXBIN2PRG.CFG in der Wurzel des Arbeitsverzeichnises
 					    <<>> 4., optional FOXBIN2PRG.CFG in jedem Verzeichnis bis zum Arbeitsverzeichnis
@@ -29909,7 +29917,10 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>################################################################################################################
 						<<>>
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
