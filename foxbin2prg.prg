@@ -4151,7 +4151,7 @@ Define Class c_foxbin2prg As Session
 								If '.' $ Juststem(.c_InputFile)
 									.c_InputFile	= lc_BaseFile
 								Endif
-
+* SF fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
 							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2) Or lcExtension = .c_DC2
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
@@ -25347,7 +25347,15 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 				Endif
 *!*	/Changed by: Lutz Scheffler 21.02.2021
 
-				Scan For &tc_DBF_Conversion_Condition.
+*!*	Changed by: Lutz Scheffler 01.03.2021
+*!*	change date="{^2021-03-01,12:45:00}"
+* failure with macro substitution<br/>
+* for wharever raeson, macro substitution failed
+* EVALUATE() should do
+*				Scan For &tc_DBF_Conversion_Condition.
+				Scan For EVALUATE(m.tc_DBF_Conversion_Condition)
+*!*	/Changed by: Lutz Scheffler 01.03.2021
+
 					I	= m.I + 1
 
 					lcText	= loRecord.toText(@taFields, tnField_Count, tl_DBF_BinChar_Base64 )
