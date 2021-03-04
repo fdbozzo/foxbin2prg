@@ -32,7 +32,9 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/02/21 | LScheffler | [v1.21.02]() | **Doc**: Documentation from CodePlex integrated |
+| 2021/03/04 | LScheffler | [v1.19.56]() | **Feature**: New value 2 for option RedirectClassType = 2, just process the single class for input in form file[.baseclass].class.vc2 |
+| | | | **Bug Fix**:<br>Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1<br>generates classlib.class.vcx and tries to recompile classlib.vcx<br>fails silent if classlib.vcx exists (compiles wrong lib), with message if not. |
+| 2021/02/21 | LScheffler | [v1.19.55]() | **Doc**: Documentation from CodePlex integrated |
 | | | | **Feature**: added option to create config file template |
 | | | | **Doc**: Info screen-doc improved |
 | | | | **Doc**: German translation improved |
@@ -368,4 +370,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
