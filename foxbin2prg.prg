@@ -5218,9 +5218,6 @@ Define Class c_foxbin2prg As Session
 		Return
 	Endproc
 
-	Procedure errOut
-*-- DEVOLUCIÓN DE SALIDA A ERROUT (-12)
-		Lparameters tcTexto
 
 	Procedure stdOut
 *-- DEVOLUCIÓN DE SALIDA A STDOUT (-11)
@@ -6437,7 +6434,6 @@ Define Class frm_main As Form
 
 Enddefine
 
-Enddefine
 
 
 Define Class c_conversor_base As Custom
@@ -7451,110 +7447,6 @@ Define Class c_conversor_base As Custom
 								Dimension taBloquesExclusion(tnBloquesExclusion,2)
 								taBloquesExclusion(tnBloquesExclusion,1)	= m.I
 								taLineasExclusion(m.I)	= .T.
-*--
-								Loop
-							Endif
-
-							lcLine		= Upper( Left( lcLine,1 ) ) + Upper( Ltrim( Substr( lcLine, 2 ) ) )
-							lnPrimerID	= 0
-
-							For X = 1 To lnID_Bloques_Count
-								lnLen_IDFinBQ	= Len( ta_ID_Bloques(m.X,2) )
-								If .isIndicatedToken( @lcLine, @ta_ID_Bloques, lnLen_IDFinBQ, m.X, 1 ) ;
-										AND Not .currentLineIsPreviousLineContinuation( @taCodeLines, m.I )
-									lnPrimerID		= m.X
-									lnAnidamientos	= 1
-									Exit
-								Endif
-							Endfor
-
-							If lnPrimerID > 0	&& Se ha identificado un ID de bloque excluyente
-								tnBloquesExclusion		= tnBloquesExclusion + 1
-								Dimension taBloquesExclusion(tnBloquesExclusion,2)
-								taBloquesExclusion(tnBloquesExclusion,1)	= m.I
-								taLineasExclusion(m.I)	= .T.
-
-* Búsqueda del ID de fin de bloque
-								For I = m.I + 1 To tnCodeLines
-* Reduzco los espacios. Ej: '#IF  .F. && cmt' ==> '#IF .F.&&cmt'
-*lcLine	= LTRIM( STRTRAN( STRTRAN( CHRTRAN( taCodeLines(m.I), CHR(9), ' ' ), '  ', ' ' ), '  ', ' ' ) )
-*lcLine		= LTRIM( CHRTRAN( taCodeLines(m.I), CHR(9), ' ' ) )
-									lcLine		= Ltrim( taCodeLines(m.I), 0, Chr(9), ' ' )
-									taLineasExclusion(m.I)	= .T.
-
-									If .lineIsOnlyCommentAndNoMetadata( @lcLine )
-										Loop
-									Endif
-
-									lcLine		= Upper( Left( lcLine,1 ) ) + Upper( Ltrim( Substr( lcLine, 2 ) ) )
-
-									Do Case
-										Case lnPrimerID = 1 And .isIndicatedToken( @lcLine, @ta_ID_Bloques, 0, m.X, 1 ) ;
-												AND Not .currentLineIsPreviousLineContinuation( @taCodeLines, m.I )
-*-- Busca el primer marcador (#IF) NOTA: No busco [TEXT] porque no se pueden anidar.
-											lnAnidamientos	= lnAnidamientos + 1
-
-										Case .isIndicatedToken( @lcLine, @ta_ID_Bloques, 0, m.X, 2 )
-*-- Busca el segundo marcador (#ENDIF o ENDTEXT)
-											lnAnidamientos	= lnAnidamientos - 1
-
-											If lnAnidamientos = 0
-												taBloquesExclusion(tnBloquesExclusion,2)	= m.I
-												Exit
-											Endif
-									Endcase
-								Endfor
-
-*-- Validación
-								If Empty(taBloquesExclusion(tnBloquesExclusion,2))
-*ERROR 'No se ha encontrado el marcador de fin [' + ta_ID_Bloques(lnPrimerID,2) ;
-+ '] que cierra al marcador de inicio [' + ta_ID_Bloques(lnPrimerID,1) ;
-+ '] de la línea ' + TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))
-									.n_Methods_LineNo = taBloquesExclusion(tnBloquesExclusion,1)
-									Error (Textmerge(loLang.C_END_MARKER_NOT_FOUND_LOC))
-								Endif
-							Endif
-						Endfor
-					Endwith && THIS
-				Endif
-
-			Catch To loEx
-				If This.n_Debug > 0 And _vfp.StartMode = 0
-					Set Step On
-				Endif
-
-				Throw
-
-			Finally
-				Release taCodeLines, tnCodeLines, ta_ID_Bloques, taLineasExclusion, tnBloquesExclusion, taBloquesExclusion, loLang ;
-					, lnBloques, I, X, lnPrimerID, lnID_Bloques_Count, lcWord, lnAnidamientos, lcLine, lcPrevLine
-		Endtry
-
-		Return
-	Endproc
-
-
-
-	Procedure excludedLine
-		Lparameters tn_Linea, tnBloquesExclusion, taLineasExclusion
-
-		Return taLineasExclusion(tn_Linea)
-	Endproc
-
-
-
-	Procedure lineIsOnlyCommentAndNoMetadata
-*---------------------------------------------------------------------------------------------------
-* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-* tcLine						(!@ IN/OUT) Línea a separar del comentario
-* tcComment						(@?    OUT) Comentario
-* tlDoNotSeparateLineAndComment	(v? IN    ) Indica o separar la línea de código del comentario
-* tlDeepCommentAnalysis			(v? IN    ) Indica realizar un análisis profundo de comentarios (para detectar casos complejos de código con '&&' embebido)
-*---------------------------------------------------------------------------------------------------
-* NOTA: Recordar que esta función suele usarse junto a Set_Line(), que quita TABS y espacios a la izquierda.
-*---------------------------------------------------------------------------------------------------
-		Lparameters tcLine As String, tcComment As String, tlDoNotSeparateLineAndComment As Boolean, tlDeepCommentAnalysis As Boolean
-		Local lllineIsOnlyCommentAndNoMetadata, ln_AT_Cmt
 
 * Búsqueda del ID de fin de bloque
 								For I = m.I + 1 To tnCodeLines
@@ -7662,16 +7554,7 @@ Define Class c_conversor_base As Custom
 		Return lllineIsOnlyCommentAndNoMetadata
 	Endproc
 
-	Procedure normalizeAssignment
-		Lparameters tcAsignacion, tcComentario
-		Local lcPropName, lcValor, lnCodError, lcExpNormalizada, lnPos
 
-		With This As c_conversor_base Of 'FOXBIN2PRG.PRG'
-			.get_SeparatedPropAndValue( @tcAsignacion, @lcPropName, @lcValor )
-			tcComentario	= ''
-			.normalizePropertyValue( @lcPropName, @lcValor, @tcComentario )
-			tcAsignacion	= lcPropName + ' = ' + lcValor
-		Endwith
 
 	Procedure loadModule
 *---------------------------------------------------------------------------------------------------
@@ -7691,13 +7574,6 @@ Define Class c_conversor_base As Custom
 		Return
 	Endproc
 
-			Case Left( tcValue, C_LEN_FB2P_VALUE_I ) == C_FB2P_VALUE_I
-*-- Valor especial Fox con cabecera CHR(1): Debo quitarla y normalizar el valor
-				tcValue	= C_FB2P_VALUE_I ;
-					+ Strtran( Strtran( Strtran( Strtran( ;
-					STREXTRACT( tcValue, C_FB2P_VALUE_I, C_FB2P_VALUE_F, 1, 1 ) ;
-					, CR_LF, '&#13+10;' ), C_CR, '&#13;' ), C_LF, '&#10;' ), '&#13+10;', CR_LF ) ;
-					+ C_FB2P_VALUE_F
 
 
 	Procedure normalizeAssignment
@@ -7716,16 +7592,6 @@ Define Class c_conversor_base As Custom
 	Endproc
 
 
-	Procedure normalizeXMLValue
-		Lparameters tcValor
-*-- NORMALIZA EL TEXTO INDICADO, COMPRIMIENDO LOS SÍMBOLOS XML ESPECIALES.
-		tcValor = Strtran(tcValor, Chr(38), Chr(38) + 'amp;')	&& reemplaza &  por  &amp;		&&
-		tcValor = Strtran(tcValor, Chr(39), Chr(38) + 'apos;')	&& reemplaza '  por  &apos;		&&
-		tcValor = Strtran(tcValor, Chr(34), Chr(38) + 'quot;')	&& reemplaza "  por  &quot;		&&
-		tcValor = Strtran(tcValor, '<', Chr(38) + 'lt;') 		&&  reemplaza <  por  &lt;		&&
-		tcValor = Strtran(tcValor, '>', Chr(38) + 'gt;')		&&  reemplaza >  por  &gt;		&&
-		tcValor = Strtran(tcValor, Chr(13)+Chr(10), Chr(10))	&& reeemplaza CR+LF por LF
-		tcValor = Chrtran(tcValor, Chr(13), Chr(10))			&& reemplaza CR por LF
 
 	Procedure normalizePropertyValue
 *-- Este método se ejecuta cuando se genera el tx2 desde el binario
@@ -7816,10 +7682,6 @@ Define Class c_conversor_base As Custom
 		Return Int(tnTimeStamp)
 	Endfunc
 
-							#Else
-								Do Case
-									Case .c_ClaseActual == 'checkbox'
-										lnPos	= Ascan( .a_SpecialProps_Chk, lcPropName, 1, 0, 1, 1+2+4 )
 
 	Procedure set_UserValue
 		Lparameters toEx As Exception
@@ -10784,27 +10646,12 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 		Endcase
 	Endproc
 
-					toModulo._Clases(lnItem)._Checked = .T.
-				Endfor
 
-			Case toFoxBin2Prg.n_UseClassPerFile = 2 And toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
-*-- El nuevo ClassPerFile, con nomenclatura 'Libreria.ClaseBase.NombreClase.vc2'
-				For I = 1 To toModulo._ExternalClasses_Count
-					lnItem	= 0
 
 Enddefine
 
-					If lnItem = 0 Then
-						lcClaseExterna	= Forcepath( Juststem(toFoxBin2Prg.c_InputFile) + '.' + toModulo._ExternalClasses(m.I,1) + '.' + Justext(toFoxBin2Prg.c_InputFile), Justpath(toFoxBin2Prg.c_InputFile) )
-*ERROR 'No se ha encontrado la clase externa [' + toModulo._ExternalClasses(m.I,1) + '] en el archivo [' + toFoxBin2Prg.c_InputFile + ']'
-						Error ( loLang.C_EXTERNAL_CLASS_NAME_WAS_NOT_FOUND_LOC + ' [' + lcClaseExterna + ']' )
-					Endif
 
-					toModulo._Clases(lnItem)._Checked = .T.
-				Endfor
 
-		Endcase
-	Endproc
 
 Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 	#If .F.
@@ -11980,9 +11827,6 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 					toFoxBin2Prg.updateProcessedFile()
 				Endwith && THIS
 
-				If This.n_Debug > 0 And _vfp.StartMode = 0
-					Set Step On
-				Endif
 
 			Catch To loEx
 				lnCodError	= loEx.ErrorNo
@@ -12695,9 +12539,6 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 					.writeBinaryFile( @toReport, @toFoxBin2Prg )
 				Endwith && THIS
 
-				If This.n_Debug > 0 And _vfp.StartMode = 0
-					Set Step On
-				Endif
 
 			Catch To loEx
 				lnCodError	= loEx.ErrorNo
@@ -13097,12 +12938,9 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 		Return llBloqueEncontrado
 	Endproc
 
-		Return llBloqueEncontrado
-	Endproc
 
 Enddefine	&& CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
-Enddefine	&& CLASS c_conversor_prg_a_frx AS c_conversor_prg_a_bin
 
 
 Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
@@ -16497,8 +16335,6 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 
 					toFoxBin2Prg.updateProcessedFile()
 
-					.updateProgressbar( 'Writing ' + toFoxBin2Prg.c_VC2 + '...', lnStep, lnClassTotal*lnStepCount, 1 )
-					lcCodigo		= toFoxBin2Prg.get_PROGRAM_HEADER() + lcExternalHeader + C_FB2PRG_CODE
 
 *-- Genero el VC2
 					lnStep			= lnStep + 1
@@ -18406,8 +18242,6 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 					Endif
 				Endwith && THIS
 
-			Catch To toEx
-				This.set_UserValue(@toEx)
 
 			Catch To toEx
 				This.set_UserValue(@toEx)
@@ -22148,7 +21982,6 @@ Define Class CL_DBC_TABLE As CL_DBC_BASE
 		Return llBloqueEncontrado
 	Endproc
 
-		Endtry
 
 	Procedure toText
 *---------------------------------------------------------------------------------------------------
@@ -23321,7 +23154,6 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 		Return lnView_Count
 	Endproc
 
-				Throw
 
 Enddefine
 
@@ -26230,7 +26062,6 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 		Endif
 	Endproc
 
-			Endtry
 
 
 	Procedure getRowServerInfo
