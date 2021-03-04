@@ -242,6 +242,10 @@
 * 21/02/2021	LScheffler	v1.19.55	Enhancement: Info screen-doc improved
 * 21/02/2021	LScheffler	v1.19.55	Enhancement: added option to create config file template
 * 23/02/2021	LScheffler	v1.19.55	Enhancement: inserted option OldFilesPerDBC to define the use splitting of DBC like version pre 1.20.0
+* 04/03/2021	LScheffler	v1.19.56	Bug Fix: Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1
+*                                                generates classlib.class.vcx and tries to recompile classlib.vcx
+*                                                fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
+* 04/03/2021	LScheffler	v1.19.56	Enhancement: New value for RedirectClassType = 2, just process the single class of classlib.class.vc2
 
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -844,8 +848,8 @@ Define Class c_foxbin2prg As Session
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
-	n_FB2PRG_Version				= 1.21
-	c_FB2PRG_Version_Real			= '1.19.55'
+	n_FB2PRG_Version				= 1.19
+	c_FB2PRG_Version_Real			= '1.19.56'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -1895,6 +1899,7 @@ Define Class c_foxbin2prg As Session
 	Procedure compileFoxProBinary
 		Lparameters tcFileName
 		Local lcType
+
 		tcFileName	= Evl(tcFileName, This.c_OutputFile)
 		lcType		= Upper(Justext(tcFileName))
 
@@ -2443,12 +2448,16 @@ Define Class c_foxbin2prg As Session
 									Endif
 *!*	/Changed by: Lutz Scheffler 21.02.2021
 
+*!*	Changed by: Lutz Scheffler 04.3.2021
+*!*	change date="{^2021-03-04,13:12:00}"
+* new value 2, just add one class
 								Case Left( laConfig(m.I), 18 ) == Lower('RedirectClassType:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
-									If Inlist( lcValue, '0', '1' ) Then
+									If Inlist( lcValue, '0', '1', '2' ) Then
 										lo_CFG.n_RedirectClassType	= Int( Val( lcValue ) )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectClassType:          ' + Transform(lcValue) )
 									Endif
+*!*	/Changed by: Lutz Scheffler 04.3.2021
 
 								Case Left( laConfig(m.I), 24 ) == Lower('RemoveNullCharsFromCode:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 25 ) )
@@ -3244,7 +3253,40 @@ Define Class c_foxbin2prg As Session
 					.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type )
 
-* Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
+*!*	Changed by: Lutz Scheffler 04.3.2021
+*!*	change date="{^2021-03-04,13:25:00}"
+* for Input file in the form file[.baseclass].class.vc2 (normaly sc2 too, but no support in old code)
+* allow to import only the class to file.VCX with n_RedirectClassType = 2
+* n_RedirectClassType = 0 will import all classes of file.VCX (as just handing file.vc2)
+* n_RedirectClassType = 1 will import the class to single lib file[.baseclass].class.VCX
+						Do Case
+							Case .n_RedirectClassType # 2
+						* not handled
+							Case !Empty(.c_ClassToConvert)
+						* not otherwise
+							Case .n_UseClassPerFile = 0
+						* not handled
+							Case Occurs('.',m.tc_InputFile) > .n_UseClassPerFile
+						* we must have more dots then UseClassPerFile, because there is an extension
+						
+						*class
+								.c_ClassToConvert = Lower( Justext( Juststem( m.tc_InputFile ) ) )
+						*remove class
+								tc_InputFile = Lower( Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+						*remove baseclass
+								If .n_UseClassPerFile = 0
+						*remove baseclass
+									tc_InputFile = Lower( Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+								Endif
+						* count anything then -BIN2PRG as import
+								.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 , 'E', 'I')
+						
+							Otherwise
+						* not handled						  
+						Endcase
+*!*	/Changed by: Lutz Scheffler 04.3.2021
+										
+				* Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
 					If .c_ClassOperationType = 'I'
 * En el caso de importar, debo cambiar la sintaxis de tc_InputFile para poder usar
 * la conversión existente de clase vc2.
@@ -4136,15 +4178,13 @@ Define Class c_foxbin2prg As Session
 							OR Not Empty(.c_ClassToConvert))
 
 						Do Case
-* SF
-* n_RedirectClassType looks like lavacode. At least I see not where it set, except in cfg file, not documented in cfg Files
+
 							Case .n_RedirectClassType = 1 Or Not Empty(.c_ClassToConvert) && Redireccionar solo esta clase
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
 									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
 								Endif
-* /SF
 
 							Case .n_UseClassPerFile = 1 And Inlist(lcExtension,.c_VC2,.c_SC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
@@ -10796,8 +10836,20 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 					If toFoxBin2Prg.n_RedirectClassType = 1 Or Not Empty(toFoxBin2Prg.c_ClassToConvert) && Redireccionar solo esta clase a main
 						llReplaceClass	= .T.
 
-						If Empty(toFoxBin2Prg.c_ClassToConvert)
-							toFoxBin2Prg.c_OutputFile = Fullpath( Forceext( lcBaseFilename, 'VCX' ), .c_InputFile)
+* - new operations of DBF
+						If Empty(toFoxBin2Prg.c_ClassToConvert) 
+*!*	Changed by: Lutz Scheffler 04.03.2021
+*!*	change date="{^2021-03-04,10:03:00}"
+* If inputfile in the form classlib.class.vc2 AND toFoxBin2Prg.n_RedirectClassType = 1  and Execute parameter tcRecompile = 1
+* the change of outputfile might generate an error
+* toFoxBin2Prg.c_OutputFile is renamed to classlib.vcx, while this.c_OutputFile is classlib.class.vcx
+* this will generate classlib.class.vcx, tries to recompile and toFoxBin2Prg recompiles classlib.vcx
+* if classlib.vcx is not existing, it errors out, els it compiles the wrong file.
+* So we do not rename if toFoxBin2Prg.n_RedirectClassType = 1
+							If toFoxBin2Prg.n_RedirectClassType = 0
+								toFoxBin2Prg.c_OutputFile = Fullpath( Forceext( lcBaseFilename, 'VCX' ), .c_InputFile)
+							Endif
+*!*	/Changed by: Lutz Scheffler 04.03.2021
 						Else
 							loClase	= toModulo._Clases(1)
 * Ajusto el nombre interno de la clase al indicado en el nombre del archivo
@@ -29354,10 +29406,16 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
-						<<>>-- CLASS and FORM options
+						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>							   && For the second form:
+						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
@@ -29560,6 +29618,12 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>							   && For the second form:
+						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
@@ -29793,6 +29857,12 @@ Define Class CL_LANG As Custom
 						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
+						<<>>RedirectClassType: 0 		   && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
+						<<>>							   && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
+						<<>>							   && Für die zweite Form gilt:
+						<<>>							   && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
+						<<>>							   && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
+						<<>>							   && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -30006,6 +30076,12 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>							   && For the second form:
+						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
@@ -31465,3 +31541,4 @@ Define Class CL_MEMVAR_RECORD As CL_CUS_BASE
 
 
 Enddefine
+	

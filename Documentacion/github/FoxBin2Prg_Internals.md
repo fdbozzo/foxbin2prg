@@ -109,6 +109,10 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | | | 1 creates a file.dc2 with DBC properties |
 | | | and additional DBC files per DBC item (stored-proc, table, ..) |
 | | | Note: recration only if RedirectFilePerDBCToMain is 1 |
+| RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
+| | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
+| | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
+| | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
 | RedirectFilePerDBCToMain | _0_, 1 | 0=Don't redirect to file.dc2,<br/>1=Redirect to file.tx2 when selecting file.item.*.dc2<br/>**Only if OldFilesPerDBC is 1** |
 | ItemPerDBCCheck | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion,<br/> 1=Check file.item.*.dc2 inclusion<br/>**Only if OldFilesPerDBC is 1**|
 | DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default) <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
@@ -657,4 +661,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
