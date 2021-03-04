@@ -52,19 +52,25 @@
 *- Class per file options (UseClassPerFile: 1)
 *UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 *RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+*RedirectClassType: 0 		    && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+*							    && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+*							    && For the second form:
+*							    && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+*							    && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+*							    && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 *ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 
 *-- Example configuration for SourceSafe compatibility:
-*extension: pj2=pja			   && Text file to PJX
-*extension: vc2=vca			   && Text file to VCX
-*extension: sc2=sca			   && Text file to SCX
-*extension: fr2=fra			   && Text file to FRX
-*extension: lb2=lba			   && Text file to LBX
-*extension: mn2=mna			   && Text file to MNX
-*extension: db2=dba			   && Text file to DBF
-*extension: dc2=dca			   && Text file to DBC
-*-- Additional extensions
-*extension: fk2=fkx			   && Text file to FKY
-*extension: me2=fkx			   && Text file to MEM
+*extension: pj2=pja			    && Text file to PJX
+*extension: vc2=vca			    && Text file to VCX
+*extension: sc2=sca			    && Text file to SCX
+*extension: fr2=fra			    && Text file to FRX
+*extension: lb2=lba			    && Text file to LBX
+*extension: mn2=mna			    && Text file to MNX
+*extension: db2=dba			    && Text file to DBF
+*extension: dc2=dca			    && Text file to DBC
+*-- Additional extensions       
+*extension: fk2=fkx			    && Text file to FKY
+*extension: me2=fkx			    && Text file to MEM
 
 *

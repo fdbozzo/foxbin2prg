@@ -140,6 +140,8 @@ Return value via _ErrorLevel_ is 0=OK, 1=Error.
 | `DO FOXBIN2PRG.PRG WITH "<path>\proj.pj2", "*"` | Generates the _Binary_ files for all the files in the PJ2 |
 | `DO FOXBIN2PRG.PRG WITH "<path>\proj.pjx", "*-"` | Generates the _Text_ files for all the files in the PJX, excluding the PJX |
 | `DO FOXBIN2PRG.PRG WITH "<path>\file.vcx::cus_client"` | Generates only the _Text_ version of the individual class cus_client of file.vcx (with UseClassPerFile:1 or 2) |
+| `DO FOXBIN2PRG.PRG WITH "<path>\file.cus_client.vc2"` | Generates only the _Binary_ version of the individual class cus_client of file.vcx (with UseClassPerFile:1 and RedirectClassType:2) |
+| `DO FOXBIN2PRG.PRG WITH "<path>\file.vc2::cus_client::import"` | Generates only the _Binary_ version of the individual class cus_client of file.vcx (with UseClassPerFile:1) |
 
 ## Explorer SendTo
 To use _FoxBin2Prg_ from the File Explorer, you can create 3 shortcuts of FoxBin2Prg.exe and move them to "SendTo" folder on your Windows profile.   
@@ -159,4 +161,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
