@@ -7,5 +7,7 @@
 /*.fxp
 /*.fpt
 
+TESTS/DATOS_READONLY/*.FXP
+
 *special, exclude local config
 foxbin2prg.cfg

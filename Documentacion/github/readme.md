@@ -5,7 +5,8 @@ Project to generate text representations of VFP binary sources for source contro
 ## Documentacion\github
 This folder containes the reworked documentation resources for use with github repo.
 
-Please Note: The spanish documents are removed, because the documents here represent the state of this fork, and my spanish is good enough to order a beer.
+Please Note: The spanish documents are removed, because the documents here represent the state of this fork,
+and my spanish is good enough to order a beer.
 
 - [FoxBin2prg](./FoxBin2prg.md)
 
