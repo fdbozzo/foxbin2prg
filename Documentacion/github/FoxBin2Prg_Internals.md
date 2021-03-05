@@ -114,13 +114,13 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default) <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
 | DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default),<br/>1=Include deleted records<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | | |  **Note:**<br/>This is only true for tables. Generating DBC to _Text_ and back to _Binary_ will act as PACK DATABASE.<br/>The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files. |
-| UseClassPerFile | _0_, 1 | 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files<br/> See [Create Class-Per-File](#create-class-per-file) |
-| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2, 1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
+| UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
+| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2,<br/>1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
 | RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
 | | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
 | | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
 | | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
-| [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion, 1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
+| [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 | ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
 | Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
 
@@ -409,6 +409,8 @@ In example, if you have a classlib "mylib.vcx" with 3 classes inside ( "cl_1, cl
   - mylib.cl_1.vc2
   - mylib.cl_2.vc2
   - mylib.cl_3.vc2
+#### Important note
+The settings of UseClassPerFile and related options are sensible. If changed the wrong way it easy to destroy classlibs.
 
 #### Recommended new setting
 Starting at v1.19.42 you can configure foxbin2prg to generate one class per file.

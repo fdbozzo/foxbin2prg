@@ -246,7 +246,10 @@
 *                                                generates classlib.class.vcx and tries to recompile classlib.vcx
 *                                                fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
 * 04/03/2021	LScheffler	v1.19.56	Enhancement: New value for RedirectClassType = 2, just process the single class of classlib.class.vc2
-* 04/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* 05/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* xx/03/2021	LScheffler	v1.19.5x	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* xx/03/2021	LScheffler	v1.19.5x	Doc: Improved, Better description of ClassPerFileCheck.
+* xx/03/2021	LScheffler	v1.19.5x	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
 
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -3275,7 +3278,7 @@ Define Class c_foxbin2prg As Session
 						*remove class
 								tc_InputFile = Lower( JustPath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 						*remove baseclass
-								If .n_UseClassPerFile = 0
+								If .n_UseClassPerFile = 2
 						*remove baseclass
 									tc_InputFile = Lower( JustPath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 								Endif

@@ -173,6 +173,7 @@ Fixes only are in the fork branch of this repo.
 | DBF_Conversion_Condition, problem with macro expansion |
 | Bug on special setting for import in form file[.baseclass].class.vc2 |
 | Bug on RedirectClassType = 2 mixed up PATH |
+| Bug on RedirectClassType = 2, UseClassPerFile = 2 failed |
 
 ### Features
 
