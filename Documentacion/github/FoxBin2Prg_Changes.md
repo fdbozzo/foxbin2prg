@@ -32,18 +32,20 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/03/05 | LScheffler | [v1.19.57]() | **Bug Fix**: RedirectClassType = 2 mixed up PATH |
+| | | | **Doc**: Improved |
 | 2021/03/04 | LScheffler | [v1.19.56]() | **Feature**: New value 2 for option RedirectClassType = 2, just process the single class for input in form file[.baseclass].class.vc2 |
 | | | | **Bug Fix**:<br>Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1<br>generates classlib.class.vcx and tries to recompile classlib.vcx<br>fails silent if classlib.vcx exists (compiles wrong lib), with message if not. |
-| 2021/02/21 | LScheffler | [v1.19.55]() | **Doc**: Documentation from CodePlex integrated |
+| 2021/03/03 | LScheffler | [v1.19.55]() | **Doc**: Documentation from CodePlex integrated |
 | | | | **Feature**: added option to create config file template |
 | | | | **Doc**: Info screen-doc improved |
 | | | | **Doc**: German translation improved |
+| 2021/03/03 | LScheffler | [v1.19.54]() | **Bug Fix**: DBF_Conversion_Condition, problem with macro expansion |
 | 2021/02/20 | LScheffler | | **Feature**: inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
 | 2021/02/19 | LScheffler | | **Feature**: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
 | 2021/02/15 | LScheffler | | **Feature**: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
 | | | | **Feature**: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
 | 2021/02/14 | LScheffler | | **Feature**: inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
-| 2021/03/03 | LScheffler | [v1.19.54]() | **Bug Fix**: DBF_Conversion_Condition, problem with macro expansion |
 | 2021/02/23 | LScheffler | [v1.19.53]() | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
 | | | | **Bug Fix**: conversion prg -> vcx, files per class could create one class multiple times |
 | 2021/02/15 | | | **Bug Fix**: processing directory, flush log file after loop instead of file |
@@ -370,4 +372,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/05_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

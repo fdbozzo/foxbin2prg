@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.56
+# FoxBin2Prg v1.19.57
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -172,6 +172,7 @@ Fixes only are in the fork branch of this repo.
 | Conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
 | DBF_Conversion_Condition, problem with macro expansion |
 | Bug on special setting for import in form file[.baseclass].class.vc2 |
+| Bug on RedirectClassType = 2 mixed up PATH |
 
 ### Features
 
@@ -201,4 +202,4 @@ This folder containes the files necessary to run FoxBin2Prg.prg or to create the
 For usage see [documentation](./Documentacion/github/FoxBin2prg.md)
 
 ----
-Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/05_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

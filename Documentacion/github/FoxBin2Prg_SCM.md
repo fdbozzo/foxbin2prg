@@ -16,6 +16,7 @@ As far as possible these are the original documents. Changes are added where fun
 
 ## Remark
 **This is article is a stub.**   
+
 If you like to use this tool with non SCM tools like [_git_](git-scm.com/),
 have a look on [VFPX](https://vfpx.github.io/projects/), there are some that integrate _git_ and _FoxBin2Prg_ into VFP IDE.
 
