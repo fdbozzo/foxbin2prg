@@ -892,7 +892,8 @@ Define Class c_foxbin2prg As Session
 	l_RemoveNullCharsFromCode		= .T.
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
-	n_UseClassPerFile 				= 0
+	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
+	n_ExcludeDBFAutoincNextval		= 0
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -905,8 +906,7 @@ Define Class c_foxbin2prg As Session
 	l_DBF_BinChar_Base64 			= .T.
 	l_DBF_IncludeDeleted            = .F.
 *!*	/Changed by: Lutz Scheffler 21.02.2021
-	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
-	n_ExcludeDBFAutoincNextval		= 0
+	n_UseClassPerFile 				= 0
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
 	n_RedirectClassType				= 0				&& 0=Redireccionar Todas las clases, 1=Redireccionar solo la clase indicada
@@ -29411,6 +29411,7 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>							   && RedirectClassType: 1 precedes
 						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
 						<<>>							   && For the second form:
@@ -29418,6 +29419,8 @@ Define Class CL_LANG As Custom
 						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
 						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
 						<<>>extension: pj2=pja			   && Text file to PJX
@@ -29619,6 +29622,7 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>							   && RedirectClassType: 1 precedes
 						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
 						<<>>							   && For the second form:
@@ -29626,6 +29630,8 @@ Define Class CL_LANG As Custom
 						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
 						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
 						<<>>extension: pj2=pja			   && Text file to PJX
@@ -29858,6 +29864,7 @@ Define Class CL_LANG As Custom
 						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
+						<<>>							   && RedirectClassType: 1 hat Vorrang
 						<<>>RedirectClassType: 0 		   && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
 						<<>>							   && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
 						<<>>							   && Für die zweite Form gilt:
@@ -29865,6 +29872,8 @@ Define Class CL_LANG As Custom
 						<<>>							   && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
 						<<>>							   && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
+						<<>>                               &&   Nur für die file[.baseclass].class.tx2 Syntax
+						<<>>                               &&   Wird für RedirectClassType: 2 ignoriert
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Beispiel für geänderte Textdatei Endungen, hier für SourceSafe Kompatibiltät:
@@ -30077,6 +30086,7 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+						<<>>							   && RedirectClassType: 1 precedes
 						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
 						<<>>							   && For the second form:
@@ -30084,6 +30094,8 @@ Define Class CL_LANG As Custom
 						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
 						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
 						<<>>extension: pj2=pja			   && Text file to PJX

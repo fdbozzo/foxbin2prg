@@ -109,20 +109,20 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | | | 1 creates a file.dc2 with DBC properties |
 | | | and additional DBC files per DBC item (stored-proc, table, ..) |
 | | | Note: recration only if RedirectFilePerDBCToMain is 1 |
-| RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
-| | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
-| | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
-| | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
-| RedirectFilePerDBCToMain | _0_, 1 | 0=Don't redirect to file.dc2,<br/>1=Redirect to file.tx2 when selecting file.item.*.dc2<br/>**Only if OldFilesPerDBC is 1** |
-| ItemPerDBCCheck | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion,<br/> 1=Check file.item.*.dc2 inclusion<br/>**Only if OldFilesPerDBC is 1**|
+| [RedirectFilePerDBCToMain](#redirectfileperdbctomain) | _0_, 1 | 0=Don't redirect to file.dc2,<br/>1=Redirect to file.tx2 when selecting file.item.*.dc2<br/>**Only if OldFilesPerDBC is 1** |
+| [ItemPerDBCCheck](#itemperdbccheck) | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion,<br/> 1=Check file.item.*.dc2 inclusion<br/>**Only if OldFilesPerDBC is 1**|
 | DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default) <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
 | DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default),<br/>1=Include deleted records<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | | |  **Note:**<br/>This is only true for tables. Generating DBC to _Text_ and back to _Binary_ will act as PACK DATABASE.<br/>The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files. |
 | UseClassPerFile | _0_, 1 | 0=One library _Text_ file, 1=Multiple file.class.vc2 files, 2=Multiple file.baseclass.class.vc2 files<br/> See [Create Class-Per-File](#create-class-per-file) |
-| RedirectClassPerFileToMain | _0_, 1 | 0=Don't redirect to file.vc2, 1=Redirect to file.vc2 when selecting file.class.vc2 |
-| ClassPerFileCheck | _0_, 1 | 0=Don't check file.class.vc2 inclusion, 1=Check file.class.vc2 inclusion |
+| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2, 1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
+| RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
+| | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
+| | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
+| | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
+| [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion, 1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 | ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
-| Language | _(auto)_, EN, FR, ES, DE | Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
+| Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
 
 ### Note
 The options will be read outside in, top to down. See [Multi-config](#multi-config)
@@ -429,13 +429,17 @@ mylib.textbox.cl_3.vc2
 
 #### Complementary options for the UseClassPerFile setting
 ##### RedirectClassPerFileToMain:
-Configuring this setting to 1 will redirect any selection of file.class.vc2
+Configuring this setting to 1 will redirect any selection of file[.baseclass].class.vc2
 to the main file.vc2 file, which will not let you generate individual vcx files by mistake.   
+RedirectClassType: 1 precedes this setting for files in the 
+
 
 ##### ClassPerFileCheck
-Configuring this setting to 1 will check the inclusion of all file.class.vc2 files
+Configuring this setting to 1 will check the inclusion of all file[.baseclass].class.vc2 files
 annotated on file.vc2 main file, otherwise no checking is made and when reconstructing the vcx/scx all files
-containing the file.class.ext naming will be included in the _Binary_ (useful when you want to add external classes to the library)    
+containing the file.class.ext naming will be included in the _Binary_ (useful when you want to add external classes to the library).    
+This only used if import file is in file[.baseclass].class.tx2 syntax.   
+Ignored for RedirectClassType: 2
 
 #### Note
 If you dont use the redirect setting, an individual vcx/scx file will be generated.
