@@ -246,6 +246,7 @@
 *                                                generates classlib.class.vcx and tries to recompile classlib.vcx
 *                                                fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
 * 04/03/2021	LScheffler	v1.19.56	Enhancement: New value for RedirectClassType = 2, just process the single class of classlib.class.vc2
+* 04/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
 
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -849,7 +850,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.56'
+	c_FB2PRG_Version_Real			= '1.19.57'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -3272,11 +3273,11 @@ Define Class c_foxbin2prg As Session
 						*class
 								.c_ClassToConvert = Lower( Justext( Juststem( m.tc_InputFile ) ) )
 						*remove class
-								tc_InputFile = Lower( Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+								tc_InputFile = Lower( JustPath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 						*remove baseclass
 								If .n_UseClassPerFile = 0
 						*remove baseclass
-									tc_InputFile = Lower( Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+									tc_InputFile = Lower( JustPath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 								Endif
 						* count anything then -BIN2PRG as import
 								.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 , 'E', 'I')
