@@ -125,6 +125,10 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 
 ---
 ---
+## Changes in 1.19.58
+* Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
+* Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
+
 ## Changes by this fork (1.19.55)
 To get the new settings in config file, use the new create-a-template function:
 
