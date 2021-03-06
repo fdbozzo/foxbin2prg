@@ -32,6 +32,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/03/04 | Doug Hennig | [v1.19.58]() | Added support for writing to a different folder than the source code using a new tcOutputFolder parameter |
+| | | | Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes) |
 | 2021/03/05 | LScheffler | [v1.19.57]() | **Bug Fix**: RedirectClassType = 2 mixed up PATH |
 | | | | **Doc**: Improved |
 | 2021/03/04 | LScheffler | [v1.19.56]() | **Feature**: New value 2 for option RedirectClassType = 2, just process the single class for input in form file[.baseclass].class.vc2 |
