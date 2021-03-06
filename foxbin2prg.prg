@@ -29414,29 +29414,29 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>							   && RedirectClassType: 1 precedes
-						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-						<<>>							   && For the second form:
-						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+						<<>>                               && RedirectClassType: 1 precedes
+						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja			   && Text file to PJX
-						<<>>extension: vc2=vca			   && Text file to VCX
-						<<>>extension: sc2=sca			   && Text file to SCX
-						<<>>extension: fr2=fra			   && Text file to FRX
-						<<>>extension: lb2=lba			   && Text file to LBX
-						<<>>extension: mn2=mna			   && Text file to MNX
-						<<>>extension: db2=dba			   && Text file to DBF
-						<<>>extension: dc2=dca			   && Text file to DBC
+						<<>>extension: pj2=pja               && Text file to PJX
+						<<>>extension: vc2=vca               && Text file to VCX
+						<<>>extension: sc2=sca               && Text file to SCX
+						<<>>extension: fr2=fra               && Text file to FRX
+						<<>>extension: lb2=lba               && Text file to LBX
+						<<>>extension: mn2=mna               && Text file to MNX
+						<<>>extension: db2=dba               && Text file to DBF
+						<<>>extension: dc2=dca               && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && Text file to FKY
-						<<>>extension: me2=fkx			   && Text file to MEM
+						<<>>extension: fk2=fkx               && Text file to FKY
+						<<>>extension: me2=fkx               && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29445,8 +29445,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
+						<<>>DBF_BinChar_Base64: <0,1>                   && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
@@ -29625,29 +29625,29 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>							   && RedirectClassType: 1 precedes
-						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-						<<>>							   && For the second form:
-						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+						<<>>                               && RedirectClassType: 1 precedes
+						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja			   && Text file to PJX
-						<<>>extension: vc2=vca			   && Text file to VCX
-						<<>>extension: sc2=sca			   && Text file to SCX
-						<<>>extension: fr2=fra			   && Text file to FRX
-						<<>>extension: lb2=lba			   && Text file to LBX
-						<<>>extension: mn2=mna			   && Text file to MNX
-						<<>>extension: db2=dba			   && Text file to DBF
-						<<>>extension: dc2=dca			   && Text file to DBC
+						<<>>extension: pj2=pja             && Text file to PJX
+						<<>>extension: vc2=vca             && Text file to VCX
+						<<>>extension: sc2=sca             && Text file to SCX
+						<<>>extension: fr2=fra             && Text file to FRX
+						<<>>extension: lb2=lba             && Text file to LBX
+						<<>>extension: mn2=mna             && Text file to MNX
+						<<>>extension: db2=dba             && Text file to DBF
+						<<>>extension: dc2=dca             && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && Text file to FKY
-						<<>>extension: me2=fkx			   && Text file to MEM
+						<<>>extension: fk2=fkx             && Text file to FKY
+						<<>>extension: me2=fkx             && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -29656,8 +29656,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && Ver esta misma configuración más arriba
 						<<>>DBF_Conversion_Order: <c_Expression>        && Expresión de campo. ej: nombre+str(edad,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Expresión lógica. ej: edad > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
+						<<>>DBF_BinChar_Base64: <0,1>                   && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
@@ -29867,30 +29867,30 @@ Define Class CL_LANG As Custom
 						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
-						<<>>							   && RedirectClassType: 1 hat Vorrang
-						<<>>RedirectClassType: 0 		   && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
-						<<>>							   && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
-						<<>>							   && Für die zweite Form gilt:
-						<<>>							   && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
-						<<>>							   && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
-						<<>>							   && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
+						<<>>                               && RedirectClassType: 1 hat Vorrang
+						<<>>RedirectClassType: 0           && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
+						<<>>                               && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
+						<<>>                               && Für die zweite Form gilt:
+						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
+						<<>>                               && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
+						<<>>                               && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
 						<<>>                               &&   Nur für die file[.baseclass].class.tx2 Syntax
 						<<>>                               &&   Wird für RedirectClassType: 2 ignoriert
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Beispiel für geänderte Textdatei Endungen, hier für SourceSafe Kompatibiltät:
-						<<>>extension: pj2=pja			   && Text Datei für PJX
-						<<>>extension: vc2=vca			   && Text Datei für VCX
-						<<>>extension: sc2=sca			   && Text Datei für SCX
-						<<>>extension: fr2=fra			   && Text Datei für FRX
-						<<>>extension: lb2=lba			   && Text Datei für LBX
-						<<>>extension: mn2=mna			   && Text Datei für MNX
-						<<>>extension: db2=dba			   && Text Datei für DBF
-						<<>>extension: dc2=dca			   && Text Datei für DBC
+						<<>>extension: pj2=pja             && Text Datei für PJX
+						<<>>extension: vc2=vca             && Text Datei für VCX
+						<<>>extension: sc2=sca             && Text Datei für SCX
+						<<>>extension: fr2=fra             && Text Datei für FRX
+						<<>>extension: lb2=lba             && Text Datei für LBX
+						<<>>extension: mn2=mna             && Text Datei für MNX
+						<<>>extension: db2=dba             && Text Datei für DBF
+						<<>>extension: dc2=dca             && Text Datei für DBC
 						<<>>-- Zusätzliche Endungen
-						<<>>extension: fk2=fkx			   && Text Datei für FKY
-						<<>>extension: me2=fkx			   && Text Datei für MEM
+						<<>>extension: fk2=fkx             && Text Datei für FKY
+						<<>>extension: me2=fkx             && Text Datei für MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -30089,29 +30089,29 @@ Define Class CL_LANG As Custom
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>							   && RedirectClassType: 1 precedes
-						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-						<<>>							   && For the second form:
-						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+						<<>>                               && RedirectClassType: 1 precedes
+						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja			   && Text file to PJX
-						<<>>extension: vc2=vca			   && Text file to VCX
-						<<>>extension: sc2=sca			   && Text file to SCX
-						<<>>extension: fr2=fra			   && Text file to FRX
-						<<>>extension: lb2=lba			   && Text file to LBX
-						<<>>extension: mn2=mna			   && Text file to MNX
-						<<>>extension: db2=dba			   && Text file to DBF
-						<<>>extension: dc2=dca			   && Text file to DBC
+						<<>>extension: pj2=pja             && Text file to PJX
+						<<>>extension: vc2=vca             && Text file to VCX
+						<<>>extension: sc2=sca             && Text file to SCX
+						<<>>extension: fr2=fra             && Text file to FRX
+						<<>>extension: lb2=lba             && Text file to LBX
+						<<>>extension: mn2=mna             && Text file to MNX
+						<<>>extension: db2=dba             && Text file to DBF
+						<<>>extension: dc2=dca             && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && Text file to FKY
-						<<>>extension: me2=fkx			   && Text file to MEM
+						<<>>extension: fk2=fkx             && Text file to FKY
+						<<>>extension: me2=fkx             && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
@@ -30120,8 +30120,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
+						<<>>DBF_BinChar_Base64: <0,1>                   && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG is only for Visual FoxPro 9.0!"
