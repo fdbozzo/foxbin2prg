@@ -2684,7 +2684,6 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_Recompile:                  ' + Transform(.l_Recompile) + ' (' + tcRecompile + ')' )
 					.writeLog( C_TAB + 'l_NoTimestamps:               ' + Transform(.l_NoTimestamps) )
 					.writeLog( C_TAB + 'l_ClearUniqueID:              ' + Transform(.l_ClearUniqueID) )
-					.writeLog( C_TAB + 'n_UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -2697,9 +2696,11 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
 					.writeLog( C_TAB + 'l_DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
 *!*	/Changed by: Lutz Scheffler 21.02.2021
+					.writeLog( C_TAB + 'n_UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
 					.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + Transform(.l_ClassPerFileCheck) )
 					.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + Transform(.l_RedirectClassPerFileToMain) )
 					.writeLog( C_TAB + 'n_RedirectClassType:          ' + Transform(.n_RedirectClassType) )
+
 					.writeLog( C_TAB + 'n_Debug:                      ' + Transform(.n_Debug) )
 					.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + Transform(.n_ExtraBackupLevels) )
 					.writeLog( C_TAB + 'c_BackgroundImage:            ' + Transform(.c_BackgroundImage) )
@@ -2709,6 +2710,10 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_RemoveZOrderSetFromProps:   ' + Transform(.l_RemoveZOrderSetFromProps) )
 					.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + Transform(.l_ClearDBFLastUpdate) )
 					.writeLog( C_TAB + 'c_Language:                   ' + Transform(.c_Language) )
+					
+					.writeLog( C_TAB + 'n_BodyDevInfo:                ' + Transform(.n_BodyDevInfo) )
+					.writeLog( C_TAB + 'n_PRG_Compat_Level:           ' + Transform(.n_PRG_Compat_Level) )
+					.writeLog( C_TAB + 'n_HomeDir:                    ' + Transform(.n_HomeDir) )
 
 					.writeLog( )
 				Endwith && THIS
