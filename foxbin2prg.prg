@@ -247,11 +247,11 @@
 *                                                fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
 * 04/03/2021	LScheffler	v1.19.56	Enhancement: New value for RedirectClassType = 2, just process the single class of classlib.class.vc2
 * 05/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* 2021-03-04	DH			v1.19.58	Enhancement: added support for writing to a different folder than the source code (Doug Hennig)
+* 2021-03-04	DH			v1.19.58	Enhancement: added configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (Doug Hennig)
 * xx/03/2021	LScheffler	v1.19.5x	Bug Fix: For RedirectClassType = 2, Path was set wrong
 * xx/03/2021	LScheffler	v1.19.5x	Doc: Improved, Better description of ClassPerFileCheck.
 * xx/03/2021	LScheffler	v1.19.5x	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
-
-
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -418,11 +418,14 @@
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 * tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
 * tcCFG_File				(v? IN    ) Indica si se debe usar un archivo de configuración distinto al predeterminado
+*** DH 2021-03-04: added tcOutputFolder parameter
+* tcOutputFolder			(v? IN    ) The output folder to write to (optional: if it isn't specified, the same folder as the source is used)
 *---------------------------------------------------------------------------------------------------
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
+*** DH 2021-03-04: added tcOutputFolder parameter
 Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName ;
-	, tcRecompile, tcNoTimestamps, tcCFG_File
+	, tcRecompile, tcNoTimestamps, tcCFG_File, tcOutputFolder
 
 *-- NO modificar! / Do NOT change!
 #Define C_CMT_I						'*--'
@@ -662,20 +665,25 @@ Endif
 *!*	/Changed by: Lutz Scheffler 15.2.2021
 
 Try
-		loEx	= Null
-		loCnv	= Createobject("c_foxbin2prg")
-		lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-			, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-			, .F., .F., .F., tcCFG_File )
-	Catch To loEx
+	loEx	= Null
+	loCnv	= Createobject("c_foxbin2prg")
+*** DH 2021-03-04: handle tcOutputFolder
+	if not empty(tcOutputFolder)
+		loCnv.cOutputFolder = tcOutputFolder
+	endif not empty(tcOutputFolder)
+*** DH 2021-03-04: end of new code
+	lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
+		, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+		, .F., .F., .F., tcCFG_File )
+Catch To loEx
 *-- Esto solo es para errores en el INIT, ya que los demás se deben capturar y tratar antes.
-		lnResp		= loEx.ErrorNo
-		Messagebox( 'Error ' + Transform(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
-			+ loEx.Procedure + ', Line ' + Transform(loEx.Lineno) + C_CR ;
-			+ loEx.Details ;
-			, 0+16+4096 ;
-			, '' ;
-			, 60000 )
+	lnResp		= loEx.ErrorNo
+	Messagebox( 'Error ' + Transform(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
+		+ loEx.Procedure + ', Line ' + Transform(loEx.Lineno) + C_CR ;
+		+ loEx.Details ;
+		, 0+16+4096 ;
+		, '' ;
+		, 60000 )
 Endtry
 
 AddProperty(_Screen, 'ExitCode', lnResp)
@@ -853,7 +861,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.57'
+	c_FB2PRG_Version_Real			= '1.19.58'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
@@ -910,6 +918,8 @@ Define Class c_foxbin2prg As Session
 	l_DBF_IncludeDeleted            = .F.
 *!*	/Changed by: Lutz Scheffler 21.02.2021
 	n_UseClassPerFile 				= 0
+	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
+	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
 	l_RedirectClassPerFileToMain	= .F.
 	n_RedirectClassType				= 0				&& 0=Redireccionar Todas las clases, 1=Redireccionar solo la clase indicada
@@ -962,7 +972,9 @@ Define Class c_foxbin2prg As Session
 	DBC_Conversion_Support			= 2
 	DBF_Conversion_Included			= ''
 	DBF_Conversion_Excluded			= ''
-
+*** DH 2021-03-04: added cOutputFolder and n_HomeDir properties
+	cOutputFolder					= ''			&& the folder to write files to (blank = same folder as source file)
+	n_HomeDir						= 1				&& 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2
 
 	Procedure Init
 		Lparameters tcCFG_File, tcCancelWithEscKey
@@ -1712,6 +1724,17 @@ Define Class c_foxbin2prg As Session
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_PRG_Compat_Level, This.n_PRG_Compat_Level )
 		Endif
 	Endproc
+
+
+*** DH 2021-03-04: added n_HomeDir_Access
+	PROCEDURE n_HomeDir_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_HomeDir
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_HomeDir, THIS.n_HomeDir )
+		ENDIF
+	ENDPROC
+*** DH 2021-03-04: end of new code
 
 
 	Procedure changeFileAttribute
@@ -2592,6 +2615,15 @@ Define Class c_foxbin2prg As Session
 									lcValue	= Alltrim( Substr( laConfig(I), 18 ) )
 									lo_CFG.n_PRG_Compat_Level	= Int( Val( lcValue ) )
 									.writeLog( C_TAB + Justfname(lcConfigFile) + ' > PRG_Compat_Level:           ' + Transform(lo_CFG.n_PRG_Compat_Level) )
+
+*** DH 2021-03-04: handle n_HomeDir configuration setting
+								CASE LEFT( laConfig(m.I), 8 ) == LOWER('HomeDir:')
+									lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 9 ) )
+									IF INLIST( lcValue, '0', '1' ) THEN
+										lo_CFG.n_HomeDir	= INT( VAL( lcValue ) )
+										.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > HomeDir:                ' + TRANSFORM(lo_CFG.n_HomeDir) )
+									ENDIF
+*** DH 2021-03-04: end of new code
 
 							Endcase
 						Endfor
@@ -4463,6 +4495,9 @@ Define Class c_foxbin2prg As Session
 							Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 
 					Endcase
+
+*** DH 2021-03-04: handle cOutputFolder
+					loConversor.cOutputFolder = This.cOutputFolder
 
 *-- Optimización: Comparación de los timestamps de InputFile y OutputFile para saber
 *-- si el OutputFile se debe regenerar o no.
@@ -6532,6 +6567,8 @@ Define Class c_conversor_base As Custom
 	c_ClaseActual			= ''
 	oFSO					= Null
 	n_Methods_LineNo		= 0			&& Número de línea del error dentro de "Methods"
+*** DH 2021-03-04: added cOutputFolder property
+	cOutputFolder			= ''
 
 
 
@@ -15934,6 +15971,12 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 				Local lcExpanded, llFileExists, lnBytes, lcOutputFile, laDirFile(1,5) ;
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
+*** DH 2021-03-04: handle cOutputFolder
+				if not empty(This.cOutputFolder)
+					tcOutputFile = forcepath(tcOutputFile, This.cOutputFolder)
+				endif not empty(This.cOutputFolder)
+*** DH 2021-03-04: end of new code
+
 				lcExpanded	= Iif( '.' $ Juststem(tcOutputFile), 'X1', 'X0' )
 
 *-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -16852,9 +16895,19 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 
 
 *-- Generación del proyecto
+*** DH 2021-03-04: only output HomeDir if we're supposed to
+					if toFoxBin2Prg.n_HomeDir = 1
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_BUILDPROJ_I>>
-						<<>>*<.HomeDir = <<loProject._HomeDir>> />
+							<<C_BUILDPROJ_I>>
+							<<>>*<.HomeDir = <<loProject._HomeDir>> />
+						ENDTEXT
+					else
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+						ENDTEXT
+					endif toFoxBin2Prg.n_HomeDir = 1
+*** DH 2021-03-04: end of updated code
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
 						FOR EACH loProject IN _VFP.Projects FOXOBJECT
 						<<>>	loProject.Close()
@@ -17412,9 +17465,19 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 					With This As c_conversor_pjm_a_prg Of 'FOXBIN2PRG.PRG'
 
 *-- Generación del proyecto
+*** DH 2021-03-04: only output HomeDir if we're supposed to
+					if toFoxBin2Prg.n_HomeDir = 1
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_BUILDPROJ_I>>
-						<<>>*<.HomeDir = <<loProject._HomeDir>> />
+							<<C_BUILDPROJ_I>>
+							<<>>*<.HomeDir = <<loProject._HomeDir>> />
+						ENDTEXT
+					else
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+						ENDTEXT
+					endif toFoxBin2Prg.n_HomeDir = 1
+*** DH 2021-03-04: end of updated code
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
 						FOR EACH loProject IN _VFP.Projects FOXOBJECT
 						<<>>	loProject.Close()
@@ -29092,6 +29155,8 @@ Define Class CL_CFG As Custom
 	DBC_Conversion_Support			= Null
 	c_BackgroundImage				= Null
 	n_PRG_Compat_Level				= Null
+*** DH 2021-03-04: added n_HomeDir property
+	n_HomeDir						= NULL
 
 
 	Procedure CopyFrom
@@ -29155,6 +29220,8 @@ Define Class CL_CFG As Custom
 			.DBC_Conversion_Support			= toParentCFG.DBC_Conversion_Support
 			.c_BackgroundImage				= toParentCFG.c_BackgroundImage
 			.n_PRG_Compat_Level				= toParentCFG.n_PRG_Compat_Level
+*** DH 2021-03-04: handle n_HomeDir
+			.n_HomeDir						= toParentCFG.n_HomeDir
 		Endwith
 	Endproc
 
@@ -29325,7 +29392,6 @@ Define Class CL_LANG As Custom
 							.C_FILENAME_LOC													= "Fichier"
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
-
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>
@@ -29358,6 +29424,7 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
@@ -29379,6 +29446,7 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>-- Convertion options:
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -29570,6 +29638,7 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
@@ -29591,6 +29660,7 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>-- Convertion options:
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -29783,6 +29853,7 @@ Define Class CL_LANG As Custom
 						<<>>cCFG_File:         Legt eine alternative Configurationsdate (CFG) fest, die statt der im foxbin2prg Verzeichnis genutzt werden soll. (Anm. des Übersetzers: Keine Angabe über Vererbung in der Verzeichnishierarchie)
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG Konfigurations Optionen: (Wird die Option nicht aufgeführt, ist der Wert im Beispiel der Default)
@@ -29814,6 +29885,7 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen Wert aus der Textdate der Datenbank (db2)
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Nutze HELPSTRING als Class Procedure Kommentar
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Konvertierungs Optionen:
@@ -30034,6 +30106,7 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
@@ -30055,6 +30128,7 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>-- Convertion options:
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)

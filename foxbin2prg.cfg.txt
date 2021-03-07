@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.2
+*Version: v1.19.58
 *################################################################################################################
 
 *extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
@@ -18,6 +18,7 @@
 *Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 *ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 *PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+*HomeDir: 1			&& 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 
 *-- Convertion options:
 *PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)

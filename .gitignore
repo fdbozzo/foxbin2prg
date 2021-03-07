@@ -2,6 +2,7 @@
 #exclude general
 *.bak
 *.tmp
+*.orig
 /*.dbf
 /*.CDX
 /*.fxp

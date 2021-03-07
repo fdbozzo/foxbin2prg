@@ -123,6 +123,7 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 | ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
 | Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
+| HomeDir | 0, _1_ | 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2. Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
 
 ### Note
 The options will be read outside in, top to down. See [Multi-config](#multi-config)
