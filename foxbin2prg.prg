@@ -29885,7 +29885,7 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen Wert aus der Textdate der Datenbank (db2)
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Nutze HELPSTRING als Class Procedure Kommentar
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
+						<<>>HomeDir: 1                     && 0 = Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert, [1 = Die Eigenschaft wird gespeichert]
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Konvertierungs Optionen:
