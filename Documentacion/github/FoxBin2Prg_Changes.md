@@ -32,8 +32,11 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/03/05 | LScheffler | [v1.19.57]() | **Bug Fix**: RedirectClassType = 2, UseClassPerFile = 2 failed |
-| 2021/xx/xx | LScheffler | [v1.19.5x]() | **Doc**: Improved, Better description of ClassPerFileCheck. |
+| 2021/03/05 | LScheffler | [v1.19.59]() | **Feature**: Added option to create config file template based on current values of a directory |
+| 2021/03/05 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, Path was set wrong |
+| 2021/03/05 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, UseClassPerFile = 2 failed |
+| 2021/xx/xx | LScheffler | [v1.19.59]() | **Doc**: Improved, Better description of ClassPerFileCheck. |
+
 | 2021/03/04 | Doug Hennig | [v1.19.58]() | Added support for writing to a different folder than the source code using a new tcOutputFolder parameter |
 | | | | Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes) |
 | 2021/03/05 | LScheffler | [v1.19.57]() | **Bug Fix**: RedirectClassType = 2 mixed up PATH |

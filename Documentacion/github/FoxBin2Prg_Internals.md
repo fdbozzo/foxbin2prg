@@ -67,7 +67,14 @@ and this require that generated text files can be manipulated manually or automa
 No problem, just convert the .pjm to .pjx/.pjt sending to FoxBin2Prg, and it generates the real project again.
 
 ## Configuration file
-It is possible to create a template with all options and comments via `FoxBin2Prg.EXE -c cOutputFile`. See [command line](./FoxBin2Prg_Run.md).   
+It is possible to create a template or a config with all options and comments via   
+```
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"    ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-C","config.cfg"      ==> Generates a config file like FoxBin2Prg.cfg with recent settings of path of second parameter
+```
+See [command line](./FoxBin2Prg_Run.md#usage-2).   
+The config file is used to move local setting to a different comupter or for changes while branching.
+ 
 The options in the template (or in the config that ships with FoxBin2Prg) are commented out.
 To activate an option remove the asterix and set appropriate value.   
 These are the FoxBin2Prg.cfg configuration file settings and their meaning:
@@ -123,15 +130,19 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 | ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
 | Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
-| HomeDir | 0, _1_ | 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2. Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
+| HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
 
 ### Note
 The options will be read outside in, top to down. See [Multi-config](#multi-config)
 
 ## Configuration file per table
 Those configuration files are valid for a single table only. The idea is to have special settings for single tables.   
-It is possible to create a template with all options and comments via `FoxBin2Prg.EXE -t cOutputFile`.
-See [command line](./FoxBin2Prg_Run.md#usage-1).   
+It is possible to create a template with all options and comments via
+```
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
+```
+
+See [command line](./FoxBin2Prg_Run.md#usage-2).   
 The options in the template (or in the config that ships with FoxBin2Prg) are commented out.
 To activate an option remove the asterix and set appropriate value.   
 These are the Table.dbf.cfg configuration file settings and their meaning:

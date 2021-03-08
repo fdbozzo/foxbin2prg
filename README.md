@@ -12,7 +12,6 @@ It's main purpose it's to fix some bugs and add some new functions. It looks lik
 I do not maintain the spanish documentation - it would fade. So just check Fernados repo for this information.   
 A quick run is [introduced](#use-foxbin2prg), more [complex](./Documentacion/github/FoxBin2prg_Run.md#usage-1), and a large [documentation](./Documentacion/github/FoxBin2prg.md) exists too.
 Remember yourself to compile the exe first.   
-For a quick few of the changes made by the fork, see [Changes by the fork](#changes-by-the-fork).
 
 ---
 ---
@@ -115,9 +114,7 @@ This program is Open Source and "libre", and I don't make any guaranties that it
 I will try to fix bugs if my obligations let me do it.
 
 ## Project info and updates: 
-
 Fernando D. Bozzo's repository at Github: https://github.com/fdbozzo/foxbin2prg   
-Lutz Scheffler's repository at Github: https://github.com/lscheffler/foxbin2prg
 
 ## LICENCE:
 This work is licensed under the Creative Commons Attribution 4.0 International License.
@@ -125,11 +122,26 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 
 ---
 ---
+## Changes
+See [Changes](./Documentacion/github/FoxBin2prg_Changes.md)
+* Bug fixes
+* New option -C   
+  To create config file (working settings) with all values set for a folder.
+  Intended for storing the settings with the project.
+
+```
+DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a file like FoxBin2Prg.cfg config file with recent settings
+```
+
+## Changes in 1.19.59
+* Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
+* Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
+
 ## Changes in 1.19.58
 * Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
 * Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
 
-## Changes by this fork (1.19.55)
+## Changes pre 1.19.58
 To get the new settings in config file, use the new create-a-template function:
 
 ```
@@ -164,8 +176,6 @@ old commits / versions would have the old config.
 So the settings would fit the data and FoxBin2Prg could generate according to it.
 	
 ### Fixes
-Fixes only are in the fork branch of this repo.
-
 | Details |
 | - |
 | Added MEM and FKY options to config template and internal documentation |
@@ -207,4 +217,4 @@ This folder containes the files necessary to run FoxBin2Prg.prg or to create the
 For usage see [documentation](./Documentacion/github/FoxBin2prg.md)
 
 ----
-Last changed: _2021/03/05_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/08_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
