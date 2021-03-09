@@ -689,7 +689,7 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 	tcType			= pcParamX
 	Release pcParamX
 Endif
-
+SET STEP ON
 * only 2 paras for -cCt
 If Pcount()#2 And ( Upper(tcType)=='-C' Or tcType=='-t' ) Then
 	tc_InputFile = ""
@@ -703,7 +703,7 @@ Try
 *** DH 2021-03-04: handle tcOutputFolder
 	if not empty(tcOutputFolder)
 		loCnv.cOutputFolder = tcOutputFolder
-	endif not empty(tcOutputFolder)
+	endif &&not empty(tcOutputFolder)
 *** DH 2021-03-04: end of new code
 	lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
 		, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
@@ -29673,7 +29673,7 @@ Define Class CL_LANG As Custom
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>****************************************************************************************************************
 						<<>>
-						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>cFileSpec.Ext:     Full name (fullpath) of the file to convert or directory name to process
@@ -29692,6 +29692,7 @@ Define Class CL_LANG As Custom
 						<<>>cRecompile:        Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
 						<<>>cNoTimestamps:     Indicates if timestamp must be cleared ('1' or empty) or not ('0')
 						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
 						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 						<<>>
@@ -29899,7 +29900,7 @@ Define Class CL_LANG As Custom
 						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>****************************************************************************************************************
 						<<>>
-						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Detalle de parámetros:
 						<<>>cFileSpec.Ext:     Nombre completo (fullpath) del archivo a convertir o del directorio a procesar
@@ -29918,6 +29919,7 @@ Define Class CL_LANG As Custom
 						<<>>cRecompile:        Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)
 						<<>>cNoTimestamps:     Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
 						<<>>cCFG_File:         Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
+						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
 						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 						<<>>
@@ -30124,7 +30126,7 @@ Define Class CL_LANG As Custom
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>****************************************************************************************************************
 						<<>>
-						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter:
 						<<>>cFileSpec.Ext:     Vollständiger Name der Datei (mit Pfad) zum Konvertieren, oder das Verzeichnis zum Konvertieren
@@ -30143,7 +30145,7 @@ Define Class CL_LANG As Custom
 						<<>>cRecompile:        '1' Die erzeugten Binädateien werden nach dem Erzeugen kompiliert. Eine Pfadangabe (d.h., die des Projektes) ist möglich.
 						<<>>cNoTimestamps:     Legt fest ob der Zeitstempel gelöscht wrden soll ('1' oder leer) oder nicht ('0')
 						<<>>cCFG_File:         Legt eine alternative Configurationsdate (CFG) fest, die statt der im foxbin2prg Verzeichnis genutzt werden soll. (Anm. des Übersetzers: Keine Angabe über Vererbung in der Verzeichnishierarchie)
-						<<>>
+						<<>>cOutputFolder:     Der Ordner in die die Ausgabedatei geschrieben werden soll. Wenn nicht angegeben, das Verzeichnis der Quelle.
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 						<<>>
 						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-C OutFileName] [-t OutFileName]
@@ -30384,7 +30386,7 @@ Define Class CL_LANG As Custom
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
 						<<>>****************************************************************************************************************
 						<<>>
-						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
+						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>cFileSpec.Ext:     Full name (fullpath) of the file to convert or directory name to process
@@ -30403,6 +30405,7 @@ Define Class CL_LANG As Custom
 						<<>>cRecompile:        Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
 						<<>>cNoTimestamps:     Indicates if timestamp must be cleared ('1' or empty) or not ('0')
 						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
 						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 						<<>>

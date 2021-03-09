@@ -130,7 +130,7 @@ See [Changes](./Documentacion/github/FoxBin2prg_Changes.md)
 * Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
 * Logging of settings as settings object passed to execute method (Option debug > 0)
 * Bug Fixes: RedirectClassType = 2
-* Improved, Better description of ClassPerFileCheck.
+* Improved, Better description of ClassPerFileCheck and tcOutputFolder.
 * Added option to create config file template based on current values of a directory
   To create config file (working settings) with all values set for a folder.
   Intended for storing the settings with the project.
