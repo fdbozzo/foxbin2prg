@@ -689,7 +689,7 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 	tcType			= pcParamX
 	Release pcParamX
 Endif
-SET STEP ON
+
 * only 2 paras for -cCt
 If Pcount()#2 And ( Upper(tcType)=='-C' Or tcType=='-t' ) Then
 	tc_InputFile = ""
@@ -3345,7 +3345,6 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 09.3.2021
 *!*	change date="{^2021-03-09,08:06:00}"
 * log settings for tcCFG_File - cfg as object
-SET STEP ON 
 					.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type, , Vartype(tcCFG_File) = "O" )
 *!*	/Changed by: Lutz Scheffler 09.3.2021
