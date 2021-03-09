@@ -69,7 +69,7 @@ just select and process each one independently, in parallel if you like, but in 
 
 ## Usage
 ### Usage 1
-`FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File] ] ] ] ] ] ] ] ] ] ]`
+`FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File [,cOutputFolder ] ] ] ] ] ] ] ] ] ] ] ]`
 
 | Parameter | Value (_Default_) | Description |
 | ----- | ----- | ----- |
@@ -93,6 +93,7 @@ just select and process each one independently, in parallel if you like, but in 
 |  | path | The _Binary_ is compiled from this path |
 | cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
 | cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
+| cOutputFolder | folder | Optional. A folder to write the output to. If not used, output be the source path. |
 
 #### Note #1
 The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:   
@@ -162,4 +163,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

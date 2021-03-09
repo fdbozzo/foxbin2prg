@@ -74,6 +74,15 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
 |  | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation. |
 
+#### cOutputFolder
+The procedural call of FoxBin2Prg like
+`FoxBin2Prg.EXE cInputFile ...` exposes a parameter _cOutputFolder_.
+This parameter is not available in this call. To set _cOutputFolder_:   
+````
+obj.cOutputFolder = cOutputFolder
+obj.execute(...)
+````   
+
 #### Note
 The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:   
 `PRG2BIN-INTERACTIVE`   
@@ -92,4 +101,4 @@ Return value is 0=OK, 1=Error.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
