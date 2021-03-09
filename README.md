@@ -124,18 +124,20 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ---
 ## Changes
 See [Changes](./Documentacion/github/FoxBin2prg_Changes.md)
-* Bug fixes
-* New option -C   
+
+## Changes in 1.19.59
+* Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
+* Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
+* Logging of settings as settings object passed to execute method (Option debug > 0)
+* Bug Fixes: RedirectClassType = 2
+* Improved, Better description of ClassPerFileCheck.
+* Added option to create config file template based on current values of a directory
   To create config file (working settings) with all values set for a folder.
   Intended for storing the settings with the project.
 
 ```
 DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a file like FoxBin2Prg.cfg config file with recent settings
 ```
-
-## Changes in 1.19.59
-* Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
-* Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
 
 ## Changes in 1.19.58
 * Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
@@ -148,10 +150,6 @@ To get the new settings in config file, use the new create-a-template function:
 DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
-
-### Exe file
-Removed exe file. Just a bloat of teh repo, any disciple of the Fox know how to create, if in need.
-The prg works anyway.
 
 ### Split of container files
 VCX, SCX and DBC are container that hold different items. There is was a single option to split them.   
@@ -217,4 +215,4 @@ This folder containes the files necessary to run FoxBin2Prg.prg or to create the
 For usage see [documentation](./Documentacion/github/FoxBin2prg.md)
 
 ----
-Last changed: _2021/03/08_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

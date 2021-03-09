@@ -64,7 +64,7 @@ Developed by Fernando D. Bozzo - GitHub: https://github.com/fdbozzo/foxbin2prg
 
 FoxBin2Prg is a 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
 
-Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
+Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, MEM, FKY
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 

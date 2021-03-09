@@ -32,13 +32,13 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/03/05 | LScheffler | [v1.19.59]() | **Feature**: Added option to create config file template based on current values of a directory |
-| 2021/03/05 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, Path was set wrong |
-| 2021/03/05 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, UseClassPerFile = 2 failed |
-| 2021/xx/xx | LScheffler | [v1.19.59]() | **Doc**: Improved, Better description of ClassPerFileCheck. |
-
-| 2021/03/04 | Doug Hennig | [v1.19.58]() | Added support for writing to a different folder than the source code using a new tcOutputFolder parameter |
-| | | | Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes) |
+| 2021/03/09 | LScheffler | [v1.19.59]() | **Feature**: Logging of settings as settings object passed to execute method (Option debug > 0) |
+| 2021/03/09 | LScheffler | [v1.19.59]() | **Feature**: Added option to create config file template based on current values of a directory |
+| 2021/03/09 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, Path was set wrong in special config |
+| 2021/03/09 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, UseClassPerFile = 2 failed |
+| 2021/03/09 | LScheffler | [v1.19.59]() | **Doc**: Improved, Better description of ClassPerFileCheck. |
+| 2021/03/04 | Doug Hennig | [v1.19.58]() | **Feature**: Added support for writing to a different folder than the source code using a new tcOutputFolder parameter |
+| | | | **Feature**: Added a configuration option: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes) |
 | 2021/03/05 | LScheffler | [v1.19.57]() | **Bug Fix**: RedirectClassType = 2 mixed up PATH |
 | | | | **Doc**: Improved |
 | 2021/03/04 | LScheffler | [v1.19.56]() | **Feature**: New value 2 for option RedirectClassType = 2, just process the single class for input in form file[.baseclass].class.vc2 |
@@ -379,4 +379,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/05_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

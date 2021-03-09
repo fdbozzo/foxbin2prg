@@ -249,10 +249,11 @@
 * 05/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
 * 2021-03-04	DH			v1.19.58	Enhancement: added support for writing to a different folder than the source code (Doug Hennig)
 * 2021-03-04	DH			v1.19.58	Enhancement: added configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (Doug Hennig)
-* 08/03/2021	LScheffler	v1.19.59	Bug Fix: For RedirectClassType = 2, Path was set wrong
-* 08/03/2021	LScheffler	v1.19.59	Doc: Improved, Better description of ClassPerFileCheck.
-* 08/03/2021	LScheffler	v1.19.59	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
-* 08/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
+* 09/03/2021	LScheffler	v1.19.59	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	LScheffler	v1.19.59	Doc: Improved, Better description of ClassPerFileCheck.
+* 09/03/2021	LScheffler	v1.19.59	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
+* 09/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
+* 09/03/2021	LScheffler	v1.19.59	Enhancement: Log settings object handed to execute (Debug > 0)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -395,8 +396,8 @@
 *                                                     generates classlib.class.vcx and tries to recompile classlib.vcx
 *                                                     fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
 * 05/03/2021	Lutz Scheffler      Bug report v1.19.56	For RedirectClassType = 2, Path was set wrong
-* xx/03/2021	Lutz Scheffler      Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
-* xx/03/2021	Lutz Scheffler      Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
+* 09/03/2021	Lutz Scheffler      Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	Lutz Scheffler      Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -2146,9 +2147,10 @@ Define Class c_foxbin2prg As Session
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 * tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
 * toParentCFG				(@? IN    ) (Uso interno) Si se pasa un valor, el nuevo CFG copiará primero sus valores de aquí para heredarlos
+* tl_ForceLog				(v? IN    ) Force logging of settings. used on cfg setting as object
 *--------------------------------------------------------------------------------------------------------------
 		Lparameters tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG
+			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG, tl_ForceLog
 
 		#If .F.
 			Local toParentCFG As CL_CFG Of 'FOXBIN2PRG.PRG'
@@ -2713,11 +2715,13 @@ Define Class c_foxbin2prg As Session
 							.n_CFG_EvaluateFromParam = .n_CFG_Actual
 						Endif
 					Else
-*-- Si no es llMasterEval, es porque esta llamada es cíclica desde este mismo método,
-*-- y no hay parámetros para evaluar, ya que se mandan todos vacíos desde el inicial.
-						Exit
+					*-- Si no es llMasterEval, es porque esta llamada es cíclica desde este mismo método,
+					*-- y no hay parámetros para evaluar, ya que se mandan todos vacíos desde el inicial.
+						If Not tl_ForceLog Then
+							Exit
+						Endif &&NOT tl_ForceLog
 					Endif
-
+					
 					.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ':' )
 					.writeLog( C_TAB + 'n_CFG_Actual:                 ' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
 					.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + Transform(.l_CFG_CachedAccess) )
@@ -3338,8 +3342,13 @@ Define Class c_foxbin2prg As Session
 
 *-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 
+*!*	Changed by: Lutz Scheffler 09.3.2021
+*!*	change date="{^2021-03-09,08:06:00}"
+* log settings for tcCFG_File - cfg as object
+SET STEP ON 
 					.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type )
+						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type, , Vartype(tcCFG_File) = "O" )
+*!*	/Changed by: Lutz Scheffler 09.3.2021
 
 *!*	Changed by: Lutz Scheffler 04.3.2021
 *!*	change date="{^2021-03-04,13:25:00}"
