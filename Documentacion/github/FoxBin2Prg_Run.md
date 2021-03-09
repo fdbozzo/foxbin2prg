@@ -69,15 +69,6 @@ just select and process each one independently, in parallel if you like, but in 
 
 ## Usage
 ### Usage 1
-`FoxBin2Prg.EXE [-c cOutputFile] [-t cOutputFile]`
-
-| Parameter | Description |
-| ----- | ----- |
-| none | Call Info screen |
-| -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
-| -t | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
-
-### Usage 2
 `FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File] ] ] ] ] ] ] ] ] ] ]`
 
 | Parameter | Value (_Default_) | Description |
@@ -113,6 +104,16 @@ On any combination of (_BIN2PRG_, _PRG2BIN_, _INTERACTIVE_, _SHOWMSG_) separated
 This is useful when used as EXE dealing with Windows shortcuts,
 on which fixed parameters must be in the shortcut.   
 The filename is an external variable parameter received when SendingTo FoxBin2Prg with right-click on File Manager.
+
+### Usage 2
+`FoxBin2Prg.EXE [-c cOutputFile] [-C cOutputFile] [-t cOutputFile]`
+
+| Parameter | Description |
+| ----- | ----- |
+| none | Call Info screen |
+| -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
+| -C | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
+| -t | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
 
 ## Return values
 Return value via _ErrorLevel_ is 0=OK, 1=Error.

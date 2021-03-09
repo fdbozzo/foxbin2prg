@@ -246,9 +246,14 @@
 *                                                generates classlib.class.vcx and tries to recompile classlib.vcx
 *                                                fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
 * 04/03/2021	LScheffler	v1.19.56	Enhancement: New value for RedirectClassType = 2, just process the single class of classlib.class.vc2
-* 04/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
-
-
+* 05/03/2021	LScheffler	v1.19.57	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* 2021-03-04	DH			v1.19.58	Enhancement: added support for writing to a different folder than the source code (Doug Hennig)
+* 2021-03-04	DH			v1.19.58	Enhancement: added configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (Doug Hennig)
+* 09/03/2021	LScheffler	v1.19.59	Bug Fix: For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	LScheffler	v1.19.59	Doc: Improved, Better description of ClassPerFileCheck.
+* 09/03/2021	LScheffler	v1.19.59	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
+* 09/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
+* 09/03/2021	LScheffler	v1.19.59	Enhancement: Log settings object handed to execute (Debug > 0)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -381,6 +386,19 @@
 * 19/07/2019	Dan Lauer			Reporte Bug v1.19.51: Manejo de AutoIncrement incompatible con Project Explorer (Arreglado en v1.19.49.6, con solución de Doug Hennnig)
 * 13/11/2019	Eric Selje			Reporte Bug v1.19.51: Incompatible with VFPA (#36) (Se arregla en v1.19.51.6)
 * 31/03/2020	Ryan Harris			Reporte Bug v1.19.51: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Se arregla en v1.19.51.6)
+* 01/04/2020	FDBOZZO		        Bug report v1.19.51	No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
+* 14/02/2021	Lutz Scheffler      Bug report v1.19.51	conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
+* 14/02/2021	Lutz Scheffler      Bug report v1.19.51	conversion prg -> dbf, fields with .NULL. value are incorectly recreated
+* 15/02/2021	Lutz Scheffler      Bug report v1.19.52	processing directory, flush log file after loop instead of file
+* 16/02/2021	Lutz Scheffler      Bug report v1.19.52	conversion prg -> vcx, files per class could create one class multiple times
+* 03/03/2021	Lutz Scheffler      Bug report v1.19.53	DBF_Conversion_Condition, problem with macro expansion
+* 04/03/2021	Lutz Scheffler      Bug report v1.19.55	Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1
+*                                                     generates classlib.class.vcx and tries to recompile classlib.vcx
+*                                                     fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
+* 05/03/2021	Lutz Scheffler      Bug report v1.19.56	For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	Lutz Scheffler      Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	Lutz Scheffler      Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
+
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -390,6 +408,8 @@
 *	_memberdata				Se separan las definiciones en lineas para evitar una sola muy larga
 *
 *---------------------------------------------------------------------------------------------------
+*** LScheffler 2021-03-08: added optional set of parameters, config file
+* Usage 1
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 *										- En modo compatibilidad con Visual SourceSafe, se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
@@ -415,11 +435,24 @@
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 * tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
 * tcCFG_File				(v? IN    ) Indica si se debe usar un archivo de configuración distinto al predeterminado
+*** DH 2021-03-04: added tcOutputFolder parameter
+* tcOutputFolder			(v? IN    ) The output folder to write to (optional: if it isn't specified, the same folder as the source is used)
 *---------------------------------------------------------------------------------------------------
 *							Ej: DO FOXBIN2PRG.PRG WITH "C:\DESA\INTEGRACION\LIBRERIA.VCX"
 *---------------------------------------------------------------------------------------------------
+*** DH 2021-03-04: added tcOutputFolder parameter
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*** LScheffler 2021-03-08: added optional set of parameters, config file
+* Usage 2
+* PARAMETERS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* tc_InputFile				(c! IN    ) Modus (case sensitive)
+*										-c Create config template "tcType" with default values
+*										-C Create config "tcType" with values of directory named by outputfile
+*										-t Create config template "tcType" for config-per-table file
+* tcType					(v! IN    ) file to create
+*---------------------------------------------------------------------------------------------------
 Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName ;
-	, tcRecompile, tcNoTimestamps, tcCFG_File
+	, tcRecompile, tcNoTimestamps, tcCFG_File, tcOutputFolder
 
 *-- NO modificar! / Do NOT change!
 #Define C_CMT_I						'*--'
@@ -650,29 +683,40 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0 Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_I0','-'+tc_InputFile) > 0 Or Atc('-SIMERR_I1','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_O1','-'+tc_InputFile) > 0;
-		OR UPPER(tc_InputFile)=='-C' OR UPPER(tc_InputFile)=='-T' Then
+		OR UPPER(tc_InputFile)=='-C' OR tc_InputFile=='-t' Then
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
 	Release pcParamX
 Endif
+
+* only 2 paras for -cCt
+If Pcount()#2 And ( Upper(tcType)=='-C' Or tcType=='-t' ) Then
+	tc_InputFile = ""
+	tcType       = ""
+Endif &&PCOUNT()#2 AND ( UPPER(tcType)=='-C' OR tcType=='-t' )
 *!*	/Changed by: Lutz Scheffler 15.2.2021
 
 Try
-		loEx	= Null
-		loCnv	= Createobject("c_foxbin2prg")
-		lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-			, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
-			, .F., .F., .F., tcCFG_File )
-	Catch To loEx
+	loEx	= Null
+	loCnv	= Createobject("c_foxbin2prg")
+*** DH 2021-03-04: handle tcOutputFolder
+	if not empty(tcOutputFolder)
+		loCnv.cOutputFolder = tcOutputFolder
+	endif not empty(tcOutputFolder)
+*** DH 2021-03-04: end of new code
+	lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
+		, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+		, .F., .F., .F., tcCFG_File )
+Catch To loEx
 *-- Esto solo es para errores en el INIT, ya que los demás se deben capturar y tratar antes.
-		lnResp		= loEx.ErrorNo
-		Messagebox( 'Error ' + Transform(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
-			+ loEx.Procedure + ', Line ' + Transform(loEx.Lineno) + C_CR ;
-			+ loEx.Details ;
-			, 0+16+4096 ;
-			, '' ;
-			, 60000 )
+	lnResp		= loEx.ErrorNo
+	Messagebox( 'Error ' + Transform(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
+		+ loEx.Procedure + ', Line ' + Transform(loEx.Lineno) + C_CR ;
+		+ loEx.Details ;
+		, 0+16+4096 ;
+		, '' ;
+		, 60000 )
 Endtry
 
 AddProperty(_Screen, 'ExitCode', lnResp)
@@ -844,15 +888,17 @@ Define Class c_foxbin2prg As Session
 *!*			+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
 *!*			+ [<memberdata name="l_dbf_binchar_base64" display="l_DBF_BinChar_Base64"/>] ;
 *!*			+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
+*!*			+ [<memberdata name="c_language_in" display="c_Language_In"/>] ;
 *!*	;&& /SF
 
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.57'
+	c_FB2PRG_Version_Real			= '1.19.59'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
+	c_Language_In					= '(auto)'
 	c_SimulateError					= ''			&& SIMERR_I0, SIMERR_I1, SIMERR_O1
 	c_loc_processing_file			= ''
 	c_loc_process_progress			= ''
@@ -892,7 +938,8 @@ Define Class c_foxbin2prg As Session
 	l_RemoveNullCharsFromCode		= .T.
 	l_RemoveZOrderSetFromProps		= .F.
 	l_Recompile						= .T.
-	n_UseClassPerFile 				= 0
+	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
+	n_ExcludeDBFAutoincNextval		= 0
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -905,6 +952,7 @@ Define Class c_foxbin2prg As Session
 	l_DBF_BinChar_Base64 			= .T.
 	l_DBF_IncludeDeleted            = .F.
 *!*	/Changed by: Lutz Scheffler 21.02.2021
+	n_UseClassPerFile 				= 0
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
@@ -959,7 +1007,9 @@ Define Class c_foxbin2prg As Session
 	DBC_Conversion_Support			= 2
 	DBF_Conversion_Included			= ''
 	DBF_Conversion_Excluded			= ''
-
+*** DH 2021-03-04: added cOutputFolder and n_HomeDir properties
+	cOutputFolder					= ''			&& the folder to write files to (blank = same folder as source file)
+	n_HomeDir						= 1				&& 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2
 
 	Procedure Init
 		Lparameters tcCFG_File, tcCancelWithEscKey
@@ -1402,6 +1452,15 @@ Define Class c_foxbin2prg As Session
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_DBF_IncludeDeleted, This.l_DBF_IncludeDeleted )
 		Endif
 	Endproc
+
+
+	Procedure c_Language_In_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.c_Language_In
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).c_Language_In, This.c_Language_In )
+		Endif
+	Endproc
 *!*	/Changed by: Lutz Scheffler 21.02.2021
 
 
@@ -1709,6 +1768,17 @@ Define Class c_foxbin2prg As Session
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_PRG_Compat_Level, This.n_PRG_Compat_Level )
 		Endif
 	Endproc
+
+
+*** DH 2021-03-04: added n_HomeDir_Access
+	PROCEDURE n_HomeDir_ACCESS
+		IF THIS.n_CFG_Actual = 0 OR ISNULL( THIS.o_Configuration( THIS.n_CFG_Actual ) )
+			RETURN THIS.n_HomeDir
+		ELSE
+			RETURN NVL( THIS.o_Configuration( THIS.n_CFG_Actual ).n_HomeDir, THIS.n_HomeDir )
+		ENDIF
+	ENDPROC
+*** DH 2021-03-04: end of new code
 
 
 	Procedure changeFileAttribute
@@ -2077,9 +2147,10 @@ Define Class c_foxbin2prg As Session
 * tc_InputFile				(v! IN    ) Nombre completo (fullpath) del archivo a convertir o nombre del directorio a procesar
 * tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
 * toParentCFG				(@? IN    ) (Uso interno) Si se pasa un valor, el nuevo CFG copiará primero sus valores de aquí para heredarlos
+* tl_ForceLog				(v? IN    ) Force logging of settings. used on cfg setting as object
 *--------------------------------------------------------------------------------------------------------------
 		Lparameters tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG
+			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG, tl_ForceLog
 
 		#If .F.
 			Local toParentCFG As CL_CFG Of 'FOXBIN2PRG.PRG'
@@ -2478,6 +2549,7 @@ Define Class c_foxbin2prg As Session
 *-- CASO ESPECIAL: El lenguaje no se guarda en lo_CFG, porque es un seteo Global.
 									lcValue	= Alltrim( Substr( laConfig(m.I), 10 ) )
 									.changeLanguage(lcValue)
+									lo_CFG.c_Language_In = m.lcValue
 									.writeLog( C_TAB + Justfname(lcConfigFile) + ' > Language:                   ' + Transform(lcValue) + ' (' + .c_Language + ')' )
 
 								Case Left( laConfig(m.I), 23 ) == Lower('PJX_Conversion_Support:')
@@ -2590,6 +2662,15 @@ Define Class c_foxbin2prg As Session
 									lo_CFG.n_PRG_Compat_Level	= Int( Val( lcValue ) )
 									.writeLog( C_TAB + Justfname(lcConfigFile) + ' > PRG_Compat_Level:           ' + Transform(lo_CFG.n_PRG_Compat_Level) )
 
+*** DH 2021-03-04: handle n_HomeDir configuration setting
+								CASE LEFT( laConfig(m.I), 8 ) == LOWER('HomeDir:')
+									lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 9 ) )
+									IF INLIST( lcValue, '0', '1' ) THEN
+										lo_CFG.n_HomeDir	= INT( VAL( lcValue ) )
+										.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > HomeDir:                ' + TRANSFORM(lo_CFG.n_HomeDir) )
+									ENDIF
+*** DH 2021-03-04: end of new code
+
 							Endcase
 						Endfor
 
@@ -2634,11 +2715,13 @@ Define Class c_foxbin2prg As Session
 							.n_CFG_EvaluateFromParam = .n_CFG_Actual
 						Endif
 					Else
-*-- Si no es llMasterEval, es porque esta llamada es cíclica desde este mismo método,
-*-- y no hay parámetros para evaluar, ya que se mandan todos vacíos desde el inicial.
-						Exit
+					*-- Si no es llMasterEval, es porque esta llamada es cíclica desde este mismo método,
+					*-- y no hay parámetros para evaluar, ya que se mandan todos vacíos desde el inicial.
+						If Not tl_ForceLog Then
+							Exit
+						Endif &&NOT tl_ForceLog
 					Endif
-
+					
 					.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ':' )
 					.writeLog( C_TAB + 'n_CFG_Actual:                 ' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
 					.writeLog( C_TAB + 'l_CFG_CachedAccess:           ' + Transform(.l_CFG_CachedAccess) )
@@ -2649,7 +2732,6 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_Recompile:                  ' + Transform(.l_Recompile) + ' (' + tcRecompile + ')' )
 					.writeLog( C_TAB + 'l_NoTimestamps:               ' + Transform(.l_NoTimestamps) )
 					.writeLog( C_TAB + 'l_ClearUniqueID:              ' + Transform(.l_ClearUniqueID) )
-					.writeLog( C_TAB + 'n_UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -2662,9 +2744,11 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
 					.writeLog( C_TAB + 'l_DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
 *!*	/Changed by: Lutz Scheffler 21.02.2021
+					.writeLog( C_TAB + 'n_UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
 					.writeLog( C_TAB + 'l_ClassPerFileCheck:          ' + Transform(.l_ClassPerFileCheck) )
 					.writeLog( C_TAB + 'l_RedirectClassPerFileToMain: ' + Transform(.l_RedirectClassPerFileToMain) )
 					.writeLog( C_TAB + 'n_RedirectClassType:          ' + Transform(.n_RedirectClassType) )
+
 					.writeLog( C_TAB + 'n_Debug:                      ' + Transform(.n_Debug) )
 					.writeLog( C_TAB + 'n_ExtraBackupLevels:          ' + Transform(.n_ExtraBackupLevels) )
 					.writeLog( C_TAB + 'c_BackgroundImage:            ' + Transform(.c_BackgroundImage) )
@@ -2673,7 +2757,12 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'l_RemoveNullCharsFromCode:    ' + Transform(.l_RemoveNullCharsFromCode) )
 					.writeLog( C_TAB + 'l_RemoveZOrderSetFromProps:   ' + Transform(.l_RemoveZOrderSetFromProps) )
 					.writeLog( C_TAB + 'l_ClearDBFLastUpdate:         ' + Transform(.l_ClearDBFLastUpdate) )
-					.writeLog( C_TAB + 'c_Language:                   ' + Transform(.c_Language) )
+					.writeLog( C_TAB + 'c_Language:                   ' + Transform(.c_Language) + ' (' + .c_Language_In + ')' )
+					
+					.writeLog( C_TAB + 'n_BodyDevInfo:                ' + Transform(.n_BodyDevInfo) )
+					.writeLog( C_TAB + 'n_PRG_Compat_Level:           ' + Transform(.n_PRG_Compat_Level) )
+* SF, 2021/030/06: added DH HomeDir option
+					.writeLog( C_TAB + 'n_HomeDir:                    ' + Transform(.n_HomeDir) )
 
 					.writeLog( )
 				Endwith && THIS
@@ -3095,7 +3184,7 @@ Define Class c_foxbin2prg As Session
 		Try
 				Local I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
 					, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon, llError ;
-					, lcOldSetEscape, lcOldOnEscape, llEscKeyRestored ;
+					, lcOldSetEscape, lcOldOnEscape, llEscKeyRestored, lcType ;
 					, loEx As Exception ;
 					, loCFG As CL_CFG Of 'FOXBIN2PRG.PRG' ;
 					, loFSO As Scripting.FileSystemObject ;
@@ -3117,7 +3206,8 @@ Define Class c_foxbin2prg As Session
 					lnPCount			= 0
 					lcInputFile_Type	= ''
 					.l_Error			= .F.
-					tcType				= Upper( Evl(tcType,'') )
+					lcType				= Evl(tcType,'')
+					tcType         		= Upper( lcType )
 					llEscKeyRestored	= .T.
 					lnVFPVersion		= Version(5)
 					.declareDLL()
@@ -3235,7 +3325,7 @@ Define Class c_foxbin2prg As Session
 					.writeLog( Replicate( '*', 100 ) )
 					.writeLog( '> ' + loLang.C_EXTERNAL_PARAMETERS_LOC + ':' )
 					.writeLog( C_TAB + 'tc_InputFile:                 ' + Transform( Evl(tc_InputFile, '(empty)  -> Will use Default [' + .c_InputFile + ']' ) ) )
-					.writeLog( C_TAB + 'tcType:                       ' + Transform( Evl(tcType, '(empty)' ) ) )
+					.writeLog( C_TAB + 'tcType:                       ' + Transform( Evl(lcType, '(empty)' ) ) )
 					.writeLog( C_TAB + 'tcTextName:                   ' + Transform( Evl(tcTextName, '(empty)' ) ) )
 					.writeLog( C_TAB + 'tlGenText:                    ' + Transform( Evl(tlGenText, '(empty)' ) ) )
 					.writeLog( C_TAB + 'tcDontShowErrors:             ' + Transform( Evl(tcDontShowErrors, '(empty)  -> Will use Default [' + Transform(.l_ShowErrors) + ']' ) ) )
@@ -3251,8 +3341,14 @@ Define Class c_foxbin2prg As Session
 					.writeLog( )
 
 *-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
+
+*!*	Changed by: Lutz Scheffler 09.3.2021
+*!*	change date="{^2021-03-09,08:06:00}"
+* log settings for tcCFG_File - cfg as object
+SET STEP ON 
 					.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type )
+						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type, , Vartype(tcCFG_File) = "O" )
+*!*	/Changed by: Lutz Scheffler 09.3.2021
 
 *!*	Changed by: Lutz Scheffler 04.3.2021
 *!*	change date="{^2021-03-04,13:25:00}"
@@ -3275,7 +3371,7 @@ Define Class c_foxbin2prg As Session
 						*remove class
 								tc_InputFile = Lower( JustPath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 						*remove baseclass
-								If .n_UseClassPerFile = 0
+								If .n_UseClassPerFile = 2
 						*remove baseclass
 									tc_InputFile = Lower( JustPath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 								Endif
@@ -3323,14 +3419,225 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
-						Case UPPER( tcType )=='-C' AND VARTYPE( tc_InputFile )='C'
+						Case m.lcType=='-c' And Vartype( m.tc_InputFile )='C'
 							loLang			= _Screen.o_FoxBin2Prg_Lang
-							STRTOFILE( STRTRAN( '*' + STRTRAN( loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), tc_InputFile )
+							Strtofile( Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
 
-						Case UPPER( tcType )=='-T' AND VARTYPE( tc_InputFile )='C'
+						Case m.lcType=='-t' And Vartype( m.tc_InputFile )='C'
 							loLang			= _Screen.o_FoxBin2Prg_Lang
-							STRTOFILE( STRTRAN( STRTRAN( '*' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), tc_InputFile )
+							Strtofile( Strtran( Strtran( '*' + m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
 *!*	/Changed by: Lutz Scheffler 15.2.2021
+
+*!*	Changed by: Lutz Scheffler 07.3.2021
+*!*	change date="{^2021-03-07,18:44:00}"
+* added option to create config files with values
+						Case m.lcType=='-C' And Vartype( m.tc_InputFile )='C'
+							Local;
+								lcText    As String,;
+								lcValue   As String,;
+								lcReturn  As String,;
+								lnLines   As Number,;
+								lnLine    As Number,;
+								lnOptions As Number,;
+								lnOption  As Number
+
+							lnOptions = 47
+
+							Local Array;
+								laLines(1),;
+								laOptions(m.lnOptions,3)
+
+							loLang  = _Screen.o_FoxBin2Prg_Lang
+							lcText  = Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A)
+							lnLines = Alines(laLines,m.lcText)
+
+*now for each option
+							laOptions(01,1) = "*ShowProgressbar:"                   && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+							laOptions(01,2) = ".n_ShowProgressbar"
+							laOptions(01,3) = 0
+							laOptions(02,1) = "*DontShowErrors:"                    && 0,1 Show message errors by default
+							laOptions(02,2) = ".l_ShowErrors"
+							laOptions(02,3) = 3
+							laOptions(03,1) = "*NoTimestamps:"                      && 0,1 Clear timestamps by default for minimize differences
+							laOptions(03,2) = ".l_NoTimestamps"
+							laOptions(03,3) = 1
+							laOptions(04,1) = "*Debug:"                             && 0,1 Don't Activate individual <file>.Log by default
+							laOptions(04,2) = ".n_Debug"
+							laOptions(04,3) = 0
+							laOptions(05,1) = "*BodyDevInfo:"                       && 0,1 [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+							laOptions(05,2) = ".n_BodyDevInfo"
+							laOptions(05,3) = 0
+							laOptions(06,1) = "*ExtraBackupLevels:"                 && n By default 1 BAK is created. With this you can make more .N.BAK, or none
+							laOptions(06,2) = ".n_ExtraBackupLevels"
+							laOptions(06,3) = 0
+							laOptions(07,1) = "*ClearUniqueID:"                     && 0,1 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+							laOptions(07,2) = ".l_ClearUniqueID"
+							laOptions(07,3) = 1
+							laOptions(08,1) = "*ClearDBFLastUpdate:"                && 0,1 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+							laOptions(08,2) = ".l_ClearDBFLastUpdate"
+							laOptions(08,3) = 1
+							laOptions(09,1) = "*OptimizeByFilestamp:"               && 0,1,2 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+							laOptions(09,2) = ".n_OptimizeByFilestamp"
+							laOptions(09,3) = 0
+							laOptions(10,1) = "*RemoveNullCharsFromCode:"           && 0,1 1=.t. 1=Drop NULL chars from source code
+							laOptions(10,2) = ".l_RemoveNullCharsFromCode"
+							laOptions(10,3) = 1
+							laOptions(11,1) = "*RemoveZOrderSetFromProps:"          && 0,1 1=.t. 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+							laOptions(11,2) = ".l_RemoveZOrderSetFromProps"
+							laOptions(11,3) = 1
+							laOptions(12,1) = "*Language:"                          && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
+							laOptions(12,2) = ".c_Language_In"
+							laOptions(12,3) = 0
+							laOptions(13,1) = "*ExcludeDBFAutoincNextval:"          && 0,1 [0=Do not exclude this value from db2], 1=Exclude this value from db2
+							laOptions(13,2) = ".n_ExcludeDBFAutoincNextval"
+							laOptions(13,3) = 0
+							laOptions(14,1) = "*PRG_Compat_Level:"                  && n [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+							laOptions(14,2) = ".n_PRG_Compat_Level"
+							laOptions(14,3) = 0
+							laOptions(15,1) = "*HomeDir:"                           && 0,1 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
+							laOptions(15,2) = ".n_HomeDir"
+							laOptions(15,3) = 0
+							laOptions(16,1) = "*PJX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(16,2) = ".PJX_Conversion_Support"
+							laOptions(16,3) = 0
+							laOptions(17,1) = "*VCX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(17,2) = ".VCX_Conversion_Support"
+							laOptions(17,3) = 0
+							laOptions(18,1) = "*SCX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(18,2) = ".SCX_Conversion_Support"
+							laOptions(18,3) = 0
+							laOptions(19,1) = "*FRX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(19,2) = ".FRX_Conversion_Support"
+							laOptions(19,3) = 0
+							laOptions(20,1) = "*LBX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(20,2) = ".LBX_Conversion_Support"
+							laOptions(20,3) = 0
+							laOptions(21,1) = "*MNX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(21,2) = ".MNX_Conversion_Support"
+							laOptions(21,3) = 0
+							laOptions(22,1) = "*FKY_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff)
+							laOptions(22,2) = ".FKY_Conversion_Support"
+							laOptions(22,3) = 0
+							laOptions(23,1) = "*MEM_Conversion_Support:"            && 0=No support, 1=Generate TXT only (Diff)
+							laOptions(23,2) = ".MEM_Conversion_Support"
+							laOptions(23,3) = 0
+							laOptions(24,1) = "*DBC_Conversion_Support:"            && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
+							laOptions(24,2) = ".DBC_Conversion_Support"
+							laOptions(24,3) = 0
+							laOptions(25,1) = "*DBF_Conversion_Support:"            && n 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
+							laOptions(25,2) = ".DBF_Conversion_Support"
+							laOptions(25,3) = 0
+							laOptions(26,1) = "*DBF_Conversion_Included:"           && n If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+							laOptions(26,2) = ".DBF_Conversion_Included"
+							laOptions(26,3) = 0
+							laOptions(27,1) = "*DBF_Conversion_Excluded:"           && n If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+							laOptions(27,2) = ".DBF_Conversion_Excluded"
+							laOptions(27,3) = 0
+							laOptions(28,1) = "*OldFilesPerDBC:"                    && 0,1 1=.t. 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+							laOptions(28,2) = ".l_OldFilesPerDBC"
+							laOptions(28,3) = 1
+							laOptions(29,1) = "*UseFilesPerDBC:"                    && 0,1 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+							laOptions(29,2) = ".n_UseFilesPerDBC"
+							laOptions(29,3) = 0
+							laOptions(30,1) = "*RedirectFilePerDBCToMain:"          && 0,1 1=.t. 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+							laOptions(30,2) = ".l_RedirectFilePerDBCToMain"
+							laOptions(30,3) = 1
+							laOptions(31,1) = "*ItemPerDBCCheck:"                   && 0,1 1=.t. 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
+							laOptions(31,2) = ".l_ItemPerDBCCheck"
+							laOptions(31,3) = 1
+							laOptions(32,1) = "*DBF_BinChar_Base64:"                && 0,1 1=.t. 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+							laOptions(32,2) = ".l_DBF_BinChar_Base64"
+							laOptions(32,3) = 1
+							laOptions(33,1) = "*DBF_IncludeDeleted:"                && 0,1 1=.t. 0=Do not include deleted records (default), 1=Include deleted records
+							laOptions(33,2) = ".l_DBF_IncludeDeleted"
+							laOptions(33,3) = 1
+							laOptions(34,1) = "*UseClassPerFile:"                   && n 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
+							laOptions(34,2) = ".n_UseClassPerFile"
+							laOptions(34,3) = 0
+							laOptions(35,1) = "*RedirectClassPerFileToMain:"        && 0,1 1=.t. 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+							laOptions(35,2) = ".l_RedirectClassPerFileToMain"
+							laOptions(35,3) = 1
+							laOptions(36,1) = "*RedirectClassType:"                 && 0,1,2 For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+							laOptions(36,2) = ".n_RedirectClassType"
+							laOptions(36,3) = 0
+							laOptions(37,1) = "*ClassPerFileCheck:"                 && 0,1 1=.t. 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+							laOptions(37,2) = ".l_ClassPerFileCheck"
+							laOptions(37,3) = 1
+							laOptions(38,1) = "*extension: pj2="                    && ext Text file to PJX
+							laOptions(38,2) = ".c_pj2"
+							laOptions(38,3) = 2
+							laOptions(39,1) = "*extension: vc2="                    && ext Text file to VCX
+							laOptions(39,2) = ".c_vc2"
+							laOptions(39,3) = 2
+							laOptions(40,1) = "*extension: sc2="                    && ext Text file to SCX
+							laOptions(40,2) = ".c_sc2"
+							laOptions(40,3) = 2
+							laOptions(41,1) = "*extension: fr2="                    && ext Text file to FRX
+							laOptions(41,2) = ".c_fr2"
+							laOptions(41,3) = 2
+							laOptions(42,1) = "*extension: lb2="                    && ext Text file to LBX
+							laOptions(42,2) = ".c_lb2"
+							laOptions(42,3) = 2
+							laOptions(43,1) = "*extension: mn2="                    && ext Text file to MNX
+							laOptions(43,2) = ".c_mn2"
+							laOptions(43,3) = 2
+							laOptions(44,1) = "*extension: db2="                    && ext Text file to DBF
+							laOptions(44,2) = ".c_db2"
+							laOptions(44,3) = 2
+							laOptions(45,1) = "*extension: dc2="                    && ext Text file to DBC
+							laOptions(45,2) = ".c_dc2"
+							laOptions(45,3) = 2
+							laOptions(46,1) = "*extension: fk2="                    && ext Text file to FKY
+							laOptions(46,2) = ".c_fk2"
+							laOptions(46,3) = 2
+							laOptions(47,1) = "*extension: me2="                    && ext Text file to MEM
+							laOptions(47,2) = ".c_me2"
+							laOptions(47,3) = 2
+
+							For lnOption = 1 To m.lnOptions
+								lnLine = Ascan( m.laLines , m.laOptions( m.lnOption, 1 ), 1, -1, 1, 4)
+								If m.lnLine >0 Then
+									lcText  = m.laLines( m.lnLine )
+									lcValue = Strextract( m.lcText , m.laOptions( m.lnOption, 1 ), '&'+'&' ,1 , 3)
+									Do Case
+										Case m.laOptions( m.lnOption, 3 ) = 0
+											lcReturn = Padr(' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) ), Len(m.lcValue) + 1 )
+
+										Case m.laOptions( m.lnOption, 3 ) = 1
+											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '1', '0' ), Len(m.lcValue) + 1 )
+
+										Case m.laOptions( m.lnOption, 3 ) = 2
+											lcReturn = Padr(Evaluate( m.laOptions( m.lnOption, 2 )), Len(m.lcValue) + 1 )
+
+										Case m.laOptions( m.lnOption, 3 ) = 3
+											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '0', '1' ), Len(m.lcValue) + 1 )
+
+										OTHERWISE
+* not defined. loop
+											Loop
+
+									Endcase
+									laLines( m.lnLine ) = Substr(Strtran(m.laLines( m.lnLine ) , m.lcValue, m.lcReturn), 2 )
+
+								Endif &&lnLine >0
+
+							Endfor &&lnOption
+
+							lcText  = ''
+
+							lnLines = m.lnLines+1
+							Dimension;
+								M.laLines( m.lnLines )
+
+							Ains(m.laLines,4)
+							laLines( 4 ) = Textmerge( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 )
+							For lnLine = 1 To m.lnLines
+								lcText = m.lcText+ m.laLines( m.lnLine )+0h0D0A
+							Endfor &&lnLine
+
+							Strtofile(  m.lcText, m.tc_InputFile )
+
+*!*	/Changed by: Lutz Scheffler 07.3.2021
 
 						Otherwise
 *-- EJECUCIÓN NORMAL
@@ -4460,6 +4767,9 @@ Define Class c_foxbin2prg As Session
 							Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 
 					Endcase
+
+*** DH 2021-03-04: handle cOutputFolder
+					loConversor.cOutputFolder = This.cOutputFolder
 
 *-- Optimización: Comparación de los timestamps de InputFile y OutputFile para saber
 *-- si el OutputFile se debe regenerar o no.
@@ -6355,15 +6665,15 @@ Define Class frm_main As Form
 	Closable = .T.
 	ControlBox = .T.
 	DoCreate = .T.
-	Height = 380
+	Height = 800
 	KeyPreview = .T.
 	MaxButton = .T.
 	MinButton = .F.
-	MinHeight = 380
-	MinWidth = 756
+	MinHeight = 800
+	MinWidth = 1024
 	Name = "FRM_MAIN"
 	ShowWindow = 2
-	Width = 756
+	Width = 1024
 
 	Add Object 'edt_Help' As EditBox With ;
 		Anchor = 1+2+4+8, ;
@@ -6373,22 +6683,22 @@ Define Class frm_main As Form
 		Enabled = .T., ;
 		FontName = "Courier New", ;
 		FontSize = 9, ;
-		Height = 324, ;
+		Height = 744, ;
 		Left = 12, ;
 		Name = "edt_Help", ;
 		ReadOnly = .T., ;
 		ScrollBars = 2, ;
 		Top = 12, ;
-		Width = 728
+		Width = 996
 
 	Add Object 'cmd_Close' As CommandButton With ;
 		Anchor = 4+8, ;
 		Cancel = .T., ;
 		Caption = "Close", ;
 		Height = 27, ;
-		Left = 656, ;
+		Left = 924, ;
 		Name = "cmd_Close", ;
-		Top = 344, ;
+		Top = 764, ;
 		Width = 84
 
 	Procedure Init
@@ -6408,8 +6718,8 @@ Define Class frm_main As Form
 					Thisform.Caption = 'FoxBin2Prg ' + _Screen.c_FB2PRG_EXE_Version + ' - ' + loLang.C_FOXBIN2PRG_SYNTAX_INFO_LOC
 				Endif
 
-				Thisform.edt_help.Value		= loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC+;
-					STRTRAN(loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg,'&'+'&','')+;
+				Thisform.edt_help.Value		= loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC+0h0d0a+;
+					STRTRAN(loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg,'&'+'&','')+0h0d0a+;
 					loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg
 
 			Endif
@@ -6529,6 +6839,8 @@ Define Class c_conversor_base As Custom
 	c_ClaseActual			= ''
 	oFSO					= Null
 	n_Methods_LineNo		= 0			&& Número de línea del error dentro de "Methods"
+*** DH 2021-03-04: added cOutputFolder property
+	cOutputFolder			= ''
 
 
 
@@ -15931,6 +16243,12 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 				Local lcExpanded, llFileExists, lnBytes, lcOutputFile, laDirFile(1,5) ;
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
+*** DH 2021-03-04: handle cOutputFolder
+				if not empty(This.cOutputFolder)
+					tcOutputFile = forcepath(tcOutputFile, This.cOutputFolder)
+				endif not empty(This.cOutputFolder)
+*** DH 2021-03-04: end of new code
+
 				lcExpanded	= Iif( '.' $ Juststem(tcOutputFile), 'X1', 'X0' )
 
 *-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -16849,9 +17167,19 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 
 
 *-- Generación del proyecto
+*** DH 2021-03-04: only output HomeDir if we're supposed to
+					if toFoxBin2Prg.n_HomeDir = 1
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_BUILDPROJ_I>>
-						<<>>*<.HomeDir = <<loProject._HomeDir>> />
+							<<C_BUILDPROJ_I>>
+							<<>>*<.HomeDir = <<loProject._HomeDir>> />
+						ENDTEXT
+					else
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+						ENDTEXT
+					endif toFoxBin2Prg.n_HomeDir = 1
+*** DH 2021-03-04: end of updated code
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
 						FOR EACH loProject IN _VFP.Projects FOXOBJECT
 						<<>>	loProject.Close()
@@ -17409,9 +17737,19 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 					With This As c_conversor_pjm_a_prg Of 'FOXBIN2PRG.PRG'
 
 *-- Generación del proyecto
+*** DH 2021-03-04: only output HomeDir if we're supposed to
+					if toFoxBin2Prg.n_HomeDir = 1
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<C_BUILDPROJ_I>>
-						<<>>*<.HomeDir = <<loProject._HomeDir>> />
+							<<C_BUILDPROJ_I>>
+							<<>>*<.HomeDir = <<loProject._HomeDir>> />
+						ENDTEXT
+					else
+						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+							<<C_BUILDPROJ_I>>
+						ENDTEXT
+					endif toFoxBin2Prg.n_HomeDir = 1
+*** DH 2021-03-04: end of updated code
+					TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
 						FOR EACH loProject IN _VFP.Projects FOXOBJECT
 						<<>>	loProject.Close()
@@ -29024,6 +29362,7 @@ Define Class CL_CFG As Custom
 		+ [<memberdata name="c_backgroundimage" display="c_BackgroundImage"/>] ;
 		+ [<memberdata name="n_prg_compat_level" display="n_PRG_Compat_Level"/>] ;
 		+ [<memberdata name="copyfrom" display="CopyFrom"/>] ;
+		+ [<memberdata name="c_language_in" display="c_Language_In"/>] ;
 		+ [</VFPData>]
 
 	#If .F.
@@ -29035,6 +29374,7 @@ Define Class CL_CFG As Custom
 	c_Foxbin2prg_FullPath			= ''
 	c_Foxbin2prg_ConfigFile			= ''
 	c_CurDir						= ''
+	c_Language_In					= Null
 	n_Debug							= Null
 	n_BodyDevInfo					= Null
 	l_ShowErrors					= Null
@@ -29089,6 +29429,8 @@ Define Class CL_CFG As Custom
 	DBC_Conversion_Support			= Null
 	c_BackgroundImage				= Null
 	n_PRG_Compat_Level				= Null
+*** DH 2021-03-04: added n_HomeDir property
+	n_HomeDir						= NULL
 
 
 	Procedure CopyFrom
@@ -29100,6 +29442,7 @@ Define Class CL_CFG As Custom
 			.c_Foxbin2prg_ConfigFile		= toParentCFG.c_Foxbin2prg_ConfigFile
 			.c_CurDir						= toParentCFG.c_CurDir
 			.n_Debug						= toParentCFG.n_Debug
+			.c_Language_In					= toParentCFG.c_Language_In
 			.n_BodyDevInfo					= toParentCFG.n_BodyDevInfo
 			.l_ShowErrors					= toParentCFG.l_ShowErrors
 			.n_ShowProgressbar				= toParentCFG.n_ShowProgressbar
@@ -29152,6 +29495,8 @@ Define Class CL_CFG As Custom
 			.DBC_Conversion_Support			= toParentCFG.DBC_Conversion_Support
 			.c_BackgroundImage				= toParentCFG.c_BackgroundImage
 			.n_PRG_Compat_Level				= toParentCFG.n_PRG_Compat_Level
+*** DH 2021-03-04: handle n_HomeDir
+			.n_HomeDir						= toParentCFG.n_HomeDir
 		Endwith
 	Endproc
 
@@ -29209,6 +29554,7 @@ Define Class CL_LANG As Custom
 	C_FOXBIN2PRG_ERROR_CAPTION_LOC									= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_LOC									= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= ""
+	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4					= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg						= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg					= ""
 	C_FOXBIN2PRG_JUST_VFP_9_LOC										= ""
@@ -29322,16 +29668,10 @@ Define Class CL_LANG As Custom
 							.C_FILENAME_LOC													= "Fichier"
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
-
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
-						<<>>
-						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
-						<<>>
-						<<>>-- Parameter details:
-						<<>>No parameter: Calls this info screen
-						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
@@ -29353,13 +29693,25 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Indicates if timestamp must be cleared ('1' or empty) or not ('0')
 						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
 						<<>>
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-C OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>No parameter: Calls this info screen
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
+							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Options for folder <<.c_Recompile>>, read as of <<DATETIME()>>" 
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
-						<<>>################################################################################################################
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -29376,7 +29728,9 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Convertion options:
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -29390,8 +29744,8 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
 						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
@@ -29407,40 +29761,48 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-						<<>>							   && For the second form:
-						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+						<<>>                               && RedirectClassType: 1 precedes
+						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja			   && Text file to PJX
-						<<>>extension: vc2=vca			   && Text file to VCX
-						<<>>extension: sc2=sca			   && Text file to SCX
-						<<>>extension: fr2=fra			   && Text file to FRX
-						<<>>extension: lb2=lba			   && Text file to LBX
-						<<>>extension: mn2=mna			   && Text file to MNX
-						<<>>extension: db2=dba			   && Text file to DBF
-						<<>>extension: dc2=dca			   && Text file to DBC
+						<<>>extension: pj2=pja               && Text file to PJX
+						<<>>extension: vc2=vca               && Text file to VCX
+						<<>>extension: sc2=sca               && Text file to SCX
+						<<>>extension: fr2=fra               && Text file to FRX
+						<<>>extension: lb2=lba               && Text file to LBX
+						<<>>extension: mn2=mna               && Text file to MNX
+						<<>>extension: db2=dba               && Text file to DBF
+						<<>>extension: dc2=dca               && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && Text file to FKY
-						<<>>extension: me2=fkx			   && Text file to MEM
+						<<>>extension: fk2=fkx               && Text file to FKY
+						<<>>extension: me2=fkx               && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>****************************************************************************************************************
+						<<>>
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
+						<<>>DBF_BinChar_Base64: <0,1>                   && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG est seulement pour Visual FoxPro 9.0!"
@@ -29533,14 +29895,9 @@ Define Class CL_LANG As Custom
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS Y PARÁMETROS"
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
-						<<>>
-						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
-						<<>>
-						<<>>-- Parameter details:
-						<<>>No parameter: Calls this info screen
-						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
@@ -29562,13 +29919,24 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
 						<<>>cCFG_File:         Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
 						<<>>
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-C OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>No parameter: Calls this info screen
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
+							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Options for folder <<.c_Recompile>>, read as of <<DATETIME()>>" 
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
-						<<>>################################################################################################################
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -29585,7 +29953,9 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Convertion options:
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -29600,6 +29970,7 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
 						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
@@ -29615,40 +29986,48 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- CLASS and FORM options
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-						<<>>							   && For the second form:
-						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+						<<>>                               && RedirectClassType: 1 precedes
+						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja			   && Text file to PJX
-						<<>>extension: vc2=vca			   && Text file to VCX
-						<<>>extension: sc2=sca			   && Text file to SCX
-						<<>>extension: fr2=fra			   && Text file to FRX
-						<<>>extension: lb2=lba			   && Text file to LBX
-						<<>>extension: mn2=mna			   && Text file to MNX
-						<<>>extension: db2=dba			   && Text file to DBF
-						<<>>extension: dc2=dca			   && Text file to DBC
+						<<>>extension: pj2=pja             && Text file to PJX
+						<<>>extension: vc2=vca             && Text file to VCX
+						<<>>extension: sc2=sca             && Text file to SCX
+						<<>>extension: fr2=fra             && Text file to FRX
+						<<>>extension: lb2=lba             && Text file to LBX
+						<<>>extension: mn2=mna             && Text file to MNX
+						<<>>extension: db2=dba             && Text file to DBF
+						<<>>extension: dc2=dca             && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && Text file to FKY
-						<<>>extension: me2=fkx			   && Text file to MEM
+						<<>>extension: fk2=fkx             && Text file to FKY
+						<<>>extension: me2=fkx             && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>-- Archivo de configuración individual para DBF (sintaxis: archivo.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>****************************************************************************************************************
+						<<>>
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && Ver esta misma configuración más arriba
 						<<>>DBF_Conversion_Order: <c_Expression>        && Expresión de campo. ej: nombre+str(edad,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Expresión lógica. ej: edad > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
+						<<>>DBF_BinChar_Base64: <0,1>                   && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "¡FOXBIN2PRG es solo para Visual FoxPro 9.0!"
@@ -29743,16 +30122,8 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
-						<<>>
-						<<>>################################################################################################################
-						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
-						<<>>
-						<<>>-- Parameter:
-						<<>>Keine Parameter:   Startet dieses Formular
-						<<>>-c                 Erzeugt eine Vorlage <OutFileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
-						<<>>-t                 Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
-						<<>>
 						<<>>****************************************************************************************************************
+						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter:
@@ -29773,11 +30144,24 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Legt fest ob der Zeitstempel gelöscht wrden soll ('1' oder leer) oder nicht ('0')
 						<<>>cCFG_File:         Legt eine alternative Configurationsdate (CFG) fest, die statt der im foxbin2prg Verzeichnis genutzt werden soll. (Anm. des Übersetzers: Keine Angabe über Vererbung in der Verzeichnishierarchie)
 						<<>>
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-C OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter:
+						<<>>Keine Parameter:   Startet dieses Formular
+						<<>>-c                 Erzeugt eine Vorlage <OutFileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
+						<<>>-C                 Erzeugt eine  Config-Datei <OutFileName>  (wie FOXBIN2PRG.CFG) mit den aktuellen Optionen des Pfades von <OutFileName>
+						<<>>-t                 Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
+						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
+							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Optionen für Verzeichnis <<.c_Recompile>>, gelesen am <<DATETIME() gelesen.>>" 
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
-						<<>>FOXBIN2PRG.CFG Konfigurations Optionen: (Wird die Option nicht aufgeführt, ist der Wert im Beispiel der Default)
+						<<>>FOXBIN2PRG.CFG Konfigurations-Optionen: (Wird die Option nicht aufgeführt, ist der Wert im Beispiel der Default)
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>> Achtung, die Konfigurationsdatein werden vererbt.
 					    <<>> 1.  Defaultwerte
@@ -29787,7 +30171,7 @@ Define Class CL_LANG As Custom
 					    <<>> 5., optional Es können spezielle Einstellungen für einzelne DBF's erzeugt werden (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle)
 					    <<>> 6., Parameter des Aufrufs von FOXBIN2PRG.EXE.
 						<<>>
-					    <<>> Einige Parameter im Aufruf von FOXBIN2PRG.EXE übersteuert diese Vorgaben (bis auf die Defaults)
+					    <<>> Einige Parameter im Aufruf von FOXBIN2PRG.EXE übersteueren diese Vorgaben (bis auf die Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>extension: tx2=newext          && Umdefinition der Dateiendung der Textdateien. Die vordefinierten Endungen enden mit '2' (Beispiel siehe Ende dieser Datei)
@@ -29805,6 +30189,7 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && 0=Aus, 1=Entferne diesen Wert aus der Textdate der Datenbank (db2)
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Nutze HELPSTRING als Class Procedure Kommentar
+						<<>>HomeDir: 1                     && 0 = Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert, [1 = Die Eigenschaft wird gespeichert]
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Konvertierungs Optionen:
@@ -29852,39 +30237,43 @@ Define Class CL_LANG As Custom
 						<<>>                               &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
-						<<>>
 						<<>>-- Optionen für CLASS und FORM
 						<<>>- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
 						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
-						<<>>RedirectClassType: 0 		   && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
-						<<>>							   && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
-						<<>>							   && Für die zweite Form gilt:
-						<<>>							   && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
-						<<>>							   && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
-						<<>>							   && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
+						<<>>                               && RedirectClassType: 1 hat Vorrang
+						<<>>RedirectClassType: 0           && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
+						<<>>                               && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
+						<<>>                               && Für die zweite Form gilt:
+						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
+						<<>>                               && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
+						<<>>                               && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
+						<<>>                               &&   Nur für die file[.baseclass].class.tx2 Syntax
+						<<>>                               &&   Wird für RedirectClassType: 2 ignoriert
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Beispiel für geänderte Textdatei Endungen, hier für SourceSafe Kompatibiltät:
-						<<>>extension: pj2=pja			   && Text Datei für PJX
-						<<>>extension: vc2=vca			   && Text Datei für VCX
-						<<>>extension: sc2=sca			   && Text Datei für SCX
-						<<>>extension: fr2=fra			   && Text Datei für FRX
-						<<>>extension: lb2=lba			   && Text Datei für LBX
-						<<>>extension: mn2=mna			   && Text Datei für MNX
-						<<>>extension: db2=dba			   && Text Datei für DBF
-						<<>>extension: dc2=dca			   && Text Datei für DBC
+						<<>>extension: pj2=pja             && Text Datei für PJX
+						<<>>extension: vc2=vca             && Text Datei für VCX
+						<<>>extension: sc2=sca             && Text Datei für SCX
+						<<>>extension: fr2=fra             && Text Datei für FRX
+						<<>>extension: lb2=lba             && Text Datei für LBX
+						<<>>extension: mn2=mna             && Text Datei für MNX
+						<<>>extension: db2=dba             && Text Datei für DBF
+						<<>>extension: dc2=dca             && Text Datei für DBC
 						<<>>-- Zusätzliche Endungen
-						<<>>extension: fk2=fkx			   && Text Datei für FKY
-						<<>>extension: me2=fkx			   && Text Datei für MEM
+						<<>>extension: fk2=fkx             && Text Datei für FKY
+						<<>>extension: me2=fkx             && Text Datei für MEM
 						<<>>
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
+						<<>>****************************************************************************************************************
+						<<>>
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=Aus
 						<<>>                                            && 1=Erzeuge Textdatei nur für Struktur (Diff)
 						<<>>                                            && 2=Erzeuge Text- und Binärdatei nur für Struktur (Merge)
@@ -29991,14 +30380,9 @@ Define Class CL_LANG As Custom
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
-						<<>>
-						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-t OutFileName]
-						<<>>
-						<<>>-- Parameter details:
-						<<>>No parameter: Calls this info screen
-						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File] ] ] ] ] ] ] ] ] ]
 						<<>>
@@ -30020,13 +30404,25 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Indicates if timestamp must be cleared ('1' or empty) or not ('0')
 						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
 						<<>>
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>
+						<<>>FOXBIN2PRG.EXE [-c OutFileName] [-C OutFileName] [-t OutFileName]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>No parameter: Calls this info screen
+						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
+						<<>>-t            creates a template table-config-file <OutFileName> (like <Tabellenname>.dbf.cfg)
+						<<>>
 						<<>>
 							ENDTEXT
+*** DH 2021-03-04: added HomeDir to text
+							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Options for folder <<.c_Recompile>>, read as of <<DATETIME()>>" 
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
-						<<>>################################################################################################################
+						<<>>****************************************************************************************************************
 						<<>>
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -30043,7 +30439,9 @@ Define Class CL_LANG As Custom
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Convertion options:
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 						<<>>VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -30058,6 +30456,7 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
 						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
@@ -30073,40 +30472,48 @@ Define Class CL_LANG As Custom
 						<<>>DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 						<<>>DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- CLASS and FORM options
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>RedirectClassType: 0 		   && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-						<<>>							   && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-						<<>>							   && For the second form:
-						<<>>							   && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-						<<>>							   && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-						<<>>							   && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+						<<>>                               && RedirectClassType: 1 precedes
+						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>
+						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Example configuration for SourceSafe compatibility:
-						<<>>extension: pj2=pja			   && Text file to PJX
-						<<>>extension: vc2=vca			   && Text file to VCX
-						<<>>extension: sc2=sca			   && Text file to SCX
-						<<>>extension: fr2=fra			   && Text file to FRX
-						<<>>extension: lb2=lba			   && Text file to LBX
-						<<>>extension: mn2=mna			   && Text file to MNX
-						<<>>extension: db2=dba			   && Text file to DBF
-						<<>>extension: dc2=dca			   && Text file to DBC
+						<<>>extension: pj2=pja             && Text file to PJX
+						<<>>extension: vc2=vca             && Text file to VCX
+						<<>>extension: sc2=sca             && Text file to SCX
+						<<>>extension: fr2=fra             && Text file to FRX
+						<<>>extension: lb2=lba             && Text file to LBX
+						<<>>extension: mn2=mna             && Text file to MNX
+						<<>>extension: db2=dba             && Text file to DBF
+						<<>>extension: dc2=dca             && Text file to DBC
 						<<>>-- Additional extensions
-						<<>>extension: fk2=fkx			   && Text file to FKY
-						<<>>extension: me2=fkx			   && Text file to MEM
+						<<>>extension: fk2=fkx             && Text file to FKY
+						<<>>extension: me2=fkx             && Text file to MEM
 						<<>>
 						<<>>
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
+						<<>>################################################################################################################
 						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>****************************************************************************************************************
+						<<>>
 						<<>>DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-						<<>>DBF_BinChar_Base64: <0,1>					&& 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-						<<>>DBF_IncludeDeleted: <0,1>					&& 0=Do not include deleted records, 1=Include deleted records
+						<<>>DBF_BinChar_Base64: <0,1>                   && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
+						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
 						<<>>
 							ENDTEXT
 							.C_FOXBIN2PRG_JUST_VFP_9_LOC									= "FOXBIN2PRG is only for Visual FoxPro 9.0!"

@@ -1,11 +1,7 @@
 lparameters toUpdateObject
-local ldDate, ;
-	lnJulian, ;
-	lcJulian
-ldDate   = date(2018,7,31)
-lnJulian = val(sys(11, ldDate)) - val(sys(11, {^2000-01-01}))
-lcJulian = padl(transform(lnJulian), 4, '0')
-toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.19.51.4' + lcJulian + ;
+local ldDate
+ldDate = date()
+toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.19.59' + ;
 	'-update-' + dtoc(ldDate, 1)
 return toUpdateObject
 
@@ -18,7 +14,7 @@ Developed by Fernando D. Bozzo - GitHub: https://github.com/fdbozzo/foxbin2prg
 
 FoxBin2Prg is a 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
 
-Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
+Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, MRM, FKY
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 

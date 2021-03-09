@@ -1,7 +1,7 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.2
-*################################################################################################################
+*Version: v1.19.59
+*****************************************************************************************************************
 
 *extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 *ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -18,7 +18,9 @@
 *Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 *ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
 *PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+*HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 
+*----------------------------------------------------------------------------------------------------------------
 *-- Convertion options:
 *PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -33,6 +35,7 @@
 *DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 *DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 
+*----------------------------------------------------------------------------------------------------------------
 *-- DBC options
 *- File per DBC options (UseFilesPerDBC: 1)
 *OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
@@ -48,29 +51,32 @@
 *DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 *DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 
+*----------------------------------------------------------------------------------------------------------------
 *-- CLASS and FORM options
 *- Class per file options (UseClassPerFile: 1)
 *UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 *RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-*RedirectClassType: 0 		    && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-*							    && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-*							    && For the second form:
-*							    && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-*							    && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-*							    && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+*                               && RedirectClassType: 1 precedes
+*RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+*                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+*                               && For the second form:
+*                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+*                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+*                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
 *ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+*                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+*                               &&   Ignored for RedirectClassType: 2
 
+*----------------------------------------------------------------------------------------------------------------
 *-- Example configuration for SourceSafe compatibility:
-*extension: pj2=pja			    && Text file to PJX
-*extension: vc2=vca			    && Text file to VCX
-*extension: sc2=sca			    && Text file to SCX
-*extension: fr2=fra			    && Text file to FRX
-*extension: lb2=lba			    && Text file to LBX
-*extension: mn2=mna			    && Text file to MNX
-*extension: db2=dba			    && Text file to DBF
-*extension: dc2=dca			    && Text file to DBC
-*-- Additional extensions       
-*extension: fk2=fkx			    && Text file to FKY
-*extension: me2=fkx			    && Text file to MEM
-
-*
+*extension: pj2=pja             && Text file to PJX
+*extension: vc2=vca             && Text file to VCX
+*extension: sc2=sca             && Text file to SCX
+*extension: fr2=fra             && Text file to FRX
+*extension: lb2=lba             && Text file to LBX
+*extension: mn2=mna             && Text file to MNX
+*extension: db2=dba             && Text file to DBF
+*extension: dc2=dca             && Text file to DBC
+*-- Additional extensions
+*extension: fk2=fkx             && Text file to FKY
+*extension: me2=fkx             && Text file to MEM
