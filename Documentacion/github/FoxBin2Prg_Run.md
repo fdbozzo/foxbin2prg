@@ -69,16 +69,7 @@ just select and process each one independently, in parallel if you like, but in 
 
 ## Usage
 ### Usage 1
-`FoxBin2Prg.EXE [-c cOutputFile] [-t cOutputFile]`
-
-| Parameter | Description |
-| ----- | ----- |
-| none | Call Info screen |
-| -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
-| -t | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
-
-### Usage 2
-`FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File] ] ] ] ] ] ] ] ] ] ]`
+`FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File [,cOutputFolder ] ] ] ] ] ] ] ] ] ] ] ]`
 
 | Parameter | Value (_Default_) | Description |
 | ----- | ----- | ----- |
@@ -102,6 +93,7 @@ just select and process each one independently, in parallel if you like, but in 
 |  | path | The _Binary_ is compiled from this path |
 | cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
 | cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
+| cOutputFolder | folder | Optional. A folder to write the output to. If not used, output be the source path. |
 
 #### Note #1
 The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:   
@@ -113,6 +105,16 @@ On any combination of (_BIN2PRG_, _PRG2BIN_, _INTERACTIVE_, _SHOWMSG_) separated
 This is useful when used as EXE dealing with Windows shortcuts,
 on which fixed parameters must be in the shortcut.   
 The filename is an external variable parameter received when SendingTo FoxBin2Prg with right-click on File Manager.
+
+### Usage 2
+`FoxBin2Prg.EXE [-c cOutputFile] [-C cOutputFile] [-t cOutputFile]`
+
+| Parameter | Description |
+| ----- | ----- |
+| none | Call Info screen |
+| -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
+| -C | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
+| -t | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
 
 ## Return values
 Return value via _ErrorLevel_ is 0=OK, 1=Error.
@@ -161,4 +163,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

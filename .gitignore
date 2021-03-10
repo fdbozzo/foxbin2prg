@@ -2,6 +2,9 @@
 #exclude general
 *.bak
 *.tmp
+*.prj
+*.pui
+*.orig
 /*.dbf
 /*.CDX
 /*.fxp
