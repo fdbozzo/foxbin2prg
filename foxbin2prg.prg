@@ -257,6 +257,9 @@
 
 * xx/xx/2021	LScheffler	v1.19.xx	Enhancement: #DEFINES of index handling in wrong order (LEN(X) before X was defined)
 * xx/xx/2021	LScheffler	v1.19.xx	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin
+* xx/xx/2021	LScheffler	v1.19.xx	Bug Fix: DBF_Conversion_Condition was read, but never used
+* xx/xx/2021	LScheffler	v1.19.xx	Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
+
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -24990,7 +24993,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 
 		Try
 				Local lcText, lcIndexKey, lcIndexFile, laConfig(1), lcValue, lcConfigItem ;
-					, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition, llExportData, laDirFile(1,5), lnFileCount ;
+					, lc_DBF_Conversion_Order, lc_DBF_Conversion_Condition, lc_DBF_IndexList, llExportData, laDirFile(1,5), lnFileCount ;
 					, loEx As Exception ;
 					, loFSO As Scripting.FileSystemObject ;
 					, loTextStream As Scripting.TextStream ;
@@ -25051,13 +25054,26 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 * setting temporary order
 				If llExportData Then
 					If lnFileCount = 1
-						lc_DBF_Conversion_Order	= loDBF_CFG.DBF_Conversion_Order
+						lc_DBF_Conversion_Order	    = loDBF_CFG.DBF_Conversion_Order
 
 						If Not Empty(lc_DBF_Conversion_Order)
 							lcIndexFile	= Forceext(tc_InputFile,'IDX')
 							Index On &lc_DBF_Conversion_Order. To (lcIndexFile) Compact
-							toFoxBin2Prg.writeLog('  > Using Index order key: ' + lc_DBF_Conversion_Order)
+							toFoxBin2Prg.writeLog('  > Using Index order key:            ' + lc_DBF_Conversion_Order)
 						Endif
+* Lutz Scheffler 18.03.2021
+* added handling DBF_Conversion_Condition:
+						lc_DBF_Conversion_Condition = loDBF_CFG.DBF_Conversion_Condition
+						If Not Empty(lc_DBF_Conversion_Condition)
+							toFoxBin2Prg.writeLog('  > Using Conversion Condition:       ' + lc_DBF_Conversion_Condition)
+						Endif
+
+* added handling DBF_IndexList:
+						lc_DBF_IndexList = loDBF_CFG.DBF_IndexList
+						If Not Empty(lc_DBF_IndexList)
+							toFoxBin2Prg.writeLog('  > Using non structural index files: ' + lc_DBF_IndexList)
+						Endif
+* /Lutz Scheffler 18.03.2021;
 
 					Endif
 				Endif
@@ -25647,6 +25663,8 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 
 				toFoxBin2Prg.writeLog( Replicate('-', 100) )
 				toFoxBin2Prg.writeLog( ' Processing index tags' )
+1=''
+*parse out idx from extra sorting
 				If Tagcount() > 0
 					toFoxBin2Prg.writeLog( Replicate('-', 100) )
 					toFoxBin2Prg.writeLog( '  Structural' )
