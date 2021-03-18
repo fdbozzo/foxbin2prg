@@ -254,6 +254,9 @@
 * 09/03/2021	LScheffler	v1.19.59	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Log settings object handed to execute (Debug > 0)
+
+* xx/xx/2021	LScheffler	v1.19.xx	Enhancement: #DEFINES of index handling in wrong order (LEN(X) before X was defined)
+* xx/xx/2021	LScheffler	v1.19.xx	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -532,12 +535,23 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_DBF_HEAD_F				'/>'
 #Define C_LEN_DBF_HEAD_I			Len(C_DBF_HEAD_I)
 #Define C_LEN_DBF_HEAD_F			Len(C_DBF_HEAD_F)
-#Define C_CDX_I						'<indexFile>'
-#Define C_CDX_F						'</indexFile>'
-#Define C_LEN_CDX_I					Len(C_CDX_I)
-#Define C_LEN_CDX_F					Len(C_CDX_F)
-#Define C_LEN_INDEX_I				Len(C_INDEX_I)
-#Define C_LEN_INDEX_F				Len(C_INDEX_F)
+#Define C_CDXIDX_I					'<IndexFiles>'		&& SF written, but not  read
+#Define C_CDXIDX_F					'</IndexFiles>'		&& SF written, but not  read
+#Define C_CDX_I						'<IndexFile'		&& SF written, but not  read
+#Define C_CDX_F						'</IndexFile>'		&& SF written, but not  read
+#DEFINE C_CDX_Type_					'Type="'
+#DEFINE C_CDX_Type_Struct			'Structural'
+#DEFINE C_CDX_Type_Compound 		'Compound'  
+#DEFINE C_CDX_Type_IDX				'Standalone'
+#DEFINE C_CDX_File_					'File="'
+#Define C_INDEXES_I					'<INDEXES>'			&& SF Read / write, no len, used w/o äDEFINE too, len
+#Define C_INDEXES_F					'</INDEXES>'		&& SF Read / write, no len, used w/o äDEFINE too, len
+#Define C_INDEX_I					'<INDEX>'			&& SF used for read, not write?
+#Define C_INDEX_F					'</INDEX>'			&& SF used for read, not write?
+*#Define C_LEN_CDX_I					Len(C_CDX_I)		&& SF not used; deactivated
+*#Define C_LEN_CDX_F					Len(C_CDX_F)		&& SF not used; deactivated
+*#Define C_LEN_INDEX_I				Len(C_INDEX_I)		&& SF not used (possibly do to errornous definition of #DEFINE); deactivated
+*#Define C_LEN_INDEX_F				Len(C_INDEX_F)		&& SF not used (possibly do to errornous definition of #DEFINE); deactivated
 #Define C_DATABASE_I				'<DATABASE>'
 #Define C_DATABASE_F				'</DATABASE>'
 #Define C_STORED_PROC_I				'<STOREDPROCEDURES><![CDATA['
@@ -564,10 +578,6 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_RELATION_F				'</RELATION>'
 #Define C_RELATIONS_I				'<RELATIONS>'
 #Define C_RELATIONS_F				'</RELATIONS>'
-#Define C_INDEX_I					'<INDEX>'
-#Define C_INDEX_F					'</INDEX>'
-#Define C_INDEXES_I					'<INDEXES>'
-#Define C_INDEXES_F					'</INDEXES>'
 #Define C_PROC_CODE_I				'*<Procedures>'
 #Define C_PROC_CODE_F				'*</Procedures>'
 #Define C_SETUPCODE_I				'*<SetupCode>'
@@ -882,6 +892,7 @@ Define Class c_foxbin2prg As Session
 
 
 *!*	;&& SF -> String to long
+*!*			+ [<memberdata name="a_processedfiles" display="a_ProcessedFiles"/>] ;
 *!*			+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
 *!*			+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 *!*			+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
@@ -2904,7 +2915,7 @@ Define Class c_foxbin2prg As Session
 			Local to_out_DBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG'
 		#Endif
 
-		Local lcTableCFG, lnFileCount, laDirFile(1,5), I, lcConfigItem
+		Local lcTableCFG, lnFileCount, laDirFile(1,5), I, lcConfigItem, lcValue 
 		lcTableCFG	= tc_InputFile + '.CFG'
 		lnFileCount	= Adir(laDirFile, lcTableCFG)
 
@@ -2923,6 +2934,12 @@ Define Class c_foxbin2prg As Session
 					Case Inlist( Left( lcConfigItem, 1 ), '*', '#', '/', "'" )
 						Loop
 
+					Case Left( lcConfigItem, 23 ) == Lower('DBF_Conversion_Support:')
+						to_out_DBF_CFG.DBF_Conversion_Support	= Int( Val( Substr( laConfig(m.I), 24 ) ) )
+						If tlGenerateLog Then
+							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Support: ' + Transform(to_out_DBF_CFG.DBF_Conversion_Support) )
+						Endif
+
 					Case Left( lcConfigItem, 21 ) == Lower('DBF_Conversion_Order:')
 						to_out_DBF_CFG.DBF_Conversion_Order		= Alltrim( Substr( laConfig(m.I), 22 ) )
 						If tlGenerateLog Then
@@ -2935,33 +2952,41 @@ Define Class c_foxbin2prg As Session
 							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Condition: ' + to_out_DBF_CFG.DBF_Conversion_Condition )
 						Endif
 
-					Case Left( lcConfigItem, 23 ) == Lower('DBF_Conversion_Support:')
-						to_out_DBF_CFG.DBF_Conversion_Support	= Int( Val( Substr( laConfig(m.I), 24 ) ) )
+*!*	Changed by: Lutz Scheffler 18.03.2021
+*!*	change date="{^2021-03-18,10:57:00}"
+* additional options controlling
+* - new operations of DBF, additional list of non structural index files
+					Case Left( lcConfigItem, 14 ) == Lower('DBF_IndexList:')
+						to_out_DBF_CFG.DBF_IndexList	= Int( Val( Substr( laConfig(m.I), 15 ) ) )
 						If tlGenerateLog Then
-							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Support: ' + Transform(to_out_DBF_CFG.DBF_Conversion_Support) )
+							This.writeLog('		' + Justfname(lcTableCFG) + ' >DBF_IndexList:           ' + Transform(to_out_DBF_CFG.DBF_IndexList) )
 						Endif
+*!*	/Changed by: Lutz Scheffler 18.03.2021
 
 *!*	Changed by: Lutz Scheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF
 *!*	/Changed by: Lutz Scheffler 21.02.2021
-					Case Left( lcConfigItem, 20 ) == Lower('DBF_BinChar_Base64:')
-						If Inlist( laConfig(m.I), '0', '1' ) Then
-							to_out_DBF_CFG.l_DBF_BinChar_Base64  	= ( Transform(laConfig(m.I)) == '1' )
+					Case Left( lcConfigItem, 19 ) == Lower('DBF_BinChar_Base64:')
+						lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
+						If Inlist( m.lcValue, '0', '1' ) Then
+							to_out_DBF_CFG.l_DBF_BinChar_Base64  	= ( Transform(m.lcValue ) == '1' )
 							If tlGenerateLog Then
 								This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_BinChar_Base64:     ' + Transform(to_out_DBF_CFG.l_DBF_BinChar_Base64) )
 							Endif
 						Endif
 
-					Case Left( lcConfigItem, 20 ) == Lower('DBF_IncludeDeleted:')
-						If Inlist( laConfig(m.I), '0', '1' ) Then
-							to_out_DBF_CFG.l_DBF_IncludeDeleted  	= ( Transform(laConfig(m.I)) == '1' )
+					Case Left( lcConfigItem, 19 ) == Lower('DBF_IncludeDeleted:')
+						lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
+						If Inlist( m.lcValue, '0', '1' ) Then
+							to_out_DBF_CFG.l_DBF_IncludeDeleted  	= ( Transform( m.lcValue ) == '1' )
 							If tlGenerateLog Then
 								This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_IncludeDeleted:     ' + Transform(to_out_DBF_CFG.l_DBF_IncludeDeleted) )
 							Endif
 						Endif
 *!*	/Changed by: Lutz Scheffler 21.02.2021
+
 				Endcase
 			Endfor
 
@@ -3263,6 +3288,32 @@ Define Class c_foxbin2prg As Session
 *	EXIT
 *ENDIF
 
+*!*	*!*	*!*	Changed by: SF 15.3.2021
+*!*	*!*	*!*	<pdm>
+*!*	*!*	*!*	<change date="{^2021-03-15,09:04:00}">Changed by: SF<br />
+*!*	*!*	*!*	add code to allow mutliple file input to define additional index per dbf
+*!*	*!*	*!*	tc_InputFile holds multiple files delimited by chr(0)
+*!*	*!*	*!*	first file is input file, followed by additional files
+*!*	*!*	*!*	will always be processed to identify tc_InputFile, use only for DBF to PRG,
+*!*	*!*	*!*	adding Nonstructural compound index (cdx) or Standalone index (.idx) files
+*!*	*!*	*!*	</change>
+*!*	*!*	*!*	</pdm>
+
+*!*	*!*				    	m.lnFileCount = ALINES(.a_InputFiles,tc_InputFile,5,0h00)
+*!*	*!*	* if string started wit 0h00 we set tc_InputFile to normal string
+*!*	*!*						tc_InputFile = ''+.a_InputFiles(1)
+*!*	*!*						IF m.lnFileCount = 1 THEN
+*!*	*!*							.a_InputFiles = ''
+*!*	*!*						ELSE  &&m.lnFileCount = 1
+*!*	*!*							ADEL(.a_InputFiles,1)
+*!*	*!*							m.lnFileCount = m.lnFileCount-1 
+*!*	*!*						 	DIMENSION;
+*!*	*!*						 	 .a_InputFiles(m.lnFileCount)
+*!*	*!*						ENDIF &&m.lnFileCount = 1 
+
+*!*	*!*	*!*	/Changed by: SF 15.3.2021
+ 
+
 *-- Reconocimiento de la clase indicada
 *-- Ej: [c:\desa\test\library.vcx::classname]
 					If '::' $ tc_InputFile Then
@@ -3550,48 +3601,49 @@ Define Class c_foxbin2prg As Session
 							laOptions(33,1) = "*DBF_IncludeDeleted:"                && 0,1 1=.t. 0=Do not include deleted records (default), 1=Include deleted records
 							laOptions(33,2) = ".l_DBF_IncludeDeleted"
 							laOptions(33,3) = 1
+
 							laOptions(34,1) = "*UseClassPerFile:"                   && n 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-							laOptions(34,2) = ".n_UseClassPerFile"
-							laOptions(34,3) = 0
-							laOptions(35,1) = "*RedirectClassPerFileToMain:"        && 0,1 1=.t. 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-							laOptions(35,2) = ".l_RedirectClassPerFileToMain"
-							laOptions(35,3) = 1
-							laOptions(36,1) = "*RedirectClassType:"                 && 0,1,2 For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-							laOptions(36,2) = ".n_RedirectClassType"
-							laOptions(36,3) = 0
-							laOptions(37,1) = "*ClassPerFileCheck:"                 && 0,1 1=.t. 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
-							laOptions(37,2) = ".l_ClassPerFileCheck"
-							laOptions(37,3) = 1
-							laOptions(38,1) = "*extension: pj2="                    && ext Text file to PJX
-							laOptions(38,2) = ".c_pj2"
-							laOptions(38,3) = 2
-							laOptions(39,1) = "*extension: vc2="                    && ext Text file to VCX
-							laOptions(39,2) = ".c_vc2"
-							laOptions(39,3) = 2
-							laOptions(40,1) = "*extension: sc2="                    && ext Text file to SCX
-							laOptions(40,2) = ".c_sc2"
-							laOptions(40,3) = 2
-							laOptions(41,1) = "*extension: fr2="                    && ext Text file to FRX
-							laOptions(41,2) = ".c_fr2"
-							laOptions(41,3) = 2
-							laOptions(42,1) = "*extension: lb2="                    && ext Text file to LBX
-							laOptions(42,2) = ".c_lb2"
-							laOptions(42,3) = 2
-							laOptions(43,1) = "*extension: mn2="                    && ext Text file to MNX
-							laOptions(43,2) = ".c_mn2"
-							laOptions(43,3) = 2
-							laOptions(44,1) = "*extension: db2="                    && ext Text file to DBF
-							laOptions(44,2) = ".c_db2"
-							laOptions(44,3) = 2
-							laOptions(45,1) = "*extension: dc2="                    && ext Text file to DBC
-							laOptions(45,2) = ".c_dc2"
-							laOptions(45,3) = 2
-							laOptions(46,1) = "*extension: fk2="                    && ext Text file to FKY
-							laOptions(46,2) = ".c_fk2"
-							laOptions(46,3) = 2
-							laOptions(47,1) = "*extension: me2="                    && ext Text file to MEM
-							laOptions(47,2) = ".c_me2"
-							laOptions(47,3) = 2
+							laOptions(34,2) = ".n_UseClassPerFile"                                                                                                                         
+							laOptions(34,3) = 0                                                                                                                                            
+							laOptions(35,1) = "*RedirectClassPerFileToMain:"        && 0,1 1=.t. 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2        
+							laOptions(35,2) = ".l_RedirectClassPerFileToMain"                                                                                                              
+							laOptions(35,3) = 1                                                                                                                                            
+							laOptions(36,1) = "*RedirectClassType:"                 && 0,1,2 For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2             
+							laOptions(36,2) = ".n_RedirectClassType"                                                                                                                       
+							laOptions(36,3) = 0                                                                                                                                            
+							laOptions(37,1) = "*ClassPerFileCheck:"                 && 0,1 1=.t. 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion                  
+							laOptions(37,2) = ".l_ClassPerFileCheck"                                                                                                                       
+							laOptions(37,3) = 1                                                                                                                                            
+							laOptions(38,1) = "*extension: pj2="                    && ext Text file to PJX                                                                                
+							laOptions(38,2) = ".c_pj2"                                                                                                                                     
+							laOptions(38,3) = 2                                                                                                                                            
+							laOptions(39,1) = "*extension: vc2="                    && ext Text file to VCX                                                                                
+							laOptions(39,2) = ".c_vc2"                                                                                                                                     
+							laOptions(39,3) = 2                                                                                                                                            
+							laOptions(40,1) = "*extension: sc2="                    && ext Text file to SCX                                                                                
+							laOptions(40,2) = ".c_sc2"                                                                                                                                     
+							laOptions(40,3) = 2                                                                                                                                            
+							laOptions(41,1) = "*extension: fr2="                    && ext Text file to FRX                                                                                
+							laOptions(41,2) = ".c_fr2"                                                                                                                                     
+							laOptions(41,3) = 2                                                                                                                                            
+							laOptions(42,1) = "*extension: lb2="                    && ext Text file to LBX                                                                                
+							laOptions(42,2) = ".c_lb2"                                                                                                                                     
+							laOptions(42,3) = 2                                                                                                                                            
+							laOptions(43,1) = "*extension: mn2="                    && ext Text file to MNX                                                                                
+							laOptions(43,2) = ".c_mn2"                                                                                                                                     
+							laOptions(43,3) = 2                                                                                                                                            
+							laOptions(44,1) = "*extension: db2="                    && ext Text file to DBF                                                                                
+							laOptions(44,2) = ".c_db2"                                                                                                                                     
+							laOptions(44,3) = 2                                                                                                                                            
+							laOptions(45,1) = "*extension: dc2="                    && ext Text file to DBC                                                                                
+							laOptions(45,2) = ".c_dc2"                                                                                                                                     
+							laOptions(45,3) = 2                                                                                                                                            
+							laOptions(46,1) = "*extension: fk2="                    && ext Text file to FKY                                                                                
+							laOptions(46,2) = ".c_fk2"                                                                                                                                     
+							laOptions(46,3) = 2                                                                                                                                            
+							laOptions(47,1) = "*extension: me2="                    && ext Text file to MEM                                                                                
+							laOptions(47,2) = ".c_me2"                                                                                                                                     
+							laOptions(47,3) = 2                                                                                                                                            
 
 							For lnOption = 1 To m.lnOptions
 								lnLine = Ascan( m.laLines , m.laOptions( m.lnOption, 1 ), 1, -1, 1, 4)
@@ -13262,7 +13314,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 	_MemberData	= [<VFPData>] ;
 		+ [<memberdata name="analyzecodeblock_table" display="analyzeCodeBlock_TABLE"/>] ;
 		+ [<memberdata name="analyzecodeblock_fields" display="analyzeCodeBlock_FIELDS"/>] ;
-		+ [<memberdata name="analyzecodeblock_indexes" display="analyzeCodeBlock_INDEXES"/>] ;
+		+ [<memberdata name="analyzecodeblockC_CDX_I" display="analyzeCodeBlock_INDEXES"/>] ;
 		+ [<memberdata name="writebinaryfile_structure" display="writeBinaryFile_STRUCTURE"/>] ;
 		+ [<memberdata name="writebinaryfile_indexes" display="writeBinaryFile_INDEXES"/>] ;
 		+ [</VFPData>]
@@ -13547,7 +13599,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 	Endproc
 
 
-
+* SF
 	Procedure writeBinaryFile_INDEXES
 		Lparameters toTable, toFoxBin2Prg
 *-- -----------------------------------------------------------------------------------------------------------
@@ -13560,17 +13612,18 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 				Local I, lnCodError, loEx As Exception ;
 					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG' ;
 					, loDBFUtils As CL_DBF_UTILS Of 'FOXBIN2PRG.PRG' ;
-					, ldLastUpdate
+					, ldLastUpdate ;
+					, lcIndexFile, llStandAlone
 
 				With This As c_conversor_prg_a_dbf Of 'FOXBIN2PRG.PRG'
 					Store Null To loIndex
 					Store 0 To lnCodError
-					Store '' To lcIndex
+					Store '' To lcIndex, lcIndexFile
 					loDBFUtils			= Createobject('CL_DBF_UTILS')
 
 *-- Regenero los índices
 					For Each loIndex In toTable._Indexes FoxObject
-						lcIndex	= 'INDEX ON ' + loIndex._Key + ' TAG ' + loIndex._TagName
+						lcIndex	= 'INDEX ON ' + loIndex._Key
 
 						If loIndex._TagType = 'BINARY'
 							lcIndex	= lcIndex + ' BINARY'
@@ -13589,7 +13642,12 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 							Endif
 						Endif
 
-
+						If m.loIndex._StandAlone Then
+							lcIndex	= m.lcIndex + ' TO ' +  m.loIndex._IndexFile
+						Else  &&m.loIndex._StandAlone
+							lcIndex	= m.lcIndex + ' TAG ' + loIndex._TagName + Iif( Empty( m.loIndex._IndexFile ), '', ' OF ' + m.loIndex._IndexFile )
+						Endif &&m.loIndex._StandAlone
+						
 						&lcIndex.
 					Endfor
 
@@ -18263,7 +18321,8 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 								Endif
 							Endif
 						Endif
-
+* SF
+*SET STEP ON
 						Use (.c_InputFile) Shared Again Noupdate Alias TABLABIN
 						lnDataSessionID	= toFoxBin2Prg.DataSessionId
 						.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
@@ -22951,7 +23010,6 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 *-- Info
 	_Name					= ''
 
-
 	Procedure analyzeCodeBlock
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -23037,10 +23095,13 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 					Store Null To loIndex
 					lcText	= ''
 					.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
-
+* SF tags
 					If .Count > 0 Then
+*!*							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*							<<>>			 <INDEXES>
+*!*							ENDTEXT
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>			<INDEXES>
+						<<>>			<<C_INDEXES_I>>
 						ENDTEXT
 
 						.KeySort = 2	&& Comentar para forzar modo LEGACY
@@ -23048,11 +23109,14 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 							lcText	= lcText + loIndex.toText( tcTable + '.' + loIndex._Name )
 						Endfor
 
+*!*							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*							<<>>			</INDEXES>
+*!*							ENDTEXT
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-						<<>>			</INDEXES>
+						<<>>			<<C_INDEXES_F>>
 						ENDTEXT
 					Endif
-
+* /SF
 
 				Endwith
 
@@ -23233,16 +23297,23 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 
 				With This As CL_DBC_INDEX_DB Of 'FOXBIN2PRG.PRG'
 					.read_BinDataToProperties(tcIndex)
-
+* SF tags
+*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*						<<>>				<INDEX>
+*!*						<<>>					<Name><<._Name>></Name>
+*!*						<<>>					<Comment><<._Comment>></Comment>
+*!*						<<>>					<IsUnique><<._IsUnique>></IsUnique>
+*!*						<<>>				</INDEX_F>
+*!*						ENDTEXT
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>				<INDEX>
+					<<>>				<<C_INDEX_I>>
 					<<>>					<Name><<._Name>></Name>
 					<<>>					<Comment><<._Comment>></Comment>
 					<<>>					<IsUnique><<._IsUnique>></IsUnique>
-					<<>>				</INDEX>
+					<<>>				<<C_INDEX_F>>
 					ENDTEXT
 
-					._ToText	= lcText
+* /SF					._ToText	= lcText
 				Endwith && THIS
 
 			Catch To loEx
@@ -24828,10 +24899,19 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 								Case C_TABLE_F $ tcLine	&& Fin
 									Exit
 
+								Case C_CDX_F $ tcLine	&& End of index file, temporary ignore
+									Loop
+
 								Case Not llFieldsEvaluated And C_FIELDS_I $ tcLine
 									loFields	= ._Fields
 									loFields.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 									llFieldsEvaluated	= .T.
+
+* new style, multiple index files
+								Case Not llIndexesEvaluated And C_CDXIDX_I $ tcLine
+									loIndexes	= ._Indexes
+									loIndexes.analyzeIndexFilesBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
+									llIndexesEvaluated	= .T.
 
 								Case Not llIndexesEvaluated And C_INDEXES_I $ tcLine
 									loIndexes	= ._Indexes
@@ -24968,6 +25048,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 
 				Endcase
 
+* setting temporary order
 				If llExportData Then
 					If lnFileCount = 1
 						lc_DBF_Conversion_Order	= loDBF_CFG.DBF_Conversion_Order
@@ -24980,6 +25061,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 
 					Endif
 				Endif
+* /setting temporary order
 
 *** DH 06/02/2014: added _Records
 				If llExportData
@@ -25015,10 +25097,12 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 				Throw
 
 			Finally
+* remove temporary order
 				If Not Empty(lcIndexFile) And File(lcIndexFile)
 					Set Index To
 					Erase (lcIndexFile)
 				Endif
+* /remove temporary order
 
 				Store Null To loIndexes, loFields, loRecords, loDBF_CFG, loTextStream
 				Release loFields, loIndexes, loRecords, loDBF_CFG, loTextStream
@@ -25336,8 +25420,8 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 		Local This As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG'
 	#Endif
 
-
-	Procedure analyzeCodeBlock
+* SF
+	Procedure analyzeIndexFilesBlock  
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tcLine					(!@ IN/OUT) Contenido de la línea en análisis
@@ -25348,10 +25432,119 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 		Lparameters tcLine, taCodeLines, I, tnCodeLines
 
 		Try
-				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
+				Local llBloqueEncontrado, loEx As Exception 
+
+				If Left(tcLine, Len(C_CDXIDX_I)) == C_CDXIDX_I
+					llBloqueEncontrado	= .T.
+
+					With This As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG'
+						For I = m.I + 1 To tnCodeLines
+							.set_Line( @tcLine, @taCodeLines, m.I )
+
+							Do Case
+								Case Empty( tcLine )
+									Loop
+
+								Case C_CDXIDX_F $ tcLine	&& Fin
+									Exit
+
+								Case C_CDX_I $ tcLine
+									.analyzeIndexFileBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
+
+								Otherwise	&& Otro valor
+*-- No hay otros valores
+							Endcase
+						Endfor
+					Endwith && THIS
+				Endif
+
+			Catch To loEx
+
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
+
+				Throw
+
+			Finally
+
+		Endtry
+
+		Return llBloqueEncontrado
+	ENDPROC &&analyzeIndexFilesBlock 
+
+
+	Procedure analyzeIndexFileBlock  
+*---------------------------------------------------------------------------------------------------
+* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+* I							(!@ IN/OUT) Número de línea en análisis
+* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+*---------------------------------------------------------------------------------------------------
+		Lparameters tcLine, taCodeLines, I, tnCodeLines
+
+		Try
+				Local llBloqueEncontrado, loEx As Exception 
+				Local lcFile As String, llStandAlone As Boolean
+
+				If Left(tcLine, Len(C_CDX_I)) == C_CDX_I
+					llBloqueEncontrado	= .T.
+
+					lcFile       = STREXTRACT(m.tcLine,C_CDX_File_,'"',1)
+					llStandAlone = STREXTRACT(m.tcLine,C_CDX_Type_,'"',1) == C_CDX_File_IDX
+
+					With This As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG'
+						For I = m.I + 1 To tnCodeLines
+							.set_Line( @tcLine, @taCodeLines, m.I )
+
+							Do Case
+								Case Empty( tcLine )
+									Loop
+
+								Case C_CDX_F $ tcLine	&& Fin
+									Exit
+
+								Case C_INDEXES_I $ tcLine
+									.analyzeCodeBlock( @tcLine, @taCodeLines, @I, m.tnCodeLines, m.lcFile, m.llStandAlone )
+
+								Otherwise	&& Otro valor
+*-- No hay otros valores
+							Endcase
+						Endfor
+					Endwith && THIS
+				Endif
+
+			Catch To loEx
+
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
+
+				Throw
+
+			Finally
+
+		Endtry
+
+		Return llBloqueEncontrado
+	ENDPROC &&analyzeIndexFileBlock 
+* /SF
+
+	Procedure analyzeCodeBlock
+*---------------------------------------------------------------------------------------------------
+* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+* I							(!@ IN/OUT) Número de línea en análisis
+* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+*---------------------------------------------------------------------------------------------------
+		Lparameters tcLine, taCodeLines, I, tnCodeLines, tcIndexFile, tlStandAlone
+
+		Try
+				Local llBloqueEncontrado, loEx As Exception ;
 					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG'
 				Store Null To loIndex
-				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_INDEXES_I)) == C_INDEXES_I
 					llBloqueEncontrado	= .T.
@@ -25370,7 +25563,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 								Case C_INDEX_I $ tcLine
 									loIndex = Null
 									loIndex = Createobject("CL_DBF_INDEX")
-									loIndex.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
+									loIndex.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, tcIndexFile, tlStandAlone )
 									.Add( loIndex, loIndex._TagName )
 
 								Otherwise	&& Otro valor
@@ -25381,10 +25574,6 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Endif
 
 			Catch To loEx
-				If loEx.ErrorNo = 1470	&& Incorrect property name.
-					loEx.UserValue	= 'I=' + Transform(m.I) + ', tcLine=' + Transform(tcLine)
-				Endif
-
 				If This.n_Debug > 0 And _vfp.StartMode = 0
 					Set Step On
 				Endif
@@ -25393,7 +25582,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 
 			Finally
 				Store Null To loIndex
-				Release lcPropName, lcValue, loIndex
+				Release loIndex
 
 		Endtry
 
@@ -25401,6 +25590,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 	Endproc
 
 
+* sf proc wrapping index
 	Procedure toText
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -25423,30 +25613,130 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Store Null To loIndex
 				lcText	= ''
 				Dimension taTagInfo(1,6)
+* SF tags
+*!*					If Tagcount() > 0
+*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*						<<>>
+*!*						<<>>	<<C_CDX_I>><<SYS(2014, CDX(1), ADDBS(JUSTPATH(tc_InputFile) ) )>><<C_CDX_F>>
+*!*						<<>>
+*!*						<<>>	<<C_INDEXES_I>>
+*!*						ENDTEXT
 
+*!*						tnTagInfo_Count	= Ataginfo( taTagInfo )
+*!*						Asort( taTagInfo, 1, -1, 0, 1 )
+*!*						loIndex			= Createobject("CL_DBF_INDEX")
+
+*!*						For I = 1 To tnTagInfo_Count
+*!*							lcText	= lcText + loIndex.toText( @taTagInfo, m.I )
+*!*						Endfor
+
+*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*						<<>>	<<C_INDEXES_F>>
+*!*						<<>>
+*!*						ENDTEXT
+*!*					Endif
+				Local;
+					lcText As String,;
+					loIndex As "CL_DBF_INDEX"
+					
+				LOCAL Array;
+					taTagInfo (1,6)
+				Local;
+					lcFile As String,;
+					lcType As String
+
+				toFoxBin2Prg.writeLog( Replicate('-', 100) )
+				toFoxBin2Prg.writeLog( ' Processing index tags' )
 				If Tagcount() > 0
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>
-					<<>>	<<C_CDX_I>><<SYS(2014, CDX(1), ADDBS(JUSTPATH(tc_InputFile) ) )>><<C_CDX_F>>
-					<<>>
-					<<>>	<<C_INDEXES_I>>
+					toFoxBin2Prg.writeLog( Replicate('-', 100) )
+					toFoxBin2Prg.writeLog( '  Structural' )
+					Text To m.lcText Additive Textmerge Noshow Flags 1+2 Pretext 1+2
+									<<>>
+									<<>>		<<C_CDX_I>> <<C_CDX_Type_>><<C_CDX_Type_Struct>>" >
+									<<>>
+									<<>>			<<C_INDEXES_I>>
 					ENDTEXT
-
+				
 					tnTagInfo_Count	= Ataginfo( taTagInfo )
-					Asort( taTagInfo, 1, -1, 0, 1 )
+					Asort( m.taTagInfo, 1, -1, 0, 1 )
 					loIndex			= Createobject("CL_DBF_INDEX")
-
-					For I = 1 To tnTagInfo_Count
-						lcText	= lcText + loIndex.toText( @taTagInfo, m.I )
+				
+					For I = 1 To m.tnTagInfo_Count
+						lcText	= m.lcText + m.loIndex.toText( @taTagInfo, m.I )
 					Endfor
-
-					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-					<<>>	<<C_INDEXES_F>>
-					<<>>
+				
+					Text To m.lcText Additive Textmerge Noshow Flags 1+2 Pretext 1+2
+									<<>>			<<C_INDEXES_F>>
+									<<>>		<<C_CDX_F>>
+									<<>>
 					ENDTEXT
 				Endif
+								
+*!*					IF ! EMPTY(toFoxBin2Prg.a_InputFiles) THEN
+*!*						toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
+*!*						toFoxBin2Prg.writeLog( '  Additional files' )
+*!*						FOR EACH lcFile IN toFoxBin2Prg.a_InputFiles   
+*!*							Try
+*!*									lcFile = SYS(2014, ''+m.lcFile, ADDBS(JUSTPATH(tc_InputFile) ) )
+*!*									lcType = SUBSTR(FILETOSTR(m.lcFile),5,4)
+*!*									lcType = IIF( m.lcType = 0hFFFFFFFF, C_CDX_Type_IDX, C_CDX_Type_Compound )
+*!*									toFoxBin2Prg.writeLog( '  '+m.lcType + ' ' + m.lcFile )
+*!*									SET INDEX TO ( m.lcFile )
+*!*									If TAGCOUNT( m.lcFile ) > 0 THEN  
+*!*										lnTagInfo_Count	= Ataginfo( taTagInfo , m.lcFile )
+*!*										TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*										<<>>
+*!*										<<>>		<<C_CDX_I>> <<C_CDX_Type_>><<m.lcType+'"'>> <<C_CDX_File_>><<m.lcFile+'"'>> >
+*!*										<<>>
+*!*										<<>>			<<C_INDEXES_I>>
+*!*										ENDTEXT
 
+*!*										lnTagInfo_Count	= Ataginfo( laTagInfo , m.lcFile)
+*!*										Asort( laTagInfo, 1, -1, 0, 1 )
+*!*										loIndex			= Createobject("CL_DBF_INDEX")
 
+*!*										For I = 1 To lnTagInfo_Count
+*!*											lcText	= lcText + loIndex.toText( @laTagInfo, m.I )
+*!*										Endfor
+
+*!*										TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*										<<>>			<<C_INDEXES_F>>
+*!*										<<>>		<<C_CDX_F>>
+*!*										<<>>
+*!*										ENDTEXT
+*!*									ENDIF &&TAGCOUNT( m.lcFile ) > 0 
+
+*!*								Catch To m.loEx When m.loEx.ErrorNo = 1
+*!*	*File Not found
+*!*									toFoxBin2Prg.writeLog( '   Not a File ' + m.lcFile)
+
+*!*								Catch To m.loEx When m.loEx.ErrorNo=114
+*!*	*INDEX does not match
+*!*									toFoxBin2Prg.writeLog( '   Index does not match table ' + m.lcFile)
+
+*!*								Catch To m.loEx
+*!*									If This.n_Debug > 0 And _vfp.StartMode = 0
+*!*										Set Step On
+*!*									Endif
+*!*						
+*!*									Throw
+*!*					
+*!*								Finally
+*!*									Store Null To m.loIndex
+*!*									Release I, m.loIndex
+*!*					
+*!*							Endtry
+*!*						ENDFOR &&lcFile 
+*!*					ENDIF &&! EMPTY(toFoxBin2Prg.a_InputFiles) 
+				
+				IF !EMPTY(m.lcText) THEN
+					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+					<<>>	<<C_CDXIDX_I>><<m.lcText>>
+					<<>>	<<C_CDXIDX_F>>
+					ENDTEXT
+				ENDIF &&!EMPTY(m.lcText) 
+				* /SF
+				
 			Catch To loEx
 				If This.n_Debug > 0 And _vfp.StartMode = 0
 					Set Step On
@@ -25463,7 +25753,6 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 		Return lcText
 	Endproc
 
-
 Enddefine
 
 
@@ -25474,6 +25763,9 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 	#Endif
 
 	_MemberData	= [<VFPData>] ;
+		+ [<memberdata name="_indexfile" display="_IndexFile"/>] ;
+		+ [<memberdata name="_standalone" display="_StandAlone"/>] ;
+		+ [<memberdata name="_tagname" display="_TagName"/>] ;
 		+ [<memberdata name="_tagname" display="_TagName"/>] ;
 		+ [<memberdata name="_tagtype" display="_TagType"/>] ;
 		+ [<memberdata name="_key" display="_Key"/>] ;
@@ -25484,6 +25776,8 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 
 
 *-- Index Info
+	_IndexFile      = ''
+	_StandAlone     = .F.
 	_TagName		= ''
 	_TagType		= ''
 	_Key			= ''
@@ -25500,7 +25794,7 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 * I							(!@ IN/OUT) Número de línea en análisis
 * tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
 *---------------------------------------------------------------------------------------------------
-		Lparameters tcLine, taCodeLines, I, tnCodeLines
+		Lparameters tcLine, taCodeLines, I, tnCodeLines, tcIndexFile, tlStandAlone
 
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception
@@ -25510,6 +25804,9 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 					llBloqueEncontrado	= .T.
 
 					With This As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG'
+						._IndexFile      = EVL( m.tcIndexFile, '')
+						._StandAlone     = m.tlStandAlone
+
 						For I = m.I + 1 To tnCodeLines
 							.set_Line( @tcLine, @taCodeLines, m.I )
 
@@ -25567,18 +25864,28 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 						Exit
 					Endif
 				Endfor
-
+* SF tags
+*!*					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
+*!*					<<>>		<INDEX>
+*!*					<<>>			<TagName><<taTagInfo(m.I,1)>></TagName>
+*!*					<<>>			<TagType><<ICASE(LEFT(taTagInfo(m.I,2),3)='BIN','BINARY',PRIMARY(m.X),'PRIMARY',CANDIDATE(m.X),'CANDIDATE',UNIQUE(m.X),'UNIQUE','REGULAR'))>></TagType>
+*!*					<<>>			<Key><<taTagInfo(m.I,3)>></Key>
+*!*					<<>>			<Filter><<taTagInfo(m.I,4)>></Filter>
+*!*					<<>>			<Order><<IIF(DESCENDING(m.X), 'DESCENDING', 'ASCENDING')>></Order>
+*!*					<<>>			<Collate><<taTagInfo(m.I,6)>></Collate>
+*!*					<<>>		</INDEX>
+*!*					ENDTEXT
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-				<<>>		<INDEX>
-				<<>>			<TagName><<taTagInfo(m.I,1)>></TagName>
-				<<>>			<TagType><<ICASE(LEFT(taTagInfo(m.I,2),3)='BIN','BINARY',PRIMARY(m.X),'PRIMARY',CANDIDATE(m.X),'CANDIDATE',UNIQUE(m.X),'UNIQUE','REGULAR'))>></TagType>
-				<<>>			<Key><<taTagInfo(m.I,3)>></Key>
-				<<>>			<Filter><<taTagInfo(m.I,4)>></Filter>
-				<<>>			<Order><<IIF(DESCENDING(m.X), 'DESCENDING', 'ASCENDING')>></Order>
-				<<>>			<Collate><<taTagInfo(m.I,6)>></Collate>
-				<<>>		</INDEX>
+				<<>>				<<C_INDEX_I>>
+				<<>>					<TagName><<taTagInfo(m.I,1)>></TagName>
+				<<>>					<TagType><<ICASE(LEFT(taTagInfo(m.I,2),3)='BIN','BINARY',PRIMARY(m.X),'PRIMARY',CANDIDATE(m.X),'CANDIDATE',UNIQUE(m.X),'UNIQUE','REGULAR'))>></TagType>
+				<<>>					<Key><<taTagInfo(m.I,3)>></Key>
+				<<>>					<Filter><<taTagInfo(m.I,4)>></Filter>
+				<<>>					<Order><<IIF(DESCENDING(m.X), 'DESCENDING', 'ASCENDING')>></Order>
+				<<>>					<Collate><<taTagInfo(m.I,6)>></Collate>
+				<<>>				<<C_INDEX_F>>
 				ENDTEXT
-
+* /SF
 
 			Catch To loEx
 				If This.n_Debug > 0 And _vfp.StartMode = 0
@@ -30577,9 +30884,10 @@ Enddefine
 
 Define Class CL_DBF_CFG As Custom
 	_MemberData	= [<VFPData>] ;
+		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
 		+ [<memberdata name="dbf_conversion_order" display="DBF_Conversion_Order"/>] ;
 		+ [<memberdata name="dbf_conversion_condition" display="DBF_Conversion_Condition"/>] ;
-		+ [<memberdata name="dbf_conversion_support" display="DBF_Conversion_Support"/>] ;
+		+ [<memberdata name="dbf_indexlist" display="DBF_IndexList"/>] ;
 		+ [<memberdata name="l_dbf_binchar_base64" display="l_DBF_BinChar_Base64"/>] ;
 		+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
 		+ [</VFPData>]
@@ -30590,9 +30898,10 @@ Define Class CL_DBF_CFG As Custom
 
 
 *-- Configuration class. By default asumes master value, except when overriding one.
+	DBF_Conversion_Support		= Null
 	DBF_Conversion_Order		= ''
 	DBF_Conversion_Condition	= ''
-	DBF_Conversion_Support		= Null
+	DBF_IndexList				= ''
 	l_DBF_BinChar_Base64        = .Null.
 	l_DBF_IncludeDeleted        = .Null.
 Enddefine
