@@ -19,9 +19,7 @@ As far as possible these are the original documents. Changes are added where fun
 The older links point to Fernandos repository.
 
 For recent verisons see 
-![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [Fernandos FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
-![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [This fork](https://github.com/lscheffler/foxbin2prg/tree/fork_mod)   
-![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [Just the bug fixes of this fork](https://github.com/lscheffler/foxbin2prg/tree/fork)   
+![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
 
 ## Full Change History
 This page is not only to get the history of the changes, but to keep a permanent list of people that have contributed to enhance FoxBin2Prg and that I feel as part of the ADN of this tool.
@@ -32,6 +30,13 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: -cC options learned to create default FoxBin2Prg._cfg file |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: -t Option learned to create default  \<tablename\>._cfg file, if table is open. |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: Handling of additional non structural index per DBF in Bin2Text and Text2Bin. See [Config per DBF](./FoxBin2Prg_Internals.md#configuration-per-table). |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: Debug-Logging for Index |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Bug Fix**: DBF_Conversion_Condition was read, but never used |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Bug Fix**: DBF_Conversion_Order sets an index that later would be stored as structural index |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Bug Fix**: config options with text value fail, if line comment is set |
 | 2021/03/09 | LScheffler | [v1.19.59]() | **Feature**: Logging of settings as settings object passed to execute method (Option debug > 0) |
 | 2021/03/09 | LScheffler | [v1.19.59]() | **Feature**: Added option to create config file template based on current values of a directory |
 | 2021/03/09 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, Path was set wrong in special config |
@@ -379,4 +384,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

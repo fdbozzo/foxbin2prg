@@ -11,6 +11,7 @@ As far as possible these are the original documents. Changes are added where fun
 ----
 ## Table of contents
 - [Why to use this tool](#why-to-use-this-tool)
+- [Limitations](#limitations)
 - [Configuration file](#configuration-file)
 - [Configuration file per table](#configuration-file-per-table)
 - [FoxBin2Prg Internals](#foxbin2prg-internals)
@@ -65,6 +66,28 @@ and this require that generated text files can be manipulated manually or automa
 **You came from Visual SourceSafe and have the .pjm but not the real pjx project?**   
 
 No problem, just convert the .pjm to .pjx/.pjt sending to FoxBin2Prg, and it generates the real project again.
+
+## Limitations
+Most of the files look like prg or XML data. Please note, those files are only look alike.
+The parsing to generate the binary depends highly on the position of data.
+So if a file is defined like 
+```
+	<FIELDS>
+		<FIELD>
+			<Name>I1</Name>
+```
+this
+```
+	<FIELDS><FIELD><Name>I1</Name>.
+```
+will be nice XML, but not readable to FoxBin2Prg. This is a line by line parser.   
+Leading and trailing spaces are mostly no problem.
+
+You might freely change and merge code inside the text files, or data in a table-XML,
+but the result must be compilable and keep the structure.   
+All limitations that occur to a binary format must be kept on the text representation -
+the definition of a HEADER class to a VCX will fail.
+
 
 ## Configuration file
 It is possible to create a template or a config with all options and comments via   
@@ -147,14 +170,16 @@ The options in the template (or in the config that ships with FoxBin2Prg) are co
 To activate an option remove the asterix and set appropriate value.   
 These are the Table.dbf.cfg configuration file settings and their meaning:
 
-| FoxBin2Prg.cfg keywords | Value | Description |
-| ----- | ----- | ----- |
-| DBF_Conversion_Support | 0, 1, 2, 4, 8 | 0=No support,<br/>1=Generate Header _Text_ only (Diff),<br/>2=Generate Header _Text_ and _Bin_ (Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
-| DBF_Conversion_Order | c_Expression | Field expresion (For _INDEX ON_). ie: name+str(age,3),<br/>Empty means no sort order. <br/> usefull only if _DBF_Conversion_Support_>0 |
-| DBF_Conversion_Condition | c_Expression | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all files, except _DBF_IncludeDeleted_ <br/> usefull only if _DBF_Conversion_Support_>0  |
-| DBF_BinChar_Base64 | 0, 1 | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform <br/> usefull only if _DBF_Conversion_Support_>2  |
-| DBF_IncludeDeleted | 0, 1 | 0=Do not include deleted records,<br/>1=Include deleted records <br/> usefull only if _DBF_Conversion_Support_>2  |
+| FoxBin2Prg.cfg keywords | Value | per<br/>file | Description |
+| ----- | ----- | ----- | ----- |
+| DBF_Conversion_Support | 0, 1, 2, 4, 8 | | 0=No support,<br/>1=Generate Header _Text_ only (Diff),<br/>2=Generate Header _Text_ and _Bin_ (Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
+| DBF_Conversion_Order | c_Expression | x | Field expresion (For _INDEX ON_). ie: name+str(age,3),<br/>Empty means no sort order. <br/> usefull only if _DBF_Conversion_Support_>0 |
+| DBF_Conversion_Condition | c_Expression | x | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all files, except _DBF_IncludeDeleted_ <br/> usefull only if _DBF_Conversion_Support_>0  |
+| DBF_IndexList | c_FileList | x | A comma delimited list of additional index files ( cdx or idx ). **Not the structural index file.** |
+| DBF_BinChar_Base64 | 0, 1 | | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform <br/> usefull only if _DBF_Conversion_Support_>2  |
+| DBF_IncludeDeleted | 0, 1 | | 0=Do not include deleted records,<br/>1=Include deleted records <br/> usefull only if _DBF_Conversion_Support_>2  |
 
+Setting **per file** could only be used via this configuration file.
 For defaults, see [Configuration file](#configuration-file).
  
 ## FoxBin2Prg Internals
@@ -674,9 +699,12 @@ because anyway you will generate them later from their _Text_ files._
 For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 **> [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)**
 
+## How to use with _git_
+See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
+
 ----
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2021/03/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

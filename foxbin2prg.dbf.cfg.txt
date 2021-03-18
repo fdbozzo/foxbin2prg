@@ -1,0 +1,21 @@
+*################################################################################################################
+*-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
+*Version: v1.19.60
+*****************************************************************************************************************
+
+*DBF_Conversion_Support: <1,2,4,8>           && 0=Aus
+*                                            && 1=Erzeuge Textdatei nur für Struktur (Diff)
+*                                            && 2=Erzeuge Text- und Binärdatei nur für Struktur (Merge)
+*                                            && 4=Erzeuge Textdatei nur für Struktur und Daten (Diff)
+*                                            && 8=Erzeuge Text- und Binärdatei nur für Struktur und Daten (Merge)
+*DBF_Conversion_Order: <c_Expression>        && Optional, Reihenfolge der Datensätze. Ausdruck für INDEX ON. ie: name+str(age,3)
+*                                            && leer: normale Reihenfolge
+*DBF_Conversion_Condition: <c_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
+*                                            && leer: Alle, außer DBF_IncludeDeleted
+*DBF_IndexList: <cFile_List>                 && Kommagetrennte Liste von Dateien. Zusätzliche Index - Dateien. CDX oder IDX. Nicht der Strukturelle Index
+*DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
+*                                            &&   Dies entspricht dem Flag 4096 in CursorToXML()
+*                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
+*DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze, 1=Mit gelöschten Datensätzen
+*                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
+*

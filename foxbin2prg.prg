@@ -255,13 +255,13 @@
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Log settings object handed to execute (Debug > 0)
 
-* xx/xx/2021	LScheffler	v1.19.xx	Enhancement: -cC options learned to create default ._cfg file
-* xx/xx/2021	LScheffler	v1.19.xx	Enhancement: -t Option learned to create default  ._cfg file, if table is open.
-* xx/xx/2021	LScheffler	v1.19.xx	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin
-* xx/xx/2021	LScheffler	v1.19.xx	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin
-* xx/xx/2021	LScheffler	v1.19.xx	Bug Fix: DBF_Conversion_Condition was read, but never used
-* xx/xx/2021	LScheffler	v1.19.xx	Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
-* xx/xx/2021	LScheffler	v1.19.xx	Bug Fix: config options with text value fail, if line comment is set
+* xx/xx/2021	LScheffler	v1.19.60	Enhancement: -cC options learned to create default FoxBin2Prg._cfg file
+* xx/xx/2021	LScheffler	v1.19.60	Enhancement: -t Option learned to create default  <tablename>._cfg file, if table is open.
+* xx/xx/2021	LScheffler	v1.19.60	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin see config per DBF
+* xx/xx/2021	LScheffler	v1.19.60	Enhancement: Debug-Logging for Index
+* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: DBF_Conversion_Condition was read, but never used
+* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
+* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: config options with text value fail, if line comment is set
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
@@ -407,6 +407,9 @@
 * 05/03/2021	Lutz Scheffler      Bug report v1.19.56	For RedirectClassType = 2, Path was set wrong
 * 09/03/2021	Lutz Scheffler      Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
 * 09/03/2021	Lutz Scheffler      Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
+* xx/xx/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Condition was read, but never used
+* xx/xx/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Order sets an index that later would be stored as structural index
+* xx/xx/2021	Lutz Scheffler      Bug report v1.19.59 config options with text value fail, if line comment is set
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -708,10 +711,13 @@ Endif
 
 * only 2 paras for -cCt
 Do Case
-	Case Pcount()=1 And tcType=='-t' And !Empty( Dbf() )
+	Case Pcount()=1 And tcType == '-t' And !Empty( Dbf() )
 		tc_InputFile = Dbf() + '._cfg'
 
-	Otherwise
+	Case Pcount()=1 And UPPER( tcType ) =='-C'
+		tc_InputFile = 'FoxBin2PRG._cfg'
+
+	Case Pcount()#2 And ( UPPER( tcType ) =='-C' OR tcType =='-t' )
 		tc_InputFile = ""
 		tcType       = ""
 
@@ -917,7 +923,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.59'
+	c_FB2PRG_Version_Real			= '1.19.60'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -6765,7 +6771,7 @@ Define Class frm_main As Form
 
 				Thisform.edt_help.Value		= loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC+0h0D0A+;
 					STRTRAN(loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg,'&'+'&','')+0h0D0A+;
-					loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg
+					STRTRAN(loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg,'&'+'&','')
 
 			Endif
 
@@ -13396,7 +13402,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 						.writeLog( '*** ERRORS found - Generation Cancelled' )
 						Exit
 					Endif
-SET STEP ON 
+
 					toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 					.writeBinaryFile_STRUCTURE( @toTable, @toFoxBin2Prg, @lcAlterTable )
 
@@ -13606,58 +13612,94 @@ SET STEP ON
 				Local I, lnCodError, loEx As Exception ;
 					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG' ;
 					, loDBFUtils As CL_DBF_UTILS Of 'FOXBIN2PRG.PRG' ;
+					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG' ;
 					, ldLastUpdate ;
-					, lcIndexFile, llStandAlone
-
+					, lcIndexFile 
+					
 				With This As c_conversor_prg_a_dbf Of 'FOXBIN2PRG.PRG'
 					Store Null To loIndex
 					Store 0 To lnCodError
-					Store '' To lcIndex, lcIndexFile
-					loDBFUtils			= Createobject('CL_DBF_UTILS')
+					Store '' To lcIndex
+					Store .NULL. To lcIndexFile
+
+					If toTable._Indexes.Count # 0 Then
+						loDBFUtils			= Createobject('CL_DBF_UTILS')
+
+						loLang			= _Screen.o_FoxBin2Prg_Lang
+						toFoxBin2Prg.writeLog( Replicate('+', 100) )
+						toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_PROCESSING_LOC )
+						toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
 
 *-- Regenero los índices
-					For Each loIndex In toTable._Indexes FoxObject
-						lcIndex	= 'INDEX ON ' + loIndex._Key
+						For Each loIndex In toTable._Indexes FoxObject
+							DO CASE
+								CASE ISNULL ( m.lcIndexFile ) AND EMPTY (m.loIndex._IndexFile)
+									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_STRUCTURAL_LOC )
+									toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 49) )
 
-						If loIndex._TagType = 'BINARY'
-							lcIndex	= lcIndex + ' BINARY'
-						Else
-							lcIndex	= lcIndex + ' COLLATE "' + loIndex._Collate + '"'
+								CASE ISNULL ( m.lcIndexFile ) AND m.loIndex._StandAlone
+									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_STANDALONE_LOC + m.loIndex._IndexFile )
 
-							If Not Empty(loIndex._Filter)
-								lcIndex	= lcIndex + ' FOR ' + loIndex._Filter
-							Endif
+								CASE ISNULL ( m.lcIndexFile )
+									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_COMPOUND_LOC + m.loIndex._IndexFile )
+									toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 59) )
 
-							lcIndex	= lcIndex + ' ' + loIndex._Order
+								CASE ! m.lcIndexFile == m.loIndex._IndexFile AND m.loIndex._StandAlone
+									toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
+									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_STANDALONE_LOC + m.loIndex._IndexFile )
 
-							If Not Inlist(loIndex._TagType, 'NORMAL', 'REGULAR')
+								CASE ! m.lcIndexFile == m.loIndex._IndexFile
+									toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
+									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_COMPOUND_LOC + m.loIndex._IndexFile )
+									toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 59) )
+							ENDCASE
+							lcIndexFile = m.loIndex._IndexFile
+
+							lcIndex	= 'INDEX ON ' + loIndex._Key
+
+							If loIndex._TagType = 'BINARY'
+								lcIndex	= lcIndex + ' BINARY'
+							Else
+								lcIndex	= lcIndex + ' COLLATE "' + loIndex._Collate + '"'
+
+								If Not Empty(loIndex._Filter)
+									lcIndex	= lcIndex + ' FOR ' + loIndex._Filter
+								Endif
+
+								lcIndex	= lcIndex + ' ' + loIndex._Order
+
+								If Not Inlist(loIndex._TagType, 'NORMAL', 'REGULAR')
 *-- Si es PRIMARY lo cambio a CANDIDATE y luego lo recodifico
-								lcIndex	= lcIndex + ' ' + Strtran( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
+									lcIndex	= lcIndex + ' ' + Strtran( loIndex._TagType, 'PRIMARY', 'CANDIDATE' )
+								Endif
 							Endif
-						Endif
 
-						If m.loIndex._StandAlone Then
-							lcIndex	= m.lcIndex + ' TO ' +  m.loIndex._IndexFile
-						Else  &&m.loIndex._StandAlone
-							lcIndex	= m.lcIndex + ' TAG ' + loIndex._TagName + Iif( Empty( m.loIndex._IndexFile ), '', ' OF ' + m.loIndex._IndexFile )
-						Endif &&m.loIndex._StandAlone
+							If m.loIndex._StandAlone Then
+								lcIndex	= m.lcIndex + ' TO ' +  m.lcIndexFile
+							Else  &&m.loIndex._StandAlone
+								lcIndex	= m.lcIndex + ' TAG ' + loIndex._TagName + Iif( Empty( m.lcIndexFile ), '', ' OF ' + m.lcIndexFile )
+								toFoxBin2Prg.writeLog( '   ' + m.loIndex._TagName )
+							Endif &&m.loIndex._StandAlone
 
-						&lcIndex.
-					Endfor
+							&lcIndex.
+						Endfor
 
+						toFoxBin2Prg.writeLog( Replicate('+', 100) + 0h0D0A )
 
-					Use In (Select(Juststem(.c_OutputFile)))
+						Use In (Select(Juststem(.c_OutputFile)))
 
 *-- La actualización de la fecha sirve para evitar diferencias al regenerar el DBF
-					If toFoxBin2Prg.l_ClearDBFLastUpdate Then
-						ldLastUpdate	= Evaluate( '{^2013/11/04}' )
-					Else
-						ldLastUpdate	= Evaluate( '{^' + toTable._LastUpdate + '}' )
-					Endif
+						If toFoxBin2Prg.l_ClearDBFLastUpdate Then
+							ldLastUpdate	= Evaluate( '{^2013/11/04}' )
+						Else
+							ldLastUpdate	= Evaluate( '{^' + toTable._LastUpdate + '}' )
+						Endif
 
-					loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
+						loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
 
-					toFoxBin2Prg.updateProcessedFile()
+						toFoxBin2Prg.updateProcessedFile()
+					Endif &&toTable._Indexes.COUNT # 0
+						toFoxBin2Prg.writeLog( Replicate('+', 100) )
 				Endwith && THIS
 
 
@@ -25619,7 +25661,8 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 
 		Try
 				Local I, lcText, loEx As Exception ;
-					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG'
+					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG' ;
+					loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 				Store Null To loIndex
 				lcText	= ''
 				Dimension taTagInfo(1,6)
@@ -25655,8 +25698,9 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 					lcIndexFile As String,;
 					lcIndexType As String
 
+				loLang			= _Screen.o_FoxBin2Prg_Lang
 				toFoxBin2Prg.writeLog( Replicate('+', 100) )
-				toFoxBin2Prg.writeLog( ' Processing index tags' )
+				toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_PROCESSING_LOC )
 
 
 *!*	Changed by: SF 18.3.2021
@@ -25703,7 +25747,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 						laIndexFiles( 1 )
 
 					toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
-					toF1oxBin2Prg.writeLog( '  Additional index files' )
+					toF1oxBin2Prg.writeLog( loLang.C_INDEX2TXT_EXTRAFILES_LOC )
 					toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 49) )
 
 *Additional index files
@@ -25741,11 +25785,11 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 
 							Catch To m.loEx When m.loEx.ErrorNo = 1
 				*File Not found
-								toFoxBin2Prg.writeLog( '   Not a File ' + m.lcIndexFile)
+								toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_NOFILE_LOC + m.lcIndexFile)
 
 							Catch To m.loEx When m.loEx.ErrorNo=114
 				*INDEX does not match
-								toFoxBin2Prg.writeLog( '   Index does not match table ' + m.lcIndexFile)
+								toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_NOTTHISTABLE_LOC + m.lcIndexFile)
 
 							Catch To m.loEx
 								If This.n_Debug > 0 And _vfp.StartMode = 0
@@ -29945,6 +29989,14 @@ Define Class CL_LANG As Custom
 	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= ""
 	C_WITH_ERRORS_LOC												= ""
 
+	C_INDEX2TXT_PROCESSING_LOC										= ""
+	C_INDEX2TXT_EXTRAFILES_LOC										= ""
+	C_INDEX2TXT_NOFILE_LOC											= ""
+	C_INDEX2TXT_NOTTHISTABLE_LOC									= ""
+	C_INDEX2BIN_PROCESSING_LOC										= ""
+	C_INDEX2BIN_STRUCTURAL_LOC										= ""
+	C_INDEX2BIN_STANDALONE_LOC										= ""
+	C_INDEX2BIN_COMPOUND_LOC										= ""
 
 
 	Procedure Init
@@ -30140,6 +30192,7 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
@@ -30196,6 +30249,14 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "AVERTISSEMENT!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "avec des erreurs"
+							.C_INDEX2TXT_PROCESSING_LOC										= " Processing index"
+							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Additional index files"
+							.C_INDEX2TXT_NOFILE_LOC											= "     Not a File "
+							.C_INDEX2TXT_NOTTHISTABLE_LOC									= "   Index does not match table "
+							.C_INDEX2BIN_PROCESSING_LOC										= " Creating index"
+							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs for structural index"
+							.C_INDEX2BIN_STANDALONE_LOC										= "  Standalone index "
+							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs for compound index "
 
 						Case Inlist(tcLanguage, '34', 'ES') && Spanish (Español)
 *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -30369,6 +30430,7 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>-- Archivo de configuración individual para DBF (sintaxis: archivo.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && Ver esta misma configuración más arriba
@@ -30425,6 +30487,14 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "¡ATENCIÓN!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡ATENCIÓN!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
 							.C_WITH_ERRORS_LOC												= "con errores"
+							.C_INDEX2TXT_PROCESSING_LOC										= " Processing index"
+							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Additional index files"
+							.C_INDEX2TXT_NOFILE_LOC											= "     Not a File "
+							.C_INDEX2TXT_NOTTHISTABLE_LOC									= "   Index does not match table "
+							.C_INDEX2BIN_PROCESSING_LOC										= " Creating index"
+							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs for structural index"
+							.C_INDEX2BIN_STANDALONE_LOC										= "  Standalone index "
+							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs for compound index "
 
 						Case Inlist(tcLanguage, '49', 'DE') && German (Alemán)
 *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -30582,7 +30652,7 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Optionen für DBF (Transformation der DBF)
-						<<>>DBF_BinChar_Base64: 1          && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus (default)
+						<<>>DBF_BinChar_Base64: 1          && Für Felder mit Zeichen Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus (default)
 						<<>>                               &&   Dies entspricht dem Flag 4096 in CursorToXML()
 						<<>>                               &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>DBF_IncludeDeleted: 0          && 0=Ohne gelöschte Datensätze (default), 1=Mit gelöschten Datensätzen
@@ -30624,6 +30694,7 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>DBF_Conversion_Support: <1,2,4,8>           && 0=Aus
@@ -30636,7 +30707,7 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Condition: <c_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
 						<<>>                                            && leer: Alle, außer DBF_IncludeDeleted
 						<<>>DBF_IndexList: <cFile_List>                 && Kommagetrennte Liste von Dateien. Zusätzliche Index - Dateien. CDX oder IDX. Nicht der Strukturelle Index
-						<<>>DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
+						<<>>DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeichen Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
 						<<>>                                            &&   Dies entspricht dem Flag 4096 in CursorToXML()
 						<<>>                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze, 1=Mit gelöschten Datensätzen
@@ -30689,6 +30760,15 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "WARNUNG!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!" + CR_LF+ "STELLEN SIE SICHER, DAS KEIN TABELLENALIAS IM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "mit Fehlern"
+
+							.C_INDEX2TXT_PROCESSING_LOC										= " Ermittle Index"
+							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Zusätzliche Index Dateien"
+							.C_INDEX2TXT_NOFILE_LOC											= "     Keine Datei "
+							.C_INDEX2TXT_NOTTHISTABLE_LOC									= "   Index passt nicht zur Tabelle "
+							.C_INDEX2BIN_PROCESSING_LOC										= " Erstelle Index"
+							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs für den strukturellen Index"
+							.C_INDEX2BIN_STANDALONE_LOC										= "  Eigenständige Indexdatei: "
+							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs für verbundene Indexdatei: "
 
 						Otherwise	&& English (Inglés)
 *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -30863,6 +30943,7 @@ Define Class CL_LANG As Custom
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
+						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
@@ -30919,6 +31000,16 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "WARNING!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "with errors"
+
+							.C_INDEX2TXT_PROCESSING_LOC										= " Processing index"
+							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Additional index files"
+							.C_INDEX2TXT_NOFILE_LOC											= "     Not a File "
+							.C_INDEX2TXT_NOTTHISTABLE_LOC									= "   Index does not match table "
+							.C_INDEX2BIN_PROCESSING_LOC										= " Creating index"
+							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs for structural index"
+							.C_INDEX2BIN_STANDALONE_LOC										= "  Standalone index "
+							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs for compound index "
+
 							.n_LanguageSelectedMethod	= 0	&& 0=Automatic with VERSION(3)
 
 					Endcase

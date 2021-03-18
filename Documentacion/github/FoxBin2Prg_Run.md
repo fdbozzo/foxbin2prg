@@ -107,14 +107,16 @@ on which fixed parameters must be in the shortcut.
 The filename is an external variable parameter received when SendingTo FoxBin2Prg with right-click on File Manager.
 
 ### Usage 2
-`FoxBin2Prg.EXE [-c cOutputFile] [-C cOutputFile] [-t cOutputFile]`
+`FoxBin2Prg.EXE [-cCt [cOutputFile]]`
 
 | Parameter | Description |
 | ----- | ----- |
 | none | Call Info screen |
 | -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
 | -C | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
+| | If cOutputFile is empty, a file FOXBIN2PRG._CFG will be created in default foder. | 
 | -t | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
+| | If cOutputFile is empty and a table is open is workarea, a file \<tablename\>._CFG will be created in table foder. | 
 
 ## Return values
 Return value via _ErrorLevel_ is 0=OK, 1=Error.
@@ -163,4 +165,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -43,6 +43,7 @@ generating bidirectional PRG-Style versions that allow recreating the original b
 - Out of the _Text_ versions you can **generate the original binaries**, so it is useful as backup
 - The extensions are configurable if you create a FOXBIN2PRG.CFG file
   - Inheritance of CFG configuration files between directories
+- Special configuration per table, allowing additional non structural index files, sorting and ranges of records to include
 - Methods and properties of _Text_ version are alphabetically sorted for easy comparison
 - Can set _UseClassPerFile_ setting to create individual files by class
 - Can set _UseFilesPerDBC_ setting to create individual files by DBC member
@@ -84,4 +85,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

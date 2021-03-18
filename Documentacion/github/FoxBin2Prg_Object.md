@@ -56,6 +56,9 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | | * | If _cInputFile_ is a project (pj[x2]) all files of the project, **including** the pjx, will be processed. The extension defines direction of operation. |
 | | \*\- | If _cInputFile_ is a project (pj[x2]) all files of the project, **excluding** the pjx, will be processed. The extension defines direction of operation. |
 | | d, D, K, B, M, R, V | SCCAPI (SCCTEXT.PRG) compatibility mode, query the conversion support for the file type specified <br /> Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class |
+| | -C | Create configuration file \<cInputFile\> or, if first parameter is empty, FoxBin2Prg._cfg in default folder. With recent values. |
+| | -c | Create configuration file template \<cInputFile\> or, if first parameter is empty, FoxBin2Prg._cfg in default folder. With inactive default values. |
+| | -t | Create per-table configuration file template <cInputFile> or, if first parameter is empty and a table open, \<tablename\>._cfg in table folder. With inactive default values. |
 | cTextName | Text filename. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. File to use. |
 | lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. .T.=Generates Text, .F.=Generates Binary. <br/> **Note:** _cType_ have predominance over _lGenText_ |
 | cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX |
@@ -90,6 +93,7 @@ The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:
 
 #### Note
 - The swap of _cInputFile_ and _cType_ is not possible here.
+- If cType is -cCt, then only the first both parameters are allowed.
 - Setting _cInputFile_ and _cType_ appropriate, info screen and generation of configuration templates is possible too. See [command line](./FoxBin2Prg_Run.md#usage_1)
 - While possibe, the SCCAPI (SCCTEXT.PRG) compatibility mode is more an idea of the [command line](./FoxBin2Prg_Run.md).
 
@@ -101,4 +105,4 @@ Return value is 0=OK, 1=Error.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
