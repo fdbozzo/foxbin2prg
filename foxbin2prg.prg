@@ -13396,7 +13396,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 						.writeLog( '*** ERRORS found - Generation Cancelled' )
 						Exit
 					Endif
-
+SET STEP ON 
 					toFoxBin2Prg.updateProcessedFile( lnIDInputFile )
 					.writeBinaryFile_STRUCTURE( @toTable, @toFoxBin2Prg, @lcAlterTable )
 
