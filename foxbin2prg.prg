@@ -265,6 +265,7 @@
 
 * xx/xx/2021	LScheffler	v1.19.60	Enhancement: FoxBin2Prg template and debug output ordered and completed, order synched, grouped and groups named
 * xx/xx/2021	LScheffler	v1.19.60	Enhancement: Option BackgroundImage was read, but not in template
+* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory 
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
@@ -5362,7 +5363,7 @@ Define Class c_foxbin2prg As Session
 					If Not Substr( laFiles(m.I,5), 5, 1 ) == 'D' Or Left(laFiles(m.I,1), 1) == '.'
 						Loop
 					Endif
-					.get_FilesFromDirectory( tcDir + laFiles(m.I,1), @taFiles, @lnFileCount )
+					.get_FilesFromDirectory( tcDir + laFiles(m.I,1), @taFiles, @tnFileCount )
 				Endfor
 			Endwith
 		Endif
