@@ -19,8 +19,31 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
-Change History -------------------------------------------------------------
+Change History-------------------------------------------------------------
 ************
+2021-03-22 v1.19.60
+- Enhancement: FoxBin2Prg template and debug output: Completed and ordered, order synched, grouped and groups named at template. (LScheffler)
+- Enhancement: Option BackgroundImage was read, but not in template (LScheffler)
+- Enhancement: -cC options learned to create default FoxBin2Prg._cfg file (LScheffler)
+- Enhancement: -t Option learned to create default  \<tablename\>._cfg file, if table is open. (LScheffler)
+- Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin. See [Config per DBF](./FoxBin2Prg_Internals.md#configuration-per-table). (LScheffler)
+- Enhancement: Debug-Logging for Index (LScheffler)
+- Bug Fix: DBF_Conversion_Condition was read, but never used (LScheffler)
+- Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index (LScheffler)
+- Bug Fix: config options with text value fail, if line comment is set (LScheffler)
+- Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory (LScheffler)
+
+2021-03-09 v1.19.59
+- Feature: Logging of settings as settings object passed to execute method (Option debug > 0) (LScheffler)
+- Feature: Added option to create config file template based on current values of a directory (LScheffler)
+- Bug Fix: RedirectClassType = 2, Path was set wrong in special config (LScheffler)
+- Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed (LScheffler)
+- Doc: Improved, Better description of ClassPerFileCheck, tcOutputFolder. (LScheffler)
+
+2021-03-04 v1.19.58
+- Feature: Added support for writing to a different folder than the source code using a new tcOutputFolder parameter (Doug Hennig)
+- Feature: Added a configuration option: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes) (Doug Hennig)
+
 2021-03-05  v1.19.57.0
 - Bug Fix: RedirectClassType = 2 mixed up PATH (LScheffler)
 - Doc: improved (LScheffler)

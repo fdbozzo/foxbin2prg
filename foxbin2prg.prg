@@ -255,18 +255,16 @@
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Log settings object handed to execute (Debug > 0)
 
-* xx/xx/2021	LScheffler	v1.19.60	Enhancement: -cC options learned to create default FoxBin2Prg._cfg file
-* xx/xx/2021	LScheffler	v1.19.60	Enhancement: -t Option learned to create default  <tablename>._cfg file, if table is open.
-* xx/xx/2021	LScheffler	v1.19.60	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin see config per DBF
-* xx/xx/2021	LScheffler	v1.19.60	Enhancement: Debug-Logging for Index
-* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: DBF_Conversion_Condition was read, but never used
-* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
-* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: config options with text value fail, if line comment is set
-
-* xx/xx/2021	LScheffler	v1.19.60	Enhancement: FoxBin2Prg template and debug output ordered and completed, order synched, grouped and groups named
-* xx/xx/2021	LScheffler	v1.19.60	Enhancement: Option BackgroundImage was read, but not in template
-* xx/xx/2021	LScheffler	v1.19.60	Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory 
-
+* 22/03/2021	LScheffler	v1.19.60	Enhancement: -cC options learned to create default FoxBin2Prg._cfg file
+* 22/03/2021	LScheffler	v1.19.60	Enhancement: -t Option learned to create default  <tablename>._cfg file, if table is open.
+* 22/03/2021	LScheffler	v1.19.60	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin see config per DBF
+* 22/03/2021	LScheffler	v1.19.60	Enhancement: Debug-Logging for Index
+* 22/03/2021	LScheffler	v1.19.60	Bug Fix: DBF_Conversion_Condition was read, but never used
+* 22/03/2021	LScheffler	v1.19.60	Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
+* 22/03/2021	LScheffler	v1.19.60	Bug Fix: config options with text value fail, if line comment is set
+* 22/03/2021	LScheffler	v1.19.60	Enhancement: FoxBin2Prg template and debug output ordered and completed, order synched, grouped and groups named
+* 22/03/2021	LScheffler	v1.19.60	Enhancement: Option BackgroundImage was read, but not in template
+* 22/03/2021	LScheffler	v1.19.60	Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -718,10 +716,10 @@ Do Case
 	Case Pcount()=1 And tcType == '-t' And !Empty( Dbf() )
 		tc_InputFile = Dbf() + '._cfg'
 
-	Case Pcount()=1 And UPPER( tcType ) =='-C'
+	Case Pcount()=1 And Upper( tcType ) =='-C'
 		tc_InputFile = 'FoxBin2PRG._cfg'
 
-	Case Pcount()#2 And ( UPPER( tcType ) =='-C' OR tcType =='-t' )
+	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' )
 		tc_InputFile = ""
 		tcType       = ""
 
@@ -2387,7 +2385,7 @@ Define Class c_foxbin2prg As Session
 
 *settings for internal work, not processing
 * Depricated:
-								Case Left( laConfig(m.I), 17 ) == Lower('DontShowProgress:')		
+								Case Left( laConfig(m.I), 17 ) == Lower('DontShowProgress:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
 									If Not Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) And Inlist( lcValue, '0', '1', '2' ) Then
 										tcDontShowProgress	= lcValue
@@ -2397,7 +2395,7 @@ Define Class c_foxbin2prg As Session
 
 								Case Left( laConfig(m.I), 9 ) == Lower('Language:')
 *-- CASO ESPECIAL: El lenguaje no se guarda en lo_CFG, porque es un seteo Global.
-									lcValue	= Alltrim( Substr( laConfig(m.I), 10 , AT('&'+'&',laConfig(m.I)) - 10 ) )
+									lcValue	= Alltrim( Substr( laConfig(m.I), 10 , At('&'+'&',laConfig(m.I)) - 10 ) )
 									.changeLanguage(lcValue)
 									lo_CFG.c_Language_In = m.lcValue
 									.writeLog( C_TAB + Justfname(lcConfigFile) + ' > Language:                   ' + Transform(lcValue) + ' (' + .c_Language + ')' )
@@ -2687,14 +2685,14 @@ Define Class c_foxbin2prg As Session
 									Endif
 
 								Case Left( laConfig(m.I), 24 ) == Lower('DBF_Conversion_Included:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , AT('&'+'&',laConfig(m.I)) - 25 ) )
+									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , At('&'+'&',laConfig(m.I)) - 25 ) )
 									If Not Empty(lcValue) Then
 										lo_CFG.c_DBF_Conversion_Included	= lcValue
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_Conversion_Included:    ' + Transform(lo_CFG.c_DBF_Conversion_Included) )
 									Endif
 
 								Case Left( laConfig(m.I), 24 ) == Lower('DBF_Conversion_Excluded:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , AT('&'+'&',laConfig(m.I)) - 25 ) )
+									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , At('&'+'&',laConfig(m.I)) - 25 ) )
 									If Not Empty(lcValue) Then
 										lo_CFG.DBF_Conversion_Excluded	= lcValue
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + Transform(lo_CFG.DBF_Conversion_Excluded) )
@@ -2716,7 +2714,7 @@ Define Class c_foxbin2prg As Session
 
 *Text file extensions
 								Case Left( laConfig(m.I), 10 ) == Lower('Extension:')
-									lcConfData	= Alltrim( Substr( laConfig(m.I), 11 , AT('&'+'&',laConfig(m.I)) - 11 ) )
+									lcConfData	= Alltrim( Substr( laConfig(m.I), 11 , At('&'+'&',laConfig(m.I)) - 11 ) )
 									lcExt		= Alltrim( Getwordnum( lcConfData, 1, '=' ) )
 									lcProp		= 'c_' + lcExt
 									If Pemstatus( lo_CFG, lcProp, 5 )
@@ -3017,7 +3015,7 @@ Define Class c_foxbin2prg As Session
 		lnFileCount	= Adir(laDirFile, lcTableCFG)
 
 		If lnFileCount = 1
- 
+
 			to_out_DBF_CFG	= Createobject("CL_DBF_CFG")
 
 			If tlGenerateLog Then
@@ -3039,13 +3037,13 @@ Define Class c_foxbin2prg As Session
 						Endif
 
 					Case Left( lcConfigItem, 21 ) == Lower('DBF_Conversion_Order:')
-						to_out_DBF_CFG.DBF_Conversion_Order		= Alltrim( Substr( laConfig(m.I), 22 , AT('&'+'&',laConfig(m.I)) - 22 ) )
+						to_out_DBF_CFG.DBF_Conversion_Order		= Alltrim( Substr( laConfig(m.I), 22 , At('&'+'&',laConfig(m.I)) - 22 ) )
 						If tlGenerateLog Then
 							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Order: ' + to_out_DBF_CFG.DBF_Conversion_Order )
 						Endif
 
 					Case Left( lcConfigItem, 25 ) == Lower('DBF_Conversion_Condition:')
-						to_out_DBF_CFG.DBF_Conversion_Condition	= Alltrim( Substr( laConfig(m.I), 26 , AT('&'+'&',laConfig(m.I)) - 26 ) )
+						to_out_DBF_CFG.DBF_Conversion_Condition	= Alltrim( Substr( laConfig(m.I), 26 , At('&'+'&',laConfig(m.I)) - 26 ) )
 						If tlGenerateLog Then
 							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Condition: ' + to_out_DBF_CFG.DBF_Conversion_Condition )
 						Endif
@@ -3055,7 +3053,7 @@ Define Class c_foxbin2prg As Session
 * additional options controlling
 * - new operations of DBF, additional list of non structural index files
 					Case Left( lcConfigItem, 14 ) == Lower('DBF_IndexList:')
-						to_out_DBF_CFG.DBF_IndexList	= Substr( laConfig(m.I), 15 , AT('&'+'&',laConfig(m.I)) - 15 )
+						to_out_DBF_CFG.DBF_IndexList	= Substr( laConfig(m.I), 15 , At('&'+'&',laConfig(m.I)) - 15 )
 						If tlGenerateLog Then
 							This.writeLog('		' + Justfname(lcTableCFG) + ' >DBF_IndexList:           ' + Transform(to_out_DBF_CFG.DBF_IndexList) )
 						Endif
@@ -3480,9 +3478,9 @@ Define Class c_foxbin2prg As Session
 * n_RedirectClassType = 0 will import all classes of file.VCX (as just handing file.vc2)
 * n_RedirectClassType = 1 will import the class to single lib file[.baseclass].class.VCX
 					Do Case
-					    Case LOWER(m.lcType)=='-c'
+						Case Lower(m.lcType)=='-c'
 * not handled
-					    Case m.lcType=='-t'
+						Case m.lcType=='-t'
 * not handled
 						Case .n_RedirectClassType # 2
 * not handled
@@ -3539,12 +3537,12 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
-						Case m.lcType=='-t' And ( Vartype( m.tc_InputFile )='C' AND !EMPTY( m.tc_InputFile ) )
+						Case m.lcType=='-t' And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
 							loLang	     = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( Strtran( '*' + m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
 
-						Case m.lcType=='-c' 
-							tc_InputFile = IIF( Vartype( m.tc_InputFile )='C' AND !EMPTY( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
+						Case m.lcType=='-c'
+							tc_InputFile = Iif( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
 							loLang		 = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
 *!*	/Changed by: Lutz Scheffler 15.2.2021
@@ -3568,7 +3566,7 @@ Define Class c_foxbin2prg As Session
 								laLines(1),;
 								laOptions(m.lnOptions,3)
 
-							tc_InputFile = IIF( Vartype( m.tc_InputFile )='C' AND !EMPTY( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
+							tc_InputFile = Iif( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
 							loLang       = _Screen.o_FoxBin2Prg_Lang
 							lcText       = Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A)
 							lnLines      = Alines(laLines,m.lcText)
@@ -3739,17 +3737,17 @@ Define Class c_foxbin2prg As Session
 
 										Case m.laOptions( m.lnOption, 3 ) = 4
 											lcReturn = ' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
-                                            lcReturn = Padr( m.lcReturn , MAX( LEN ( m.lcReturn )+1, Len( m.lcValue ) + 1 ) )
+											lcReturn = Padr( m.lcReturn , Max( Len ( m.lcReturn )+1, Len( m.lcValue ) + 1 ) )
 
 										Case m.laOptions( m.lnOption, 3 ) = 5
-											IF Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
-											lcReturn = ' *'
-											 
-											Else  &&Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) ) 
-											lcReturn = ' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
+											If Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
+												lcReturn = ' *'
 
-											Endif &&Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) ) 
-                                            lcReturn = Padr( m.lcReturn , MAX( LEN ( m.lcReturn )+1, Len( m.lcValue ) + 1 ) )
+											Else  &&Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
+												lcReturn = ' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
+
+											Endif &&Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
+											lcReturn = Padr( m.lcReturn , Max( Len ( m.lcReturn )+1, Len( m.lcValue ) + 1 ) )
 
 										Case m.laOptions( m.lnOption, 3 ) = 6
 											If Lower( Justfname ( Evaluate( m.laOptions( m.lnOption, 2 ) ) ) ) == 'foxbin2prg.jpg' Then
@@ -13720,13 +13718,13 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					, loDBFUtils As CL_DBF_UTILS Of 'FOXBIN2PRG.PRG' ;
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG' ;
 					, ldLastUpdate ;
-					, lcIndexFile 
-					
+					, lcIndexFile
+
 				With This As c_conversor_prg_a_dbf Of 'FOXBIN2PRG.PRG'
 					Store Null To loIndex
 					Store 0 To lnCodError
 					Store '' To lcIndex
-					Store .NULL. To lcIndexFile
+					Store .Null. To lcIndexFile
 
 					If toTable._Indexes.Count # 0 Then
 						loDBFUtils			= Createobject('CL_DBF_UTILS')
@@ -13738,27 +13736,27 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 
 *-- Regenero los índices
 						For Each loIndex In toTable._Indexes FoxObject
-							DO CASE
-								CASE ISNULL ( m.lcIndexFile ) AND EMPTY (m.loIndex._IndexFile)
+							Do Case
+								Case Isnull ( m.lcIndexFile ) And Empty (m.loIndex._IndexFile)
 									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_STRUCTURAL_LOC )
 									toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 49) )
 
-								CASE ISNULL ( m.lcIndexFile ) AND m.loIndex._StandAlone
+								Case Isnull ( m.lcIndexFile ) And m.loIndex._StandAlone
 									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_STANDALONE_LOC + m.loIndex._IndexFile )
 
-								CASE ISNULL ( m.lcIndexFile )
+								Case Isnull ( m.lcIndexFile )
 									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_COMPOUND_LOC + m.loIndex._IndexFile )
 									toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 59) )
 
-								CASE ! m.lcIndexFile == m.loIndex._IndexFile AND m.loIndex._StandAlone
+								Case ! m.lcIndexFile == m.loIndex._IndexFile And m.loIndex._StandAlone
 									toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
 									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_STANDALONE_LOC + m.loIndex._IndexFile )
 
-								CASE ! m.lcIndexFile == m.loIndex._IndexFile
+								Case ! m.lcIndexFile == m.loIndex._IndexFile
 									toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
 									toFoxBin2Prg.writeLog( loLang.C_INDEX2BIN_COMPOUND_LOC + m.loIndex._IndexFile )
 									toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 59) )
-							ENDCASE
+							Endcase
 							lcIndexFile = m.loIndex._IndexFile
 
 							lcIndex	= 'INDEX ON ' + loIndex._Key
@@ -13805,7 +13803,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 
 						toFoxBin2Prg.updateProcessedFile()
 					Endif &&toTable._Indexes.COUNT # 0
-						toFoxBin2Prg.writeLog( Replicate('+', 100) )
+					toFoxBin2Prg.writeLog( Replicate('+', 100) )
 				Endwith && THIS
 
 
@@ -25186,13 +25184,13 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 				Endcase
 
 * Lutz Scheffler 18.03.2021 added handling DBF_IndexList:
-					If lnFileCount = 1
-						lc_DBF_IndexList = loDBF_CFG.DBF_IndexList
-						If Not Empty(lc_DBF_IndexList)
-							toFoxBin2Prg.writeLog('  > Using non structural index files: ' + lc_DBF_IndexList)
-						Endif
-
+				If lnFileCount = 1
+					lc_DBF_IndexList = loDBF_CFG.DBF_IndexList
+					If Not Empty(lc_DBF_IndexList)
+						toFoxBin2Prg.writeLog('  > Using non structural index files: ' + lc_DBF_IndexList)
 					Endif
+
+				Endif
 
 * Lutz Scheffler 18.03.2021 moved index to get Settings per DBF
 *-- Indexes
@@ -25650,7 +25648,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 					llBloqueEncontrado	= .T.
 
 					lcFile       = Strextract(m.tcLine,C_CDX_File_,'"',1)
-					llStandAlone = Strextract(m.tcLine,C_CDX_Type_,'"',1) == C_CDX_Type_IDX 
+					llStandAlone = Strextract(m.tcLine,C_CDX_Type_,'"',1) == C_CDX_Type_IDX
 					With This As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG'
 						For I = m.I + 1 To tnCodeLines
 							.set_Line( @tcLine, @taCodeLines, m.I )
@@ -25817,7 +25815,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 *!*	</change>
 *!*	</pdm>
 				lcIndexFile = Juststem( Dbf() ) + '.CDX'
- 
+
 *				If Tagcount() > 0
 				If Tagcount( m.lcIndexFile ) > 0
 					lcIndexType = C_CDX_Type_Struct
@@ -25890,11 +25888,11 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 								Endif &&TAGCOUNT( m.lcIndexFile ) > 0
 
 							Catch To m.loEx When m.loEx.ErrorNo = 1
-				*File Not found
+*File Not found
 								toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_NOFILE_LOC + m.lcIndexFile)
 
 							Catch To m.loEx When m.loEx.ErrorNo=114
-				*INDEX does not match
+*INDEX does not match
 								toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_NOTTHISTABLE_LOC + m.lcIndexFile)
 
 							Catch To m.loEx
@@ -25920,7 +25918,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Endif &&!EMPTY(m.lcText)
 
 				toFoxBin2Prg.writeLog( Replicate('+', 100)+0h0D0A )
-				* /SF
+* /SF
 
 			Catch To loEx
 				If This.n_Debug > 0 And _vfp.StartMode = 0
@@ -30203,7 +30201,7 @@ Define Class CL_LANG As Custom
 						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t            creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
-						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder. 
+						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
 						<<>>
 						<<>>
 							ENDTEXT
@@ -30253,7 +30251,7 @@ Define Class CL_LANG As Custom
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
-						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
@@ -30454,7 +30452,7 @@ Define Class CL_LANG As Custom
 						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t            creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
-						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder. 
+						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
 						<<>>
 							ENDTEXT
 *** DH 2021-03-04: added HomeDir to text
@@ -30503,7 +30501,7 @@ Define Class CL_LANG As Custom
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
-						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
@@ -30770,7 +30768,7 @@ Define Class CL_LANG As Custom
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
 						<<>>                               &&   Nur für die file[.baseclass].class.tx2 Syntax
 						<<>>                               &&   Wird für RedirectClassType: 2 ignoriert
-						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>-- Optionen für DBC
 						<<>>- Optionen für Datei per DBC options (UseFilesPerDBC: 1)
@@ -30988,7 +30986,7 @@ Define Class CL_LANG As Custom
 						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t            creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
-						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder. 
+						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
 						<<>>
 						<<>>
 							ENDTEXT
@@ -31038,7 +31036,7 @@ Define Class CL_LANG As Custom
 						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
-						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)

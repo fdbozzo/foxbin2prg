@@ -30,7 +30,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/xx/xx | LScheffler | [v1.19.60](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.60) | **Enhancement**: FoxBin2Prg template and debug output: Completed and ordered, order synched, grouped and groups named at template. |
+| 2021/03/22 | LScheffler | [v1.19.60](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.60) | **Enhancement**: FoxBin2Prg template and debug output: Completed and ordered, order synched, grouped and groups named at template. |
 | | | | **Enhancement**: Option BackgroundImage was read, but not in template |
 | | | | **Enhancement**: -cC options learned to create default FoxBin2Prg._cfg file |
 | | | | **Enhancement**: -t Option learned to create default  \<tablename\>._cfg file, if table is open. |
@@ -387,4 +387,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/22_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
