@@ -125,6 +125,15 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ## Changes
 See [Changes](./Documentacion/github/FoxBin2prg_Changes.md)
 
+## Changes in 1.19.60
+* -cC options learned to create default FoxBin2Prg._cfg file
+* -t Option learned to create default  \<TableName\>._cfg file, if table is open.
+* Handling of additional non structural index per DBF in Bin2Text and Text2Bin
+* Debug-Logging for Index
+* Bug Fix: DBF_Conversion_Condition was read, but never used
+* Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
+* Bug Fix: config options with text value fail, if line comment is set
+
 ## Changes in 1.19.59
 * Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
 * Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
@@ -139,15 +148,12 @@ See [Changes](./Documentacion/github/FoxBin2prg_Changes.md)
 DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a file like FoxBin2Prg.cfg config file with recent settings
 ```
 
-## Changes in 1.19.58
-* Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
-* Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
-
-## Changes pre 1.19.58
+## Changes to Settings
 To get the new settings in config file, use the new create-a-template function:
 
 ```
-DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest default settings
+DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with active settings
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
@@ -172,37 +178,6 @@ The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions genera
 It's a good idea to have the _FoxBin2Prg.cfg_ per projekt and and source control,
 old commits / versions would have the old config.  
 So the settings would fit the data and FoxBin2Prg could generate according to it.
-	
-### Fixes
-| Details |
-| - |
-| Added MEM and FKY options to config template and internal documentation |
-| Conversion prg -> vcx, files per class could create one class multiple times |
-| Processing directory, flush log file after loop instead of file |
-| Conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
-| Minor translations |
-| Conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
-| DBF_Conversion_Condition, problem with macro expansion |
-| Bug on special setting for import in form file[.baseclass].class.vc2 |
-| Bug on RedirectClassType = 2 mixed up PATH |
-| Bug on RedirectClassType = 2, UseClassPerFile = 2 failed |
-
-### Features
-
-| Details |
-| - |
-| [Documentation](./Documentacion/github/FoxBin2prg.md) reworked. |
-| German translation improved |
-| Info screen-doc improved |
-| Inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
-| Inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
-| Inserted option OldFilesPerDBC to control split of DBC, the options below are controled by this |
-| Inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
-| Inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
-| Inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
-| added option to create config file template |
-| New value 2 for option RedirectClassType. Alter single class for input form file[.baseclass].class.vc2 |
-
 
 ---
 ---

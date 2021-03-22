@@ -1,58 +1,33 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.19.59
+*Version: v1.19.60
 *****************************************************************************************************************
 
-*extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+*-- Settings for internal work, not processing
+*Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 *ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
 *DontShowErrors: 0              && Show message errors by default
-*NoTimestamps: 1                && Clear timestamps by default for minimize differences
-*Debug: 0                       && Don't Activate individual <file>.Log by default
-*BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
 *ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
-*ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
-*ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-*OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-*RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
-*RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-*Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-*ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
-*PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+*Debug: 0                       && Don't Activate individual <file>.Log by default
+*BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 *HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
-
 *----------------------------------------------------------------------------------------------------------------
-*-- Convertion options:
+
+*-- Conversion operation by type
 *PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
-*MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 *DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-*DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-*DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-
+*FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 *----------------------------------------------------------------------------------------------------------------
-*-- DBC options
-*- File per DBC options (UseFilesPerDBC: 1)
-*OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
-*                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
-*                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
-*UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
-*                               && 0 creates only a file.dc2 with all DBC (file) data
-*                               && 1 creates a file.dc2 with DBC properties
-*                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
-*                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-*RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
-*ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-*DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-*DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
 
-*----------------------------------------------------------------------------------------------------------------
-*-- CLASS and FORM options
+*Setting for container files (not pjx)
+*-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 *- Class per file options (UseClassPerFile: 1)
 *UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
 *RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
@@ -66,8 +41,46 @@
 *ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 *                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 *                               &&   Ignored for RedirectClassType: 2
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
 
+*-- DBC options
+*- File per DBC options (UseFilesPerDBC: 1)
+*OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
+*                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
+*                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+*UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
+*                               && 0 creates only a file.dc2 with all DBC (file) data
+*                               && 1 creates a file.dc2 with DBC properties
+*                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
+*                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
+*RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+*ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 *----------------------------------------------------------------------------------------------------------------
+
+*-- General files
+*NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+*ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+*OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+*RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+*RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+*PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+*----------------------------------------------------------------------------------------------------------------
+
+*-- PJX special
+*BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+*----------------------------------------------------------------------------------------------------------------
+
+*-- DBF special
+*ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+*ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+*DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+*DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+*DBF_BinChar_Base64: 1          && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+*DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
+*----------------------------------------------------------------------------------------------------------------
+
+*-- Text file extensions
+*extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 *-- Example configuration for SourceSafe compatibility:
 *extension: pj2=pja             && Text file to PJX
 *extension: vc2=vca             && Text file to VCX
@@ -80,3 +93,4 @@
 *-- Additional extensions
 *extension: fk2=fkx             && Text file to FKY
 *extension: me2=fkx             && Text file to MEM
+*
