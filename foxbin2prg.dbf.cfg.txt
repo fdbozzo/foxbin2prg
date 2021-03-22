@@ -13,7 +13,7 @@
 *DBF_Conversion_Condition: <c_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
 *                                            && leer: Alle, außer DBF_IncludeDeleted
 *DBF_IndexList: <cFile_List>                 && Kommagetrennte Liste von Dateien. Zusätzliche Index - Dateien. CDX oder IDX. Nicht der Strukturelle Index
-*DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeicehn Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
+*DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeichen Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
 *                                            &&   Dies entspricht dem Flag 4096 in CursorToXML()
 *                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
 *DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze, 1=Mit gelöschten Datensätzen

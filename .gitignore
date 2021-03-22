@@ -5,6 +5,7 @@
 *.prj
 *.pui
 *.orig
+*.err
 /*.dbf
 /*.CDX
 /*.fxp

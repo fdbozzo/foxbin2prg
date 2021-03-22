@@ -30,38 +30,40 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: -cC options learned to create default FoxBin2Prg._cfg file |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: -t Option learned to create default  \<tablename\>._cfg file, if table is open. |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: Handling of additional non structural index per DBF in Bin2Text and Text2Bin. See [Config per DBF](./FoxBin2Prg_Internals.md#configuration-per-table). |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: Debug-Logging for Index |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Bug Fix**: DBF_Conversion_Condition was read, but never used |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Bug Fix**: DBF_Conversion_Order sets an index that later would be stored as structural index |
-| 2021/xx/xx | LScheffler | [v1.19.60]() | **Bug Fix**: config options with text value fail, if line comment is set |
-| 2021/03/09 | LScheffler | [v1.19.59]() | **Feature**: Logging of settings as settings object passed to execute method (Option debug > 0) |
-| 2021/03/09 | LScheffler | [v1.19.59]() | **Feature**: Added option to create config file template based on current values of a directory |
-| 2021/03/09 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, Path was set wrong in special config |
-| 2021/03/09 | LScheffler | [v1.19.59]() | **Bug Fix**: RedirectClassType = 2, UseClassPerFile = 2 failed |
-| 2021/03/09 | LScheffler | [v1.19.59]() | **Doc**: Improved, Better description of ClassPerFileCheck, tcOutputFolder. |
-| 2021/03/04 | Doug Hennig | [v1.19.58]() | **Feature**: Added support for writing to a different folder than the source code using a new tcOutputFolder parameter |
+| 2021/xx/xx | LScheffler | [v1.19.60]() | **Enhancement**: FoxBin2Prg template and debug output: Completed and ordered, order synched, grouped and groups named at template. |
+| | | | **Enhancement**: Option BackgroundImage was read, but not in template |
+| | | | **Enhancement**: -cC options learned to create default FoxBin2Prg._cfg file |
+| | | | **Enhancement**: -t Option learned to create default  \<tablename\>._cfg file, if table is open. |
+| | | | **Enhancement**: Handling of additional non structural index per DBF in Bin2Text and Text2Bin. See [Config per DBF](./FoxBin2Prg_Internals.md#configuration-per-table). |
+| | | | **Enhancement**: Debug-Logging for Index |
+| | | | **Bug Fix**: DBF_Conversion_Condition was read, but never used |
+| | | | **Bug Fix**: DBF_Conversion_Order sets an index that later would be stored as structural index |
+| | | | **Bug Fix**: config options with text value fail, if line comment is set |
+| 2021/03/09 | LScheffler | v1.19.59 | **Feature**: Logging of settings as settings object passed to execute method (Option debug > 0) |
+| | | | **Feature**: Added option to create config file template based on current values of a directory |
+| | | | **Bug Fix**: RedirectClassType = 2, Path was set wrong in special config |
+| | | | **Bug Fix**: RedirectClassType = 2, UseClassPerFile = 2 failed |
+| | | | **Doc**: Improved, Better description of ClassPerFileCheck, tcOutputFolder. |
+| 2021/03/04 | Doug Hennig | [v1.19.58](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.58) | **Feature**: Added support for writing to a different folder than the source code using a new tcOutputFolder parameter |
 | | | | **Feature**: Added a configuration option: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes) |
-| 2021/03/05 | LScheffler | [v1.19.57]() | **Bug Fix**: RedirectClassType = 2 mixed up PATH |
+| 2021/03/05 | LScheffler | v1.19.57 | **Bug Fix**: RedirectClassType = 2 mixed up PATH |
 | | | | **Doc**: Improved |
-| 2021/03/04 | LScheffler | [v1.19.56]() | **Feature**: New value 2 for option RedirectClassType = 2, just process the single class for input in form file[.baseclass].class.vc2 |
+| 2021/03/04 | LScheffler | v1.19.56 | **Feature**: New value 2 for option RedirectClassType = 2, just process the single class for input in form file[.baseclass].class.vc2 |
 | | | | **Bug Fix**:<br>Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1<br>generates classlib.class.vcx and tries to recompile classlib.vcx<br>fails silent if classlib.vcx exists (compiles wrong lib), with message if not. |
-| 2021/03/03 | LScheffler | [v1.19.55]() | **Doc**: Documentation from CodePlex integrated |
+| 2021/03/03 | LScheffler | v1.19.55 | **Doc**: Documentation from CodePlex integrated |
 | | | | **Feature**: added option to create config file template |
 | | | | **Doc**: Info screen-doc improved |
 | | | | **Doc**: German translation improved |
-| 2021/03/03 | LScheffler | [v1.19.54]() | **Bug Fix**: DBF_Conversion_Condition, problem with macro expansion |
+| 2021/03/03 | LScheffler | v1.19.54 | **Bug Fix**: DBF_Conversion_Condition, problem with macro expansion |
 | 2021/02/20 | LScheffler | | **Feature**: inserted option DBF_IncludeDeleted to allow including deleted records of DBF |
 | 2021/02/19 | LScheffler | | **Feature**: inserted option DBF_BinChar_Base64 to allow processing of NoCPTrans fields in non base64 way |
 | 2021/02/15 | LScheffler | | **Feature**: inserted option ItemPerDBCCheck to split DBC processing from vcx / scx |
 | | | | **Feature**: inserted option RedirectFilePerDBCToMain to split DBC processing from vcx / scx |
 | 2021/02/14 | LScheffler | | **Feature**: inserted option UseFilesPerDBC to split DBC processing from vcx / scx |
-| 2021/02/23 | LScheffler | [v1.19.53]() | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
+| 2021/02/23 | LScheffler | v1.19.53 | **Doc**: For Info screen  and config-template, usage of MEM and FRX added |
 | | | | **Bug Fix**: conversion prg -> vcx, files per class could create one class multiple times |
 | 2021/02/15 | | | **Bug Fix**: processing directory, flush log file after loop instead of file |
-| 2021/02/14 | LScheffler | [v1.19.52]() | **Bug Fix**: conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
+| 2021/02/14 | LScheffler | v1.19.52 | **Bug Fix**: conversion prg -> dbf, fields with .NULL. value are incorectly recreated |
 | | | | **Doc**: minor translations |
 | | | | **Bug Fix**: conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false) |
 | 2020/04/01 | FDBOZZO | [v1.19.51.6](https://github.com/fdbozzo/foxbin2prg/tree/v1.19.51.6) | Add some fixes to existent ut_tests |
@@ -384,4 +386,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

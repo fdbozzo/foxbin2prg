@@ -92,8 +92,8 @@ the definition of a HEADER class to a VCX will fail.
 ## Configuration file
 It is possible to create a template or a config with all options and comments via   
 ```
-DO FOXBIN2PRG.PRG WITH "-c","template.cfg"    ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
-DO FOXBIN2PRG.PRG WITH "-C","config.cfg"      ==> Generates a config file like FoxBin2Prg.cfg with recent settings of path of second parameter
+DO FOXBIN2PRG.PRG WITH "-c","template.cfg"    &&==> Generates a template for FoxBin2Prg.cfg config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-C","config.cfg"      &&==> Generates a config file like FoxBin2Prg.cfg with recent settings of path of second parameter
 ```
 See [command line](./FoxBin2Prg_Run.md#usage-2).   
 The config file is used to move local setting to a different comupter or for changes while branching.
@@ -104,17 +104,15 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 
 | FoxBin2Prg.cfg keywords | Value (_Default_) | Description |
 | ----- | ----- | ----- |
-| extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that.<br/>For example you can change pj2 to pja using this: "extension: pj2=pja" for making it SourceSafe (sccapi v1) compatible.<br/>It could be any pair, used sources are:<br/>pj2, vc2, sc2, fr2, lb2, mn2, db2, dc2, fk2, me2  |
+| Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
 | DontShowProgress | 0 | **Deprecated**. Replaced by ShowProgressbar option from v1.19.40 |
 | ShowProgressbar | 0, _1_, 2 | 1=Always show a progress bar,<br/>2=Only show it when processing multiple-files,<br/>0=Don't show progressbar |
 | DontShowErrors | _0_, 1 | By default, show message errors in a modal messagebox.<br/>Specify "1" if don't want to show errors |
-| NoTimestamps | 0, _1_ | By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on _Binaries_ and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files |
-| Debug | _0_, 1, 2 | By default, don't generate individual <file>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
 | ExtraBackupLevels | 0, _1_, n | By default, one _filename_.BAK file is created.<br/>With this setting you can make more _filename_.n.BAK files,<br/>or none at all using 0 |
-| ClearUniqueID | 0, _1_ | 0=Keep UniqueID,<br/>1=Clear Unique ID.<br/>Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
-| OptimizeByFilestamp | _0_, 1 | 0=Don't optimize (always generate),<br/>1=Optimize (generate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
-| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code,<br/>0=Leave NULLs in source code |
-| RemoveZOrderSetFromProps | _0_, 1 | 1=Remove ZOrderSet from the properties,<br/>0=Leave ZOrderSet in the properties |
+| Debug | _0_, 1, 2 | By default, don't generate individual <file>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
+| BackgroundImage | <cFile> | Backgroundimage for process form |
+| HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
+|||
 | XXX_Conversion_Support | n | Defines the conversion operation per filetype |
 | | | For code:<br/> 0=No support,<br/>1=Generate _Text_ (Diff),<br/>2=Generate _Text_ and _Bin_ (Merge) |
 | | | For complex data:<br/> (PJX / DBC / DBF): 0=No support,<br/>1=Generate Header _Text_ only (Diff),<br/>2=Generate Header _Text_ and _Bin_ (Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
@@ -124,12 +122,19 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | FRX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
 | LBX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
 | MNX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| FKY_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
-| MEM_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
 | DBC_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
 | DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated.<br/>The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!.<br/>A value of 4 is used to export Structure and Data, but exported data is not imported again.<br/>A value of 8 is used for bidirectional support (No General fields!). <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
-| DBF_Conversion_Included | * | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records). |
-| DBF_Conversion_Excluded | | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records). |
+| FKY_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
+| MEM_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
+|||
+| UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
+| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2,<br/>1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
+| RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
+| | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
+| | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
+| | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
+| [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
+|||
 | OldFilesPerDBC | _0_, 1 | This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the options will be read. |
 | | | 0 New version inactive, options follow:<br/>UseFilesPerDBC=UseClassPerFile<br/>RedirectFilePerDBCToMain=RedirectClassPerFileToMain<br/>ItemPerDBCCheck=ClassPerFileCheck |
 | | | 1 New version active, options active |
@@ -141,19 +146,33 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | | | Note: recration only if RedirectFilePerDBCToMain is 1 |
 | [RedirectFilePerDBCToMain](#redirectfileperdbctomain) | _0_, 1 | 0=Don't redirect to file.dc2,<br/>1=Redirect to file.tx2 when selecting file.item.*.dc2<br/>**Only if OldFilesPerDBC is 1** |
 | [ItemPerDBCCheck](#itemperdbccheck) | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion,<br/> 1=Check file.item.*.dc2 inclusion<br/>**Only if OldFilesPerDBC is 1**|
-| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default) <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
+|||
+| NoTimestamps | 0, _1_ | By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on _Binaries_ and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files |
+| ClearUniqueID | 0, _1_ | 0=Keep UniqueID,<br/>1=Clear Unique ID.<br/>Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
+| OptimizeByFilestamp | _0_, 1 | 0=Don't optimize (always generate),<br/>1=Optimize (generate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
+| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code,<br/>0=Leave NULLs in source code |
+| RemoveZOrderSetFromProps | _0_, 1 | 1=Remove ZOrderSet from the properties,<br/>0=Leave ZOrderSet in the properties |
+|||
+| ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
+| ExcludeDBFAutoincNextval | _0_, 1 | 0=Do not exclude this value from db2, 1=Exclude this value from db2 |
+| DBF_Conversion_Included | * | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records).<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
+| DBF_Conversion_Excluded | | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records).<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
+| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default),<br/>1=Include deleted records<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | | |  **Note:**<br/>This is only true for tables. Generating DBC to _Text_ and back to _Binary_ will act as PACK DATABASE.<br/>The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files. |
-| UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
-| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2,<br/>1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
-| RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
-| | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
-| | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
-| | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
-| [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
-| ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
-| Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
-| HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
+|||
+| extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that. |
+| extension: pj2= | \<extension\> | Text file for project PJX |
+| extension: vc2= | \<extension\> | Text file for classlibray VCX, or a class out of a VCX |
+| extension: sc2= | \<extension\> | Text file for form SCX, or a class out of a SCX (Form; Dataenbironment) |
+| extension: fr2= | \<extension\> | Text file for report FRX |
+| extension: lb2= | \<extension\> | Text file for label LBX |
+| extension: mn2= | \<extension\> | Text file for menu MNX |
+| extension: db2= | \<extension\> | Text file for table DBF, free or DBC bound |
+| extension: dc2= | \<extension\> | Text file for database container DBC, or records from database container DBC |
+| extension: fk2= | \<extension\> | Text file for macro file FKY |
+| extension: me2= | \<extension\> | Text file for variable memory MEM, created with SAVE TO |
+|  | | **Example for for making it SourceSafe (sccapi v1) compatible:**<br/>extension: pj2=pja<br/>extension: vc2=vca<br/>extension: sc2=sca<br/>extension: fr2=fra<br/>extension: lb2=lba<br/>extension: mn2=mna<br/>extension: db2=dba<br/>extension: dc2=dca  |
 
 ### Note
 The options will be read outside in, top to down. See [Multi-config](#multi-config)
@@ -162,7 +181,7 @@ The options will be read outside in, top to down. See [Multi-config](#multi-conf
 Those configuration files are valid for a single table only. The idea is to have special settings for single tables.   
 It is possible to create a template with all options and comments via
 ```
-DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  &&==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
 See [command line](./FoxBin2Prg_Run.md#usage-2).   
@@ -707,4 +726,4 @@ See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
