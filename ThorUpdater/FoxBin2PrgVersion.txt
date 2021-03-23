@@ -1,7 +1,7 @@
 lparameters toUpdateObject
 local ldDate
 ldDate = date()
-toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.19.59' + ;
+toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.19.60' + ;
 	'-update-' + dtoc(ldDate, 1)
 return toUpdateObject
 

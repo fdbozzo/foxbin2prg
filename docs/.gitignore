@@ -1,0 +1,11 @@
+# we use the exclude-all-include-special approach, easier then excluding any odd stuff later
+#exclude general
+*.*
+
+#include general
+# docs
+!*.md
+
+#include special
+#default git
+!*.gitignore

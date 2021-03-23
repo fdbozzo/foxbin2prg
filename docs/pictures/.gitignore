@@ -1,0 +1,7 @@
+# we use the exclude-all-include-special approach, easier then excluding any odd stuff later
+ #excluded in parent directory, we just add the stuff to include here
+
+#include general
+#grafics
+!*.gif
+!*.png
