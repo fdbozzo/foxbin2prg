@@ -265,6 +265,7 @@
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: FoxBin2Prg template and debug output ordered and completed, order synched, grouped and groups named
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: Option BackgroundImage was read, but not in template
 * 22/03/2021	LScheffler	v1.19.60	Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory
+* 23/03/2021	LScheffler	v1.19.61	Bug Fix: missnamed property
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -925,7 +926,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.60'
+	c_FB2PRG_Version_Real			= '1.19.61'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1755,11 +1756,11 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure DBF_Conversion_Excluded_ACCESS
+	Procedure c_DBF_Conversion_Excluded_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.DBF_Conversion_Excluded
+			Return This.c_DBF_Conversion_Excluded
 		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).DBF_Conversion_Excluded, This.DBF_Conversion_Excluded )
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).c_DBF_Conversion_Excluded, This.c_DBF_Conversion_Excluded )
 		Endif
 	Endproc
 
@@ -2694,8 +2695,8 @@ Define Class c_foxbin2prg As Session
 								Case Left( laConfig(m.I), 24 ) == Lower('DBF_Conversion_Excluded:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , At('&'+'&',laConfig(m.I)) - 25 ) )
 									If Not Empty(lcValue) Then
-										lo_CFG.DBF_Conversion_Excluded	= lcValue
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + Transform(lo_CFG.DBF_Conversion_Excluded) )
+										lo_CFG.c_DBF_Conversion_Excluded	= lcValue
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + Transform(lo_CFG.c_DBF_Conversion_Excluded) )
 									Endif
 
 								Case Left( laConfig(m.I), 19 ) == Lower('DBF_BinChar_Base64:')
@@ -2854,8 +2855,8 @@ Define Class c_foxbin2prg As Session
 *dbf special
 					.writeLog( C_TAB + 'ClearDBFLastUpdate:         ' + Transform(.l_ClearDBFLastUpdate) )
 					.writeLog( C_TAB + 'ExcludeDBFAutoincNextval:   ' + Transform(.n_ExcludeDBFAutoincNextval) )
-					.writeLog( C_TAB + 'DBF_Conversion_Included     ' + Transform(.c_DBF_Conversion_Support) )
-					.writeLog( C_TAB + 'DBF_Conversion_Excluded     ' + Transform(.c_DBC_Conversion_Support) )
+					.writeLog( C_TAB + 'DBF_Conversion_Included     ' + Transform(.c_DBF_Conversion_Included) )
+					.writeLog( C_TAB + 'DBF_Conversion_Excluded     ' + Transform(.c_DBF_Conversion_Excluded) )
 					.writeLog( C_TAB + 'DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
 					.writeLog( C_TAB + 'DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
 
@@ -18435,9 +18436,9 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 						Endif
 
 *-- Exclude
-						If Not Empty(toFoxBin2Prg.DBF_Conversion_Excluded) ;
-								AND toFoxBin2Prg.filenameFoundInFilter( Justfname(.c_InputFile), toFoxBin2Prg.DBF_Conversion_Excluded )
-							toFoxBin2Prg.writeLog('  ' + Justfname(.c_InputFile) + ' está en el filtro DBF_Conversion_Excluded (' + toFoxBin2Prg.DBF_Conversion_Excluded + ')' )
+						If Not Empty(toFoxBin2Prg.c_DBF_Conversion_Excluded) ;
+								AND toFoxBin2Prg.filenameFoundInFilter( Justfname(.c_InputFile), toFoxBin2Prg.c_DBF_Conversion_Excluded )
+							toFoxBin2Prg.writeLog('  ' + Justfname(.c_InputFile) + ' está en el filtro DBF_Conversion_Excluded (' + toFoxBin2Prg.c_DBF_Conversion_Excluded + ')' )
 							Exit
 						Endif
 
