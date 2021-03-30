@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.19.61
+*Version: v1.19.62
 *****************************************************************************************************************
 
 *-- Settings for internal work, not processing
@@ -41,7 +41,7 @@
 *ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
 *                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 *                               &&   Ignored for RedirectClassType: 2
-*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - 
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 *-- DBC options
 *- File per DBC options (UseFilesPerDBC: 1)
@@ -53,7 +53,7 @@
 *                               && 1 creates a file.dc2 with DBC properties
 *                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 *                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-*RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+*RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 *ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 *----------------------------------------------------------------------------------------------------------------
 

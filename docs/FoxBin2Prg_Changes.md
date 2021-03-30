@@ -30,7 +30,11 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2021/03/23 | LScheffler | [v1.19.61](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.61) | **Bug Fix**: missnamed property. |
+| 2021/03/30 | LScheffler | [v1.19.62](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.62) | **Enhancement**: Debug logging, level of config file. |
+| | | | **Bug Fix**: *_Conversion_Support options not read from config file. |
+| | | | **Bug Fix**: Extension shift options not read from config file. (Sergej s-s-a) |
+| | | | **Bug Fix**: RedirectFilePerDBCToMain option was defined wrong in configuration example |
+| 2021/03/23 | LScheffler | [v1.19.61](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.61) | **Bug Fix**: Missnamed property. |
 | 2021/03/22 | LScheffler | [v1.19.60](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.60) | **Enhancement**: FoxBin2Prg template and debug output: Completed and ordered, order synched, grouped and groups named at template. |
 | | | | **Enhancement**: Option BackgroundImage was read, but not in template |
 | | | | **Enhancement**: -cC options learned to create default FoxBin2Prg._cfg file |
@@ -40,7 +44,7 @@ _**Note:** you can click on the version number for downloading this version from
 | | | | **Bug Fix**: DBF_Conversion_Condition was read, but never used |
 | | | | **Bug Fix**: DBF_Conversion_Order sets an index that later would be stored as structural index |
 | | | | **Bug Fix**: config options with text value fail, if line comment is set |
-| | | | **Bug Fix**: issue #53 Variable lnFileCount in get_filesfromdirectory |
+| | | | **Bug Fix**: issue #53 Variable lnFileCount in get_filesfromdirectory (msueping) |
 | 2021/03/09 | LScheffler | v1.19.59 | **Feature**: Logging of settings as settings object passed to execute method (Option debug > 0) |
 | | | | **Feature**: Added option to create config file template based on current values of a directory |
 | | | | **Bug Fix**: RedirectClassType = 2, Path was set wrong in special config |
