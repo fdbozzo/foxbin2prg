@@ -266,10 +266,16 @@
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: Option BackgroundImage was read, but not in template
 * 22/03/2021	LScheffler	v1.19.60	Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory
 * 23/03/2021	LScheffler	v1.19.61	Bug Fix: missnamed property
+* 30/03/2021	LScheffler	v1.19.62	Bug Fix: *_Conversion_Support options not read from config file
+* 30/03/2021	LScheffler	v1.19.62	Bug Fix: Extension shift options not read from config file
+* 30/03/2021	LScheffler	v1.19.62	Bug Fix: RedirectFilePerDBCToMain option was defined wrong in configuration example
+* 30/03/2021	LScheffler	v1.19.62	Enhancement: Debug logging, level of config file.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
+* 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
 * 23/11/2013	Luis Martínez		REPORTE BUG scx v1.4: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny		REPORTE BUG vcx v1.5: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny		REPORTE BUG scx v1.6: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
@@ -740,13 +746,13 @@ Try
 			, .F., .F., .F., tcCFG_File )
 	Catch To loEx
 *-- Esto solo es para errores en el INIT, ya que los demás se deben capturar y tratar antes.
-	lnResp		= loEx.ErrorNo
-	Messagebox( 'Error ' + Transform(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
-		+ loEx.Procedure + ', Line ' + Transform(loEx.Lineno) + C_CR ;
-		+ loEx.Details ;
-		, 0+16+4096 ;
-		, '' ;
-		, 60000 )
+		lnResp		= loEx.ErrorNo
+		Messagebox( 'Error ' + Transform(loEx.ErrorNo) + ', ' + loEx.Message + C_CR ;
+			+ loEx.Procedure + ', Line ' + Transform(loEx.Lineno) + C_CR ;
+			+ loEx.Details ;
+			, 0+16+4096 ;
+			, '' ;
+			, 60000 )
 Endtry
 
 AddProperty(_Screen, 'ExitCode', lnResp)
@@ -926,7 +932,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.61'
+	c_FB2PRG_Version_Real			= '1.19.62'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1038,9 +1044,6 @@ Define Class c_foxbin2prg As Session
 	n_MEM_Conversion_Support		= 1
 	c_DBF_Conversion_Included		= ''
 	c_DBF_Conversion_Excluded		= ''
-*** DH 2021-03-04: added cOutputFolder and n_HomeDir properties
-	cOutputFolder					= ''			&& the folder to write files to (blank = same folder as source file)
-	n_HomeDir						= 1				&& 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2
 *** DH 2021-03-04: added cOutputFolder and n_HomeDir properties
 	cOutputFolder					= ''			&& the folder to write files to (blank = same folder as source file)
 	n_HomeDir						= 1				&& 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2
@@ -1687,7 +1690,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure SCX_Conversion_Support_ACCESS
+	Procedure n_SCX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_SCX_Conversion_Support
 		Else
@@ -1696,7 +1699,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure FRX_Conversion_Support_ACCESS
+	Procedure n_FRX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_FRX_Conversion_Support
 		Else
@@ -1705,7 +1708,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure LBX_Conversion_Support_ACCESS
+	Procedure n_LBX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_LBX_Conversion_Support
 		Else
@@ -1714,7 +1717,25 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure MNX_Conversion_Support_ACCESS
+	Procedure n_DBC_Conversion_Support_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_DBC_Conversion_Support
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBC_Conversion_Support, This.n_DBC_Conversion_Support )
+		Endif
+	Endproc
+
+
+	Procedure n_DBF_Conversion_Support_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_DBF_Conversion_Support
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBF_Conversion_Support, This.n_DBF_Conversion_Support )
+		Endif
+	Endproc
+
+
+	Procedure n_MNX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_MNX_Conversion_Support
 		Else
@@ -1723,7 +1744,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure FKY_Conversion_Support_ACCESS
+	Procedure n_FKY_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_FKY_Conversion_Support
 		Else
@@ -1732,20 +1753,11 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure MEM_Conversion_Support_ACCESS
+	Procedure n_MEM_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_MEM_Conversion_Support
 		Else
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_MEM_Conversion_Support, This.n_MEM_Conversion_Support )
-		Endif
-	Endproc
-
-
-	Procedure DBF_Conversion_Support_ACCESS
-		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.n_DBF_Conversion_Support
-		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBF_Conversion_Support, This.n_DBF_Conversion_Support )
 		Endif
 	Endproc
 
@@ -1764,15 +1776,6 @@ Define Class c_foxbin2prg As Session
 			Return This.c_DBF_Conversion_Excluded
 		Else
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).c_DBF_Conversion_Excluded, This.c_DBF_Conversion_Excluded )
-		Endif
-	Endproc
-
-
-	Procedure DBC_Conversion_Support_ACCESS
-		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.n_DBC_Conversion_Support
-		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBC_Conversion_Support, This.n_DBC_Conversion_Support )
 		Endif
 	Endproc
 
@@ -2351,12 +2354,14 @@ Define Class c_foxbin2prg As Session
 					If .l_Main_CFG_Loaded
 						If .l_CFG_CachedAccess And .n_CFG_Actual > 0 Then
 							toParentCFG	= lo_CFG
-							.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile + '  => ' + tc_InputFile + '' )
+							.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile + '  => ' + tc_InputFile + ;
+							 ' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 						Else
-							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path )
 							lo_CFG	= Createobject('CL_CFG')
 							lo_Configuration.Add( lo_CFG, lc_CFG_Path )
 							.n_CFG_Actual  	= lo_Configuration.Count
+							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path + ;
+							 ' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 
 							If Not Isnull(toParentCFG)
 								lo_CFG.CopyFrom(@toParentCFG)
@@ -2455,7 +2460,7 @@ Define Class c_foxbin2prg As Session
 									lcValue	= Alltrim( Substr( laConfig(m.I), 9 ) )
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.n_HomeDir	= Int( Val( lcValue ) )
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > HomeDir:                ' + Transform(lo_CFG.n_HomeDir) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > HomeDir:                    ' + Transform(lo_CFG.n_HomeDir) )
 									Endif
 *** DH 2021-03-04: end of new code
 **************
@@ -2678,7 +2683,7 @@ Define Class c_foxbin2prg As Session
 									lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_ClearDBFLastUpdate	= ( Transform(lcValue) == '1' )
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClearDBFLastUpdate:      ' + Transform(lcValue) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClearDBFLastUpdate:         ' + Transform(lcValue) )
 									Endif
 
 								Case Left( laConfig(m.I), 25 ) == Lower('ExcludeDBFAutoincNextval:')
@@ -2718,7 +2723,7 @@ Define Class c_foxbin2prg As Session
 
 *Text file extensions
 								Case Left( laConfig(m.I), 10 ) == Lower('Extension:')
-									lcConfData	= Alltrim( Substr( laConfig(m.I), 11 , At('&'+'&',laConfig(m.I)) - 11 ) )
+									lcConfData	= Alltrim( Substr( laConfig(m.I), 11 ) )
 									lcExt		= Alltrim( Getwordnum( lcConfData, 1, '=' ) )
 									lcProp		= 'c_' + lcExt
 									If Pemstatus( lo_CFG, lcProp, 5 )
@@ -2728,15 +2733,6 @@ Define Class c_foxbin2prg As Session
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ' + loLang.C_EXTENSION_RECONFIGURATION_LOC + ' ' + lcExt + ' -> ' + lcValue )
 									Endif
 
-
-*** DH 2021-03-04: handle n_HomeDir configuration setting
-								CASE LEFT( laConfig(m.I), 8 ) == LOWER('HomeDir:')
-									lcValue	= ALLTRIM( SUBSTR( laConfig(m.I), 9 ) )
-									IF INLIST( lcValue, '0', '1' ) THEN
-										lo_CFG.n_HomeDir	= INT( VAL( lcValue ) )
-										.writeLog( C_TAB + JUSTFNAME(lcConfigFile) + ' > HomeDir:                ' + TRANSFORM(lo_CFG.n_HomeDir) )
-									ENDIF
-*** DH 2021-03-04: end of new code
 
 							Endcase
 						Endfor
@@ -3806,217 +3802,6 @@ Define Class c_foxbin2prg As Session
 							loFrm_Main.Show()
 							Read Events
 							lnCodError	= 0
-
-*!*	Changed by: Lutz Scheffler 07.3.2021
-*!*	change date="{^2021-03-07,18:44:00}"
-* added option to create config files with values
-						Case m.lcType=='-C' And Vartype( m.tc_InputFile )='C'
-							Local;
-								lcText    As String,;
-								lcValue   As String,;
-								lcReturn  As String,;
-								lnLines   As Number,;
-								lnLine    As Number,;
-								lnOptions As Number,;
-								lnOption  As Number
-
-							lnOptions = 47
-
-							Local Array;
-								laLines(1),;
-								laOptions(m.lnOptions,3)
-
-							loLang  = _Screen.o_FoxBin2Prg_Lang
-							lcText  = Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A)
-							lnLines = Alines(laLines,m.lcText)
-
-*now for each option
-							laOptions(01,1) = "*ShowProgressbar:"                   && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
-							laOptions(01,2) = ".n_ShowProgressbar"
-							laOptions(01,3) = 0
-							laOptions(02,1) = "*DontShowErrors:"                    && 0,1 Show message errors by default
-							laOptions(02,2) = ".l_ShowErrors"
-							laOptions(02,3) = 3
-							laOptions(03,1) = "*NoTimestamps:"                      && 0,1 Clear timestamps by default for minimize differences
-							laOptions(03,2) = ".l_NoTimestamps"
-							laOptions(03,3) = 1
-							laOptions(04,1) = "*Debug:"                             && 0,1 Don't Activate individual <file>.Log by default
-							laOptions(04,2) = ".n_Debug"
-							laOptions(04,3) = 0
-							laOptions(05,1) = "*BodyDevInfo:"                       && 0,1 [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
-							laOptions(05,2) = ".n_BodyDevInfo"
-							laOptions(05,3) = 0
-							laOptions(06,1) = "*ExtraBackupLevels:"                 && n By default 1 BAK is created. With this you can make more .N.BAK, or none
-							laOptions(06,2) = ".n_ExtraBackupLevels"
-							laOptions(06,3) = 0
-							laOptions(07,1) = "*ClearUniqueID:"                     && 0,1 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
-							laOptions(07,2) = ".l_ClearUniqueID"
-							laOptions(07,3) = 1
-							laOptions(08,1) = "*ClearDBFLastUpdate:"                && 0,1 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-							laOptions(08,2) = ".l_ClearDBFLastUpdate"
-							laOptions(08,3) = 1
-							laOptions(09,1) = "*OptimizeByFilestamp:"               && 0,1,2 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-							laOptions(09,2) = ".n_OptimizeByFilestamp"
-							laOptions(09,3) = 0
-							laOptions(10,1) = "*RemoveNullCharsFromCode:"           && 0,1 1=.t. 1=Drop NULL chars from source code
-							laOptions(10,2) = ".l_RemoveNullCharsFromCode"
-							laOptions(10,3) = 1
-							laOptions(11,1) = "*RemoveZOrderSetFromProps:"          && 0,1 1=.t. 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-							laOptions(11,2) = ".l_RemoveZOrderSetFromProps"
-							laOptions(11,3) = 1
-							laOptions(12,1) = "*Language:"                          && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-							laOptions(12,2) = ".c_Language_In"
-							laOptions(12,3) = 0
-							laOptions(13,1) = "*ExcludeDBFAutoincNextval:"          && 0,1 [0=Do not exclude this value from db2], 1=Exclude this value from db2
-							laOptions(13,2) = ".n_ExcludeDBFAutoincNextval"
-							laOptions(13,3) = 0
-							laOptions(14,1) = "*PRG_Compat_Level:"                  && n [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
-							laOptions(14,2) = ".n_PRG_Compat_Level"
-							laOptions(14,3) = 0
-							laOptions(15,1) = "*HomeDir:"                           && 0,1 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
-							laOptions(15,2) = ".n_HomeDir"
-							laOptions(15,3) = 0
-							laOptions(16,1) = "*PJX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(16,2) = ".PJX_Conversion_Support"
-							laOptions(16,3) = 0
-							laOptions(17,1) = "*VCX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(17,2) = ".VCX_Conversion_Support"
-							laOptions(17,3) = 0
-							laOptions(18,1) = "*SCX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(18,2) = ".SCX_Conversion_Support"
-							laOptions(18,3) = 0
-							laOptions(19,1) = "*FRX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(19,2) = ".FRX_Conversion_Support"
-							laOptions(19,3) = 0
-							laOptions(20,1) = "*LBX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(20,2) = ".LBX_Conversion_Support"
-							laOptions(20,3) = 0
-							laOptions(21,1) = "*MNX_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(21,2) = ".MNX_Conversion_Support"
-							laOptions(21,3) = 0
-							laOptions(22,1) = "*FKY_Conversion_Support:"            && n 0=No support, 1=Generate TXT only (Diff)
-							laOptions(22,2) = ".FKY_Conversion_Support"
-							laOptions(22,3) = 0
-							laOptions(23,1) = "*MEM_Conversion_Support:"            && 0=No support, 1=Generate TXT only (Diff)
-							laOptions(23,2) = ".MEM_Conversion_Support"
-							laOptions(23,3) = 0
-							laOptions(24,1) = "*DBC_Conversion_Support:"            && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-							laOptions(24,2) = ".DBC_Conversion_Support"
-							laOptions(24,3) = 0
-							laOptions(25,1) = "*DBF_Conversion_Support:"            && n 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-							laOptions(25,2) = ".DBF_Conversion_Support"
-							laOptions(25,3) = 0
-							laOptions(26,1) = "*DBF_Conversion_Included:"           && n If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-							laOptions(26,2) = ".DBF_Conversion_Included"
-							laOptions(26,3) = 0
-							laOptions(27,1) = "*DBF_Conversion_Excluded:"           && n If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-							laOptions(27,2) = ".DBF_Conversion_Excluded"
-							laOptions(27,3) = 0
-							laOptions(28,1) = "*OldFilesPerDBC:"                    && 0,1 1=.t. 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
-							laOptions(28,2) = ".l_OldFilesPerDBC"
-							laOptions(28,3) = 1
-							laOptions(29,1) = "*UseFilesPerDBC:"                    && 0,1 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
-							laOptions(29,2) = ".n_UseFilesPerDBC"
-							laOptions(29,3) = 0
-							laOptions(30,1) = "*RedirectFilePerDBCToMain:"          && 0,1 1=.t. 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
-							laOptions(30,2) = ".l_RedirectFilePerDBCToMain"
-							laOptions(30,3) = 1
-							laOptions(31,1) = "*ItemPerDBCCheck:"                   && 0,1 1=.t. 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-							laOptions(31,2) = ".l_ItemPerDBCCheck"
-							laOptions(31,3) = 1
-							laOptions(32,1) = "*DBF_BinChar_Base64:"                && 0,1 1=.t. 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-							laOptions(32,2) = ".l_DBF_BinChar_Base64"
-							laOptions(32,3) = 1
-							laOptions(33,1) = "*DBF_IncludeDeleted:"                && 0,1 1=.t. 0=Do not include deleted records (default), 1=Include deleted records
-							laOptions(33,2) = ".l_DBF_IncludeDeleted"
-							laOptions(33,3) = 1
-							laOptions(34,1) = "*UseClassPerFile:"                   && n 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-							laOptions(34,2) = ".n_UseClassPerFile"
-							laOptions(34,3) = 0
-							laOptions(35,1) = "*RedirectClassPerFileToMain:"        && 0,1 1=.t. 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-							laOptions(35,2) = ".l_RedirectClassPerFileToMain"
-							laOptions(35,3) = 1
-							laOptions(36,1) = "*RedirectClassType:"                 && 0,1,2 For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-							laOptions(36,2) = ".n_RedirectClassType"
-							laOptions(36,3) = 0
-							laOptions(37,1) = "*ClassPerFileCheck:"                 && 0,1 1=.t. 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
-							laOptions(37,2) = ".l_ClassPerFileCheck"
-							laOptions(37,3) = 1
-							laOptions(38,1) = "*extension: pj2="                    && ext Text file to PJX
-							laOptions(38,2) = ".c_pj2"
-							laOptions(38,3) = 2
-							laOptions(39,1) = "*extension: vc2="                    && ext Text file to VCX
-							laOptions(39,2) = ".c_vc2"
-							laOptions(39,3) = 2
-							laOptions(40,1) = "*extension: sc2="                    && ext Text file to SCX
-							laOptions(40,2) = ".c_sc2"
-							laOptions(40,3) = 2
-							laOptions(41,1) = "*extension: fr2="                    && ext Text file to FRX
-							laOptions(41,2) = ".c_fr2"
-							laOptions(41,3) = 2
-							laOptions(42,1) = "*extension: lb2="                    && ext Text file to LBX
-							laOptions(42,2) = ".c_lb2"
-							laOptions(42,3) = 2
-							laOptions(43,1) = "*extension: mn2="                    && ext Text file to MNX
-							laOptions(43,2) = ".c_mn2"
-							laOptions(43,3) = 2
-							laOptions(44,1) = "*extension: db2="                    && ext Text file to DBF
-							laOptions(44,2) = ".c_db2"
-							laOptions(44,3) = 2
-							laOptions(45,1) = "*extension: dc2="                    && ext Text file to DBC
-							laOptions(45,2) = ".c_dc2"
-							laOptions(45,3) = 2
-							laOptions(46,1) = "*extension: fk2="                    && ext Text file to FKY
-							laOptions(46,2) = ".c_fk2"
-							laOptions(46,3) = 2
-							laOptions(47,1) = "*extension: me2="                    && ext Text file to MEM
-							laOptions(47,2) = ".c_me2"
-							laOptions(47,3) = 2
-
-							For lnOption = 1 To m.lnOptions
-								lnLine = Ascan( m.laLines , m.laOptions( m.lnOption, 1 ), 1, -1, 1, 4)
-								If m.lnLine >0 Then
-									lcText  = m.laLines( m.lnLine )
-									lcValue = Strextract( m.lcText , m.laOptions( m.lnOption, 1 ), '&'+'&' ,1 , 3)
-									Do Case
-										Case m.laOptions( m.lnOption, 3 ) = 0
-											lcReturn = Padr(' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) ), Len(m.lcValue) + 1 )
-
-										Case m.laOptions( m.lnOption, 3 ) = 1
-											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '1', '0' ), Len(m.lcValue) + 1 )
-
-										Case m.laOptions( m.lnOption, 3 ) = 2
-											lcReturn = Padr(Evaluate( m.laOptions( m.lnOption, 2 )), Len(m.lcValue) + 1 )
-
-										Case m.laOptions( m.lnOption, 3 ) = 3
-											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '0', '1' ), Len(m.lcValue) + 1 )
-
-										OTHERWISE
-* not defined. loop
-											Loop
-
-									Endcase
-									laLines( m.lnLine ) = Substr(Strtran(m.laLines( m.lnLine ) , m.lcValue, m.lcReturn), 2 )
-
-								Endif &&lnLine >0
-
-							Endfor &&lnOption
-
-							lcText  = ''
-
-							lnLines = m.lnLines+1
-							Dimension;
-								M.laLines( m.lnLines )
-
-							Ains(m.laLines,4)
-							laLines( 4 ) = Textmerge( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 )
-							For lnLine = 1 To m.lnLines
-								lcText = m.lcText+ m.laLines( m.lnLine )+0h0D0A
-							Endfor &&lnLine
-
-							Strtofile(  m.lcText, m.tc_InputFile )
-
-*!*	/Changed by: Lutz Scheffler 07.3.2021
 
 						Otherwise
 *-- EJECUCIÓN NORMAL
@@ -21861,6 +21646,7 @@ Define Class CL_DBC As CL_DBC_BASE
 					Erase (Forceext(tc_OutputFile,'DCX'))
 					Erase (Forceext(tc_OutputFile,'DCT'))
 					Create Database (tc_OutputFile)
+
 					Close Databases
 					Open Database (tc_OutputFile) Shared
 					Use (tc_OutputFile) Shared Again Alias TABLABIN
@@ -23460,9 +23246,6 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 					.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
 * SF tags
 					If .Count > 0 Then
-*!*							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*							<<>>			 <INDEXES>
-*!*							ENDTEXT
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<<C_INDEXES_I>>
 						ENDTEXT
@@ -23472,14 +23255,10 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 							lcText	= lcText + loIndex.toText( tcTable + '.' + loIndex._Name )
 						Endfor
 
-*!*							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*							<<>>			</INDEXES>
-*!*							ENDTEXT
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<<C_INDEXES_F>>
 						ENDTEXT
 					Endif
-* /SF
 
 				Endwith
 
@@ -23661,13 +23440,6 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 				With This As CL_DBC_INDEX_DB Of 'FOXBIN2PRG.PRG'
 					.read_BinDataToProperties(tcIndex)
 * SF tags
-*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*						<<>>				<INDEX>
-*!*						<<>>					<Name><<._Name>></Name>
-*!*						<<>>					<Comment><<._Comment>></Comment>
-*!*						<<>>					<IsUnique><<._IsUnique>></IsUnique>
-*!*						<<>>				</INDEX_F>
-*!*						ENDTEXT
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<<C_INDEX_I>>
 					<<>>					<Name><<._Name>></Name>
@@ -23675,8 +23447,8 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 					<<>>					<IsUnique><<._IsUnique>></IsUnique>
 					<<>>				<<C_INDEX_F>>
 					ENDTEXT
-
-* /SF					._ToText	= lcText
+* /SF
+					._ToText	= lcText
 				Endwith && THIS
 
 			Catch To loEx
@@ -25995,27 +25767,6 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				lcText	= ''
 				Dimension taTagInfo(1,6)
 * SF tags
-*!*					If Tagcount() > 0
-*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*						<<>>
-*!*						<<>>	<<C_CDX_I>><<SYS(2014, CDX(1), ADDBS(JUSTPATH(tc_InputFile) ) )>><<C_CDX_F>>
-*!*						<<>>
-*!*						<<>>	<<C_INDEXES_I>>
-*!*						ENDTEXT
-
-*!*						tnTagInfo_Count	= Ataginfo( taTagInfo )
-*!*						Asort( taTagInfo, 1, -1, 0, 1 )
-*!*						loIndex			= Createobject("CL_DBF_INDEX")
-
-*!*						For I = 1 To tnTagInfo_Count
-*!*							lcText	= lcText + loIndex.toText( @taTagInfo, m.I )
-*!*						Endfor
-
-*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*						<<>>	<<C_INDEXES_F>>
-*!*						<<>>
-*!*						ENDTEXT
-*!*					Endif
 				Local;
 					lcText As String,;
 					loIndex As "CL_DBF_INDEX"
@@ -26272,16 +26023,6 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 					Endif
 				Endfor
 * SF tags
-*!*					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*					<<>>		<INDEX>
-*!*					<<>>			<TagName><<taTagInfo(m.I,1)>></TagName>
-*!*					<<>>			<TagType><<ICASE(LEFT(taTagInfo(m.I,2),3)='BIN','BINARY',PRIMARY(m.X),'PRIMARY',CANDIDATE(m.X),'CANDIDATE',UNIQUE(m.X),'UNIQUE','REGULAR'))>></TagType>
-*!*					<<>>			<Key><<taTagInfo(m.I,3)>></Key>
-*!*					<<>>			<Filter><<taTagInfo(m.I,4)>></Filter>
-*!*					<<>>			<Order><<IIF(DESCENDING(m.X), 'DESCENDING', 'ASCENDING')>></Order>
-*!*					<<>>			<Collate><<taTagInfo(m.I,6)>></Collate>
-*!*					<<>>		</INDEX>
-*!*					ENDTEXT
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>				<<C_INDEX_I>>
 				<<>>					<TagName><<taTagInfo(m.I,1)>></TagName>
@@ -30446,7 +30187,6 @@ Define Class CL_LANG As Custom
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>----------------------------------------------------------------------------------------------------------------
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>-- Conversion operation by type
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -30488,7 +30228,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
@@ -30516,7 +30256,6 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- Text file extensions
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
-						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Example configuration for SourceSafe compatibility:
 						<<>>extension: pj2=pja             && Text file to PJX
 						<<>>extension: vc2=vca             && Text file to VCX
@@ -30698,7 +30437,6 @@ Define Class CL_LANG As Custom
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>----------------------------------------------------------------------------------------------------------------
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>-- Conversion operation by type
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -30740,7 +30478,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
@@ -30768,7 +30506,6 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- Text file extensions
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
-						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Example configuration for SourceSafe compatibility:
 						<<>>extension: pj2=pja             && Text file to PJX
 						<<>>extension: vc2=vca             && Text file to VCX
@@ -30961,7 +30698,6 @@ Define Class CL_LANG As Custom
 						<<>>BackgroundImage: <cFile>       && Hintergrundbild für das Formular zur Fortschrittsanzeige.
 						<<>>                               && Leer erzeugt kein Hintergrundbild., Wird die Datei nicht gefunden, wird der Standardhintergrund verwendet.
 						<<>>HomeDir: 1                     && 0 = Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert, [1 = Die Eigenschaft wird gespeichert]
-						<<>>HomeDir: 1                     && 0 = Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert, [1 = Die Eigenschaft wird gespeichert]
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Konvertierungs Optionen:
@@ -30991,7 +30727,7 @@ Define Class CL_LANG As Custom
 						<<>>RedirectClassType: 0           && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
 						<<>>                               && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
 						<<>>                               && Für die zweite Form gilt:
-						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
+						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle Klassen dieser Bibliothek werden neu gelesen
 						<<>>                               && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
 						<<>>                               && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
@@ -31009,7 +30745,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 Erzeugt eine Datei <Datenbank>.dc2 mit den Eigenschaften der Datenbank
 						<<>>                               &&   und zusätzlich eine Datei für jedes Item der Datenbank (Gespeicherte Prozeduren, Tabellen, Views, ..)
 						<<>>                               &&   Achtung! Diese Dateien werden nur dann in die Binädatei einbezogen, wenn RedirectFilePerDBCToMain 1 ist
-						<<>>RedirectFilePerDBCToMain 0     && Originale Dokumntation: 0=Keine Umlenkung, 1=Erzeuge <Datenbank>.dbc, wenn <Datenbank>.item.*.dc2 gewählt wurde
+						<<>>RedirectFilePerDBCToMain: 0    && Originale Dokumntation: 0=Keine Umlenkung, 1=Erzeuge <Datenbank>.dbc, wenn <Datenbank>.item.*.dc2 gewählt wurde
 						<<>>                               &&   Die Binär-Datenbank wird nur dann automatisch zusammen gefügt, wenn diese Option 1 ist!
 						<<>>ItemPerDBCCheck: 0             && 0=Aus, 1=Teste, ob <Datenbank>.item.*.dc2 einbezogen wird.
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -31041,6 +30777,7 @@ Define Class CL_LANG As Custom
 						<<>>DBF_IncludeDeleted: 0          && 0=Ohne gelöschte Datensätze (default), 1=Mit gelöschten Datensätzen
 						<<>>                               &&   Diese Option kann auch per Tabelle gesetzt werden.
 						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>
 						<<>>-- Text-Datei Endungen
 						<<>>extension: tx2=newext          && Umdefinition der Dateiendung der Textdateien. Die vordefinierten Endungen enden mit '2' (Beispiel siehe Ende dieser Datei)
 						<<>>-- Beispiel für geänderte Textdatei Endungen, hier für SourceSafe Kompatibiltät:
@@ -31235,7 +30972,6 @@ Define Class CL_LANG As Custom
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>----------------------------------------------------------------------------------------------------------------
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
 						<<>>
 						<<>>-- Conversion operation by type
 						<<>>PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
@@ -31277,7 +31013,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
@@ -31305,7 +31041,6 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- Text file extensions
 						<<>>extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
-						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Example configuration for SourceSafe compatibility:
 						<<>>extension: pj2=pja             && Text file to PJX
 						<<>>extension: vc2=vca             && Text file to VCX
