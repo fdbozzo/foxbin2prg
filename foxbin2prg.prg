@@ -266,10 +266,16 @@
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: Option BackgroundImage was read, but not in template
 * 22/03/2021	LScheffler	v1.19.60	Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory
 * 23/03/2021	LScheffler	v1.19.61	Bug Fix: missnamed property
+* 30/03/2021	LScheffler	v1.19.62	Bug Fix: *_Conversion_Support options not read from config file
+* 30/03/2021	LScheffler	v1.19.62	Bug Fix: Extension shift options not read from config file
+* 30/03/2021	LScheffler	v1.19.62	Bug Fix: RedirectFilePerDBCToMain option was defined wrong in configuration example
+* 30/03/2021	LScheffler	v1.19.62	Enhancement: Debug logging, level of config file.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
+* 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
 * 23/11/2013	Luis Martínez		REPORTE BUG scx v1.4: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny		REPORTE BUG vcx v1.5: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny		REPORTE BUG scx v1.6: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
@@ -926,7 +932,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.61'
+	c_FB2PRG_Version_Real			= '1.19.62'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1684,7 +1690,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure SCX_Conversion_Support_ACCESS
+	Procedure n_SCX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_SCX_Conversion_Support
 		Else
@@ -1693,7 +1699,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure FRX_Conversion_Support_ACCESS
+	Procedure n_FRX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_FRX_Conversion_Support
 		Else
@@ -1702,7 +1708,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure LBX_Conversion_Support_ACCESS
+	Procedure n_LBX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_LBX_Conversion_Support
 		Else
@@ -1711,7 +1717,25 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure MNX_Conversion_Support_ACCESS
+	Procedure n_DBC_Conversion_Support_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_DBC_Conversion_Support
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBC_Conversion_Support, This.n_DBC_Conversion_Support )
+		Endif
+	Endproc
+
+
+	Procedure n_DBF_Conversion_Support_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_DBF_Conversion_Support
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBF_Conversion_Support, This.n_DBF_Conversion_Support )
+		Endif
+	Endproc
+
+
+	Procedure n_MNX_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_MNX_Conversion_Support
 		Else
@@ -1720,7 +1744,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure FKY_Conversion_Support_ACCESS
+	Procedure n_FKY_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_FKY_Conversion_Support
 		Else
@@ -1729,20 +1753,11 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-	Procedure MEM_Conversion_Support_ACCESS
+	Procedure n_MEM_Conversion_Support_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_MEM_Conversion_Support
 		Else
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_MEM_Conversion_Support, This.n_MEM_Conversion_Support )
-		Endif
-	Endproc
-
-
-	Procedure DBF_Conversion_Support_ACCESS
-		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.n_DBF_Conversion_Support
-		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBF_Conversion_Support, This.n_DBF_Conversion_Support )
 		Endif
 	Endproc
 
@@ -1761,15 +1776,6 @@ Define Class c_foxbin2prg As Session
 			Return This.c_DBF_Conversion_Excluded
 		Else
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).c_DBF_Conversion_Excluded, This.c_DBF_Conversion_Excluded )
-		Endif
-	Endproc
-
-
-	Procedure DBC_Conversion_Support_ACCESS
-		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.n_DBC_Conversion_Support
-		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_DBC_Conversion_Support, This.n_DBC_Conversion_Support )
 		Endif
 	Endproc
 
@@ -2348,12 +2354,14 @@ Define Class c_foxbin2prg As Session
 					If .l_Main_CFG_Loaded
 						If .l_CFG_CachedAccess And .n_CFG_Actual > 0 Then
 							toParentCFG	= lo_CFG
-							.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile + '  => ' + tc_InputFile + '' )
+							.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile + '  => ' + tc_InputFile + ;
+							 ' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 						Else
-							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path )
 							lo_CFG	= Createobject('CL_CFG')
 							lo_Configuration.Add( lo_CFG, lc_CFG_Path )
 							.n_CFG_Actual  	= lo_Configuration.Count
+							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path + ;
+							 ' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 
 							If Not Isnull(toParentCFG)
 								lo_CFG.CopyFrom(@toParentCFG)
@@ -2452,7 +2460,7 @@ Define Class c_foxbin2prg As Session
 									lcValue	= Alltrim( Substr( laConfig(m.I), 9 ) )
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.n_HomeDir	= Int( Val( lcValue ) )
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > HomeDir:                ' + Transform(lo_CFG.n_HomeDir) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > HomeDir:                    ' + Transform(lo_CFG.n_HomeDir) )
 									Endif
 *** DH 2021-03-04: end of new code
 **************
@@ -2675,7 +2683,7 @@ Define Class c_foxbin2prg As Session
 									lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
 									If Inlist( lcValue, '0', '1' ) Then
 										lo_CFG.l_ClearDBFLastUpdate	= ( Transform(lcValue) == '1' )
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClearDBFLastUpdate:      ' + Transform(lcValue) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClearDBFLastUpdate:         ' + Transform(lcValue) )
 									Endif
 
 								Case Left( laConfig(m.I), 25 ) == Lower('ExcludeDBFAutoincNextval:')
@@ -2715,7 +2723,7 @@ Define Class c_foxbin2prg As Session
 
 *Text file extensions
 								Case Left( laConfig(m.I), 10 ) == Lower('Extension:')
-									lcConfData	= Alltrim( Substr( laConfig(m.I), 11 , At('&'+'&',laConfig(m.I)) - 11 ) )
+									lcConfData	= Alltrim( Substr( laConfig(m.I), 11 ) )
 									lcExt		= Alltrim( Getwordnum( lcConfData, 1, '=' ) )
 									lcProp		= 'c_' + lcExt
 									If Pemstatus( lo_CFG, lcProp, 5 )
@@ -21638,6 +21646,7 @@ Define Class CL_DBC As CL_DBC_BASE
 					Erase (Forceext(tc_OutputFile,'DCX'))
 					Erase (Forceext(tc_OutputFile,'DCT'))
 					Create Database (tc_OutputFile)
+
 					Close Databases
 					Open Database (tc_OutputFile) Shared
 					Use (tc_OutputFile) Shared Again Alias TABLABIN
@@ -23237,9 +23246,6 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 					.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
 * SF tags
 					If .Count > 0 Then
-*!*							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*							<<>>			 <INDEXES>
-*!*							ENDTEXT
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<<C_INDEXES_I>>
 						ENDTEXT
@@ -23249,14 +23255,10 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 							lcText	= lcText + loIndex.toText( tcTable + '.' + loIndex._Name )
 						Endfor
 
-*!*							TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*							<<>>			</INDEXES>
-*!*							ENDTEXT
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<<C_INDEXES_F>>
 						ENDTEXT
 					Endif
-* /SF
 
 				Endwith
 
@@ -23438,13 +23440,6 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 				With This As CL_DBC_INDEX_DB Of 'FOXBIN2PRG.PRG'
 					.read_BinDataToProperties(tcIndex)
 * SF tags
-*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*						<<>>				<INDEX>
-*!*						<<>>					<Name><<._Name>></Name>
-*!*						<<>>					<Comment><<._Comment>></Comment>
-*!*						<<>>					<IsUnique><<._IsUnique>></IsUnique>
-*!*						<<>>				</INDEX_F>
-*!*						ENDTEXT
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<<C_INDEX_I>>
 					<<>>					<Name><<._Name>></Name>
@@ -23452,8 +23447,8 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 					<<>>					<IsUnique><<._IsUnique>></IsUnique>
 					<<>>				<<C_INDEX_F>>
 					ENDTEXT
-
-* /SF					._ToText	= lcText
+* /SF
+					._ToText	= lcText
 				Endwith && THIS
 
 			Catch To loEx
@@ -25772,27 +25767,6 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				lcText	= ''
 				Dimension taTagInfo(1,6)
 * SF tags
-*!*					If Tagcount() > 0
-*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*						<<>>
-*!*						<<>>	<<C_CDX_I>><<SYS(2014, CDX(1), ADDBS(JUSTPATH(tc_InputFile) ) )>><<C_CDX_F>>
-*!*						<<>>
-*!*						<<>>	<<C_INDEXES_I>>
-*!*						ENDTEXT
-
-*!*						tnTagInfo_Count	= Ataginfo( taTagInfo )
-*!*						Asort( taTagInfo, 1, -1, 0, 1 )
-*!*						loIndex			= Createobject("CL_DBF_INDEX")
-
-*!*						For I = 1 To tnTagInfo_Count
-*!*							lcText	= lcText + loIndex.toText( @taTagInfo, m.I )
-*!*						Endfor
-
-*!*						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*						<<>>	<<C_INDEXES_F>>
-*!*						<<>>
-*!*						ENDTEXT
-*!*					Endif
 				Local;
 					lcText As String,;
 					loIndex As "CL_DBF_INDEX"
@@ -26049,16 +26023,6 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 					Endif
 				Endfor
 * SF tags
-*!*					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-*!*					<<>>		<INDEX>
-*!*					<<>>			<TagName><<taTagInfo(m.I,1)>></TagName>
-*!*					<<>>			<TagType><<ICASE(LEFT(taTagInfo(m.I,2),3)='BIN','BINARY',PRIMARY(m.X),'PRIMARY',CANDIDATE(m.X),'CANDIDATE',UNIQUE(m.X),'UNIQUE','REGULAR'))>></TagType>
-*!*					<<>>			<Key><<taTagInfo(m.I,3)>></Key>
-*!*					<<>>			<Filter><<taTagInfo(m.I,4)>></Filter>
-*!*					<<>>			<Order><<IIF(DESCENDING(m.X), 'DESCENDING', 'ASCENDING')>></Order>
-*!*					<<>>			<Collate><<taTagInfo(m.I,6)>></Collate>
-*!*					<<>>		</INDEX>
-*!*					ENDTEXT
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>				<<C_INDEX_I>>
 				<<>>					<TagName><<taTagInfo(m.I,1)>></TagName>
@@ -30264,7 +30228,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
@@ -30514,7 +30478,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
@@ -30763,7 +30727,7 @@ Define Class CL_LANG As Custom
 						<<>>RedirectClassType: 0           && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
 						<<>>                               && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
 						<<>>                               && Für die zweite Form gilt:
-						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle dclassen dieser Bibliothek werden neu gelesen
+						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle Klassen dieser Bibliothek werden neu gelesen
 						<<>>                               && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
 						<<>>                               && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
 						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
@@ -30781,7 +30745,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 Erzeugt eine Datei <Datenbank>.dc2 mit den Eigenschaften der Datenbank
 						<<>>                               &&   und zusätzlich eine Datei für jedes Item der Datenbank (Gespeicherte Prozeduren, Tabellen, Views, ..)
 						<<>>                               &&   Achtung! Diese Dateien werden nur dann in die Binädatei einbezogen, wenn RedirectFilePerDBCToMain 1 ist
-						<<>>RedirectFilePerDBCToMain 0     && Originale Dokumntation: 0=Keine Umlenkung, 1=Erzeuge <Datenbank>.dbc, wenn <Datenbank>.item.*.dc2 gewählt wurde
+						<<>>RedirectFilePerDBCToMain: 0    && Originale Dokumntation: 0=Keine Umlenkung, 1=Erzeuge <Datenbank>.dbc, wenn <Datenbank>.item.*.dc2 gewählt wurde
 						<<>>                               &&   Die Binär-Datenbank wird nur dann automatisch zusammen gefügt, wenn diese Option 1 ist!
 						<<>>ItemPerDBCCheck: 0             && 0=Aus, 1=Teste, ob <Datenbank>.item.*.dc2 einbezogen wird.
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -31049,7 +31013,7 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>

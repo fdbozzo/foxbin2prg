@@ -19,8 +19,17 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
-Change History-------------------------------------------------------------
-************
++++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2021-03-23 v1.19.62
+- Enhancement: Debug logging, level of config file.
+- Bug Fix: *_Conversion_Support options not read from config file.
+- Bug Fix: Extension shift options not read from config file. (Sergej s-s-a)
+- Bug Fix: RedirectFilePerDBCToMain option was defined wrong in configuration example
+
+2021-03-23 v1.19.61
+- Bug Fix: missnamed property (LScheffler)
+
 2021-03-22 v1.19.60
 - Enhancement: FoxBin2Prg template and debug output: Completed and ordered, order synched, grouped and groups named at template. (LScheffler)
 - Enhancement: Option BackgroundImage was read, but not in template (LScheffler)
@@ -31,7 +40,7 @@ Change History-------------------------------------------------------------
 - Bug Fix: DBF_Conversion_Condition was read, but never used (LScheffler)
 - Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index (LScheffler)
 - Bug Fix: config options with text value fail, if line comment is set (LScheffler)
-- Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory (LScheffler)
+- Bug Fix: issue #53 Variable lnFileCount in get_filesfromdirectory (msueping)
 
 2021-03-09 v1.19.59
 - Feature: Logging of settings as settings object passed to execute method (Option debug > 0) (LScheffler)

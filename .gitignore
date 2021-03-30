@@ -14,3 +14,8 @@ TESTS/DATOS_READONLY/*.FXP
 
 *special, exclude local config
 foxbin2prg.cfg
+
+#nix von hier
+default/
+temp/
+tmp/
