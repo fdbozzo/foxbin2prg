@@ -10,7 +10,7 @@ It's main purpose it's to fix some bugs and add some new functions. It looks lik
  so, with his permission, I introduce this fork to [VFPX](https://vfpx.github.io/) ![VFPX Picture](./pictures/vfpxpoweredby_alternative.gif).
 
 I do not maintain the spanish documentation - it would fade. So just check Fernados repo for this information.   
-A quick run is [introduced](#use-foxbin2prg), more [complex](./Documentacion/github/FoxBin2prg_Run.md#usage-1), and a large [documentation](./Documentacion/github/FoxBin2prg.md) exists too.
+A quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2prg.md) exists too.
 Remember yourself to compile the exe first.   
 
 ---
@@ -123,7 +123,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ---
 ---
 ## Changes
-See [Changes](./Documentacion/github/FoxBin2prg_Changes.md)
+See [Changes](./docs/FoxBin2prg_Changes.md)
 
 ## Changes in 1.19.60
 * -cC options learned to create default FoxBin2Prg._cfg file
@@ -163,7 +163,7 @@ The split of DBC the same way like VCX/SCX might not be the best choice under al
 New option _OldFilesPerDBC_ is set 1, _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ might be used to set the handling of the DBC.   
 Note that those options will be ignored, if _OldFilesPerDBC_ is 0 (default).   
 **Check that changes will be reflected on running projects.**   
-See [Internals](./Documentacion/github/FoxBin2prg_Internals.md#configuration-file).  
+See [Internals](./docs/FoxBin2prg_Internals.md#configuration-file).  
 
 ### Tanscoding of table fields with NoCPTrans
 The function _DBF_BinChar_Base64: 0_ must be handled with care too.
@@ -187,7 +187,7 @@ Project to generate text representations of VFP binary sources for source contro
 ## ./
 This folder containes the files necessary to run FoxBin2Prg.prg or to create the FoxBin2Prg.exe
 
-For usage see [documentation](./Documentacion/github/FoxBin2prg.md)
+For usage see [documentation](./docs/FoxBin2prg.md)
 
 ----
 Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
