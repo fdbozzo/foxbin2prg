@@ -254,7 +254,6 @@
 * 09/03/2021	LScheffler	v1.19.59	Bug Fix: RedirectClassType = 2, UseClassPerFile = 2 failed.
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Added option to create config file template based on current values of a directory
 * 09/03/2021	LScheffler	v1.19.59	Enhancement: Log settings object handed to execute (Debug > 0)
-
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: -cC options learned to create default FoxBin2Prg._cfg file
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: -t Option learned to create default  <tablename>._cfg file, if table is open.
 * 22/03/2021	LScheffler	v1.19.60	Enhancement: Handling of additional non structural index per DBF in Bin2Text and Text2Bin see config per DBF
@@ -270,10 +269,13 @@
 * 30/03/2021	LScheffler	v1.19.62	Bug Fix: Extension shift options not read from config file
 * 30/03/2021	LScheffler	v1.19.62	Bug Fix: RedirectFilePerDBCToMain option was defined wrong in configuration example
 * 30/03/2021	LScheffler	v1.19.62	Enhancement: Debug logging, level of config file.
+* 12/04/2021	LScheffler	v1.19.63	Bug Fix: Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database" (jstagerGH)
+* 12/04/2021	LScheffler	v1.19.63	Docu: Readme reworked (mattslay)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 08/04/2021	jstagerGH 			BUG REPORT v1.19.62 Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database"
 * 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
 * 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
 * 23/11/2013	Luis Martínez		REPORTE BUG scx v1.4: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
@@ -932,7 +934,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.62'
+	c_FB2PRG_Version_Real			= '1.19.63'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -13735,8 +13737,9 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					Store '' To lcIndex
 					Store .Null. To lcIndexFile
 
+					loDBFUtils			= Createobject('CL_DBF_UTILS')
+
 					If toTable._Indexes.Count # 0 Then
-						loDBFUtils			= Createobject('CL_DBF_UTILS')
 
 						loLang			= _Screen.o_FoxBin2Prg_Lang
 						toFoxBin2Prg.writeLog( Replicate('+', 100) )
@@ -13799,19 +13802,21 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 
 						toFoxBin2Prg.writeLog( Replicate('+', 100) + 0h0D0A )
 
-						Use In (Select(Juststem(.c_OutputFile)))
+					Endif &&toTable._Indexes.COUNT # 0
+
+					Use In (Select(Juststem(.c_OutputFile)))
 
 *-- La actualización de la fecha sirve para evitar diferencias al regenerar el DBF
-						If toFoxBin2Prg.l_ClearDBFLastUpdate Then
-							ldLastUpdate	= Evaluate( '{^2013/11/04}' )
-						Else
-							ldLastUpdate	= Evaluate( '{^' + toTable._LastUpdate + '}' )
-						Endif
+					If toFoxBin2Prg.l_ClearDBFLastUpdate Then
+						ldLastUpdate	= Evaluate( '{^2013/11/04}' )
+					Else
+						ldLastUpdate	= Evaluate( '{^' + toTable._LastUpdate + '}' )
+					Endif
 
-						loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
+					loDBFUtils.write_DBC_BackLink( .c_OutputFile, toTable._Database, ldLastUpdate )
 
-						toFoxBin2Prg.updateProcessedFile()
-					Endif &&toTable._Indexes.COUNT # 0
+					toFoxBin2Prg.updateProcessedFile()
+
 					toFoxBin2Prg.writeLog( Replicate('+', 100) )
 				Endwith && THIS
 

@@ -4,13 +4,13 @@
 ## Lutz Scheffler
 ![VFPX Logo](https://vfpx.github.io/images/vfpxbanner_small.gif)
 
-## Why this fork?
-This is a fork of [Fernando D. Bozzo](https://github.com/fdbozzo) [foxbin2prg](https://github.com/fdbozzo/foxbin2prg/).  
-It's main purpose it's to fix some bugs and add some new functions. It looks like Fernando does not longer maintain FoxBin2Prg,
- so, with his permission, I introduce this fork to [VFPX](https://vfpx.github.io/) ![VFPX Picture](./pictures/vfpxpoweredby_alternative.gif).
+This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
+It's the main tool with some bugs fixes and some new functions. It looks like Fernando does not longer maintain FoxBin2Prg,
+so, with his permission, I work onto this through my [fork](https://github.com/lscheffler/foxbin2prg).
+updates may be faster there, because of the merge process.
 
-I do not maintain the spanish documentation - it would fade. So just check Fernados repo for this information.   
-A quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2prg.md) exists too.
+The spanish documentation is not longer maintained - it would fade.
+For fast acces a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2prg.md) exists too.
 Remember yourself to compile the exe first.   
 
 ---
@@ -26,7 +26,7 @@ If you like to see Fernandos blog, or value his work:
 ---
 ---
 If you like to value my work, support the Geeks at https://virtualfoxfest.com/ or www.swfox.net.  
-I also do not reject invitations to beer, Next autumn in Gilbert.
+I also do not reject invitations to beer, next time in Gilbert.
 
 ---
 ---
