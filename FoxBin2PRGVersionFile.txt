@@ -21,6 +21,9 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
 
+2021-08-12 v1.19.63
+- Bug Fix: Tables without indexes cause an error that the __Table ## is not marked as belonging to the ## database.__ (jstagerGH)
+
 2021-03-23 v1.19.62
 - Enhancement: Debug logging, level of config file.
 - Bug Fix: *_Conversion_Support options not read from config file.

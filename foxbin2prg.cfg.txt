@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.19.62
+*Version: v1.19.63
 *****************************************************************************************************************
 
 *-- Settings for internal work, not processing
