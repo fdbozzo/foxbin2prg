@@ -138,7 +138,7 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | OldFilesPerDBC | _0_, 1 | This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the options will be read. |
 | | | 0 New version inactive, options follow:<br/>UseFilesPerDBC=UseClassPerFile<br/>RedirectFilePerDBCToMain=RedirectClassPerFileToMain<br/>ItemPerDBCCheck=ClassPerFileCheck |
 | | | 1 New version active, options active |
-| | | Note the options will be set to old style, is option is turned off. |
+| | | Note the options will be set to old style, if option is turned off. |
 | UseFilesPerDBC | _0_, 1 | 0=One database dc2 file, 1=Multiple file.\*.\*.dc2 files.<br/>See [Create File-Per-DBC](#create file-per-dbc)<br/>**Only if OldFilesPerDBC is 1** |
 | | | 0 creates only a file.dc2 with all DBC (file) data |
 | | | 1 creates a file.dc2 with DBC properties |
