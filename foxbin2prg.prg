@@ -18840,7 +18840,8 @@ Define Class c_conversor_mnx_a_prg As c_conversor_bin_a_prg
 			Local toMenu As CL_MENU Of 'FOXBIN2PRG.PRG'
 			Local toFoxBin2Prg As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 		#Endif
-
+* SF
+SET STEP ON 
 		Try
 				With This As c_conversor_mnx_a_prg Of 'FOXBIN2PRG.PRG'
 					If toFoxBin2Prg.l_ProcessFiles Then
@@ -28658,7 +28659,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 						If Isdigit(lcBarName)
 *-- Bar#
-							loReg.OBJCODE		= C_OBJCODE_MENUOPTION_BARNUM
+							loReg.OBJCODE		= C_OBJCODE_MENUOPTION_BARNUM 
 						Else
 *-- Es un BAR del sistema
 							loReg.Name	= lcBarName
@@ -28931,14 +28932,34 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 		Try
 				Local lcText, lcTab, loEx As Exception ;
-					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
+					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
+					, lcName , lcName2
 				Store Null To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
 				lcText		= ''
+*!*	Changed by SF 22.4.2021
+*!*	<pdm>
+*!*	<change date="{^2021-04-22,06:24:00}">Changed by SF<br />
+*!*	If the BAR real name starts (legaly) with a digit it could not be recreated
+*!*	added code to add additional information to recreate the name
+*!*	name will wrap into " , so we got DEFINE BAR "Number" OF
+*!*	also use variable on all places instead of EVL(..
+*!*	</change>
+*!*	</pdm>
+				If !Empty(toReg.Name) And ISDIGIT( toReg.Name ) Then
+					lcName	= ALLTRIM( toReg.Name )
+					lcName2	= '"' + Alltrim(toReg.Name) + '"'
+				Else  &&!Empty(toReg.Name) And ISDIGIT( toReg.Name )
+					lcName	= ALLTRIM( Evl(toReg.Name, '_' + Transform( Int( Val( toReg.ItemNum ) ), '@L #########') ) )
+					lcName2	= m.lcName
+				Endif &&!Empty(toReg.Name) And ISDIGIT( toReg.Name )
 
+* SF
+* location of definition  of MENU BAR Evl( toReg.Name, toReg.ItemNum )
+* /SF
 *-- DEFINE BAR
 *lcText	= lcTab + '*----------------------------------' + CR_LF
-				lcText	= lcText + lcTab + 'DEFINE BAR ' + Alltrim( Evl( toReg.Name, toReg.ItemNum ) ) + ' OF ' + Alltrim(toReg.LevelName) ;
+				lcText	= lcText + lcTab + 'DEFINE BAR ' + m.lcName2 + ' OF ' + Alltrim(toReg.LevelName) ;
 					+ ' PROMPT "' + toReg.Prompt + '"'
 
 				If Not Empty(toReg.KEYNAME)
@@ -28971,10 +28992,10 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 					If toReg.OBJCODE = C_OBJCODE_MENUOPTION_SUBMENU	&& Submenu
 						loBarPop	= This.Item(1).oReg
-						lcText	= lcText + lcTab + 'ON BAR ' + Alltrim( Evl( toReg.Name, toReg.ItemNum ) ) + ' OF ' + Alltrim(toReg.LevelName) ;
+						lcText	= lcText + lcTab + 'ON BAR ' + m.lcName + ' OF ' + Alltrim(toReg.LevelName) ;
 							+ ' ACTIVATE POPUP ' + Alltrim(loBarPop.Name)
 					Else
-						lcText	= lcText + lcTab + 'ON SELECTION BAR ' + Alltrim( Evl( toReg.Name, toReg.ItemNum ) ) + ' OF ' + Alltrim(toReg.LevelName)
+						lcText	= lcText + lcTab + 'ON SELECTION BAR ' + m.lcName + ' OF ' + Alltrim(toReg.LevelName)
 
 						Do Case
 							Case toReg.OBJCODE = C_OBJCODE_MENUOPTION_COMMAND	&& Command
@@ -29003,6 +29024,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Release lcTab, loBarPop
 
 		Endtry
+*!*	/Changed by SF 22.4.2021
 
 		Return lcText
 	Endproc
@@ -29017,18 +29039,35 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 * toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 *---------------------------------------------------------------------------------------------------
 		Lparameters toReg, toBarPop, tnNivel, toHeader
+*!*	Changed by SF 21.4.2021
+*!*	<pdm>
+*!*	<change date="{^2021-04-21,22:33:00}">Changed by SF<br />
+*!*	If the PAD real name starts (leagly) with "_" it could not be recreated
+*!*	added code to add additional information to recreate the name
+*!*	name will simple wrapped into ", so we got DEFINE PAD "_Name" OF
+*!*	</change>
+*!*	</pdm>
 
 		Try
 				Local lcText, lcTab, lnContainer, lnObject, loEx As Exception ;
-					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
+					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
+					, lcName2
 				Store Null To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
-				toReg.Name	= Evl(toReg.Name, '_' + Transform( Int( Val( toReg.ItemNum ) ), '@L #########') )
+				If !Empty(toReg.Name) And toReg.Name = '_' Then
+					lcName2		= '"' + Alltrim(toReg.Name) + '"'
+					toReg.Name	= toReg.Name
+				Else  &&!EMPTY(toReg.Name) AND toReg.Name = '_'
+					toReg.Name	= Evl(toReg.Name, '_' + Transform( Int( Val( toReg.ItemNum ) ), '@L #########') )
+					lcName2		= Alltrim(toReg.Name)
+				Endif &&!EMPTY(toReg.Name) AND toReg.Name = '_'
+*!*	/Changed by SF 21.4.2021
+
 				lcText		= ''
 
 *-- DEFINE PAD
 *lcText	= lcTab + '*----------------------------------' + CR_LF
-				lcText	= lcText + lcTab + 'DEFINE PAD ' + Alltrim(toReg.Name) + ' OF ' + Alltrim(toReg.LevelName) ;
+				lcText	= lcText + lcTab + 'DEFINE PAD ' + m.lcName2 + ' OF ' + Alltrim(toReg.LevelName) ;
 					+ ' PROMPT "' + toReg.Prompt + '"' ;
 					+ ' COLOR SCHEME ' + Transform(toBarPop.Scheme)
 
