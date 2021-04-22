@@ -30,6 +30,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/04/22 | LScheffler | [v1.19.64](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.64) | **Bug Fix**: onverting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen. (Jimrnelson) |
+| | | | **Bug Fix**: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen. (LScheffler) |
 | 2021/04/12 | LScheffler | [v1.19.63](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.63) | **Bug Fix**: Tables without indexes cause an error that the __Table ## is not marked as belonging to the ## database.__ (jstagerGH) |
 | 2021/03/30 | LScheffler | [v1.19.62](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.62) | **Enhancement**: Debug logging, level of config file. |
 | | | | **Bug Fix**: *_Conversion_Support options not read from config file. |

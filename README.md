@@ -125,30 +125,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ## Changes
 See [Changes](./docs/FoxBin2prg_Changes.md)
 
-## Changes in 1.19.60
-* -cC options learned to create default FoxBin2Prg._cfg file
-* -t Option learned to create default  \<TableName\>._cfg file, if table is open.
-* Handling of additional non structural index per DBF in Bin2Text and Text2Bin
-* Debug-Logging for Index
-* Bug Fix: DBF_Conversion_Condition was read, but never used
-* Bug Fix: DBF_Conversion_Order sets an index that later would be stored as structural index
-* Bug Fix: config options with text value fail, if line comment is set
-
-## Changes in 1.19.59
-* Added support for writing to a different folder than the source code using a new tcOutputFolder parameter
-* Added a configuration item: HomeDir, which determines if HomeDir is saved in PJ2 files (the default is 1 for Yes)
-* Logging of settings as settings object passed to execute method (Option debug > 0)
-* Bug Fixes: RedirectClassType = 2
-* Improved, Better description of ClassPerFileCheck and tcOutputFolder.
-* Added option to create config file template based on current values of a directory
-  To create config file (working settings) with all values set for a folder.
-  Intended for storing the settings with the project.
-
-```
-DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a file like FoxBin2Prg.cfg config file with recent settings
-```
-
-## Changes to Settings
+### Changes to Settings
 To get the new settings in config file, use the new create-a-template function:
 
 ```
@@ -157,37 +134,8 @@ DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
-### Split of container files
-VCX, SCX and DBC are container that hold different items. There is was a single option to split them.   
-The split of DBC the same way like VCX/SCX might not be the best choice under all circumstances.  
-New option _OldFilesPerDBC_ is set 1, _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ might be used to set the handling of the DBC.   
-Note that those options will be ignored, if _OldFilesPerDBC_ is 0 (default).   
-**Check that changes will be reflected on running projects.**   
-See [Internals](./docs/FoxBin2prg_Internals.md#configuration-file).  
-
-### Tanscoding of table fields with NoCPTrans
-The function _DBF_BinChar_Base64: 0_ must be handled with care too.
-Tables must converted to _Text_ according. **It's not recommended for running projects. Handle with extra care otherwise.**
-
-### Inclusion of deleted records
-Sometimes information left in deleted (table) records is still valuable information.
-The new option _DBF_IncludeDeleted_ allows to keep those records throug conversion.   
-The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files.
-
-#### Recomendation
-It's a good idea to have the _FoxBin2Prg.cfg_ per projekt and and source control,
-old commits / versions would have the old config.  
-So the settings would fit the data and FoxBin2Prg could generate according to it.
-
----
----
-# Folder information
-Project to generate text representations of VFP binary sources for source control
-
-## ./
-This folder containes the files necessary to run FoxBin2Prg.prg or to create the FoxBin2Prg.exe
-
 For usage see [documentation](./docs/FoxBin2prg.md)
 
 ----
+## Usage
 Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

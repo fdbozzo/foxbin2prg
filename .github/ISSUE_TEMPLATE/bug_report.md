@@ -11,6 +11,7 @@ assignees: ''
 
 - VFP version: 
 - FoxBin2PRG version:
+- Last FoxBin2PRG version w/o bug (if available):
 
 ## 📝 Provide detailed reproduction steps (if any)
 
