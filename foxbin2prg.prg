@@ -18840,8 +18840,7 @@ Define Class c_conversor_mnx_a_prg As c_conversor_bin_a_prg
 			Local toMenu As CL_MENU Of 'FOXBIN2PRG.PRG'
 			Local toFoxBin2Prg As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 		#Endif
-* SF
-SET STEP ON 
+
 		Try
 				With This As c_conversor_mnx_a_prg Of 'FOXBIN2PRG.PRG'
 					If toFoxBin2Prg.l_ProcessFiles Then
@@ -28480,7 +28479,6 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	</change>
 *!*	</pdm>
 
- 
  						Do Case
  							Case LEFT ( m.lcBarName, 1 ) = '"'
 	 							lcBarName   	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
@@ -28562,12 +28560,21 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 						Endcase
 
-						If Left(lcBarName,1) == '_'
-*-- Es un BAR del Sistema, así que no tiene ON BAR ni nada más.
-							loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM	&& Bar#
-							I = m.I + 1
-							Exit
-						Endif
+*!*	Changd By: SF 22.4.2021
+*!*	<pdm>
+*!*	<change date="{^2021-04-22,15:26:00}">Changd By: SF<br />
+*!*	This is not valid here - "_" is never set in get_DefineBarText
+*!*	</change>
+*!*	</pdm>
+
+*!*							If Left(lcBarName,1) == '_'
+*!*	*-- Es un BAR del Sistema, así que no tiene ON BAR ni nada más.
+*!*								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM	&& Bar#
+*!*								I = m.I + 1
+*!*								Exit
+*!*							Endif
+
+*!*	/Changd By: SF 22.4.2021
 
 
 * Estructuras ejemplo a analizar:
@@ -28692,7 +28699,22 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 						loReg				= .oReg
 						loReg.ObjType		= C_OBJTYPE_MENUTYPE_OPTION
 						lcPadName			= Alltrim( Strextract( tcLine, 'PAD ' , ' OF' ) )
-						loReg.Name			= lcPadName
+
+*!*	Changd By: SF 22.4.2021
+*!*	<pdm>
+*!*	<change date="{^2021-04-22,15:56:00}">Changd By: SF<br />
+*!*	Old style determeines generic name from set name by testing as digit. It could be only digit. :(
+*!*	New style wraps it in ", so anything in " is set name
+*!*	</change>
+*!*	</pdm>
+
+*!*							loReg.Name			= lcPadName
+ 						IF LEFT ( m.lcPadName, 1 ) = '"' THEN
+	 						lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
+ 							loReg.Name		= m.lcPadName
+ 						ENDIF &&LEFT ( m.lcPadName, 1 ) = '"'
+
+*!*	/Changd By: SF 22.4.2021
 						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
 
 						If Upper(loReg.LevelName) # Upper(.c_ParentName)
@@ -28967,7 +28989,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 					lcName	= ALLTRIM( toReg.Name )
 					lcName2	= '"' + Alltrim(toReg.Name) + '"'
 				Else  &&!Empty(toReg.Name) And ISDIGIT( toReg.Name )
-					lcName	= ALLTRIM( Evl(toReg.Name, '_' + Transform( Int( Val( toReg.ItemNum ) ), '@L #########') ) )
+					lcName	= Alltrim( Evl( toReg.Name, toReg.ItemNum ) )
 					lcName2	= m.lcName
 				Endif &&!Empty(toReg.Name) And ISDIGIT( toReg.Name )
 
@@ -29071,7 +29093,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 					, lcName2
 				Store Null To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
-				If !Empty(toReg.Name) And toReg.Name = '_' Then
+				If !Empty(toReg.Name) And LEFT( toReg.Name, 1 ) = '_' Then
 					lcName2		= '"' + Alltrim(toReg.Name) + '"'
 					toReg.Name	= toReg.Name
 				Else  &&!EMPTY(toReg.Name) AND toReg.Name = '_'
