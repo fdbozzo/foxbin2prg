@@ -271,10 +271,14 @@
 * 30/03/2021	LScheffler	v1.19.62	Enhancement: Debug logging, level of config file.
 * 12/04/2021	LScheffler	v1.19.63	Bug Fix: Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database" (jstagerGH)
 * 12/04/2021	LScheffler	v1.19.63	Docu: Readme reworked (mattslay)
+* 22/04/2021	LScheffler	v1.19.64	Bug Fix: Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen (Jimrnelson)
+* 22/04/2021	LScheffler	v1.19.64	Bug Fix: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 22/04/2021	LScheffler 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen
+* 21/04/2021	Jimrnelson 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen
 * 08/04/2021	jstagerGH 			BUG REPORT v1.19.62 Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database"
 * 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
 * 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
@@ -934,7 +938,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.63'
+	c_FB2PRG_Version_Real			= '1.19.64'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'

@@ -2,7 +2,7 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.57.0'
+    .VersionNumber        = 'v1.19.64.0'
     .VersionDate          = Date(2021,03,25)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
@@ -21,7 +21,11 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
 
-2021-08-12 v1.19.63
+2021-04-22 v1.19.64
+- Bug Fix: Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen. (Jimrnelson)
+- Bug Fix: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen. (LScheffler)
+
+2021-04-12 v1.19.63
 - Bug Fix: Tables without indexes cause an error that the __Table ## is not marked as belonging to the ## database.__ (jstagerGH)
 
 2021-03-23 v1.19.62
