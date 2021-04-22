@@ -28427,6 +28427,231 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 	Endproc
 
 
+	Procedure analyzeCodeBlock_DefineBAR
+*---------------------------------------------------------------------------------------------------
+* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
+* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
+* I							(!@ IN/OUT) Número de línea en análisis
+* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
+* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
+*---------------------------------------------------------------------------------------------------
+		Lparameters tcLine, taCodeLines, I, tnCodeLines, toConversor
+
+		#If .F.
+			Local toConversor As c_conversor_prg_a_mnx Of 'FOXBIN2PRG.PRG'
+		#Endif
+
+		Try
+				Local llBloqueEncontrado, lcText, loReg, lnPos, lcBarName, lcExpr, lcComment, lcProcName, lcProcCode, loEx As Exception ;
+					, lnNegContainer, lnNegObject
+				Store '' To lcText, lcComment, lcBarName
+
+* Estructura ejemplo a analizar:
+*--------------------------------
+*		DEFINE BAR _3YM1DR90Z OF _MSYSMENU PROMPT "Opción A con submenú" COLOR SCHEME 3 ;
+*			NEGOTIATE NONE, LEFT ;
+*			KEY DEL, "Pulsar <DEL>" ;
+*			SKIP FOR SKIP_FOR() ;
+*			MESSAGE "Mensaje para Opción A con submenú" && Comentario
+*
+*		ON BAR _3YM1DR90Z OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
+*
+*		DEFINE BAR 1 OF _MSYSMENU PROMPT "Opción A con submenú" ;
+*			NEGOTIATE NONE, LEFT ;
+*			KEY DEL, "Pulsar <DEL>" ;
+*			SKIP FOR SKIP_FOR() ;
+*			MESSAGE "Mensaje para Opción A con submenú" && Comentario
+*
+*		ON BAR 1 OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
+*--------------------------------
+				If Left( tcLine, 11 ) == 'DEFINE BAR '
+					llBloqueEncontrado	= .T.
+
+					With This As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
+						loReg				= .oReg
+						loReg.ObjType		= C_OBJTYPE_MENUTYPE_OPTION
+						lcBarName			= Alltrim( Strextract( tcLine, 'BAR ' , ' OF' ) )
+*!*	Changd By: SF 22.4.2021
+*!*	<pdm>
+*!*	<change date="{^2021-04-22,06:49:00}">Changd By: SF<br />
+*!*	Old style determeines generic name from set name by testing as digit. It could be only digit. :(
+*!*	New style wraps it in ", so anything in " is set name
+*!*	</change>
+*!*	</pdm>
+
+ 
+ 						Do Case
+ 							Case m.lcBarName = '"'
+ 								loReg.Name	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
+ 							Case Isdigit( m.lcBarName )
+ 						*-- Bar#
+ 								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
+
+ 							Otherwise
+ 						*-- Es un BAR del sistema
+ 								loReg.Name	= m.lcBarName
+
+ 						Endcase
+
+*!*	/Changd By: SF 22.4.2021
+						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
+
+						If Upper(loReg.LevelName) # Upper(.c_ParentName)
+							Exit
+						Endif
+
+						loReg.Prompt		= Alltrim( Strextract( tcLine, ' PROMPT ', ';', 1, 2 ) )
+						loReg.Prompt		= Substr( loReg.Prompt, 2, Len( loReg.Prompt ) - 2 )
+
+*-- ANALISIS DEL "DEFINE BAR"
+						Do Case
+							Case ';' $ tcLine
+								For I = m.I + 1 To tnCodeLines
+									.set_Line( @tcLine, @taCodeLines, m.I )
+
+									If Empty(loReg.Comment)	&& No volver a buscar el comentario si ya existe
+*-- Busco si tiene comentario
+										If .get_SeparatedLineAndComment( @tcLine, @lcComment )
+											loReg.Comment	= Strtran( Strtran( lcComment, '<CR>', Chr(13) ), '<LF>', Chr(10) )
+										Endif
+									Endif
+
+									Do Case
+										Case Left( tcLine, 10 ) == 'NEGOTIATE '
+											lcExpr	= Alltrim( Strextract( tcLine, 'NEGOTIATE ', ';', 1, 2 ) )
+											lnNegContainer	= Int( At( ',' + Padr( Alltrim(Getwordnum( lcExpr, 1, ',' )), 6, '_' ) ;
+												, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
+											lnNegObject		= Int( At( ',' + Padr( Alltrim(Getwordnum( lcExpr, 2, ',' )), 6, '_' ) ;
+												, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
+											loReg.Location	= lnNegContainer + lnNegObject * 2^4
+
+										Case Left( tcLine, 4 ) == 'KEY '
+											lcExpr	= Alltrim( Strextract( tcLine, 'KEY ', ';', 1, 2 ) )
+											lnPos	= At( ',', lcExpr )
+											loReg.KEYNAME	= Alltrim( Left( lcExpr, lnPos-1 ) )
+											loReg.KeyLabel	= Alltrim( Strextract( lcExpr, '"', '"' ) )
+
+										Case Left( tcLine, 9 ) == 'SKIP FOR '
+											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ', ';', 1, 2 ) )
+
+										Case Left( tcLine, 8 ) == 'MESSAGE '
+											loReg.Message	= Alltrim( Substr( tcLine, 9 ) )
+
+										Case Left( tcLine, 8 ) == 'PICTURE '
+											loReg.RESNAME	= Alltrim( Strextract( tcLine, '"', '"' ) )
+
+										Case Left( tcLine, 8 ) == 'PICTRES '
+											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ', ';', 1, 2 ) )
+											loReg.SYSRES	= 1
+
+										Otherwise
+* Nada
+									Endcase
+
+									If Not ';' $ tcLine	&& Fin
+										Exit
+									Endif
+								Endfor
+
+							Case .set_Line( @tcLine, @taCodeLines, m.I ) And .get_SeparatedLineAndComment( @tcLine, @lcComment )
+*-- Es un Bar de una sola línea y con comentarios
+								loReg.Comment	= Strtran( Strtran( lcComment, '<CR>', Chr(13) ), '<LF>', Chr(10) )
+
+						Endcase
+
+						If Left(lcBarName,1) == '_'
+*-- Es un BAR del Sistema, así que no tiene ON BAR ni nada más.
+							loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM	&& Bar#
+							I = m.I + 1
+							Exit
+						Endif
+
+
+* Estructuras ejemplo a analizar:
+*--------------------------------
+*	ON BAR _3YM1DR90Z OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
+*	ON BAR _3YM1DR90Z OF _MSYSMENU wait window "algo"
+*	ON BAR _3YM1DR90Z OF _MSYSMENU DO Menu1_Opción_A_2_Sub_SNIPPET
+*	ON SELECTION BAR 1 OF Contracts DO BAR_1_OF_Contracts_FB2P
+*--------------------------------
+
+*-- ANALISIS DEL "ON BAR" U "ON SELECTION BAR"
+						For I = m.I + 1 To tnCodeLines
+							.set_Line( @tcLine, @taCodeLines, m.I )
+
+							Do Case
+								Case Empty( tcLine )
+									Loop
+
+								Case Inlist( Left( tcLine, 11 ), 'DEFINE BAR ', 'DEFINE PAD ' )
+*-- Se encontró el siguiente DEFINE BAR/PAD, por lo que el analizado es de tipo #BAR vacío
+*-- y no tiene ON BAR ni nada más.
+									loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM	&& Bar#
+									Exit
+
+								Case Left( tcLine, 7 ) == 'ON BAR '
+									loReg.OBJCODE	= C_OBJCODE_MENUOPTION_SUBMENU	&& Submenu
+
+									I = m.I + 1
+									Exit
+
+								Case Left( tcLine, 17 ) == 'ON SELECTION BAR '
+									lcExpr	= Alltrim( Strextract( tcLine, ' OF ' + loReg.LevelName + ' ', '', 1, 2 ) )
+									.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1, .F. )
+
+									Do Case
+										Case Not Empty(lcProcCode)
+											loReg.Procedure	= Strtran( lcProcCode, '<<ProcName>>', lcProcName )
+
+											If Empty( loReg.Procedure )
+												loReg.OBJCODE	= C_OBJCODE_MENUOPTION_COMMAND
+												loReg.Command	= lcExpr
+											Else
+												loReg.OBJCODE	= C_OBJCODE_MENUOPTION_PROCEDURE
+												loReg.ProcType	= 1
+											Endif
+
+										Otherwise
+											loReg.OBJCODE	= C_OBJCODE_MENUOPTION_COMMAND	&& Command
+											loReg.Command	= lcExpr
+
+									Endcase
+
+									I = m.I + 1
+									Exit
+
+								Case Left( tcLine, 19 ) == 'ON SELECTION POPUP '
+									Exit
+
+								Otherwise
+* Nada
+							Endcase
+
+							If Not ';' $ tcLine	&& Fin
+								I = m.I + 1
+								Exit
+							Endif
+						Endfor
+					Endwith && THIS
+
+					I = m.I - 1
+				Endif
+
+			Catch To loEx
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
+
+				Throw
+
+		Endtry
+
+		Return llBloqueEncontrado
+		Endproc
+
+
+
 	Procedure analyzeCodeBlock_DefinePAD
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -28604,216 +28829,6 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Store Null To loReg
 				Release tcLine, taCodeLines, I, tnCodeLines, toConversor ;
 					, lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, lnNegContainer, lnNegObject
-
-		Endtry
-
-		Return llBloqueEncontrado
-	Endproc
-
-
-	Procedure analyzeCodeBlock_DefineBAR
-*---------------------------------------------------------------------------------------------------
-* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-* tcLine					(!@ IN/OUT) Contenido de la línea en análisis
-* taCodeLines				(!@ IN    ) Array de líneas del programa analizado
-* I							(!@ IN/OUT) Número de línea en análisis
-* tnCodeLines				(!@ IN    ) Cantidad de líneas del programa analizado
-* toConversor				(v! IN    ) Referencia al conversor para poder usar sus métodos
-*---------------------------------------------------------------------------------------------------
-		Lparameters tcLine, taCodeLines, I, tnCodeLines, toConversor
-
-		#If .F.
-			Local toConversor As c_conversor_prg_a_mnx Of 'FOXBIN2PRG.PRG'
-		#Endif
-
-		Try
-				Local llBloqueEncontrado, lcText, loReg, lnPos, lcBarName, lcExpr, lcComment, lcProcName, lcProcCode, loEx As Exception ;
-					, lnNegContainer, lnNegObject
-				Store '' To lcText, lcComment, lcBarName
-
-* Estructura ejemplo a analizar:
-*--------------------------------
-*		DEFINE BAR _3YM1DR90Z OF _MSYSMENU PROMPT "Opción A con submenú" COLOR SCHEME 3 ;
-*			NEGOTIATE NONE, LEFT ;
-*			KEY DEL, "Pulsar <DEL>" ;
-*			SKIP FOR SKIP_FOR() ;
-*			MESSAGE "Mensaje para Opción A con submenú" && Comentario
-*
-*		ON BAR _3YM1DR90Z OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
-*
-*		DEFINE BAR 1 OF _MSYSMENU PROMPT "Opción A con submenú" ;
-*			NEGOTIATE NONE, LEFT ;
-*			KEY DEL, "Pulsar <DEL>" ;
-*			SKIP FOR SKIP_FOR() ;
-*			MESSAGE "Mensaje para Opción A con submenú" && Comentario
-*
-*		ON BAR 1 OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
-*--------------------------------
-				If Left( tcLine, 11 ) == 'DEFINE BAR '
-					llBloqueEncontrado	= .T.
-
-					With This As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
-						loReg				= .oReg
-						loReg.ObjType		= C_OBJTYPE_MENUTYPE_OPTION
-						lcBarName			= Alltrim( Strextract( tcLine, 'BAR ' , ' OF' ) )
-
-						If Isdigit(lcBarName)
-*-- Bar#
-							loReg.OBJCODE		= C_OBJCODE_MENUOPTION_BARNUM 
-						Else
-*-- Es un BAR del sistema
-							loReg.Name	= lcBarName
-						Endif
-
-						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
-
-						If Upper(loReg.LevelName) # Upper(.c_ParentName)
-							Exit
-						Endif
-
-						loReg.Prompt		= Alltrim( Strextract( tcLine, ' PROMPT ', ';', 1, 2 ) )
-						loReg.Prompt		= Substr( loReg.Prompt, 2, Len( loReg.Prompt ) - 2 )
-
-*-- ANALISIS DEL "DEFINE BAR"
-						Do Case
-							Case ';' $ tcLine
-								For I = m.I + 1 To tnCodeLines
-									.set_Line( @tcLine, @taCodeLines, m.I )
-
-									If Empty(loReg.Comment)	&& No volver a buscar el comentario si ya existe
-*-- Busco si tiene comentario
-										If .get_SeparatedLineAndComment( @tcLine, @lcComment )
-											loReg.Comment	= Strtran( Strtran( lcComment, '<CR>', Chr(13) ), '<LF>', Chr(10) )
-										Endif
-									Endif
-
-									Do Case
-										Case Left( tcLine, 10 ) == 'NEGOTIATE '
-											lcExpr	= Alltrim( Strextract( tcLine, 'NEGOTIATE ', ';', 1, 2 ) )
-											lnNegContainer	= Int( At( ',' + Padr( Alltrim(Getwordnum( lcExpr, 1, ',' )), 6, '_' ) ;
-												, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
-											lnNegObject		= Int( At( ',' + Padr( Alltrim(Getwordnum( lcExpr, 2, ',' )), 6, '_' ) ;
-												, '______,NONE__,LEFT__,MIDDLE,RIGHT_' ) / 7 - 1 )
-											loReg.Location	= lnNegContainer + lnNegObject * 2^4
-
-										Case Left( tcLine, 4 ) == 'KEY '
-											lcExpr	= Alltrim( Strextract( tcLine, 'KEY ', ';', 1, 2 ) )
-											lnPos	= At( ',', lcExpr )
-											loReg.KEYNAME	= Alltrim( Left( lcExpr, lnPos-1 ) )
-											loReg.KeyLabel	= Alltrim( Strextract( lcExpr, '"', '"' ) )
-
-										Case Left( tcLine, 9 ) == 'SKIP FOR '
-											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ', ';', 1, 2 ) )
-
-										Case Left( tcLine, 8 ) == 'MESSAGE '
-											loReg.Message	= Alltrim( Substr( tcLine, 9 ) )
-
-										Case Left( tcLine, 8 ) == 'PICTURE '
-											loReg.RESNAME	= Alltrim( Strextract( tcLine, '"', '"' ) )
-
-										Case Left( tcLine, 8 ) == 'PICTRES '
-											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ', ';', 1, 2 ) )
-											loReg.SYSRES	= 1
-
-										Otherwise
-* Nada
-									Endcase
-
-									If Not ';' $ tcLine	&& Fin
-										Exit
-									Endif
-								Endfor
-
-							Case .set_Line( @tcLine, @taCodeLines, m.I ) And .get_SeparatedLineAndComment( @tcLine, @lcComment )
-*-- Es un Bar de una sola línea y con comentarios
-								loReg.Comment	= Strtran( Strtran( lcComment, '<CR>', Chr(13) ), '<LF>', Chr(10) )
-
-						Endcase
-
-						If Left(lcBarName,1) == '_'
-*-- Es un BAR del Sistema, así que no tiene ON BAR ni nada más.
-							loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM	&& Bar#
-							I = m.I + 1
-							Exit
-						Endif
-
-
-* Estructuras ejemplo a analizar:
-*--------------------------------
-*	ON BAR _3YM1DR90Z OF _MSYSMENU ACTIVATE POPUP OpciónA_CS
-*	ON BAR _3YM1DR90Z OF _MSYSMENU wait window "algo"
-*	ON BAR _3YM1DR90Z OF _MSYSMENU DO Menu1_Opción_A_2_Sub_SNIPPET
-*	ON SELECTION BAR 1 OF Contracts DO BAR_1_OF_Contracts_FB2P
-*--------------------------------
-
-*-- ANALISIS DEL "ON BAR" U "ON SELECTION BAR"
-						For I = m.I + 1 To tnCodeLines
-							.set_Line( @tcLine, @taCodeLines, m.I )
-
-							Do Case
-								Case Empty( tcLine )
-									Loop
-
-								Case Inlist( Left( tcLine, 11 ), 'DEFINE BAR ', 'DEFINE PAD ' )
-*-- Se encontró el siguiente DEFINE BAR/PAD, por lo que el analizado es de tipo #BAR vacío
-*-- y no tiene ON BAR ni nada más.
-									loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM	&& Bar#
-									Exit
-
-								Case Left( tcLine, 7 ) == 'ON BAR '
-									loReg.OBJCODE	= C_OBJCODE_MENUOPTION_SUBMENU	&& Submenu
-
-									I = m.I + 1
-									Exit
-
-								Case Left( tcLine, 17 ) == 'ON SELECTION BAR '
-									lcExpr	= Alltrim( Strextract( tcLine, ' OF ' + loReg.LevelName + ' ', '', 1, 2 ) )
-									.AnalizarSiExpresionEsComandoOProcedimiento( lcExpr, @lcProcName, @lcProcCode, @C_FB2PRG_CODE, -1, .F. )
-
-									Do Case
-										Case Not Empty(lcProcCode)
-											loReg.Procedure	= Strtran( lcProcCode, '<<ProcName>>', lcProcName )
-
-											If Empty( loReg.Procedure )
-												loReg.OBJCODE	= C_OBJCODE_MENUOPTION_COMMAND
-												loReg.Command	= lcExpr
-											Else
-												loReg.OBJCODE	= C_OBJCODE_MENUOPTION_PROCEDURE
-												loReg.ProcType	= 1
-											Endif
-
-										Otherwise
-											loReg.OBJCODE	= C_OBJCODE_MENUOPTION_COMMAND	&& Command
-											loReg.Command	= lcExpr
-
-									Endcase
-
-									I = m.I + 1
-									Exit
-
-								Case Left( tcLine, 19 ) == 'ON SELECTION POPUP '
-									Exit
-
-								Otherwise
-* Nada
-							Endcase
-
-							If Not ';' $ tcLine	&& Fin
-								I = m.I + 1
-								Exit
-							Endif
-						Endfor
-					Endwith && THIS
-
-					I = m.I - 1
-				Endif
-
-			Catch To loEx
-				If This.n_Debug > 0 And _vfp.StartMode = 0
-					Set Step On
-				Endif
-
-				Throw
 
 		Endtry
 
