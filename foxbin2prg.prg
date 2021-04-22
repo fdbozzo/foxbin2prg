@@ -28482,8 +28482,10 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
  
  						Do Case
- 							Case m.lcBarName = '"'
- 								loReg.Name	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
+ 							Case LEFT ( m.lcBarName, 1 ) = '"'
+	 							lcBarName   	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
+ 								loReg.Name		= m.lcBarName
+ 								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
  							Case Isdigit( m.lcBarName )
  						*-- Bar#
  								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
