@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.64.0'
-    .VersionDate          = Date(2021,03,25)
+    .VersionNumber        = 'v1.19.65.0'
+    .VersionDate          = Date(2021,05,20)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -20,6 +20,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2021-05-20 v1.19.65
+- Bug Fix: Parameters -cCt not working from command line. (LScheffler)
 
 2021-04-22 v1.19.64
 - Bug Fix: Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen. (Jimrnelson)

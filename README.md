@@ -5,8 +5,9 @@
 ![VFPX Logo](https://vfpx.github.io/images/vfpxbanner_small.gif)
 
 This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
-It's the main tool with some bugs fixes and some new functions. It looks like Fernando does not longer maintain FoxBin2Prg,
-so, with his permission, I work onto this through my [fork](https://github.com/lscheffler/foxbin2prg).
+It's the main tool with some bugs fixes and some new functions.
+It looks like Fernando does not longer maintain FoxBin2Prg, so, with his permission, I work onto this.
+On my [fork](https://github.com/lscheffler/foxbin2prg).
 updates may be faster there, because of the merge process.
 
 The spanish documentation is not longer maintained - it would fade.
@@ -108,13 +109,9 @@ Select a file, right-click, SendTo -> FoxBin2Prg
 ## LOCALIZATION:
 Is automatic starting at v1.19.38 (Languages: EN,ES,FR,DE)
 
-
 ## FINAL NOTE:
 This program is Open Source and "libre", and I don't make any guaranties that it fulfills your expectations or that it will be free of bugs.
 I will try to fix bugs if my obligations let me do it.
-
-## Project info and updates: 
-Fernando D. Bozzo's repository at Github: https://github.com/fdbozzo/foxbin2prg   
 
 ## LICENCE:
 This work is licensed under the Creative Commons Attribution 4.0 International License.
@@ -138,4 +135,4 @@ For usage see [documentation](./docs/FoxBin2prg.md)
 
 ----
 ## Usage
-Last changed: _2021/03/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/15/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

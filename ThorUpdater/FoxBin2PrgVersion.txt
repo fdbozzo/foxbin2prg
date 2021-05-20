@@ -10,8 +10,8 @@ local;
 
 lcappName      = "FoxBin2Prg"
 *Set following two numbers on version
-ldDate         = date(2021,04,22)
-lcmajorVersion = "1.19.64"
+ldDate         = date(2021,05,20)
+lcmajorVersion = "1.19.65"
 
 *lnJulian = val(sys(11, m.ldDate)) - val(sys(11, {^2000-01-01}))
 *lcJulian = padl(transform(lnJulian), 4, '0')
@@ -38,6 +38,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2021-05-20 v1.19.65
+- Bug Fix: Parameters -cCt not working from command line. (LScheffler)
 
 2021-04-22 v1.19.64
 - Bug Fix: Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen. (Jimrnelson)

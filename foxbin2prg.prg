@@ -273,10 +273,12 @@
 * 12/04/2021	LScheffler	v1.19.63	Docu: Readme reworked (mattslay)
 * 22/04/2021	LScheffler	v1.19.64	Bug Fix: Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen (Jimrnelson)
 * 22/04/2021	LScheffler	v1.19.64	Bug Fix: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen (LScheffler)
+* 20/05/2021	LScheffler 	v1.19.65	Bug Fix: Options "-cCt" are not usable on command line base EXE. "cCt" are allowed too now
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 17/05/2021	LScheffler 			BUG REPORT v1.19.64 Options "-cCt" are not usable on command line base EXE.
 * 22/04/2021	LScheffler 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen
 * 21/04/2021	Jimrnelson 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen
 * 08/04/2021	jstagerGH 			BUG REPORT v1.19.62 Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database"
@@ -717,7 +719,8 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0 Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_I0','-'+tc_InputFile) > 0 Or Atc('-SIMERR_I1','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_O1','-'+tc_InputFile) > 0;
-		OR Upper(tc_InputFile)=='-C' Or tc_InputFile=='-t' Then
+		OR Upper(tc_InputFile)=='-C' Or tc_InputFile=='-t' ;
+		OR Upper(tc_InputFile)=='C' Or tc_InputFile=='t' Then
 	pcParamX		= tc_InputFile
 	tc_InputFile	= tcType
 	tcType			= pcParamX
@@ -726,13 +729,13 @@ Endif
 
 * only 2 paras for -cCt
 Do Case
-	Case Pcount()=1 And tcType == '-t' And !Empty( Dbf() )
+	Case Pcount()=1 And ( tcType == '-t' OR tcType == 't' ) And !Empty( Dbf() )
 		tc_InputFile = Dbf() + '._cfg'
 
-	Case Pcount()=1 And Upper( tcType ) =='-C'
+	Case Pcount()=1 And ( Upper( tcType ) =='-C' OR Upper( tcType ) =='C' )
 		tc_InputFile = 'FoxBin2PRG._cfg'
 
-	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' )
+	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' OR Upper( tcType ) =='C' Or tcType =='t' )
 		tc_InputFile = ""
 		tcType       = ""
 
@@ -747,6 +750,7 @@ Try
 			loCnv.cOutputFolder = tcOutputFolder
 		Endif &&not empty(tcOutputFolder)
 *** DH 2021-03-04: end of new code
+
 		lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
 			, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
 			, .F., .F., .F., tcCFG_File )
@@ -938,7 +942,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.64'
+	c_FB2PRG_Version_Real			= '1.19.65'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -3316,7 +3320,7 @@ Define Class c_foxbin2prg As Session
 		Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx As Exception, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
 			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File
-
+ 
 		Try
 				Local I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
 					, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon, llError ;
@@ -3493,9 +3497,9 @@ Define Class c_foxbin2prg As Session
 * n_RedirectClassType = 0 will import all classes of file.VCX (as just handing file.vc2)
 * n_RedirectClassType = 1 will import the class to single lib file[.baseclass].class.VCX
 					Do Case
-						Case Lower(m.lcType)=='-c'
+						Case ( Lower(m.lcType)=='-c' OR Lower(m.lcType)=='c' )
 * not handled
-						Case m.lcType=='-t'
+						Case ( m.lcType=='-t' OR m.lcType=='t' )
 * not handled
 						Case .n_RedirectClassType # 2
 * not handled
@@ -3552,11 +3556,11 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
-						Case m.lcType=='-t' And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
+						Case ( m.lcType=='-t' OR m.lcType=='t' ) And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
 							loLang	     = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( Strtran( '*' + m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
 
-						Case m.lcType=='-c'
+						Case ( m.lcType=='-c' OR m.lcType=='c' )
 							tc_InputFile = Iif( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
 							loLang		 = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
@@ -3565,7 +3569,7 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 07.3.2021
 *!*	change date="{^2021-03-07,18:44:00}"
 * added option to create config files with values
-						Case m.lcType=='-C'
+						Case ( m.lcType=='-C' OR m.lcType=='C' )
 							Local;
 								lcText    As String,;
 								lcValue   As String,;
@@ -30245,14 +30249,15 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c|-C|-t [OutFileName]]
+						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
+						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
+						<<>>-c (c)        Creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-C (C)        Creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
-						<<>>-t            creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
+						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
 						<<>>
 						<<>>
@@ -30496,14 +30501,15 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c|-C|-t [OutFileName]]
+						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
+						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
+						<<>>-c (c)        Creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-C (C)        Creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
-						<<>>-t            creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
+						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
 						<<>>
 							ENDTEXT
@@ -30745,14 +30751,15 @@ Define Class CL_LANG As Custom
 						<<>>cOutputFolder:     Der Ordner in die die Ausgabedatei geschrieben werden soll. Wenn nicht angegeben, das Verzeichnis der Quelle.
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c|-C|-t [OutFileName]]
+						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
+						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
 						<<>>
 						<<>>-- Parameter:
 						<<>>Keine Parameter:   Startet dieses Formular
-						<<>>-c                 Erzeugt eine Vorlage <OutFileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
-						<<>>-C                 Erzeugt eine  Config-Datei <OutFileName>  (wie FOXBIN2PRG.CFG) mit den aktuellen Optionen des Pfades von <OutFileName>
+						<<>>-c (c)             Erzeugt eine Vorlage <OutFileName> für eine Config-Datei (wie FOXBIN2PRG.CFG)
+						<<>>-C (C)             Erzeugt eine  Config-Datei <OutFileName>  (wie FOXBIN2PRG.CFG) mit den aktuellen Optionen des Pfades von <OutFileName>
 						<<>>                   Wird OutFileName nicht angegeben, so wird eine Konfigurationsdatei FoxBin2Prg._cfg angelegt.
-						<<>>-t                 Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
+						<<>>-t (t)             Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
 						<<>>                   Wird OutFileName nicht angegeben und ist eine Tabelle offen,
 						<<>>                   so wird eine Konfigurationsdatei <Tabellenname>.dbf._cfg im Verzeichnis der Tabelle angelegt.
 						<<>>
@@ -30778,12 +30785,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>Interne Einstellungen
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
-						<<>>ShowProgressbar: 1             && 0=Zeige Fortschrittsfenster, 1=Zeige es nicht, 2= Zeige Fortschrittsfenster nur, wen mehrere Dateien konvertiert werden.
+						<<>>ShowProgressbar: 1             && 0=Zeige Fortschrittsfenster, 1=Zeige es nicht, 2= Zeige Fortschrittsfenster nur, wenn mehrere Dateien konvertiert werden.
 						<<>>DontShowErrors: 0              && 0=Zeige Fehler an, 1=Zeige keine Fehler an
 						<<>>ExtraBackupLevels: 1           && Anzahl der Backup-Ebenen der Binärdateien 0=kein Backup, 1=<Datei>.BAK, n>1= n-Backup-Ebenen, <Datei>.n.BAK
 						<<>>Debug: 0                       && 0=Individuelles Logging ist aus 1= Individuelles Log per Datei <Datei>.Log
 						<<>>BackgroundImage: <cFile>       && Hintergrundbild für das Formular zur Fortschrittsanzeige.
-						<<>>                               && Leer erzeugt kein Hintergrundbild., Wird die Datei nicht gefunden, wird der Standardhintergrund verwendet.
+						<<>>                               && Leer erzeugt kein Hintergrundbild. Wird die Datei nicht gefunden, wird der Standardhintergrund verwendet.
 						<<>>HomeDir: 1                     && 0 = Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert, [1 = Die Eigenschaft wird gespeichert]
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -31030,14 +31037,15 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [-c|-C|-t [OutFileName]]
+						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
+						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
-						<<>>-c            creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
-						<<>>-C            creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
+						<<>>-c (c)        Creates a template config-file <OutFileName> (like FOXBIN2PRG.CFG)
+						<<>>-C (C)        Creates a config-file <OutFileName> (like FOXBIN2PRG.CFG) with current options of folder of <OutFileName>
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
-						<<>>-t            creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
+						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
 						<<>>
 						<<>>
