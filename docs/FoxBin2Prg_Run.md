@@ -107,16 +107,22 @@ on which fixed parameters must be in the shortcut.
 The filename is an external variable parameter received when SendingTo FoxBin2Prg with right-click on File Manager.
 
 ### Usage 2
-`FoxBin2Prg.EXE [-cCt [cOutputFile]]`
+`FoxBin2Prg.EXE [cCt [cOutputFile]]`   
+`DO FoxBin2Prg.EXE WITH ["-cCt" [,cOutputFile]]`   
 
 | Parameter | Description |
 | ----- | ----- |
 | none | Call Info screen |
-| -c | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
-| -C | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
+| -c (c) | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
+| -C (C) | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
 | | If cOutputFile is empty, a file FOXBIN2PRG._CFG will be created in default foder. | 
-| -t | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
+| -t (t) | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
 | | If cOutputFile is empty and a table is open is workarea, a file \<tablename\>._CFG will be created in table foder. | 
+
+#### Note
+From command line the call with paramters like -c, -C -t is not possible. Those parameters will be removed by VFP itself.
+Just call without the dash.
+Calling inside VFP with `DO FoxBin2Prg.EXE` works with this dashed parameters.
 
 ## Return values
 Return value via _ErrorLevel_ is 0=OK, 1=Error.

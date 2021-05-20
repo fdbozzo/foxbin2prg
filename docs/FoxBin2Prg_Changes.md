@@ -30,6 +30,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/05/20 | LScheffler | [v1.19.65](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.65) | **Bug Fix**: Parameters -cCt not working from command line. (LScheffler) |
 | 2021/04/22 | LScheffler | [v1.19.64](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.64) | **Bug Fix**: onverting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen. (Jimrnelson) |
 | | | | **Bug Fix**: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen. (LScheffler) |
 | 2021/04/12 | LScheffler | [v1.19.63](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.63) | **Bug Fix**: Tables without indexes cause an error that the __Table ## is not marked as belonging to the ## database.__ (jstagerGH) |
@@ -395,4 +396,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/22_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/05/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

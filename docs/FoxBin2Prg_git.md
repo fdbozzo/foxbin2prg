@@ -25,6 +25,8 @@ Please note, if you come from a SCM system, git feels very odd. It's a complete 
 Do yourself the favour, on [git-scm](https://git-scm.com/doc) you find _pro git_. Read and work at least through the first three chapters.
 **No matter, if you are using git on bash or GUI**
 
+There is a bunch of common traps to avoid - like storing credentials to github - I recommend [Oh my git!](https://ohmygit.org/) too.
+
 For almost anything you don't need a server, even for colaborating a storage is enough.
 I use a server - a self hosted copy of gitlab - but this basically for access restrictions and remote work. 
 
@@ -112,12 +114,9 @@ If you like it separated from VCX - let me know.
 #### Databases
 Splitting DBC is possible too. My approach does not touch the DBC _structure_ (it's meta data only) in the source over decades, so there is little use. 
 So I've added an option to inhibit splitting DBC while splitting VCX/SCX.   
-Storing as _Text_ is a long term goal - the fork is about some of the problems.
 
 #### Tables
-Storing as _Text_ is a long term goal - the fork is about some of the problems.
-Since nobody brought up the .NULL. problem, it looks like it's not commonly used.
-Depends on the data used. (And if there is any sense in merging.)
+Since nobody brought up the .NULL. problem, it looks like it's not commonly used. It works for me for a while now and I found no problems so far.
 
 #### Others
 All the other table-based-sources of VFP work seamless as _Text_. No fuzz.
@@ -127,7 +126,47 @@ Assuming you do a fresh install of git, you will be asked questions over questio
 The one I recommend is the dealing with line endings. You know all the odd uses of LF and CR. 
 _git for windows_ offers to alter this while dealing with your files. I recommend not. Just "Check in as is, check out as is".
 This will keep your files, and any modern editor or WEB UI will not care anyway.   
-If you missed on install - just install again.
+If you missed on install - just install again.   
+
+Do not forget to set up username, email and a ssh key. The following script sets up git and creates the key.
+It will copy the public key to _clipboard_ too - ready to paste into github. Anyway, you allways can copy the contents of `~/.ssh/id_rsa.pub`.
+Note, this will clear data, so do not run twice or on the wrong comp. A key overwritten is lost!
+````
+#!/bin/sh
+#--------------------------------------------
+#  create_rsa.sh
+#
+#	Abstract:
+#   create an rsa ssh key an ~/.ssh
+#   with options to git
+#
+#   set email and domain in this file
+#
+#   Written by SF
+#   May 2018
+#--------------------------------------------
+
+user=="your name"
+email="$user@$domain"
+
+cd ~
+if test -d .ssh
+then
+ cd .ssh
+ rm id_rsa.*
+ rm id_rsa
+else
+ mkdir .ssh
+ cd .ssh
+fi
+
+ssh-keygen -t rsa -b 4096 -C "$email"
+cat ~/.ssh/id_rsa.pub | clip
+ 
+git config --global user.name "$user"
+git config --global user.email "$email"
+````
+Depending on your needs you might set a password or not.
 
 #### Note
 For some odd reasons, the people on git-scm are going the way of evil. If you start the Setup of git, all depends who you are.
@@ -209,7 +248,7 @@ foxuser.*
 _command.prg
 ````
 As you see, this assumes that tables and databases are stored as binary.  
-I think I will swap to use them as _Text_ too, since version 1.20.1 of FoxBin2Prg eleminates some problems with this idea.
+I think I will swap to use them as _Text_ too, since version 1.19.55 of FoxBin2Prg eleminates some problems with this idea.
 
 Also this approach ignores any bak / log / tmp / err files by default.
 
@@ -292,7 +331,7 @@ RedirectClassPerFileToMain: 1   && 0=Don't redirect to file.tx2, 1=Redirect to f
 DBF_Conversion_Support: 0       && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 DBC_Conversion_Support: 0       && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 ````
-All use off this are the last four lines. But I like to keep the template (recent as version 1.20.0).
+All use off this are the last four lines. But I like to keep the template (recent as version 1.19.55).
 - Using single classes - because it's much more easy to merge a single class then a whole library.
 - A single class selected might be added to the VCX
 - Turn off DBC and DBF conversion
@@ -302,4 +341,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/05/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
