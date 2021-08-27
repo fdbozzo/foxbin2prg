@@ -357,7 +357,7 @@ _**Note:** you can click on the version number for downloading this version from
 |||| Added support for converting SourceSafe PJM to FoxBin PJ2  |
 |||| Added validation for Menus when converting from older versions, so user can convert it to VFP 9 format first  |
 |||| Change in MN2 property: "Autor" was changed to "Author". You can add the missing letter to MN2 or regenerate  |
-| 2014/01/07 | FDBOZZO | [v1.18.1](https://github.com/fdbozzo/foxbin2prg/tree/v1.18.1) | Added a vbs script (NormalizeFileNames.vbs) for FileNames normalizing in batch mode, and updated FileNameCaps.exe and the call on FoxBin2prg  |
+| 2014/01/07 | FDBOZZO | [v1.18.1](https://github.com/fdbozzo/foxbin2prg/tree/v1.18.1) | Added a vbs script (NormalizeFileNames.vbs) for FileNames normalizing in batch mode, and updated FileNameCaps.exe and the call on FoxBin2Prg  |
 | 2014/01/06 | FDBOZZO | [v1.18](https://github.com/fdbozzo/foxbin2prg/tree/v1.18-pública) | **bug fix**: mnx Generation of DO Procedure or Command when no Procedure or Command available to call when empty option is created (Fidel Charny)  |
 |||| Added support for DBFs earlier than VFP 9 for generating DB2 text, but DBF regeneration is in VFP 9 version!  |
 |||| dbf bug fix: DBFs linked to a DBC that use long field names throw error when regenerating DBFs  |

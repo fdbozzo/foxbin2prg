@@ -25,13 +25,13 @@ Start reading our code and you'll get the hang of it. We optimize for readabilit
 Please note, there are some tasks to set up a new version.
 Stuff is a bit scattered, so this is where to look up.
 1. Please create a fork at github
-0. In _FoxBin2prg.prg_ there are two version numbers in properties:   
+0. In _FoxBin2Prg.prg_ there are two version numbers in properties:   
 `n_FB2PRG_Version      = 1.19`    
 `c_FB2PRG_Version_Real = '1.19.60'`
 1. Please set the **minor** part of _c_FB2PRG_Version_Real_ to a new number.   
    **Do not** alter the **1.19** part. This is written to the text files.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
-3. Add a meaningfull description of the change in the changes list on top of _FoxBin2prg.prg_.
+3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
 4. Add a description to _FoxBin2Prg_Changes.md_
 4. If a change to the config files is made please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings

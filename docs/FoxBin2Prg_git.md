@@ -88,7 +88,7 @@ With thanks to Fernando **FoxBin2Prg** comes into play.
 One might be reluctant to dropping the binaries - but I do for years and it works like a charm.
 Do not play around with text-to-look-up-changes ideas storing both _Text_ and _Binary_.
 Just merge, compare like a normal text based language.   
-The only thing one must learn (and remember, even after odd merges) is to run FoxBin2prg wrapping any git operation.
+The only thing one must learn (and remember, even after odd merges) is to run FoxBin2Prg wrapping any git operation.
 
 git would even allow to hook FoxBin2Prg to run after some git operations, but this might be a killer.
 
@@ -215,7 +215,7 @@ An example for _Text_ only use.
 #header
 !*.h
 
-#libs (by FoxBin2prg)
+#libs (by FoxBin2Prg)
 #!*.vc[xt]
 #!*.pj[xt]
 #!*.fr[xt]
@@ -223,7 +223,7 @@ An example for _Text_ only use.
 #!*.sc[xt]
 #!*.lb[xt]
 
-#FoxBin2prg
+#FoxBin2Prg
 !*.vc2
 !*.pj2
 !*.fr2
@@ -240,7 +240,7 @@ An example for _Text_ only use.
 
 #diverse
 !*.reg
-!/FoxBin2prg.cfg
+!/FoxBin2Prg.cfg
 !README.md
 
 #exclude special again
