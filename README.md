@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.57
+# FoxBin2Prg v1.19.66
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -11,7 +11,7 @@ On my [fork](https://github.com/lscheffler/foxbin2prg).
 updates may be faster there, because of the merge process.
 
 The spanish documentation is not longer maintained - it would fade.
-For fast acces a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2prg.md) exists too.
+For fast acces a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
 Remember yourself to compile the exe first.   
 
 ---
@@ -120,7 +120,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ---
 ---
 ## Changes
-See [Changes](./docs/FoxBin2prg_Changes.md)
+See [Changes](./docs/FoxBin2Prg_Changes.md)
 
 ### Changes to Settings
 To get the new settings in config file, use the new create-a-template function:
@@ -131,7 +131,7 @@ DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
-For usage see [documentation](./docs/FoxBin2prg.md)
+For usage see [documentation](./docs/FoxBin2Prg.md)
 
 ----
 ## Usage

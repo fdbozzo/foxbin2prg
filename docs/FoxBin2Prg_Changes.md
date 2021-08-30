@@ -15,9 +15,6 @@ As far as possible these are the original documents. Changes are added where fun
 - [Remark](#remark)
 - [Full Change History](#full-change-history)
 
-## Remark
-The older links point to Fernandos repository.
-
 For recent verisons see 
 ![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
 
@@ -30,6 +27,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/08/20 | LScheffler | [v1.19.66](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.66) | **Bug Fix**: Incorrect version showing for v1.19.65 (siara-cc) |
+| 2021/08/20 | LScheffler | [v1.19.66](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.66) | **Enhancement**: Incorrect links on documentation (siara-cc) |
 | 2021/05/20 | LScheffler | [v1.19.65](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.65) | **Bug Fix**: Parameters -cCt not working from command line. (LScheffler) |
 | 2021/04/22 | LScheffler | [v1.19.64](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.64) | **Bug Fix**: onverting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen. (Jimrnelson) |
 | | | | **Bug Fix**: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen. (LScheffler) |
@@ -357,7 +356,7 @@ _**Note:** you can click on the version number for downloading this version from
 |||| Added support for converting SourceSafe PJM to FoxBin PJ2  |
 |||| Added validation for Menus when converting from older versions, so user can convert it to VFP 9 format first  |
 |||| Change in MN2 property: "Autor" was changed to "Author". You can add the missing letter to MN2 or regenerate  |
-| 2014/01/07 | FDBOZZO | [v1.18.1](https://github.com/fdbozzo/foxbin2prg/tree/v1.18.1) | Added a vbs script (NormalizeFileNames.vbs) for FileNames normalizing in batch mode, and updated FileNameCaps.exe and the call on FoxBin2prg  |
+| 2014/01/07 | FDBOZZO | [v1.18.1](https://github.com/fdbozzo/foxbin2prg/tree/v1.18.1) | Added a vbs script (NormalizeFileNames.vbs) for FileNames normalizing in batch mode, and updated FileNameCaps.exe and the call on FoxBin2Prg  |
 | 2014/01/06 | FDBOZZO | [v1.18](https://github.com/fdbozzo/foxbin2prg/tree/v1.18-pública) | **bug fix**: mnx Generation of DO Procedure or Command when no Procedure or Command available to call when empty option is created (Fidel Charny)  |
 |||| Added support for DBFs earlier than VFP 9 for generating DB2 text, but DBF regeneration is in VFP 9 version!  |
 |||| dbf bug fix: DBFs linked to a DBC that use long field names throw error when regenerating DBFs  |
