@@ -726,4 +726,4 @@ See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2021/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
