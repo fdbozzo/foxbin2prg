@@ -60,3 +60,6 @@ In special:
    - Update the version number in _FoxBin2PrgVersion.txt_
 
 Thanks
+
+----
+Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

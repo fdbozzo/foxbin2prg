@@ -135,4 +135,4 @@ For usage see [documentation](./docs/FoxBin2Prg.md)
 
 ----
 ## Usage
-Last changed: _2021/15/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
