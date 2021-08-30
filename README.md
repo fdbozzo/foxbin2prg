@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.57
+# FoxBin2Prg v1.19.66
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
