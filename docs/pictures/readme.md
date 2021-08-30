@@ -6,7 +6,7 @@ Project to generate text representations of VFP binary sources for source contro
 This folder containes the pictures for the reworked documentation resources for use with github repo.
 
 
-- [FoxBin2prg](../FoxBin2prg.md)
+- [FoxBin2Prg](../FoxBin2Prg.md)
 
 ----
 Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

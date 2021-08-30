@@ -25,21 +25,23 @@ Start reading our code and you'll get the hang of it. We optimize for readabilit
 Please note, there are some tasks to set up a new version.
 Stuff is a bit scattered, so this is where to look up.
 1. Please create a fork at github
-0. In _FoxBin2prg.prg_ there are two version numbers in properties:   
+0. In _FoxBin2Prg.prg_ there are two version numbers in properties:   
 `n_FB2PRG_Version      = 1.19`    
 `c_FB2PRG_Version_Real = '1.19.60'`
 1. Please set the **minor** part of _c_FB2PRG_Version_Real_ to a new number.   
    **Do not** alter the **1.19** part. This is written to the text files.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
-3. Add a meaningfull description of the change in the changes list on top of _FoxBin2prg.prg_.
+3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
+   The most recent entries met in the middle of this section around * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 4. Add a description to _FoxBin2Prg_Changes.md_
 4. If a change to the config files is made please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg:_ for settings per table
-   - Create a template _foxbin2prg.cfg.txt_ for general settings or _foxbin2prg.dbf.cfg.txt_ for the settings per table.
+4. Create a template _foxbin2prg.cfg.txt_ for general settings or _foxbin2prg.dbf.cfg.txt_ for the settings per table.
+   - Do this even if no change to the setting to change the version number inside this files.
+   - Or change version number in those files manually
 5. If a change to the parameters is made, change _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_ properties.
 4. For changed functionality, add descriptive text on the appropriate _.md_ file.
-4. Highlight the change on _README.md_ in projects root
 2. Alter the version number for the EXE to the version used above.
 0. Compile to EXE
 1. Change Thor (see below)
@@ -50,8 +52,11 @@ There are some considerations to make to add a new version to Thor.
 Please check [Supporting Thor Updater](https://vfpx.github.io/thorupdate/)
 In special:
 - Update _Project.txt_, in special the version number
-- Run the script included, or 
-   - add files to _FoxBin2Prg.zip_, namly FoxBin2Prg.prg, FoxBin2Prg.exe and the config files templates
+- and run the script included, or 
+   - add files to _FoxBin2Prg.zip_, namely
+     - FoxBin2Prg.prg,
+     - FoxBin2Prg.exe,
+     - the config files templates
    - Update the version number in _FoxBin2PrgVersion.txt_
 
 Thanks

@@ -8,7 +8,7 @@ This folder containes the reworked documentation resources for use with github r
 Please Note: The spanish documents are removed, because the documents here represent the state of this fork,
 and my spanish is good enough to order a beer.
 
-- [FoxBin2prg](./FoxBin2prg.md)
+- [FoxBin2Prg](./FoxBin2Prg.md)
 
 ----
 Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

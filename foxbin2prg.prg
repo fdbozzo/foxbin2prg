@@ -274,10 +274,15 @@
 * 22/04/2021	LScheffler	v1.19.64	Bug Fix: Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen (Jimrnelson)
 * 22/04/2021	LScheffler	v1.19.64	Bug Fix: Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen (LScheffler)
 * 20/05/2021	LScheffler 	v1.19.65	Bug Fix: Options "-cCt" are not usable on command line base EXE. "cCt" are allowed too now
+* 30/08/2021	LScheffler 	v1.19.66	Bug Fix: Incorrect version showing for v1.19.65 (siara-cc)
+*                                                This creates wrong version in generated config files too
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
+* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Tags missing on github.
+* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect links on documentation.
 * 17/05/2021	LScheffler 			BUG REPORT v1.19.64 Options "-cCt" are not usable on command line base EXE.
 * 22/04/2021	LScheffler 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen
 * 21/04/2021	Jimrnelson 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen
@@ -942,7 +947,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.65'
+	c_FB2PRG_Version_Real			= '1.19.66'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1119,7 +1124,19 @@ Define Class c_foxbin2prg As Session
 		This.c_Foxbin2prg_ConfigFile	= Evl( tcCFG_File, Forceext( This.c_Foxbin2prg_FullPath, 'CFG' ) )
 		This.c_BackgroundImage			= This.get_AbsolutePath( Addbs(Justpath(This.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg' )
 		lc_Foxbin2prg_EXE				= Forceext( This.c_Foxbin2prg_FullPath, 'EXE' )
-		This.c_FB2PRG_EXE_Version		= 'v' + Iif( Agetfileversion( laValues, lc_Foxbin2prg_EXE ) = 0, Transform(This.c_FB2PRG_Version_Real), laValues(11) )
+*!*	Changed by: SF 30.8.2021
+*!*	<pdm>
+*!*	<change date="{^2021-08-30,07:48:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/69 / Incorrect version showing for v1.19.65
+*!*	Set version number to This.c_FB2PRG_Version_Real and ignore Exe
+*!*	</change>
+*!*	</pdm>
+
+*		This.c_FB2PRG_EXE_Version		= 'v' + Iif( Agetfileversion( laValues, lc_Foxbin2prg_EXE ) = 0, Transform(This.c_FB2PRG_Version_Real), laValues(11) )
+		This.c_FB2PRG_EXE_Version		= 'v' + Transform(This.c_FB2PRG_Version_Real)
+
+*!*	/Changed by SF 30.8.2021
+ 
 		AddProperty(_Screen, 'c_FB2PRG_EXE_Version', This.c_FB2PRG_EXE_Version)
 		AddProperty(_Screen, 'ExitCode', 0)
 

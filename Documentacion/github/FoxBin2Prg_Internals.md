@@ -282,7 +282,7 @@ and some tables with their data exported for easy diffing with previous versions
 or even use **"DBF_Conversion_Support: 8"** (available since v1.19.47) for bidirectional support of data import/export.   
 
 ### Order and range of records
-**FoxBin2prg.cfg (Main CFG, Directory CFG or Table CFG)**  
+**FoxBin2Prg.cfg (Main CFG, Directory CFG or Table CFG)**  
 New foxbin2prg.cfg options for filtering tables from conversion using one or multiple conbinations of filemasks.
 
 #### Syntax

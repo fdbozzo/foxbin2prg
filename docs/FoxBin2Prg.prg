@@ -19,8 +19,7 @@ As far as possible these are the original documents. Changes are added where fun
 - [Keep reading](#keep-reading)
 
 ## Source
-Original repository at https://github.com/fdbozzo/foxbin2prg,
-This is a fork available on https://github.com/lscheffler/foxbin2prg
+Original repository at https://github.com/fdbozzo/foxbin2prg.
 
 ## Requirements
 - A copy of MS VFP9 SP1, at least _3504_
@@ -43,6 +42,7 @@ generating bidirectional PRG-Style versions that allow recreating the original b
 - Out of the _Text_ versions you can **generate the original binaries**, so it is useful as backup
 - The extensions are configurable if you create a FOXBIN2PRG.CFG file
   - Inheritance of CFG configuration files between directories
+- Special configuration per table, allowing additional non structural index files, sorting and ranges of records to include
 - Methods and properties of _Text_ version are alphabetically sorted for easy comparison
 - Can set _UseClassPerFile_ setting to create individual files by class
 - Can set _UseFilesPerDBC_ setting to create individual files by DBC member
@@ -58,8 +58,8 @@ for which a _Text_ version is generated with pj2, sc2, vc2, fr2, lb2, dc2, db2, 
 The extensions may be reconfigured to be compatible with SCCAPI (just tested with SourceSafe).
 
 ## Example
-![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
-![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
+![FoxBin2Prg_scctextx-vs-FoxBin2Prg_scx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
+![FoxBin2Prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
 
 ## Usage
 FoxBin2Prg can be used in tree ways:
@@ -84,4 +84,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2021/05/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
