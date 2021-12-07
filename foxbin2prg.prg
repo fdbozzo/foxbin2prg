@@ -276,10 +276,13 @@
 * 20/05/2021	LScheffler 	v1.19.65	Bug Fix: Options "-cCt" are not usable on command line base EXE. "cCt" are allowed too now
 * 30/08/2021	LScheffler 	v1.19.66	Bug Fix: Incorrect version showing for v1.19.65 (siara-cc)
 *                                                This creates wrong version in generated config files too
+* 07/12/2021	LScheffler 	v1.19.67	Bug Fix: Double classes in VCX
+* 12/04/2021	LScheffler	v1.19.67	Docu: examples and template for config files reworked
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 05/11/2021	LScheffler 			BUG REPORT v1.19.66 Double classes in VCX
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Tags missing on github.
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect links on documentation.
@@ -947,7 +950,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.66'
+	c_FB2PRG_Version_Real			= '1.19.67'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -11398,7 +11401,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 					, laLineasExclusion, lnBloquesExclusion, I
 		Endtry
 
-		Return
+		RETURN 
 	Endproc
 
 
@@ -11479,9 +11482,12 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 		Try
 				Local lcObjName, lnCodError, I, X, llReplace, laUniqueID(1,1), loEx As Exception ;
 					, loClase As CL_CLASE Of 'FOXBIN2PRG.PRG' ;
-					, loFSO As Scripting.FileSystemObject
+					, loFSO As Scripting.FileSystemObject ;
+					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
 				With This As c_conversor_prg_a_vcx Of 'FOXBIN2PRG.PRG'
+					loLang			= _Screen.o_FoxBin2Prg_Lang
+
 					Store Null To loFSO, loClase
 					loFSO	= .oFSO
 
@@ -11565,6 +11571,29 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 								If Empty(loClase._UniqueID)
 									loClase._UniqueID	= toFoxBin2Prg.unique_ID()
 								Endif
+
+*!*	Changed by: SF 07.12.2021
+*!*	<pdm>
+*!*	<change date="{^2021-12-07,09:14:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/72 / double classes in VCX
+*!*	The old code will write a class whether or not the class is already in the classlib
+*!*	Problem comes if a class is defined double by inconsistent UseClassPerFile, 
+*!*	with same class defined in file.vc2 and in file[.baseclass].class.vc2
+*!*	</change>
+*!*	</pdm>
+
+								SELECT TABLABIN
+								LOCATE;
+									FOR OBJNAME==loClase._ObjName
+								IF FOUND() THEN
+*SF 20211207
+*SET STEP ON
+									Error loLang.C_ClassTwice_Header_LOC + ;
+										loLang.C_ClassTwice_Lib_LOC + JUSTFNAME( DBF() ) + ;
+										loLang.C_ClassTwice_Class_LOC + loClase._ObjName+0h0D0A
+								ENDIF &&FOUND() 
+
+*!*	/Changed by SF 07.12.2021
 
 *-- Inserto la clase
 								Insert Into TABLABIN ;
@@ -11667,12 +11696,15 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 									, '' )
 
 							Endfor	&& I = 1 TO toModulo._Clases_Count
+							IF !EMPTY( lnCodError ) THEN
+								EXIT
+							ENDIF &&!EMPTY( lnCodError ) 
 						Endfor	&& X = 1 TO 2
 					Endif
 
 					Use In (Select("TABLABIN"))
 
-					If toFoxBin2Prg.l_Recompile
+					If toFoxBin2Prg.l_Recompile AND EMPTY( lnCodError )
 						toFoxBin2Prg.compileFoxProBinary()
 					Endif
 
@@ -30115,6 +30147,9 @@ Define Class CL_LANG As Custom
 	C_FILENAME_LOC													= ""
 	C_FOXBIN2PRG_ERROR_CAPTION_LOC									= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_LOC									= ""
+	C_ClassTwice_Header_LOC											= ""
+	C_ClassTwice_Lib_LOC											= ""
+	C_ClassTwice_Class_LOC											= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC							= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4					= ""
 	C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg						= ""
@@ -30238,6 +30273,9 @@ Define Class CL_LANG As Custom
 							.C_FILENAME_LOC													= "Fichier"
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERREUR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
+							.C_ClassTwice_Header_LOC										= 0h0D0A+"Class defined twice."+0h0D0A
+							.C_ClassTwice_Lib_LOC											= 0h0D0A+"Library: "
+							.C_ClassTwice_Class_LOC											= 0h0D0A+"Class: "
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
@@ -30294,7 +30332,9 @@ Define Class CL_LANG As Custom
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
+						<<>>HomeDir: 1                     && Home Directory in PJX
+						<<>>                               && 0 don't save HomeDir in PJ2
+						<<>>                               && 1 save HomeDir in PJ2
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -30313,16 +30353,23 @@ Define Class CL_LANG As Custom
 						<<>>Setting for container files (not pjx)
 						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 						<<>>- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>                               && RedirectClassType: 1 precedes
+						<<>>UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
+						<<>>                               && 0 One library.tx2 file
+						<<>>                               && 1 Multiple file.class.tx2 files
+						<<>>                               && 2 Multiple file.baseclass.class.tx2 files
+						<<>>RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
+						<<>>                               && 0 Don't redirect to file.tx2
+						<<>>                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+						<<>>                               &&   RedirectClassType: 1 has precedence
 						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
 						<<>>                               && For the second form:
 						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
 						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
 						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
-						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>ClassPerFileCheck: 0           && Check, if files listed in the main file of a library or form will be included
+						<<>>                               && 0 Don't check file inclusion
+						<<>>                               && 1 Check file[.baseclass].class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30347,16 +30394,16 @@ Define Class CL_LANG As Custom
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- PJX special
-						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- DBF special
 						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>ExcludeDBFAutoincNextval: 0    && 0=Do not exclude this value from db2, 1=Exclude this value from db2
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_BinChar_Base64: 1          && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
@@ -30490,6 +30537,9 @@ Define Class CL_LANG As Custom
 							.C_FILENAME_LOC													= "Archivo"
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "INFORMACIÓN DE SINTAXIS Y PARÁMETROS"
+							.C_ClassTwice_Header_LOC										= 0h0D0A+"Class defined twice."+0h0D0A
+							.C_ClassTwice_Lib_LOC											= 0h0D0A+"Library: "
+							.C_ClassTwice_Class_LOC											= 0h0D0A+"Class: "
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>Página principal y descarga de FoxBin2Prg: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
@@ -30545,7 +30595,9 @@ Define Class CL_LANG As Custom
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
+						<<>>HomeDir: 1                     && Home Directory in PJX
+						<<>>                               && 0 don't save HomeDir in PJ2
+						<<>>                               && 1 save HomeDir in PJ2
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -30564,16 +30616,23 @@ Define Class CL_LANG As Custom
 						<<>>Setting for container files (not pjx)
 						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 						<<>>- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>                               && RedirectClassType: 1 precedes
+						<<>>UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
+						<<>>                               && 0 One library.tx2 file
+						<<>>                               && 1 Multiple file.class.tx2 files
+						<<>>                               && 2 Multiple file.baseclass.class.tx2 files
+						<<>>RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
+						<<>>                               && 0 Don't redirect to file.tx2
+						<<>>                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+						<<>>                               &&   RedirectClassType: 1 has precedence
 						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
 						<<>>                               && For the second form:
 						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
 						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
 						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
-						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>ClassPerFileCheck: 0           && Check, if files listed in the main file of a library or form will be included
+						<<>>                               && 0 Don't check file inclusion
+						<<>>                               && 1 Check file[.baseclass].class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -30598,16 +30657,16 @@ Define Class CL_LANG As Custom
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- PJX special
-						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- DBF special
 						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>ExcludeDBFAutoincNextval: 0    && 0=Do not exclude this value from db2, 1=Exclude this value from db2
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_BinChar_Base64: 1          && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
@@ -30741,6 +30800,9 @@ Define Class CL_LANG As Custom
 							.C_FILENAME_LOC													= "Datei"
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "FEHLER"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX UND PARAMETER INFORMATION"
+							.C_ClassTwice_Header_LOC										= 0h0D0A+"Klasse doppelt deklariert."+0h0D0A
+							.C_ClassTwice_Lib_LOC											= 0h0D0A+"Bibliothek: "
+							.C_ClassTwice_Class_LOC											= 0h0D0A+"Klasse: "
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
@@ -30808,7 +30870,9 @@ Define Class CL_LANG As Custom
 						<<>>Debug: 0                       && 0=Individuelles Logging ist aus 1= Individuelles Log per Datei <Datei>.Log
 						<<>>BackgroundImage: <cFile>       && Hintergrundbild für das Formular zur Fortschrittsanzeige.
 						<<>>                               && Leer erzeugt kein Hintergrundbild. Wird die Datei nicht gefunden, wird der Standardhintergrund verwendet.
-						<<>>HomeDir: 1                     && 0 = Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert, [1 = Die Eigenschaft wird gespeichert]
+						<<>>HomeDir: 1                     && Speichern der HomeDir Eigenschaft in die PJX
+						<<>>                               && 0 Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert
+						<<>>                               && 1 Die Eigenschaft wird gespeichert
 						<<>>
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>-- Konvertierungs Optionen:
@@ -30831,18 +30895,25 @@ Define Class CL_LANG As Custom
 						<<>> ------Einstellungen für Container-Dateien (not pjx)
 						<<>>-- Optionen für CLASS und FORM
 						<<>>- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
-						<<>>UseClassPerFile: 0             && 0=Eine Textdatei pro VCX/SCX, 1=Mehrere Dateien <Dateiname>.KlassenName.vc2 files, 2=Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
+						<<>>UseClassPerFile: 0             && Bestimmt wie die Klassen einer Bibliothek oder die objekte eines Formulars behandelt werden
+						<<>>                               && 0 Eine Textdatei pro VCX/SCX
+						<<>>                               && 1 Mehrere Dateien <Dateiname>.KlassenName.vc2 files
+						<<>>                               && 2 Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
-						<<>>RedirectClassPerFileToMain: 0  && 0=Keine Umlenkung, 1=Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.vc2 gewählt wurde
-						<<>>                               && RedirectClassType: 1 hat Vorrang
-						<<>>RedirectClassType: 0           && Für Textdateien die mit UseClassPerFile>0 in der Form file[.baseclass].class.tx2 erstellt wurden.
-						<<>>                               && diese Dateien können als file.tx2::Class::import oder als file[.baseclass].class.tx2 importiert werden.
-						<<>>                               && Für die zweite Form gilt:
-						<<>>                               && 0 Aus file[.baseclass].class.tx2 wird file.VCX und alle Klassen dieser Bibliothek werden neu gelesen
-						<<>>                               && 1 Aus file[.baseclass].class.tx2 wird file[.baseclass].class.VCX, die Bibliothek file.VCX wird ignoriert
-						<<>>                               && 2 Aus file[.baseclass].class.tx2 wird file.VCX aber alle anderen Klassen bleiben unverändert
-						<<>>ClassPerFileCheck: 0           && 0=Aus, 1=Teste, ob die Datei einbezogen <Dateiname>[.Basisklasse].KlassenName.vc2 wurde
-						<<>>                               &&   Nur für die file[.baseclass].class.tx2 Syntax
+						<<>>RedirectClassPerFileToMain: 0  && Bestimmt beim Erzeugen von Binardateien für Klassenbibliotheken und Formulare die Zieldatei
+						<<>>                               && 0 Keine Umlenkung
+						<<>>                               && 1 Klassen (und Objekte) werden in die VCX/SCX geschrieben wenn eine Datei <Dateiname>[.Basisklasse].KlassenName.tx2 gewählt wurde
+						<<>>                               &&   RedirectClassType: 1 hat Vorrang
+						<<>>RedirectClassType: 0           && Für Textdateien die mit UseClassPerFile>0 in der Form <Dateiname>[.Basisklasse].KlassenName.tx2 erstellt wurden.
+						<<>>                               && diese Dateien können als Dateiname.tx2::KlassenName::import oder als <Dateiname>[.Basisklasse].KlassenName.tx2 importiert werden.
+						<<>>                               && Für die zweite Form gilt (jeweils VCX oder SCX ):
+						<<>>                               && 0 Aus <Dateiname>[.Basisklasse].KlassenName.tx2 wird <Dateiname>.VCX und alle Klassen dieser Bibliothek werden neu gelesen
+						<<>>                               && 1 Aus <Dateiname>[.Basisklasse].KlassenName.tx2 wird <Dateiname>[.Basisklasse].KlassenName.VCX, die Bibliothek file.VCX wird ignoriert
+						<<>>                               && 2 Aus <Dateiname>[.Basisklasse].KlassenName.tx2 wird <Dateiname>.VCX aber alle anderen Klassen bleiben unverändert
+						<<>>ClassPerFileCheck: 0           && Test, ob dateien aus die in der Basisdatei definert wurden, einbezogen wurden.
+						<<>>                               && 0 Kein Test
+						<<>>                               && 1 Teste, ob die Datei <Dateiname>[.Basisklasse].KlassenName.tx2 einbezogen wurde
+						<<>>                               &&   Nur für die <Dateiname>[.Basisklasse].KlassenName.tx2 Syntax
 						<<>>                               &&   Wird für RedirectClassType: 2 ignoriert
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
@@ -30867,7 +30938,7 @@ Define Class CL_LANG As Custom
 						<<>>OptimizeByFilestamp: 0         && 0=Aus, 1=Optimierte Erzeugung der Binärdateien in Abhängigkeit vom Zeitstempel. Gefährlich beim Arbeiten mit Zweigen!
 						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche NULL (CHR(0)) Zeichen aus dem Quellcode
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Aus, 1=Entferne ZOrderSet Eigenschaft von Objekten
-						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Nutze HELPSTRING als Class Procedure Kommentar
+						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Nutze HELPSTRING als Class Procedure Kommentar
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- speziell PJX
@@ -31026,6 +31097,9 @@ Define Class CL_LANG As Custom
 							.C_FILENAME_LOC													= "File"
 							.C_FOXBIN2PRG_ERROR_CAPTION_LOC									= "ERROR"
 							.C_FOXBIN2PRG_SYNTAX_INFO_LOC									= "SYNTAX AND PARAMETERS INFO"
+							.C_ClassTwice_Header_LOC										= 0h0D0A+"Class defined twice."+0h0D0A
+							.C_ClassTwice_Lib_LOC											= 0h0D0A+"Library: "
+							.C_ClassTwice_Class_LOC											= 0h0D0A+"Class: "
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
 						<<>>FoxBin2Prg Home Page and download: https://github.com/fdbozzo/foxbin2prg/wiki  -  Fernando D. Bozzo (2013.11.25)
@@ -31082,7 +31156,9 @@ Define Class CL_LANG As Custom
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-						<<>>HomeDir: 1                     && 0 = don't save HomeDir in PJ2, [1 = save HomeDir in PJ2]
+						<<>>HomeDir: 1                     && Home Directory in PJX
+						<<>>                               && 0 don't save HomeDir in PJ2
+						<<>>                               && 1 save HomeDir in PJ2
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -31101,16 +31177,23 @@ Define Class CL_LANG As Custom
 						<<>>Setting for container files (not pjx)
 						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 						<<>>- Class per file options (UseClassPerFile: 1)
-						<<>>UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-						<<>>RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-						<<>>                               && RedirectClassType: 1 precedes
+						<<>>UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
+						<<>>                               && 0 One library.tx2 file
+						<<>>                               && 1 Multiple file.class.tx2 files
+						<<>>                               && 2 Multiple file.baseclass.class.tx2 files
+						<<>>RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
+						<<>>                               && 0 Don't redirect to file.tx2
+						<<>>                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+						<<>>                               &&   RedirectClassType: 1 has precedence
 						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
 						<<>>                               && For the second form:
 						<<>>                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
 						<<>>                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
 						<<>>                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
-						<<>>ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+						<<>>ClassPerFileCheck: 0           && Check, if files listed in the main file of a library or form will be included
+						<<>>                               && 0 Don't check file inclusion
+						<<>>                               && 1 Check file[.baseclass].class.tx2 inclusion
 						<<>>                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -31135,16 +31218,16 @@ Define Class CL_LANG As Custom
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-						<<>>PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- PJX special
-						<<>>BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- DBF special
 						<<>>ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-						<<>>ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
+						<<>>ExcludeDBFAutoincNextval: 0    && 0=Do not exclude this value from db2, 1=Exclude this value from db2
 						<<>>DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 						<<>>DBF_BinChar_Base64: 1          && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
