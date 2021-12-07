@@ -10,8 +10,8 @@ local;
 
 lcappName      = "FoxBin2Prg"
 *Set following two numbers on version
-ldDate         = date(2021,08,30)
-lcmajorVersion = "1.19.66"
+ldDate         = date(2021,12,07)
+lcmajorVersion = "1.19.67"
 
 *lnJulian = val(sys(11, m.ldDate)) - val(sys(11, {^2000-01-01}))
 *lcJulian = padl(transform(lnJulian), 4, '0')
@@ -38,6 +38,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2021-12-07 v1.19.67
+- Bug Fix: Double classes in VCX (LScheffler)
 
 2021-08-30 v1.19.66
 - Bug Fix: Incorrect version showing for v1.19.65 (siara-cc)

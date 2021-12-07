@@ -27,6 +27,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2021/08/20 | LScheffler | [v1.19.67](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.67) | **Bug Fix**: Double classes in VCX (LScheffler) |
+| | | | **Enhancement**: Templates and documentation for config files reworked |
 | 2021/08/20 | LScheffler | [v1.19.66](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.66) | **Bug Fix**: Incorrect version showing for v1.19.65 (siara-cc) |
 | | | | **Enhancement**: Incorrect links on documentation (siara-cc) |
 | 2021/05/20 | LScheffler | [v1.19.65](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.65) | **Bug Fix**: Parameters -cCt not working from command line. (LScheffler) |
