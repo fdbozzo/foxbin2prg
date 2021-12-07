@@ -1,12 +1,21 @@
 *################################################################################################################
-*-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
-*Version: v1.19.66
+*-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
+*Version: v1.19.67
 *****************************************************************************************************************
 
-*DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-*DBF_Conversion_Order: <c_Expression>        && Field expresion. ie: name+str(age,3)
-*DBF_Conversion_Condition: <c_Expression>    && Logical expression. ie: age > 10 AND NOT DELETED()
-*DBF_IndexList: <cFile_List>                 && comma delimited list of additonal non structural index files, cdx or idx
-*DBF_BinChar_Base64: <0,1>                   && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform
-*DBF_IncludeDeleted: <0,1>                   && 0=Do not include deleted records, 1=Include deleted records
+*DBF_Conversion_Support: <1,2,4,8>           && 0=Aus
+*                                            && 1=Erzeuge Textdatei nur für Struktur (Diff)
+*                                            && 2=Erzeuge Text- und Binärdatei nur für Struktur (Merge)
+*                                            && 4=Erzeuge Textdatei nur für Struktur und Daten (Diff)
+*                                            && 8=Erzeuge Text- und Binärdatei nur für Struktur und Daten (Merge)
+*DBF_Conversion_Order: <c_Expression>        && Optional, Reihenfolge der Datensätze. Ausdruck für INDEX ON. ie: name+str(age,3)
+*                                            && leer: normale Reihenfolge
+*DBF_Conversion_Condition: <c_Expression>    && Optional, Ausdruck für SELECT FOR. ie: age > 10 AND NOT DELETED()
+*                                            && leer: Alle, außer DBF_IncludeDeleted
+*DBF_IndexList: <cFile_List>                 && Kommagetrennte Liste von Dateien. Zusätzliche Index - Dateien. CDX oder IDX. Nicht der Strukturelle Index
+*DBF_BinChar_Base64: <0,1>                   && Für Felder mit Zeichen Typ (C,V,M), wenn NoCPTrans, dann 0=nicht transform,ieren, 1=Führe Base64 Transformation aus
+*                                            &&   Dies entspricht dem Flag 4096 in CursorToXML()
+*                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
+*DBF_IncludeDeleted: <0,1>                   && 0=Ohne gelöschte Datensätze, 1=Mit gelöschten Datensätzen
+*                                            &&   Diese Option kann auch per Tabelle gesetzt werden.
 *
