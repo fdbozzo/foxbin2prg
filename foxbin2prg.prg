@@ -278,10 +278,13 @@
 *                                                This creates wrong version in generated config files too
 * 07/12/2021	LScheffler 	v1.19.67	Bug Fix: Double classes in VCX
 * 12/04/2021	LScheffler	v1.19.67	Docu: examples and template for config files reworked
+* 18/01/2022	LScheffler	v1.19.68	Docu: Minor links in readme.html
+* 18/01/2022	LScheffler	v1.19.68	Bug Fix: Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 18/01/2022	Jimrnelson 			BUG REPORT v1.19.67 Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
 * 05/11/2021	LScheffler 			BUG REPORT v1.19.66 Double classes in VCX
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Tags missing on github.
@@ -950,7 +953,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.67'
+	c_FB2PRG_Version_Real			= '1.19.68'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -28760,7 +28763,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	Changd By: SF 22.4.2021
 *!*	<pdm>
 *!*	<change date="{^2021-04-22,15:56:00}">Changd By: SF<br />
-*!*	Old style determeines generic name from set name by testing as digit. It could be only digit. :(
+*!*	Old style determines generic name from set name by testing as digit. It could be only digit. :(
 *!*	New style wraps it in ", so anything in " is set name
 *!*	</change>
 *!*	</pdm>
@@ -28769,6 +28772,18 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
  						IF LEFT ( m.lcPadName, 1 ) = '"' THEN
 	 						lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
  							loReg.Name		= m.lcPadName
+
+*!*	Changed By: SF 18.1.2022
+*!*	<pdm>
+*!*	<change date="{^2022-01-18,19:34:00}">Changed Bby SF<br />
+*!*	<a href"https://github.com/fdbozzo/foxbin2prg/issues/74">Issue 74</a>, by Jimrnelson
+*!*	Does not work for padname without '"'.
+*!*	</change>
+*!*	</pdm>
+ 						ELSE  &&LEFT ( m.lcPadName, 1 ) = '"'
+ 							loReg.Name		= m.lcPadName
+*!*	/Changed Bby SF 18.1.2022
+
  						ENDIF &&LEFT ( m.lcPadName, 1 ) = '"'
 
 *!*	/Changd By: SF 22.4.2021
