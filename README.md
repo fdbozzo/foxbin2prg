@@ -131,8 +131,12 @@ DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
+----
+## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
 ----
-## Usage
-Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+## Contribution
+See [contribution](./.github/CONTRIBUTING.md)
+
+Last changed: _2022/01/18_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
