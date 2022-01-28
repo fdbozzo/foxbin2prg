@@ -1,6 +1,6 @@
 *################################################################################################################
 *-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
-*Version: v1.19.67
+*Version: v1.19.68
 *****************************************************************************************************************
 
 *DBF_Conversion_Support: <1,2,4,8>           && 0=Aus
