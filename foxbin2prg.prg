@@ -28769,6 +28769,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
  						IF LEFT ( m.lcPadName, 1 ) = '"' THEN
 	 						lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
  							loReg.Name		= m.lcPadName
+ 						Else
+ 							*** SWH 2022-01-07 : use pad name if exists
+ 							loReg.Name = lcPadName
  						ENDIF &&LEFT ( m.lcPadName, 1 ) = '"'
 
 *!*	/Changd By: SF 22.4.2021
