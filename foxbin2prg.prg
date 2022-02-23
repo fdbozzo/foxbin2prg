@@ -280,10 +280,12 @@
 * 12/04/2021	LScheffler	v1.19.67	Docu: examples and template for config files reworked
 * 18/01/2022	LScheffler	v1.19.68	Docu: Minor links in readme.html
 * 18/01/2022	LScheffler	v1.19.68	Bug Fix: Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
+* 23/02/2022	LScheffler	v1.19.69	Bug Fix: Creating a class, when an object is named equal to this class
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.69 Creating a class, when an object is named equal to this class
 * 18/01/2022	Jimrnelson 			BUG REPORT v1.19.67 Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
 * 05/11/2021	LScheffler 			BUG REPORT v1.19.66 Double classes in VCX
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
@@ -953,7 +955,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.68'
+	c_FB2PRG_Version_Real			= '1.19.69'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -11586,8 +11588,21 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 *!*	</pdm>
 
 								SELECT TABLABIN
+*!*	Changed by: SF 23.02.2022
+*!*	<pdm>
+*!*	<change date="{^2022-02-23,19:44:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/77 / If a classname is used as objectname too, an error is reported
+*!*	A class is Objname with empty parent field, while an object has parent filled.
+*!*	</change>
+*!*	</pdm>
+
+*								LOCATE;
+*									FOR OBJNAME==loClase._ObjName
 								LOCATE;
-									FOR OBJNAME==loClase._ObjName
+									FOR OBJNAME==loClase._ObjName;
+									AND EMPTY(Parent)
+
+*!*	/Changed by SF 07.12.2021
 								IF FOUND() THEN
 *SF 20211207
 *SET STEP ON

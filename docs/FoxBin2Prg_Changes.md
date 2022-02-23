@@ -27,6 +27,9 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2022/02/23 | LScheffler | [v1.19.69](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.69) | **Bug Fix**: Recreating a class while an object with same name exists in VCX fails (bjornhoeksel) |
+| | | | **Enhancement**: Template configuration files FOXBIN2PRG.DBF.TXT and FOXBIN2PRG.DBF.CFG.TXT in English |
+| | | | **Enhancement**: Notice in contribution file to creating files above in English |
 | 2022/01/18 | LScheffler | [v1.19.68](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.68) | **Bug Fix**: Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen (Jimrnelson) |
 | | | | **Enhancement**: Minor links in readme.html |
 | 2021/08/20 | LScheffler | [v1.19.67](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.67) | **Bug Fix**: Double classes in VCX (LScheffler) |
@@ -399,4 +402,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/01/17_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/02/23_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
