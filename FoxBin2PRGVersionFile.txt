@@ -21,6 +21,23 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
 
+2022-02-25 v1.19.69
+-Bug Fix: Missing class when building text file from corrupted VCX
+-Bug Fix: Recreating a class while an object with same name exists in VCX fails
+- Docu: Template configuration files FOXBIN2PRG.DBF.TXT and FOXBIN2PRG.DBF.CFG.TXT in English |
+- Docu: Notice in contribution file to creating files above in English |
+- Docu: Started reworking double documentation |
+
+2022-01-18 v1.19.68
+- Docu: Minor links in readme.html
+- Bug Fix: Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
+
+2021-12-07 v1.19.67
+- Bug Fix: Double classes in VCX (LScheffler)
+
+2021-08-30 v1.19.66
+- Bug Fix: Incorrect version showing for v1.19.65 (siara-cc)
+
 2021-05-20 v1.19.65
 - Bug Fix: Parameters -cCt not working from command line. (LScheffler)
 

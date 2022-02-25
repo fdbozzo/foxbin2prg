@@ -279,11 +279,17 @@
 * 07/12/2021	LScheffler 	v1.19.67	Bug Fix: Double classes in VCX
 * 12/04/2021	LScheffler	v1.19.67	Docu: examples and template for config files reworked
 * 18/01/2022	LScheffler	v1.19.68	Docu: Minor links in readme.html
-* 18/01/2022	LScheffler	v1.19.68	Bug Fix: Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
+* 18/01/2022	LScheffler	v1.19.68	Bug Fix: Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen (Jimrnelson)
+* 23/02/2022	LScheffler	v1.19.69	Bug Fix: Creating a class, when an object is named equal to this class (bjornhoeksel)
+* 23/02/2022	LScheffler	v1.19.69	Docu: examples and template for config files reworked to English, Contribution.md reworked
+* 25/02/2022	LScheffler	v1.19.69	Bug Fix: Missing class when building text file from corrupted VCX (bjornhoeksel)
+* 25/02/2022	LScheffler	v1.19.69	github: added tags to bring links in docu to work
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
+* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.69 Missing class when building text file from corrupted VCX
+* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.69 Creating a class, when an object is named equal to this class
 * 18/01/2022	Jimrnelson 			BUG REPORT v1.19.67 Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
 * 05/11/2021	LScheffler 			BUG REPORT v1.19.66 Double classes in VCX
 * 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
@@ -740,13 +746,13 @@ Endif
 
 * only 2 paras for -cCt
 Do Case
-	Case Pcount()=1 And ( tcType == '-t' OR tcType == 't' ) And !Empty( Dbf() )
+	Case Pcount()=1 And ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() )
 		tc_InputFile = Dbf() + '._cfg'
 
-	Case Pcount()=1 And ( Upper( tcType ) =='-C' OR Upper( tcType ) =='C' )
+	Case Pcount()=1 And ( Upper( tcType ) =='-C' Or Upper( tcType ) =='C' )
 		tc_InputFile = 'FoxBin2PRG._cfg'
 
-	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' OR Upper( tcType ) =='C' Or tcType =='t' )
+	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t' )
 		tc_InputFile = ""
 		tcType       = ""
 
@@ -953,7 +959,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.68'
+	c_FB2PRG_Version_Real			= '1.19.69'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1142,7 +1148,7 @@ Define Class c_foxbin2prg As Session
 		This.c_FB2PRG_EXE_Version		= 'v' + Transform(This.c_FB2PRG_Version_Real)
 
 *!*	/Changed by SF 30.8.2021
- 
+
 		AddProperty(_Screen, 'c_FB2PRG_EXE_Version', This.c_FB2PRG_EXE_Version)
 		AddProperty(_Screen, 'ExitCode', 0)
 
@@ -2388,13 +2394,13 @@ Define Class c_foxbin2prg As Session
 						If .l_CFG_CachedAccess And .n_CFG_Actual > 0 Then
 							toParentCFG	= lo_CFG
 							.writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile + '  => ' + tc_InputFile + ;
-							 ' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
+								' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 						Else
 							lo_CFG	= Createobject('CL_CFG')
 							lo_Configuration.Add( lo_CFG, lc_CFG_Path )
 							.n_CFG_Actual  	= lo_Configuration.Count
 							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path + ;
-							 ' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
+								' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 
 							If Not Isnull(toParentCFG)
 								lo_CFG.CopyFrom(@toParentCFG)
@@ -3343,7 +3349,7 @@ Define Class c_foxbin2prg As Session
 		Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx As Exception, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
 			, tcBackupLevels, tcClearUniqueID, tcOptimizeByFilestamp, tcCFG_File
- 
+
 		Try
 				Local I, lcPath, lnCodError, lcFileSpec, lcFile, laFiles(1,5), laDirInfo(1,5), lcInputFile_Type, lc_OldSetNotify ;
 					, lnFileCount, lcErrorInfo, lcErrorFile, lnPCount, laParams(1), lnConversionOption, lnErrorIcon, llError ;
@@ -3520,9 +3526,9 @@ Define Class c_foxbin2prg As Session
 * n_RedirectClassType = 0 will import all classes of file.VCX (as just handing file.vc2)
 * n_RedirectClassType = 1 will import the class to single lib file[.baseclass].class.VCX
 					Do Case
-						Case ( Lower(m.lcType)=='-c' OR Lower(m.lcType)=='c' )
+						Case ( Lower(m.lcType)=='-c' Or Lower(m.lcType)=='c' )
 * not handled
-						Case ( m.lcType=='-t' OR m.lcType=='t' )
+						Case ( m.lcType=='-t' Or m.lcType=='t' )
 * not handled
 						Case .n_RedirectClassType # 2
 * not handled
@@ -3579,11 +3585,11 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
-						Case ( m.lcType=='-t' OR m.lcType=='t' ) And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
+						Case ( m.lcType=='-t' Or m.lcType=='t' ) And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
 							loLang	     = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( Strtran( '*' + m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
 
-						Case ( m.lcType=='-c' OR m.lcType=='c' )
+						Case ( m.lcType=='-c' Or m.lcType=='c' )
 							tc_InputFile = Iif( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
 							loLang		 = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
@@ -3592,7 +3598,7 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: Lutz Scheffler 07.3.2021
 *!*	change date="{^2021-03-07,18:44:00}"
 * added option to create config files with values
-						Case ( m.lcType=='-C' OR m.lcType=='C' )
+						Case ( m.lcType=='-C' Or m.lcType=='C' )
 							Local;
 								lcText    As String,;
 								lcValue   As String,;
@@ -11404,7 +11410,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 					, laLineasExclusion, lnBloquesExclusion, I
 		Endtry
 
-		RETURN 
+		Return
 	Endproc
 
 
@@ -11580,21 +11586,34 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 *!*	<change date="{^2021-12-07,09:14:00}">Changed by: SF<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/72 / double classes in VCX
 *!*	The old code will write a class whether or not the class is already in the classlib
-*!*	Problem comes if a class is defined double by inconsistent UseClassPerFile, 
+*!*	Problem comes if a class is defined double by inconsistent UseClassPerFile,
 *!*	with same class defined in file.vc2 and in file[.baseclass].class.vc2
 *!*	</change>
 *!*	</pdm>
 
-								SELECT TABLABIN
-								LOCATE;
-									FOR OBJNAME==loClase._ObjName
-								IF FOUND() THEN
+								Select TABLABIN
+*!*	Changed by: SF 23.02.2022
+*!*	<pdm>
+*!*	<change date="{^2022-02-23,19:44:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/77 / If a classname is used as objectname too, an error is reported
+*!*	A class is Objname with empty parent field, while an object has parent filled.
+*!*	</change>
+*!*	</pdm>
+
+*								LOCATE;
+*									FOR OBJNAME==loClase._ObjName
+								Locate;
+									FOR OBJNAME==loClase._ObjName;
+									AND Empty(Parent)
+
+*!*	/Changed by SF 07.12.2021
+								If Found() Then
 *SF 20211207
 *SET STEP ON
 									Error loLang.C_ClassTwice_Header_LOC + ;
-										loLang.C_ClassTwice_Lib_LOC + JUSTFNAME( DBF() ) + ;
+										loLang.C_ClassTwice_Lib_LOC + Justfname( Dbf() ) + ;
 										loLang.C_ClassTwice_Class_LOC + loClase._ObjName+0h0D0A
-								ENDIF &&FOUND() 
+								Endif &&FOUND()
 
 *!*	/Changed by SF 07.12.2021
 
@@ -11699,15 +11718,15 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 									, '' )
 
 							Endfor	&& I = 1 TO toModulo._Clases_Count
-							IF !EMPTY( lnCodError ) THEN
-								EXIT
-							ENDIF &&!EMPTY( lnCodError ) 
+							If !Empty( lnCodError ) Then
+								Exit
+							Endif &&!EMPTY( lnCodError )
 						Endfor	&& X = 1 TO 2
 					Endif
 
 					Use In (Select("TABLABIN"))
 
-					If toFoxBin2Prg.l_Recompile AND EMPTY( lnCodError )
+					If toFoxBin2Prg.l_Recompile And Empty( lnCodError )
 						toFoxBin2Prg.compileFoxProBinary()
 					Endif
 
@@ -15237,13 +15256,35 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 		lcSetDeleted	= Set("Deleted")
 		Set Deleted Off
 
+*!*	Changed by: SF 25.2.2022
+*!*	<pdm>
+*!*	<change date="{^2022-02-25,15:57:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/78 / After vc2 convert back to vcx class is corrupted no errors reported
+*!*	Better named: Missing class when building text file from corrupted VCX
+*!* If the VCX is corrupted and holds empty records, the original coed will delete the next class.
+*!* This because the while clause for an empty OBJNAME deletes the record with the class itself, since this never has a PARENT
+*!* Solution is from bjornhoeksel, see issue
+*!*	</change>
+*!*	</pdm>
+
+* 		Scan For PLATFORM = "WINDOWS" And Empty(Parent) And Empty(RESERVED1)
+*			lcParentObjName	= Lower(OBJNAME)
+*			Delete
+*			Skip
+*			Delete Rest While Getwordnum(Lower(Parent) + '.', 1, '.') == lcParentObjName
+*			Skip -1
+*		Endscan
+
 		Scan For PLATFORM = "WINDOWS" And Empty(Parent) And Empty(RESERVED1)
 			lcParentObjName	= Lower(OBJNAME)
 			Delete
-			Skip
-			Delete Rest While Getwordnum(Lower(Parent) + '.', 1, '.') == lcParentObjName
-			Skip -1
+			If (Not Empty(lcParentObjName)) Then
+				Skip
+				Delete Rest While Getwordnum(Lower(Parent) + '.', 1, '.') == lcParentObjName
+				Skip -1
+			Endif
 		Endscan
+*!*	/Changed by: SF 25.2.2022
 
 		Set Deleted &lcSetDeleted.
 		Return
@@ -28539,20 +28580,20 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	</change>
 *!*	</pdm>
 
- 						Do Case
- 							Case LEFT ( m.lcBarName, 1 ) = '"'
-	 							lcBarName   	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
- 								loReg.Name		= m.lcBarName
- 								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
- 							Case Isdigit( m.lcBarName )
- 						*-- Bar#
- 								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
+						Do Case
+							Case Left ( m.lcBarName, 1 ) = '"'
+								lcBarName   	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
+								loReg.Name		= m.lcBarName
+								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
+							Case Isdigit( m.lcBarName )
+*-- Bar#
+								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
 
- 							Otherwise
- 						*-- Es un BAR del sistema
- 								loReg.Name	= m.lcBarName
+							Otherwise
+*-- Es un BAR del sistema
+								loReg.Name	= m.lcBarName
 
- 						Endcase
+						Endcase
 
 *!*	/Changd By: SF 22.4.2021
 						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
@@ -28717,7 +28758,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 		Endtry
 
 		Return llBloqueEncontrado
-		Endproc
+	Endproc
 
 
 
@@ -28769,9 +28810,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	</pdm>
 
 *!*							loReg.Name			= lcPadName
- 						IF LEFT ( m.lcPadName, 1 ) = '"' THEN
-	 						lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
- 							loReg.Name		= m.lcPadName
+						If Left ( m.lcPadName, 1 ) = '"' Then
+							lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
+							loReg.Name		= m.lcPadName
 
 *!*	Changed By: SF 18.1.2022
 *!*	<pdm>
@@ -28780,11 +28821,11 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	Does not work for padname without '"'.
 *!*	</change>
 *!*	</pdm>
- 						ELSE  &&LEFT ( m.lcPadName, 1 ) = '"'
- 							loReg.Name		= m.lcPadName
+						Else  &&LEFT ( m.lcPadName, 1 ) = '"'
+							loReg.Name		= m.lcPadName
 *!*	/Changed Bby SF 18.1.2022
 
- 						ENDIF &&LEFT ( m.lcPadName, 1 ) = '"'
+						Endif &&LEFT ( m.lcPadName, 1 ) = '"'
 
 *!*	/Changd By: SF 22.4.2021
 						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
@@ -29057,8 +29098,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	also use variable on all places instead of EVL(..
 *!*	</change>
 *!*	</pdm>
-				If !Empty(toReg.Name) And ISDIGIT( toReg.Name ) Then
-					lcName	= ALLTRIM( toReg.Name )
+				If !Empty(toReg.Name) And Isdigit( toReg.Name ) Then
+					lcName	= Alltrim( toReg.Name )
 					lcName2	= '"' + Alltrim(toReg.Name) + '"'
 				Else  &&!Empty(toReg.Name) And ISDIGIT( toReg.Name )
 					lcName	= Alltrim( Evl( toReg.Name, toReg.ItemNum ) )
@@ -29165,7 +29206,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 					, lcName2
 				Store Null To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
-				If !Empty(toReg.Name) And LEFT( toReg.Name, 1 ) = '_' Then
+				If !Empty(toReg.Name) And Left( toReg.Name, 1 ) = '_' Then
 					lcName2		= '"' + Alltrim(toReg.Name) + '"'
 					toReg.Name	= toReg.Name
 				Else  &&!EMPTY(toReg.Name) AND toReg.Name = '_'
