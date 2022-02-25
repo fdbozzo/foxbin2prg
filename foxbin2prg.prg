@@ -284,6 +284,7 @@
 * 23/02/2022	LScheffler	v1.19.69	Docu: examples and template for config files reworked to English, Contribution.md reworked
 * 25/02/2022	LScheffler	v1.19.69	Bug Fix: Missing class when building text file from corrupted VCX (bjornhoeksel)
 * 25/02/2022	LScheffler	v1.19.69	github: added tags to bring links in docu to work
+* 25/02/2022	LScheffler	v1.19.69	Docu: examples and template for config files enhanced
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -30381,6 +30382,17 @@ Define Class CL_LANG As Custom
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
+						<<>> Note, configuration files will follow an inheritance.
+					    <<>> 1.  Default values
+					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
+					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
+					    <<>> 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
+						<<>>
+					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
+						<<>>****************************************************************************************************************
+						<<>>
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
@@ -30642,6 +30654,17 @@ Define Class CL_LANG As Custom
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>****************************************************************************************************************
+						<<>>
+						<<>> Note, configuration files will follow an inheritance.
+					    <<>> 1.  Default values
+					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
+					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
+					    <<>> 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
+						<<>>
+					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>-- Settings for internal work, not processing
@@ -31203,6 +31226,17 @@ Define Class CL_LANG As Custom
 						<<>>################################################################################################################
 						<<>>FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
+						<<>>****************************************************************************************************************
+						<<>>
+						<<>> Note, configuration files will follow an inheritance.
+					    <<>> 1.  Default values
+					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
+					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
+					    <<>> 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
+						<<>>
+					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>-- Settings for internal work, not processing
