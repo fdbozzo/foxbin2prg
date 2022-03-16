@@ -15,7 +15,7 @@ If you do not access FoxBin2Prg via [Thor](https://github.com/VFPX/Thor) remind 
 ---
 ---
 If you like to value my work, support the Geeks at 
-[![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](www.swfox.net).  
+[![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](https://www.swfox.net).  
 I also do not reject invitations to a beer, next time in Gilbert.
 
 ---
@@ -138,4 +138,4 @@ For usage see [documentation](./docs/FoxBin2Prg.md)
 ## Contribution
 See [contribution](./.github/CONTRIBUTING.md)
 
-Last changed: _2022/01/18_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/03/16_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
