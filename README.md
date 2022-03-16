@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.67
+# FoxBin2Prg v1.19.70
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -6,13 +6,17 @@
 
 This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
 It's the main tool with some bugs fixes and some new functions.
-It looks like Fernando does not longer maintain FoxBin2Prg, so, with his permission, I work onto this.
-On my [fork](https://github.com/lscheffler/foxbin2prg).
-updates may be faster there, because of the merge process.
+Since I know maintain this project, my [fork](https://github.com/lscheffler/foxbin2prg) is no longer in sync.
 
 The spanish documentation is not longer maintained - it would fade.
-For fast acces a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
-Remember yourself to compile the exe first.   
+For fast access a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
+If you do not access FoxBin2Prg via [Thor](https://github.com/VFPX/Thor) remind yourself to compile the exe first.   
+
+---
+---
+If you like to value my work, support the Geeks at 
+[![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](www.swfox.net).  
+I also do not reject invitations to a beer, next time in Gilbert.
 
 ---
 ---
@@ -23,11 +27,6 @@ If you like to see Fernandos blog, or value his work:
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
     Thank you for your support!
-
----
----
-If you like to value my work, support the Geeks at https://virtualfoxfest.com/ or www.swfox.net.  
-I also do not reject invitations to beer, next time in Gilbert.
 
 ---
 ---

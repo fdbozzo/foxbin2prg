@@ -72,7 +72,7 @@ It's a Linux tool developed to deal with the Kernel code.
 Highly sophisticated, neat, fast.  
 So storing binaries into it is something one should avoid as far as possible.
 
-There is stuff where on might not circumvent it - like pictures.
+There is stuff where one might not circumvent it - like pictures.
 
 #### Text representation of VFP's binaries
 And there is the oddness of VFP sources. Storing those to git is as wrong as it could be.
@@ -102,12 +102,13 @@ If I imagine to have one of my larger vcx's like this in a merge view - no.
 
 Just split up the vcx's into single classes. It's like a charm on merge and diff.
 Also on blame.   
-I you go for the _lib.baseclass.classname.vc2_ or _lib.classname.vc2_ style is a matter of taste.
+If you go for the _lib.baseclass.classname.vc2_ or _lib.classname.vc2_ style is a matter of taste.
 I can see baseclass on classname, so there is not much value, other might think different.
 But split into classes makes life easy.   
+This is to be done in the [config file](#config), setting _UseClassPerFile_ option to 1 or 2.
 
 #### Forms
-Side effect is that SCX will be split into 3 files too.
+Side effect of splitting VCX is that SCX will be split into 3 files too.
 I have no idea if there is some use of it - I just do classes.
 If you like it separated from VCX - let me know.
 
@@ -117,6 +118,10 @@ So I've added an option to inhibit splitting DBC while splitting VCX/SCX.
 
 #### Tables
 Since nobody brought up the .NULL. problem, it looks like it's not commonly used. It works for me for a while now and I found no problems so far.
+
+##### Note
+I do DBF / DBC to text and vice versa for a while now, but still with the binaries. I found no problem yet, except the binaries are a pain on merges.
+What I see is that a synthetic PK is helpfull, not all the lookups had one. So I added one just for the purpose of merging.
 
 #### Others
 All the other table-based-sources of VFP work seamless as _Text_. No fuzz.
@@ -260,36 +265,68 @@ If I have to checkout old stuff.
 ````
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
+*Version: v1.19.69
+*****************************************************************************************************************
 
-*extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
+* Note, configuration files will follow an inheritance.
+* 1.  Default values
+* 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+* 3., optional FOXBIN2PRG.CFG in root of working directory
+* 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
+* 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+* 6., Parameter calling FOXBIN2PRG.EXE.
+
+* Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
+*****************************************************************************************************************
+
+*-- Settings for internal work, not processing
+*Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 *ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
 *DontShowErrors: 0              && Show message errors by default
-*NoTimestamps: 1                && Clear timestamps by default for minimize differences
-*Debug: 0                       && Don't Activate individual <file>.Log by default
-*BodyDevInfo: 0                 && [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
 *ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
-*ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
-*ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-*OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-*RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
-*RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-*Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-*ExcludeDBFAutoincNextval: 0    && [0=Do not exclude this value from db2], 1=Exclude this value from db2
-*PRG_Compat_Level: 0            && [0=Legacy], 1=Use HELPSTRING as Class Procedure comment
+*Debug: 0                       && Don't Activate individual <file>.Log by default
+*BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
+*HomeDir: 1                     && Home Directory in PJX
+*                               && 0 don't save HomeDir in PJ2
+*                               && 1 save HomeDir in PJ2
+*----------------------------------------------------------------------------------------------------------------
 
-*-- Convertion options:
+*-- Conversion operation by type
 *PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
-*MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 *DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 *DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-*DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-*DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+*FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*----------------------------------------------------------------------------------------------------------------
+
+*Setting for container files (not pjx)
+*-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+*- Class per file options (UseClassPerFile: 1)
+*UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
+*                               && 0 One library.tx2 file
+*                               && 1 Multiple file.class.tx2 files
+*                               && 2 Multiple file.baseclass.class.tx2 files
+*RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
+*                               && 0 Don't redirect to file.tx2
+*                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+*                               &&   RedirectClassType: 1 has precedence
+*RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+*                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
+*                               && For the second form:
+*                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
+*                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
+*                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
+*ClassPerFileCheck: 0           && Check, if files listed in the main file of a library or form will be included
+*                               && 0 Don't check file inclusion
+*                               && 1 Check file[.baseclass].class.tx2 inclusion
+*                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
+*                               &&   Ignored for RedirectClassType: 2
+*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 *-- DBC options
 *- File per DBC options (UseFilesPerDBC: 1)
@@ -301,29 +338,47 @@ If I have to checkout old stuff.
 *                               && 1 creates a file.dc2 with DBC properties
 *                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 *                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-*RedirectFilePerDBCToMain 0     && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+*RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
 *ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-*DBF_BinChar_Base64: 1          && 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
+*----------------------------------------------------------------------------------------------------------------
+
+*-- General files
+*NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+*ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+*OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+*RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+*RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
+*PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
+*----------------------------------------------------------------------------------------------------------------
+
+*-- PJX special
+*BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
+*----------------------------------------------------------------------------------------------------------------
+
+*-- DBF special
+*ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
+*ExcludeDBFAutoincNextval: 0    && 0=Do not exclude this value from db2, 1=Exclude this value from db2
+*DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+*DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
+*DBF_BinChar_Base64: 1          && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
 *DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
+*----------------------------------------------------------------------------------------------------------------
 
-*-- Class per file options (UseClassPerFile: 1)
-*UseClassPerFile: 0             && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-*RedirectClassPerFileToMain: 0  && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-*ClassPerFileCheck: 0           && 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
-
+*-- Text file extensions
+*extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
 *-- Example configuration for SourceSafe compatibility:
-*extension: pj2=pja
-*extension: vc2=vca
-*extension: sc2=sca
-*extension: fr2=fra
-*extension: lb2=lba
-*extension: mn2=mna
-*extension: db2=dba
-*extension: dc2=dca
+*extension: pj2=pja             && Text file to PJX
+*extension: vc2=vca             && Text file to VCX
+*extension: sc2=sca             && Text file to SCX
+*extension: fr2=fra             && Text file to FRX
+*extension: lb2=lba             && Text file to LBX
+*extension: mn2=mna             && Text file to MNX
+*extension: db2=dba             && Text file to DBF
+*extension: dc2=dca             && Text file to DBC
 *-- Additional extensions
-*extension: fk2=fkx            && FKY
-*extension: me2=fkx            && MEM
-
+*extension: fk2=fkx             && Text file to FKY
+*extension: me2=fkx             && Text file to MEM
+*
 *Settings changed
 *----------------
 UseClassPerFile: 2              && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
@@ -331,7 +386,7 @@ RedirectClassPerFileToMain: 1   && 0=Don't redirect to file.tx2, 1=Redirect to f
 DBF_Conversion_Support: 0       && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 DBC_Conversion_Support: 0       && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 ````
-All use off this are the last four lines. But I like to keep the template (recent as version 1.19.55).
+All use off this are the last four lines. But I like to keep the template (recent as version 1.19.69).
 - Using single classes - because it's much more easy to merge a single class then a whole library.
 - A single class selected might be added to the VCX
 - Turn off DBC and DBF conversion
@@ -341,4 +396,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

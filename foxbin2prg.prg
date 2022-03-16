@@ -285,23 +285,12 @@
 * 25/02/2022	LScheffler	v1.19.69	Bug Fix: Missing class when building text file from corrupted VCX (bjornhoeksel)
 * 25/02/2022	LScheffler	v1.19.69	github: added tags to bring links in docu to work
 * 25/02/2022	LScheffler	v1.19.69	Docu: examples and template for config files enhanced
+* 16/03/2022	LScheffler	v1.19.70	Bug Fix: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel)
+* 16/03/2022	LScheffler	v1.19.70	Docu: Bug list below
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
 * <TESTEO, REPORTE DE BUGS Y MEJORAS (AGRADECIMIENTOS)>
-* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.69 Missing class when building text file from corrupted VCX
-* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.69 Creating a class, when an object is named equal to this class
-* 18/01/2022	Jimrnelson 			BUG REPORT v1.19.67 Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
-* 05/11/2021	LScheffler 			BUG REPORT v1.19.66 Double classes in VCX
-* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
-* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Tags missing on github.
-* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect links on documentation.
-* 17/05/2021	LScheffler 			BUG REPORT v1.19.64 Options "-cCt" are not usable on command line base EXE.
-* 22/04/2021	LScheffler 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen
-* 21/04/2021	Jimrnelson 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen
-* 08/04/2021	jstagerGH 			BUG REPORT v1.19.62 Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database"
-* 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
-* 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
 * 23/11/2013	Luis Martínez		REPORTE BUG scx v1.4: En algunos forms solo se generaba el dataenvironment (arreglado en v.1.5)
 * 27/11/2013	Fidel Charny		REPORTE BUG vcx v1.5: Error en el guardado de ciertas propiedades de array (arreglado en v.1.6)
 * 02/12/2013	Fidel Charny		REPORTE BUG scx v1.6: Se pierden algunas propiedades y no muestra picture si "Name" no es la última (arreglado en v.1.7)
@@ -442,9 +431,23 @@
 * 05/03/2021	Lutz Scheffler      Bug report v1.19.56	For RedirectClassType = 2, Path was set wrong
 * 09/03/2021	Lutz Scheffler      Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
 * 09/03/2021	Lutz Scheffler      Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
-* xx/xx/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Condition was read, but never used
-* xx/xx/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Order sets an index that later would be stored as structural index
-* xx/xx/2021	Lutz Scheffler      Bug report v1.19.59 config options with text value fail, if line comment is set
+* 22/03/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Condition was read, but never used
+* 22/03/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Order sets an index that later would be stored as structural index
+* 22/03/2021	Lutz Scheffler      Bug report v1.19.59 config options with text value fail, if line comment is set
+* 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
+* 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
+* 08/04/2021	jstagerGH 			BUG REPORT v1.19.62 Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database"
+* 22/04/2021	LScheffler 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined Pad Name found in "Prompt Options" screen
+* 21/04/2021	Jimrnelson 			BUG REPORT v1.19.63 Converting MN2 to MNX ignores the programmer-defined bar # found in "Prompt Options" screen
+* 17/05/2021	LScheffler 			BUG REPORT v1.19.64 Options "-cCt" are not usable on command line base EXE.
+* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect version number shown.
+* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Tags missing on github.
+* 05/08/2021	siara-cc 			BUG REPORT v1.19.65 Incorrect links on documentation.
+* 05/11/2021	LScheffler 			BUG REPORT v1.19.66 Double classes in VCX
+* 18/01/2022	Jimrnelson 			BUG REPORT v1.19.67 Converting MN2 to MNX ignores the programmer-defined "Pad Name" found in "Prompt Options" screen
+* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.68 Missing class when building text file from corrupted VCX
+* 23/02/2022	bjornhoeksel		Bug REPORT v1.19.68 Creating a class, when an object is named equal to this class
+* 16/03/2022	bjornhoeksel		Bug REPORT v1.19.69 Last bar in menu files are in some situations not converted correctly back in the mnx file.
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -960,7 +963,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.69'
+	c_FB2PRG_Version_Real			= '1.19.70'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -28585,17 +28588,30 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 							Case Left ( m.lcBarName, 1 ) = '"'
 								lcBarName   	= Substr( m.lcBarName, 2, Len( m.lcBarName ) - 2 )
 								loReg.Name		= m.lcBarName
-								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
+*								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
+
 							Case Isdigit( m.lcBarName )
 *-- Bar#
-								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
+*								loReg.OBJCODE	= C_OBJCODE_MENUOPTION_BARNUM
 
 							Otherwise
 *-- Es un BAR del sistema
-								loReg.Name	= m.lcBarName
+								loReg.Name	  = m.lcBarName
+*								loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM
 
 						Endcase
+*!*	Changd By: SF 16.3.2022
+*!*	<pdm>
+*!*	<change date="{^2022-03-16,19:41:00}">Changd By: SF <br />
+*!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/79">Issue #79</a>, by bjornhoeksel
+* loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM for OTHERWISE too,
+* just move it out of the case
+*!*	</change>
+*!*	</pdm>
 
+ 						loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM
+
+*!*	/Changd By: SF 16.3.2022
 *!*	/Changd By: SF 22.4.2021
 						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
 
