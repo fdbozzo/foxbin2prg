@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.65.0'
-    .VersionDate          = Date(2021,05,20)
+    .VersionNumber        = 'v1.19.70.0'
+    .VersionDate          = Date(2022,03,16)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -21,9 +21,13 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
 
+2022-03-16 v1.19.70
+- Bug Fix: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel)
+- Docu: Buglist internal of FoxBin2Prg reordered
+
 2022-02-25 v1.19.69
--Bug Fix: Missing class when building text file from corrupted VCX
--Bug Fix: Recreating a class while an object with same name exists in VCX fails
+- Bug Fix: Missing class when building text file from corrupted VCX
+- Bug Fix: Recreating a class while an object with same name exists in VCX fails
 - Docu: Template configuration files FOXBIN2PRG.DBF.TXT and FOXBIN2PRG.DBF.CFG.TXT in English |
 - Docu: Notice in contribution file to creating files above in English |
 - Docu: Started reworking double documentation |

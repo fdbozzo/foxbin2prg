@@ -33,7 +33,8 @@ Stuff is a bit scattered, so this is where to look up.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
 3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
    The most recent entries met in the middle of this section around * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
-4. Add a description to _FoxBin2Prg_Changes.md_
+4. Alter version in _README.md_
+4. Add a description to _docs\FoxBin2Prg_Changes.md_
 4. If a change to the config files is made please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg:_ for settings per table
@@ -42,7 +43,7 @@ Stuff is a bit scattered, so this is where to look up.
    - Or change version number in those files manually
    - **Note**. If you are not on an English comp, set in the value _Language: EN_ in your local _foxbin2prg.cfg_ to create English files.
 5. If a change to the parameters is made, change _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_ properties.
-4. For changed functionality, add descriptive text on the appropriate _.md_ file.
+4. For changed functionality, add descriptive text on the appropriate _.md_ file in _docs_ folder.
 2. Alter the version number for the EXE to the version used above.
 0. Compile to EXE
 1. Change Thor (see below)

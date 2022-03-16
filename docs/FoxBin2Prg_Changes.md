@@ -27,6 +27,9 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2022/03/16 | LScheffler | [v1.19.70](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.70) | **Bug Fix**: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel) |
+| | | | **Enhancement**: Buglist internal of FoxBin2Prg reordered |
+| | | | **Enhancement**: Enhancement to documentation |
 | 2022/02/25 | LScheffler | [v1.19.69](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.69) | **Bug Fix**: Missing class when building text file from corrupted VCX (bjornhoeksel) |
 | 2022/02/23 | LScheffler | [v1.19.69](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.69) | **Bug Fix**: Recreating a class while an object with same name exists in VCX fails (bjornhoeksel) |
 | | | | **Enhancement**: Template configuration files FOXBIN2PRG.DBF.TXT and FOXBIN2PRG.DBF.CFG.TXT in English |
@@ -405,4 +408,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/02/25_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/03/16_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
