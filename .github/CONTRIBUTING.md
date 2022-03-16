@@ -64,4 +64,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2022/02/23_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/03/16_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
