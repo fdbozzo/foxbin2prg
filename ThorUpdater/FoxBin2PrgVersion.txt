@@ -10,8 +10,8 @@ local;
 
 lcappName      = "FoxBin2Prg"
 *Set following two numbers on version
-ldDate         = date(2022,03,16)
-lcmajorVersion = "1.19.70"
+ldDate         = date(2022,03,30)
+lcmajorVersion = "1.19.71"
 
 *lnJulian = val(sys(11, m.ldDate)) - val(sys(11, {^2000-01-01}))
 *lcJulian = padl(transform(lnJulian), 4, '0')
@@ -38,6 +38,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2022-03-30 v1.19.71
+- Bug Fix: Convert menu mn2 to mnx with skip for that contains a string with ; sign is missing part after that sign in mnx. (bjornhoeksel)
 
 2022-03-16 v1.19.70
 - Bug Fix: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel)
