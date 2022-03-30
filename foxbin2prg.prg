@@ -287,6 +287,7 @@
 * 25/02/2022	LScheffler	v1.19.69	Docu: examples and template for config files enhanced
 * 16/03/2022	LScheffler	v1.19.70	Bug Fix: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel)
 * 16/03/2022	LScheffler	v1.19.70	Docu: Bug list below
+* 30/03/2022	bjornhoeksel	v1.19.71	Bug Fix: Convert menu mn2 to mnx with skip for that contains a string with ; sign is missing part after that sign in mnx. (bjornhoeksel)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -448,6 +449,7 @@
 * 23/02/2022	bjornhoeksel		Bug REPORT v1.19.68 Missing class when building text file from corrupted VCX
 * 23/02/2022	bjornhoeksel		Bug REPORT v1.19.68 Creating a class, when an object is named equal to this class
 * 16/03/2022	bjornhoeksel		Bug REPORT v1.19.69 Last bar in menu files are in some situations not converted correctly back in the mnx file.
+* 30/03/2022	bjornhoeksel		Bug REPORT v1.19.70 Convert menu mn2 to mnx with skip for that contains a string with ; sign is missing part after that sign in mnx.
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -963,7 +965,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.70'
+	c_FB2PRG_Version_Real			= '1.19.71'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -28530,6 +28532,77 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 		Return llBloqueEncontrado
 	Endproc
 
+*!*	Changd By: BH 30.3.2022
+*!*	<pdm>
+*!*	<change date="{^2022-03-16,19:41:00}">Changd By: BH <br />
+*!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/80">Issue #80</a>, by bjornhoeksel
+*!* 	Support ; sign in skip for expression between quotes  
+*!*	</change>
+*!*	</pdm>
+
+	PROCEDURE remove_strings
+	*---------------------------------------------------------------------------------------------------
+	* Remove all things between quotes
+	* PARÁMETROS:				
+	* tcLine						 Contenido de la línea en análisis
+	*---------------------------------------------------------------------------------------------------
+	Lparameters tcLine
+	* m.p_format_class		= parameter object
+
+	LOCAL lnStringCount, lnStringNumber, lnStartPosition, lnEndPosition
+
+	* Count the number of '
+	lnStringCount = OCCURS("'", tcLine) / 2
+
+	FOR lnStringNumber = 1 TO lnStringCount
+		* Loop for the number of '
+		
+		* Get start position of  '
+		lnStartPosition = ATC("'", tcLine, lnStringNumber)
+		* Get end position of  '
+		lnEndPosition = 	ATC("'", tcLine, lnStringNumber + 1) - lnStartPosition
+		
+		* Replace all that stand between ' with ***
+		tcLine = STUFF(tcLine, lnStartPosition, lnEndPosition, '********')    
+	NEXT
+
+	* Count the number of "
+	lnStringCount = OCCURS(["], tcLine) / 2
+
+	FOR lnStringNumber = 1 TO lnStringCount
+		* Loop for the number of "
+
+		* Get start position of  "
+		lnStartPosition = ATC(["], tcLine, lnStringNumber)
+		* Get end position of  '
+		lnEndPosition = 	ATC(["], tcLine, lnStringNumber + 1) - lnStartPosition
+		
+		* Replace all that stand between " with ***
+		tcLine = STUFF(tcLine, lnStartPosition, lnEndPosition, '********')    
+	NEXT
+
+	* Count the number of [
+	lnStringCount = OCCURS("[", tcLine)
+
+	FOR lnStringNumber = 1 TO lnStringCount
+		* Loop for the number of [
+		
+		* Get start position of  [
+		lnStartPosition = AT("[", tcLine, lnStringNumber) + 1
+		
+		* Get end position of  ]
+		lnEndPosition = 	AT("]", tcLine, lnStringNumber) - lnStartPosition
+		
+	 	* Replace all that stand between [ with ***
+		tcLine = STUFF(tcLine, lnStartPosition, lnEndPosition, '********')    
+	NEXT
+
+	* Return line without string content
+	RETURN tcLine
+	
+	ENDPROC
+	
+*!*	/Changd By: BH 30.3.2022	
 
 	Procedure analyzeCodeBlock_DefineBAR
 *---------------------------------------------------------------------------------------------------
@@ -28548,7 +28621,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 		Try
 				Local llBloqueEncontrado, lcText, loReg, lnPos, lcBarName, lcExpr, lcComment, lcProcName, lcProcCode, loEx As Exception ;
-					, lnNegContainer, lnNegObject
+					, lnNegContainer, lnNegObject, lnLineEnd, lcLineNoStrings
 				Store '' To lcText, lcComment, lcBarName
 
 * Estructura ejemplo a analizar:
@@ -28625,6 +28698,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *-- ANALISIS DEL "DEFINE BAR"
 						Do Case
 							Case ';' $ tcLine
+ 
 								For I = m.I + 1 To tnCodeLines
 									.set_Line( @tcLine, @taCodeLines, m.I )
 
@@ -28635,6 +28709,25 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Endif
 									Endif
 
+*!*	Changd By: BH 30.3.2022
+*!*	<pdm>
+*!*	<change date="{^2022-03-16,19:41:00}">Changd By: BH <br />
+*!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/80">Issue #80</a>, by bjornhoeksel
+*!* 	Support ; sign in skip for expression between quotes  
+*!*	</change>
+*!*	</pdm>
+									lcLineNoStrings = this.remove_strings(tcLine)
+									lnLineEnd = OCCURS(";", lcLineNoStrings)
+
+									IF lnLineEnd > 0
+										* We have ; end line markers not between quotes
+										* Calc first ; not between quotes
+										lnLineEnd = (OCCURS(";", tcLine) - ((OCCURS(";", tcLine) - lnLineEnd))) + 1
+									ELSE
+										* No line markers not between quotes
+										lnLineEnd = 0
+									Endif
+										
 									Do Case
 										Case Left( tcLine, 10 ) == 'NEGOTIATE '
 											lcExpr	= Alltrim( Strextract( tcLine, 'NEGOTIATE ', ';', 1, 2 ) )
@@ -28645,13 +28738,21 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 											loReg.Location	= lnNegContainer + lnNegObject * 2^4
 
 										Case Left( tcLine, 4 ) == 'KEY '
-											lcExpr	= Alltrim( Strextract( tcLine, 'KEY ', ';', 1, 2 ) )
+											lcExpr	= Alltrim( Strextract( tcLine, 'KEY ') )
+											IF lnLineEnd > 0
+												lcExpr = SUBSTR(lcExpr, 1, ATC(';', lcExpr, lnLineEnd)-1)
+											ENDIF
+												
 											lnPos	= At( ',', lcExpr )
 											loReg.KEYNAME	= Alltrim( Left( lcExpr, lnPos-1 ) )
 											loReg.KeyLabel	= Alltrim( Strextract( lcExpr, '"', '"' ) )
 
 										Case Left( tcLine, 9 ) == 'SKIP FOR '
-											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ', ';', 1, 2 ) )
+											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ') )
+											IF lnLineEnd > 0
+												loReg.SkipFor = SUBSTR(loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1)
+											ENDIF
+	
 
 										Case Left( tcLine, 8 ) == 'MESSAGE '
 											loReg.Message	= Alltrim( Substr( tcLine, 9 ) )
@@ -28660,12 +28761,20 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 											loReg.RESNAME	= Alltrim( Strextract( tcLine, '"', '"' ) )
 
 										Case Left( tcLine, 8 ) == 'PICTRES '
-											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ', ';', 1, 2 ) )
+											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ') )
+										
+											IF lnLineEnd > 0
+												loReg.RESNAME = SUBSTR(loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1)
+											ELSE
+												
+											ENDIF
 											loReg.SYSRES	= 1
 
 										Otherwise
 * Nada
-									Endcase
+									ENDCASE
+*!*	/Changd By: BH 30.3.2022									
+									
 
 									If Not ';' $ tcLine	&& Fin
 										Exit
