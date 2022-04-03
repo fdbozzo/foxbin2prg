@@ -1,11 +1,14 @@
 # How to contribute to FoxBin2Prg
+
 ## Bug report?
 - Please check  [issues](https://github.com/fdbozzo/foxbin2prg/issues) if the bug is reported
 - If you're unable to find an open issue addressing the problem, open a new one. Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
+
 ### Did you write a patch that fixes a bug?
 - Open a new GitHub merge request with the patch.
 - Ensure the PR description clearly describes the problem and solution.
   - Include the relevant version number if applicable.
+- See [New version](#new-version) for additional tasks
 
 ## Coding conventions
 
@@ -25,6 +28,7 @@ Start reading our code and you'll get the hang of it. We optimize for readabilit
 Please note, there are some tasks to set up a new version.
 Stuff is a bit scattered, so this is where to look up.
 1. Please create a fork at github
+   - See this [guide](https://www.dataschool.io/how-to-contribute-on-github/) for setting up and using a fork
 0. In _FoxBin2Prg.prg_ there are two version numbers in properties:   
 `n_FB2PRG_Version      = 1.19`    
 `c_FB2PRG_Version_Real = '1.19.60'`
@@ -35,6 +39,7 @@ Stuff is a bit scattered, so this is where to look up.
    The most recent entries met in the middle of this section around * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 4. Alter version in _README.md_
 4. Add a description to _docs\FoxBin2Prg_Changes.md_
+6. Please alter the footer of *.md files touched to recent date.
 4. If a change to the config files is made please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg:_ for settings per table
@@ -64,4 +69,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2022/03/16_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/03_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
