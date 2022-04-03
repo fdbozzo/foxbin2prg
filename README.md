@@ -6,7 +6,7 @@
 
 This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
 It's the main tool with some bugs fixes and some new functions.
-Since I know maintain this project, my [fork](https://github.com/lscheffler/foxbin2prg) is no longer in sync.
+Since I now maintain this project, my [fork](https://github.com/lscheffler/foxbin2prg) is no longer in sync.
 
 The spanish documentation is not longer maintained - it would fade.
 For fast access a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
@@ -138,4 +138,4 @@ For usage see [documentation](./docs/FoxBin2Prg.md)
 ## Contribution
 See [contribution](./.github/CONTRIBUTING.md)
 
-Last changed: _2022/03/30_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/03/31_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
