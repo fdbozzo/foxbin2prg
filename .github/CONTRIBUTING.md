@@ -28,7 +28,7 @@ Start reading our code and you'll get the hang of it. We optimize for readabilit
 Please note, there are some tasks to set up a new version.
 Stuff is a bit scattered, so this is where to look up.
 1. Please create a fork at github
-   - See this [guide](https://www.dataschool.io/how-to-contribute-on-github/){:target="_blank" rel="noopener"} for setting up and using a fork
+   - See this [guide](https://www.dataschool.io/how-to-contribute-on-github/) for setting up and using a fork
 0. In _FoxBin2Prg.prg_ there are two version numbers in properties:   
 `n_FB2PRG_Version      = 1.19`    
 `c_FB2PRG_Version_Real = '1.19.60'`
