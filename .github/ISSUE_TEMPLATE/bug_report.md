@@ -27,6 +27,12 @@ _What is the expected result of the above steps?_
 
 _What is the actual result of the above steps?_
 
+## 📷 Config
+
+**Do not include your normal config.**
+Please add your current full configuration.   
+Create a config file via `DO FOXBIN2PRG.PRG WITH '-C','path-to-source\FoxBin.cfg'` , zip and add here.  
+
 ## 📷 Screenshots
 
 _Are there any useful screenshots? WinKey+Shift+S and then just paste them directly into the form_
