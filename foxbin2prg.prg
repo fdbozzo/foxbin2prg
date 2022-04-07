@@ -288,6 +288,11 @@
 * 16/03/2022	LScheffler	v1.19.70	Bug Fix: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel)
 * 16/03/2022	LScheffler	v1.19.70	Docu: Bug list below
 * 30/03/2022	bjornhoeksel	v1.19.71	Bug Fix: Convert menu mn2 to mnx with skip for that contains a string with ; sign is missing part after that sign in mnx. (bjornhoeksel)
+* 06/04/2022	LScheffler	v1.19.72	Bug Fix: Problem on using "DBF_Conversion_Support" on table configuration file (LScheffler)
+* 06/04/2022	LScheffler	v1.19.72	Bug Fix: Problem converting intentionally trailing spaces to VarChar/VarBinary (LScheffler)
+* 06/04/2022	LScheffler	v1.19.72	Bug Fix: Problem converting trailing spaces on line end in memo (bjornhoeksel)
+* 07/04/2022	LScheffler	v1.19.72	Enhancement: Documentation in config file enhanced
+* 07/04/2022	LScheffler	v1.19.72	Enhancement: Added parameter "?" to show interactive help ("interactive" still works)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -450,6 +455,11 @@
 * 23/02/2022	bjornhoeksel		Bug REPORT v1.19.68 Creating a class, when an object is named equal to this class
 * 16/03/2022	bjornhoeksel		Bug REPORT v1.19.69 Last bar in menu files are in some situations not converted correctly back in the mnx file.
 * 30/03/2022	bjornhoeksel		Bug REPORT v1.19.70 Convert menu mn2 to mnx with skip for that contains a string with ; sign is missing part after that sign in mnx.
+
+* 05/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces to text on memos.
+* 06/04/2022	LScheffler			Bug REPORT v1.19.71 Problem on using "DBF_Conversion_Support" on table configuration file (LScheffler)
+* 06/04/2022	LScheffler			Bug REPORT v1.19.71 Problem converting intentionally trailing spaces to VarChar/VarBinary.
+* 06/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces on line end in memo (bjornhoeksel)
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -739,7 +749,8 @@ tcType			= Evl(tcType,'')
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
 If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 ;
-		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0 Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 ;
+		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0;
+		Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 Or Atc('-?','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_I0','-'+tc_InputFile) > 0 Or Atc('-SIMERR_I1','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_O1','-'+tc_InputFile) > 0;
 		OR Upper(tc_InputFile)=='-C' Or tc_InputFile=='-t' ;
@@ -965,7 +976,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.71'
+	c_FB2PRG_Version_Real			= '1.19.72'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -3852,7 +3863,7 @@ Define Class c_foxbin2prg As Session
 *-- EJECUCIÓN NORMAL
 
 
-							If Atc('-INTERACTIVE', ('-' + tcType)) > 0 ;
+							If (Atc('-INTERACTIVE', ('-' + tcType)) > 0 OR Atc('-?', ('-' + tcType)) > 0 );
 									AND Atc('-BIN2PRG', ('-' + tcType)) = 0 And Atc('-PRG2BIN', ('-' + tcType)) = 0 ;
 									AND lcInputFile_Type == C_FILETYPE_DIRECTORY Then
 *-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
@@ -26690,14 +26701,30 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 *-- SF: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
-										luValue = .Encode(Rtrim(luValue), .T.)
+*!*	Changed by: SF 07.4.2022
+*!*	<pdm>
+*!*	<change date="{^2022-04-07,15:11:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/81 / Trailing spaces are lost for memo fields converting dbf with including data.
+*!*	RTRIM removed trsiling spaces from memo
+*!*	</change>
+*!*	</pdm>
+							luValue = .Encode(Rtrim(luValue), .T.)
+										luValue = .Encode(luValue, .T.)
 									Endif
 
 							Endcase
 
-							TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
-							<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
-							ENDTEXT
+*!*	Changed by: SF 07.4.2022
+*!*	TEXT .. ENDTEXT removes trailing spaces from lines inserted with TEXXTMERGE
+*!*	Char etc are processed special
+							If Vartype(luValue) = 'C'
+								lcText = lcText + 0H0D0A + '			<' + lcField + '>' + luValue + '</' + lcField + '>'
+							Else
+								TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
+								<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
+								ENDTEXT
+							Endif
+*!*	/Changed by SF 07.4.2022
 						Endif
 					Next
 
@@ -30466,7 +30493,8 @@ Define Class CL_LANG As Custom
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
-						<<>>cFileSpec.Ext:     Full name (fullpath) of the file to convert or directory name to process
+						<<>>cFileSpec.Ext:     ? | interactive This help
+						<<>>                   Full name (fullpath) of the file to convert or directory name to process
 						<<>>                     - If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
 						<<>>                     - If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
 						<<>>                     - In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
@@ -30512,7 +30540,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
 					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
@@ -30741,7 +30769,8 @@ Define Class CL_LANG As Custom
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Detalle de parámetros:
-						<<>>cFileSpec.Ext:     Nombre completo (fullpath) del archivo a convertir o del directorio a procesar
+						<<>>cFileSpec.Ext:     ? | interactive This help
+						<<>>                   Nombre completo (fullpath) del archivo a convertir o del directorio a procesar
 						<<>>                   - Si indica 'BIN2PRG', se procesa el directorio indicado en tcType para generar los TX2
 						<<>>                   - Si indica 'PRG2BIN', se procesa el directorio indicado en tcType para generar los BIN
 						<<>>                   - En modo compatibilidad con SCCAPI (VSS), se usa para preguntar el tipo de soporte de conversión para el tipo de archivo indicado
@@ -30786,7 +30815,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
 					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
@@ -31015,7 +31044,8 @@ Define Class CL_LANG As Custom
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter:
-						<<>>cFileSpec.Ext:     Vollständiger Name der Datei (mit Pfad) zum Konvertieren, oder das Verzeichnis zum Konvertieren
+						<<>>cFileSpec.Ext:     ? | interactive Diese Hilfe
+						<<>>                   Vollständiger Name der Datei (mit Pfad) zum Konvertieren, oder das Verzeichnis zum Konvertieren
 						<<>>                    - wenn 'BIN2PRG' spezifiziert ist, wird das Verzeichnis in cType (!!) zum Erstellen der Textdateien genutzt
 						<<>>                    - wenn 'PRG2BIN' spezifiziert ist, wird das Verzeichnis in cType (!!) zum Erstellen der Binärdateien genutzt
 						<<>>                    - Im SCCAPI (VSS) Kompatibilitätsmodus, wird dies zur Abfrage der Unterstützung der Umwandlung für den genannten Dateityp genutzt
@@ -31027,7 +31057,7 @@ Define Class CL_LANG As Custom
 						<<>>cDontShowErrors:   '1' Unterdrückt die Anzeige von Fehlern
 						<<>>cDebug:            '1' Erzeugt LOG Dateien, Halte bei Fehlern an
 						<<>>cDontShowProgress: '1' Zeige kein Fortschrittsfenster
-						<<>>cOriginalFileName: Falls als Inputdatei eine temporäre Datei genutz wird, kann hier fürden Kopf der Textdatei der richtige Name angegeben werden.
+						<<>>cOriginalFileName: Falls als Inputdatei eine temporäre Datei genutzt wird, kann hier für den Kopf der Textdatei der richtige Name angegeben werden.
 						<<>>cRecompile:        '1' Die erzeugten Binädateien werden nach dem Erzeugen kompiliert. Eine Pfadangabe (d.h., die des Projektes) ist möglich.
 						<<>>cNoTimestamps:     Legt fest ob der Zeitstempel einiger Dateiarten gelöscht werden soll ('1' oder leer) oder nicht ('0')
 						<<>>cCFG_File:         Legt eine alternative Configurationsdate (CFG) fest, die statt der im foxbin2prg Verzeichnis genutzt werden soll. (Anm. des Übersetzers: Keine Angabe über Vererbung in der Verzeichnishierarchie)
@@ -31312,7 +31342,8 @@ Define Class CL_LANG As Custom
 						<<>>FOXBIN2PRG.EXE <cFileSpec.Ext> [cType [cTextName [cGenText [cDontShowErrors [cDebug [cDontShowProgress [cOriginalFileName [cRecompile [cNoTimestamps [cCFG_File [cOutputFolder] ] ] ] ] ] ] ] ] ] ]
 						<<>>
 						<<>>-- Parameter details:
-						<<>>cFileSpec.Ext:     Full name (fullpath) of the file to convert or directory name to process
+						<<>>cFileSpec.Ext:     ? | interactive This help
+						<<>>                   Full name (fullpath) of the file to convert or directory name to process
 						<<>>                     - If 'BIN2PRG' is specified, the directory specified in tcType is processed for generating TX2
 						<<>>                     - If 'PRG2BIN' is specified, the directory specified in tcType is processed for regenerating BIN
 						<<>>                     - In SCCAPI (VSS) compatibility mode, it is used to query the conversion support for the file type specified
@@ -31358,7 +31389,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
 					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
@@ -31562,7 +31593,7 @@ Define Class CL_DBF_CFG As Custom
 
 
 *-- Configuration class. By default asumes master value, except when overriding one.
-	DBF_Conversion_Support		= Null
+	n_DBF_Conversion_Support	= Null
 	DBF_Conversion_Order		= ''
 	DBF_Conversion_Condition	= ''
 	DBF_IndexList				= ''

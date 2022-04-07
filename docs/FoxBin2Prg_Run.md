@@ -73,7 +73,8 @@ just select and process each one independently, in parallel if you like, but in 
 
 | Parameter | Value (_Default_) | Description |
 | ----- | ----- | ----- |
-| cInputFile | fullpath | Full name of the file to convert or directory name to process <br/> without any other parameter given, the extension (and the config) defines the operation|
+| cInputFile | ? / interactive | Call interactive list of parameters |
+| | fullpath | Full name of the file to convert or directory name to process <br/> without any other parameter given, the extension (and the config) defines the operation |
 | | _FileName::ClassName_ | If option UseClassPerFile is 1 or 2, a class-file will be extracted from the lib |
 | cType | _empty_ | Fileextension of _cInputFile_ defines operation |
 | | BIN2PRG | _cInputFile_ is processed for generating a _Text_ representation. |

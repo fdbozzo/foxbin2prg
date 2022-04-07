@@ -3,6 +3,7 @@
 ## Bug report?
 - Please check  [issues](https://github.com/fdbozzo/foxbin2prg/issues) if the bug is reported
 - If you're unable to find an open issue addressing the problem, open a new one. Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
+- Please add your current configuration creating a config file via `DO FOXBIN2PRG.PRG WITH '-C','path-to-source\FoxBin.cfg'`. **Do not include your normal config**
 
 ### Did you write a patch that fixes a bug?
 - Open a new GitHub merge request with the patch.
@@ -36,7 +37,8 @@ Stuff is a bit scattered, so this is where to look up.
    **Do not** alter the **1.19** part. This is written to the text files.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
 3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
-   The most recent entries met in the middle of this section around * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
+   The most recent entries for changes in the middle of this section around _* </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>_,   
+   The most recent bugs are listed above _* </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>_
 4. Alter version in _README.md_
 4. Add a description to _docs\FoxBin2Prg_Changes.md_
 6. Please alter the footer of *.md files touched to recent date.
@@ -51,7 +53,10 @@ Stuff is a bit scattered, so this is where to look up.
 4. For changed functionality, add descriptive text on the appropriate _.md_ file in _docs_ folder.
 2. Alter the version number for the EXE to the version used above.
 0. Compile to EXE
-1. Change Thor (see below)
+8. Change Thor ([see below](#thor-conventions))
+8. commit
+9. push to your fork
+0. create a pull request
 
 ## Thor conventions
 This project is part of [VFPX](https://vfpx.github.io/) and published via [Thor](https://github.com/VFPX/Thor).   
@@ -69,4 +74,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2022/04/03_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/07_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)

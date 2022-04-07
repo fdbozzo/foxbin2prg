@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.71
+# FoxBin2Prg v1.19.72
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -83,6 +83,11 @@ DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
 
+### Interactive list of options
+```
+DO FOXBIN2PRG.PRG WITH "?"
+```
+
 ### Use with MS Windows SendTo
 You can create up to three different shortcuts pointing to FoxBin2Prg.exe and in your "SendTo" folder in your Windows profile. This allows you to "send" a selected file (pjx,pj2,etc) to the selected option, and make on-the-fly conversions. (Make sure you have the option for seeing known file extensions turned on!):
 
@@ -138,4 +143,4 @@ For usage see [documentation](./docs/FoxBin2Prg.md)
 ## Contribution
 See [contribution](./.github/CONTRIBUTING.md)
 
-Last changed: _2022/03/31_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/07_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
