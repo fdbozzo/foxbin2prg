@@ -27,6 +27,11 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2022/04/07 | LScheffler | [v1.19.72](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.72) | **Bug Fix**: Problem converting trailing spaces on line end in memo (bjornhoeksel) |
+|  |  |  | **Bug Fix**: Problem converting intentionally trailing spaces to VarChar/VarBinary (LScheffler) |
+|  |  |  | **Bug Fix**: Bug Fix: Problem on using "DBF_Conversion_Support" on table configuration file (LScheffler) |
+|  |  |  | **Enhancement**: Documentation in config file enhanced |
+|  |  |  | **Enhancement**: Added parameter "?" to show interactive help ("interactive" still works) |
 | 2022/03/30 | bjornhoeksel | [v1.19.71](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.71) | **Bug Fix**: Convert menu mn2 to mnx with skip for that contains a string with ; sign is missing part after that sign in mnx. (bjornhoeksel) |
 | 2022/03/16 | LScheffler | [v1.19.70](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.70) | **Bug Fix**: Last bar in menu files are in some situations not converted correctly back in the mnx file. (bjornhoeksel) |
 | | | | **Enhancement**: Buglist internal of FoxBin2Prg reordered |
@@ -409,4 +414,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/03/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/07_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

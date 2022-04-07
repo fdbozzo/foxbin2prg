@@ -37,7 +37,8 @@ Stuff is a bit scattered, so this is where to look up.
    **Do not** alter the **1.19** part. This is written to the text files.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
 3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
-   The most recent entries met in the middle of this section around * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
+   The most recent entries for changes in the middle of this section around _* </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>_,   
+   The most recent bugs are listed above _* </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>_
 4. Alter version in _README.md_
 4. Add a description to _docs\FoxBin2Prg_Changes.md_
 6. Please alter the footer of *.md files touched to recent date.
@@ -73,4 +74,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2022/04/03_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/07_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
