@@ -48,7 +48,7 @@ Stuff is a bit scattered, so this is where to look up.
 4. Create a template _foxbin2prg.cfg.txt_ for general settings or _foxbin2prg.dbf.cfg.txt_ for the settings per table.
    - Do this even if no change to the setting to change the version number inside this files.
    - Or change version number in those files manually
-   - **Note**. If you are not on an English comp, set in the value _Language: EN_ in your local _foxbin2prg.cfg_ to create English files.
+   - **Note**. If you are not on an English comp, set the value _Language: EN_ in your local _foxbin2prg.cfg_ to create English files.
 5. If a change to the parameters is made, change _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_ properties.
 4. For changed functionality, add descriptive text on the appropriate _.md_ file in _docs_ folder.
 2. Alter the version number for the EXE to the version used above.
@@ -74,4 +74,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2022/04/07_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/08_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
