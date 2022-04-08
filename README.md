@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.72
+# FoxBin2Prg v1.19.73
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -143,4 +143,4 @@ For usage see [documentation](./docs/FoxBin2Prg.md)
 ## Contribution
 See [contribution](./.github/CONTRIBUTING.md)
 
-Last changed: _2022/04/07_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/04/08_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)

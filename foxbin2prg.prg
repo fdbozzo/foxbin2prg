@@ -293,6 +293,7 @@
 * 06/04/2022	LScheffler	v1.19.72	Bug Fix: Problem converting trailing spaces on line end in memo (bjornhoeksel)
 * 07/04/2022	LScheffler	v1.19.72	Enhancement: Documentation in config file enhanced
 * 07/04/2022	LScheffler	v1.19.72	Enhancement: Added parameter "?" to show interactive help ("interactive" still works)
+* 08/04/2022	LScheffler	v1.19.73	Bug Fix: Problem converting trailing spaces on line end in memo again (bjornhoeksel)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -460,6 +461,7 @@
 * 06/04/2022	LScheffler			Bug REPORT v1.19.71 Problem on using "DBF_Conversion_Support" on table configuration file (LScheffler)
 * 06/04/2022	LScheffler			Bug REPORT v1.19.71 Problem converting intentionally trailing spaces to VarChar/VarBinary.
 * 06/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces on line end in memo (bjornhoeksel)
+* 08/04/2022	bjornhoeksel		Bug REPORT v1.19.72 Problem converting trailing spaces on line end in memo (again) (bjornhoeksel)
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -976,7 +978,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.72'
+	c_FB2PRG_Version_Real			= '1.19.73'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -26708,7 +26710,6 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 *!*	RTRIM removed trsiling spaces from memo
 *!*	</change>
 *!*	</pdm>
-							luValue = .Encode(Rtrim(luValue), .T.)
 										luValue = .Encode(luValue, .T.)
 									Endif
 

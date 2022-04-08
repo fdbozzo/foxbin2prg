@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.70.07'
-    .VersionDate          = Date(2022,04,07)
+    .VersionNumber        = 'v1.19.73'
+    .VersionDate          = Date(2022,04,08)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -20,6 +20,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2022-04-08 v1.19.73
+- Bug Fix: Problem converting trailing spaces on line end in memo (again) (bjornhoeksel)
 
 2022-04-07 v1.19.72
 - Bug Fix: Problem on using "DBF_Conversion_Support" on table configuration file (LScheffler)
