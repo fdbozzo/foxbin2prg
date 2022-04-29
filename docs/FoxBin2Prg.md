@@ -23,7 +23,7 @@ Original repository at https://github.com/fdbozzo/foxbin2prg.
 
 ## Requirements
 - A copy of MS VFP9 SP1, at least _3504_
-- Runs with VFPA
+- Runs with VFPA (Note, you need to recompile the EXE or use the PRG)
 
 ## Demo video
 [See YouTube demo video of FoxBin2Prg used with PlasticSCM](http://youtu.be/sE4wQ50Itqg)
@@ -66,6 +66,7 @@ FoxBin2Prg can be used in tree ways:
 1. [EXE version](./FoxBin2Prg_Run.md): (Recommended and fastest)   
    - All-inclusive, you just need foxbin2prg.exe and filename_caps.exe/cfg.   
    - Runs from windows
+   - If run from IDE, the EXE needs to be compiled for the version of FoxPro.
 1. [PRG version](./FoxBin2Prg_Run.md):   
    - You need various files: foxbin2prg.prg, all the props*.txt files and filename_caps.exe/cfg.
    - Runs out of VFP IDE, no problems mixing VFP 9 and VFPA
