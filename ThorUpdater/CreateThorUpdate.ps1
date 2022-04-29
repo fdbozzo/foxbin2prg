@@ -1,7 +1,3 @@
-﻿# Import the Powershell Community Extensions add-on module.
-#Import-Module PSCX
-Import-Module Pscx -Prefix Pscx
-
 # Get the project settings from Project.txt
 $appInfo = Get-Content Project.txt
 $appName = $appInfo[0].Substring($appInfo[0].IndexOf('=') + 1).Trim()
@@ -44,7 +40,7 @@ try
         if ($allowed) {
             $_
         }
-    } | Write-Zip -OutputPath $zipFileName
+    } | Compress-Archive -CompressionLevel "Fastest" -DestinationPath $zipFileName
 
 
     # If the zip file was created, read in the Version source file, replace
@@ -64,12 +60,14 @@ try
     else
     { 
         Write-Host "Zip creation failed"
+        pause
     } 
 }
 
 catch
 {
     Write-Host "Error occurred at $(Get-Date): $($Error[0].Exception.Message)"
+    pause
 } 
 
 finally
