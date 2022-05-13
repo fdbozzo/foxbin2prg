@@ -294,6 +294,7 @@
 * 07/04/2022	LScheffler	v1.19.72	Enhancement: Documentation in config file enhanced
 * 07/04/2022	LScheffler	v1.19.72	Enhancement: Added parameter "?" to show interactive help ("interactive" still works)
 * 08/04/2022	LScheffler	v1.19.73	Bug Fix: Problem converting trailing spaces on line end in memo again (bjornhoeksel)
+* 13/05/2022	bjornhoeksel	v1.19.74	Bug Fix: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -462,6 +463,7 @@
 * 06/04/2022	LScheffler			Bug REPORT v1.19.71 Problem converting intentionally trailing spaces to VarChar/VarBinary.
 * 06/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces on line end in memo (bjornhoeksel)
 * 08/04/2022	bjornhoeksel		Bug REPORT v1.19.72 Problem converting trailing spaces on line end in memo (again) (bjornhoeksel)
+* 13/05/2022	DanLauer			Bug REPORT v1.19.73 Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -978,7 +980,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.73'
+	c_FB2PRG_Version_Real			= '1.19.74'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -28750,7 +28752,16 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 									IF lnLineEnd > 0
 										* We have ; end line markers not between quotes
 										* Calc first ; not between quotes
-										lnLineEnd = (OCCURS(";", tcLine) - ((OCCURS(";", tcLine) - lnLineEnd))) + 1
+										
+*!*	Changd By: BH 10.5.2022
+*!*	<pdm>
+*!*	<change date="{^2022-05-10,14:20:00}">Changd By: BH <br />
+*!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/83">Issue #83</a>, by DanLauer
+*!* 	Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
+*!*	</change>
+*!*	</pdm>
+										lnLineEnd = OCCURS(";", tcLine) -  lnLineEnd + 1
+*!*	/Changd By: BH 10.5.2022
 									ELSE
 										* No line markers not between quotes
 										lnLineEnd = 0
