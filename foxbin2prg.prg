@@ -295,6 +295,7 @@
 * 07/04/2022	LScheffler	v1.19.72	Enhancement: Added parameter "?" to show interactive help ("interactive" still works)
 * 08/04/2022	LScheffler	v1.19.73	Bug Fix: Problem converting trailing spaces on line end in memo again (bjornhoeksel)
 * 13/05/2022	bjornhoeksel	v1.19.74	Bug Fix: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer)
+* 08/06/2022	LScheffler	v1.19.75	Enhancement: Typo in German (JoergSchneider)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -464,6 +465,8 @@
 * 06/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces on line end in memo (bjornhoeksel)
 * 08/04/2022	bjornhoeksel		Bug REPORT v1.19.72 Problem converting trailing spaces on line end in memo (again) (bjornhoeksel)
 * 13/05/2022	DanLauer			Bug REPORT v1.19.73 Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
+* 07/06/2022	JoergSchneider		Bug REPORT v1.19.74	Typo in German (JoergSchneider)
+* 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -29288,6 +29291,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Endif
 
 				If Not Empty(toReg.RESNAME)
+*sf 20220608
+*SET STEP ON
 					If toReg.SYSRES = 1
 						lcText	= lcText + ' ;' + CR_LF + lcTab + '	PICTRES ' + toReg.RESNAME
 					Else
@@ -29404,6 +29409,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Endif
 
 				If Not Empty(toReg.RESNAME)
+*sf 20220608
+*SET STEP ON
 					If toReg.SYSRES = 1
 						lcText	= lcText + ' ;' + CR_LF + lcTab + '	PICTRES ' + toReg.RESNAME
 					Else
@@ -31030,7 +31037,7 @@ Define Class CL_LANG As Custom
 							.C_DUPLICATED_OBJECT_LOC										= "Doppelte Objekt"
 							.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Kann keinen Ende Marker [ENDDEFINE] in Zeile <<TRANSFORM( toClase._Inicio )>> für die ID [<<toClase._Nombre>>] finden"
 							.C_END_MARKER_NOT_FOUND_LOC										= "Kann keinen Ende Marker [<<ta_ID_Bloques(lnPrimerID,2)>>] welcher den Start Marker [<<ta_ID_Bloques(lnPrimerID,1)>>] in Zeile <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>> schließt"
-							.C_END_OF_PROCESS_LOC											= "Ende desr Prozesses"
+							.C_END_OF_PROCESS_LOC											= "Ende des Prozesses"
 							.C_ERROR_LOC													= "FEHLER"
 							.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
 							.C_EXTENSION_RECONFIGURATION_LOC								= "Neukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven

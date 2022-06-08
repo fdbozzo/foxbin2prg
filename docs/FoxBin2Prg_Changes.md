@@ -27,6 +27,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2022/06/08 | LScheffler | [v1.19.75](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.75) | **Enhancement**: Typo in German (JoergSchneider) |
 | 2022/05/13 | bjornhoeksel | [v1.19.74](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.74) | **Bug Fix**: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer) |
 | 2022/04/08 | LScheffler | [v1.19.73](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.73) | **Bug Fix**: Problem converting trailing spaces on line end in memo (again) (bjornhoeksel) |
 | 2022/04/07 | LScheffler | [v1.19.72](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.72) | **Bug Fix**: Problem converting trailing spaces on line end in memo (bjornhoeksel) |
@@ -416,4 +417,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/05/13_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/06/08_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
