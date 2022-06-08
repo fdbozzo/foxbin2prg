@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.74'
-    .VersionDate          = Date(2022,05,13)
+    .VersionNumber        = 'v1.19.75'
+    .VersionDate          = Date(2022,06,08)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -20,6 +20,10 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2022-06-08 v1.19.75
+- Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
+- Enhancement: Typo in German (JoergSchneider)
 
 2022-05-13 v1.19.74
 - Bug Fix: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer)

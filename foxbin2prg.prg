@@ -295,6 +295,8 @@
 * 07/04/2022	LScheffler	v1.19.72	Enhancement: Added parameter "?" to show interactive help ("interactive" still works)
 * 08/04/2022	LScheffler	v1.19.73	Bug Fix: Problem converting trailing spaces on line end in memo again (bjornhoeksel)
 * 13/05/2022	bjornhoeksel	v1.19.74	Bug Fix: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer)
+* 08/06/2022	LScheffler	v1.19.75	Enhancement: Typo in German (JoergSchneider)
+* 08/06/2022	LScheffler	v1.19.75	Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -464,6 +466,8 @@
 * 06/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces on line end in memo (bjornhoeksel)
 * 08/04/2022	bjornhoeksel		Bug REPORT v1.19.72 Problem converting trailing spaces on line end in memo (again) (bjornhoeksel)
 * 13/05/2022	DanLauer			Bug REPORT v1.19.73 Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
+* 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Typo in German (JoergSchneider)
+* 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -980,7 +984,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.74'
+	c_FB2PRG_Version_Real			= '1.19.75'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -28767,6 +28771,13 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										lnLineEnd = 0
 									Endif
 										
+*!*	Changed by: SF 8.6.2022
+*!*	<pdm>
+*!*	<change date="{^2022-06-08,16:16:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/84 / Multiple text2bin and bin2text conversion on MNX causes space grow
+*!*	Bin2Text is formated like "xxx ;", trailing space must be removed, TRIM() added for SKIP FOR and PICTRES
+*!*	</change> 
+*!*	</pdm>
 									Do Case
 										Case Left( tcLine, 10 ) == 'NEGOTIATE '
 											lcExpr	= Alltrim( Strextract( tcLine, 'NEGOTIATE ', ';', 1, 2 ) )
@@ -28789,7 +28800,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Case Left( tcLine, 9 ) == 'SKIP FOR '
 											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ') )
 											IF lnLineEnd > 0
-												loReg.SkipFor = SUBSTR(loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1)
+*!*	Changed by: SF 8.6.2022
+												loReg.SkipFor = Trim( Substr( loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1) )
 											ENDIF
 	
 
@@ -28803,7 +28815,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ') )
 										
 											IF lnLineEnd > 0
-												loReg.RESNAME = SUBSTR(loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1)
+*!*	Changed by: SF 8.6.2022
+												loReg.RESNAME = Trim( Substr( loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1) )
 											ELSE
 												
 											ENDIF
@@ -28812,6 +28825,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Otherwise
 * Nada
 									ENDCASE
+*!*	/Changed by: SF 8.6.2022
 *!*	/Changd By: BH 30.3.2022									
 									
 
@@ -31030,7 +31044,7 @@ Define Class CL_LANG As Custom
 							.C_DUPLICATED_OBJECT_LOC										= "Doppelte Objekt"
 							.C_ENDDEFINE_MARKER_NOT_FOUND_LOC								= "Kann keinen Ende Marker [ENDDEFINE] in Zeile <<TRANSFORM( toClase._Inicio )>> für die ID [<<toClase._Nombre>>] finden"
 							.C_END_MARKER_NOT_FOUND_LOC										= "Kann keinen Ende Marker [<<ta_ID_Bloques(lnPrimerID,2)>>] welcher den Start Marker [<<ta_ID_Bloques(lnPrimerID,1)>>] in Zeile <<TRANSFORM(taBloquesExclusion(tnBloquesExclusion,1))>> schließt"
-							.C_END_OF_PROCESS_LOC											= "Ende desr Prozesses"
+							.C_END_OF_PROCESS_LOC											= "Ende des Prozesses"
 							.C_ERROR_LOC													= "FEHLER"
 							.C_ERRORS_FOUND_IN_FILE_LOC										= "FEHLER IN FILE GEFUNDEN"
 							.C_EXTENSION_RECONFIGURATION_LOC								= "Neukonfiguration der Erweiterungen:"		&&wir wollen es mal nicht übertreiben, mit den zusammengesetzten Substantiven
