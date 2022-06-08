@@ -296,6 +296,7 @@
 * 08/04/2022	LScheffler	v1.19.73	Bug Fix: Problem converting trailing spaces on line end in memo again (bjornhoeksel)
 * 13/05/2022	bjornhoeksel	v1.19.74	Bug Fix: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer)
 * 08/06/2022	LScheffler	v1.19.75	Enhancement: Typo in German (JoergSchneider)
+* 08/06/2022	LScheffler	v1.19.75	Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -465,7 +466,7 @@
 * 06/04/2022	bjornhoeksel		Bug REPORT v1.19.71 Problem converting trailing spaces on line end in memo (bjornhoeksel)
 * 08/04/2022	bjornhoeksel		Bug REPORT v1.19.72 Problem converting trailing spaces on line end in memo (again) (bjornhoeksel)
 * 13/05/2022	DanLauer			Bug REPORT v1.19.73 Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
-* 07/06/2022	JoergSchneider		Bug REPORT v1.19.74	Typo in German (JoergSchneider)
+* 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Typo in German (JoergSchneider)
 * 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
@@ -983,7 +984,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.74'
+	c_FB2PRG_Version_Real			= '1.19.75'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
