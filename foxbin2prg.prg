@@ -28770,6 +28770,13 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										lnLineEnd = 0
 									Endif
 										
+*!*	Changed by: SF 8.6.2022
+*!*	<pdm>
+*!*	<change date="{^2022-06-08,16:16:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/84 / Multiple text2bin and bin2text conversion on MNX causes space grow
+*!*	Bin2Text is formated like "xxx ;", trailing space must be removed, TRIM() added for SKIP FOR and PICTRES
+*!*	</change> 
+*!*	</pdm>
 									Do Case
 										Case Left( tcLine, 10 ) == 'NEGOTIATE '
 											lcExpr	= Alltrim( Strextract( tcLine, 'NEGOTIATE ', ';', 1, 2 ) )
@@ -28792,7 +28799,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Case Left( tcLine, 9 ) == 'SKIP FOR '
 											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ') )
 											IF lnLineEnd > 0
-												loReg.SkipFor = SUBSTR(loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1)
+*!*	Changed by: SF 8.6.2022
+												loReg.SkipFor = Trim( Substr( loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1) )
 											ENDIF
 	
 
@@ -28806,7 +28814,8 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ') )
 										
 											IF lnLineEnd > 0
-												loReg.RESNAME = SUBSTR(loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1)
+*!*	Changed by: SF 8.6.2022
+												loReg.RESNAME = Trim( Substr( loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1) )
 											ELSE
 												
 											ENDIF
@@ -28815,6 +28824,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Otherwise
 * Nada
 									ENDCASE
+*!*	/Changed by: SF 8.6.2022
 *!*	/Changd By: BH 30.3.2022									
 									
 
@@ -29291,8 +29301,6 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Endif
 
 				If Not Empty(toReg.RESNAME)
-*sf 20220608
-*SET STEP ON
 					If toReg.SYSRES = 1
 						lcText	= lcText + ' ;' + CR_LF + lcTab + '	PICTRES ' + toReg.RESNAME
 					Else
@@ -29409,8 +29417,6 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Endif
 
 				If Not Empty(toReg.RESNAME)
-*sf 20220608
-*SET STEP ON
 					If toReg.SYSRES = 1
 						lcText	= lcText + ' ;' + CR_LF + lcTab + '	PICTRES ' + toReg.RESNAME
 					Else
