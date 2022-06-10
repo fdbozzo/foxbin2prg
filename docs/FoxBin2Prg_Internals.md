@@ -279,13 +279,13 @@ so the only guideline is trying to make it as FoxPro does, but this is not alway
 and variants between the them:   
 1. The best and easy one, is when defining a class (or control) with his properties: In this case,
 each class have a phisical record on the scx/vcx table, and all the properties of it are keep toghether,
-so this ordering can be easily duplicated (look at "TESTS\DATOS_READONLY\f_form_aa.scx file" on foxbin2prg project
+so this ordering can be easily duplicated (look at "TESTS\DATOS_READONLY\f_form_aa.scx file" on FoxBin2Prg project
 and open it as a table to see the class per record)
 2. The worst and most difficult case, is when there is a container with controls subclassed,
 and properties are changed on the instance: In this case FoxPro makes a big and unique list of properties of all objects
 in just one phisical record, so there is no way to know which property corresponds to which class. For this case,
 I've made a unique list composed of all properties of all classes,
-ordered according to most common orderings (look at "TESTS\DATOS_READONLY\f_form_aa2.scx file" on foxbin2prg project
+ordered according to most common orderings (look at "TESTS\DATOS_READONLY\f_form_aa2.scx file" on FoxBin2Prg project
 and open it as a table to see all the properties of all the classes of the same earlier example, in just one record)
 
 For these two cases, and starting from v1.19.22, I've created several "props_*" files with ordering by class for the 1st case,
@@ -293,7 +293,7 @@ and a list with all in it ("props_all.txt") for the second case, so in case of a
 rearranging some props will be an easy thing.   
 
 #### Warning
-These "props_**" files are necessary in the foxbin2prg install directory.
+These "props_**" files are necessary in the FoxBin2Prg install directory.
 
 It's recommended to use the EXE version that have all files included and is faster._   
 Several Unit Tests (in TESTS directory) are made to make the best effort to cover the most typical use cases.
@@ -412,7 +412,7 @@ with your country code and translate the messages (can be done in 20 minutes or 
 and send it to me. I will include it in the next release ;-)    
 
 #### Note
-.h language files are not supported anymore, and are now implemented inside foxbin2prg,
+.h language files are not supported anymore, and are now implemented inside FoxBin2Prg,
 in the "C_LANG" class at the end of the PRG_
 
 ### Multi-config
@@ -453,7 +453,7 @@ Debug messages are translated (+90% of debug messages), but capitalization proce
 and are available just in Spanish (-10% of debug messages).
 
 ### Create Class-Per-File
-Starting at v1.19.37 you can configure foxbin2prg to generate one class per file using TwoFox naming style "basefile.class.vc2"
+Starting at v1.19.37 you can configure FoxBin2Prg to generate one class per file using TwoFox naming style "basefile.class.vc2"
 with the value "1"
 To configure this, you must first enable it in foxbin2prg.cfg file:
 ````
@@ -469,7 +469,7 @@ In example, if you have a classlib "mylib.vcx" with 3 classes inside ( "cl_1, cl
 The settings of UseClassPerFile and related options are sensible. If changed the wrong way it's easy to destroy classlibs.
 
 #### Recommended new setting
-Starting at v1.19.42 you can configure foxbin2prg to generate one class per file.
+Starting at v1.19.42 you can configure FoxBin2Prg to generate one class per file.
 Using the naming style "basefile._baseclass_.class.vc2" with the new value "2".
 
 To configure this, you must first enable it in foxbin2prg.cfg file:
@@ -544,7 +544,7 @@ that allow you to implement your own tools, like the VFP tools I've implemented 
 The return value of `execute()` method, is an error code, where 0 means *No errors*.
 You can also get an Exception reference in case of errors, passing extra parameters as in the next examples.
 
-First you instantiate foxbin2prg as object, using this syntax:
+First you instantiate FoxBin2Prg as object, using this syntax:
 ````
 LOCAL loCnv AS c_foxbin2prg OF "<Path>\FOXBIN2PRG.PRG"  && For Intellisense
 SET PROCEDURE TO "<Path>\FOXBIN2PRG.EXE"
@@ -628,7 +628,7 @@ This is a list of available methods and properties:
 | **get_DBF_Configuration**<br/>loCnv.get_DBF_Configuration( cInputFile, @oOutDbfCfg ) | Returns 1 if a CFG is found for the indicated DBF, or 0 if not  |
 | **hasSupport_Bin2Prg**<br/>loCnv.hasSupport_Bin2Prg( cFilename.ext )<br/>loCnv.hasSupport_Bin2Prg( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to _text_ |
 | **hasSupport_Prg2Bin**<br/>loCnv.hasSupport_Prg2Bin( cFilename.ext )<br/>loCnv.hasSupport_Prg2Bin( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to _Binary_ |
-| **evaluateConfiguration**<br/>loCnv.evaluateConfiguration( cDontShowProgress [,cDontShowErrors [,cNoTimestamps [,cDebug [,cRecompile [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cInputFile [,cInputFileTypeType [,cCFG_File](,cDontShowErrors-[,cNoTimestamps-[,cDebug-[,cRecompile-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cInputFile-[,cInputFileTypeType-[,cCFG_File) ] ] ] ] ] ] ] ] ) | Forces foxbin2prg to process the directory indicated in the cInputFile and update any CFG in the directory or their parents |
+| **evaluateConfiguration**<br/>loCnv.evaluateConfiguration( cDontShowProgress [,cDontShowErrors [,cNoTimestamps [,cDebug [,cRecompile [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cInputFile [,cInputFileTypeType [,cCFG_File](,cDontShowErrors-[,cNoTimestamps-[,cDebug-[,cRecompile-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cInputFile-[,cInputFileTypeType-[,cCFG_File) ] ] ] ] ] ] ] ] ) | Forces FoxBin2Prg to process the directory indicated in the cInputFile and update any CFG in the directory or their parents |
 | **loadProgressbarForm**<br/>loCnv.loadProgressbarForm() | Load and show the progressbar form as upper level window |
 | **unloadProgressbarForm**<br/>loCnv.unloadProgressbarForm() | Hide and unload the progressbar form |
 | **updateProgressbar**<br/>loCnt.updateProgressbar( cText, nValue, nTotal, nType ) | Update the progressbar and the message. nType indicates which progressbar to update, being 0=1st PB and 1=2nd PB |
