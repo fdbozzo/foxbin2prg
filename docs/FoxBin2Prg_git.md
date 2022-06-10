@@ -35,7 +35,8 @@ CTRL+C, CTRL+V on Explorer might save the day. ;)
 
 ## Requirements
 ### #1
-A copy of FoxBin2Prg. Install via Or Install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
+A copy of FoxBin2Prg.   
+Or Install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ### #2
 It might be a good idea to have a copy of git.   
