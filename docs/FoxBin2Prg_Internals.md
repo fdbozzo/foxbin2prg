@@ -32,7 +32,7 @@ As far as possible these are the original documents. Changes are added where fun
    - [Conversion processes Logging](#conversion-processes-logging)
    - [Create Class-Per-File](#create-class-per-file)
       - [Complementary options for the UseClassPerFile setting](#complementary-options-for-the-useclassperfile-setting)
-         - [RedirectClassPerFileToMain:](#redirectclassperfiletomain:)
+         - [RedirectClassPerFileToMain](#redirectclassperfiletomain)
          - [ClassPerFileCheck](#classperfilecheck)
    - [Create File-Per-DBC](#create-file-per-dbc)
       - [Complementary options for the UseFilesPerDBC setting](#complementary-options-for-the-usefilesperdbc-setting)
