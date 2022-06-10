@@ -20,7 +20,7 @@ As far as possible these are the original documents. Changes are added where fun
 
 ## Source
 Original repository at https://github.com/fdbozzo/foxbin2prg.   
-Or Install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
+Or install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ## Requirements
 - A copy of MS VFP9 SP1, at least _3504_
