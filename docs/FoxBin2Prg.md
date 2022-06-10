@@ -19,7 +19,8 @@ As far as possible these are the original documents. Changes are added where fun
 - [Keep reading](#keep-reading)
 
 ## Source
-Original repository at https://github.com/fdbozzo/foxbin2prg.
+Original repository at https://github.com/fdbozzo/foxbin2prg.   
+Or Install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ## Requirements
 - A copy of MS VFP9 SP1, at least _3504_
@@ -85,4 +86,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2021/05/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

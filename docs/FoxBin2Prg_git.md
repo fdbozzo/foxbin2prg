@@ -19,7 +19,7 @@ See [Use with SCM tools](./FoxBin2Prg_SCM.md)
 As we all know, there is a whole bunch of tools that we might use to colaborate and to version our work.  
 Since I use git I try to point out what I do to do as fast and comfortable work.   
 This document gives no workflow, in special not a workflow of git. There is no wrong or right.   
-If you are not fimilar with git, please read through this first, there are minor settings that might help a bit on later work.
+If you are not familar with git, please read through this first, there are minor settings that might help a bit on later work.
 
 Please note, if you come from a SCM system, git feels very odd. It's a complete different idea of thinking.
 Do yourself the favour, on [git-scm](https://git-scm.com/doc) you find _pro git_. Read and work at least through the first three chapters.
@@ -35,7 +35,7 @@ CTRL+C, CTRL+V on Explorer might save the day. ;)
 
 ## Requirements
 ### #1
-A copy of FoxBin2Prg 
+A copy of FoxBin2Prg. Install via Or Install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ### #2
 It might be a good idea to have a copy of git.   
