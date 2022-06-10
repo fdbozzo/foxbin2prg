@@ -2,7 +2,7 @@
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
-Using FoxPin2Prg with git.   
+Using FoxBin2Prg with git.   
 See [Use with SCM tools](./FoxBin2Prg_SCM.md)
 
 ----
@@ -62,7 +62,7 @@ To integrate git into the Fox [VFPX](https://vfpx.github.io/) lists some tools.
 I'm somehow into the [Bin 2 Text extension](https://github.com/lscheffler/bin2text), but then I know this best.   
 
 A nice graphical compare / mergetool is nice too have - check if and how to integrate first,
-and also if the code mokey creating the interface understands git.
+and also if the code monkey creating the interface understands git.
 Some try to use it like SCM, what ends up odd.
 
 ## Recomendations
@@ -100,7 +100,7 @@ Folks, hardware is cheap. There is no sense in counting ticks and bits any more.
 Dealing with the FoxBin2Prg.prg is the limit.
 If I imagine to have one of my larger vcx's like this in a merge view - no.
 
-Just split up the vcx's into single classes. It's like a charm on merge and diff.
+Just split up the vcx's into single classes using FoxBin2Prg for git purposes. It's like a charm on merge and diff.
 Also on blame.   
 If you go for the _lib.baseclass.classname.vc2_ or _lib.classname.vc2_ style is a matter of taste.
 I can see baseclass on classname, so there is not much value, other might think different.
@@ -183,7 +183,7 @@ If you don't have no other needs, use 32bit.
 
 ### gitignore
 The _.gitignore_ file controls which files **go not** into the git repository by default. It goes by folder with inheritance.
-If you undstand the inheritance of .gitignore, you grok FoXBin2Prg.cfg and vice versa. Very close.
+If you understand the inheritance of .gitignore, you grok FoXBin2Prg.cfg and vice versa. Very close.
 
 But git would not be git if one could not teach .gitignore to define the files **included**.
 Again, see pro-git.
@@ -259,7 +259,7 @@ Also this approach ignores any bak / log / tmp / err files by default.
 
 ### config
 The config of FoxBin2Prg using FoxBin2Prg.cfg files is relative simple. As you might see above, I carry the file within the repo.   
-The good on this is, if I change my mind and alter settings in it, FoxBin2PRG will find the setting that fit to the data on each commit.
+The good on this is, if I change my mind and alter settings in it, FoxBin2Prg will find the setting that fit to the data on each commit.
 If I have to checkout old stuff.
 
 ````
@@ -396,4 +396,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
