@@ -106,10 +106,10 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | ----- | ----- | ----- |
 | Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
 | DontShowProgress | 0 | **Deprecated**. Replaced by ShowProgressbar option from v1.19.40 |
-| ShowProgressbar | 0, _1_, 2 | 1=Always show a progress bar,<br/>2=Only show it when processing multiple-files,<br/>0=Don't show progressbar |
-| DontShowErrors | _0_, 1 | By default, show message errors in a modal messagebox.<br/>Specify "1" if don't want to show errors |
-| ExtraBackupLevels | 0, _1_, n | By default, one _filename_.BAK file is created.<br/>With this setting you can make more _filename_.n.BAK files,<br/>or none at all using 0 |
-| Debug | _0_, 1, 2 | By default, don't generate individual <file>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
+| ShowProgressbar | 0, _1_, 2 | 0=Don't show progressbar,<br/>1=Always show a progress bar,<br/>2=Only show it when processing multiple-files |
+| DontShowErrors | _0_, 1 | 0=show message errors in a modal messagebox. (default)<br/>1=don't show errors |
+| ExtraBackupLevels | 0, _1_, n | <br/>0=No backup<br/>1=One backupfile _\_filename\_.BAK_ (default)<br/>n=n levels of backup in style _\_filename\_.n.BAK_ |
+| Debug | _0_, 1, 2 | 0=Off<br/>1=Normal<br/>2=Extended<br/>By default, don't generate individual <file>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
 | BackgroundImage | <cFile> | Backgroundimage for process form |
 | HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
 |||
@@ -130,34 +130,34 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
 | [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2,<br/>1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
 | RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
-| | | 0 creates / refresh class in file.VCX and add / replace all other classes of this library |
-| | | 1 creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
-| | | 2 creates / refresh class in file.VCX and do not touch other classes of file.VCX |
+| | | 0=creates / refresh class in file.VCX and add / replace all other classes of this library |
+| | | 1=creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
+| | | 2=creates / refresh class in file.VCX and do not touch other classes of file.VCX |
 | [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 |||
-| OldFilesPerDBC | _0_, 1 | This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the options will be read. |
-| | | 0 New version inactive, options follow:<br/>UseFilesPerDBC=UseClassPerFile<br/>RedirectFilePerDBCToMain=RedirectClassPerFileToMain<br/>ItemPerDBCCheck=ClassPerFileCheck |
-| | | 1 New version active, options active |
-| | | Note the options will be set to old style, if option is turned off. |
-| UseFilesPerDBC | _0_, 1 | 0=One database dc2 file, 1=Multiple file.\*.\*.dc2 files.<br/>See [Create File-Per-DBC](#create file-per-dbc)<br/>**Only if OldFilesPerDBC is 1** |
-| | | 0 creates only a file.dc2 with all DBC (file) data |
-| | | 1 creates a file.dc2 with DBC properties |
+| OldFilesPerDBC | _0_, 1 | 0=Old Style,<br/>1=New style<br/>This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the options will be read. |
+| | | 0=New version inactive, options follow:<br/>UseFilesPerDBC=UseClassPerFile<br/>RedirectFilePerDBCToMain=RedirectClassPerFileToMain<br/>ItemPerDBCCheck=ClassPerFileCheck |
+| | | 1=New version active, options active |
+| | | Note: The options will be set to old style, if option is turned off. |
+| UseFilesPerDBC | _0_, 1 | 0=One database dc2 file,<br/>1=Multiple file.\*.\*.dc2 files.<br/>See [Create File-Per-DBC](#create file-per-dbc)<br/>**Only if OldFilesPerDBC is 1** |
+| | | 0=creates only a file.dc2 with all DBC (file) data |
+| | | 1=creates a file.dc2 with DBC properties |
 | | | and additional DBC files per DBC item (stored-proc, table, ..) |
 | | | Note: recration only if RedirectFilePerDBCToMain is 1 |
 | [RedirectFilePerDBCToMain](#redirectfileperdbctomain) | _0_, 1 | 0=Don't redirect to file.dc2,<br/>1=Redirect to file.tx2 when selecting file.item.*.dc2<br/>**Only if OldFilesPerDBC is 1** |
 | [ItemPerDBCCheck](#itemperdbccheck) | _0_, 1 | 0=Don't check file.item.*.dc2 inclusion,<br/> 1=Check file.item.*.dc2 inclusion<br/>**Only if OldFilesPerDBC is 1**|
 |||
-| NoTimestamps | 0, _1_ | By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on _Binaries_ and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files |
-| ClearUniqueID | 0, _1_ | 0=Keep UniqueID,<br/>1=Clear Unique ID.<br/>Very useful for Diff and Merge. By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
+| NoTimestamps | 0, _1_ | 0=Do not clear<br/>1=Clear<br/>By default, timestamp fields are cleared on _Text_ files, because a lot of differencies are generated on _Binaries_ and _Text_ files with Timestamps activated. This timestamp field is part of the vcx, scx and other Foxpro binary source code files. |
+| ClearUniqueID | 0, _1_ | 0=Keep UniqueID,<br/>1=Clear Unique ID.<br/>Very useful for Diff and Merge.<br/>By default, UniqueID fields are cleared on _Text_ files, because a lot of differencies are generated with UniqueID activated |
 | OptimizeByFilestamp | _0_, 1 | 0=Don't optimize (always generate),<br/>1=Optimize (generate only when destination filestamp es older). By default this optimization is deactivated, and it is not recommended if using for merge, so _Bin_ and _Text_ files can be modified seperately.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
-| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code,<br/>0=Leave NULLs in source code |
+| RemoveNullCharsFromCode | 0, _1_ | 1=Drop NULL chars from source code,<br/>0=Leave NULL chars in source code |
 | RemoveZOrderSetFromProps | _0_, 1 | 1=Remove ZOrderSet from the properties,<br/>0=Leave ZOrderSet in the properties |
 |||
-| ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff, minimizes differences. |
-| ExcludeDBFAutoincNextval | _0_, 1 | 0=Do not exclude this value from db2, 1=Exclude this value from db2 |
+| ClearDBFLastUpdate | 0, _1_ | 0=Keep DBF LastUpdate,<br/>1=Clear DBF LastUpdate.<br/>Useful for Diff, minimizes differences. |
+| ExcludeDBFAutoincNextval | _0_, 1 | 0=Do not exclude this value from db2,<br/>1=Exclude this value from db2 |
 | DBF_Conversion_Included | * | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records).<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | DBF_Conversion_Excluded | | If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf.<br/>See [Order and range of records](#order-and-range-of-records).<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
-| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
+| DBF_BinChar_Base64 | 0, _1_ | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform (default)<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | DBF_IncludeDeleted | _0_, 1 | 0=Do not include deleted records (default),<br/>1=Include deleted records<br/>**Note:** This can be [changed per table](#configuration-file-per-table). |
 | | |  **Note:**<br/>This is only true for tables. Generating DBC to _Text_ and back to _Binary_ will act as PACK DATABASE.<br/>The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files. |
 |||
@@ -193,7 +193,7 @@ These are the Table.dbf.cfg configuration file settings and their meaning:
 | ----- | ----- | ----- | ----- |
 | DBF_Conversion_Support | 0, 1, 2, 4, 8 | | 0=No support,<br/>1=Generate Header _Text_ only (Diff),<br/>2=Generate Header _Text_ and _Bin_ (Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
 | DBF_Conversion_Order | c_Expression | x | Field expresion (For _INDEX ON_). ie: name+str(age,3),<br/>Empty means no sort order. <br/> usefull only if _DBF_Conversion_Support_>0 |
-| DBF_Conversion_Condition | c_Expression | x | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all files, except _DBF_IncludeDeleted_ <br/> usefull only if _DBF_Conversion_Support_>0  |
+| DBF_Conversion_Condition | c_Expression | x | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all records, except _DBF_IncludeDeleted_ <br/> usefull only if _DBF_Conversion_Support_>0  |
 | DBF_IndexList | c_FileList | x | A comma delimited list of additional index files ( cdx or idx ). **Not the structural index file.** |
 | DBF_BinChar_Base64 | 0, 1 | | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform <br/> usefull only if _DBF_Conversion_Support_>2  |
 | DBF_IncludeDeleted | 0, 1 | | 0=Do not include deleted records,<br/>1=Include deleted records <br/> usefull only if _DBF_Conversion_Support_>2  |
@@ -466,11 +466,11 @@ In example, if you have a classlib "mylib.vcx" with 3 classes inside ( "cl_1, cl
   - mylib.cl_2.vc2
   - mylib.cl_3.vc2
 #### Important note
-The settings of UseClassPerFile and related options are sensible. If changed the wrong way it easy to destroy classlibs.
+The settings of UseClassPerFile and related options are sensible. If changed the wrong way it's easy to destroy classlibs.
 
 #### Recommended new setting
 Starting at v1.19.42 you can configure foxbin2prg to generate one class per file.
-using the naming style "basefile._baseclass_.class.vc2" with the new value "2".
+Using the naming style "basefile._baseclass_.class.vc2" with the new value "2".
 
 To configure this, you must first enable it in foxbin2prg.cfg file:
 ````
@@ -478,13 +478,11 @@ To configure this, you must first enable it in foxbin2prg.cfg file:
 including DBC members
 ````
 In example, if you have a classlib "mylib.vcx" with 3 classes inside ( "cl_1, cl_2, cl_3") then this files are generated:
-````
-mylib.vc2 => Header file, with all conforming classes annotated inside
-mylib.custom.cl_1.vc2
-mylib.form.cl_2.vc2
-mylib.textbox.cl_3.vc2
-````
 
+- mylib.vc2 => Header file, with all conforming classes annotated inside
+  - mylib.custom.cl_1.vc2
+  - mylib.form.cl_2.vc2
+  - mylib.textbox.cl_3.vc2
 #### Complementary options for the UseClassPerFile setting
 ##### RedirectClassPerFileToMain:
 Configuring this setting to 1 will redirect any selection of file[.baseclass].class.vc2
@@ -496,12 +494,12 @@ RedirectClassType: 1 precedes this setting for files in the
 Configuring this setting to 1 will check the inclusion of all file[.baseclass].class.vc2 files
 annotated on file.vc2 main file, otherwise no checking is made and when reconstructing the vcx/scx all files
 containing the file.class.ext naming will be included in the _Binary_ (useful when you want to add external classes to the library).    
-This only used if import file is in file[.baseclass].class.tx2 syntax.   
+This is only used, if import file is in file[.baseclass].class.tx2 syntax.   
 Ignored for RedirectClassType: 2
 
 #### Note
-If you dont use the redirect setting, an individual vcx/scx file will be generated.
-This can be useful if you want to divide a big library in smaller pieces_
+If you don't use the redirect setting, an individual vcx/scx file will be generated.
+This can be useful if you want to divide a big library in smaller pieces.
 
 #### Note
 This is true for SCX files as well. SCX files may contain a form and a dataenvironment.
@@ -535,7 +533,7 @@ Configuring this setting to 1 will check the inclusion of all DataBaseName.*.dc2
 annotated on DataBaseName.dc2 main file, otherwise no checking is made and when reconstructing the dbc files
 
 #### Note
-If you dont use the Redirect setting, an individual dbc file will be generated.
+If you don't use the Redirect setting, an individual dbc file will be generated.
 There is no real use of this.
 
 ### FoxBin2Prg API
@@ -543,7 +541,7 @@ With v1.19.42 version started an enhanced API support, making public methods tha
 When using FoxBin2Prg as an object, you can access low level functionalities not available when using as external program,
 that allow you to implement your own tools, like the VFP tools I've implemented for working with PlasticSCM.   
 
-The return value of execute() method, is an error code, where 0 means No errors.
+The return value of `execute()` method, is an error code, where 0 means *No errors*.
 You can also get an Exception reference in case of errors, passing extra parameters as in the next examples.
 
 First you instantiate foxbin2prg as object, using this syntax:
@@ -558,7 +556,7 @@ Convert a file.vcx to text:
 ````
 loCnv.execute( "<Path>\file.vcx" )
 ````
-generate the _Binary_ classlib from the text file.vc2:
+Generate the _Binary_ classlib from the text file.vc2:
 ````
 loCnv.execute( "<Path>\file.vc2" )
 ````
@@ -566,7 +564,7 @@ Convert all files of a project.pjx to text:
 ````
 loCnv.execute( "<Path>\project.pjx", "*" )
 ````
-Return a laProc array of processed forms _**after**_ processing a project:
+Return a `laProc` array of processed forms _**after**_ processing a project:
 ````
 DIMENSION laProcs(1,6)
 lnErr = loCnv.execute("C:\DESA\foxbin2prg\TESTS\DATOS_TEST\fb2p_test.pjx", "*", "", "", "1", "0", "1")
@@ -588,7 +586,7 @@ loCnv.evaluateConfiguration( '', '', '', '', '', '', '', '', <Path>, 'D' )
 ````
 #### Note
 If you query for support in different subdirectories,
-then you need to call "evaluateConfiguration()"` method for refreshing the CFG info that is used by those methods._
+then you need to call `evaluateConfiguration()` method for refreshing the CFG info that is used by those methods.
 
 Clear the cache of processed files for allowing reprocessing a file:
 ````
@@ -601,8 +599,8 @@ oCFG = loCnv.get_DirSettings( "c:\developments\projects\myproj_1" )
 ? oCFG.DBF_Conversion_Support
 ````
 #### Note
-"get_DirSettings()"` method internally calls "evaluateConfiguration()"`
-method for refreshing the CFG info before returning the CFG object._
+`get_DirSettings()` method internally calls `evaluateConfiguration()`
+method for refreshing the CFG info before returning the CFG object.
 
 
 Check if a file was processed:
@@ -626,17 +624,17 @@ This is a list of available methods and properties:
 | Method()/Property<br/>Syntax | Description |
 | -| - |
 | **execute**<br/>loCnv.execute( cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,oModule [,oEx [,lRelanzarError [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cCFG_File](,cType-[,cTextName-[,lGenText-[,cDontShowErrors-[,cDebug-[,cDontShowProgress-[,oModule-[,oEx-[,lRelanzarError-[,cOriginalFileName-[,cRecompile-[,cNoTimestamps-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cCFG_File ] ] ] ] ] ] ] ] ] ] ] ] ] ] ) | Main execution method to start a conversion<br/> See [Object version](./FoxBin2Prg_Object.md#execute) |
-| **conversionSupportType**<br/>loCnv.conversionSupportType( cFilename ) | Return de code of the support type (0,1,2,4,8) |
+| **conversionSupportType**<br/>loCnv.conversionSupportType( cFilename ) | Return the code of the support type (0,1,2,4,8) |
 | **get_DBF_Configuration**<br/>loCnv.get_DBF_Configuration( cInputFile, @oOutDbfCfg ) | Returns 1 if a CFG is found for the indicated DBF, or 0 if not  |
-| **hasSupport_Bin2Prg**<br/>loCnv.hasSupport_Bin2Prg( cFilename.ext )<br/>loCnv.hasSupport_Bin2Prg( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to text |
+| **hasSupport_Bin2Prg**<br/>loCnv.hasSupport_Bin2Prg( cFilename.ext )<br/>loCnv.hasSupport_Bin2Prg( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to _text_ |
 | **hasSupport_Prg2Bin**<br/>loCnv.hasSupport_Prg2Bin( cFilename.ext )<br/>loCnv.hasSupport_Prg2Bin( cExt ) | Returns .T. if there is support for converting the file or filetype indicated to _Binary_ |
-| **evaluateConfiguration**<br/>loCnv.evaluateConfiguration( cDontShowProgress [,cDontShowErrors [,cNoTimestamps [,cDebug [,cRecompile [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cInputFile [,cInputFileTypeType [,cCFG_File](,cDontShowErrors-[,cNoTimestamps-[,cDebug-[,cRecompile-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cInputFile-[,cInputFileTypeType-[,cCFG_File) ] ] ] ] ] ] ] ] ) | Forces foxbin to process the directory indicated in the cInputFile and update any CFG in the directory or their parents |
+| **evaluateConfiguration**<br/>loCnv.evaluateConfiguration( cDontShowProgress [,cDontShowErrors [,cNoTimestamps [,cDebug [,cRecompile [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cInputFile [,cInputFileTypeType [,cCFG_File](,cDontShowErrors-[,cNoTimestamps-[,cDebug-[,cRecompile-[,cBackupLevels-[,cClearUniqueID-[,cOptimizeByFilestamp-[,cInputFile-[,cInputFileTypeType-[,cCFG_File) ] ] ] ] ] ] ] ] ) | Forces foxbin2prg to process the directory indicated in the cInputFile and update any CFG in the directory or their parents |
 | **loadProgressbarForm**<br/>loCnv.loadProgressbarForm() | Load and show the progressbar form as upper level window |
 | **unloadProgressbarForm**<br/>loCnv.unloadProgressbarForm() | Hide and unload the progressbar form |
 | **updateProgressbar**<br/>loCnt.updateProgressbar( cText, nValue, nTotal, nType ) | Update the progressbar and the message. nType indicates which progressbar to update, being 0=1st PB and 1=2nd PB |
 | **get_DirSettings**<br/>loCnv.get_DirSettings( cDir ) | Returns a CFG object with the settings that are applied on the indicated directory |
-| **get_Ext2FromExt**<br/>loCnv.get_Ext2FromExt( cExt ) | Returns the text extension corresponding to the _Binary_ extension indicated |
-| **get_Processed**<br/>loCnv.get_Processed( @aProcessed, cFileMask ) | Returns an array with the status of the files being processed or that will be processed in no-real-process-mode if you set "l_ProcessFiles=.F."` before the call. Columns returned are 6: "cFile, cInOutType, cProcessed, cHasErrors, cSupported, cExpanded"` |
+| **get_Ext2FromExt**<br/>loCnv.get_Ext2FromExt( cExt ) | Returns the _text extension_ corresponding to the _Binary_ extension indicated |
+| **get_Processed**<br/>loCnv.get_Processed( @aProcessed, cFileMask ) | Returns an array with the status of the files being processed or that will be processed in no-real-process-mode if you set `l_ProcessFiles=.F.` before the call. Columns returned are 6: "cFile, cInOutType, cProcessed, cHasErrors, cSupported, cExpanded"` |
 | **clearProcessedFiles**<br/>loCnv.clearProcessedFiles() | Clear the statistics and the cache about processed files. If a file was processed and is already processed, being not cached will force to process it again |
 | **wasProcessed**<br/>loCnv.wasProcessed( cFile ) | Returns .T. if the fullpath-file was processed, searching in the internal cache |
 
@@ -702,7 +700,7 @@ If any _Binary_ doesn't have the corresponding _Text_ file,
 it can be because it is in use (close opened _Binariy_ and CLEAR ALL at VFP command window),
 or because you really haven't made any changes to the code,
 in which case you should undo the changes to the _Binaries_ that don't have their _Text_ files using the "undo" option
-for these files of your SCM tool._
+for these files of your SCM tool.
 
 
 ### Checkin because a merge operation
@@ -712,7 +710,7 @@ you need to generate the _Binaries_ (forms, classlib, etc) just from the _Text_ 
 Once you have done, then you checkin the boundle of _Binaries_/_Text_.   
 #### Note
 If at the end of a merge operation there are _Binaries_ left, you need to choose the "workspace binaries",
-because anyway you will generate them later from their _Text_ files._
+because anyway you will generate them later from their _Text_ files.
 
 
 For options on integrating FoxBin2Prg with SCM tools, look at this topic:
@@ -726,4 +724,4 @@ See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

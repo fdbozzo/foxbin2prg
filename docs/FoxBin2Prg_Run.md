@@ -32,8 +32,8 @@ For settings and other related stuff see [Internals](./FoxBin2Prg_Internals.md).
 
 ## Differences on excecution
 ### EXE
-The exe contains the mose controling structures and the program itself.
-Alongside the _FoxBin2Prg.exe_ must be _FileName_Caps.exe_ .
+The exe contains the most controling structures and the program itself.
+Alongside the _FoxBin2Prg.exe_ must be _\_FileName\_Caps.exe_ .
 It is recomended to have a general _FoxBin2Prg.cfg_ configuration file in the folder with the EXE, but it will run without.   
 
 Remember, the Exe needs to be created first.
@@ -74,7 +74,7 @@ just select and process each one independently, in parallel if you like, but in 
 | Parameter | Value (_Default_) | Description |
 | ----- | ----- | ----- |
 | cInputFile | ? / interactive | Call interactive list of parameters |
-| | fullpath | Full name of the file to convert or directory name to process <br/> without any other parameter given, the extension (and the config) defines the operation |
+| | fullpath | Full name of the file to convert or directory name to process <br/>without any other parameter given, the extension (and the config) defines the operation |
 | | _FileName::ClassName_ | If option UseClassPerFile is 1 or 2, a class-file will be extracted from the lib |
 | cType | _empty_ | Fileextension of _cInputFile_ defines operation |
 | | BIN2PRG | _cInputFile_ is processed for generating a _Text_ representation. |
@@ -116,9 +116,9 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 | none | Call Info screen |
 | -c (c) | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
 | -C (C) | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
-| | If cOutputFile is empty, a file FOXBIN2PRG._CFG will be created in default foder. | 
-| -t (t) | creates a template table-config-file _cOutputFile_ ( like _TableName_.dbf.cfg ) |
-| | If cOutputFile is empty and a table is open is workarea, a file \<tablename\>._CFG will be created in table foder. | 
+| | If cOutputFile is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
+| -t (t) | creates a template table-config-file _cOutputFile_ ( like \_TableName\_.dbf.cfg ) |
+| | If cOutputFile is empty and a table is open is workarea, a file \<tablename\>.CFG will be created in table foder. | 
 
 #### Note
 From command line the call with paramters like -c, -C -t is not possible. Those parameters will be removed by VFP itself.
@@ -172,4 +172,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
