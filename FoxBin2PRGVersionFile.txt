@@ -2,8 +2,8 @@ Lparameters toUpdateInfo
 
 Local lcNote
 With toUpdateInfo
-    .VersionNumber        = 'v1.19.75'
-    .VersionDate          = Date(2022,06,08)
+    .VersionNumber        = 'v1.19.76'
+    .VersionDate          = Date(2022,06,13)
     .SourceFileUrl        = 'http://vfpxrepository.com/dl/thorupdate/Projects/FoxBin2Prg/FoxBin2Prg.Zip'
 
     .Link                 = 'https://github.com/fdbozzo/foxbin2prg/wiki'
@@ -20,6 +20,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2022-06-08 v1.19.76
+- Bug Fix: On operation per folder, change of folder must change configuration (JoergSchneider)
 
 2022-06-08 v1.19.75
 - Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)

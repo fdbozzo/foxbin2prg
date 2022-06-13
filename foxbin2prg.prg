@@ -297,6 +297,7 @@
 * 13/05/2022	bjornhoeksel	v1.19.74	Bug Fix: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer)
 * 08/06/2022	LScheffler	v1.19.75	Enhancement: Typo in German (JoergSchneider)
 * 08/06/2022	LScheffler	v1.19.75	Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
+* 13/06/2022	LScheffler	v1.19.76	Bug Fix: On operation per folder, change of folder must change configuration (JoergSchneider)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -468,7 +469,7 @@
 * 13/05/2022	DanLauer			Bug REPORT v1.19.73 Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
 * 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Typo in German (JoergSchneider)
 * 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
-
+* 10/06/2022	JoergSchneider		Bug REPORT v1.19.75	On operation per folder, change of folder must change configuration (JoergSchneider)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -984,7 +985,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.75'
+	c_FB2PRG_Version_Real			= '1.19.76'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1161,9 +1162,9 @@ Define Class c_foxbin2prg As Session
 		This.c_Foxbin2prg_ConfigFile	= Evl( tcCFG_File, Forceext( This.c_Foxbin2prg_FullPath, 'CFG' ) )
 		This.c_BackgroundImage			= This.get_AbsolutePath( Addbs(Justpath(This.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg' )
 		lc_Foxbin2prg_EXE				= Forceext( This.c_Foxbin2prg_FullPath, 'EXE' )
-*!*	Changed by: SF 30.8.2021
+*!*	Changed by: Lutz Scheffler 30.8.2021
 *!*	<pdm>
-*!*	<change date="{^2021-08-30,07:48:00}">Changed by: SF<br />
+*!*	<change date="{^2021-08-30,07:48:00}">Changed by: Lutz Scheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/69 / Incorrect version showing for v1.19.65
 *!*	Set version number to This.c_FB2PRG_Version_Real and ignore Exe
 *!*	</change>
@@ -1172,7 +1173,7 @@ Define Class c_foxbin2prg As Session
 *		This.c_FB2PRG_EXE_Version		= 'v' + Iif( Agetfileversion( laValues, lc_Foxbin2prg_EXE ) = 0, Transform(This.c_FB2PRG_Version_Real), laValues(11) )
 		This.c_FB2PRG_EXE_Version		= 'v' + Transform(This.c_FB2PRG_Version_Real)
 
-*!*	/Changed by SF 30.8.2021
+*!*	/Changed by Lutz Scheffler 30.8.2021
 
 		AddProperty(_Screen, 'c_FB2PRG_EXE_Version', This.c_FB2PRG_EXE_Version)
 		AddProperty(_Screen, 'ExitCode', 0)
@@ -3216,12 +3217,33 @@ Define Class c_foxbin2prg As Session
 			loDBF_CFG	= Null
 			lcExt		= Upper(Justext('.' + tcFileName))
 
-			If '\' $ tcFileName And lcExt == 'DBF' Then
-				lcDir		= Justpath(tcFileName)
-				.get_DBF_Configuration(tcFileName, @loDBF_CFG)
-			Else
-				lcDir		= tcDir
-			Endif
+*!*	Changed by: Lutz Scheffler 13.6.2022
+*!*	<pdm>
+*!*	<change date="{^2022-06-13,20:17:00}">Changed by: Lutz Scheffler<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/56 / Configfile is ignored if foldername has "." v1.19.74
+*!*	On operation per folder, change of folder must change configuration
+*!*	this method does not recieve tcDir in such case
+*!*	</change>
+*!*	</pdm>
+
+*!*				If '\' $ tcFileName And lcExt == 'DBF' Then
+*!*					lcDir		= Justpath(tcFileName)
+*!*					.get_DBF_Configuration(tcFileName, @loDBF_CFG)
+*!*				Else
+*!*					lcDir		= tcDir
+*!*				ENDIF
+
+			Do Case
+				Case '\' $ tcFileName And lcExt == 'DBF'
+					lcDir		= Justpath(tcFileName)
+					.get_DBF_Configuration(tcFileName, @loDBF_CFG)
+				Case Not Empty(tcDir)
+					lcDir		= tcDir
+				Case Vartype( tcFileName ) = "C"
+					lcDir = Justpath( tcFileName )
+			Endcase
+
+*!*	/Changed by: Lutz Scheffler 13.6.2022
 
 			If Not Empty(lcDir)
 				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
@@ -3258,13 +3280,34 @@ Define Class c_foxbin2prg As Session
 			loDBF_CFG	= Null
 			lcExt		= Upper(Justext('.' + tcFileName))
 
-			If '\' $ tcFileName And lcExt == .c_DB2 Then
-				lcDir		= Justpath(tcFileName)
-				.get_DBF_Configuration(tcFileName, @loDBF_CFG)
-			Else
-				lcDir		= tcDir
-			Endif
+*!*	Changed by: Lutz Scheffler 13.6.2022
+*!*	<pdm>
+*!*	<change date="{^2022-06-13,20:17:00}">Changed by: Lutz Scheffler<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/56 / Configfile is ignored if foldername has "." v1.19.74
+*!*	On operation per folder, change of folder must change configuration
+*!*	this method does not recieve tcDir in such case
+*!*	</change>
+*!*	</pdm>
 
+*!*				If '\' $ tcFileName And lcExt == .c_DB2 Then
+*!*					lcDir		= Justpath(tcFileName)
+*!*					.get_DBF_Configuration(tcFileName, @loDBF_CFG)
+*!*				Else
+*!*					lcDir		= tcDir
+*!*				Endif
+
+			Do Case
+				Case '\' $ tcFileName And lcExt == .c_DB2
+					lcDir		= Justpath(tcFileName)
+					.get_DBF_Configuration(tcFileName, @loDBF_CFG)
+				Case Not Empty(tcDir)
+					lcDir		= tcDir
+				Case Vartype( tcFileName ) = "C"
+					lcDir = Justpath( tcFileName )
+			Endcase
+
+*!*	/Changed by: Lutz Scheffler 13.6.2022
+ 
 			If Not Empty(lcDir)
 				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
 			Endif
@@ -3904,7 +3947,8 @@ Define Class c_foxbin2prg As Session
 								Endcase
 							Endif
 
-
+*sf 2022 06 13
+*SET STEP ON 
 *-- Evaluación de FileSpec de entrada
 							Do Case
 								Case Atc('-BIN2PRG', ('-' + tcType)) = 0 And Atc('-PRG2BIN', ('-' + tcType)) = 0 ;
@@ -11606,9 +11650,9 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 									loClase._UniqueID	= toFoxBin2Prg.unique_ID()
 								Endif
 
-*!*	Changed by: SF 07.12.2021
+*!*	Changed by: Lutz Scheffler 07.12.2021
 *!*	<pdm>
-*!*	<change date="{^2021-12-07,09:14:00}">Changed by: SF<br />
+*!*	<change date="{^2021-12-07,09:14:00}">Changed by: Lutz Scheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/72 / double classes in VCX
 *!*	The old code will write a class whether or not the class is already in the classlib
 *!*	Problem comes if a class is defined double by inconsistent UseClassPerFile,
@@ -11617,9 +11661,9 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 *!*	</pdm>
 
 								Select TABLABIN
-*!*	Changed by: SF 23.02.2022
+*!*	Changed by: Lutz Scheffler 23.02.2022
 *!*	<pdm>
-*!*	<change date="{^2022-02-23,19:44:00}">Changed by: SF<br />
+*!*	<change date="{^2022-02-23,19:44:00}">Changed by: Lutz Scheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/77 / If a classname is used as objectname too, an error is reported
 *!*	A class is Objname with empty parent field, while an object has parent filled.
 *!*	</change>
@@ -11631,7 +11675,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 									FOR OBJNAME==loClase._ObjName;
 									AND Empty(Parent)
 
-*!*	/Changed by SF 07.12.2021
+*!*	/Changed by Lutz Scheffler 07.12.2021
 								If Found() Then
 *SF 20211207
 *SET STEP ON
@@ -11640,7 +11684,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 										loLang.C_ClassTwice_Class_LOC + loClase._ObjName+0h0D0A
 								Endif &&FOUND()
 
-*!*	/Changed by SF 07.12.2021
+*!*	/Changed by Lutz Scheffler 07.12.2021
 
 *-- Inserto la clase
 								Insert Into TABLABIN ;
@@ -15281,9 +15325,9 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 		lcSetDeleted	= Set("Deleted")
 		Set Deleted Off
 
-*!*	Changed by: SF 25.2.2022
+*!*	Changed by: Lutz Scheffler 25.2.2022
 *!*	<pdm>
-*!*	<change date="{^2022-02-25,15:57:00}">Changed by: SF<br />
+*!*	<change date="{^2022-02-25,15:57:00}">Changed by: Lutz Scheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/78 / After vc2 convert back to vcx class is corrupted no errors reported
 *!*	Better named: Missing class when building text file from corrupted VCX
 *!* If the VCX is corrupted and holds empty records, the original coed will delete the next class.
@@ -15309,7 +15353,7 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 				Skip -1
 			Endif
 		Endscan
-*!*	/Changed by: SF 25.2.2022
+*!*	/Changed by: Lutz Scheffler 25.2.2022
 
 		Set Deleted &lcSetDeleted.
 		Return
@@ -18770,7 +18814,8 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 			Local toDatabase As CL_DBC Of 'FOXBIN2PRG.PRG'
 			Local toFoxBin2Prg As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 		#Endif
-
+*SF 20220613
+*SET STEP ON
 		Try
 				With This As c_conversor_dbc_a_prg Of 'FOXBIN2PRG.PRG'
 					Local lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile, lcExternalHeader, lcCodigo ;
@@ -25913,9 +25958,9 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_PROCESSING_LOC )
 
 
-*!*	Changed by: SF 18.3.2021
+*!*	Changed by: Lutz Scheffler 18.3.2021
 *!*	<pdm>
-*!*	<change date="{^2021-03-18,10:34:00}">Changed by: SF<br />
+*!*	<change date="{^2021-03-18,10:34:00}">Changed by: Lutz Scheffler<br />
 *!*	Standalone index <em>tc_InputFile.IDX</em> will be included if <em>DBF_Conversion_Order</em> is activated
 *!*	use only tags of structural compound index file
 *!*	</change>
@@ -25937,7 +25982,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 *					tnTagInfo_Count	= Ataginfo( taTagInfo )
 					tnTagInfo_Count	= Ataginfo( taTagInfo, m.lcIndexFile )
 
-*!*	/Changed by: SF 18.3.2021
+*!*	/Changed by: Lutz Scheffler 18.3.2021
 					Asort( m.taTagInfo, 1, -1, 0, 1 )
 					loIndex			= Createobject("CL_DBF_INDEX")
 
@@ -26709,9 +26754,9 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 *-- SF: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
-*!*	Changed by: SF 07.4.2022
+*!*	Changed by: Lutz Scheffler 07.4.2022
 *!*	<pdm>
-*!*	<change date="{^2022-04-07,15:11:00}">Changed by: SF<br />
+*!*	<change date="{^2022-04-07,15:11:00}">Changed by: Lutz Scheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/81 / Trailing spaces are lost for memo fields converting dbf with including data.
 *!*	RTRIM removed trsiling spaces from memo
 *!*	</change>
@@ -26721,7 +26766,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 
 							Endcase
 
-*!*	Changed by: SF 07.4.2022
+*!*	Changed by: Lutz Scheffler 07.4.2022
 *!*	TEXT .. ENDTEXT removes trailing spaces from lines inserted with TEXXTMERGE
 *!*	Char etc are processed special
 							If Vartype(luValue) = 'C'
@@ -26731,7 +26776,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
 								ENDTEXT
 							Endif
-*!*	/Changed by SF 07.4.2022
+*!*	/Changed by Lutz Scheffler 07.4.2022
 						Endif
 					Next
 
@@ -28771,9 +28816,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										lnLineEnd = 0
 									Endif
 										
-*!*	Changed by: SF 8.6.2022
+*!*	Changed by: Lutz Scheffler 8.6.2022
 *!*	<pdm>
-*!*	<change date="{^2022-06-08,16:16:00}">Changed by: SF<br />
+*!*	<change date="{^2022-06-08,16:16:00}">Changed by: Lutz Scheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/84 / Multiple text2bin and bin2text conversion on MNX causes space grow
 *!*	Bin2Text is formated like "xxx ;", trailing space must be removed, TRIM() added for SKIP FOR and PICTRES
 *!*	</change> 
@@ -28800,7 +28845,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Case Left( tcLine, 9 ) == 'SKIP FOR '
 											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ') )
 											IF lnLineEnd > 0
-*!*	Changed by: SF 8.6.2022
+*!*	Changed by: Lutz Scheffler 8.6.2022
 												loReg.SkipFor = Trim( Substr( loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1) )
 											ENDIF
 	
@@ -28815,7 +28860,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ') )
 										
 											IF lnLineEnd > 0
-*!*	Changed by: SF 8.6.2022
+*!*	Changed by: Lutz Scheffler 8.6.2022
 												loReg.RESNAME = Trim( Substr( loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1) )
 											ELSE
 												
@@ -28825,7 +28870,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 										Otherwise
 * Nada
 									ENDCASE
-*!*	/Changed by: SF 8.6.2022
+*!*	/Changed by: Lutz Scheffler 8.6.2022
 *!*	/Changd By: BH 30.3.2022									
 									
 
@@ -28993,7 +29038,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 							lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
 							loReg.Name		= m.lcPadName
 
-*!*	Changed By: SF 18.1.2022
+*!*	Changed By: Lutz Scheffler 18.1.2022
 *!*	<pdm>
 *!*	<change date="{^2022-01-18,19:34:00}">Changed Bby SF<br />
 *!*	<a href"https://github.com/fdbozzo/foxbin2prg/issues/74">Issue 74</a>, by Jimrnelson
@@ -29268,9 +29313,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Store Null To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
 				lcText		= ''
-*!*	Changed by SF 22.4.2021
+*!*	Changed by Lutz Scheffler 22.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-22,06:24:00}">Changed by SF<br />
+*!*	<change date="{^2021-04-22,06:24:00}">Changed by Lutz Scheffler<br />
 *!*	If the BAR real name starts (legaly) with a digit it could not be recreated
 *!*	added code to add additional information to recreate the name
 *!*	name will wrap into " , so we got DEFINE BAR "Number" OF
@@ -29355,7 +29400,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Release lcTab, loBarPop
 
 		Endtry
-*!*	/Changed by SF 22.4.2021
+*!*	/Changed by Lutz Scheffler 22.4.2021
 
 		Return lcText
 	Endproc
@@ -29370,9 +29415,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 * toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 *---------------------------------------------------------------------------------------------------
 		Lparameters toReg, toBarPop, tnNivel, toHeader
-*!*	Changed by SF 21.4.2021
+*!*	Changed by Lutz Scheffler 21.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-21,22:33:00}">Changed by SF<br />
+*!*	<change date="{^2021-04-21,22:33:00}">Changed by Lutz Scheffler<br />
 *!*	If the PAD real name starts (leagly) with "_" it could not be recreated
 *!*	added code to add additional information to recreate the name
 *!*	name will simple wrapped into ", so we got DEFINE PAD "_Name" OF
@@ -29392,7 +29437,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 					toReg.Name	= Evl(toReg.Name, '_' + Transform( Int( Val( toReg.ItemNum ) ), '@L #########') )
 					lcName2		= Alltrim(toReg.Name)
 				Endif &&!EMPTY(toReg.Name) AND toReg.Name = '_'
-*!*	/Changed by SF 21.4.2021
+*!*	/Changed by Lutz Scheffler 21.4.2021
 
 				lcText		= ''
 

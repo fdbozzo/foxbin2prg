@@ -10,8 +10,8 @@ local;
 
 lcappName      = "FoxBin2Prg"
 *Set following two numbers on version
-ldDate         = date(2022,06,08)
-lcmajorVersion = "1.19.75"
+ldDate         = date(2022,06,13)
+lcmajorVersion = "1.19.76"
 
 *lnJulian = val(sys(11, m.ldDate)) - val(sys(11, {^2000-01-01}))
 *lcJulian = padl(transform(lnJulian), 4, '0')
@@ -38,6 +38,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2022-06-08 v1.19.76
+- Bug Fix: On operation per folder, change of folder must change configuration (JoergSchneider)
 
 2022-06-08 v1.19.75
 - Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
