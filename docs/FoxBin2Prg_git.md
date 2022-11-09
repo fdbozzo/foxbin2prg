@@ -12,8 +12,10 @@ See [Use with SCM tools](./FoxBin2Prg_SCM.md)
 - [Tools](#tools)
 - [Recomendations](#recomendations)
    - [git settings](#git-settings)
-   - [gitignore](#gitignore)
-   - [config](#config)
+   - [settings per project](#settings-per-project)
+     - [gitignore](#gitignore)
+     - [gitattributes](#gitattributes)
+     - [config](#foxbin2prg-config)
 
 ## Introduction
 As we all know, there is a whole bunch of tools that we might use to colaborate and to version our work.  
@@ -49,7 +51,7 @@ I prefer it on the bash. Some of the reasons
 - It's complex. If a GUI does something wrong, you need to go to the bash anyway.
    - Note, every git-GUI is simple a tool that needs git to run original commands.
 - It's simple. For day to day work, it's some easy to learn commands.
-- The little visual need I have, and yes, some commands too, run on gitk, what ships with git
+- The little visual need I have, and yes, some commands too, run on gitk, what ships with git for windows
 - bash, because all help out of the web comes in 'nix style, rethink to the windows world is to much work.
 - working on the command line gives ideas of doing the stuff using the Fox, and we are programmmers, are we?
 - since we have those extra step to create _Text_ and _Binary_ around the git repo, any GUI is awkward.
@@ -69,7 +71,7 @@ Some try to use it like SCM, what ends up odd.
 ## Recomendations
 #### Short about git
 The first one must understand here, git is set up to deal with text based files.
-It's a Linux tool developed to deal with the Kernel code.  
+It's a Linux tool developed to deal with Linux - the Kernel code.  
 Highly sophisticated, neat, fast.  
 So storing binaries into it is something one should avoid as far as possible.
 
@@ -106,7 +108,7 @@ Also on blame.
 If you go for the _lib.baseclass.classname.vc2_ or _lib.classname.vc2_ style is a matter of taste.
 I can see baseclass on classname, so there is not much value, other might think different.
 But split into classes makes life easy.   
-This is to be done in the [config file](#config), setting _UseClassPerFile_ option to 1 or 2.
+This is to be done in the [config file](#foxbin2prg-config), setting _UseClassPerFile_ option to 1 or 2.
 
 #### Forms
 Side effect of splitting VCX is that SCX will be split into 3 files too.
@@ -114,7 +116,8 @@ I have no idea if there is some use of it - I just do classes.
 If you like it separated from VCX - let me know.
 
 #### Databases
-Splitting DBC is possible too. My approach does not touch the DBC _structure_ (it's meta data only) in the source over decades, so there is little use. 
+Splitting DBC is possible too. My approach does not touch the DBC _structure_ (it's meta data only) in the source over decades,
+so there is little use. 
 So I've added an option to inhibit splitting DBC while splitting VCX/SCX.   
 
 #### Tables
@@ -128,9 +131,13 @@ What I see is that a synthetic PK is helpfull, not all the lookups had one. So I
 All the other table-based-sources of VFP work seamless as _Text_. No fuzz.
 
 ### git settings
+Those settings are mainly per user (in _git_ terms **global**)
+
+----
 Assuming you do a fresh install of git, you will be asked questions over questions. The most you left unchanged.   
 The one I recommend is the dealing with line endings. You know all the odd uses of LF and CR. 
-_git for windows_ offers to alter this while dealing with your files. I recommend not. Just "Check in as is, check out as is".
+_git_ offers to alter this while dealing with your files. I recommend not.
+Just "Check in as is, check out as is" while installing _git for windows_.
 This will keep your files, and any modern editor or WEB UI will not care anyway.   
 If you missed on install - just install again.   
 
@@ -178,13 +185,12 @@ Depending on your needs you might set a password or not.
 For some odd reasons, the people on git-scm are going the way of evil. If you start the Setup of git, all depends who you are.
 If you not check _Run as Adminstrator_, it will install into your user folder. Even if installed in Programs folder earlier!
 
-#### Note
-It's your taste to install 64 or 32 bit versions. Calling 64bit from the fox is odd, to say the least.
-If you don't have no other needs, use 32bit.
-
-### gitignore
+### Settings per project
+Those settings are mainly per project (in _git_ terms **local**). One can argue to put the one or other in different levels.
+I recommend those inside the project to keep the repository as self contained as possible.
+#### gitignore
 The _.gitignore_ file controls which files **go not** into the git repository by default. It goes by folder with inheritance.
-If you understand the inheritance of .gitignore, you grok FoXBin2Prg.cfg and vice versa. Very close.
+If you understand the inheritance of .gitignore, you grok [FoXBin2Prg.cfg](#foxbin2prg-config) and vice versa. Very close.
 
 But git would not be git if one could not teach .gitignore to define the files **included**.
 Again, see pro-git.
@@ -241,6 +247,7 @@ An example for _Text_ only use.
 #include special
 #default git
 !*.gitignore
+!*.gitattributes
 !/desktop.ini
 #desktop.ini. usless? no! it keeeps the folder icon!
 
@@ -258,10 +265,25 @@ I think I will swap to use them as _Text_ too, since version 1.19.55 of FoxBin2P
 
 Also this approach ignores any bak / log / tmp / err files by default.
 
-### config
+#### gitattributes
+The _.gitattributes_ file controls some things that might be set to as local computer / user / repository (via _git config_),
+but should be constant to the repository, no matter the local settings. This file is included into the repository.   
+for VFP purposes, it controls the processing of line ending on commit / checkout.   
+As mentioned [above](#git-settings) git might manipulate CRLF and LF. If the settings are different on different computers ,
+it might checkout with LF instead of CRLF. This creates useless files in the commit, but also might create havoc using the files.
+See [this](https://github.com/VFPX/GoFish/issues/27) for an example.   
+To solve this, add a _.gitattributes_ file to any of your projects, next to the _.gitignore_ file. It should look like this:
+````
+#.gitattributes
+# disable newline conversion on checkout with no conversion on check-in for all files
+* -text
+````
+If you have a project running, check the line endings and make shure they follow DOS standard CRLF.
+
+#### FoxBin2Prg config
 The config of FoxBin2Prg using FoxBin2Prg.cfg files is relative simple. As you might see above, I carry the file within the repo.   
 The good on this is, if I change my mind and alter settings in it, FoxBin2Prg will find the setting that fit to the data on each commit.
-If I have to checkout old stuff.
+If I have to checkout old stuff - the setting will fit.
 
 ````
 *################################################################################################################
@@ -397,4 +419,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/11/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
