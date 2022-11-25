@@ -10528,7 +10528,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		If Upper(Left(tcLine, 7)) == 'HIDDEN '
 			llBloqueEncontrado	= .T.
-			toClase._HiddenProps		= Lower( Alltrim( Substr( tcLine, 8 ) ) )
+			toClase._HiddenProps		= Alltrim( Substr( tcLine, 8 ) )
 		Endif
 
 		Release toClase, tcLine
