@@ -28,6 +28,10 @@ If you like to see Fernandos blog, or value his work:
 
     Thank you for your support!
 
+----
+## Contribution
+See [contribution](./.github/CONTRIBUTING.md)
+
 ---
 ---
 
@@ -139,8 +143,4 @@ DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for tab
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-----
-## Contribution
-See [contribution](./.github/CONTRIBUTING.md)
-
-Last changed: _2022/06/13_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2022/12/01_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
