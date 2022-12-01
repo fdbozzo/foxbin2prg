@@ -10528,7 +10528,14 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		If Upper(Left(tcLine, 7)) == 'HIDDEN '
 			llBloqueEncontrado	= .T.
+* SF 20221201. reset to original state of #87
+*t-zuidema, 2022/11/25
+*old 
 			toClase._HiddenProps		= Lower( Alltrim( Substr( tcLine, 8 ) ) )
+*new of t-zuidema
+*			toClase._HiddenProps		= Alltrim( Substr( tcLine, 8 ) )
+*/t-zuidema, 2022/11/25
+*/SF 20221201
 		Endif
 
 		Release toClase, tcLine
