@@ -142,7 +142,7 @@ DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for tab
 ----
 ## Limitations
 If dealing with project files, FoxBin2Prg will fail if files of the project are not stored on the drive of the project.
-See issue #93.
+See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 
 ----
 ## Usage
