@@ -15,6 +15,7 @@ As far as possible these are the original documents. Changes are added where fun
 - [What is FoxBin2Prg](#what-is-foxbin2prg)
 - [Advantages](#advantages)
 - [Example](#example)
+- [Limitations](#limitations)
 - [Usage](#usage)
 - [Keep reading](#keep-reading)
 
@@ -62,6 +63,10 @@ The extensions may be reconfigured to be compatible with SCCAPI (just tested wit
 ![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
 ![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
 
+## Limitations
+If dealing with project files, FoxBin2Prg will fail if files of the project are not stored on the drive of the project.
+See issue #93.
+
 ## Usage
 FoxBin2Prg can be used in tree ways:
 1. [EXE version](./FoxBin2Prg_Run.md): (Recommended and fastest)   
@@ -86,4 +91,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/16_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
