@@ -27,10 +27,12 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2023/03/16 | LScheffler | [v1.19.77](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.77) | **Bug Fix**: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider) |
+|  |  |  | **Bug Fix**: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler) |
 | 2022/11/09 | LScheffler | Docu | **Enhancement**: Documentation for git on handling line endings |
 | 2022/06/13 | LScheffler | [v1.19.76](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.76) | **Bug Fix**: On operation per folder, change of folder must change configuration (JoergSchneider) |
 | 2022/06/08 | LScheffler | [v1.19.75](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.75) | **Bug Fix**: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider) |
-|  |  | [ | **Enhancement**: Typo in German (JoergSchneider) |
+|  |  |  | **Enhancement**: Typo in German (JoergSchneider) |
 | 2022/05/13 | bjornhoeksel | [v1.19.74](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.74) | **Bug Fix**: Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost. (DanLauer) |
 | 2022/04/08 | LScheffler | [v1.19.73](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.73) | **Bug Fix**: Problem converting trailing spaces on line end in memo (again) (bjornhoeksel) |
 | 2022/04/07 | LScheffler | [v1.19.72](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.72) | **Bug Fix**: Problem converting trailing spaces on line end in memo (bjornhoeksel) |
@@ -420,4 +422,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/11/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/16_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -30,6 +30,7 @@ Please note, there are some tasks to set up a new version.
 Stuff is a bit scattered, so this is where to look up.
 1. Please create a fork at github
    - See this [guide](https://www.dataschool.io/how-to-contribute-on-github/) for setting up and using a fork
+   - If allready forked, pull the recent state, or get most recent version otherwise.
 0. In _FoxBin2Prg.prg_ there are two version numbers in properties:   
 `n_FB2PRG_Version      = 1.19`    
 `c_FB2PRG_Version_Real = '1.19.60'`
@@ -52,11 +53,12 @@ Stuff is a bit scattered, so this is where to look up.
 5. If a change to the parameters is made, change _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_ properties.
 4. For changed functionality, add descriptive text on the appropriate _.md_ file in _docs_ folder.
 2. Alter the version number for the EXE to the version used above.
-0. Compile to EXE
+0. Compile to EXE **in VFP9 SP2**
 8. Change Thor ([see below](#thor-conventions))
 8. commit
 9. push to your fork
 0. create a pull request
+1.
 
 ## Thor conventions
 This project is part of [VFPX](https://vfpx.github.io/) and published via [Thor](https://github.com/VFPX/Thor).   
@@ -74,4 +76,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2022/04/08_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/16_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)

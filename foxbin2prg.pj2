@@ -10,7 +10,7 @@ lcCurdir = SYS(5)+CURDIR()
 CD ( EVL( tcDir, JUSTPATH( SYS(16) ) ) )
 
 *<DevInfo>
-_Author = "Fernando D. Bozzo"
+_Author = "Fernando D. Bozzo / Lutz Scheffler"
 _Company = ""
 _Address = ""
 _City = "Coslada"
@@ -26,7 +26,7 @@ _LegalTrademark = "MIT License"
 _ProductName = "FOXBIN2PRG"
 _MajorVer = "1"
 _MinorVer = "19"
-_Revision = "76"
+_Revision = "77"
 _LanguageID = "1034"
 _AutoIncrement = "0"
 *</DevInfo>

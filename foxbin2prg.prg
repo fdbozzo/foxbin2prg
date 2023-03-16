@@ -112,7 +112,7 @@
 * 19/11/2014	FDBOZZO		v1.19.37	Mejora: Las configuraciones de foxbin2prg.cfg no permiten comentarios && al final (edyshor)
 * 19/11/2014	FDBOZZO		v1.19.37	Arreglo bug: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (edyshor)
 * 19/11/2014	FDBOZZO		v1.19.37	Mejora dbf: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (edyshor)
-* 21/10/2014    FDBOZZO     v1.19.37    Mejora: Permitir generar una clase por archivo (Ryan Harris/Lutz Scheffler)
+* 21/10/2014    FDBOZZO     v1.19.37    Mejora: Permitir generar una clase por archivo (Ryan Harris/LScheffler)
 * 29/11/2014	FDBOZZO		v1.19.37	Arreglo bug scx/vcx: Algunas propiedades a veces tomaban la descripción de otras propiedades similares
 * 29/11/2014	FDBOZZO		v1.19.37	Arreglo bug scx/vcx: Las propiedades "Protected" y "Hidden" no siempre estaban ordenadas alfabéticamente
 * 30/10/2014	FDBOZZO		v1.19.37	Mejora: Optimizaciones en velocidad de proceso para scx/vcx/dbf
@@ -136,33 +136,33 @@
 * 20/01/2015	FDBOZZO		v1.19.42	Mejora: Validación de versión de Visual FoxPro SP1, para evitar problemas ajenos a FoxBin2Prg
 * 04/02/2015	FDBOZZO		v1.19.42	Mejora dc2: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
 * 22/01/2015    FDBOZZO     v1.19.42    Bug Fix: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Tuvia Vinitsky)
-* 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Lutz Scheffler)
-* 25/02/2015	FDBOZZO		v1.19.42	Mejora: Hacer algunos mensajes de error más descriptivos (Lutz Scheffler)
-* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Mejoras en la traducción al alemán (Lutz Scheffler)
-* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir definir el archivo de entrada con un path relativo (Lutz Scheffler)
+* 25/02/2015	FDBOZZO		v1.19.42	Bug Fix scx/vcx: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (LScheffler)
+* 25/02/2015	FDBOZZO		v1.19.42	Mejora: Hacer algunos mensajes de error más descriptivos (LScheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Mejoras en la traducción al alemán (LScheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir definir el archivo de entrada con un path relativo (LScheffler)
 * 03/03/2015	FDBOZZO		v1.19.42	Bug Fix scx: Metadato del Dataenvironment no se genera bien cuando el Dataenvironment es renombrado
-* 03/03/2015	FDBOZZO		v1.19.42	Bug Fix scx: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Lutz Scheffler)
-* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Lutz Scheffler)
-* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (Lutz Scheffler)
-* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2, usando *- (Lutz Scheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Bug Fix scx: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (LScheffler)
+* 03/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (LScheffler)
+* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Cambiada la clase de base de FoxBin2Prg de custom a session (LScheffler)
+* 05/03/2015	FDBOZZO		v1.19.42	Mejora: Permitir procesar los archivos de un proyecto sin convertir el PJX/2, usando *- (LScheffler)
 * 06/03/2015	FDBOZZO		v1.19.42	Bug Fix pjx: Permitir usar fin de linea (CR/LF) en los atributos de versión del PJX
 * 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Agregado soporte de errOut e implementado en writeErrorLog
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte total de comodines *? en nombres de archivo para procesar múltiples archivos de la misma extensión (Lutz Scheffler)
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo parámetro para permitir un CFG alternativo (Lutz Scheffler)
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo método get_Processed() para obtener información de los archivos procesados (Lutz Scheffler)
-* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva salida de archivos procesados a stdOut (Lutz Scheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Agregado soporte total de comodines *? en nombres de archivo para procesar múltiples archivos de la misma extensión (LScheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo parámetro para permitir un CFG alternativo (LScheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora API: Nuevo método get_Processed() para obtener información de los archivos procesados (LScheffler)
+* 10/03/2015	FDBOZZO		v1.19.42	Mejora: Nueva salida de archivos procesados a stdOut (LScheffler)
 * 10/03/2015	FDBOZZO		v1.19.42	Bug Fix: Arreglada la cancelación del procesamiento con tecla Esc
 * 22/03/2015	FDBOZZO		v1.19.42	Mejora: Ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Ryan Harris)
 * 22/03/2015	FDBOZZO		v1.19.42	Mejora: Aplicar ClassPerFile a las conexiones, tablas, vistas y stored procedures de los DBC (Ryan Harris)
-* 23/03/2015	FDBOZZO		v1.19.42	Bug Fix mnx: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Lutz Scheffler)
+* 23/03/2015	FDBOZZO		v1.19.42	Bug Fix mnx: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (LScheffler)
 * 25/03/2015	FDBOZZO		v1.19.42	Mejora API: Nueva propiedad l_ProcessFiles que permite obtener la lista de archivos a procesar sin procesarlos realmente usando el valor .F.
 * 25/03/2015	FDBOZZO		v1.19.42	Bug Fix frx/lbx: Arreglo de CR,LF,TAB sobrantes en algunos archivos FR2/LB2 agregados en versiones anteriores (Ryan Harris)
 * 02/04/2015	FDBOZZO		v1.19.42	Mejora: Herencia de CFGs entre directorios
-* 12/04/2015	FDBOZZO		v1.19.42	Mejora API: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Lutz Scheffler)
-* 13/04/2015	FDBOZZO		v1.19.42	Mejora: Permitir generar texto de una clase de una librería (Lutz Scheffler)
+* 12/04/2015	FDBOZZO		v1.19.42	Mejora API: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (LScheffler)
+* 13/04/2015	FDBOZZO		v1.19.42	Mejora: Permitir generar texto de una clase de una librería (LScheffler)
 * 16/04/2015	FDBOZZO		v1.19.42	Mejora API: Renombrados los nombres de los métodos al Inglés para facilitar su entendimiento internacional (Mike Potjer)
 * 23/04/2015	FDBOZZO		v1.19.43	Mejora: Nueva configuración "RemoveZOrderSetFromProps" para quitar la propiedad ZOrderSet de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Ryan Harris)
-* 23/04/2015	FDBOZZO		v1.19.43	Mejora: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Lutz Scheffler)
+* 23/04/2015	FDBOZZO		v1.19.43	Mejora: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (LScheffler)
 * 28/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Ralf Wagner)
 * 29/04/2015	FDBOZZO		v1.19.43	Bug Fix: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Fidel Charny)
 * 10/05/2015	FDBOZZO		v1.19.43	Bug Fix: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Esteban H)
@@ -170,7 +170,7 @@
 * 18/05/2015	FDBOZZO		v1.19.44	Mejora: Permitir la exportación de datos de DBFs cuando se usa DBF_Conversion_Support:1 y CFG individual opcional
 * 31/05/2015	FDBOZZO		v1.19.44	Bug Fix: Un arreglo previo en el manejo de errores en cascada provocó un reseteo del último estado de error de proceso, haciendo que a veces los errores no se reporten.
 * 01/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Mike Potjer)
-* 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Lutz Scheffler)
+* 09/06/2015	FDBOZZO		v1.19.45	Bug Fix: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (LScheffler)
 * 15/06/2015	FDBOZZO		v1.19.45	Bug Fix pjx,*/pj2,*: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Matt Slay)
 * 22/06/2015	FDBOZZO		v1.19.46	Bug Fix: Arreglo de bug en método set_UserValue() cuando se intenta obtener información de un error que no puede abrir la tabla (por ej, porque el memo está corrupto)
 * 22/06/2015	FDBOZZO		v1.19.46	Mejora: Agregado soporte interno para consulta de información de cfg de directorio, mediante nuevo parámetro opcional, para los métodos API que lo requieren (por ej: get_Ext2FromExt, hasSupport*)
@@ -179,7 +179,7 @@
 * 14/09/2015	FDBOZZO		v1.19.46	Mejora: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones, por lo que se reemplaza por llamadas Win32 nativas (Aurélien Dellieux)
 * 15/09/2015	FDBOZZO		v1.19.46	Bug Fix Frx/Lbx : El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Ryan Harris)
 * 18/09/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Ryan Harris)
-* 29/10/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Lutz Scheffler)
+* 29/10/2015	FDBOZZO		v1.19.46	Bug Frx/Lbx: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (LScheffler)
 * 04/11/2015	RALFXWAGNER	v1.19.46	Bug Fix Pjx: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Ralf Wagner)
 * 25/11/2015	FDBOZZO		v1.19.46	Bug Fix Pj2: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (EddieC)
 * 25/11/2015	FDBOZZO		v1.19.46	Mejora dbf: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (edyshor)
@@ -194,17 +194,17 @@
 * 10/07/2016	FDBOZZO		v1.19.48	Fix defecto db2: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix pj2: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Nathan Brown)
 * 11/07/2016	FDBOZZO		v1.19.48	Bug Fix frx: Los ControlSource de objetos OLE que contienen comillas se generan mal (Nathan Brown)
-* 23/03/2017	FDBOZZO		v1.19.49	Bug Fix vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (Lutz Scheffler)
-* 25/03/2017	FDBOZZO		v1.19.49	Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Lutz Scheffler)
+* 23/03/2017	FDBOZZO		v1.19.49	Bug Fix vcx: No funciona la generación de una clase individual con "classlib.vcx::classname" (LScheffler)
+* 25/03/2017	FDBOZZO		v1.19.49	Mejora vcx: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (LScheffler)
 * 26/03/2017    FDBOZZO     v1.19.49    Mejora cfg: Se permite indicar un archivo CFG por parámetro de cualquier directorio para anular los CFG predeterminados de los subdirectorios, para casos especiales donde sea necesario
 * 28/03/2017    FDBOZZO     v1.19.49    Mejora vcx: Implementada sintaxis para importar o exportar clases individuales usando "classlibrary.vcx::classname::import" y "classlibrary.vcx::classname::export"
 * 11/04/2017	FDBOZZO		v1.19.49	Bug Fix frx: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Alejandro A Sosa)
-* 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Lutz Scheffler)
+* 11/04/2017	FDBOZZO		v1.19.49	Mejora cfg : En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (LScheffler)
 * 12/04/2017	DH&FDBOZZO	v1.19.49	Bug Fix & Report pjx: No se estaba guardando el campo User en los archivos PJX (Doug Hennig)
 * 25/06/2017	FDBOZZO		v1.19.49.1	Bug Fix tx2 v1.19.49: El campo DEVINFO usado en los PJX se estaba usando en los demás binarios, dando errores
-* 02/12/2017	FDBOZZO		v1.19.49.2	Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (Lutz Scheffler)
+* 02/12/2017	FDBOZZO		v1.19.49.2	Bug Fix tx2 v1.19.49: No exporta los objetos a TX2 cuando se usa ClassPerFile (LScheffler)
 * 03/12/2017	JS&FDBOZZO	v1.19.49.3	Bug Fix db2: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Jerry Stager)
-* 04/12/2017	FDBOZZO		v1.19.49.4	Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Lutz Scheffler)
+* 04/12/2017	FDBOZZO		v1.19.49.4	Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (LScheffler)
 * 20/12/2017	DH&FDBOZZO	v1.19.49.5	Bug Fix dbf: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Doug Hennig)
 * 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Doug Hennig)
 * 04/01/2018	FDBOZZO		v1.19.49.6	Bug Fix vcx/scx: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Doug Hennnig)
@@ -298,6 +298,8 @@
 * 08/06/2022	LScheffler	v1.19.75	Enhancement: Typo in German (JoergSchneider)
 * 08/06/2022	LScheffler	v1.19.75	Bug Fix: Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 * 13/06/2022	LScheffler	v1.19.76	Bug Fix: On operation per folder, change of folder must change configuration (JoergSchneider)
+* 16/03/2023	LScheffler	v1.19.77	Bug Fix: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
+* 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -347,7 +349,7 @@
 * 19/11/2014	edyshor				MEJORA cfg v1.19.36: DBF_Conversion_Excluded no permite comentarios && al final (Agregado en v1.19.37)
 * 19/11/2014	edyshor				REPORTE BUG dbf v1.19.36: "String is too long to fit" cuando se procesa un DBF grande con DBF_Conversion_Support = 4 (Agregado en v1.19.37)
 * 19/11/2014	edyshor				MEJORA dbf v1.19.36: Nuevo parámetro ClearDBFLastUpdate para evitar diferencias por este dato (Agregado en v1.19.37)
-* 14/10/2014	Lutz Scheffler		MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta) (Agregado en v1.19.37)
+* 14/10/2014	LScheffler			MEJORA v1.19.36: Permitir generar una clase por archivo (pregunta) (Agregado en v1.19.37)
 * 21/10/2014	Ryan Harris			MEJORA v1.19.36: Permitir generar una clase por archivo (sugerencia) (Agregado en v1.19.37)
 * 04/12/2014	Francisco Prieto	MEJORA v1.19.36: Permitir hacer conversiones masivas bin2prg y prg2bin sin los scripts vbs (Agregado en v1.19.38)
 * 12/12/2014	Álvaro Castrillón	MEJORA v1.19.36: Detección de métodos duplicados para notificar casos de corrupción (Agregado en v1.19.38)
@@ -361,31 +363,31 @@
 * 24/01/2015	Ryan Harris			Mejora dc2 v1.19.41: Permitir ordenar los campos de vistas y tablas alfabéticamente y mantener en una lista aparte el orden real, para facilitar el diff y el merge (Agregado en v1.19.42)
 * 24/01/2015	Ryan Harris			Mejora dc2 v1.19.41: Aplicar ClassPerFile a las conexiones, tablas, vistas y stored procedures de los DBC (Agregado en v1.19.42)
 * 22/01/2015	Tuvia Vinitsky		Reporte bug v1.19.41: Compatibilidad con SourceSafe rota porque se genera un error al realizar la consulta para soporte de archivo (Arreglado en v1.19.42)
-* 25/02/2015	Lutz Scheffler		Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
-* 25/02/2015	Lutz Scheffler		Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
-* 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Mejoras en la traducción al alemán (Agregado en v1.19.42)
-* 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir definir el archivo de entrada con un path relativo (Agregado en v1.19.42)
-* 03/03/2015	Lutz Scheffler		Reporte bug scx v1.19.41: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Agregado en v1.19.42)
-* 03/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir proceso multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Agregado en v1.19.42)
-* 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Cambiar clase de base de FoxBin2Prg de custom a session (Agregado en v1.19.42)
-* 05/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Agregado en v1.19.42)
-* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir configurar un CFG alternativo (Agregado en v1.19.42)
-* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_Processed() para obtener información de los archivos procesados (Agregado en v1.19.42)
-* 10/03/2015	Lutz Scheffler		Mejora v1.19.41: Permitir salida de archivos procesados a stdOut (Agregado en v1.19.42)
-* 23/03/2015	Lutz Scheffler		Reporte bug mnx v1.19.41: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Arreglado en v1.19.42)
+* 25/02/2015	LScheffler			Reporte de Bug scx/vcx v1.19.41: Procesar solo un nivel de text/endtext, ya que no se admiten más niveles (Arreglado en v1.19.42)
+* 25/02/2015	LScheffler			Mejora v1.19.41: Hacer algunos mensajes de error más descriptivos (Agregado en v1.19.42)
+* 03/03/2015	LScheffler			Mejora v1.19.41: Mejoras en la traducción al alemán (Agregado en v1.19.42)
+* 03/03/2015	LScheffler			Mejora v1.19.41: Permitir definir el archivo de entrada con un path relativo (Agregado en v1.19.42)
+* 03/03/2015	LScheffler			Reporte bug scx v1.19.41: Agregada la generación del PJX/PJ2 cuando se indica "file.pjx", "*" (Agregado en v1.19.42)
+* 03/03/2015	LScheffler			Mejora v1.19.41: Permitir proceso multi-proyecto (*.PJX, *.PJ2) cuando se especifica "file.pjx", "*" (Agregado en v1.19.42)
+* 05/03/2015	LScheffler			Mejora v1.19.41: Cambiar clase de base de FoxBin2Prg de custom a session (Agregado en v1.19.42)
+* 05/03/2015	LScheffler			Mejora v1.19.41: Permitir procesar los archivos de un proyecto sin convertir el PJX/2 (Agregado en v1.19.42)
+* 10/03/2015	LScheffler			Mejora v1.19.41: Permitir configurar un CFG alternativo (Agregado en v1.19.42)
+* 10/03/2015	LScheffler			Mejora v1.19.41: Crear un método API get_Processed() para obtener información de los archivos procesados (Agregado en v1.19.42)
+* 10/03/2015	LScheffler			Mejora v1.19.41: Permitir salida de archivos procesados a stdOut (Agregado en v1.19.42)
+* 23/03/2015	LScheffler			Reporte bug mnx v1.19.41: No se mantiene el Pad vacío al regenerar el menú cuando se define un menu con un Pad sin nombre (Arreglado en v1.19.42)
 * 24/03/2015	Ryan Harris			Reporte bug frx/lbx v1.19.41: Hay algunos CR,LF,TAB sobrantes en las etiquetas tag de algunos archivos FR2/LB2 (Arreglado en v1.19.42)
 * 24/03/2015	Ryan Harris			Mejora v1.19.41: Borrar archivos ERR al procesar, cuando se usa UseClassPerFile (Agregado en v1.19.42)
-* 10/04/2015	Lutz Scheffler		Mejora v1.19.41: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Agregado en v1.19.42)
-* 12/04/2015	Lutz Scheffler		Mejora v1.19.41: Permitir generar texto de una clase de una librería (Agregado en v1.19.42)
+* 10/04/2015	LScheffler			Mejora v1.19.41: Crear un método API get_DirSettings() para obtener información de seteos del directorio indicado (Agregado en v1.19.42)
+* 12/04/2015	LScheffler			Mejora v1.19.41: Permitir generar texto de una clase de una librería (Agregado en v1.19.42)
 * 15/04/2015	Mike Potjer			Sugerencia v1.19.41: Los nombres de los métodos en Inglés facilitarían su entendimiento a más personas (Agregado en v1.19.42)
 * 22/04/2015	Ryan Harris			Mejora v1.19.42: Permitir que FoxBin quite los ZOrderProps de los objetos que cambian constantemente, provocan diferencias y a veces dan problemas de objeto encima/debajo (Agregado en v1.19.43)
-* 23/04/2015	Lutz Scheffler		Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
+* 23/04/2015	LScheffler			Mejora v1.19.42: Hacer que la progressbar no se convierta en la ventana de salida por defecto de los ? (Agregado en v1.19.43)
 * 28/04/2015	Ralf Wagner			Reporte bug v1.19.42: FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.43)
 * 29/04/2015	Fidel Charny		Reporte bug v1.19.42: FoxBin2Prg a veces genera errores OLE cuando se ejecuta más de una vez en modo objeto sobre un archivo con errores (Arreglado en v1.19.43)
 * 10/05/2015	Esteban Herrero		Reporte bug v1.19.42: Cuando un form tiene AutoCenter=.T., hay veces en que al regenerar el binario y ejecutarlo no se muestra centrado (Arreglado en v1.19.43)
 * 29/04/2015	Ralf Wagner			Reporte bug v1.19.43: En ciertos PCs FoxBin2Prg no retorna códigos de error cuando se llama como programa externo (Arreglado en v1.19.44)
 * 01/06/2015	Mike Potjer			Reporte bug v1.19.44: Cuando se exporta a texto un menu que usa comillas simples o una expresión en el mensaje de las opciones, al regenerar el binario se recortan partes del mensaje de esas opciones (Arreglado en v1.19.45)
-* 09/06/2015	Lutz Scheffler		Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
+* 09/06/2015	LScheffler			Reporte bug v1.19.44: Cuando se procesan múltiples archivos PJ2, puede ocurrir un error de "variable llError no definida" (Arreglado en v1.19.45)
 * 13/06/2015	Matt Slay			Reporte bug v1.19.44: Los proyectos PJX/PJ2 que referencian archivos de otras unidades de disco causan errores ne esos archivos al procesar con las opciones "*" o "*-" (Arreglado en v1.19.45)
 * 29/07/2015	Dave Crozier		Reporte bug v1.19.45: Cuando se procesa un directorio o un proyecto con todos los archivos, a veces puede ocurrir el error "Alias already in use" (Arreglado en v1.19.46)
 * 29/07/2015	Walter Nicholls		Mejora DBF-Data v1.19.45: Permitir exportar e importar datos de los DBF
@@ -393,7 +395,7 @@
 * 09/09/2015	Aurélien Dellieux	Mejora v1.19.45: El objeto WSscript.Shell da problemas en algunos entornos o bajo ciertas condiciones (Cambiado en v1.19.46)
 * 11/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: El ordenamiento de registros de los reportes cambia el orden Z de los objetos próximos que se solapan, pudiendo causar que se visualicen mal (Arreglado en v1.19.46)
 * 17/09/2015	Ryan Harris			Reporte bug Frx/Lbx v1.19.45: Cuando se regeneran reportes o etiquetas con textos multilinea alineados al centro o a la derecha, la alineación no es completamente correcta (Arreglado en v1.19.46)
-* 11/10/2015	Lutz Scheffler		Reporte bug Frx/Lbx v1.19.45: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Arreglado en v1.19.46 Preview-7)
+* 11/10/2015	LScheffler			Reporte bug Frx/Lbx v1.19.45: Cuando se agrupan controles en diseño y se convierte a texto, al regenerar se pierden las agrupaciones (Arreglado en v1.19.46 Preview-7)
 * 04/11/2015	Ralf Wagner			Reporte bug Pjx v1.19.45: Los archivos SPR y MPR no estan bien representados en la información del proyecto (Arreglado en v1.19.46 Preview-8)
 * 20/11/2015	EddieC				Reporte bug Pjx v1.19.45: Se genera un error al regenerar un PJX desde un PJ2 donde algún archivo contiene paréntesis (Arreglado en v1.19.46 Preview-9)
 * 24/11/2015	edyshor				Mejora dbf v1.19.45: Nuevo parámetro ExcludeDBFAutoincNextval para evitar diferencias por este dato (Agregado en v1.19.46 Preview-9)
@@ -406,14 +408,14 @@
 * 10/07/2016	Nathan Brown		Reporte defecto v1.19.48-Preview3: Cuando se arregló el bug del memo multi-línea, se introdujo un nuevo defecto por el cual un memo de linea-simple se decodifica mal (Arreglado en v1.19.48 Preview-4)
 * 11/07/2016	Nathan Brown		Reporte bug pj2 v1.19.48-Preview4: Cuando se regenera el binario de un PJ2 con archivos en una ruta con paréntesis y espacios, se genera un error "Error 36, Command contains unrecognized phrase/keyword" (Arreglado en v1.19.48 Preview-5)
 * 11/07/2016	Nathan Brown		Reporte bug frx v1.19.48-Preview5: Los ControlSource de objetos OLE que contienen comillas se generan mal (Arreglado en v1.19.48 Preview-6)
-* 23/03/2017	Lutz Scheffler		Reporte bug vcx v1.19.48: No funciona la generación de una clase individual con "classlib.vcx::classname" (Arreglado en v1.19.49)
-* 23/03/2017	Lutz Scheffler		Mejora vcx v1.19.48: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Agragado en v1.19.49)
+* 23/03/2017	LScheffler			Reporte bug vcx v1.19.48: No funciona la generación de una clase individual con "classlib.vcx::classname" (Arreglado en v1.19.49)
+* 23/03/2017	LScheffler			Mejora vcx v1.19.48: Poder importar una clase (VC2 generado con ClassPerFile) en un VCX existente (Agragado en v1.19.49)
 * 30/03/2017	Alejandro A Sosa	Reporte bug frx v1.19.48: Cuando dentro de una expresión se usa "&&", se corrompe el registro del FRX generado (Arreglado en v1.19.49)
-* 28/03/2017	Lutz Scheffler		Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
+* 28/03/2017	LScheffler			Mejora cfg v1.19.48: En modo objeto permitir indicar un objeto CFG en lugar de un archivo CFG (Agragado en v1.19.49)
 * 06/04/2017	Doug Hennig			Reporte Bug y arreglo parcial PJX v1.19.48: No se estaba guardando el campo User en los archivos PJX (Agregado en v1.19.49)
-* 28/11/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: No exporta los objetos a VX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
+* 28/11/2017	LScheffler			Reporte Bug vx2 v1.19.49: No exporta los objetos a VX2 cuando se usa ClassPerFile (Arreglado en v1.19.49.2)
 * 31/08/2017	Jerry Stager		Reporte bug db2 v1.19.48: Los campos "Double" asumen 2 decimales cuando se definen con 0 decimales (Agregado en v1.19.49.3)
-* 03/12/2017	Lutz Scheffler		Reporte Bug vx2 v1.19.49: Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Arreglado en v1.19.49.4)
+* 03/12/2017	LScheffler			Reporte Bug vx2 v1.19.49: Cuando se usa ClassPerFile an Modo API y se importan clases simples, a veces sus nombres se toman sin comillas, provocando errores (Arreglado en v1.19.49.4)
 * 18/12/2017	Doug Hennnig		Reporte Bug dbf v1.19.49: Cuando se importan datos de un DB2 a DBF (con DBF_Conversion_Support = 8), los tabs al inicio de los memo se pierden (Arreglado en v1.19.49.5)
 * 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: FoxBin2Prg debería ignorar los registros que el diseñador de FoxPro ignora (Arreglado en v1.19.49.6)
 * 04/01/2018	Doug Hennnig		Reporte Bug vcx/scx v1.19.49: Cuando se regenera la propiedad _MemberData se agregan CR/LF por cada miembro, pudiendo provocar un error de "valor muy largo" (Arreglado en v1.19.49.6)
@@ -431,20 +433,20 @@
 * 13/11/2019	Eric Selje			Reporte Bug v1.19.51: Incompatible with VFPA (#36) (Se arregla en v1.19.51.6)
 * 31/03/2020	Ryan Harris			Reporte Bug v1.19.51: Si alguno de los archivos-por-clase no tiene CR_LF al final, al ensamblar la clase se pueden superponer instrucciones de forma inválida (Se arregla en v1.19.51.6)
 * 01/04/2020	FDBOZZO		        Bug report v1.19.51	No se respetan las propiedades de VCX/SCX con nombre "note" (Tracy Pearson)
-* 14/02/2021	Lutz Scheffler      Bug report v1.19.51	conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
-* 14/02/2021	Lutz Scheffler      Bug report v1.19.51	conversion prg -> dbf, fields with .NULL. value are incorectly recreated
-* 15/02/2021	Lutz Scheffler      Bug report v1.19.52	processing directory, flush log file after loop instead of file
-* 16/02/2021	Lutz Scheffler      Bug report v1.19.52	conversion prg -> vcx, files per class could create one class multiple times
-* 03/03/2021	Lutz Scheffler      Bug report v1.19.53	DBF_Conversion_Condition, problem with macro expansion
-* 04/03/2021	Lutz Scheffler      Bug report v1.19.55	Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1
+* 14/02/2021	LScheffler			Bug report v1.19.51	conversion dbf -> prg, error if only test mode (toFoxBin2Prg.l_ProcessFiles is false)
+* 14/02/2021	LScheffler  	    Bug report v1.19.51	conversion prg -> dbf, fields with .NULL. value are incorectly recreated
+* 15/02/2021	LScheffler      	Bug report v1.19.52	processing directory, flush log file after loop instead of file
+* 16/02/2021	LScheffler  	    Bug report v1.19.52	conversion prg -> vcx, files per class could create one class multiple times
+* 03/03/2021	LScheffler      	Bug report v1.19.53	DBF_Conversion_Condition, problem with macro expansion
+* 04/03/2021	LScheffler			Bug report v1.19.55	Inputfile in form classlib.class.vc2 AND RedirectClassType = 1  and Execute param tcRecompile = 1
 *                                                     generates classlib.class.vcx and tries to recompile classlib.vcx
 *                                                     fails silent if classlib.vcx exists (compiles wrong lib), with message if not.
-* 05/03/2021	Lutz Scheffler      Bug report v1.19.56	For RedirectClassType = 2, Path was set wrong
-* 09/03/2021	Lutz Scheffler      Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
-* 09/03/2021	Lutz Scheffler      Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
-* 22/03/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Condition was read, but never used
-* 22/03/2021	Lutz Scheffler      Bug report v1.19.59 DBF_Conversion_Order sets an index that later would be stored as structural index
-* 22/03/2021	Lutz Scheffler      Bug report v1.19.59 config options with text value fail, if line comment is set
+* 05/03/2021	LScheffler			Bug report v1.19.56	For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	LScheffler  	    Bug report v1.19.57	For RedirectClassType = 2, Path was set wrong
+* 09/03/2021	LScheffler      	Bug report v1.19.57	RedirectClassType = 2, UseClassPerFile = 2 failed.
+* 22/03/2021	LScheffler			Bug report v1.19.59 DBF_Conversion_Condition was read, but never used
+* 22/03/2021	LScheffler			Bug report v1.19.59 DBF_Conversion_Order sets an index that later would be stored as structural index
+* 22/03/2021	LScheffler			Bug report v1.19.59 config options with text value fail, if line comment is set
 * 16/03/2021	msueping			BUG REPORT v1.19.57 Variable lnFileCount in get_filesfromdirectory
 * 30/03/2021	Sergej s-s-a		BUG REPORT v1.19.61 Ignoring extention in foxbin2prg.cfg
 * 08/04/2021	jstagerGH 			BUG REPORT v1.19.62 Tables without indexes cause an error that the "Table ## is not marked as belonging to the ## database"
@@ -470,6 +472,8 @@
 * 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Typo in German (JoergSchneider)
 * 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 * 10/06/2022	JoergSchneider		Bug REPORT v1.19.75	On operation per folder, change of folder must change configuration (JoergSchneider)
+* 16/03/2023	JoergSchneider		Bug REPORT v1.19.76	Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
+* 16/03/2023	LScheffler			Bug REPORT v1.19.76	Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -551,6 +555,13 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_DEFINED_PAM_F				'*</DefinedPropArrayMethod>'
 #Define C_LEN_DEFINED_PAM_I			Len(C_DEFINED_PAM_I)
 #Define C_LEN_DEFINED_PAM_F			Len(C_DEFINED_PAM_F)
+*SF 16.03.2023
+*mark property value section in classes, objects and forms
+#Define C_DEFINED_PROPVAL_I			'*<PropValue>'
+#Define C_DEFINED_PROPVAL_F			'*</PropValue>'
+#Define C_LEN_DEFINED_PROPVAL_I		Len(C_DEFINED_PROPVAL_I)
+#Define C_LEN_DEFINED_PROPVAL_F		Len(C_DEFINED_PROPVAL_F)
+*/SF 16.03.2023
 #Define C_END_OBJECT_I				'*< END OBJECT:'
 #Define C_END_OBJECT_F				'/>'
 #Define C_LEN_END_OBJECT_I			Len(C_END_OBJECT_I)
@@ -671,7 +682,7 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_RECORDS_F					'</RECORDS>'
 #Define C_RECORD_I					'<RECORD>'	&& *** FDBOZZO 2016/06/06: Quitado el REGNUM para evitar diferencias innecesarias
 #Define C_RECORD_F					'</RECORD>'
-#Define C_DEL_RECORD_I				'<DELRECORD>'	&& *** Lutz Scheffler 2021/02/20: Deleted Record, just mark like this, no fuzz with field name
+#Define C_DEL_RECORD_I				'<DELRECORD>'	&& *** LScheffler 2021/02/20: Deleted Record, just mark like this, no fuzz with field name
 #Define C_DEL_RECORD_F				'</DELRECORD>'
 #Define C_RECNO_I					'<RECNO>'
 #Define C_RECNO_F					'</RECNO>'
@@ -754,7 +765,7 @@ Local lnResp, loEx As Exception
 tc_InputFile	= Evl(tc_InputFile,'')
 tcType			= Evl(tcType,'')
 
-*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	Changed by: LScheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
 If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 ;
@@ -783,7 +794,7 @@ Do Case
 		tcType       = ""
 
 Endcase
-*!*	/Changed by: Lutz Scheffler 15.2.2021
+*!*	/Changed by: LScheffler 15.2.2021
 
 Try
 		loEx	= Null
@@ -985,7 +996,7 @@ Define Class c_foxbin2prg As Session
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
 	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.76'
+	c_FB2PRG_Version_Real			= '1.19.77'
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1030,7 +1041,7 @@ Define Class c_foxbin2prg As Session
 	l_Recompile						= .T.
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
@@ -1041,7 +1052,7 @@ Define Class c_foxbin2prg As Session
 	l_ItemPerDBCCheck				= .F.
 	l_DBF_BinChar_Base64 			= .T.
 	l_DBF_IncludeDeleted            = .F.
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 	n_UseClassPerFile 				= 0
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
@@ -1162,9 +1173,9 @@ Define Class c_foxbin2prg As Session
 		This.c_Foxbin2prg_ConfigFile	= Evl( tcCFG_File, Forceext( This.c_Foxbin2prg_FullPath, 'CFG' ) )
 		This.c_BackgroundImage			= This.get_AbsolutePath( Addbs(Justpath(This.c_Foxbin2prg_FullPath)) + 'foxbin2prg.jpg' )
 		lc_Foxbin2prg_EXE				= Forceext( This.c_Foxbin2prg_FullPath, 'EXE' )
-*!*	Changed by: Lutz Scheffler 30.8.2021
+*!*	Changed by: LScheffler 30.8.2021
 *!*	<pdm>
-*!*	<change date="{^2021-08-30,07:48:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2021-08-30,07:48:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/69 / Incorrect version showing for v1.19.65
 *!*	Set version number to This.c_FB2PRG_Version_Real and ignore Exe
 *!*	</change>
@@ -1173,7 +1184,7 @@ Define Class c_foxbin2prg As Session
 *		This.c_FB2PRG_EXE_Version		= 'v' + Iif( Agetfileversion( laValues, lc_Foxbin2prg_EXE ) = 0, Transform(This.c_FB2PRG_Version_Real), laValues(11) )
 		This.c_FB2PRG_EXE_Version		= 'v' + Transform(This.c_FB2PRG_Version_Real)
 
-*!*	/Changed by Lutz Scheffler 30.8.2021
+*!*	/Changed by LScheffler 30.8.2021
 
 		AddProperty(_Screen, 'c_FB2PRG_EXE_Version', This.c_FB2PRG_EXE_Version)
 		AddProperty(_Screen, 'ExitCode', 0)
@@ -1497,7 +1508,7 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
@@ -1563,7 +1574,7 @@ Define Class c_foxbin2prg As Session
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).c_Language_In, This.c_Language_In )
 		Endif
 	Endproc
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 
 	Procedure l_RedirectClassPerFileToMain_ACCESS
@@ -2604,7 +2615,7 @@ Define Class c_foxbin2prg As Session
 *-------- setting for container files (not pjx) --------
 *Classes and forms ( vcx / scx)
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
@@ -2641,9 +2652,9 @@ Define Class c_foxbin2prg As Session
 											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => RedirectFilePerDBCToMain: ' + Transform(lcValue) )
 										Endif
 									Endif
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
-*!*	Changed by: Lutz Scheffler 04.3.2021
+*!*	Changed by: LScheffler 04.3.2021
 *!*	change date="{^2021-03-04,13:12:00}"
 * new value 2, just add one class
 								Case Left( laConfig(m.I), 18 ) == Lower('RedirectClassType:')
@@ -2652,7 +2663,7 @@ Define Class c_foxbin2prg As Session
 										lo_CFG.n_RedirectClassType	= Int( Val( lcValue ) )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectClassType:          ' + Transform(lcValue) )
 									Endif
-*!*	/Changed by: Lutz Scheffler 04.3.2021
+*!*	/Changed by: LScheffler 04.3.2021
 
 *Databases
 								Case Left( laConfig(m.I), 15 ) == Lower('OldFilesPerDBC:')
@@ -2875,7 +2886,7 @@ Define Class c_foxbin2prg As Session
 					Endcase
 					.writeLog( C_TAB + 'Debug:                      ' + Transform(.n_Debug) )
 
-* SF, 2021/030/06: added DH HomeDir option
+* LScheffler, 2021/030/06: added DH HomeDir option
 					.writeLog( C_TAB + 'HomeDir:                    ' + Transform(.n_HomeDir) )
 
 *Conversion operation by type
@@ -2898,7 +2909,7 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'RedirectClassType:          ' + Transform(.n_RedirectClassType) )
 
 *Databases
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - split of DBC separated from VCX/SCX
@@ -2909,7 +2920,7 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'ItemPerDBCCheck:            ' + Transform(.l_ItemPerDBCCheck) )
 					.writeLog( C_TAB + 'DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
 					.writeLog( C_TAB + 'DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 *general files
 					.writeLog( C_TAB + 'NoTimestamps:               ' + Transform(.l_NoTimestamps) )
@@ -3122,7 +3133,7 @@ Define Class c_foxbin2prg As Session
 							This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_Conversion_Condition: ' + to_out_DBF_CFG.DBF_Conversion_Condition )
 						Endif
 
-*!*	Changed by: Lutz Scheffler 18.03.2021
+*!*	Changed by: LScheffler 18.03.2021
 *!*	change date="{^2021-03-18,10:57:00}"
 * additional options controlling
 * - new operations of DBF, additional list of non structural index files
@@ -3131,13 +3142,13 @@ Define Class c_foxbin2prg As Session
 						If tlGenerateLog Then
 							This.writeLog('		' + Justfname(lcTableCFG) + ' >DBF_IndexList:           ' + Transform(to_out_DBF_CFG.DBF_IndexList) )
 						Endif
-*!*	/Changed by: Lutz Scheffler 18.03.2021
+*!*	/Changed by: LScheffler 18.03.2021
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 					Case Left( lcConfigItem, 19 ) == Lower('DBF_BinChar_Base64:')
 						lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
 						If Inlist( m.lcValue, '0', '1' ) Then
@@ -3155,7 +3166,7 @@ Define Class c_foxbin2prg As Session
 								This.writeLog('		' + Justfname(lcTableCFG) + ' > DBF_IncludeDeleted:     ' + Transform(to_out_DBF_CFG.l_DBF_IncludeDeleted) )
 							Endif
 						Endif
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 				Endcase
 			Endfor
@@ -3217,9 +3228,9 @@ Define Class c_foxbin2prg As Session
 			loDBF_CFG	= Null
 			lcExt		= Upper(Justext('.' + tcFileName))
 
-*!*	Changed by: Lutz Scheffler 13.6.2022
+*!*	Changed by: LScheffler 13.6.2022
 *!*	<pdm>
-*!*	<change date="{^2022-06-13,20:17:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2022-06-13,20:17:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/56 / Configfile is ignored if foldername has "." v1.19.74
 *!*	On operation per folder, change of folder must change configuration
 *!*	this method does not recieve tcDir in such case
@@ -3243,7 +3254,7 @@ Define Class c_foxbin2prg As Session
 					lcDir = Justpath( tcFileName )
 			Endcase
 
-*!*	/Changed by: Lutz Scheffler 13.6.2022
+*!*	/Changed by: LScheffler 13.6.2022
 
 			If Not Empty(lcDir)
 				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
@@ -3280,9 +3291,9 @@ Define Class c_foxbin2prg As Session
 			loDBF_CFG	= Null
 			lcExt		= Upper(Justext('.' + tcFileName))
 
-*!*	Changed by: Lutz Scheffler 13.6.2022
+*!*	Changed by: LScheffler 13.6.2022
 *!*	<pdm>
-*!*	<change date="{^2022-06-13,20:17:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2022-06-13,20:17:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/56 / Configfile is ignored if foldername has "." v1.19.74
 *!*	On operation per folder, change of folder must change configuration
 *!*	this method does not recieve tcDir in such case
@@ -3306,8 +3317,8 @@ Define Class c_foxbin2prg As Session
 					lcDir = Justpath( tcFileName )
 			Endcase
 
-*!*	/Changed by: Lutz Scheffler 13.6.2022
- 
+*!*	/Changed by: LScheffler 13.6.2022
+
 			If Not Empty(lcDir)
 				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
 			Endif
@@ -3580,14 +3591,14 @@ Define Class c_foxbin2prg As Session
 
 *-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
 
-*!*	Changed by: Lutz Scheffler 09.3.2021
+*!*	Changed by: LScheffler 09.3.2021
 *!*	change date="{^2021-03-09,08:06:00}"
 * log settings for tcCFG_File - cfg as object
 					.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
 						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type, , Vartype(tcCFG_File) = "O" )
-*!*	/Changed by: Lutz Scheffler 09.3.2021
+*!*	/Changed by: LScheffler 09.3.2021
 
-*!*	Changed by: Lutz Scheffler 04.3.2021
+*!*	Changed by: LScheffler 04.3.2021
 *!*	change date="{^2021-03-04,13:25:00}"
 * for Input file in the form file[.baseclass].class.vc2 (normaly sc2 too, but no support in old code)
 * allow to import only the class to file.VCX with n_RedirectClassType = 2
@@ -3622,7 +3633,7 @@ Define Class c_foxbin2prg As Session
 						Otherwise
 * not handled
 					Endcase
-*!*	/Changed by: Lutz Scheffler 04.3.2021
+*!*	/Changed by: LScheffler 04.3.2021
 
 * Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
 					If .c_ClassOperationType = 'I'
@@ -3650,7 +3661,7 @@ Define Class c_foxbin2prg As Session
 							Messagebox( loLang.C_FOXBIN2PRG_JUST_VFP_9_LOC, 0+64+4096, 'FoxBin2Prg ' + This.c_FB2PRG_EXE_Version + ': ' + loLang.C_FOXBIN2PRG_WARN_CAPTION_LOC + ' (' + .c_Language + ')', 60000 )
 							lnCodError	= 1
 
-*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	Changed by: LScheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
 						Case ( m.lcType=='-t' Or m.lcType=='t' ) And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
@@ -3661,9 +3672,9 @@ Define Class c_foxbin2prg As Session
 							tc_InputFile = Iif( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
 							loLang		 = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
-*!*	/Changed by: Lutz Scheffler 15.2.2021
+*!*	/Changed by: LScheffler 15.2.2021
 
-*!*	Changed by: Lutz Scheffler 07.3.2021
+*!*	Changed by: LScheffler 07.3.2021
 *!*	change date="{^2021-03-07,18:44:00}"
 * added option to create config files with values
 						Case ( m.lcType=='-C' Or m.lcType=='C' )
@@ -3900,7 +3911,7 @@ Define Class c_foxbin2prg As Session
 
 							Strtofile(  m.lcText, m.tc_InputFile )
 
-*!*	/Changed by: Lutz Scheffler 07.3.2021
+*!*	/Changed by: LScheffler 07.3.2021
 
 						Case Empty(tc_InputFile)
 *-- (Ejemplo de sintaxis y uso)
@@ -3914,7 +3925,7 @@ Define Class c_foxbin2prg As Session
 *-- EJECUCIÓN NORMAL
 
 
-							If (Atc('-INTERACTIVE', ('-' + tcType)) > 0 OR Atc('-?', ('-' + tcType)) > 0 );
+							If (Atc('-INTERACTIVE', ('-' + tcType)) > 0 Or Atc('-?', ('-' + tcType)) > 0 );
 									AND Atc('-BIN2PRG', ('-' + tcType)) = 0 And Atc('-PRG2BIN', ('-' + tcType)) = 0 ;
 									AND lcInputFile_Type == C_FILETYPE_DIRECTORY Then
 *-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
@@ -3947,8 +3958,6 @@ Define Class c_foxbin2prg As Session
 								Endcase
 							Endif
 
-*sf 2022 06 13
-*SET STEP ON 
 *-- Evaluación de FileSpec de entrada
 							Do Case
 								Case Atc('-BIN2PRG', ('-' + tcType)) = 0 And Atc('-PRG2BIN', ('-' + tcType)) = 0 ;
@@ -4108,7 +4117,7 @@ Define Class c_foxbin2prg As Session
 
 												.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', m.I, lnFileCount, 0 )
 												lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	Changed by: LScheffler 15.2.2021
 *!*	change date="{^2021-02-15,06:57:00}"
 * flushing the log after each file let us only see last file
 * why ever, it should be appended, but we simply move
@@ -4125,7 +4134,7 @@ Define Class c_foxbin2prg As Session
 												Endcase
 											Endfor && I = 1 TO lnFileCount
 											.writeLog_Flush()
-*!*	/Changed by: Lutz Scheffler 15.2.2021
+*!*	/Changed by: LScheffler 15.2.2021
 
 											.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 											Exit
@@ -4178,7 +4187,7 @@ Define Class c_foxbin2prg As Session
 
 												.updateProgressbar( loLang.C_PROCESSING_LOC + ' ' + lcFile + '...', m.I, lnFileCount, 0 )
 												lnCodError = .convert( lcFile, @toModulo, @toEx, .F., tcOriginalFileName )
-*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	Changed by: LScheffler 15.2.2021
 *!*	change date="{^2021-02-15,06:57:00}"
 * flushing the log after each file let us only see last file
 * why ever, it should be appended, but we simply move
@@ -4195,7 +4204,7 @@ Define Class c_foxbin2prg As Session
 												Endcase
 											Endfor && I = 1 TO lnFileCount
 											.writeLog_Flush()
-*!*	/Changed by: Lutz Scheffler 15.2.2021
+*!*	/Changed by: LScheffler 15.2.2021
 
 											.updateProgressbar( loLang.C_END_OF_PROCESS_LOC, lnFileCount, lnFileCount, 0 )
 											Exit
@@ -4748,7 +4757,7 @@ Define Class c_foxbin2prg As Session
 						lcForceAttribs	= lcForceAttribs + '-R'
 					Endif
 
-*!*	Changed by: Lutz Scheffler 03.03.2021
+*!*	Changed by: LScheffler 03.03.2021
 *!*	change date="{^2021-03-03,11:38:00}"
 * Added option for DBC split
 
@@ -4777,7 +4786,7 @@ Define Class c_foxbin2prg As Session
 								If '.' $ Juststem(.c_InputFile)
 									.c_InputFile	= lc_BaseFile
 								Endif
-** SF, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
+** LScheffler, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
 							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
@@ -4813,7 +4822,7 @@ Define Class c_foxbin2prg As Session
 
 					Endif
 
-*!*	/Changed by: Lutz Scheffler 03.03.2021
+*!*	/Changed by: LScheffler 03.03.2021
 
 					Erase ( .c_InputFile + '.ERR' )
 
@@ -7125,7 +7134,7 @@ Define Class c_conversor_base As Custom
 		Set Safety Off
 		Set Multilocks On
 		Set TablePrompt Off
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * Operation set to standard value
 * anywhere else it will respect this to,
@@ -7133,7 +7142,7 @@ Define Class c_conversor_base As Custom
 
 *		SET BLOCKSIZE TO 0
 
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 		Set Exact On
 		If Not Empty( On("ESCAPE") ) Then
@@ -7916,7 +7925,21 @@ Define Class c_conversor_base As Custom
 		If '=' $ tcAsignacion
 			ln_AT_Cmt		= At( '=', tcAsignacion)
 			tcPropName		= Alltrim( Left( tcAsignacion, ln_AT_Cmt - 2 ), 0, ' ', Chr(9) )	&& Quito espacios y TABS
-			tcValue			= Ltrim( Substr( tcAsignacion, ln_AT_Cmt + 2 ) )
+*!*	Changed by: LScheffler 16.3.2023
+*!*	<pdm>
+*!*	<change date="{^2023-03-16,09:02:00}">Changed by: LScheffler<br />
+*!*	Problems with property values with leading and trailing spaces
+*!*	and with double ampersand in value
+*!*	we just do not LTRIM so we keep the leading space here
+*!*	and we start after the space after the equal sign.<br/>
+*!*	see issues #90, #91
+*!*	</change>
+*!*	</pdm>
+
+*			tcValue			= Ltrim( Substr( tcAsignacion, ln_AT_Cmt + 2 ) )
+			tcValue			= Substr( tcAsignacion, ln_AT_Cmt + 2 )
+
+*!*	/Changed by: LScheffler 16.3.2023
 
 			If Pcount() > 3
 *-- EVALUAR UNA ASIGNACIÓN QUE PUEDE SER MULTILÍNEA (memberdata, fb2p_value, etc)
@@ -8199,7 +8222,7 @@ Define Class c_conversor_base As Custom
 *TEXT TO lcValue TEXTMERGE ADDITIVE NOSHOW FLAGS 1+2 PRETEXT 1+2
 *	<<>>		<<CHRTRAN( STREXTRACT( tcValue, '<memberdata ', '/>', m.I, 1+4 ), CR_LF, '  ' )>>
 *ENDTEXT
-					lcValue = lcValue + Chr(13) + Chr(10) + Chr(9) + Chr(9) + Chrtran( Strextract( tcValue, '<memberdata ', '/>', m.I, 1+4 ), CR_LF, '  ' )
+					lcValue = lcValue + Chr(13) + Chr(10) + Chr(9) + Chr(9) + Chr(9) + Chrtran( Strextract( tcValue, '<memberdata ', '/>', m.I, 1+4 ), CR_LF, '  ' )
 				Endfor
 
 				TEXT TO tcValue TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -10291,7 +10314,96 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 		Return llBloqueEncontrado
 	Endproc
 
+*!*	Changed by: LScheffler 16.3.2023
+*!*	<pdm>
+*!*	<change date="{^2023-03-16,13:39:00}">Changed by: LScheffler<br />
+*!*	get the newly introduced Class-property-value-block
+*!*	</change>
+*!*	</pdm>
 
+	Procedure analyzeCodeBlock_DEFINED_PROPVAL
+
+*--------------------------------------------------------------------------------------------------------------
+* 16/03/2023	LutzScheffler	old version (pre v1.19.77) stored the comment on the property value, so it was impossible to to keep && in value
+* the method is basically a copy of analyzeCodeBlock_DEFINED_PAM
+*--------------------------------------------------------------------------------------------------------------
+* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* toClase					(!@ IN    ) Objeto de la Clase
+* tcLine					(!@ IN    ) Línea de datos en evaluación
+* taCodeLines				(!@ IN    ) El array con las líneas del código de texto donde buscar
+* tnCodeLines				(!@ IN    ) Cantidad de líneas de código
+* I							(!@ IN    ) Número de línea en evaluación
+*--------------------------------------------------------------------------------------------------------------
+		Lparameters toClase, tcLine, taCodeLines, tnCodeLines, I
+
+*-- Structur to store properties without comment
+*(versions older then 1.19.77 are without this section, and values with trailing inline)
+*<PropValue>
+*Property = Property_Value
+*Number:
+*prop1 = 0
+*String:
+*prop2 = Number
+*String with leading and trailing space:
+*prop3 =  with spaces 
+*String with inline comment:
+*prop4 = with && text
+*Property = Property_Expression (in Property sheet as =....)
+*prop5 = (Expression after =)
+*_memberdata
+*_memberdata = <VFPData> ..
+*</PropValue>
+
+		#If .F.
+			Local toClase As CL_CLASE Of 'FOXBIN2PRG.PRG'
+		#Endif
+
+		Try
+				Local llBloqueEncontrado, lcPAM_Type
+				LOCAL lcProp, lcValue
+
+
+				If Left( tcLine, C_LEN_DEFINED_PROPVAL_I) == C_DEFINED_PROPVAL_I
+					llBloqueEncontrado	= .T.
+
+					With This As c_conversor_prg_a_bin Of foxbin2prg.prg
+						For I = m.I + 1 To tnCodeLines
+							.set_Line( @tcLine, @taCodeLines, m.I )
+
+							Do Case
+								Case Left( tcLine, C_LEN_DEFINED_PROPVAL_F ) == C_DEFINED_PROPVAL_F
+									I = m.I + 1
+									Exit
+
+								Otherwise
+									.get_SeparatedPropAndValue( tcLine, @lcProp, @lcValue, @toClase, @taCodeLines, tnCodeLines, @m.I )
+									toClase.add_Property( @lcProp, @lcValue, "" )
+
+							Endcase
+						Endfor
+					Endwith && THIS
+
+*-- Junto propiedades y los métodos al final.
+					I = m.I - 1
+				Endif
+
+			Catch To loEx
+				lnCodError	= loEx.ErrorNo
+
+				If This.n_Debug > 0 And _vfp.StartMode = 0
+					Set Step On
+				Endif
+
+				Throw
+
+			Finally
+				Release toClase, tcLine, taCodeLines, tnCodeLines, I
+		Endtry
+
+		Return llBloqueEncontrado
+	Endproc
+
+*!*	/Changed by: LScheffler 16.3.2023
 
 
 	Procedure analyzeCodeBlock_DEFINE_CLASS
@@ -10322,6 +10434,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		Local llBloqueEncontrado
 
+*toModulo
 		If Upper(Left(tcLine + ' ', 13)) == C_DEFINE_CLASS + ' '
 			Try
 					llBloqueEncontrado = .T.
@@ -10406,6 +10519,9 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 								Case Not llDEFINED_PAM_Completed And .analyzeCodeBlock_DEFINED_PAM( @toClase, @tcLine, @taCodeLines, tnCodeLines, @m.I )
 									llDEFINED_PAM_Completed	= .T.
+
+								Case Not llCLASS_PROPERTY_Completed And .analyzeCodeBlock_DEFINED_PROPVAL( @toClase, @tcLine, @taCodeLines, tnCodeLines, @m.I )
+									llCLASS_PROPERTY_Completed	= .T.
 
 
 								Case .analyzeCodeBlock_ADD_OBJECT( @toModulo, @toClase, @tcLine, @m.I, @taCodeLines, @tnCodeLines, @toFoxBin2Prg )
@@ -10528,14 +10644,14 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		If Upper(Left(tcLine, 7)) == 'HIDDEN '
 			llBloqueEncontrado	= .T.
-* SF 20221201. reset to original state of #87
+* LScheffler 20221201. reset to original state of #87
 *t-zuidema, 2022/11/25
-*old 
+*old
 			toClase._HiddenProps		= Lower( Alltrim( Substr( tcLine, 8 ) ) )
 *new of t-zuidema
 *			toClase._HiddenProps		= Alltrim( Substr( tcLine, 8 ) )
 */t-zuidema, 2022/11/25
-*/SF 20221201
+*/LScheffler 20221201
 		Endif
 
 		Release toClase, tcLine
@@ -11318,7 +11434,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 							lcInputFile			= .c_InputFile
 						Endif
 
-*!*	Changed by: Lutz Scheffler 15.2.2021
+*!*	Changed by: LScheffler 15.2.2021
 *!*	change date="{^2021-02-15,16:09:00}"
 * problem with classes declared in multiple files, looks like merge problem of git
 * creates multiple classes in VCX
@@ -11337,7 +11453,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 							Next
 							Dimension;
 								laFiles(Evl(lnFileCount,1),Alen(laFiles,2))
-*!*	/Changed by: Lutz Scheffler 15.2.2021
+*!*	/Changed by: LScheffler 15.2.2021
 
 							Asort( laFiles, 1, 0, 0, 1)
 						Endif
@@ -11430,7 +11546,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 
 * - new operations of DBF
 						If Empty(toFoxBin2Prg.c_ClassToConvert)
-*!*	Changed by: Lutz Scheffler 04.03.2021
+*!*	Changed by: LScheffler 04.03.2021
 *!*	change date="{^2021-03-04,10:03:00}"
 * If inputfile in the form classlib.class.vc2 AND toFoxBin2Prg.n_RedirectClassType = 1  and Execute parameter tcRecompile = 1
 * the change of outputfile might generate an error
@@ -11441,7 +11557,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 							If toFoxBin2Prg.n_RedirectClassType = 0
 								toFoxBin2Prg.c_OutputFile = Fullpath( Forceext( lcBaseFilename, 'VCX' ), .c_InputFile)
 							Endif
-*!*	/Changed by: Lutz Scheffler 04.03.2021
+*!*	/Changed by: LScheffler 04.03.2021
 						Else
 							loClase	= toModulo._Clases(1)
 * Ajusto el nombre interno de la clase al indicado en el nombre del archivo
@@ -11657,9 +11773,9 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 									loClase._UniqueID	= toFoxBin2Prg.unique_ID()
 								Endif
 
-*!*	Changed by: Lutz Scheffler 07.12.2021
+*!*	Changed by: LScheffler 07.12.2021
 *!*	<pdm>
-*!*	<change date="{^2021-12-07,09:14:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2021-12-07,09:14:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/72 / double classes in VCX
 *!*	The old code will write a class whether or not the class is already in the classlib
 *!*	Problem comes if a class is defined double by inconsistent UseClassPerFile,
@@ -11668,9 +11784,9 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 *!*	</pdm>
 
 								Select TABLABIN
-*!*	Changed by: Lutz Scheffler 23.02.2022
+*!*	Changed by: LScheffler 23.02.2022
 *!*	<pdm>
-*!*	<change date="{^2022-02-23,19:44:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2022-02-23,19:44:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/77 / If a classname is used as objectname too, an error is reported
 *!*	A class is Objname with empty parent field, while an object has parent filled.
 *!*	</change>
@@ -11682,16 +11798,14 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 									FOR OBJNAME==loClase._ObjName;
 									AND Empty(Parent)
 
-*!*	/Changed by Lutz Scheffler 07.12.2021
+*!*	/Changed by LScheffler 07.12.2021
 								If Found() Then
-*SF 20211207
-*SET STEP ON
 									Error loLang.C_ClassTwice_Header_LOC + ;
 										loLang.C_ClassTwice_Lib_LOC + Justfname( Dbf() ) + ;
 										loLang.C_ClassTwice_Class_LOC + loClase._ObjName+0h0D0A
 								Endif &&FOUND()
 
-*!*	/Changed by Lutz Scheffler 07.12.2021
+*!*	/Changed by LScheffler 07.12.2021
 
 *-- Inserto la clase
 								Insert Into TABLABIN ;
@@ -13680,14 +13794,14 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 *-- Identifico los registros de la tabla y los agrego
 						I = toTable._I - 1
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF
 						toTable.analyzeCodeBlock( C_TABLE_I, @laCodeLines, @m.I, lnCodeLines, @toFoxBin2Prg,;
 							IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_BinChar_Base64, m.toFoxBin2Prg.l_DBF_BinChar_Base64 ), m.toFoxBin2Prg.l_DBF_BinChar_Base64 ),;
 							IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_IncludeDeleted, m.toFoxBin2Prg.l_DBF_IncludeDeleted ), m.toFoxBin2Prg.l_DBF_IncludeDeleted ) )
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 					Endif
 
@@ -13869,7 +13983,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 	Endproc
 
 
-* SF
+* LScheffler
 	Procedure writeBinaryFile_INDEXES
 		Lparameters toTable, toFoxBin2Prg
 *-- -----------------------------------------------------------------------------------------------------------
@@ -14064,7 +14178,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 Enddefine	&& CLASS c_conversor_prg_a_dbf AS c_conversor_prg_a_bin
 
 
-* SF, Analyse, just locate
+* LScheffler, Analyse, just locate
 Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 	#If .F.
 		Local This As c_conversor_prg_a_dbc Of 'FOXBIN2PRG.PRG'
@@ -15153,7 +15267,6 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 			Local toFoxBin2Prg As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 		#Endif
 
-
 		Try
 				Local laItems(1), I, X, lnLenAcum, lnPosEQ, lcPropName, lnLenVal, lcValue, lcMethods, lcLastIncompletePropName
 				Store '' To tcSortedMemo, lcLastIncompletePropName
@@ -15234,7 +15347,20 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 								X	= m.X + 1
 								Dimension taPropsAndValues(m.X,2)
 								taPropsAndValues(m.X,1)	= lcLastIncompletePropName + Left( laItems(m.I), lnPosEQ - 2 )
-								taPropsAndValues(m.X,2)	= .normalizePropertyValue( taPropsAndValues(m.X,1), Ltrim( Substr( laItems(m.I), lnPosEQ + 2 ) ), '' )
+*!*	Changed by: LScheffler 16.3.2023
+*!*	<pdm>
+*!*	<change date="{^2023-03-16,06:12:00}">Changed by: LScheffler<br />
+*!*	Problems with property values with leading and trailing spaces
+*!*	and with double ampersand in value
+*!*	we just do not LTRIM so we keep the leading space here<br/>
+*!*	see issues #90, #91
+*!*	</change>
+*!*	</pdm>
+
+*								taPropsAndValues(m.X,2)	= .normalizePropertyValue( taPropsAndValues(m.X,1), Ltrim( Substr( laItems(m.I), lnPosEQ + 2 ) ), '' )
+								taPropsAndValues(m.X,2)	= .normalizePropertyValue( taPropsAndValues(m.X,1), Substr( laItems(m.I), lnPosEQ + 2 ), '' )
+
+*!*	/Changed by: LScheffler 16.3.2023
 							Endif
 
 							lcLastIncompletePropName	= ''
@@ -15332,9 +15458,9 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 		lcSetDeleted	= Set("Deleted")
 		Set Deleted Off
 
-*!*	Changed by: Lutz Scheffler 25.2.2022
+*!*	Changed by: LScheffler 25.2.2022
 *!*	<pdm>
-*!*	<change date="{^2022-02-25,15:57:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2022-02-25,15:57:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/78 / After vc2 convert back to vcx class is corrupted no errors reported
 *!*	Better named: Missing class when building text file from corrupted VCX
 *!* If the VCX is corrupted and holds empty records, the original coed will delete the next class.
@@ -15360,7 +15486,7 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 				Skip -1
 			Endif
 		Endscan
-*!*	/Changed by: Lutz Scheffler 25.2.2022
+*!*	/Changed by: LScheffler 25.2.2022
 
 		Set Deleted &lcSetDeleted.
 		Return
@@ -16089,17 +16215,39 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 						.write_PROTECTED_Properties( @lcProtectedProp, @tcCodigo )
 
 *-- Escribo las propiedades de la clase y sus comentarios (los comentarios aquí son redundantes)
-						For I = 1 To tnPropsAndValues_Count
-							tcCodigo = tcCodigo + Chr(13) + Chr(10) + Chr(9) + taPropsAndValues(m.I,1) + ' = ' + taPropsAndValues(m.I,2)
 
-							If tnPropsAndComments_Count > 0 Then
-								lnComment	= Ascan( taPropsAndComments, taPropsAndValues(m.I,1), 1, 0, 1, 1+2+4+8)
+*!*	Changed by: LScheffler 16.3.2023
+*!*	<pdm>
+*!*	<change date="{^2023-03-16,06:19:00}">Changed by: LScheffler<br />
+*!*	Problems with property values with leading and trailing spaces
+*!*	and with double ampersand in value
+*!*	we just do not add the property comment, the comment will be recreated by the property definiton
+*!*	section <em>DefinedPropArrayMethod<em/><br/>
+*!*	see issues #90, #91
+*!*	</change>
+*!*	</pdm>
+						If tnPropsAndValues_Count>0
+*LScheffler 16.3.2023 set delimiters around properties value, so we know it's without comment and we can keep "&&" in value
+							tcCodigo = tcCodigo + Chr(13) + Chr(10) + Chr(9) + C_DEFINED_PROPVAL_I
 
-								If lnComment > 0 And Not Empty(taPropsAndComments(lnComment,2))
-									tcCodigo = tcCodigo + Chr(9) + Chr(9) + '&' + '& ' + taPropsAndComments(lnComment,2)
-								Endif
-							Endif
-						Endfor
+							For I = 1 To tnPropsAndValues_Count
+								tcCodigo = tcCodigo + Chr(13) + Chr(10) + Chr(9) + Chr(9) + taPropsAndValues(m.I,1) + ' = ' + taPropsAndValues(m.I,2)
+
+*LScheffler 16.3.2023 without comment
+*							If tnPropsAndComments_Count > 0 Then
+*								lnComment	= Ascan( taPropsAndComments, taPropsAndValues(m.I,1), 1, 0, 1, 1+2+4+8)
+*
+*								If lnComment > 0 And Not Empty(taPropsAndComments(lnComment,2))
+*									tcCodigo = tcCodigo + Chr(9) + Chr(9) + '&' + '& ' + taPropsAndComments(lnComment,2)
+*								Endif
+*							Endif
+
+							Endfor
+
+*LScheffler 16.3.2023 set delimiters around properties value, so we know it's without comment and we can keep "&&" in value
+							tcCodigo = tcCodigo + Chr(13) + Chr(10) + Chr(9) + C_DEFINED_PROPVAL_F
+						Endif &&tnPropsAndValues_Count>0
+*!*	/Changed by: LScheffler 16.3.2023
 
 						TEXT TO tcCodigo ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>
@@ -18572,7 +18720,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 		#Endif
 		DoDefault( @toModulo, @toEx, @toFoxBin2Prg )
 
-*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	Changed by: LScheffler 11.2.2021
 *!*	change date="{^2021-02-11,08:50:00}"
 * If toFoxBin2Prg.l_ProcessFiles is not true
 * and the try block was exited
@@ -18583,18 +18731,18 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 		If Not toFoxBin2Prg.l_ProcessFiles Then
 			This.write_OutputFile( '', This.c_OutputFile, @toFoxBin2Prg )
 		Else  &&NOT toFoxBin2Prg.l_ProcessFiles
-*!*	/Changed by: Lutz Scheffler 11.2.2021
+*!*	/Changed by: LScheffler 11.2.2021
 
 			Try
 					With This As c_conversor_dbf_a_prg Of 'FOXBIN2PRG.PRG'
-*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	Changed by: LScheffler 11.2.2021
 *!*	change date="{^2021-02-11,08:50:00}"
 *moved up:
 *				IF NOT toFoxBin2Prg.l_ProcessFiles THEN
 *					.write_OutputFile( '', .c_OutputFile, @toFoxBin2Prg )
 *					EXIT	&& Si se indicó no procesar, se sale aquí. (Modo de simulación)
 *				ENDIF
-*!*	/Changed by: Lutz Scheffler 11.2.2021
+*!*	/Changed by: LScheffler 11.2.2021
 
 						Local lnCodError, laDatabases(1), lnDatabases_Count, laDatabases2(1) ;
 							, lnLen, lc_FileTypeDesc, laLines(1), lcOutputFile ;
@@ -18652,7 +18800,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 								Endif
 							Endif
 						Endif
-* SF
+* LScheffler
 						Use (.c_InputFile) Shared Again Noupdate Alias TABLABIN
 						lnDataSessionID	= toFoxBin2Prg.DataSessionId
 						.RestoreDBCEvents(loDBC, @llDBCEventsEnabled)
@@ -18672,7 +18820,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 						Endif
 
 						loTextStream.WriteLine( C_FB2PRG_CODE )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
-* SF, Analyse, call table
+* LScheffler, Analyse, call table
 						loTable.toText( ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, .c_InputFile, lc_FileTypeDesc, @toFoxBin2Prg )
 
 						loTextStream.Close()
@@ -18763,7 +18911,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 					Endfor
 
 					Store Null To loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
-*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	Changed by: LScheffler 11.2.2021
 *!*	change date="{^2021-02-11,08:50:00}"
 * Release different, parts moved outsidef IF .. ENDIF
 					Release loTextStream ;
@@ -18771,7 +18919,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 						, ln_HexFileType, ll_FileHasCDX, ll_FileHasMemo, ll_FileIsDBC, lc_DBC_Name, lnDataSessionID, lnSelect ;
 						, loTable, loDBFUtils
 			Endtry
-*!*	Changed by: Lutz Scheffler 11.2.2021
+*!*	Changed by: LScheffler 11.2.2021
 *!*	change date="{^2021-02-11,08:50:00}"
 * so the whole try / catch block should not run if in simulation
 
@@ -18779,7 +18927,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 
 * Release  from above
 		Release toModulo, toEx, toFoxBin2Prg, loTextStream ;
-*!*	/Changed by: Lutz Scheffler 11.2.2021
+*!*	/Changed by: LScheffler 11.2.2021
 
 		Return
 	Endproc
@@ -18799,7 +18947,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 Enddefine
 
 
-* SF, Analyse, just locate
+* LScheffler, Analyse, just locate
 Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 	#If .F.
 		Local This As c_conversor_dbc_a_prg Of 'FOXBIN2PRG.PRG'
@@ -18821,8 +18969,7 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 			Local toDatabase As CL_DBC Of 'FOXBIN2PRG.PRG'
 			Local toFoxBin2Prg As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 		#Endif
-*SF 20220613
-*SET STEP ON
+
 		Try
 				With This As c_conversor_dbc_a_prg Of 'FOXBIN2PRG.PRG'
 					Local lnCodError, laDatabases(1), lnDatabases_Count, lcEventsFile, lcExternalHeader, lcCodigo ;
@@ -23427,7 +23574,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 					Store Null To loIndex
 					lcText	= ''
 					.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
-* SF tags
+
 					If .Count > 0 Then
 						TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 						<<>>			<<C_INDEXES_I>>
@@ -23622,7 +23769,7 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 
 				With This As CL_DBC_INDEX_DB Of 'FOXBIN2PRG.PRG'
 					.read_BinDataToProperties(tcIndex)
-* SF tags
+
 					TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>				<<C_INDEX_I>>
 					<<>>					<Name><<._Name>></Name>
@@ -23630,7 +23777,7 @@ Define Class CL_DBC_INDEX_DB As CL_DBC_BASE
 					<<>>					<IsUnique><<._IsUnique>></IsUnique>
 					<<>>				<<C_INDEX_F>>
 					ENDTEXT
-* /SF
+
 					._ToText	= lcText
 				Endwith && THIS
 
@@ -25247,13 +25394,13 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 									Endif
 
 									loRecords	= ._Records
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF
 									loRecords.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, ._Fields, @toFoxBin2Prg,;
 										tl_DBF_BinChar_Base64, tl_DBF_IncludeDeleted )
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 								Otherwise	&& Otro valor
 *-- Estructura a reconocer:
 * 	<tagname>ID<tagname>
@@ -25362,7 +25509,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 
 				Endcase
 
-* Lutz Scheffler 18.03.2021 added handling DBF_IndexList:
+* LScheffler 18.03.2021 added handling DBF_IndexList:
 				If lnFileCount = 1
 					lc_DBF_IndexList = loDBF_CFG.DBF_IndexList
 					If Not Empty(lc_DBF_IndexList)
@@ -25371,11 +25518,11 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 
 				Endif
 
-* Lutz Scheffler 18.03.2021 moved index to get Settings per DBF
+* LScheffler 18.03.2021 moved index to get Settings per DBF
 *-- Indexes
 				loIndexes	= This._Indexes
 				lcText		= lcText + loIndexes.toText( '', '', tc_InputFile, @toFoxBin2Prg, lc_DBF_IndexList)
-* /Lutz Scheffler 18.03.2021
+* /LScheffler 18.03.2021
 
 * setting temporary order
 				If llExportData Then
@@ -25387,12 +25534,12 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 							Index On &lc_DBF_Conversion_Order. To (lcIndexFile) Compact
 							toFoxBin2Prg.writeLog('  > Using Index order key:            ' + lc_DBF_Conversion_Order)
 						Endif
-* Lutz Scheffler 18.03.2021 added handling DBF_Conversion_Condition:
+* LScheffler 18.03.2021 added handling DBF_Conversion_Condition:
 						lc_DBF_Conversion_Condition = loDBF_CFG.DBF_Conversion_Condition
 						If Not Empty(lc_DBF_Conversion_Condition)
 							toFoxBin2Prg.writeLog('  > Using Conversion Condition:       ' + lc_DBF_Conversion_Condition)
 						Endif
-* /Lutz Scheffler 18.03.2021
+* /LScheffler 18.03.2021
 
 					Endif
 				Endif
@@ -25403,14 +25550,14 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 					loRecords	= This._Records
 *FWRITE( toFoxBin2Prg.n_FileHandle, lcText )
 					loTextStream.WriteLine( lcText )		&& Replace VFP low-level file funcs.because the 8-16KB limit.
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF
 					loRecords.toText(@laFields, lnFieldCount, lc_DBF_Conversion_Condition, @toFoxBin2Prg,;
 						IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_BinChar_Base64, m.toFoxBin2Prg.l_DBF_BinChar_Base64 ), m.toFoxBin2Prg.l_DBF_BinChar_Base64 ),;
 						IIF( m.lnFileCount = 1, Nvl( m.loDBF_CFG.l_DBF_IncludeDeleted, m.toFoxBin2Prg.l_DBF_IncludeDeleted ), m.toFoxBin2Prg.l_DBF_IncludeDeleted ))
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 					lcText	= ''
 				Endif
 
@@ -25755,7 +25902,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 		Local This As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG'
 	#Endif
 
-* SF
+* LScheffler
 	Procedure analyzeIndexFilesBlock
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -25863,7 +26010,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 
 		Return llBloqueEncontrado
 	Endproc &&analyzeIndexFileBlock
-* /SF
+* /LScheffler
 
 	Procedure analyzeCodeBlock
 *---------------------------------------------------------------------------------------------------
@@ -25924,7 +26071,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 	Endproc
 
 
-* sf proc wrapping index
+* LScheffler proc wrapping index
 	Procedure toText
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
@@ -25949,7 +26096,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Store Null To loIndex
 				lcText	= ''
 				Dimension taTagInfo(1,6)
-* SF tags
+
 				Local;
 					lcText As String,;
 					loIndex As "CL_DBF_INDEX"
@@ -25965,9 +26112,9 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_PROCESSING_LOC )
 
 
-*!*	Changed by: Lutz Scheffler 18.3.2021
+*!*	Changed by: LScheffler 18.3.2021
 *!*	<pdm>
-*!*	<change date="{^2021-03-18,10:34:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2021-03-18,10:34:00}">Changed by: LScheffler<br />
 *!*	Standalone index <em>tc_InputFile.IDX</em> will be included if <em>DBF_Conversion_Order</em> is activated
 *!*	use only tags of structural compound index file
 *!*	</change>
@@ -25989,7 +26136,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 *					tnTagInfo_Count	= Ataginfo( taTagInfo )
 					tnTagInfo_Count	= Ataginfo( taTagInfo, m.lcIndexFile )
 
-*!*	/Changed by: Lutz Scheffler 18.3.2021
+*!*	/Changed by: LScheffler 18.3.2021
 					Asort( m.taTagInfo, 1, -1, 0, 1 )
 					loIndex			= Createobject("CL_DBF_INDEX")
 
@@ -26076,7 +26223,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Endif &&!EMPTY(m.lcText)
 
 				toFoxBin2Prg.writeLog( Replicate('+', 100)+0h0D0A )
-* /SF
+* /LScheffler
 
 			Catch To loEx
 				If This.n_Debug > 0 And _vfp.StartMode = 0
@@ -26205,7 +26352,7 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 						Exit
 					Endif
 				Endfor
-* SF tags
+
 				TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<>>				<<C_INDEX_I>>
 				<<>>					<TagName><<taTagInfo(m.I,1)>></TagName>
@@ -26216,7 +26363,6 @@ Define Class CL_DBF_INDEX As CL_CUS_BASE
 				<<>>					<Collate><<taTagInfo(m.I,6)>></Collate>
 				<<>>				<<C_INDEX_F>>
 				ENDTEXT
-* /SF
 
 			Catch To loEx
 				If This.n_Debug > 0 And _vfp.StartMode = 0
@@ -26299,11 +26445,11 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 *FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 									Endif
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF, handle include of deleted records
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 								Case m.tl_DBF_IncludeDeleted And '<DELRECORD' $ tcLine
 									Append Blank
 									loRecord.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, @toFields, tl_DBF_BinChar_Base64 )
@@ -26315,7 +26461,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 										DoEvents
 *FFLUSH( toFoxBin2Prg.n_FileHandle, .T. )
 									Endif
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 								Otherwise	&& Otro valor
 *-- No hay otros valores
@@ -26393,7 +26539,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 					tc_DBF_Conversion_Condition	= '.T.'
 				Endif
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF, handle include of deleted records
@@ -26401,16 +26547,16 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 				If m.tl_DBF_IncludeDeleted Then
 					Set Deleted Off
 				Endif
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
-*!*	Changed by: Lutz Scheffler 01.03.2021
+*!*	Changed by: LScheffler 01.03.2021
 *!*	change date="{^2021-03-01,12:45:00}"
 * failure with macro substitution<br/>
 * for wharever reason, macro substitution failed
 * EVALUATE() should do
 *				Scan For &tc_DBF_Conversion_Condition.
 				Scan For Evaluate(m.tc_DBF_Conversion_Condition)
-*!*	/Changed by: Lutz Scheffler 01.03.2021
+*!*	/Changed by: LScheffler 01.03.2021
 
 					I	= m.I + 1
 
@@ -26493,7 +26639,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 * tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
 *---------------------------------------------------------------------------------------------------
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * general note:
 * - added code to handle NoCPTrans coding with or without basr64, just like the flag 4096 of CURSORTOXML
@@ -26511,13 +26657,13 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 					, loField As CL_DBF_FIELD Of 'FOXBIN2PRG.PRG'
 				Store '' To lcFieldName, lcValue
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF, handle include of deleted records
 * Note, the inclusion of records deleted is done in the method calling, so here it will just be read
 				If '<RECORD' $ tcLine Or '<DELRECORD' $ tcLine
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 					llBloqueEncontrado	= .T.
 
 					With This As CL_DBF_RECORD Of 'FOXBIN2PRG.PRG'
@@ -26531,7 +26677,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								Case C_RECORD_F $ tcLine	&& Fin
 									Exit
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF, handle include of deleted records
@@ -26539,7 +26685,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								Case C_DEL_RECORD_F $ tcLine	&& Fin
 									Exit
 
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 								Otherwise	&& Campo de RECORD
 *-- Estructura a reconocer:
 *	<fieldName>VALOR</fieldName>
@@ -26550,7 +26696,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 
 									lcFieldType		= loField._Type
 									llNoCPTran		= Cast( loField._NoCPTran As Logical)
-*!*	Changed by: Lutz Scheffler 14.2.2021
+*!*	Changed by: LScheffler 14.2.2021
 *!*	change date="{^2021-02-14,20:35:00}"
 * Does not recreate .NULL. Field values
 * CAST(.. does not tronsform ".NULL." to .NULL.
@@ -26562,7 +26708,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 										Case m.llNull And Upper(m.lcValue)=='.NULL.'		&& .NULL.
 											luValue = .Null.
 
-*!*	/Changed by: Lutz Scheffler 14.2.2021
+*!*	/Changed by: LScheffler 14.2.2021
 
 										Case lcFieldType == 'L'	&& Logical (Boolean)
 											luValue = Cast(lcValue As Logical)
@@ -26579,7 +26725,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 										Case lcFieldType == 'V'	&& Varchar
 											If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
-*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+*-- LScheffler: might, not must, see XMLTOCURSOR, flag 4096
 												luValue		= Strconv(lcValue,14)
 											Else
 												luValue = .Decode(lcValue)
@@ -26588,7 +26734,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 										Case lcFieldType == 'M'	&& Memo
 											If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
-*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+*--LScheffler: might, not must, see XMLTOCURSOR, flag 4096
 												luValue		= Strconv(lcValue,14)
 											Else
 												If llOneLineOnly And Atc('<![CDATA[', lcValue) = 0
@@ -26633,7 +26779,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 										Otherwise	&& Asume 'C'	&& Character
 											If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
-*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+*--LScheffler: might, not must, see XMLTOCURSOR, flag 4096
 
 *-- If NoCPTran, then must encode in b64binary
 												luValue		= Strconv(lcValue,14)
@@ -26682,9 +26828,9 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 * tnField_Count				(@! IN    ) Cantidad de campos
 * tl_DBF_BinChar_Base64		out of settings (folder or per-file) Transform NocPTrans fields base64
 *---------------------------------------------------------------------------------------------------
-* SF, Analyse, calling method decides if deleted records will be included, we just process
+* LScheffler, Analyse, calling method decides if deleted records will be included, we just process
 
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * general note:
 * - added code to handle NoCPTrans coding with or without base64, just like the flag 4096 of CURSORTOXML
@@ -26699,7 +26845,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 
 				With This As CL_DBF_RECORD Of 'FOXBIN2PRG.PRG'
 *** FDBOZZO 2014/07/15: New "num" property invalidates the use of REGNUM field
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - new operations of DBF, handle include of deleted records
@@ -26711,7 +26857,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 						lcStartTag = C_RECORD_I
 						lcEndTag   = C_RECORD_F
 					Endif
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 
 					TEXT TO lcText TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 					<<>>		<<m.lcStartTag>>
@@ -26740,7 +26886,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								Case lcFieldType == 'V'	&& Varchar
 									If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
-*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+*-- LScheffler: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
 										luValue = .Encode(luValue)
@@ -26749,7 +26895,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								Case lcFieldType $ 'C'	&& Character
 									If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
-*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+*-- LScheffler: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
 										luValue = .Encode(Rtrim(luValue))
@@ -26758,12 +26904,12 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 								Case lcFieldType $ 'M'	&& Memo
 									If llNoCPTran And m.tl_DBF_BinChar_Base64 Then
 *-- If NoCPTran, then must encode in b64binary
-*-- SF: might, not must, see XMLTOCURSOR, flag 4096
+*-- LScheffler: might, not must, see XMLTOCURSOR, flag 4096
 										luValue		= Strconv(luValue,13)
 									Else
-*!*	Changed by: Lutz Scheffler 07.4.2022
+*!*	Changed by: LScheffler 07.4.2022
 *!*	<pdm>
-*!*	<change date="{^2022-04-07,15:11:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2022-04-07,15:11:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/81 / Trailing spaces are lost for memo fields converting dbf with including data.
 *!*	RTRIM removed trsiling spaces from memo
 *!*	</change>
@@ -26773,17 +26919,17 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 
 							Endcase
 
-*!*	Changed by: Lutz Scheffler 07.4.2022
+*!*	Changed by: LScheffler 07.4.2022
 *!*	TEXT .. ENDTEXT removes trailing spaces from lines inserted with TEXXTMERGE
 *!*	Char etc are processed special
 							If Vartype(luValue) = 'C'
-								lcText = lcText + 0H0D0A + '			<' + lcField + '>' + luValue + '</' + lcField + '>'
+								lcText = lcText + 0h0D0A + '			<' + lcField + '>' + luValue + '</' + lcField + '>'
 							Else
 								TEXT TO lcText TEXTMERGE NOSHOW flags 1+2 PRETEXT 1+2 additive
 								<<>>			<<'<' + lcField + '>'>><<luValue>><<'</' + lcField + '>'>>
 								ENDTEXT
 							Endif
-*!*	/Changed by Lutz Scheffler 07.4.2022
+*!*	/Changed by LScheffler 07.4.2022
 						Endif
 					Next
 
@@ -28622,73 +28768,73 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	<pdm>
 *!*	<change date="{^2022-03-16,19:41:00}">Changd By: BH <br />
 *!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/80">Issue #80</a>, by bjornhoeksel
-*!* 	Support ; sign in skip for expression between quotes  
+*!* 	Support ; sign in skip for expression between quotes
 *!*	</change>
 *!*	</pdm>
 
-	PROCEDURE remove_strings
-	*---------------------------------------------------------------------------------------------------
-	* Remove all things between quotes
-	* PARÁMETROS:				
-	* tcLine						 Contenido de la línea en análisis
-	*---------------------------------------------------------------------------------------------------
-	Lparameters tcLine
-	* m.p_format_class		= parameter object
+	Procedure remove_strings
+*---------------------------------------------------------------------------------------------------
+* Remove all things between quotes
+* PARÁMETROS:
+* tcLine						 Contenido de la línea en análisis
+*---------------------------------------------------------------------------------------------------
+		Lparameters tcLine
+* m.p_format_class		= parameter object
 
-	LOCAL lnStringCount, lnStringNumber, lnStartPosition, lnEndPosition
+		Local lnStringCount, lnStringNumber, lnStartPosition, lnEndPosition
 
-	* Count the number of '
-	lnStringCount = OCCURS("'", tcLine) / 2
+* Count the number of '
+		lnStringCount = Occurs("'", tcLine) / 2
 
-	FOR lnStringNumber = 1 TO lnStringCount
-		* Loop for the number of '
-		
-		* Get start position of  '
-		lnStartPosition = ATC("'", tcLine, lnStringNumber)
-		* Get end position of  '
-		lnEndPosition = 	ATC("'", tcLine, lnStringNumber + 1) - lnStartPosition
-		
-		* Replace all that stand between ' with ***
-		tcLine = STUFF(tcLine, lnStartPosition, lnEndPosition, '********')    
-	NEXT
+		For lnStringNumber = 1 To lnStringCount
+* Loop for the number of '
 
-	* Count the number of "
-	lnStringCount = OCCURS(["], tcLine) / 2
+* Get start position of  '
+			lnStartPosition = Atc("'", tcLine, lnStringNumber)
+* Get end position of  '
+			lnEndPosition = 	Atc("'", tcLine, lnStringNumber + 1) - lnStartPosition
 
-	FOR lnStringNumber = 1 TO lnStringCount
-		* Loop for the number of "
+* Replace all that stand between ' with ***
+			tcLine = Stuff(tcLine, lnStartPosition, lnEndPosition, '********')
+		Next
 
-		* Get start position of  "
-		lnStartPosition = ATC(["], tcLine, lnStringNumber)
-		* Get end position of  '
-		lnEndPosition = 	ATC(["], tcLine, lnStringNumber + 1) - lnStartPosition
-		
-		* Replace all that stand between " with ***
-		tcLine = STUFF(tcLine, lnStartPosition, lnEndPosition, '********')    
-	NEXT
+* Count the number of "
+		lnStringCount = Occurs(["], tcLine) / 2
 
-	* Count the number of [
-	lnStringCount = OCCURS("[", tcLine)
+		For lnStringNumber = 1 To lnStringCount
+* Loop for the number of "
 
-	FOR lnStringNumber = 1 TO lnStringCount
-		* Loop for the number of [
-		
-		* Get start position of  [
-		lnStartPosition = AT("[", tcLine, lnStringNumber) + 1
-		
-		* Get end position of  ]
-		lnEndPosition = 	AT("]", tcLine, lnStringNumber) - lnStartPosition
-		
-	 	* Replace all that stand between [ with ***
-		tcLine = STUFF(tcLine, lnStartPosition, lnEndPosition, '********')    
-	NEXT
+* Get start position of  "
+			lnStartPosition = Atc(["], tcLine, lnStringNumber)
+* Get end position of  '
+			lnEndPosition = 	Atc(["], tcLine, lnStringNumber + 1) - lnStartPosition
 
-	* Return line without string content
-	RETURN tcLine
-	
-	ENDPROC
-	
-*!*	/Changd By: BH 30.3.2022	
+* Replace all that stand between " with ***
+			tcLine = Stuff(tcLine, lnStartPosition, lnEndPosition, '********')
+		Next
+
+* Count the number of [
+		lnStringCount = Occurs("[", tcLine)
+
+		For lnStringNumber = 1 To lnStringCount
+* Loop for the number of [
+
+* Get start position of  [
+			lnStartPosition = At("[", tcLine, lnStringNumber) + 1
+
+* Get end position of  ]
+			lnEndPosition = 	At("]", tcLine, lnStringNumber) - lnStartPosition
+
+* Replace all that stand between [ with ***
+			tcLine = Stuff(tcLine, lnStartPosition, lnEndPosition, '********')
+		Next
+
+* Return line without string content
+		Return tcLine
+
+	Endproc
+
+*!*	/Changd By: BH 30.3.2022
 
 	Procedure analyzeCodeBlock_DefineBAR
 *---------------------------------------------------------------------------------------------------
@@ -28735,9 +28881,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 						loReg				= .oReg
 						loReg.ObjType		= C_OBJTYPE_MENUTYPE_OPTION
 						lcBarName			= Alltrim( Strextract( tcLine, 'BAR ' , ' OF' ) )
-*!*	Changd By: SF 22.4.2021
+*!*	Changd By: LScheffler 22.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-22,06:49:00}">Changd By: SF<br />
+*!*	<change date="{^2021-04-22,06:49:00}">Changd By: LScheffler<br />
 *!*	Old style determeines generic name from set name by testing as digit. It could be only digit. :(
 *!*	New style wraps it in ", so anything in " is set name
 *!*	</change>
@@ -28759,19 +28905,19 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *								loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM
 
 						Endcase
-*!*	Changd By: SF 16.3.2022
+*!*	Changd By: LScheffler 16.3.2022
 *!*	<pdm>
-*!*	<change date="{^2022-03-16,19:41:00}">Changd By: SF <br />
+*!*	<change date="{^2022-03-16,19:41:00}">Changd By: LScheffler <br />
 *!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/79">Issue #79</a>, by bjornhoeksel
 * loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM for OTHERWISE too,
 * just move it out of the case
 *!*	</change>
 *!*	</pdm>
 
- 						loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM
+						loReg.OBJCODE = C_OBJCODE_MENUOPTION_BARNUM
 
-*!*	/Changd By: SF 16.3.2022
-*!*	/Changd By: SF 22.4.2021
+*!*	/Changd By: LScheffler 16.3.2022
+*!*	/Changd By: LScheffler 22.4.2021
 						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
 
 						If Upper(loReg.LevelName) # Upper(.c_ParentName)
@@ -28784,7 +28930,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *-- ANALISIS DEL "DEFINE BAR"
 						Do Case
 							Case ';' $ tcLine
- 
+
 								For I = m.I + 1 To tnCodeLines
 									.set_Line( @tcLine, @taCodeLines, m.I )
 
@@ -28799,16 +28945,16 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*	<pdm>
 *!*	<change date="{^2022-03-16,19:41:00}">Changd By: BH <br />
 *!* <a href"https://github.com/fdbozzo/foxbin2prg/issues/80">Issue #80</a>, by bjornhoeksel
-*!* 	Support ; sign in skip for expression between quotes  
+*!* 	Support ; sign in skip for expression between quotes
 *!*	</change>
 *!*	</pdm>
-									lcLineNoStrings = this.remove_strings(tcLine)
-									lnLineEnd = OCCURS(";", lcLineNoStrings)
+									lcLineNoStrings = This.remove_strings(tcLine)
+									lnLineEnd = Occurs(";", lcLineNoStrings)
 
-									IF lnLineEnd > 0
-										* We have ; end line markers not between quotes
-										* Calc first ; not between quotes
-										
+									If lnLineEnd > 0
+* We have ; end line markers not between quotes
+* Calc first ; not between quotes
+
 *!*	Changd By: BH 10.5.2022
 *!*	<pdm>
 *!*	<change date="{^2022-05-10,14:20:00}">Changd By: BH <br />
@@ -28816,19 +28962,19 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!* 	Fix menu bars with shortcuts keys like KEY F6, "F6"; are lost.
 *!*	</change>
 *!*	</pdm>
-										lnLineEnd = OCCURS(";", tcLine) -  lnLineEnd + 1
+										lnLineEnd = Occurs(";", tcLine) -  lnLineEnd + 1
 *!*	/Changd By: BH 10.5.2022
-									ELSE
-										* No line markers not between quotes
+									Else
+* No line markers not between quotes
 										lnLineEnd = 0
 									Endif
-										
-*!*	Changed by: Lutz Scheffler 8.6.2022
+
+*!*	Changed by: LScheffler 8.6.2022
 *!*	<pdm>
-*!*	<change date="{^2022-06-08,16:16:00}">Changed by: Lutz Scheffler<br />
+*!*	<change date="{^2022-06-08,16:16:00}">Changed by: LScheffler<br />
 *!*	https://github.com/fdbozzo/foxbin2prg/issues/84 / Multiple text2bin and bin2text conversion on MNX causes space grow
 *!*	Bin2Text is formated like "xxx ;", trailing space must be removed, TRIM() added for SKIP FOR and PICTRES
-*!*	</change> 
+*!*	</change>
 *!*	</pdm>
 									Do Case
 										Case Left( tcLine, 10 ) == 'NEGOTIATE '
@@ -28841,21 +28987,21 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 										Case Left( tcLine, 4 ) == 'KEY '
 											lcExpr	= Alltrim( Strextract( tcLine, 'KEY ') )
-											IF lnLineEnd > 0
-												lcExpr = SUBSTR(lcExpr, 1, ATC(';', lcExpr, lnLineEnd)-1)
-											ENDIF
-												
+											If lnLineEnd > 0
+												lcExpr = Substr(lcExpr, 1, Atc(';', lcExpr, lnLineEnd)-1)
+											Endif
+
 											lnPos	= At( ',', lcExpr )
 											loReg.KEYNAME	= Alltrim( Left( lcExpr, lnPos-1 ) )
 											loReg.KeyLabel	= Alltrim( Strextract( lcExpr, '"', '"' ) )
 
 										Case Left( tcLine, 9 ) == 'SKIP FOR '
 											loReg.SkipFor	= Alltrim( Strextract( tcLine, 'SKIP FOR ') )
-											IF lnLineEnd > 0
-*!*	Changed by: Lutz Scheffler 8.6.2022
-												loReg.SkipFor = Trim( Substr( loReg.SkipFor, 1, ATC(';', loReg.SkipFor, lnLineEnd)-1) )
-											ENDIF
-	
+											If lnLineEnd > 0
+*!*	Changed by: LScheffler 8.6.2022
+												loReg.SkipFor = Trim( Substr( loReg.SkipFor, 1, Atc(';', loReg.SkipFor, lnLineEnd)-1) )
+											Endif
+
 
 										Case Left( tcLine, 8 ) == 'MESSAGE '
 											loReg.Message	= Alltrim( Substr( tcLine, 9 ) )
@@ -28865,21 +29011,21 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 										Case Left( tcLine, 8 ) == 'PICTRES '
 											loReg.RESNAME	= Alltrim( Strextract( tcLine, 'PICTRES ') )
-										
-											IF lnLineEnd > 0
-*!*	Changed by: Lutz Scheffler 8.6.2022
-												loReg.RESNAME = Trim( Substr( loReg.RESNAME, 1, ATC(';', loReg.RESNAME, lnLineEnd)-1) )
-											ELSE
-												
-											ENDIF
+
+											If lnLineEnd > 0
+*!*	Changed by: LScheffler 8.6.2022
+												loReg.RESNAME = Trim( Substr( loReg.RESNAME, 1, Atc(';', loReg.RESNAME, lnLineEnd)-1) )
+											Else
+
+											Endif
 											loReg.SYSRES	= 1
 
 										Otherwise
 * Nada
-									ENDCASE
-*!*	/Changed by: Lutz Scheffler 8.6.2022
-*!*	/Changd By: BH 30.3.2022									
-									
+									Endcase
+*!*	/Changed by: LScheffler 8.6.2022
+*!*	/Changd By: BH 30.3.2022
+
 
 									If Not ';' $ tcLine	&& Fin
 										Exit
@@ -28892,9 +29038,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 
 						Endcase
 
-*!*	Changd By: SF 22.4.2021
+*!*	Changd By: LScheffler 22.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-22,15:26:00}">Changd By: SF<br />
+*!*	<change date="{^2021-04-22,15:26:00}">Changd By: LScheffler<br />
 *!*	This is not valid here - "_" is never set in get_DefineBarText
 *!*	</change>
 *!*	</pdm>
@@ -28906,7 +29052,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 *!*								Exit
 *!*							Endif
 
-*!*	/Changd By: SF 22.4.2021
+*!*	/Changd By: LScheffler 22.4.2021
 
 
 * Estructuras ejemplo a analizar:
@@ -29032,9 +29178,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 						loReg.ObjType		= C_OBJTYPE_MENUTYPE_OPTION
 						lcPadName			= Alltrim( Strextract( tcLine, 'PAD ' , ' OF' ) )
 
-*!*	Changd By: SF 22.4.2021
+*!*	Changd By: LScheffler 22.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-22,15:56:00}">Changd By: SF<br />
+*!*	<change date="{^2021-04-22,15:56:00}">Changd By: LScheffler<br />
 *!*	Old style determines generic name from set name by testing as digit. It could be only digit. :(
 *!*	New style wraps it in ", so anything in " is set name
 *!*	</change>
@@ -29045,20 +29191,20 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 							lcPadName   	= Substr( m.lcPadName, 2, Len( m.lcPadName ) - 2 )
 							loReg.Name		= m.lcPadName
 
-*!*	Changed By: Lutz Scheffler 18.1.2022
+*!*	Changed by: LScheffler 18.1.2022
 *!*	<pdm>
-*!*	<change date="{^2022-01-18,19:34:00}">Changed Bby SF<br />
+*!*	<change date="{^2022-01-18,19:34:00}">Changed by LScheffler<br />
 *!*	<a href"https://github.com/fdbozzo/foxbin2prg/issues/74">Issue 74</a>, by Jimrnelson
 *!*	Does not work for padname without '"'.
 *!*	</change>
 *!*	</pdm>
 						Else  &&LEFT ( m.lcPadName, 1 ) = '"'
 							loReg.Name		= m.lcPadName
-*!*	/Changed Bby SF 18.1.2022
+*!*	/Changed by LScheffler 18.1.2022
 
 						Endif &&LEFT ( m.lcPadName, 1 ) = '"'
 
-*!*	/Changd By: SF 22.4.2021
+*!*	/Changd By: LScheffler 22.4.2021
 						loReg.LevelName		= Alltrim( Strextract( tcLine, ' OF ', ' PROMPT ' ) )
 
 						If Upper(loReg.LevelName) # Upper(.c_ParentName)
@@ -29320,9 +29466,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Store Null To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
 				lcText		= ''
-*!*	Changed by Lutz Scheffler 22.4.2021
+*!*	Changed by LScheffler 22.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-22,06:24:00}">Changed by Lutz Scheffler<br />
+*!*	<change date="{^2021-04-22,06:24:00}">Changed by LScheffler<br />
 *!*	If the BAR real name starts (legaly) with a digit it could not be recreated
 *!*	added code to add additional information to recreate the name
 *!*	name will wrap into " , so we got DEFINE BAR "Number" OF
@@ -29337,9 +29483,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 					lcName2	= m.lcName
 				Endif &&!Empty(toReg.Name) And ISDIGIT( toReg.Name )
 
-* SF
+* LScheffler 
 * location of definition  of MENU BAR Evl( toReg.Name, toReg.ItemNum )
-* /SF
+* /LScheffler
 *-- DEFINE BAR
 *lcText	= lcTab + '*----------------------------------' + CR_LF
 				lcText	= lcText + lcTab + 'DEFINE BAR ' + m.lcName2 + ' OF ' + Alltrim(toReg.LevelName) ;
@@ -29407,7 +29553,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Release lcTab, loBarPop
 
 		Endtry
-*!*	/Changed by Lutz Scheffler 22.4.2021
+*!*	/Changed by LScheffler 22.4.2021
 
 		Return lcText
 	Endproc
@@ -29422,9 +29568,9 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 * toHeader					(v! IN    ) Objeto Registro de cabecera del menu
 *---------------------------------------------------------------------------------------------------
 		Lparameters toReg, toBarPop, tnNivel, toHeader
-*!*	Changed by Lutz Scheffler 21.4.2021
+*!*	Changed by LScheffler 21.4.2021
 *!*	<pdm>
-*!*	<change date="{^2021-04-21,22:33:00}">Changed by Lutz Scheffler<br />
+*!*	<change date="{^2021-04-21,22:33:00}">Changed by LScheffler<br />
 *!*	If the PAD real name starts (leagly) with "_" it could not be recreated
 *!*	added code to add additional information to recreate the name
 *!*	name will simple wrapped into ", so we got DEFINE PAD "_Name" OF
@@ -29444,7 +29590,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 					toReg.Name	= Evl(toReg.Name, '_' + Transform( Int( Val( toReg.ItemNum ) ), '@L #########') )
 					lcName2		= Alltrim(toReg.Name)
 				Endif &&!EMPTY(toReg.Name) AND toReg.Name = '_'
-*!*	/Changed by Lutz Scheffler 21.4.2021
+*!*	/Changed by LScheffler 21.4.2021
 
 				lcText		= ''
 
@@ -30220,14 +30366,14 @@ Define Class CL_CFG As Custom
 		+ [<memberdata name="l_showerrors" display="l_ShowErrors"/>] ;
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
-		; && SF
+		; && LScheffler
 	+ [<memberdata name="l_oldfilesperdbc" display="l_OldFilesPerDBC"/>] ;
 		+ [<memberdata name="n_usefilesperdbc" display="n_UseFilesPerDBC"/>] ;
 		+ [<memberdata name="l_redirectfileperdbctomain" display="l_RedirectFilePerDBCToMain"/>] ;
 		+ [<memberdata name="l_itemperdbccheck" display="l_ItemPerDBCCheck"/>] ;
 		+ [<memberdata name="l_dbf_binchar_base64" display="l_DBF_BinChar_Base64"/>] ;
 		+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
-		; && /SF
+		; && /LScheffler
 	+ [<memberdata name="n_pjx_conversion_support" display="PJX_Conversion_Support"/>] ;
 		+ [<memberdata name="n_vcx_conversion_support" display="n_VCX_Conversion_Support"/>] ;
 		+ [<memberdata name="n_scx_conversion_support" display="n_SCX_Conversion_Support"/>] ;
@@ -30271,19 +30417,19 @@ Define Class CL_CFG As Custom
 	l_RemoveNullCharsFromCode		= Null
 	l_RemoveZOrderSetFromProps		= Null
 	n_UseClassPerFile				= Null
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 	l_OldFilesPerDBC				= Null
 	n_UseFilesPerDBC				= Null
 	l_RedirectFilePerDBCToMain		= Null
 	l_ItemPerDBCCheck				= Null
 	l_DBF_BinChar_Base64            = Null
 	l_DBF_IncludeDeleted            = Null
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 	l_ClassPerFileCheck				= Null
 	n_ExtraBackupLevels				= Null
 	c_VC2							= Null
@@ -30338,7 +30484,7 @@ Define Class CL_CFG As Custom
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
-*!*	Changed by: Lutz Scheffler 21.02.2021
+*!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
@@ -30349,7 +30495,7 @@ Define Class CL_CFG As Custom
 			.l_ItemPerDBCCheck				= toParentCFG.l_ItemPerDBCCheck
 			.l_DBF_BinChar_Base64			= toParentCFG.l_DBF_BinChar_Base64
 			.l_DBF_IncludeDeleted			= toParentCFG.l_DBF_IncludeDeleted
-*!*	/Changed by: Lutz Scheffler 21.02.2021
+*!*	/Changed by: LScheffler 21.02.2021
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
 			.c_VC2							= toParentCFG.c_VC2
