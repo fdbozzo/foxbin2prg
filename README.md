@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.76
+# FoxBin2Prg v1.19.77
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -143,4 +143,4 @@ DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for tab
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _2022/12/01_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/16_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
