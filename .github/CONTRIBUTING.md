@@ -31,10 +31,10 @@ Stuff is a bit scattered, so this is where to look up.
 1. Please create a fork at github
    - See this [guide](https://www.dataschool.io/how-to-contribute-on-github/) for setting up and using a fork
    - If allready forked, pull the recent state, or get most recent version otherwise.
-0. In _FoxBin2Prg.prg_ there are two version numbers in properties:   
-`n_FB2PRG_Version      = 1.19`    
-`c_FB2PRG_Version_Real = '1.19.60'`
-1. Please set the **minor** part of _c_FB2PRG_Version_Real_ to a new number.   
+0. On top of _FoxBin2Prg.prg_ there are two version numbers:   
+`#DEFINE DN_FB2PRG_VERSION      1.19`    
+`#DEFINE DC_FB2PRG_VERSION_REAL '1.19.60'`
+1. Please set the **minor** part of _DC_FB2PRG_VERSION_REAL_ to a new number.   
    **Do not** alter the **1.19** part. This is written to the text files.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
 3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
@@ -50,6 +50,12 @@ Stuff is a bit scattered, so this is where to look up.
    - Do this even if no change to the setting to change the version number inside this files.
    - Or change version number in those files manually
    - **Note**. If you are not on an English comp, set the value _Language: EN_ in your local _foxbin2prg.cfg_ to create English files.
+   - run like:
+   ```
+   CD Path_Top_Project
+   DO FoxBin2Prg.prg WITH "-c","foxbin2prg.cfg.txt"
+   DO FoxBin2Prg.prg WITH "-t","foxbin2prg.dbc.txt"
+   ```
 5. If a change to the parameters is made, change _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_ properties.
 4. For changed functionality, add descriptive text on the appropriate _.md_ file in _docs_ folder.
 2. Alter the version number for the EXE to the version used above.
@@ -76,4 +82,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2023/03/16_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/20_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)

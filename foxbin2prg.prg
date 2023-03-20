@@ -1,3 +1,6 @@
+#DEFINE	DN_FB2PRG_VERSION		1.19
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.19.78'
+
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
 * Author.........: Fernando D. Bozzo (mailto:fdbozzo@gmail.com) - http://fdbozzo.blogspot.com
@@ -300,6 +303,7 @@
 * 13/06/2022	LScheffler	v1.19.76	Bug Fix: On operation per folder, change of folder must change configuration (JoergSchneider)
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
+* 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -474,6 +478,7 @@
 * 10/06/2022	JoergSchneider		Bug REPORT v1.19.75	On operation per folder, change of folder must change configuration (JoergSchneider)
 * 16/03/2023	JoergSchneider		Bug REPORT v1.19.76	Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler			Bug REPORT v1.19.76	Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
+* 17/03/2023	ericbarte			Bug REPORT v1.19.76	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -990,13 +995,13 @@ Define Class c_foxbin2prg As Session
 *!*			+ [<memberdata name="l_dbf_includedeleted" display="l_DBF_IncludeDeleted"/>] ;
 *!*			+ [<memberdata name="c_language_in" display="c_Language_In"/>] ;
 *!*			+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
-*!*	;&& /SF
+*!*			+ [<memberdata name="n_checkfileinpath" display="n_CheckFileInPath"/>] ;
 
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
 *--
-	n_FB2PRG_Version				= 1.19
-	c_FB2PRG_Version_Real			= '1.19.77'
+	n_FB2PRG_Version				= DN_FB2PRG_VERSION
+	c_FB2PRG_Version_Real			= DC_FB2PRG_VERSION_REAL
 *--
 	c_Language						= ''			&& EN, FR, ES, DE
 	c_Language_In					= '(auto)'
@@ -1053,6 +1058,11 @@ Define Class c_foxbin2prg As Session
 	l_DBF_BinChar_Base64 			= .T.
 	l_DBF_IncludeDeleted            = .F.
 *!*	/Changed by: LScheffler 21.02.2021
+*!*	Changed by: LScheffler 19.03.2023
+* additional options controlling
+* files in non subpath of the PJX
+	n_CheckFileInPath 				= 0
+*!*	/Changed by: LScheffler 19.03.2023
 	n_UseClassPerFile 				= 0
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
@@ -1499,6 +1509,18 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
+*!*	Changed by: LScheffler 19.03.2023
+* additional options controlling
+* files in non subpath of the PJX
+	Procedure n_CheckFileInPath_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_CheckFileInPath
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_CheckFileInPath, This.n_CheckFileInPath )
+		Endif
+	Endproc
+*!*	/Changed by: LScheffler 19.03.2023
+
 	Procedure n_UseClassPerFile_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.n_UseClassPerFile
@@ -1506,7 +1528,6 @@ Define Class c_foxbin2prg As Session
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_UseClassPerFile, This.n_UseClassPerFile )
 		Endif
 	Endproc
-
 
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
@@ -2615,6 +2636,17 @@ Define Class c_foxbin2prg As Session
 *-------- setting for container files (not pjx) --------
 *Classes and forms ( vcx / scx)
 
+*!*	Changed by: LScheffler 19.03.2023
+* additional options controlling
+* files in non subpath of the PJX
+								Case Left( laConfig(m.I), 16 ) == Lower('CheckFileInPath:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
+									If Inlist( lcValue, '0', '1', '2', '3' ) Then
+										lo_CFG.n_CheckFileInPath	= Int( Val(lcValue) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > CheckFileInPath:            ' + Transform(lcValue) )
+									Endif
+*!*	/Changed by: LScheffler 19.03.2023
+
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -2861,6 +2893,7 @@ Define Class c_foxbin2prg As Session
 						Endif &&NOT tl_ForceLog
 					Endif
 * SF
+
 					.writeLog( '> ' + loLang.C_USING_THIS_SETTINGS_LOC + ':' )
 *internal info, just what is read to this moment
 					.writeLog( C_TAB + 'CFG_Actual:                 ' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
@@ -2900,6 +2933,13 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'DBC_Conversion_Support      ' + Transform(.n_DBC_Conversion_Support) )
 					.writeLog( C_TAB + 'FKY_Conversion_Support      ' + Transform(.n_FKY_Conversion_Support) )
 					.writeLog( C_TAB + 'MEM_Conversion_Support      ' + Transform(.n_MEM_Conversion_Support) )
+
+*!*	Changed by: LScheffler 19.03.2023
+* additional options controlling
+* files in non subpath of the PJX
+*setting for PJX files
+					.writeLog( C_TAB + 'CheckFileInPath:            ' + Transform(.n_CheckFileInPath) )
+*!*	/Changed by: LScheffler 19.03.2023
 
 *setting for container files (not pjx)
 *Classes and forms ( vcx / scx)
@@ -3687,7 +3727,7 @@ Define Class c_foxbin2prg As Session
 								lnOptions As Number,;
 								lnOption  As Number
 
-							lnOptions = 48
+							lnOptions = 49
 
 							Local Array;
 								laLines(1),;
@@ -3798,51 +3838,54 @@ Define Class c_foxbin2prg As Session
 							laOptions(33,1) = "*DBF_IncludeDeleted:"                && 0,1 1=.t. 0=Do not include deleted records (default), 1=Include deleted records
 							laOptions(33,2) = ".l_DBF_IncludeDeleted"
 							laOptions(33,3) = 1
-							laOptions(34,1) = "*UseClassPerFile:"                   && n 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-							laOptions(34,2) = ".n_UseClassPerFile"
+							laOptions(34,1) = "*CheckFileInPath:"                   && n 0=Default,no check. Determines 2Txt deals with files not in the subfolders of the PJX
+							laOptions(34,2) = ".n_CheckFileInPath"
 							laOptions(34,3) = 0
-							laOptions(35,1) = "*RedirectClassPerFileToMain:"        && 0,1 1=.t. 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-							laOptions(35,2) = ".l_RedirectClassPerFileToMain"
-							laOptions(35,3) = 1
-							laOptions(36,1) = "*RedirectClassType:"                 && 0,1,2 For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-							laOptions(36,2) = ".n_RedirectClassType"
-							laOptions(36,3) = 0
-							laOptions(37,1) = "*ClassPerFileCheck:"                 && 0,1 1=.t. 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
-							laOptions(37,2) = ".l_ClassPerFileCheck"
-							laOptions(37,3) = 1
-							laOptions(38,1) = "*extension: pj2="                    && ext Text file to PJX
-							laOptions(38,2) = ".c_pj2"
-							laOptions(38,3) = 2
-							laOptions(39,1) = "*extension: vc2="                    && ext Text file to VCX
-							laOptions(39,2) = ".c_vc2"
+							laOptions(35,1) = "*UseClassPerFile:"                   && n 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
+							laOptions(35,2) = ".n_UseClassPerFile"
+							laOptions(35,3) = 0
+							laOptions(36,1) = "*RedirectClassPerFileToMain:"        && 0,1 1=.t. 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
+							laOptions(36,2) = ".l_RedirectClassPerFileToMain"
+							laOptions(36,3) = 1
+							laOptions(37,1) = "*RedirectClassType:"                 && 0,1,2 For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
+							laOptions(37,2) = ".n_RedirectClassType"
+							laOptions(37,3) = 0
+							laOptions(38,1) = "*ClassPerFileCheck:"                 && 0,1 1=.t. 0=Don't check file.class.tx2 inclusion, 1=Check file.class.tx2 inclusion
+							laOptions(38,2) = ".l_ClassPerFileCheck"
+							laOptions(38,3) = 1
+							laOptions(39,1) = "*extension: pj2="                    && ext Text file to PJX
+							laOptions(39,2) = ".c_pj2"
 							laOptions(39,3) = 2
-							laOptions(40,1) = "*extension: sc2="                    && ext Text file to SCX
-							laOptions(40,2) = ".c_sc2"
+							laOptions(40,1) = "*extension: vc2="                    && ext Text file to VCX
+							laOptions(40,2) = ".c_vc2"
 							laOptions(40,3) = 2
-							laOptions(41,1) = "*extension: fr2="                    && ext Text file to FRX
-							laOptions(41,2) = ".c_fr2"
+							laOptions(41,1) = "*extension: sc2="                    && ext Text file to SCX
+							laOptions(41,2) = ".c_sc2"
 							laOptions(41,3) = 2
-							laOptions(42,1) = "*extension: lb2="                    && ext Text file to LBX
-							laOptions(42,2) = ".c_lb2"
+							laOptions(42,1) = "*extension: fr2="                    && ext Text file to FRX
+							laOptions(42,2) = ".c_fr2"
 							laOptions(42,3) = 2
-							laOptions(43,1) = "*extension: mn2="                    && ext Text file to MNX
-							laOptions(43,2) = ".c_mn2"
+							laOptions(43,1) = "*extension: lb2="                    && ext Text file to LBX
+							laOptions(43,2) = ".c_lb2"
 							laOptions(43,3) = 2
-							laOptions(44,1) = "*extension: db2="                    && ext Text file to DBF
-							laOptions(44,2) = ".c_db2"
+							laOptions(44,1) = "*extension: mn2="                    && ext Text file to MNX
+							laOptions(44,2) = ".c_mn2"
 							laOptions(44,3) = 2
-							laOptions(45,1) = "*extension: dc2="                    && ext Text file to DBC
-							laOptions(45,2) = ".c_dc2"
+							laOptions(45,1) = "*extension: db2="                    && ext Text file to DBF
+							laOptions(45,2) = ".c_db2"
 							laOptions(45,3) = 2
-							laOptions(46,1) = "*extension: fk2="                    && ext Text file to FKY
-							laOptions(46,2) = ".c_fk2"
+							laOptions(46,1) = "*extension: dc2="                    && ext Text file to DBC
+							laOptions(46,2) = ".c_dc2"
 							laOptions(46,3) = 2
-							laOptions(47,1) = "*extension: me2="                    && ext Text file to MEM
-							laOptions(47,2) = ".c_me2"
+							laOptions(47,1) = "*extension: fk2="                    && ext Text file to FKY
+							laOptions(47,2) = ".c_fk2"
 							laOptions(47,3) = 2
-							laOptions(48,1) = "*BackgroundImage:"                    && ext Text file to MEM
-							laOptions(48,2) = ".c_BackgroundImage"
-							laOptions(48,3) = 6
+							laOptions(48,1) = "*extension: me2="                    && ext Text file to MEM
+							laOptions(48,2) = ".c_me2"
+							laOptions(48,3) = 2
+							laOptions(49,1) = "*BackgroundImage:"                    && ext Text file to MEM
+							laOptions(49,2) = ".c_BackgroundImage"
+							laOptions(49,3) = 6
 
 							For lnOption = 1 To m.lnOptions
 								lnLine = Ascan( m.laLines , m.laOptions( m.lnOption, 1 ), 1, -1, 1, 4)
@@ -7127,6 +7170,7 @@ Define Class c_conversor_base As Custom
 
 	Procedure Init
 		Local lcSys16, lnPosProg
+
 		Set Deleted On
 		Set Date YMD
 		Set Hours To 24
@@ -17656,8 +17700,8 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 			Local toModulo As CL_PROJECT Of 'FOXBIN2PRG.PRG'
 		#Endif
 		DoDefault( @toModulo, @toEx, @toFoxBin2Prg )
-
-		Try
+ 
+		TRY 
 				Local lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 					, loEx As Exception ;
 					, loProject As CL_PROJECT Of 'FOXBIN2PRG.PRG' ;
@@ -17680,7 +17724,42 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 						loServerHead	= loProject._ServerHead
 
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
+*!*	Changed by: LScheffler 19.3.2023
+*!*	<pdm>
+*!*	<change date="{^2023-03-19,17:16:00}">Changed by: LScheffler<br />
+*!*	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. Issue 93<br />
+*!*	Text2Bin creates a construct for relative paths that will fail if a file is on a different drive.<br />
+*!*	Solution, we create a new option <em>CheckFileInPath<em/> to control the transformation
+*!*	Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.<br />
+*!*	0 Ignore. Default<br />
+*!*	1 Check and error out if file is not on same structure (for source control)<br />
+*!*	2 Create absolute path if file is on different drive.<br />
+*!*	3 Create absolute path if file is not in structure<br />
+*!*	</change>
+*!*	</pdm>
 
+toFoxBin2Prg.n_CheckFileInPath=2
+						lcStr = ADDBS( Chrtran( loProject._HomeDir, ['], [] ))
+						IF toFoxBin2Prg.n_CheckFileInPath=1 THEN
+*let's scan all files against pjx home dir 
+							IF !Empty(loProject._MainProg) AND !EMPTY( JUSTDRIVE( SYS( 2014, loProject._MainProg, m.lcStr))) THEN
+								lcStr = loLang.C_PJXPATH_ERR_LOC1 + loProject._MainProg + loLang.C_PJXPATH_ERR_LOC4 + m.lcStr + loLang.C_PJXPATH_ERR_LOC5
+					 			ERROR 1941
+							ENDIF &&!Empty(loProject._MainProg) AND !EMPTY( JUSTDRIVE( SYS( 2014, loProject._MainProg, m.lcStr))) 
+							IF !Empty(loProject._Icon) AND !EMPTY( JUSTDRIVE( SYS( 2014, loProject._Icon, m.lcStr))) THEN
+								lcStr = loLang.C_PJXPATH_ERR_LOC2 + loProject._Icon + loLang.C_PJXPATH_ERR_LOC4 + m.lcStr + loLang.C_PJXPATH_ERR_LOC5
+					 			ERROR 1941
+							ENDIF &&!Empty(loProject._Icon) AND !EMPTY( JUSTDRIVE( SYS( 2014, loProject._Icon, m.lcStr))) 
+							
+							For Each loReg In loProject &&FOXOBJECT
+							IF !EMPTY( JUSTDRIVE( SYS( 2014, loReg.Name,m.lcStr))) THEN
+								lcStr = loLang.C_PJXPATH_ERR_LOC3 + loReg.Name + loLang.C_PJXPATH_ERR_LOC4 + m.lcStr + loLang.C_PJXPATH_ERR_LOC5
+					 			ERROR 1941
+								ENDIF &&!EMPTY( JUSTDRIVE( SYS( 2014, loReg.Name, m.lcStr))) 
+							Endfor
+						ENDIF &&toFoxBin2Prg.n_CheckFileInPath=1 
+
+*!*	/Changed by: LScheffler 19.3.2023
 
 *-- Directorio de inicio
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -17795,7 +17874,10 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 
 						For Each loReg In loProject &&FOXOBJECT
 							If Not Empty(loReg.COMMENTS)
-								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Description = '" + loReg.COMMENTS + "'"
+*								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Description = '" + loReg.COMMENTS + "'"
+								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(" +;
+								THIS.GetPathFromHome(m.loReg.Name, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg) +;
+								").Description = '" + loReg.COMMENTS + "'"
 							Endif
 							loReg	= Null
 						Endfor
@@ -17812,7 +17894,10 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 
 						For Each loReg In loProject &&FOXOBJECT
 							If loReg.EXCLUDE
-								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Exclude = .T."
+*								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Exclude = .T."
+								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(" +;
+								THIS.GetPathFromHome(m.loReg.Name, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg) +;
+								").Exclude = .T."
 							Endif
 							loReg	= Null
 						Endfor
@@ -17829,7 +17914,10 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 
 						For Each loReg In loProject &&FOXOBJECT
 							If Inlist( Upper( Justext( loReg.Name ) ), 'H','FPW' )
-								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Type = 'T'"
+*								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Type = 'T'"
+								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(" +;
+								THIS.GetPathFromHome(m.loReg.Name, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg) +;
+								").Type = 'T'"
 							Endif
 							loReg	= Null
 						Endfor
@@ -17845,14 +17933,17 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 						ENDTEXT
 
 						If Not Empty(loProject._MainProg)
+*							<<>>	.SetMain(lcCurdir + '<<loProject._MainProg>>')
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.SetMain(lcCurdir + '<<loProject._MainProg>>')
+							<<>>	.SetMain(<<THIS.GetPathFromHome(m.loProject._MainProg, m.lcStr, "lcCurdir + '", "'", m.toFoxBin2Prg)>>)
+
 							ENDTEXT
 						Endif
 
 						If Not Empty(loProject._Icon)
+*							<<>>	.Icon = lcCurdir + '<<loProject._Icon>>'
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
-							<<>>	.Icon = lcCurdir + '<<loProject._Icon>>'
+							<<>>	.Icon = <<THIS.GetPathFromHome(m.loProject._Icon, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg)>>
 							ENDTEXT
 						Endif
 
@@ -17919,6 +18010,9 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 				Do Case
 					Case lnCodError = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
 						toEx.UserValue	= toEx.UserValue + loLang.C_DUPLICATED_FILE_LOC + ': ' + loReg.Name
+					Case lnCodError = 1941
+						toEx.UserValue	= m.lcStr
+
 				Endcase
 
 				If This.n_Debug > 0 And _vfp.StartMode = 0
@@ -18085,6 +18179,56 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 
 		Return
 	Endproc
+
+*!*	Changed by: LScheffler 20.3.2023
+*!*	<pdm>
+*!*	<change date="{^2023-03-20,06:21:00}">Changed by: LScheffler<br />
+*!*	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. Issue 93<br />
+*!*	Text2Bin creates a construct for relative paths that will fail if a file is on a different drive.<br />
+*!*	Solution, we create a new option <em>CheckFileInPath<em/> to control the transformation
+*!*	Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.<br />
+*!*	0 Ignore. Default<br />
+*!*	1 Check and error out if file is not on same structure (for source control)<br />
+*!*	2 Create absolute path if file is on different drive.<br />
+*!*	3 Create absolute path if file is not in structure<br />
+*!*	</change>
+*!*	</pdm>
+	Procedure GetPathFromHome
+	*---------------------------------------------------------------------------------------------------
+	* PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+	* tcFilePath				(v! IN    ) String of a file with path
+	* tcProjPath				(v! IN    ) Home directory of a project 
+	* tcPrefix					(v! IN    ) Prefix for return
+	* tcSufix					(v! IN    ) Sufix for return
+	* toFoxBin2Prg				(v! IN    ) Referencia al objeto principal
+	* 
+	* Return					String to File in text file
+	*---------------------------------------------------------------------------------------------------
+		Lparameters tcFilePath, tcProjPath, tcPrefix, tcSufix, toFoxBin2Prg
+	
+		Local;
+			lcReturn As String
+			
+		lcReturn = SYS( 2014, m.tcFilePath, m.tcProjPath)
+		Do Case
+			Case m.toFoxBin2Prg.n_CheckFileInPath=2 AND !EMPTY( JUSTDRIVE( m.lcReturn))
+*!*	2 Create absolute path if file is on different drive.<br />
+		lcReturn = '"' + m.tcFilePath + '"'
+
+			Case m.toFoxBin2Prg.n_CheckFileInPath=3 AND (!EMPTY( JUSTDRIVE( m.lcReturn)) OR LEFT(m.lcReturn, 2) = "..")
+*!*	3 Create absolute path if file is not in structure<br />
+		lcReturn = '"' + m.tcFilePath + '"'
+	
+			Otherwise
+*!*	just normal relative path
+		lcReturn = m.tcPrefix + m.tcFilePath + m.tcSufix
+	
+		Endcase
+	
+		RETURN m.lcReturn
+	Endproc &&GetPathFromHome
+*!*	/Changed by: LScheffler 20.3.2023
+	
 Enddefine
 
 
@@ -30417,6 +30561,7 @@ Define Class CL_CFG As Custom
 	l_RemoveNullCharsFromCode		= Null
 	l_RemoveZOrderSetFromProps		= Null
 	n_UseClassPerFile				= Null
+	n_CheckFileInPath				= Null
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -30643,6 +30788,11 @@ Define Class CL_LANG As Custom
 	C_INDEX2BIN_STANDALONE_LOC										= ""
 	C_INDEX2BIN_COMPOUND_LOC										= ""
 
+	C_PJXPATH_ERR_LOC1												= ""
+	C_PJXPATH_ERR_LOC2												= ""
+	C_PJXPATH_ERR_LOC3												= ""
+	C_PJXPATH_ERR_LOC4												= ""
+	C_PJXPATH_ERR_LOC5												= ""
 
 	Procedure Init
 		Lparameters tcLanguage
@@ -30795,6 +30945,14 @@ Define Class CL_LANG As Custom
 						<<>>MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
+						<<>>Setting for pjx files
+						<<>>CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+						<<>>                               && 0 Ignore. Default
+						<<>>                               && 1 Check and error out if file is not on same structure (for source control)
+						<<>>                               && 2 Create absolute path if file is on different drive.
+						<<>>                               && 3 Create absolute path if file is not in structure
+						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>
 						<<>>Setting for container files (not pjx)
 						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
 						<<>>- Class per file options (UseClassPerFile: 1)
@@ -30939,6 +31097,11 @@ Define Class CL_LANG As Custom
 							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs for structural index"
 							.C_INDEX2BIN_STANDALONE_LOC										= "  Standalone index "
 							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs for compound index "
+							.C_PJXPATH_ERR_LOC1												= 0h0D0A + 'Main file "'
+							.C_PJXPATH_ERR_LOC2												= 0h0D0A + 'Project icon file "'
+							.C_PJXPATH_ERR_LOC3												= 0h0D0A + 'File ""'
+							.C_PJXPATH_ERR_LOC4												= '"' + 0h0D0A + 'not in PJX folder structure, "' 
+							.C_PJXPATH_ERR_LOC5												= '",' + 0h0D0A + 'check option "CheckFileInPath".' + 0h0D0A0D0A
 
 						Case Inlist(tcLanguage, '34', 'ES') && Spanish (Español)
 *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -31068,6 +31231,14 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 						<<>>MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>
+						<<>>Setting for pjx files
+						<<>>CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+						<<>>                               && 0 Ignore. Default
+						<<>>                               && 1 Check and error out if file is not on same structure (for source control)
+						<<>>                               && 2 Create absolute path if file is on different drive.
+						<<>>                               && 3 Create absolute path if file is not in structure
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>Setting for container files (not pjx)
@@ -31214,6 +31385,11 @@ Define Class CL_LANG As Custom
 							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs for structural index"
 							.C_INDEX2BIN_STANDALONE_LOC										= "  Standalone index "
 							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs for compound index "
+							.C_PJXPATH_ERR_LOC1												= 0h0D0A + 'Main file "'
+							.C_PJXPATH_ERR_LOC2												= 0h0D0A + 'Project icon file "'
+							.C_PJXPATH_ERR_LOC3												= 0h0D0A + 'File ""'
+							.C_PJXPATH_ERR_LOC4												= '"' + 0h0D0A + 'not in PJX folder structure, "' 
+							.C_PJXPATH_ERR_LOC5												= '",' + 0h0D0A + 'check option "CheckFileInPath".' + 0h0D0A0D0A
 
 						Case Inlist(tcLanguage, '49', 'DE') && German (Alemán)
 *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -31348,6 +31524,15 @@ Define Class CL_LANG As Custom
 						<<>>                               && 8=Erzeuge Text- und Binärdatei nur für Struktur und Daten (Merge)
 						<<>>FKY_Conversion_Support: 1      && 0=Aus, 1=Erzeuge nur Textdatei (Diff)
 						<<>>MEM_Conversion_Support: 1      && 0=Aus, 1=Erzeuge nur Textdatei (Diff)
+						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>
+						<<>>Setting for pjx files
+						<<>>CheckFileInPath: 0             && Bestimmt, ob bein Erstellen von pj2 Dateien Dateien in der ordnerstruktur des PJX sein müssen.
+						<<>>                               && Keine Behandlung für UNC Pfade.
+						<<>>                               && 0 Ignorieren. Default
+						<<>>                               && 1 Teste, und breche ab wenn die Datei nicht in der Struktur ist (für Quellcodeverwaltung)
+						<<>>                               && 2 Erstelle absoluten Pfad für Dateien auf einem anderen Laufwerk.
+						<<>>                               && 3 Erstelle absoluten Pfad für Dateien die nicht in der Ordnerstruktur sind.
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>> ------Einstellungen für Container-Dateien (not pjx)
@@ -31512,6 +31697,12 @@ Define Class CL_LANG As Custom
 							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs für den strukturellen Index"
 							.C_INDEX2BIN_STANDALONE_LOC										= "  Eigenständige Indexdatei: "
 							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs für verbundene Indexdatei: "
+							.C_PJXPATH_ERR_LOC1												= 0h0D0A + 'Hauptdatei "'
+							.C_PJXPATH_ERR_LOC2												= 0h0D0A + 'Projekt-Icon Datei "'
+							.C_PJXPATH_ERR_LOC3												= 0h0D0A + 'Datei ""'
+							.C_PJXPATH_ERR_LOC4												= '"' + 0h0D0A + 'ist nicht in der PJX Ordner Struktur, "'
+							.C_PJXPATH_ERR_LOC5												= '",' + 0h0D0A + 'siehe Option "CheckFileInPath".' + 0h0D0A0D0A
+
 
 						Otherwise	&& English (Inglés)
 *-------------------------------------------------------------------------------------------------------------------------------------------
@@ -31642,6 +31833,14 @@ Define Class CL_LANG As Custom
 						<<>>DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 						<<>>FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 						<<>>MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>
+						<<>>Setting for pjx files
+						<<>>CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+						<<>>                               && 0 Ignore. Default
+						<<>>                               && 1 Check and error out if file is not on same structure (for source control)
+						<<>>                               && 2 Create absolute path if file is on different drive.
+						<<>>                               && 3 Create absolute path if file is not in structure
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>Setting for container files (not pjx)
@@ -31789,6 +31988,11 @@ Define Class CL_LANG As Custom
 							.C_INDEX2BIN_STRUCTURAL_LOC										= "  TAGs for structural index"
 							.C_INDEX2BIN_STANDALONE_LOC										= "  Standalone index "
 							.C_INDEX2BIN_COMPOUND_LOC										= "  TAGs for compound index "
+							.C_PJXPATH_ERR_LOC1												= 0h0D0A + 'Main file "'
+							.C_PJXPATH_ERR_LOC2												= 0h0D0A + 'Project icon file "'
+							.C_PJXPATH_ERR_LOC3												= 0h0D0A + 'File ""'
+							.C_PJXPATH_ERR_LOC4												= '"' + 0h0D0A + 'not in PJX folder structure, "' 
+							.C_PJXPATH_ERR_LOC5												= '",' + 0h0D0A + 'check option "CheckFileInPath".' + 0h0D0A0D0A
 
 							.n_LanguageSelectedMethod	= 0	&& 0=Automatic with VERSION(3)
 

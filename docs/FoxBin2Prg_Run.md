@@ -1,4 +1,4 @@
-# Usage in command line style
+# FoxBin2Prg - Usage in command line style
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
@@ -172,4 +172,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

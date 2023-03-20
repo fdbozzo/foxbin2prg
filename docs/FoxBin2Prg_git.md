@@ -1,4 +1,4 @@
-# Use with git
+# FoxBin2Prg - Use with git
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
@@ -419,4 +419,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2022/11/09_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -1,4 +1,4 @@
-# Use with SCM
+# FoxBin2Prg - Use with SCM
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
@@ -76,4 +76,4 @@ feel free to share how you are using it so others can benefit.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
