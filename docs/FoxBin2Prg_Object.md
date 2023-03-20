@@ -1,4 +1,4 @@
-# Usage in object style
+# FoxBin2Prg - Usage in object style
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
@@ -105,4 +105,4 @@ Return value is 0=OK, 1=Error.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2021/03/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

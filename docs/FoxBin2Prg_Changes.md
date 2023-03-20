@@ -1,4 +1,4 @@
-# Change log
+# FoxBin2Prg Change log
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
@@ -27,6 +27,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2023/03/20 | LScheffler | [v1.19.78](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.78) | **Enhancement**: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte) |
+|  |  |  | **Enhancement**: Documentation enhanced |
 | 2023/03/16 | LScheffler | [v1.19.77](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.77) | **Bug Fix**: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider) |
 |  |  |  | **Bug Fix**: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler) |
 | 2022/11/09 | LScheffler | Docu | **Enhancement**: Documentation for git on handling line endings |

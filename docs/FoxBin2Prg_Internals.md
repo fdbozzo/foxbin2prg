@@ -1,4 +1,4 @@
-# Internals
+# FoxBin2Prg Internals
 Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 
 ## Purpose of this document
@@ -30,6 +30,7 @@ As far as possible these are the original documents. Changes are added where fun
    - [Multi-config](#multi-config)
    - [File Capitalization](#file-capitalization)
    - [Conversion processes Logging](#conversion-processes-logging)
+   - [Storing paths for pjx](#storing-paths-for pjx)
    - [Create Class-Per-File](#create-class-per-file)
       - [Complementary options for the UseClassPerFile setting](#complementary-options-for-the-useclassperfile-setting)
          - [RedirectClassPerFileToMain](#redirectclassperfiletomain)
@@ -126,6 +127,8 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated.<br/>The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!.<br/>A value of 4 is used to export Structure and Data, but exported data is not imported again.<br/>A value of 8 is used for bidirectional support (No General fields!). <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
 | FKY_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
 | MEM_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
+|||
+| CheckFileInPath | _0_, 1, 2, 3 |Determines how 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.<br />0 = Ignore. Default<br />1 = Check and error out if file is not on same structure (for source control)<br />2 = Create absolute path if file is on different drive.<br />3 = Create absolute path if file is not in structure<br />See [Storing paths for pjx](#storing-paths-for-pjx) |
 |||
 | UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
 | [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2,<br/>1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
@@ -452,6 +455,23 @@ to see all internal processes, decisions and used optimizations, you can enable 
 Debug messages are translated (+90% of debug messages), but capitalization process messages are not,
 and are available just in Spanish (-10% of debug messages).
 
+### Storing paths for pjx
+The project is basicaly designed to deal with a file structure where all files of a PJX
+are on the same folder or within the subfolders of the PJX.
+This looks like the most usefull way when using source control systems.
+Any way, some prefer to spread there files over different drives.
+In default mode, this will fail on recreating the PJX.
+The default is kept because it's the fastest way, and recreating projects on forks or different comps might break the drives.   
+If files must be stored outside the structure,
+an option allows to store absolute paths for files not in the folder structure **only* in pj2 file.
+To configure this, starting with v1.19.78, you might enable it in foxbin2prg.cfg file:   
+````
+*CheckFileInPath: && 0 = Ignore. Default, 1 = Check and error out if file is not on same structure (for source control), 2 = Create absolute path if file is on different drive.,3 = Create absolute path if file is not in structure
+````
+- 0 - the way FoxBin2Prg works all the time
+- 1 - only testing. The process will stop if a file is not in the structure expected
+- 2 - Use an absolute path do store file location in pjx if the file is stored on a different drive.
+- 3 - Use an absolute path do store file location in pjx if the file is stored on a different drive or not in the folder structure but on same drive.
 ### Create Class-Per-File
 Starting at v1.19.37 you can configure FoxBin2Prg to generate one class per file using TwoFox naming style "basefile.class.vc2"
 with the value "1"
@@ -724,4 +744,4 @@ See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2022/06/10_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

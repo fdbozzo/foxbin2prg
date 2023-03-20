@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.19.77
+*Version: v1.19.78
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
@@ -37,6 +37,14 @@
 *DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 *FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 *MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*----------------------------------------------------------------------------------------------------------------
+
+*Setting for pjx files
+*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+*                               && 0 Ignore. Default
+*                               && 1 Check and error out if file is not on same structure (for source control)
+*                               && 2 Create absolute path if file is on different drive.
+*                               && 3 Create absolute path if file is not in structure
 *----------------------------------------------------------------------------------------------------------------
 
 *Setting for container files (not pjx)
