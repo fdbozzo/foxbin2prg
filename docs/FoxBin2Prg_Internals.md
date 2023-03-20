@@ -30,7 +30,7 @@ As far as possible these are the original documents. Changes are added where fun
    - [Multi-config](#multi-config)
    - [File Capitalization](#file-capitalization)
    - [Conversion processes Logging](#conversion-processes-logging)
-   - [Storing paths for pjx](#storing-paths-for pjx)
+   - [Storing paths for pjx](#storing-paths-for-pjx)
    - [Create Class-Per-File](#create-class-per-file)
       - [Complementary options for the UseClassPerFile setting](#complementary-options-for-the-useclassperfile-setting)
          - [RedirectClassPerFileToMain](#redirectclassperfiletomain)
