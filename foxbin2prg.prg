@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.19
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.19.78'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.19.79'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -304,6 +304,7 @@
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
+* 04/08/2023	LScheffler	v1.19.79	Bug Fix: Bin2Text: Forms with ole controls conversion error (also: any vcx)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -479,6 +480,7 @@
 * 16/03/2023	JoergSchneider		Bug REPORT v1.19.76	Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler			Bug REPORT v1.19.76	Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * 17/03/2023	ericbarte			Bug REPORT v1.19.76	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
+* 04/08/2023	KestasL				Bug REPORT v1.19.78	Bin2Text: Forms with ole controls conversion error (also: any vcx)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -16978,6 +16980,10 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 				loLang	= _Screen.o_FoxBin2Prg_Lang
 
 				With This As c_conversor_vcx_a_prg Of 'FOXBIN2PRG.PRG'
+*SF 20230804
+*issue #95, [Kestutis Laurinavicius] prevent change ole codepage
+*set NOCPTRANS for the vcx
+					SET NOCPTRANS TO ole
 					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
 
 					If toFoxBin2Prg.n_UseClassPerFile = 0 Or Empty(toFoxBin2Prg.c_ClassToConvert) Then
@@ -16992,6 +16998,9 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 							OR PLATFORM == 'COMMENT ' And Lower(OBJNAME) == toFoxBin2Prg.c_ClassToConvert
 					Endif
 
+*set NOCPTRANS for the cursor
+					SET NOCPTRANS TO ole
+*/SF 20230804
 					lnStepCount	= 7
 					Use In (Select("_TABLAORIG"))
 
@@ -17353,7 +17362,14 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 
 				With This As c_conversor_scx_a_prg Of 'FOXBIN2PRG.PRG'
 					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
+*SF 20230804
+*issue #95, [Kestutis Laurinavicius] prevent change ole codepage
+*set NOCPTRANS for the scx
+					SET NOCPTRANS TO ole
 					Select _TABLAORIG.*,Recno() regnum From _TABLAORIG Into Cursor TABLABIN Readwrite
+*set NOCPTRANS for the cursor
+					SET NOCPTRANS TO ole
+*/SF 20230804
 					Use In (Select("_TABLAORIG"))
 
 * Issue#15: Ignorar objetos mal definidos
@@ -17455,7 +17471,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						lnObjCount	= 0
 						lnRecno	= Recno()
 						Locate For Upper( TABLABIN.PLATFORM ) = "WINDOWS" And Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
-
+*SF 20230804
 						Scan Rest While Upper( TABLABIN.PLATFORM ) = "WINDOWS" And Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
 							lnObjCount	= lnObjCount + 1
 							loRegObj	= Null
