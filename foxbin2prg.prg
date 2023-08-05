@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.19
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.19.78'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.19.79'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -304,7 +304,7 @@
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
-* 04/08/2023	LScheffler	v1.19.78	Bug Fix: Bin2Text: Forms with ole controls conversion error (also: any vcx)
+* 04/08/2023	LScheffler	v1.19.79	Bug Fix: Bin2Text: Forms with ole controls conversion error (also: any vcx)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
