@@ -128,7 +128,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ---
 ---
 ## Changes
-See [Changes](./docs/FoxBin2Prg_Changes.md)
+See [Changes](./docs/ChangeLog.md)
 
 ### Changes to Settings
 To get the new settings in config file, use the new create-a-template function:
@@ -148,4 +148,13 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _2023/08/04_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/06_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+<comment>
+Rework Thor_Update_FoxBin2Prg.prg, GetNotes() useless or to much.
+
+location der Dateien
+- remotes version file (version auf github) lcAppID + 'Version.txt'
+- locales version file (version im localen thor) lcAppID + 'VersionFile.txt'
+das muss nicht in der Wurzel liegen
+
+</comment>

@@ -1,0 +1,70 @@
+*ProjectSettings.txt to create Thor deployment
+*See https://github.com/VFPX/VFPXDeployment/blob/main/docs/Documentation.md for help.
+*Paths relative are based on git toplevel folder
+
+*The name to show in Thor. Mandatory
+AppName   = FoxBin2PRG
+
+*The ID for Thor operation. Mandatory
+AppID     = FoxBin2PRG
+
+*Version number
+*A string, or enter pjx to use _VFP.ActiveProject.VersionNumber or, if defined PJXFile
+*SF 20230806: überdenken, wie das hier und pjx und prg zusammengeht
+Version   = 1.0
+
+*Component of Thor or Tool. Use No for Tool.
+Component = Yes
+
+*Remote repository on a git server. There are two ways for the remote repository.
+*- the builder assumes https://github.com/VFPX/{AppId}
+*- or enter the URL here (uncomment to use):
+Repository = https://github.com/fdbozzo/foxbin2prg
+
+*The changelog file. Might be merged into the {AppID}Version.txt
+*The file installed as template (uncomment to use):
+ChangeLog = docs\ChangeLog.md
+
+*Create VFPX community folders and files. Will not overwrite existing files.
+*Include_VFPX = Yes
+
+*Do not create Thor folders and files (uncomment to use):
+*Include_Thor = No
+
+
+* The remaining lines are options to are not mandatory uncomment the options to use *
+
+*"Yes" to auto run FoxBin2prg (Default), else "No" to not run.
+RunBin2Prg = No
+
+*"Yes" to auto run git (Default), else "No" to not run.
+RunGit = No
+
+*The release date formatted as YYYY-MM-DD; if omitted, today
+*VersionDate = 1973-09-11
+
+*Yes (Default) to prompt for Version if not specified
+*Prompt = Yes
+
+*The category to use when adding to the Thor menu. If omitted, "Applications". only when Component is No.
+*Category = {My}
+
+*The relative path to the PJX file to compile. Omit this if that isn't required.
+PJXFile = FoxBin2Prg.pjx
+*The path to the APP or EXE to build from the project, with the extension
+AppFile = FoxBin2Prg.exe
+*Builds the project specified in PJXFile without the RECOMPILE clause.
+*Recompile = No
+
+*A comma-separated list of relative paths to which FoxBin2PRG is to be applied.
+*Bin2PRGFolder = {MySource1,MySource1}
+
+*A different name for the staging folder.
+*InstalledFilesFolder = {MyInstallFolder}
+
+*Remove all files from InstalledFiles folder if InstalledFiles.txt is given
+*Clear_InstalledFiles = No
+
+*A different name for version file used to publish info on the remote server.
+*A help with old projects using a different name for the version file
+*VersionFile_Remote = {AppID}Version.txt

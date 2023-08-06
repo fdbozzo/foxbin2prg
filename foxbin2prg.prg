@@ -305,6 +305,7 @@
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
 * 04/08/2023	LScheffler	v1.19.79	Bug Fix: Bin2Text: Forms with ole controls conversion error (also: any vcx)
+* 06/08/2023	LScheffler	v1.19.79	Enhancement: Added option to return version number
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -532,6 +533,12 @@
 *										-C Create config "tcType" with values of directory named by outputfile
 *										-t Create config template "tcType" for config-per-table file
 * tcType					(v! IN    ) file to create
+*---------------------------------------------------------------------------------------------------
+*** LScheffler 2023-08-06: added option to output version number
+* Usage 2
+* PARAMETERS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
+* tc_InputFile				(c! IN    ) Modus (case sensitive)
+*										-VERNO Return versio number (DC_FB2PRG_VERSION_REAL)
 *---------------------------------------------------------------------------------------------------
 Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName ;
 	, tcRecompile, tcNoTimestamps, tcCFG_File, tcOutputFolder
@@ -771,6 +778,17 @@ Local lnResp, loEx As Exception
 *-- En el caso de recibir "BIN2PRG" o "PRG2BIN" en el primer parámetro, los invierto.
 tc_InputFile	= Evl(tc_InputFile,'')
 tcType			= Evl(tcType,'')
+
+*!*	Changed by: LScheffler 06.08.2023
+*!*	change date="{^2023-08-06,14:29:00}"
+* added option to return version number
+If Atc('-VERNO','-'+tc_InputFile) > 0
+ tc_InputFile = DC_FB2PRG_VERSION_REAL
+ RETURN DC_FB2PRG_VERSION_REAL
+Endif &&Atc('-VERNO','-'+tc_InputFile) > 0 
+
+*!*	/Changed by: LScheffler 06.08.2023
+
 
 *!*	Changed by: LScheffler 15.2.2021
 *!*	change date="{^2021-02-15,18:44:00}"
@@ -30901,7 +30919,6 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Indicates if timestamp of several file types must be cleared ('1' or empty) or not ('0')
 						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
 						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
-						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
@@ -30914,6 +30931,13 @@ Define Class CL_LANG As Custom
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
+						<<>>FOXBIN2PRG.EXE [VERNO]
+						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
 						<<>>
 						<<>>
 							ENDTEXT
@@ -30930,7 +30954,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
 					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
@@ -31190,7 +31214,6 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
 						<<>>cCFG_File:         Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
 						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
-						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
@@ -31203,6 +31226,14 @@ Define Class CL_LANG As Custom
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
+						<<>>FOXBIN2PRG.EXE [VERNO]
+						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
+						<<>>
 						<<>>
 							ENDTEXT
 *** DH 2021-03-04: added HomeDir to text
@@ -31218,7 +31249,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
 					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
@@ -31491,6 +31522,14 @@ Define Class CL_LANG As Custom
 						<<>>-t (t)             Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
 						<<>>                   Wird OutFileName nicht angegeben und ist eine Tabelle offen,
 						<<>>                   so wird eine Konfigurationsdatei <Tabellenname>.dbf._cfg im Verzeichnis der Tabelle angelegt.
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
+						<<>>FOXBIN2PRG.EXE [VERNO]
+						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>
+						<<>>-- Parameter:
+						<<>>-VERNO (VERNO) Debe dies Versionnummer zurück.
+						<<>>
 						<<>>
 							ENDTEXT
 *** DH 2021-03-04: added HomeDir to text
@@ -31506,7 +31545,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG im Vereichnis aus dem FOXBIN2PRG.EXE startet
 					    <<>> 3., optional FOXBIN2PRG.CFG in der Wurzel des Arbeitsverzeichnises
 					    <<>> 4., optional FOXBIN2PRG.CFG in jedem Verzeichnis bis zum Arbeitsverzeichnis
-					    <<>> 5., optional Es können spezielle Einstellungen für einzelne DBF's erzeugt werden (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle)
+					    <<>> 5., optional Es können spezielle Einstellungen für einzelne DBF's erzeugt werden (Syntax: <TableName>.dbf.cfg im Verzeichnis der Tabelle)
 					    <<>> 6., Parameter des Aufrufs von FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Einige Parameter im Aufruf von FOXBIN2PRG.EXE übersteueren diese Vorgaben (bis auf die Defaults)
@@ -31637,7 +31676,7 @@ Define Class CL_LANG As Custom
 							ENDTEXT
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
-						<<>>-- Individual DBF configuration file (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
+						<<>>-- Individuelle DBF Konfigurations-Datei (Syntax: <Tabellenname>.dbf.cfg im Verzeichnis der Tabelle) Defaults siehe FoxBin2prg.cfg
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
@@ -31791,7 +31830,6 @@ Define Class CL_LANG As Custom
 						<<>>cNoTimestamps:     Indicates if timestamp of several file types must be cleared ('1' or empty) or not ('0')
 						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
 						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
-						<<>>
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
 						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
@@ -31804,6 +31842,13 @@ Define Class CL_LANG As Custom
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
+						<<>>FOXBIN2PRG.EXE [VERNO]
+						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>
+						<<>>-- Parameter details:
+						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
 						<<>>
 						<<>>
 							ENDTEXT
@@ -31820,7 +31865,7 @@ Define Class CL_LANG As Custom
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
 					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)

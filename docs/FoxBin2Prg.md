@@ -81,7 +81,7 @@ FoxBin2Prg can be used in tree ways:
    - expandable
 
 ## Keep reading
-- [FoxBin2Prg Full Change History](./FoxBin2Prg_Changes.md)
+- [FoxBin2Prg Full Change History](./ChangeLog.md)
 - [FoxBin2Prg Internals and Configuration](./FoxBin2Prg_Internals.md)
 - [FoxBin2Prg and use with SCM tools](./FoxBin2Prg_SCM.md)
 - [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
@@ -91,4 +91,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/06_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

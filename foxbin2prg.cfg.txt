@@ -8,7 +8,7 @@
 * 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 * 3., optional FOXBIN2PRG.CFG in root of working directory
 * 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-* 5., optional Special settings per single DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
+* 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
 * 6., Parameter calling FOXBIN2PRG.EXE.
 
 * Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)

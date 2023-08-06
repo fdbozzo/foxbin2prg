@@ -5,9 +5,9 @@
 *.pui
 *.orig
 *.err
+*.fxp
 /*.dbf
 /*.CDX
-/*.fxp
 /*.fpt
 
 TESTS/DATOS_READONLY/*.FXP
@@ -19,3 +19,6 @@ foxbin2prg.cfg
 default/
 temp/
 tmp/
+
+*re-include
+!foxbin2prg_keywords.*

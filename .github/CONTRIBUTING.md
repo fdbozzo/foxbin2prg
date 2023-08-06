@@ -41,7 +41,7 @@ Stuff is a bit scattered, so this is where to look up.
    The most recent entries for changes in the middle of this section around _* </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>_,   
    The most recent bugs are listed above _* </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>_
 4. Alter version in _README.md_
-4. Add a description to _docs\FoxBin2Prg_Changes.md_
+4. Add a description to _docs\ChangeLog.md_
 6. Please alter the footer of *.md files touched to recent date.
 4. If a change to the config files is made please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings
@@ -82,4 +82,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2023/03/20_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/06_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)

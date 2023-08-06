@@ -1,0 +1,88 @@
+@@@ Edit this template if necessary. Note the use of placeholders such as
+{APPNAME} and {APPID}; they are substituted with the correct values when
+the deployment process is run, so no need to edit those. Also, this file is
+textmerged so some text may not appear in the generated {APPID}Version.txt.
+Also, any text between @@@ and \\\ is removed.
+
+\\\lparameters toUpdateObject
+
+* Set the properties of the passed updater object.@@@ You likely won't need to
+* edit this code. One possible change is versioning: if you want to use the
+* Julian date as a minor version number, edit the AvailableVersion setting to:
+*
+* 	.AvailableVersion = '{APPNAME}-{VERSION}.{JULIAN}-update-{VERSIONDATE}'
+*
+* or possibly:
+*
+* 	.AvailableVersion = '{APPNAME}-{VERSION}-{JULIAN}-{VERSIONDATE}'\\\
+
+with toUpdateObject
+	.VersionNumber    = '{VERSION} - {VERSIONDATE}'
+	.AvailableVersion = '{APPNAME}-{VERSION}-update-{VERSIONDATE}'
+	.Notes            = GetNotes()
+<<iif('{COMPONENT}' = 'No', '', '*')>>	.RegisterWithThor = GetRegisterWithThor()
+endwith
+return toUpdateObject
+
+* Get the notes for the project.@@@ Edit this code as necessary. If you specify
+* the name of a change log file as the ChangeLog setting in ProjectSettings.txt,
+* the contents of that file are substituted for the CHANGELOG placeholder so
+* there's no need to edit this.\\\
+
+procedure GetNotes
+local lcNotes
+text to lcNotes noshow
+{CHANGELOG}
+endtext
+return lcNotes
+
+@@@* Register the tool with Thor. This template code assumes the tool is an APP
+* file named {AppID}.app, where AppID is the AppID setting in ProjectSettings.txt.
+* If that isn't the case, edit the Code property as necessary.
+
+\\\* Register the tool with Thor. Note: Thor replaces ##InstallFolder## with the
+* installation path for the tool when this code is executed.
+
+<<iif('{COMPONENT}' = 'No', '', '@@@')>>
+procedure GetRegisterWithThor
+ local lcCommand
+ text to lcCommand noshow
+* "{APPNAME}" is a tool created by VFPX Deployment:
+* Create the tool under Thor Tools.
+
+loThorInfo = Execscript (_Screen.cThorDispatcher, 'Thor Register=')
+with loThorInfo
+
+* Required properties.
+
+	.PRGName    = 'Thor_Tool_{APPID}'
+	.FolderName = '##InstallFolder##'
+	.Prompt     = '{APPNAME}'
+
+* Optional properties.
+
+	.Description = '{APPNAME}'
+
+* These are used to group and sort tools when they are displayed in menus or
+* the Thor form.
+
+	.Category        = '{CATEGORY}'
+	.CanRunAtStartUp = .F.
+
+* This is the code to execute when the tool is selected.
+
+	.Code = "do ('##InstallFolder##{APPID}.app')"
+
+* Register the tool with Thor.
+
+	llRegister = .Register()
+endwith
+ endtext
+
+ return lcCommand
+endproc &&GetRegisterWithThor
+<<iif('{COMPONENT}' = 'No', '', '\\\')>><<iif('{COMPONENT}' = 'No', '@@@', '')>>
+* "{APPNAME}" is a Component. No procedure GetRegisterWithThor created by VFPX Deployment 
+<<iif('{COMPONENT}' = 'No', '\\\', '')>>
+
+*created by VFPX Deployment, <<DATETIME()>>
