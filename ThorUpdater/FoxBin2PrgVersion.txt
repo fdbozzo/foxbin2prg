@@ -7,7 +7,7 @@ with toUpdateObject
 	.AvailableVersion = 'FoxBin2PRG-1.19.80-update-20230808'
 	.Notes            = GetNotes()
 *	.RegisterWithThor = GetRegisterWithThor()
-	.RegisterWithThor = "SET STEP ON"
+	.RegisterWithThor = "SET STEP ON"+0h0d0a+"*"+sys(16)
 endwith
 return toUpdateObject
 
