@@ -3,10 +3,11 @@ lparameters toUpdateObject
 * Set the properties of the passed updater object.
 
 with toUpdateObject
-	.VersionNumber    = '1.19.79 - 20230806'
-	.AvailableVersion = 'FoxBin2PRG-1.19.79-update-20230806'
+	.VersionNumber    = '1.19.80 - 20230808'
+	.AvailableVersion = 'FoxBin2PRG-1.19.80-update-20230808'
 	.Notes            = GetNotes()
 *	.RegisterWithThor = GetRegisterWithThor()
+	.RegisterWithThor = "SET STEP ON"
 endwith
 return toUpdateObject
 

@@ -16998,11 +16998,12 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 				loLang	= _Screen.o_FoxBin2Prg_Lang
 
 				With This As c_conversor_vcx_a_prg Of 'FOXBIN2PRG.PRG'
+
+					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
 *SF 20230804
 *issue #95, [Kestutis Laurinavicius] prevent change ole codepage
 *set NOCPTRANS for the vcx
 					SET NOCPTRANS TO ole
-					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
 
 					If toFoxBin2Prg.n_UseClassPerFile = 0 Or Empty(toFoxBin2Prg.c_ClassToConvert) Then
 *-- Exportar la librería entera a texto
