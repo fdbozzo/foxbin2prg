@@ -6,10 +6,27 @@ with toUpdateObject
 	.VersionNumber    = '1.19.80 - 20230808'
 	.AvailableVersion = 'FoxBin2PRG-1.19.80-update-20230808'
 	.Notes            = GetNotes()
-*	.RegisterWithThor = GetRegisterWithThor()
-	.RegisterWithThor = "SET STEP ON"+0h0d0a+"*"+NVL(EXECSCRIPT(_SCREEN.cThorDispatcher, 'Thor_Proc_GetFoxBin2PrgFolder'),'fail')
+	.RegisterWithThor = GetRegisterWithThor()
+*	.RegisterWithThor = "SET STEP ON"+0h0d0a+"*"+NVL(EXECSCRIPT(_SCREEN.cThorDispatcher, 'Thor_Proc_GetFoxBin2PrgFolder'),'fail')
 endwith
 return toUpdateObject
+
+procedure GetRegisterWithThor
+ local lcCommand
+ text to lcCommand noshow
+SET STEP ON
+lcBase = EXECSCRIPT(_SCREEN.cThorDispatcher, 'Thor_Proc_GetFoxBin2PrgFolder')
+IF FILE(m.lcBase+"clean_copied_memo.prg") THEN
+*old crap
+ DO m.lcBase+"clean_thorfolder.prg"
+ENDIF &&FILE(m.lcBase+"clean_copied_memo.prg")
+
+DELETE FILE (m.lcBase+"clean_thorfolder.*")
+
+ endtext
+
+ return lcCommand
+endproc &&GetRegisterWithThor
 
 * Get the notes for the project.
 
