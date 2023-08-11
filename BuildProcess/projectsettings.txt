@@ -65,6 +65,9 @@ AppFile = FoxBin2Prg.exe
 *Remove all files from InstalledFiles folder if InstalledFiles.txt is given
 *Clear_InstalledFiles = No
 
+*add a gitignore to InstalledFiles directory to not add this directory to git repository
+gitIgnore_InstalledFiles = Yes
+
 *A different name for version file used to publish info on the remote server.
 *A help with old projects using a different name for the version file
 *VersionFile_Remote = {AppID}Version.txt

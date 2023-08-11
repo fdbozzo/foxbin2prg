@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.79
+# FoxBin2Prg <!--VERNO-->1.19.79<!--/VerNo-->
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -13,14 +13,11 @@ For fast access a quick run is [introduced](#use-foxbin2prg), more [complex](./d
 If you do not access FoxBin2Prg via [Thor](https://github.com/VFPX/Thor) remind yourself to compile the exe first.   
 
 ---
----
 If you like to value my work, support the Geeks at 
 [![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](https://www.swfox.net).  
 I also do not reject invitations to a beer, next time in Gilbert.
 
 ---
----
-
 
 If you like to see Fernandos blog, or value his work:   
 - Blog: http://fdbozzo.blogspot.com.es/
@@ -32,7 +29,6 @@ If you like to see Fernandos blog, or value his work:
 ## Contribution
 See [contribution](./.github/CONTRIBUTING.md)
 
----
 ---
 
 ## What is FOXBIN2PRG?
@@ -148,7 +144,7 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _2023/08/06_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _<!--CVERSIONDATE-->2023-08-09<!--/CVERSIONDATE-->_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
 <comment>
 Rework Thor_Update_FoxBin2Prg.prg, GetNotes() useless or to much.
 

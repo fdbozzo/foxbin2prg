@@ -15,7 +15,8 @@ DO foxbin2prg.prg WITH lcVerno
 
 *Set Thor verno
 pcVersion = m.lcVerno
-pcPJXFile = "foxbin2prg.pjx"
+pcFullVersion = m.lcVerno
+pcPJXFile = pcPJXFile	&&"foxbin2prg.pjx"
 *Set FoxBin2Prg.exe verno
 For lnProject = 1 To _vfp.Projects.Count
 	If Upper(Fullpath(m.pcPJXFile))==Upper(_vfp.Projects(m.lnProject).Name) Then

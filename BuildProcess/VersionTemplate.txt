@@ -20,9 +20,26 @@ with toUpdateObject
 	.VersionNumber    = '{VERSION} - {VERSIONDATE}'
 	.AvailableVersion = '{APPNAME}-{VERSION}-update-{VERSIONDATE}'
 	.Notes            = GetNotes()
-<<iif('{COMPONENT}' = 'No', '', '*')>>	.RegisterWithThor = GetRegisterWithThor()
+    .RegisterWithThor = GetRegisterWithThor()
 endwith
 return toUpdateObject
+
+
+procedure GetRegisterWithThor
+ local lcCommand
+ text to lcCommand noshow
+lcBase = EXECSCRIPT(_SCREEN.cThorDispatcher, 'Thor_Proc_GetFoxBin2PrgFolder')
+IF FILE(m.lcBase+"clean_copied_memo.prg") THEN
+*remove old crap
+ DO m.lcBase+"clean_thorfolder.prg" WITH lcBase
+ENDIF &&FILE(m.lcBase+"clean_copied_memo.prg")
+
+DELETE FILE (m.lcBase+"clean_thorfolder.*")
+
+ endtext
+
+ return lcCommand
+endproc &&GetRegisterWithThor
 
 * Get the notes for the project.@@@ Edit this code as necessary. If you specify
 * the name of a change log file as the ChangeLog setting in ProjectSettings.txt,
