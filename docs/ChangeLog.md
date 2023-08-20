@@ -27,7 +27,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/08/04 | LScheffler | [v1.19.79](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.79) | **Bug Fix**: Bin2Text: Forms with ole controls conversion error (also: any vcx) #95  (KestasL) |
+| 2023/08/xx | LScheffler | [v1.19.79](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.79) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
+| | | | **Enhancement**: Added option to return version number |
 | 2023/03/20 | LScheffler | [v1.19.78](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.78) | **Enhancement**: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte) |
 |  |  |  | **Enhancement**: Documentation enhanced |
 | 2023/03/16 | LScheffler | [v1.19.77](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.77) | **Bug Fix**: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider) |
