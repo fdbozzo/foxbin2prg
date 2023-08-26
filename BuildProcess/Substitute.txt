@@ -1,2 +1,0 @@
-#List of additional files that will be substituded when running VFPXDeployment for FoxBin2PRG
-docs\ChangeLog.md

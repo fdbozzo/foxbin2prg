@@ -1,24 +1,82 @@
 #exclude general
-*.bak
-*.tmp
-*.prj
-*.pui
-*.orig
-*.err
-*.fxp
-/*.dbf
-/*.CDX
-/*.fpt
+*.*
 
-TESTS/DATOS_READONLY/*.FXP
+#include general
+#dbx data
+#!*.dbf
+#!*.cdx
+#!*.fpt
 
-*special, exclude local config
-foxbin2prg.cfg
+#!*.dbc
+#!*.dc[tx]
+
+#grafics
+!*.bmp
+!*.msk
+!*.ico
+!*.cdr
+!*.cur
+
+#programms
+!*.prg
+!*.fpw
+
+#header
+!*.h
+
+#libs (by FoxBin2prg)
+#!*.vc[xt]
+#!*.pj[xt]
+#!*.fr[xt]
+#!*.mn[xt]
+#!*.sc[xt]
+#!*.lb[xt]
+
+#FoxBin2prg
+!*.vc2
+!*.pj2
+!*.fr2
+!*.mn2
+!*.sc2
+!*.lb2
+!*.d[bc]2
+
+#include special
+#default git
+!*.gitignore
+!/desktop.ini
+!data/*.jpg
+
+#gitlab
+!*.md
+!/.gitlab/
+
+#diverse
+!*.reg
+!README.md
+
+#exclude special
+foxuser_9.*
+_command.prg
+*ref.*
+debug*.*
+Sicherungskopie*.*
+include/projsub.h
+include/projekt_switch.h
+include/projekt_user.h
+Factory_Init.*
 
 #nix von hier
 default/
 temp/
 tmp/
+
+bin2txt.*
+
+#exclude general
+
+*special, reinclude duplicate, or the job might not be done elsewehere
+!/foxbin2prg.cfg.cfg
 
 *re-include
 !foxbin2prg_keywords.*

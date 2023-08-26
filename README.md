@@ -144,7 +144,7 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _<!--CVERSIONDATE-->2023-08-09<!--/CVERSIONDATE-->_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _<!--CVERSIONDATE-->2023-08-12<!--/CVERSIONDATE-->_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
 <comment>
 Rework Thor_Update_FoxBin2Prg.prg, GetNotes() useless or to much.
 
