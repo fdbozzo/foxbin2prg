@@ -101,8 +101,4 @@ The _BIN2PRG, PRG2BIN, INTERACTIVE, SHOWMSG_ cTypes might be mixed freely like:
 Return value is 0=OK, 1=Error.
 
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of [VFPX](https://vfpx.github.io/).   
-
-----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_

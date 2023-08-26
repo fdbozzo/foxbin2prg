@@ -740,8 +740,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of [VFPX](https://vfpx.github.io/).    
-
-----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_

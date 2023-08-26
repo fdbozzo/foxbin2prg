@@ -61,44 +61,11 @@ Stuff is a bit scattered, so this is where to look up.
    ```
 13. Alter the version number for the EXE to the version used above.
 14. Compile to EXE **in VFP9 SP2**
-15. Change Thor ([see below](#thor-conventions))
 16. commit
 17. push to your fork
 18. create a pull request
 
-## Thor conventions
-This project is part of [VFPX](https://vfpx.github.io/) and published via [Thor](https://github.com/VFPX/Thor).   
-Some steps must be done to create the information for Thor
-### Using VFPXDeployment
-The standard procedure to create the Thor files is runing VFPXDeployment via Thor.   
-1. If you add or remove files to FoxBin2Prg, that you need in the release: 
-  - alter *BuildProcess/installedfiles.txt*, see [here](https://github.com/VFPX/VFPXDeployment/blob/main/docs/Documentation.md#installedfilestxt)
-  - open the *Helper/Clean_ThorFolder.prg* file
-  - navigate to *Get_CompareFiles procedure*
-  - alter the TEXT .. ENDTEXT section to remove all files deleted and add new files, check the block for examples.
-  - There is a programm *Helper/GetRevisions.prg* to create the list, but this need to run VFPXDeployment one time to create the INSTALLEDFILES directory before.
-2. Run VFPXDeployment. It will set version number to EXE, compile, set several documentation and create the files for Thor.
-3. commit
-4. push to your fork
-5. create a pull request
-
-### Without VFPXDeployment
-If you do not use VFPXDeployment
-There are some considerations to make to add a new version to Thor.   
-Please check [Supporting Thor Updater](https://vfpx.github.io/thorupdate/)
-In special:
-- Update _Project.txt_, in special the version number
-- update the *Helper/Clean_ThorFolder.prg* file, see above
-- add files to _FoxBin2Prg.zip_, namely
-  - FoxBin2Prg.prg,
-  - FoxBin2Prg.exe,
-  - the config files templates
-  - Clean_ThorFolder.prg
-- Update the version number in _FoxBin2PrgVersion.txt_
-- Update the changelog in _FoxBin2PrgVersion.txt_
-- the use of CreateThorUpdate.ps1 is not longer recommended.
-
 Thanks
 
 ----
-Last changed: _2023/08/08_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_

@@ -15,9 +15,6 @@ As far as possible these are the original documents. Changes are added where fun
 - [Remark](#remark)
 - [Full Change History](#full-change-history)
 
-For recent verisons see 
-![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
-
 ## Full Change History
 This page is not only to get the history of the changes, but to keep a permanent list of people that have contributed to enhance FoxBin2Prg and that I feel as part of the ADN of this tool.
 
@@ -27,8 +24,10 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/08/xx | LScheffler | [v1.19.79](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.79) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
+| 2023/08/26 | LScheffler | [v1.20.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.79) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
 | | | | **Enhancement**: Added option to return version number |
+| | | | **Bug Fix**: Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL) |
+| | | | Since all files will be rewritten due to the codepage stored, it's a good time to change version number too. |
 | 2023/03/20 | LScheffler | [v1.19.78](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.78) | **Enhancement**: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte) |
 |  |  |  | **Enhancement**: Documentation enhanced |
 | 2023/03/16 | LScheffler | [v1.19.77](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.77) | **Bug Fix**: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider) |
@@ -422,8 +421,4 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of [VFPX](https://vfpx.github.io/).   
-
-----
-Last changed: _2023/08/04_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_

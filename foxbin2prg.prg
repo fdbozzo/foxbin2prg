@@ -1,5 +1,5 @@
-#DEFINE	DN_FB2PRG_VERSION		1.19
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.19.79'
+#DEFINE	DN_FB2PRG_VERSION		1.20
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.00'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -304,8 +304,8 @@
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
-* 06/08/2023	LScheffler	v1.19.79	Enhancement: Added option to return version number (KestasL)
-* 20/08/2023	LScheffler	v1.19.79	Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL)
+* 06/08/2023	LScheffler	v1.20.00	Enhancement: Added option to return version number (KestasL)
+* 20/08/2023	LScheffler	v1.20.00	Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------

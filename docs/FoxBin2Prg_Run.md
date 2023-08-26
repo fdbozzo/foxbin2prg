@@ -166,10 +166,5 @@ FoxBin2Prg - Binary2Text.lnk  <path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"
 FoxBin2Prg - Text2Binary.lnk  <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"
 FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 ```
-
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of [VFPX](https://vfpx.github.io/).   
-
-----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_

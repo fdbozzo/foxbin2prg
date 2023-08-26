@@ -11,4 +11,4 @@ and my spanish is good enough to order a beer.
 - [FoxBin2Prg](./FoxBin2Prg.md)
 
 ----
-Last changed: _2021/08/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_

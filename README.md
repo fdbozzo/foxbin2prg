@@ -2,15 +2,13 @@
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
-![VFPX Logo](https://vfpx.github.io/images/vfpxbanner_small.gif)
 
 This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
 It's the main tool with some bugs fixes and some new functions.
 Since I now maintain this project, my [fork](https://github.com/lscheffler/foxbin2prg) is no longer in sync.
 
 The spanish documentation is not longer maintained - it would fade.
-For fast access a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
-If you do not access FoxBin2Prg via [Thor](https://github.com/VFPX/Thor) remind yourself to compile the exe first.   
+Remind yourself to compile the exe first.   
 
 ---
 If you like to value my work, support the Geeks at 
@@ -144,13 +142,4 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _<!--CVERSIONDATE-->2023-08-12<!--/CVERSIONDATE-->_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
-<comment>
-Rework Thor_Update_FoxBin2Prg.prg, GetNotes() useless or to much.
-
-location der Dateien
-- remotes version file (version auf github) lcAppID + 'Version.txt'
-- locales version file (version im localen thor) lcAppID + 'VersionFile.txt'
-das muss nicht in der Wurzel liegen
-
-</comment>
+Last changed: _2023-08-26_

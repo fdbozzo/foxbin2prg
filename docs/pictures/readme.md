@@ -9,4 +9,4 @@ This folder containes the pictures for the reworked documentation resources for 
 - [FoxBin2Prg](../FoxBin2Prg.md)
 
 ----
-Last changed: _2021/03/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/08/26_
