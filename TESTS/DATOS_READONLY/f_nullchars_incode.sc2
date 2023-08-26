@@ -4,36 +4,8 @@
 *--------------------------------------------------------------------------------------------------------------------------------------------------------
 *< FOXBIN2PRG: Version="1.19" SourceFile="f_nullchars_incode.scx" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
+*-- EXTERNAL_CLASS identify external member Class names / EXTERNAL_CLASS identifica los nombres de las Clases externas
+*< EXTERNAL_CLASS: Name="dataenvironment" Baseclass="dataenvironment" />
+*< EXTERNAL_CLASS: Name="form1" Baseclass="form" />
+
 *
-DEFINE CLASS dataenvironment AS dataenvironment 
- 	*< CLASSDATA: Baseclass="dataenvironment" Timestamp="" Scale="" Uniqueid="" ClassIcon="1" />
-
-	DataSource = .NULL.
-	Height = 0
-	Left = 0
-	Name = "Dataenvironment"
-	Top = 0
-	Width = 0
-
-ENDDEFINE
-
-DEFINE CLASS form1 AS form 
- 	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="" Uniqueid="" />
-
-	Caption = "Form1"
-	DoCreate = .T.
-	Height = 79
-	Left = 0
-	Name = "Form1"
-	Top = 0
-	Width = 394
-	
-	PROCEDURE Click
-		LPARAMETERS p1, p2, p3
-	ENDPROC
-
-	PROCEDURE Load
-		LPARAMETERS p1, p2, p3
-	ENDPROC
-
-ENDDEFINE

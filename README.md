@@ -10,13 +10,16 @@ Since I now maintain this project, my [fork](https://github.com/lscheffler/foxbi
 The spanish documentation is not longer maintained - it would fade.
 Remind yourself to compile the exe first.   
 
+**Note: If you have cloned the project, you must run it against itself to create the binaries.**
+1. Run `DO FOXBIN2PRG.PRG WITH "path_to_FoxBin2Prg","Prg2Bin",,,,,,,,,"foxbin2prg_self.cfg"`
+2. Create the exe by compiling the pjx
+
 ---
 If you like to value my work, support the Geeks at 
 [![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](https://www.swfox.net).  
 I also do not reject invitations to a beer, next time in Gilbert.
 
 ---
-
 If you like to see Fernandos blog, or value his work:   
 - Blog: http://fdbozzo.blogspot.com.es/
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 

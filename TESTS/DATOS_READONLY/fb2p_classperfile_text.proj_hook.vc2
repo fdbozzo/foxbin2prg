@@ -7,8 +7,10 @@
 DEFINE CLASS proj_hook AS projecthook 
  	*< CLASSDATA: Baseclass="projecthook" Timestamp="" Scale="Pixels" Uniqueid="" />
 
-	Height = 22
-	Name = "proj_hook"
-	Width = 23
+	*<PropValue>
+		Height = 22
+		Name = "proj_hook"
+		Width = 23
+	*</PropValue>
 
 ENDDEFINE

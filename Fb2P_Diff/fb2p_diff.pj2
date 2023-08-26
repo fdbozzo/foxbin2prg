@@ -33,7 +33,7 @@ _AutoIncrement = "0"
 
 
 *<BuildProj>
-*<.HomeDir = 'g:\desa\foxbin2prg' />
+*<.HomeDir = 'e:\se\vfpx\foxbin2prg\fb2p_diff' />
 
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
@@ -50,10 +50,10 @@ MODIFY PROJECT 'fb2p_diff.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 loProject = _VFP.Projects('fb2p_diff.pjx')
 
 WITH loProject.FILES
-	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" DevInfo="" />
-	.ADD('fb2p_diff.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" User="" DevInfo="" />
-	.ADD('fb2p_diff.scx')		&& *< FileMetadata: Type="K" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" DevInfo="" />
-	.ADD('main_fb2p_diff.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" DevInfo="" />
+	.ADD('config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
+	.ADD('fb2p_diff.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" User="" />
+	.ADD('fb2p_diff.scx')		&& *< FileMetadata: Type="K" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" />
+	.ADD('main_fb2p_diff.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
@@ -65,13 +65,14 @@ WITH loProject.FILES
 	*</ExcludedFiles>
 
 	*<TextFiles>
-	.ITEM(lcCurdir + 'config\config.fpw').Type = 'T'
+	.ITEM(lcCurdir + 'config.fpw').Type = 'T'
 	*</TextFiles>
 ENDWITH
 
 WITH loProject
 	*<ProjectProperties>
 	.SetMain(lcCurdir + 'main_fb2p_diff.prg')
+
 	.Icon = lcCurdir + 'fb2p_diff.ico'
 	.Debug = .T.
 	.Encrypted = .F.

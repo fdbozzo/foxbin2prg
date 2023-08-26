@@ -5,6 +5,7 @@
 *< FOXBIN2PRG: Version="1.19" SourceFile="fb2p_free.dbf" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
 
+
 <TABLE>
 	<MemoFile></MemoFile>
 	<CodePage>1252</CodePage>
@@ -376,39 +377,44 @@
 		</FIELD>
 	</FIELDS>
 
+	<IndexFiles>
 
-	<indexFile>FB2P_FREE.CDX</indexFile>
+		<IndexFile Type="Structural" >
 
-	<INDEXES>
-		<INDEX>
-			<TagName>CARACTER</TagName>
-			<TagType>CANDIDATE</TagType>
-			<Key>CARACTER</Key>
-			<Filter>.NOT.EMPTY(caracter)</Filter>
-			<Order>ASCENDING</Order>
-			<Collate>GENERAL</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>ENTERO</TagName>
-			<TagType>REGULAR</TagType>
-			<Key>ENTERO</Key>
-			<Filter></Filter>
-			<Order>DESCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>LOGICO</TagName>
-			<TagType>BINARY</TagType>
-			<Key>LOGICO</Key>
-			<Filter></Filter>
-			<Order>ASCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-	</INDEXES>
+			<INDEXES>
+				<INDEX>
+					<TagName>CARACTER</TagName>
+					<TagType>CANDIDATE</TagType>
+					<Key>CARACTER</Key>
+					<Filter>.NOT.EMPTY(caracter)</Filter>
+					<Order>ASCENDING</Order>
+					<Collate>GENERAL</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>ENTERO</TagName>
+					<TagType>REGULAR</TagType>
+					<Key>ENTERO</Key>
+					<Filter></Filter>
+					<Order>DESCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>LOGICO</TagName>
+					<TagType>BINARY</TagType>
+					<Key>LOGICO</Key>
+					<Filter></Filter>
+					<Order>ASCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+			</INDEXES>
+		</IndexFile>
+
+	</IndexFiles>
 
 
 	<RECORDS>
-		<RECORD num="4">
+
+		<RECORD>
 			<CARACTER></CARACTER>
 			<FECHA>/  /  </FECHA>
 			<FECHORA>/  /     :  :  </FECHORA>
@@ -423,11 +429,12 @@
 			<VAR_BINARY></VAR_BINARY>
 			<VAR_CHAR></VAR_CHAR>
 			<NOTASBIN></NOTASBIN>
-			<CARC_BIN>ICAgICAgICAgICAgICAgICAgICAgICAgICAgICAg</CARC_BIN>
+			<CARC_BIN></CARC_BIN>
 			<VARCHARBIN></VARCHARBIN>
-			<ID_AUTOINC>45</ID_AUTOINC>
+			<ID_AUTOINC>50</ID_AUTOINC>
 		</RECORD>
-		<RECORD num="2">
+
+		<RECORD>
 			<CARACTER>axaxaxaxaXAXA</CARACTER>
 			<FECHA>1969/11/26</FECHA>
 			<FECHORA>1969/11/26 22:10:06</FECHORA>
@@ -438,15 +445,18 @@
 			<BLOB>NgAuAEUAcwB0AGEAIABlAHMAIAB1AG4AYQAgAGYAcgBhAHMAZQAgAGMAbwBkAGkAZgBpAGMAYQBkAGEAIABlAG4AIABoAGUAeABhACAAeQAgAGMAbwBuACAAYwBhAHIAYQBjAHQAZQByAGUAcwAgAGUAcwBwAGUAYwBpAGEAbABlAHMALgAgAOEA6QDtAPMA+gDBAMkAzQDTANoAxADLAM8A1gDcAOQA6wDvAPYA/ADgAOgA7ADyAPkA8QDRAMcA5wBeAA==</BLOB>
 			<MONEDA>12345.6786</MONEDA>
 			<ENTERO>1234567896</ENTERO>
-			<NOTAS>6.notas TXT.&#13;&#10;·ÈÌÛ˙ƒÀœ÷‹—Ò‰ÎÔˆ¸.&#13;&#10;^Fin«Á</NOTAS>
+			<NOTAS><![CDATA[6.notas TXT.
+·ÈÌÛ˙ƒÀœ÷‹—Ò‰ÎÔˆ¸.
+^Fin«Á]]></NOTAS>
 			<VAR_BINARY>Ni5GcmFzZSBVVEYtOC4gw6HDqcOtw7PDusOEw4vDj8OWw5w=</VAR_BINARY>
 			<VAR_CHAR>var char 6.·ÈÌÛ˙‹—</VAR_CHAR>
-			<NOTASBIN>yQBzAHQAYQAgAGUAcwAgAGwAYQAgAHMAZQDxAGEAbAAhAA==</NOTASBIN>
-			<CARC_BIN>Q2hhckJpbi02LsOhw6nDrcOzw7rDnMORICAgICAg</CARC_BIN>
-			<VARCHARBIN>VkNoYXJCaW4tNi7DocOpw63Ds8O6w5zDkQ==</VARCHARBIN>
-			<ID_AUTOINC>35</ID_AUTOINC>
+			<NOTASBIN><![CDATA[… s t a   e s   l a   s e Ò a l ! ]]></NOTASBIN>
+			<CARC_BIN>CharBin-6.√°√©√≠√≥√∫√ú√ë</CARC_BIN>
+			<VARCHARBIN>VCharBin-6.√°√©√≠√≥√∫√ú√ë</VARCHARBIN>
+			<ID_AUTOINC>55</ID_AUTOINC>
 		</RECORD>
-		<RECORD num="1">
+
+		<RECORD>
 			<CARACTER>lalal.·ÈÌÛ˙‹—</CARACTER>
 			<FECHA>1969/11/27</FECHA>
 			<FECHORA>1969/11/27 22:10:07</FECHORA>
@@ -457,15 +467,18 @@
 			<BLOB>NwAuAEUAcwB0AGEAIABlAHMAIAB1AG4AYQAgAGYAcgBhAHMAZQAgAGMAbwBkAGkAZgBpAGMAYQBkAGEAIABlAG4AIABoAGUAeABhACAAeQAgAGMAbwBuACAAYwBhAHIAYQBjAHQAZQByAGUAcwAgAGUAcwBwAGUAYwBpAGEAbABlAHMALgAgAOEA6QDtAPMA+gDBAMkAzQDTANoAxADLAM8A1gDcAOQA6wDvAPYA/ADgAOgA7ADyAPkA8QDRAMcA5wBeAA==</BLOB>
 			<MONEDA>12345.6787</MONEDA>
 			<ENTERO>1234567897</ENTERO>
-			<NOTAS>7.notas TXT.&#13;&#10;·ÈÌÛ˙ƒÀœ÷‹—Ò‰ÎÔˆ¸.&#13;&#10;^Fin«Á</NOTAS>
+			<NOTAS><![CDATA[7.notas TXT.
+·ÈÌÛ˙ƒÀœ÷‹—Ò‰ÎÔˆ¸.
+^Fin«Á]]></NOTAS>
 			<VAR_BINARY>Ny5GcmFzZSBVVEYtOC4gw6HDqcOtw7PDusOEw4vDj8OWw5w=</VAR_BINARY>
 			<VAR_CHAR>var char 7.·ÈÌÛ˙‹—</VAR_CHAR>
-			<NOTASBIN>yQB4AGkAdABvAHMAIADaAG4AaQBjAG8AcwAhACAAOgApAA==</NOTASBIN>
-			<CARC_BIN>Q2hhckJpbi03LsOhw6nDrcOzw7rDnMORICAgICAg</CARC_BIN>
-			<VARCHARBIN>VkNoYXJCaW4tNy7DocOpw63Ds8O6w5zDkQ==</VARCHARBIN>
-			<ID_AUTOINC>30</ID_AUTOINC>
+			<NOTASBIN><![CDATA[… x i t o s   ⁄ n i c o s !   : ) ]]></NOTASBIN>
+			<CARC_BIN>CharBin-7.√°√©√≠√≥√∫√ú√ë</CARC_BIN>
+			<VARCHARBIN>VCharBin-7.√°√©√≠√≥√∫√ú√ë</VARCHARBIN>
+			<ID_AUTOINC>60</ID_AUTOINC>
 		</RECORD>
-		<RECORD num="3">
+
+		<RECORD>
 			<CARACTER>pepepepepEPE</CARACTER>
 			<FECHA>1969/11/25</FECHA>
 			<FECHORA>1969/11/25 22:10:05</FECHORA>
@@ -476,14 +489,19 @@
 			<BLOB>NQAuAEUAcwB0AGEAIABlAHMAIAB1AG4AYQAgAGYAcgBhAHMAZQAgAGMAbwBkAGkAZgBpAGMAYQBkAGEAIABlAG4AIABoAGUAeABhACAAeQAgAGMAbwBuACAAYwBhAHIAYQBjAHQAZQByAGUAcwAgAGUAcwBwAGUAYwBpAGEAbABlAHMALgAgAOEA6QDtAPMA+gDBAMkAzQDTANoAxADLAM8A1gDcAOQA6wDvAPYA/ADgAOgA7ADyAPkA8QDRAMcA5wBeAA==</BLOB>
 			<MONEDA>12345.6785</MONEDA>
 			<ENTERO>1234567895</ENTERO>
-			<NOTAS>5.notas TXT.&#13;&#10;·ÈÌÛ˙ƒÀœ÷‹—Ò‰ÎÔˆ¸.&#13;&#10;^Fin«Á</NOTAS>
+			<NOTAS><![CDATA[5.notas TXT.
+·ÈÌÛ˙ƒÀœ÷‹—Ò‰ÎÔˆ¸.
+^Fin«Á]]></NOTAS>
 			<VAR_BINARY>NS5GcmFzZSBVVEYtOC4gw6HDqcOtw7PDusOEw4vDj8OWw5w=</VAR_BINARY>
 			<VAR_CHAR>var char 5.·ÈÌÛ˙‹—</VAR_CHAR>
-			<NOTASBIN>yQBzAHQAYQAgAGUAcwAgAGwAYQAgAHMAZQDxAGEAbAAhAA==</NOTASBIN>
-			<CARC_BIN>Q2hhckJpbi01LsOhw6nDrcOzw7rDnMORICAgICAg</CARC_BIN>
-			<VARCHARBIN>VkNoYXJCaW4tNS7DocOpw63Ds8O6w5zDkQ==</VARCHARBIN>
-			<ID_AUTOINC>40</ID_AUTOINC>
+			<NOTASBIN><![CDATA[… s t a   e s   l a   s e Ò a l ! ]]></NOTASBIN>
+			<CARC_BIN>CharBin-5.√°√©√≠√≥√∫√ú√ë</CARC_BIN>
+			<VARCHARBIN>VCharBin-5.√°√©√≠√≥√∫√ú√ë</VARCHARBIN>
+			<ID_AUTOINC>65</ID_AUTOINC>
 		</RECORD>
+
 	</RECORDS>
 
+
 </TABLE>
+

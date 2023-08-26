@@ -5,10 +5,11 @@
 *< FOXBIN2PRG: Version="1.19" SourceFile="fb2p_dbf.dbf" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
 
+
 <TABLE>
 	<MemoFile></MemoFile>
 	<CodePage>1252</CodePage>
-	<LastUpdate>2014/01/06</LastUpdate>
+	<LastUpdate></LastUpdate>
 	<Database>fb2p_dbc.dbc</Database>
 	<FileType>0x00000031</FileType>
 	<FileType_Descrip>Visual FoxPro, autoincrement enabled</FileType_Descrip>
@@ -116,66 +117,117 @@
 		</FIELD>
 	</FIELDS>
 
+	<IndexFiles>
 
-	<indexFile>FB2P_DBF.CDX</indexFile>
+		<IndexFile Type="Structural" >
 
-	<INDEXES>
-		<INDEX>
-			<TagName>ID</TagName>
-			<TagType>PRIMARY</TagType>
-			<Key>ID</Key>
-			<Filter></Filter>
-			<Order>ASCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>EDAD_ND</TagName>
-			<TagType>REGULAR</TagType>
-			<Key>EDAD</Key>
-			<Filter>.NOT.DELETED()</Filter>
-			<Order>ASCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>NOTDELETED</TagName>
-			<TagType>BINARY</TagType>
-			<Key>.NOT.DELETED()</Key>
-			<Filter></Filter>
-			<Order>ASCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>EDAD</TagName>
-			<TagType>CANDIDATE</TagType>
-			<Key>EDAD</Key>
-			<Filter></Filter>
-			<Order>DESCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>DEPTO</TagName>
-			<TagType>REGULAR</TagType>
-			<Key>DEPTO</Key>
-			<Filter>.NOT.DELETED().AND..T.</Filter>
-			<Order>ASCENDING</Order>
-			<Collate>GENERAL</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>NOMBRE</TagName>
-			<TagType>REGULAR</TagType>
-			<Key>NOMBRE</Key>
-			<Filter>.NOT.DELETED().AND..T..AND..T.</Filter>
-			<Order>ASCENDING</Order>
-			<Collate>GENERAL</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>I_NOMBRE</TagName>
-			<TagType>REGULAR</TagType>
-			<Key>NOMBRE</Key>
-			<Filter>.NOT.DELETED().AND..T..AND..NOT..F.</Filter>
-			<Order>DESCENDING</Order>
-			<Collate>GENERAL</Collate>
-		</INDEX>
-	</INDEXES>
+			<INDEXES>
+				<INDEX>
+					<TagName>DEPTO</TagName>
+					<TagType>REGULAR</TagType>
+					<Key>DEPTO</Key>
+					<Filter>.NOT.DELETED().AND..T.</Filter>
+					<Order>ASCENDING</Order>
+					<Collate>GENERAL</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>EDAD</TagName>
+					<TagType>CANDIDATE</TagType>
+					<Key>EDAD</Key>
+					<Filter></Filter>
+					<Order>DESCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>EDAD_ND</TagName>
+					<TagType>REGULAR</TagType>
+					<Key>EDAD</Key>
+					<Filter>.NOT.DELETED()</Filter>
+					<Order>ASCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>ID</TagName>
+					<TagType>PRIMARY</TagType>
+					<Key>ID</Key>
+					<Filter></Filter>
+					<Order>ASCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>I_NOMBRE</TagName>
+					<TagType>REGULAR</TagType>
+					<Key>NOMBRE</Key>
+					<Filter>.NOT.DELETED().AND..T..AND..NOT..F.</Filter>
+					<Order>DESCENDING</Order>
+					<Collate>GENERAL</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>NOMBRE</TagName>
+					<TagType>REGULAR</TagType>
+					<Key>NOMBRE</Key>
+					<Filter>.NOT.DELETED().AND..T..AND..T.</Filter>
+					<Order>ASCENDING</Order>
+					<Collate>GENERAL</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>NOTDELETED</TagName>
+					<TagType>BINARY</TagType>
+					<Key>.NOT.DELETED()</Key>
+					<Filter></Filter>
+					<Order>ASCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+			</INDEXES>
+		</IndexFile>
+
+	</IndexFiles>
+
+
+	<RECORDS>
+
+		<RECORD>
+			<NOMBRE>Fer</NOMBRE>
+			<EDAD>45</EDAD>
+			<ID>18</ID>
+			<BIGTEXT></BIGTEXT>
+			<DEPTO>D.1.C</DEPTO>
+		</RECORD>
+
+		<RECORD>
+			<NOMBRE>Fer2</NOMBRE>
+			<EDAD>46</EDAD>
+			<ID>22</ID>
+			<BIGTEXT></BIGTEXT>
+			<DEPTO>D.1.C</DEPTO>
+		</RECORD>
+
+		<RECORD>
+			<NOMBRE>Fer3</NOMBRE>
+			<EDAD>47</EDAD>
+			<ID>24</ID>
+			<BIGTEXT></BIGTEXT>
+			<DEPTO>D.1.C</DEPTO>
+		</RECORD>
+
+		<RECORD>
+			<NOMBRE>Fer4</NOMBRE>
+			<EDAD>48</EDAD>
+			<ID>26</ID>
+			<BIGTEXT></BIGTEXT>
+			<DEPTO>D.1.C</DEPTO>
+		</RECORD>
+
+		<RECORD>
+			<NOMBRE>Fer5</NOMBRE>
+			<EDAD>49</EDAD>
+			<ID>28</ID>
+			<BIGTEXT></BIGTEXT>
+			<DEPTO>D.1.C</DEPTO>
+		</RECORD>
+
+	</RECORDS>
+
 
 </TABLE>
+

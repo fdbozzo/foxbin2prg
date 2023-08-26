@@ -5,6 +5,7 @@
 *< FOXBIN2PRG: Version="1.19" SourceFile="fb2p_depto.dbf" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
 
+
 <TABLE>
 	<MemoFile></MemoFile>
 	<CodePage>1252</CodePage>
@@ -56,34 +57,42 @@
 		</FIELD>
 	</FIELDS>
 
+	<IndexFiles>
 
-	<indexFile>FB2P_DEPTO.CDX</indexFile>
+		<IndexFile Type="Structural" >
 
-	<INDEXES>
-		<INDEX>
-			<TagName>DEPTO</TagName>
-			<TagType>PRIMARY</TagType>
-			<Key>DEPTO</Key>
-			<Filter>depto=>"0"</Filter>
-			<Order>ASCENDING</Order>
-			<Collate>MACHINE</Collate>
-		</INDEX>
-		<INDEX>
-			<TagName>DESCRIP</TagName>
-			<TagType>REGULAR</TagType>
-			<Key>DESCRIP</Key>
-			<Filter></Filter>
-			<Order>DESCENDING</Order>
-			<Collate>GENERAL</Collate>
-		</INDEX>
-	</INDEXES>
+			<INDEXES>
+				<INDEX>
+					<TagName>DEPTO</TagName>
+					<TagType>PRIMARY</TagType>
+					<Key>DEPTO</Key>
+					<Filter>depto=>"0"</Filter>
+					<Order>ASCENDING</Order>
+					<Collate>MACHINE</Collate>
+				</INDEX>
+				<INDEX>
+					<TagName>DESCRIP</TagName>
+					<TagType>REGULAR</TagType>
+					<Key>DESCRIP</Key>
+					<Filter></Filter>
+					<Order>DESCENDING</Order>
+					<Collate>GENERAL</Collate>
+				</INDEX>
+			</INDEXES>
+		</IndexFile>
+
+	</IndexFiles>
 
 
 	<RECORDS>
-		<RECORD num="1">
+
+		<RECORD>
 			<DEPTO>D.1.C</DEPTO>
 			<DESCRIP>la descrip</DESCRIP>
 		</RECORD>
+
 	</RECORDS>
 
+
 </TABLE>
+

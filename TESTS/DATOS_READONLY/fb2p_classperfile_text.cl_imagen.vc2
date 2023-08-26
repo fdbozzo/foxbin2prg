@@ -11,10 +11,12 @@ DEFINE CLASS cl_imagen AS image OLEPUBLIC		&& otro ole
 		*m: un_metodo_de_clase		&& Para testear si el código se va a la clase cl_form
 	*</DefinedPropArrayMethod>
 
-	Height = 16
-	Name = "cl_imagen"
-	Picture = bmps\sobrepostal.bmp
-	Width = 17
+	*<PropValue>
+		Height = 16
+		Name = "cl_imagen"
+		Picture = bmps\sobrepostal.bmp
+		Width = 17
+	*</PropValue>
 	
 	PROCEDURE un_metodo_de_clase		&& Para testear si el código se va a la clase cl_form
 		* ESTE CODIGO ES DE "cl_imagen::un_metodo_de_clase"

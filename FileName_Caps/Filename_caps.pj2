@@ -50,8 +50,8 @@ MODIFY PROJECT 'Filename_caps.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 loProject = _VFP.Projects('Filename_caps.pjx')
 
 WITH loProject.FILES
-	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" DevInfo="" />
-	.ADD('filename_caps.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" DevInfo="" />
+	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
+	.ADD('filename_caps.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" />
 	*</BuildProj>
 
 	.ITEM('__newproject.f2b').Remove()
@@ -63,13 +63,14 @@ WITH loProject.FILES
 	*</ExcludedFiles>
 
 	*<TextFiles>
-	.ITEM(lcCurdir + 'config\config.fpw').Type = 'T'
+	.ITEM("config\config.fpw").Type = 'T'
 	*</TextFiles>
 ENDWITH
 
 WITH loProject
 	*<ProjectProperties>
-	.SetMain(lcCurdir + 'filename_caps.prg')
+	.SetMain("filename_caps.prg")
+
 	.Debug = .T.
 	.Encrypted = .F.
 	*<.CmntStyle = 1 />

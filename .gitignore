@@ -75,8 +75,8 @@ bin2txt.*
 
 #exclude general
 
-*special, reinclude duplicate, or the job might not be done elsewehere
-!/foxbin2prg.cfg.cfg
+*special, settings to create foxbin2prg binary
+!/foxbin2prg_self.cfg
 
 *re-include
 !foxbin2prg_keywords.*

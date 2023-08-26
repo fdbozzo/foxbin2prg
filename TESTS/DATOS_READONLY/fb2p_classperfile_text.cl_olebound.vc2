@@ -7,8 +7,10 @@
 DEFINE CLASS cl_olebound AS oleboundcontrol 
  	*< CLASSDATA: Baseclass="oleboundcontrol" Timestamp="" Scale="Pixels" Uniqueid="" />
 
-	Height = 100
-	Name = "cl_olebound"
-	Width = 100
+	*<PropValue>
+		Height = 100
+		Name = "cl_olebound"
+		Width = 100
+	*</PropValue>
 
 ENDDEFINE

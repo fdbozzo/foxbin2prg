@@ -4,42 +4,7 @@
 *--------------------------------------------------------------------------------------------------------------------------------------------------------
 *< FOXBIN2PRG: Version="1.19" SourceFile="fb2p_test_bug_estructural.vcx" /> (Solo para binarios VFP 9 / Only for VFP 9 binaries)
 *
+*-- EXTERNAL_CLASS identify external member Class names / EXTERNAL_CLASS identifica los nombres de las Clases externas
+*< EXTERNAL_CLASS: Name="cl_form" Baseclass="form" />
+
 *
-DEFINE CLASS cl_form AS form 
- 	*< CLASSDATA: Baseclass="form" Timestamp="" Scale="Pixels" Uniqueid="" />
-
-	*-- OBJECTDATA items order determines ZOrder / El orden de los items OBJECTDATA determina el ZOrder 
-	*< OBJECTDATA: ObjPath="Command1" UniqueID="" Timestamp="" />
-
-	Caption = "Form"
-	DoCreate = .T.
-	Name = "cl_form"
-
-	ADD OBJECT 'Command1' AS commandbutton WITH ;
-		Caption = "Command1", ;
-		Height = 27, ;
-		Left = 36, ;
-		Name = "Command1", ;
-		Top = 32, ;
-		Width = 84
-		*< END OBJECT: BaseClass="commandbutton" />
-	
-	PROCEDURE Load
-		TEXT	&& COMPROBACIÓN DE CIERRE DE ESTRUCTURA "ENDPROC"
-		
-			*-- Dejando la últim línea sin ENTER se comprueba si el ENDPROC
-			*-- se queda pegado a la misma o no por faltar un CR+LF antes del mismo.
-			
-		ENDTEXT && Esto termina sin ENTER.
-	ENDPROC
-
-	PROCEDURE Command1.Click
-		TEXT	&& COMPROBACIÓN DE CIERRE DE ESTRUCTURA "ENDPROC"
-		
-			*-- Dejando la últim línea sin ENTER se comprueba si el ENDPROC
-			*-- se queda pegado a la misma o no por faltar un CR+LF antes del mismo.
-			
-		ENDTEXT && Esto termina sin ENTER.
-	ENDPROC
-
-ENDDEFINE

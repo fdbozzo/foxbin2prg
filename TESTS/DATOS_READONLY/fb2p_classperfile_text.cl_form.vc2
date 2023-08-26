@@ -23,22 +23,24 @@ DEFINE CLASS cl_form AS form OLEPUBLIC		&& mi OLE server DLL
 
 	HIDDEN ahidden,chidden
 	PROTECTED aprotected,cprotected
-	Caption = "Form"
-	chidden = 		&& Prop.Hidden
-	cprotected = 		&& Prop.Protegida
-	DoCreate = .T.
-	Height = 345
-	Left = 0
-	Name = "cl_form"
-	Picture = bmps\scccheckout.bmp
-	Top = 0
-	Width = 570
-	_memberdata = <VFPData>
-		<memberdata name="ahidden" display="aHidden"/>
-		<memberdata name="aprotected" display="aProtected"/>
-		<memberdata name="chidden" display="cHidden"/>
-		<memberdata name="cprotected" display="cProtected"/>
-		</VFPData>		&& XML Metadata for customizable properties
+	*<PropValue>
+		Caption = "Form"
+		chidden = 
+		cprotected = 
+		DoCreate = .T.
+		Height = 345
+		Left = 0
+		Name = "cl_form"
+		Picture = bmps\scccheckout.bmp
+		Top = 0
+		Width = 570
+		_memberdata = <VFPData>
+			<memberdata name="ahidden" display="aHidden"/>
+			<memberdata name="aprotected" display="aProtected"/>
+			<memberdata name="chidden" display="cHidden"/>
+			<memberdata name="cprotected" display="cProtected"/>
+		</VFPData>
+	*</PropValue>
 
 	ADD OBJECT 'Cl_commandgroup1' AS cl_commandgroup WITH ;
 		BackColor = 255,128,192, ;

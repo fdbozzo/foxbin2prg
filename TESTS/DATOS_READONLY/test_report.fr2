@@ -76,7 +76,9 @@ COLOR=2
 	<style><![CDATA[]]>
 	<expr><![CDATA["Anothertest caption :)--end--"]]>
 	<supexpr><![CDATA[]]>
-	<comment><![CDATA[Este esun commenten 3 líneas!]]>
+	<comment><![CDATA[Este es
+un comment
+en 3 líneas!]]>
 	<user><![CDATA[]]>
 </Reportes>
 <Reportes 
