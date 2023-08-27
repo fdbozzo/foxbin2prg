@@ -1,4 +1,4 @@
-# FoxBin2Prg <!--VERNO-->1.19.79<!--/VerNo-->
+# FoxBin2Prg 1.20.00
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -11,7 +11,11 @@ The spanish documentation is not longer maintained - it would fade.
 Remind yourself to compile the exe first.   
 
 **Note: If you have cloned the project, you must run it against itself to create the binaries.**
-1. Run `DO FOXBIN2PRG.PRG WITH "path_to_FoxBin2Prg","Prg2Bin",,,,,,,,,"foxbin2prg_self.cfg"`
+1. Run   
+```
+CD "path_to_FoxBin2Prg"
+DO FOXBIN2PRG.PRG WITH JUSTPATH(FULLPATH("","")),"Prg2Bin",,,,,,,,,FULLPATH("","")+"foxbin2prg_self.cfg"
+```
 2. Create the exe by compiling the pjx
 
 ---
