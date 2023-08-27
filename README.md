@@ -5,23 +5,25 @@
 
 This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
 It's the main tool with some bugs fixes and some new functions.
-Since I now maintain this project, my [fork](https://github.com/lscheffler/foxbin2prg) is no longer in sync.
+I now maintain only [this project](https://github.com/lscheffler/foxbin2prg), https://github.com/fdbozzo/foxbin2prg is no longer in sync.
 
 The spanish documentation is not longer maintained - it would fade.
 Remind yourself to compile the exe first.   
 
-**Note: If you have cloned the project, you must run it against itself to create the binaries.**
+## Regenerate after download / clone
+**Note: If you have cloned the project, you must run it against itself to create the binaries ane exes.**
 1. Run   
 ```
 CD "path_to_FoxBin2Prg"
-DO FOXBIN2PRG.PRG WITH JUSTPATH(FULLPATH("","")),"Prg2Bin",,,,,,,,,FULLPATH("","")+"foxbin2prg_self.cfg"
+*This uses a special configuration
+DO ReCreate_FoxBin2Prg.prg
 ```
 2. Create the exe by compiling the pjx
 
 ---
 If you like to value my work, support the Geeks at 
 [![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](https://www.swfox.net).  
-I also do not reject invitations to a beer, next time in Gilbert.
+I also do not reject invitations to a beer, next time in Arizona.
 
 ---
 If you like to see Fernandos blog, or value his work:   
@@ -83,6 +85,9 @@ extension: DC2=DCA
 ```
 DO FOXBIN2PRG.PRG WITH "<path>\archivo.scx"     ==> Generates the TEXT version sc2 extension
 DO FOXBIN2PRG.PRG WITH "<path>\archivo.sc2"     ==> Regenerates the binary version with scx extension
+
+DO FOXBIN2PRG.PRG WITH "<path>","Prg2Bin"     ==> Generates the TEXT of the path, that is directory or file
+DO FOXBIN2PRG.PRG WITH "<path>","Bin2Prg"     ==> Regenerates the binary version of the path, that is directory or file
 
 DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with newest settings
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
@@ -149,4 +154,4 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _2023-08-26_
+Last changed: _2023-08-27_

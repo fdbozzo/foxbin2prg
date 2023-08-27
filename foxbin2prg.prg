@@ -752,6 +752,7 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_FILETYPE_DIRECTORY		"D"
 #Define C_FILETYPE_FILE				"F"
 #Define C_FILETYPE_QUERYSUPPORT		"Q"
+#Define C_FILETYPE_CONFIG			"C"
 *-- Fin / End
 
 *-- Predefine 64MB of RAM
@@ -795,6 +796,7 @@ Endif &&Atc('-VERNO','-'+tc_InputFile) > 0
 *!*	change date="{^2021-02-15,18:44:00}"
 * added option to create config files
 If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 ;
+		OR Atc('-BIN2TEXT','-'+tc_InputFile) > 0 Or Atc('-TEXT2BIN','-'+tc_InputFile) > 0 ;
 		OR Atc('-SHOWMSG','-'+tc_InputFile) > 0;
 		Or Atc('-INTERACTIVE','-'+tc_InputFile) > 0 Or Atc('-?','-'+tc_InputFile) > 0 ;
 		OR Atc('-SIMERR_I0','-'+tc_InputFile) > 0 Or Atc('-SIMERR_I1','-'+tc_InputFile) > 0 ;
@@ -807,14 +809,25 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 	Release pcParamX
 Endif
 
-* only 2 paras for -cCt
+*!*	*SF 20230827 SET STEP ON
+*!*	* only 3 paras for -cCt
+*!*	If Pcount()=3;
+*!*			And Upper(tcType)=='-C' Or tcType=='-t' ;
+*!*			OR Upper(tcType)=='C' Or tcType=='t' THEN
+*!*		tcCFG_File = tcTextName
+
+*!*	Endif &&Pcount()=3	And Upper(tc_InputFile)=='-C' Or tc_InputFile=='-t' OR Upper(tc_InputFile)=='C' Or tc_InputFile= ... 
+
 Do Case
-	Case Pcount()=1 And ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() )
+*!*		Case (Pcount()=1 And ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() ));
+			OR (Pcount()=3 And EMPTY(tc_InputFile) AND ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() ))
+	Case (Pcount()=1 And ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() ))
 		tc_InputFile = Dbf() + '._cfg'
 
 	Case Pcount()=1 And ( Upper( tcType ) =='-C' Or Upper( tcType ) =='C' )
 		tc_InputFile = 'FoxBin2PRG._cfg'
 
+*!*		Case Pcount()>3 And ( Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t' )
 	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t' )
 		tc_InputFile = ""
 		tcType       = ""
@@ -2327,6 +2340,7 @@ Define Class c_foxbin2prg As Session
 					Store 0 To lnKey
 					loLang				= _Screen.o_FoxBin2Prg_Lang
 					tcRecompile			= Evl(tcRecompile, .c_Recompile)
+*SF 20230827 SET STEP ON
 					lcConfigFile		= .c_Foxbin2prg_ConfigFile
 					tc_InputFile		= Evl(tc_InputFile, .c_InputFile)
 					tcInputFile_Type	= Evl(tcInputFile_Type,'')
@@ -2362,7 +2376,7 @@ Define Class c_foxbin2prg As Session
 								tcInputFile_Type	= C_FILETYPE_FILE
 						Endcase
 					Endif
-
+*SF 20230827 SET STEP ON
 					If .l_Main_CFG_Loaded And Not Empty(tc_InputFile) And Not tcInputFile_Type == C_FILETYPE_QUERYSUPPORT Then
 						If .n_CFG_EvaluateFromParam = 1
 * Si se indicó por parámetro (modo objeto), usarlo como Maestro
@@ -2390,7 +2404,7 @@ Define Class c_foxbin2prg As Session
 					.l_CFG_CachedAccess	= .F.
 					lc_CFG_Path			= Upper( Justpath( lcConfigFile ) )
 					lo_CFG				= This
-
+*SF 20230827 SET STEP ON 
 *-- Búsqueda del CFG del PATH indicado en la caché
 					If .l_Main_CFG_Loaded
 
@@ -2502,6 +2516,7 @@ Define Class c_foxbin2prg As Session
 						.writeLog( '> ' + loLang.C_READING_CFG_VALUES_FROM_DISK_LOC + ':' )
 						.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
+*!*	*SF 20230827 SET STEP ON 
 						lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
 
 						For I = 1 To Alines( laConfig, Filetostr( lcConfigFile ), 1+4 )
@@ -2903,6 +2918,7 @@ Define Class c_foxbin2prg As Session
 
 					.l_Main_CFG_Loaded	= .T.
 
+*SF 20230827 SET STEP ON 
 					If llMasterEval
 * Si se inidicó un archivo CFG por parámetro (modo objeto), aqui se bloquea
 * al Nº de configuración correspondiente.
@@ -3544,7 +3560,7 @@ Define Class c_foxbin2prg As Session
 								+ 'tcType = "' + tcType + '"' + CR_LF ;
 								+ CR_LF ;
 								+ loLang.C_ALLOWED_VALUES_ARE_LOC + ': ' + CR_LF ;
-								+ '*, *-, -BIN2PRG, -PRG2BIN, -SHOWMSG, -SIMERR_I0, -SIMERR_I1, -SIMERR_O1'
+								+ '*, *-, -BIN2PRG, -PRG2BIN, -BIN2TEXT, -TEXT2BIN, -SHOWMSG, -SIMERR_I0, -SIMERR_I1, -SIMERR_O1'
 
 						Otherwise
 * OK all versions from 900(3504) and up. For VFPA Guys :)
@@ -3587,7 +3603,7 @@ Define Class c_foxbin2prg As Session
 					Else
 						.c_ClassOperationType	= ''
 					Endif
-
+*SF 20230827 SET STEP ON 
 					If Vartype(tcCFG_File) = "O"
 * Validar el objeto
 						loCFG	= tcCFG_File
@@ -3600,12 +3616,12 @@ Define Class c_foxbin2prg As Session
 
 					Else
 						.c_Foxbin2prg_ConfigFile	= Evl( tcCFG_File, .c_Foxbin2prg_ConfigFile )
-						.n_CFG_EvaluateFromParam	= (Iif(Empty(tcCFG_File), 0, 1))
+						.n_CFG_EvaluateFromParam	= Iif(Empty(tcCFG_File), 0, 1)
 					Endif
 
 *-- Ajusto la ruta si no es absoluta
 					tc_InputFile	= .get_AbsolutePath( tc_InputFile, .c_CurDir )
-
+*SF 20230827 SET STEP ON
 *-- Determino el tipo de InputFile (Archivo o Directorio)
 					If Empty(lcInputFile_Type) And Not Empty(tc_InputFile)
 						Do Case
@@ -3616,6 +3632,9 @@ Define Class c_foxbin2prg As Session
 *-- Ejemplo: "c:\desa\"
 								lcInputFile_Type	= C_FILETYPE_DIRECTORY
 
+							Case Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t'
+								lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT	&&C_FILETYPE_CONFIG
+								
 							Otherwise
 *-- Ejemplo: "c:\desa\*.scx", "c:\desa\file.ext", (lista de archivos)
 								lcInputFile_Type	= C_FILETYPE_FILE
@@ -3692,7 +3711,7 @@ Define Class c_foxbin2prg As Session
 								tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 							Endif
 * count anything then -BIN2PRG as import
-							.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 , 'E', 'I')
+							.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 OR Atc('-BIN2TEXT','-'+tcType) > 0, 'E', 'I')
 
 						Otherwise
 * not handled
@@ -3994,6 +4013,7 @@ Define Class c_foxbin2prg As Session
 
 							If (Atc('-INTERACTIVE', ('-' + tcType)) > 0 Or Atc('-?', ('-' + tcType)) > 0 );
 									AND Atc('-BIN2PRG', ('-' + tcType)) = 0 And Atc('-PRG2BIN', ('-' + tcType)) = 0 ;
+									AND Atc('-BIN2TEXT','-'+tcType) = 0 And Atc('-TEXT2BIN','-'+tcType) = 0 ;
 									AND lcInputFile_Type == C_FILETYPE_DIRECTORY Then
 *-- Se seleccionó un directorio y se puede elegir: Bin2Txt, Txt2Bin y Nada
 								.writeLog( loLang.C_INTERACTIVE_DIRECTORY_SELECTION_LOC )
@@ -4028,6 +4048,7 @@ Define Class c_foxbin2prg As Session
 *-- Evaluación de FileSpec de entrada
 							Do Case
 								Case Atc('-BIN2PRG', ('-' + tcType)) = 0 And Atc('-PRG2BIN', ('-' + tcType)) = 0 ;
+									    AND Atc('-BIN2TEXT','-'+tcType) = 0 And Atc('-TEXT2BIN','-'+tcType) = 0 ;
 										AND lcInputFile_Type == C_FILETYPE_FILE ;
 										AND ( '*' $ Justext( tc_InputFile ) Or '?' $ Justext( tc_InputFile ) )
 
@@ -4079,7 +4100,8 @@ Define Class c_foxbin2prg As Session
 *-- Filespec: "*.PJ2", "*"
 												.evaluate_Full_PJ2(lcFile, tcRecompile, @toModulo, @toEx, tcOriginalFileName, .c_LogFile, tcType)
 
-											Case Atc('-BIN2PRG', ('-' + tcType)) > 0
+											Case Atc('-BIN2PRG', ('-' + tcType)) > 0;
+ 													OR Atc('-BIN2TEXT','-'+tcType) > 0
 *-- SE QUIEREN CONVERTIR A TEXTO TODOS LOS ARCHIVOS DE UN DIRECTORIO
 *-- Filespec: "*.*"
 												If .hasSupport_Bin2Prg(lcFile) Then
@@ -4098,7 +4120,8 @@ Define Class c_foxbin2prg As Session
 													Endcase
 												Endif
 
-											Case Atc('-PRG2BIN', ('-' + tcType)) > 0
+											Case Atc('-PRG2BIN', ('-' + tcType)) > 0;
+													Or Atc('-TEXT2BIN','-'+tcType) > 0
 *-- SE QUIEREN CONVERTIR A BINARIO TODOS LOS ARCHIVOS DE UN DIRECTORIO
 *-- Filespec: "*.*"
 												If .hasSupport_Prg2Bin(lcFile) Then
@@ -4145,7 +4168,8 @@ Define Class c_foxbin2prg As Session
 									Exit
 
 
-								Case Atc('-BIN2PRG', ('-' + tcType)) > 0
+								Case Atc('-BIN2PRG', ('-' + tcType)) > 0;
+											Or Atc('-BIN2TEXT','-'+tcType) > 0
 									.writeLog( '> ' + loLang.C_OPTION_LOC + ': BIN2PRG' )
 
 									If .n_ShowProgressbar <> 0 And .l_ProcessFiles Then
@@ -4214,7 +4238,8 @@ Define Class c_foxbin2prg As Session
 									Endcase
 
 
-								Case Atc('-PRG2BIN', ('-' + tcType)) > 0
+								Case Atc('-PRG2BIN', ('-' + tcType)) > 0;
+										Or Atc('-TEXT2BIN','-'+tcType) > 0
 									.writeLog( '> ' + loLang.C_OPTION_LOC + ': PRG2BIN' )
 
 									If .n_ShowProgressbar <> 0 And .l_ProcessFiles Then

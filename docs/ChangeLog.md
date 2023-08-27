@@ -24,7 +24,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/08/26 | LScheffler | [v1.20.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.19.79) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
+| 2023/08/27 | LScheffler | [v1.20.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.00) | **Enhancement**: Source now ships without binary source files. See [README.md](../README.md) how to regenerate. |
+| 2023/08/26 | LScheffler | [v1.20.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.00) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
 | | | | **Enhancement**: Added option to return version number |
 | | | | **Bug Fix**: Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL) |
 | | | | Since all files will be rewritten due to the codepage stored, it's a good time to change version number too. |
@@ -421,4 +422,4 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-Last changed: _2023/08/26_
+Last changed: _2023/08/27_
