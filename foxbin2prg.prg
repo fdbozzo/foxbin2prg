@@ -306,6 +306,7 @@
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
 * 06/08/2023	LScheffler	v1.20.00	Enhancement: Added option to return version number (KestasL)
 * 20/08/2023	LScheffler	v1.20.00	Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL)
+* 28/08/2023	LScheffler	v1.20.xx	Bug Fix: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -483,6 +484,7 @@
 * 17/03/2023	ericbarte			Bug REPORT v1.19.76	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
 * 04/08/2023	KestasL				Bug REPORT v1.19.78	Bin2Text: Forms with ole controls conversion error issue #95 (also: any vcx) (KestasL)
 * 04/08/2023	KestasL				Bug REPORT v1.19.78	Codepage is lost on recreation, issue #96 (KestasL)
+* 28/08/2023	LScheffler			Bug REPORT v1.20.00	Sometimes Language is not changed fitting to conmfig file
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -809,7 +811,7 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 	Release pcParamX
 Endif
 
-*!*	*SF 20230827 SET STEP ON
+*SF 20230827 SET STEP ON
 *!*	* only 3 paras for -cCt
 *!*	If Pcount()=3;
 *!*			And Upper(tcType)=='-C' Or tcType=='-t' ;
@@ -2540,7 +2542,7 @@ Define Class c_foxbin2prg As Session
 
 								Case Left( laConfig(m.I), 9 ) == Lower('Language:')
 *-- CASO ESPECIAL: El lenguaje no se guarda en lo_CFG, porque es un seteo Global.
-									lcValue	= Alltrim( Substr( laConfig(m.I), 10 , At('&'+'&',laConfig(m.I)) - 10 ) )
+									lcValue	= Alltrim( Substr( laConfig(m.I), 10 , IIF('&'+'&'$laConfig(m.I), At('&'+'&', laConfig(m.I)) - 10, LEN(laConfig(m.I) ) ) ) )
 									.changeLanguage(lcValue)
 									lo_CFG.c_Language_In = m.lcValue
 									.writeLog( C_TAB + Justfname(lcConfigFile) + ' > Language:                   ' + Transform(lcValue) + ' (' + .c_Language + ')' )
@@ -2841,14 +2843,14 @@ Define Class c_foxbin2prg As Session
 									Endif
 
 								Case Left( laConfig(m.I), 24 ) == Lower('DBF_Conversion_Included:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , At('&'+'&',laConfig(m.I)) - 25 ) )
+									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , IIF('&'+'&'$laConfig(m.I), At('&'+'&', laConfig(m.I)) - 25, LEN(laConfig(m.I) ) ) ) )
 									If Not Empty(lcValue) Then
 										lo_CFG.c_DBF_Conversion_Included	= lcValue
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_Conversion_Included:    ' + Transform(lo_CFG.c_DBF_Conversion_Included) )
 									Endif
 
 								Case Left( laConfig(m.I), 24 ) == Lower('DBF_Conversion_Excluded:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , At('&'+'&',laConfig(m.I)) - 25 ) )
+									lcValue	= Alltrim( Substr( laConfig(m.I), 25 , IIF('&'+'&'$laConfig(m.I), At('&'+'&', laConfig(m.I)) - 25, LEN(laConfig(m.I) ) ) ) )
 									If Not Empty(lcValue) Then
 										lo_CFG.c_DBF_Conversion_Excluded	= lcValue
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > DBF_Conversion_Excluded:    ' + Transform(lo_CFG.c_DBF_Conversion_Excluded) )
