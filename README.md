@@ -1,4 +1,4 @@
-# FoxBin2Prg 1.20.00
+# FoxBin2Prg 1.20.01
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -10,15 +10,14 @@ I now maintain only [this project](https://github.com/lscheffler/foxbin2prg), ht
 The spanish documentation is not longer maintained - it would fade.
 Remind yourself to compile the exe first.   
 
-## Regenerate after download / clone
-**Note: If you have cloned the project, you must run it against itself to create the binaries ane exes.**
-1. Run   
+## Regenerate after download / clone / pull
+**Note: If you have cloned the project, you must run it against itself to create the binaries and exes.**
+Run   
 ```
 CD "path_to_FoxBin2Prg"
 *This uses a special configuration
 DO ReCreate_FoxBin2Prg.prg
 ```
-2. Create the exe by compiling the pjx
 
 ---
 If you like to value my work, support the Geeks at 
@@ -154,4 +153,4 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _2023-08-27_
+Last changed: _2023-08-30_

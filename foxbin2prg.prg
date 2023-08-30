@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.20
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.00'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.01'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -95,7 +95,7 @@
 * 14/06/2014	FDBOZZO		v1.19.24	Arreglo bug vcx/scx: Un campo de tabla llamado "text" que comienza la línea puede confundirse con la estructura TEXT/ENDTEXT y reconocer mal el resto del código
 * 16/06/2014	FDBOZZO		v1.19.25	Mejora: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del principal (Mario Peschke)
 * 17/06/2014	FDBOZZO		v1.19.25	Mejora: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Pedro Gutiérrez M.)
-* 06/07/2014	FDBOZZO		v1.19.26	Mejora: Cuando se convierten binarios a texto, los CHR(0) pasan también, pudiendo provocar falsa detección como binario. Se agrega opción para quitar los NULLs. (Matt Slay)
+* 06/07/2014	FDBOZZO		v1.19.26	Mejora: Cuando se convierten binarios a texto, los CHR(0) pasan también, pudiendo provocar falsa detección como binario. Se agrega opción para quitar los .Null.s. (Matt Slay)
 * 27/06/2014	FDBOZZO		v1.19.26	Mejora: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg lo procesa igualmente. (Daniel Sánchez)
 * 06/07/2014	FDBOZZO		v1.19.26	Bug Fix cfg: ExtraBackupLevel no se tiene en cuenta cuando se usa multi-configuración
 * 02/06/2014	DH/FDBOZZO	v1.19.27	Mejora: Agregado soporte para exportar datos para DIFF (no para importar)
@@ -304,9 +304,13 @@
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
 * 16/03/2023	LScheffler	v1.19.77	Bug Fix: Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
-* 06/08/2023	LScheffler	v1.20.00	Enhancement: Added option to return version number (KestasL)
+* 06/08/2023	LScheffler	v1.20.00	Enhancement: Added option to return version number (LScheffler)
 * 20/08/2023	LScheffler	v1.20.00	Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL)
-* 28/08/2023	LScheffler	v1.20.xx	Bug Fix: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler)
+* 30/08/2023	LScheffler	v1.20.21	Bug Fix: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler)
+* 30/08/2023	LScheffler	v1.20.21	Bug Fix: config file set by parameter would be ignored, if the folder contains FoxBin2Prg.cfg (LScheffler)
+* 30/08/2023	LScheffler	v1.20.21	Enhancement: For config file template new options to set config file and debug added
+* 30/08/2023	LScheffler	v1.20.21	Enhancement: New option for parameter set config file to control the use of "regular" config files
+* 30/08/2023	LScheffler	v1.20.21	Bug Fix: Fixed problems with table config files (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -341,7 +345,7 @@
 * 13/06/2014	Mario Peschke		REPORTE BUG vcx/scx v1.19.23: Los campos de tabla con nombre "text" a veces provocan corrupción del binario generado (Arreglado en v1.19.24)
 * 16/06/2014	Mario Peschke		MEJORA v1.19.24: Agregado soporte de configuraciones (CFG) por directorio que, si existen, se usan en lugar del CFG principal (Agregado en v1.19.25)
 * 17/06/2014	Pedro Gutiérrez M.	MEJORA v1.19.24: Si durante la generación de binarios o de textos se producen errores, mostrar un mensaje avisando de ello (Agregado en v1.19.25)
-* 02/07/2014	Matt Slay			MEJORA v1.19.25: Se filtran algunos CHR(0) de los binarios al tx2, provocando que a veces no sea reconocido como texto. Deberían poderse quitar los NULLs (Arreglado en v1.19.26)
+* 02/07/2014	Matt Slay			MEJORA v1.19.25: Se filtran algunos CHR(0) de los binarios al tx2, provocando que a veces no sea reconocido como texto. Deberían poderse quitar los .Null.s (Arreglado en v1.19.26)
 * 27/06/2014	Daniel Sánchez		MEJORA v1.19.25: Si el campo memo "methods" de los vcx/scx contiene asteriscos fuera de lugar (que no debería), FoxBin2Prg falla. Debería poder procesarlo igual.
 * 02/06/2014	Doug Hennig			MEJORA v1.19.22: Agregada funcionalidad para exportar los datos de las tablas al archivo db2 (Agregado en v1.19.27)
 * 21/07/2014	Edyshor				PROPUESTA DE MEJORA db2 v1.19.27: Sería útil poder filtrar tablas y datos cuando se elige DBF_Conversion_Support:4 (Agregado en v1.19.28)
@@ -531,17 +535,18 @@
 *** LScheffler 2021-03-08: added optional set of parameters, config file
 * Usage 2
 * PARAMETERS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-* tc_InputFile				(c! IN    ) Modus (case sensitive)
+* tcType			(c! IN    ) Modus (case sensitive)
 *										-c Create config template "tcType" with default values
 *										-C Create config "tcType" with values of directory named by outputfile
 *										-t Create config template "tcType" for config-per-table file
-* tcType					(v! IN    ) file to create
+* tc_OutputFile		(v? IN    ) file to create
+* tcCFG_File		(v? IN    ) Config file to load (no inheritance)
+* tcDebug			(v? IN    ) '1' write debug log (posiibly to GETENV("TEMP") )
 *---------------------------------------------------------------------------------------------------
 *** LScheffler 2023-08-06: added option to output version number
-* Usage 2
+* Usage 3
 * PARAMETERS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
-* tc_InputFile				(c! IN    ) Modus (case sensitive)
-*										-VERNO Return versio number (DC_FB2PRG_VERSION_REAL)
+* tc_InputFile				(@! OUT   ) -VERNO Return version number (DC_FB2PRG_VERSION_REAL)
 *---------------------------------------------------------------------------------------------------
 Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress, tcOriginalFileName ;
 	, tcRecompile, tcNoTimestamps, tcCFG_File, tcOutputFolder
@@ -572,13 +577,13 @@ Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDeb
 #Define C_DEFINED_PAM_F				'*</DefinedPropArrayMethod>'
 #Define C_LEN_DEFINED_PAM_I			Len(C_DEFINED_PAM_I)
 #Define C_LEN_DEFINED_PAM_F			Len(C_DEFINED_PAM_F)
-*SF 16.03.2023
+*LScheffler 16.03.2023
 *mark property value section in classes, objects and forms
 #Define C_DEFINED_PROPVAL_I			'*<PropValue>'
 #Define C_DEFINED_PROPVAL_F			'*</PropValue>'
 #Define C_LEN_DEFINED_PROPVAL_I		Len(C_DEFINED_PROPVAL_I)
 #Define C_LEN_DEFINED_PROPVAL_F		Len(C_DEFINED_PROPVAL_F)
-*/SF 16.03.2023
+*/LScheffler 16.03.2023
 #Define C_END_OBJECT_I				'*< END OBJECT:'
 #Define C_END_OBJECT_F				'/>'
 #Define C_LEN_END_OBJECT_I			Len(C_END_OBJECT_I)
@@ -811,34 +816,41 @@ If Atc('-BIN2PRG','-'+tc_InputFile) > 0 Or Atc('-PRG2BIN','-'+tc_InputFile) > 0 
 	Release pcParamX
 Endif
 
-*SF 20230827 SET STEP ON
-*!*	* only 3 paras for -cCt
-*!*	If Pcount()=3;
-*!*			And Upper(tcType)=='-C' Or tcType=='-t' ;
-*!*			OR Upper(tcType)=='C' Or tcType=='t' THEN
-*!*		tcCFG_File = tcTextName
+* -cCt Create config files
+If Upper(tcType)=='-C' Or tcType=='-t' ;
+		OR Upper(tcType)=='C' Or tcType=='t' THEN
 
-*!*	Endif &&Pcount()=3	And Upper(tc_InputFile)=='-C' Or tc_InputFile=='-t' OR Upper(tc_InputFile)=='C' Or tc_InputFile= ... 
+	If Pcount()>2 THEN
+		tcCFG_File = tcTextName
+		IF VARTYPE(tcCFG_File)="C" AND EMPTY(JUSTPATH(tcCFG_File)) THEN 
+		 tcCFG_File = FULLPATH(tcCFG_File,"")
+		ENDIF &&VARTYPE(tcCFG_File)="C" AND EMPTY(JUSTPATH(tcCFG_File))
+		tcTextName = .F.
+	ENDIF &&Pcount()>2 
 
-Do Case
-*!*		Case (Pcount()=1 And ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() ));
-			OR (Pcount()=3 And EMPTY(tc_InputFile) AND ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() ))
-	Case (Pcount()=1 And ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() ))
-		tc_InputFile = Dbf() + '._cfg'
+	If Pcount()>3 THEN
+		tcDebug   = tlGenText
+		tlGenText = .F.
+	ENDIF &&Pcount()>3 
 
-	Case Pcount()=1 And ( Upper( tcType ) =='-C' Or Upper( tcType ) =='C' )
-		tc_InputFile = 'FoxBin2PRG._cfg'
+	Do Case
+		Case Pcount()>4
+			tc_InputFile = ""
+			tcType       = ""
+		Case !EMPTY( tc_InputFile)
 
-*!*		Case Pcount()>3 And ( Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t' )
-	Case Pcount()#2 And ( Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t' )
-		tc_InputFile = ""
-		tcType       = ""
+		Case ( tcType == '-t' Or tcType == 't' ) And !Empty( Dbf() )
+			tc_InputFile = Dbf() + '._cfg'
 
-Endcase
+		Case ( Upper( tcType ) =='-C' Or Upper( tcType ) =='C' ) And tc_InputFile
+			tc_InputFile = 'FoxBin2PRG._cfg'
+
+	Endcase
 *!*	/Changed by: LScheffler 15.2.2021
+ENDIF &&Upper(tcType)=='-C' Or tcType=='-t' OR Upper(tcType)=='C' Or tcType=='t' 
 
 Try
-		loEx	= Null
+		loEx	= .Null.
 		loCnv	= Createobject("c_foxbin2prg")
 *** DH 2021-03-04: handle tcOutputFolder
 		If Not Empty(tcOutputFolder)
@@ -847,7 +859,7 @@ Try
 *** DH 2021-03-04: end of new code
 
 		lnResp	= loCnv.execute( tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug ;
-			, tcDontShowProgress, Null, @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
+			, tcDontShowProgress, .Null., @loEx, .F., tcOriginalFileName, tcRecompile, tcNoTimestamps ;
 			, .F., .F., .F., tcCFG_File )
 	Catch To loEx
 *-- Esto solo es para errores en el INIT, ya que los demás se deben capturar y tratar antes.
@@ -864,18 +876,18 @@ AddProperty(_Screen, 'ExitCode', lnResp)
 *SET COVERAGE TO
 
 If _vfp.StartMode <> 4 Or Not Sys(16) == Sys(16,0) && 4 = Visual FoxPro was started as a distributable .app or .exe file.
-	Store Null To loEx, loCnv
+	Store .Null. To loEx, loCnv
 	Release loEx, loCnv
 	Return lnResp	&& lnResp contiene un código de error, pero invocado desde SourceSafe puede contener el tipo de soporte de archivo (0,1,2).
 Endif
 
 If Empty(lnResp)
-	Store Null To loEx, loCnv
+	Store .Null. To loEx, loCnv
 	Release loEx, loCnv
 	Quit
 Endif
 
-Store Null To loEx, loCnv
+Store .Null. To loEx, loCnv
 Release loEx, loCnv
 
 *-- Muy útil para procesos batch que capturan el código de error
@@ -893,7 +905,7 @@ Declare Integer TerminateProcess In Win32API Integer hProcess, Integer uExitCode
 *lcComputer = [.]
 *loCIMV2 = GETOBJECT( [winmgmts:{impersonationLevel=impersonate}!\\] + lcComputer + [\root\cimv2] )
 *loProcCols = loCIMV2.ExecQuery( [select * from Win32_Process where processid=] + TRANSFORM(_VFP.PROCESSID) + [] )
-*loCIMV2 = NULL
+*loCIMV2 = .Null.
 *loProcCols.ItemIndex(0).TERMINATE(1)
 
 
@@ -958,6 +970,7 @@ Define Class c_foxbin2prg As Session
 		+ [<memberdata name="l_cancelwithesckey" display="l_CancelWithEscKey"/>] ;
 		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
+		+ [<memberdata name="l_allowinheritance" display="l_AllowInheritance"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
@@ -978,6 +991,7 @@ Define Class c_foxbin2prg As Session
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="l_stdouthabilitado" display="l_StdOutHabilitado"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
+		+ [<memberdata name="l_singleconfig" display="l_SingleConfig"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
@@ -1071,6 +1085,7 @@ Define Class c_foxbin2prg As Session
 	l_Errors						= .F.			&& Indicador de error de la sesión actual, acumulativo de todos los procesos
 	c_TextErr						= ''
 	l_Test							= .F.
+	l_SingleConfig					= .F.			&& There is only one single configuration file in use
 	l_ShowErrors					= .T.
 	n_ShowProgressbar				= 1
 	n_ForceWriteIfReadOnly			= 0
@@ -1103,6 +1118,8 @@ Define Class c_foxbin2prg As Session
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
+*!*	LScheffler 30.08.2023
+	l_AllowInheritance				= .T.
 	l_RedirectClassPerFileToMain	= .F.
 	n_RedirectClassType				= 0				&& 0=Redireccionar Todas las clases, 1=Redireccionar solo la clase indicada
 	l_NoTimestamps					= .T.
@@ -1123,13 +1140,13 @@ Define Class c_foxbin2prg As Session
 	n_Order_View_Fields				= 1
 	n_ProcessedFiles                = 0             && Contador usado para los archivos file.class.ext
 	n_ProcessedFilesCount			= 0				&& Contador genérico de procesados
-	o_Conversor                     = Null
-	o_Frm_Avance					= Null
-	o_WSH							= Null
-	o_FSO							= Null			&& Scripting.FileSystemObject
-	o_TextStream					= Null			&& Scripting.TextStream
-	o_FNC							= Null			&& Filename_caps object
-	o_Configuration					= Null
+	o_Conversor                     = .Null.
+	o_Frm_Avance					= .Null.
+	o_WSH							= .Null.
+	o_FSO							= .Null.			&& Scripting.FileSystemObject
+	o_TextStream					= .Null.			&& Scripting.TextStream
+	o_FNC							= .Null.			&& Filename_caps object
+	o_Configuration					= .Null.
 	run_AfterCreateTable			= ''
 	run_AfterCreate_DB2				= ''
 	c_PJ2							= 'PJ2'			&& PJX
@@ -1157,7 +1174,7 @@ Define Class c_foxbin2prg As Session
 *** DH 2021-03-04: added cOutputFolder and n_HomeDir properties
 	cOutputFolder					= ''			&& the folder to write files to (blank = same folder as source file)
 	n_HomeDir						= 1				&& 0 = don't save HomeDir in PJ2, 1 = save HomeDir in PJ2
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	i_CPID							= 0 &&CPCURRENT(1) 
     
@@ -1282,18 +1299,18 @@ Define Class c_foxbin2prg As Session
 				This.writeLog( )
 				This.writeLog_Flush()
 				This.unloadProgressbarForm()
-				This.o_Configuration	= Null
-				This.o_WSH				= Null
-				This.o_FSO				= Null
+				This.o_Configuration	= .Null.
+				This.o_WSH				= .Null.
+				This.o_FSO				= .Null.
 				If Vartype(_Screen.o_FoxBin2Prg_Lang) = "O" Then
-					_Screen.o_FoxBin2Prg_Lang = Null
+					_Screen.o_FoxBin2Prg_Lang = .Null.
 				Endif
 			Catch
 
 			Finally
-				This.o_FSO	= Null
-				This.o_WSH	= Null
-				This.o_FNC	= Null
+				This.o_FSO	= .Null.
+				This.o_WSH	= .Null.
+				This.o_FNC	= .Null.
 *-- Funciones para changeFileAttributes
 				Clear Dlls fb2p_SetFileAttributes, fb2p_GetFileAttributes
 *-- Funciones para escribir en StdOut
@@ -1681,6 +1698,15 @@ Define Class c_foxbin2prg As Session
 		Endif
 	Endproc
 
+*!*	LScheffler 30.08.2023
+	Procedure l_AllowInheritance_ACCESS
+*only from base config (and only if this is from parameter)
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( 1 ) )
+			Return This.l_AllowInheritance
+		Else
+			Return Nvl( This.o_Configuration( 1 ).l_AllowInheritance, This.l_AllowInheritance )
+		Endif
+	Endproc
 
 	Procedure l_ClearUniqueID_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
@@ -2297,7 +2323,7 @@ Define Class c_foxbin2prg As Session
 		If (tlForceUnload Or This.n_ShowProgressbar <> 0) And Vartype(This.o_Frm_Avance) = "O" Then
 			This.o_Frm_Avance.Hide()
 			This.o_Frm_Avance.Release()
-			This.o_Frm_Avance = Null
+			This.o_Frm_Avance = .Null.
 		Endif
 	Endproc
 
@@ -2321,9 +2347,10 @@ Define Class c_foxbin2prg As Session
 * tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
 * toParentCFG				(@? IN    ) (Uso interno) Si se pasa un valor, el nuevo CFG copiará primero sus valores de aquí para heredarlos
 * tl_ForceLog				(v? IN    ) Force logging of settings. used on cfg setting as object
+* tcCFG_File				(v? IN    ) Config file. If a configfile is set, the normal chain of inheritance is stopped and only this file is used atop the defaults
 *--------------------------------------------------------------------------------------------------------------
 		Lparameters tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
-			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG, tl_ForceLog
+			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG, tl_ForceLog, tcCFG_File
 
 		#If .F.
 			Local toParentCFG As CL_CFG Of 'FOXBIN2PRG.PRG'
@@ -2335,14 +2362,36 @@ Define Class c_foxbin2prg As Session
 			, loCFG_Manual As CL_CFG Of 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration As Collection ;
 			, loLang As CL_LANG Of 'FOXBIN2PRG.PRG' ;
-			, loEx As Exception
-
+			, loEx As Exception, llSetSingleConfig, lc_Foxbin2prg_ConfigFile
+			
 		Try
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 					Store 0 To lnKey
+					llSetSingleConfig = .Null.
+					
 					loLang				= _Screen.o_FoxBin2Prg_Lang
 					tcRecompile			= Evl(tcRecompile, .c_Recompile)
-*SF 20230827 SET STEP ON
+
+*!*	LScheffler 30.08.2023, is a config file given by programm parameter
+					IF VARTYPE(tcCFG_File)='C' AND !EMPTY(tcCFG_File) THEN
+					 lc_Foxbin2prg_ConfigFile   = .c_Foxbin2prg_ConfigFile
+					 .c_Foxbin2prg_ConfigFile	= tcCFG_File
+					 .l_Main_CFG_Loaded         = .F.
+					 .o_Configuration.Remove(-1)
+					 .n_CFG_EvaluateFromParam	= 0
+					 .l_SingleConfig            = .F.
+					 
+					 llSetSingleConfig			= .T.
+					 .writeLog( '> ' + Upper(loLang.C_USING_THIS_SETTINGS_LOC) + ': ' + .c_Foxbin2prg_ConfigFile + ;
+					  loLang.C_USING_THIS_SETTINGS_LOC1 )
+
+					ENDIF &&VARTYPE(tcCFG_File)='C' AND !EMPTY(tcCFG_File) 
+
+*!*	LScheffler 30.08.2023, just the single config from programm parameter, or sub dirs of the config file given by the parameter
+					IF .l_SingleConfig AND !.l_AllowInheritance THEN 
+					  Exit
+					 ENDIF &&.l_SingleConfig AND !.l_AllowInheritance
+
 					lcConfigFile		= .c_Foxbin2prg_ConfigFile
 					tc_InputFile		= Evl(tc_InputFile, .c_InputFile)
 					tcInputFile_Type	= Evl(tcInputFile_Type,'')
@@ -2354,11 +2403,11 @@ Define Class c_foxbin2prg As Session
 						lcConfigFile	= Fullpath('Personalized-CFG-Object', tc_InputFile)
 						loCFG_Manual.c_Foxbin2prg_ConfigFile	= 'Personalized-CFG-Object'
 					Else
-						loCFG_Manual	= Null
+						loCFG_Manual	= .Null.
 					Endif
 
-					If Vartype(toParentCFG) <> 'O' Then
-						toParentCFG			= Null
+					If Vartype(toParentCFG) <> 'O' OR llSetSingleConfig Then
+						toParentCFG			= .Null.
 					Endif
 
 					If Isnull(toParentCFG) Then
@@ -2378,7 +2427,7 @@ Define Class c_foxbin2prg As Session
 								tcInputFile_Type	= C_FILETYPE_FILE
 						Endcase
 					Endif
-*SF 20230827 SET STEP ON
+
 					If .l_Main_CFG_Loaded And Not Empty(tc_InputFile) And Not tcInputFile_Type == C_FILETYPE_QUERYSUPPORT Then
 						If .n_CFG_EvaluateFromParam = 1
 * Si se indicó por parámetro (modo objeto), usarlo como Maestro
@@ -2406,7 +2455,7 @@ Define Class c_foxbin2prg As Session
 					.l_CFG_CachedAccess	= .F.
 					lc_CFG_Path			= Upper( Justpath( lcConfigFile ) )
 					lo_CFG				= This
-*SF 20230827 SET STEP ON 
+
 *-- Búsqueda del CFG del PATH indicado en la caché
 					If .l_Main_CFG_Loaded
 
@@ -2416,7 +2465,7 @@ Define Class c_foxbin2prg As Session
 								.n_CFG_Actual = .n_CFG_EvaluateFromParam
 							Else
 * Normalmente se buscará el CFG del directorio analizado
-								.n_CFG_Actual		= lo_Configuration.GetKey( lc_CFG_Path )	&& 0 = No hay CFG cacheada, >0 = Hay CFG cacheada
+								.n_CFG_Actual		= lo_Configuration.GetKey( lcConfigFile )	&& 0 = No hay CFG cacheada, >0 = Hay CFG cacheada
 							Endif
 
 							If .n_CFG_Actual > 0 Then
@@ -2431,7 +2480,8 @@ Define Class c_foxbin2prg As Session
 						Endif
 
 *-- Si no se pasó un CFG padre y no hay CFGs o no encuentra el del PATH indicado, analizo la jararquía
-						If Isnull(toParentCFG) And (lo_Configuration.Count = 0 Or .n_CFG_Actual = 0) Then
+*!*	LScheffler 30.08.2023 only read path if no config by parameter
+						If Isnull(llSetSingleConfig) AND Isnull(toParentCFG) And (lo_Configuration.Count = 0 Or .n_CFG_Actual = 0) Then
 							llMasterEval	= .T.
 							toParentCFG		= This
 
@@ -2495,20 +2545,23 @@ Define Class c_foxbin2prg As Session
 								' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 						Else
 							lo_CFG	= Createobject('CL_CFG')
-							lo_Configuration.Add( lo_CFG, lc_CFG_Path )
+							lo_Configuration.Add( lo_CFG, lcConfigFile )
 							.n_CFG_Actual  	= lo_Configuration.Count
-							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lc_CFG_Path + ;
+
+ASSERT lo_Configuration.Count<6
+							.writeLog( '> ' + Upper(loLang.C_CACHING_CONFIG_FOR_DIRECTORY_LOC) + ': ' + lcConfigFile + ;
 								' CFG_Actual:' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]')  )
 
 							If Not Isnull(toParentCFG)
 								lo_CFG.CopyFrom(@toParentCFG)
 								toParentCFG	= lo_CFG
-								.writeLog( C_TAB + '- ' + loLang.C_INHERITING_FROM_LOC + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile )
+*								.writeLog( C_TAB + '- ' + loLang.C_INHERITING_FROM_LOC + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile )
+								.writeLog( C_TAB + '- ' + loLang.C_INHERITING_FROM_LOC + ': ' + lo_Configuration.GetKey(lo_Configuration.Count-1) )
 							Endif
 						Endif
 
 					Else
-						lo_Configuration.Add( Null, lc_CFG_Path )	&& La NULL se carga solo cuando no hay Main_CFG_loaded todavía.
+						lo_Configuration.Add( .Null., lcConfigFile )	&& La .Null. se carga solo cuando no hay Main_CFG_loaded todavía.
 						.n_CFG_Actual  	= lo_Configuration.Count
 					Endif
 
@@ -2518,7 +2571,6 @@ Define Class c_foxbin2prg As Session
 						.writeLog( '> ' + loLang.C_READING_CFG_VALUES_FROM_DISK_LOC + ':' )
 						.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
 
-*!*	*SF 20230827 SET STEP ON 
 						lo_CFG.c_Foxbin2prg_ConfigFile		= lcConfigFile
 
 						For I = 1 To Alines( laConfig, Filetostr( lcConfigFile ), 1+4 )
@@ -2529,6 +2581,7 @@ Define Class c_foxbin2prg As Session
 							Do Case
 								Case Empty( laConfig(m.I) ) Or Inlist( Left( laConfig(m.I), 1 ), '*', '#', '/', "'" )
 									Loop
+
 
 *settings for internal work, not processing
 * Depricated:
@@ -2713,6 +2766,18 @@ Define Class c_foxbin2prg As Session
 											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
 											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => ItemPerDBCCheck:          ' + Transform(lcValue) )
 										Endif
+									Endif
+
+*!*	LScheffler 30.08.2023
+								Case Left( laConfig(m.I), 17 ) == Lower('AllowInheritance:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
+									If Inlist( lcValue, '0', '1' ) Then
+										IF llSetSingleConfig THEN
+										 lo_CFG.l_AllowInheritance	= ( Transform(lcValue) == '1' )
+										ENDIF &&llSetSingleConfig 
+
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > AllowInheritance:           ' + Transform(lcValue) +;
+										IIF(m.llSetSingleConfig, "", ", will be ignored, standard configuration file." ) )
 									Endif
 
 								Case Left( laConfig(m.I), 27 ) == Lower('RedirectClassPerFileToMain:')
@@ -2920,7 +2985,6 @@ Define Class c_foxbin2prg As Session
 
 					.l_Main_CFG_Loaded	= .T.
 
-*SF 20230827 SET STEP ON 
 					If llMasterEval
 * Si se inidicó un archivo CFG por parámetro (modo objeto), aqui se bloquea
 * al Nº de configuración correspondiente.
@@ -3038,6 +3102,7 @@ Define Class c_foxbin2prg As Session
 					.writeLog( C_TAB + 'extension: ME2              ' + Transform(.c_ME2) )
 
 					.writeLog( )
+					 
 				Endwith && THIS
 
 			Catch To loEx
@@ -3052,7 +3117,18 @@ Define Class c_foxbin2prg As Session
 				Throw
 
 			Finally
-				Store Null To lo_Configuration, lo_CFG, loEx
+				This.l_SingleConfig = NVL(llSetSingleConfig,This.l_SingleConfig)
+				IF llSetSingleConfig THEN
+					 .c_Foxbin2prg_ConfigFile = lc_Foxbin2prg_ConfigFile
+					 .writeLog( '> ' + IIF(This.l_AllowInheritance, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
+
+					IF This.l_AllowInheritance THEN
+						This.evaluateConfiguration( '', '', '', '', '', '', '', '', JUSTPATH(This.c_Foxbin2prg_ConfigFile), C_FILETYPE_DIRECTORY, @toParentCFG)
+
+					ENDIF &&This.l_AllowInheritance 
+				ENDIF &&llSetSingleConfig 
+
+				Store .Null. To lo_Configuration, lo_CFG, loEx
 				Release tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 					, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile ;
 					, lcConfigFile, llExiste_CFG_EnDisco, laConfig, I, lcConfData, lcExt, lcValue, lc_CFG_Path ;
@@ -3180,6 +3256,7 @@ Define Class c_foxbin2prg As Session
 		Local lcTableCFG, lnFileCount, laDirFile(1,5), I, lcConfigItem, lcValue
 		lcTableCFG	= tc_InputFile + '.CFG'
 		lnFileCount	= Adir(laDirFile, lcTableCFG)
+		to_out_DBF_CFG	= .NULL.
 
 		If lnFileCount = 1
 
@@ -3307,7 +3384,7 @@ Define Class c_foxbin2prg As Session
 			, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG'
 
 		With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
-			loDBF_CFG	= Null
+			loDBF_CFG	= .Null.
 			lcExt		= Upper(Justext('.' + tcFileName))
 
 *!*	Changed by: LScheffler 13.6.2022
@@ -3349,7 +3426,7 @@ Define Class c_foxbin2prg As Session
 				, lcExt == 'LBX', .n_LBX_Conversion_Support > 0 ;
 				, lcExt == 'MNX', .n_MNX_Conversion_Support > 0 ;
 				, lcExt == 'DBC', .n_DBC_Conversion_Support > 0 ;
-				, lcExt == 'DBF', Not Isnull(loDBF_CFG) And loDBF_CFG.n_DBF_Conversion_Support > 0 Or .n_DBF_Conversion_Support > 0 ;
+				, lcExt == 'DBF', Iif(Isnull(loDBF_CFG), .n_DBF_Conversion_Support > 0, loDBF_CFG.n_DBF_Conversion_Support > 0 ) ;
 				, lcExt == 'FKY', .n_FKY_Conversion_Support > 0 ;
 				, lcExt == 'MEM', .n_MEM_Conversion_Support > 0 ;
 				, .F. )
@@ -3370,7 +3447,7 @@ Define Class c_foxbin2prg As Session
 			, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG'
 
 		With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
-			loDBF_CFG	= Null
+			loDBF_CFG	= .Null.
 			lcExt		= Upper(Justext('.' + tcFileName))
 
 *!*	Changed by: LScheffler 13.6.2022
@@ -3413,9 +3490,7 @@ Define Class c_foxbin2prg As Session
 				, lcExt == .c_MN2, .n_MNX_Conversion_Support = 2 ;
 				, lcExt == .c_FK2, .n_FKY_Conversion_Support = 2 ;
 				, lcExt == .c_ME2, .n_MEM_Conversion_Support = 2 ;
-				, lcExt == .c_DB2, Not Isnull(loDBF_CFG) And Inlist(loDBF_CFG.n_DBF_Conversion_Support, 2, 8) ;
-				OR (Inlist(.n_DBF_Conversion_Support, 2, 8) ;
-				AND (Isnull(loDBF_CFG) Or Not Inlist(loDBF_CFG.n_DBF_Conversion_Support, 1, 4))) ;
+				, lcExt == .c_DB2, Iif(Isnull(loDBF_CFG), Inlist(.n_DBF_Conversion_Support, 2, 8), Inlist(loDBF_CFG.n_DBF_Conversion_Support, 2, 8) ) ;
 				, lcExt == .c_DC2, .n_DBC_Conversion_Support = 2 ;
 				, .F. )
 		Endwith && THIS
@@ -3435,7 +3510,7 @@ Define Class c_foxbin2prg As Session
 
 		Try
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
-					loDBF_CFG	= Null
+					loDBF_CFG	= .Null.
 					lcExt		= Upper(Justext('.' + tcFileName))
 
 					If '\' $ tcFileName And Inlist(lcExt, .c_DB2, 'DBF') Then
@@ -3459,7 +3534,7 @@ Define Class c_foxbin2prg As Session
 						, Inlist(lcExt, .c_MN2, 'MNX'), .n_MNX_Conversion_Support ;
 						, Inlist(lcExt, .c_FK2, 'FKY'), .n_FKY_Conversion_Support ;
 						, Inlist(lcExt, .c_ME2, 'MEM'), .n_MEM_Conversion_Support ;
-						, Inlist(lcExt, .c_DB2, 'DBF'), Icase( Isnull(loDBF_CFG) Or loDBF_CFG.n_DBF_Conversion_Support = 0, .n_DBF_Conversion_Support, loDBF_CFG.n_DBF_Conversion_Support ) ;
+						, Inlist(lcExt, .c_DB2, 'DBF'), Iif(Isnull(loDBF_CFG), .n_DBF_Conversion_Support, loDBF_CFG.n_DBF_Conversion_Support ) ;
 						, Inlist(lcExt, .c_DC2, 'DBC'), .n_DBC_Conversion_Support ;
 						, 0 )
 
@@ -3467,7 +3542,7 @@ Define Class c_foxbin2prg As Session
 				Endwith && THIS
 
 			Finally
-				Store Null To loDBF_CFG
+				Store .Null. To loDBF_CFG
 				Release loDBF_CFG
 		Endtry
 
@@ -3523,7 +3598,7 @@ Define Class c_foxbin2prg As Session
 					, loFrm_Main As frm_main Of 'FOXBIN2PRG.PRG' ;
 					, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG' ;
 					, loWSH As WScript.Shell ;
-					, lnVFPVersion
+					, lnVFPVersion, lcCFG_File
 
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 					lc_OldSetNotify	= Set("Notify")
@@ -3532,7 +3607,7 @@ Define Class c_foxbin2prg As Session
 					loLang				= _Screen.o_FoxBin2Prg_Lang
 					loFSO				= .o_FSO
 					loWSH				= .o_WSH
-					loCFG				= Null
+					loCFG				= .Null.
 					lnPCount			= 0
 					lcInputFile_Type	= ''
 					.l_Error			= .F.
@@ -3605,7 +3680,7 @@ Define Class c_foxbin2prg As Session
 					Else
 						.c_ClassOperationType	= ''
 					Endif
-*SF 20230827 SET STEP ON 
+
 					If Vartype(tcCFG_File) = "O"
 * Validar el objeto
 						loCFG	= tcCFG_File
@@ -3613,17 +3688,19 @@ Define Class c_foxbin2prg As Session
 							Error 'CFG object: Invalid class. Please, generate it with get_DirSettings()'
 						Endif
 
-						.c_Foxbin2prg_ConfigFile	= loCFG
-						.n_CFG_EvaluateFromParam	= 1
+						.c_Foxbin2prg_ConfigFile = loCFG
+						.n_CFG_EvaluateFromParam = 1
 
 					Else
-						.c_Foxbin2prg_ConfigFile	= Evl( tcCFG_File, .c_Foxbin2prg_ConfigFile )
-						.n_CFG_EvaluateFromParam	= Iif(Empty(tcCFG_File), 0, 1)
+*!*	LScheffler 30.08.2023: Change name only in Init
+*					.c_Foxbin2prg_ConfigFile = Evl( tcCFG_File,  )
+*						.n_CFG_EvaluateFromParam = Iif(Empty(tcCFG_File), 0, 1)
+						lcCFG_File               = IIF(VARTYPE(tcCFG_File)='C' AND !EMPTY(tcCFG_File),tcCFG_File,.F.)
 					Endif
 
 *-- Ajusto la ruta si no es absoluta
 					tc_InputFile	= .get_AbsolutePath( tc_InputFile, .c_CurDir )
-*SF 20230827 SET STEP ON
+
 *-- Determino el tipo de InputFile (Archivo o Directorio)
 					If Empty(lcInputFile_Type) And Not Empty(tc_InputFile)
 						Do Case
@@ -3634,8 +3711,8 @@ Define Class c_foxbin2prg As Session
 *-- Ejemplo: "c:\desa\"
 								lcInputFile_Type	= C_FILETYPE_DIRECTORY
 
-							Case Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t'
-								lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT	&&C_FILETYPE_CONFIG
+*!*								Case Upper( tcType ) =='-C' Or tcType =='-t' Or Upper( tcType ) =='C' Or tcType =='t'
+*!*									lcInputFile_Type	= C_FILETYPE_QUERYSUPPORT	&&C_FILETYPE_CONFIG
 								
 							Otherwise
 *-- Ejemplo: "c:\desa\*.scx", "c:\desa\file.ext", (lista de archivos)
@@ -3658,20 +3735,29 @@ Define Class c_foxbin2prg As Session
 					.writeLog( loLang.C_MAIN_EXECUTION_LOC, 2 )
 					.writeLog( Replicate( '*', 100 ) )
 					.writeLog( '> ' + loLang.C_EXTERNAL_PARAMETERS_LOC + ':' )
-					.writeLog( C_TAB + 'tc_InputFile:                 ' + Transform( Evl(tc_InputFile, '(empty)  -> Will use Default [' + .c_InputFile + ']' ) ) )
-					.writeLog( C_TAB + 'tcType:                       ' + Transform( Evl(lcType, '(empty)' ) ) )
-					.writeLog( C_TAB + 'tcTextName:                   ' + Transform( Evl(tcTextName, '(empty)' ) ) )
-					.writeLog( C_TAB + 'tlGenText:                    ' + Transform( Evl(tlGenText, '(empty)' ) ) )
-					.writeLog( C_TAB + 'tcDontShowErrors:             ' + Transform( Evl(tcDontShowErrors, '(empty)  -> Will use Default [' + Transform(.l_ShowErrors) + ']' ) ) )
-					.writeLog( C_TAB + 'tcDebug:                      ' + Transform( Evl(tcDebug, '(empty)  -> Will use Default [' + Transform(.n_Debug) + ']' ) ) )
-					.writeLog( C_TAB + 'tcDontShowProgress:           ' + Transform( Evl(tcDontShowProgress, '(empty)  -> Will use Default [' + Transform(.n_ShowProgressbar) + ']' ) ) )
-					.writeLog( C_TAB + 'tlRelanzarError:              ' + Transform( Evl(tlRelanzarError, '(empty)' ) ) )
-					.writeLog( C_TAB + 'tcOriginalFileName:           ' + Transform( Evl(tcOriginalFileName, '(empty)  -> Will use Default [' + .c_OriginalFileName + ']' ) ) )
-					.writeLog( C_TAB + 'tcRecompile:                  ' + Transform( Evl(tcRecompile, '(empty)  -> Will use Default [' + .c_Recompile + ']' ) ) )
-					.writeLog( C_TAB + 'tcNoTimestamps:               ' + Transform( Evl(tcNoTimestamps, '(empty)  -> Will use Default [' + Transform(.l_NoTimestamps) + ']' ) ) )
-					.writeLog( C_TAB + 'tcBackupLevels:               ' + Transform( Evl(tcBackupLevels, '(empty)  -> Will use Default [' + Transform(.n_ExtraBackupLevels) + ']' ) ) )
-					.writeLog( C_TAB + 'tcClearUniqueID:              ' + Transform( Evl(tcClearUniqueID, '(empty)  -> Will use Default [' + Transform(.l_ClearUniqueID) + ']' ) ) )
-					.writeLog( C_TAB + 'tcOptimizeByFilestamp:        ' + Transform( Evl(tcOptimizeByFilestamp, '(empty)  -> Will use Default [' + Transform(.n_OptimizeByFilestamp) + ']' ) ) )
+					If Upper(tcType)=='-C' Or tcType=='-t' ;
+							OR Upper(tcType)=='C' Or tcType=='t' THEN
+						.writeLog( C_TAB + 'tcType:                       ' + Transform( Evl(lcType, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tc_OutputFile:                ' + Transform( Evl(tc_InputFile, '(empty)  -> Will use Default [' + .c_InputFile + ']' ) ) )
+						.writeLog( C_TAB + 'tcCFG_File                    ' + Transform( Evl(tcCFG_File, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tcDebug:                      ' + Transform( Evl(tcDebug, '(empty)  -> Will use Default [' + Transform(.n_Debug) + ']' ) ) )
+					ELSE  &&Upper(tcType)=='-C' Or tcType=='-t' OR Upper(tcType)=='C' Or tcType=='t'
+						.writeLog( C_TAB + 'tc_InputFile:                 ' + Transform( Evl(tc_InputFile, '(empty)  -> Will use Default [' + .c_InputFile + ']' ) ) )
+						.writeLog( C_TAB + 'tcType:                       ' + Transform( Evl(lcType, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tcTextName:                   ' + Transform( Evl(tcTextName, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tlGenText:                    ' + Transform( Evl(tlGenText, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tcDontShowErrors:             ' + Transform( Evl(tcDontShowErrors, '(empty)  -> Will use Default [' + Transform(.l_ShowErrors) + ']' ) ) )
+						.writeLog( C_TAB + 'tcDebug:                      ' + Transform( Evl(tcDebug, '(empty)  -> Will use Default [' + Transform(.n_Debug) + ']' ) ) )
+						.writeLog( C_TAB + 'tcDontShowProgress:           ' + Transform( Evl(tcDontShowProgress, '(empty)  -> Will use Default [' + Transform(.n_ShowProgressbar) + ']' ) ) )
+						.writeLog( C_TAB + 'tlRelanzarError:              ' + Transform( Evl(tlRelanzarError, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tcOriginalFileName:           ' + Transform( Evl(tcOriginalFileName, '(empty)  -> Will use Default [' + .c_OriginalFileName + ']' ) ) )
+						.writeLog( C_TAB + 'tcRecompile:                  ' + Transform( Evl(tcRecompile, '(empty)  -> Will use Default [' + .c_Recompile + ']' ) ) )
+						.writeLog( C_TAB + 'tcNoTimestamps:               ' + Transform( Evl(tcNoTimestamps, '(empty)  -> Will use Default [' + Transform(.l_NoTimestamps) + ']' ) ) )
+						.writeLog( C_TAB + 'tcBackupLevels:               ' + Transform( Evl(tcBackupLevels, '(empty)  -> Will use Default [' + Transform(.n_ExtraBackupLevels) + ']' ) ) )
+						.writeLog( C_TAB + 'tcClearUniqueID:              ' + Transform( Evl(tcClearUniqueID, '(empty)  -> Will use Default [' + Transform(.l_ClearUniqueID) + ']' ) ) )
+						.writeLog( C_TAB + 'tcOptimizeByFilestamp:        ' + Transform( Evl(tcOptimizeByFilestamp, '(empty)  -> Will use Default [' + Transform(.n_OptimizeByFilestamp) + ']' ) ) )
+						.writeLog( C_TAB + 'tcCFG_File                    ' + Transform( Evl(tcCFG_File, '(empty)' ) ) )
+					ENDIF &&Upper(tcType)=='-C' Or tcType=='-t' OR Upper(tcType)=='C' Or tcType=='t' 
 					.writeLog( )
 
 *-- ARCHIVO DE CONFIGURACIÓN PRINCIPAL
@@ -3680,7 +3766,7 @@ Define Class c_foxbin2prg As Session
 *!*	change date="{^2021-03-09,08:06:00}"
 * log settings for tcCFG_File - cfg as object
 					.evaluateConfiguration( @tcDontShowProgress, @tcDontShowErrors, @tcNoTimestamps, @tcDebug, @tcRecompile, @tcBackupLevels ;
-						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type, , Vartype(tcCFG_File) = "O" )
+						, @tcClearUniqueID, @tcOptimizeByFilestamp, @tc_InputFile, @lcInputFile_Type, , Vartype(tcCFG_File) = "O", lcCFG_File)
 *!*	/Changed by: LScheffler 09.3.2021
 
 *!*	Changed by: LScheffler 04.3.2021
@@ -3752,11 +3838,13 @@ Define Class c_foxbin2prg As Session
 						Case ( m.lcType=='-t' Or m.lcType=='t' ) And ( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ) )
 							loLang	     = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( Strtran( '*' + m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
+						.writeLog_Flush()
 
 						Case ( m.lcType=='-c' Or m.lcType=='c' )
 							tc_InputFile = Iif( Vartype( m.tc_InputFile )='C' And !Empty( m.tc_InputFile ), m.tc_InputFile, 'FoxBin2Prg._cfg' )
 							loLang		 = _Screen.o_FoxBin2Prg_Lang
 							Strtofile( Strtran( '*' + Strtran( m.loLang.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg, 0h0D0A, 0h0D0A + '*'), 0h0D0A + '*' + 0h0D0A, 0h0D0A0D0A), m.tc_InputFile )
+						.writeLog_Flush()
 *!*	/Changed by: LScheffler 15.2.2021
 
 *!*	Changed by: LScheffler 07.3.2021
@@ -3772,7 +3860,7 @@ Define Class c_foxbin2prg As Session
 								lnOptions As Number,;
 								lnOption  As Number
 
-							lnOptions = 49
+							lnOptions = 50
 
 							Local Array;
 								laLines(1),;
@@ -3811,7 +3899,7 @@ Define Class c_foxbin2prg As Session
 							laOptions(09,1) = "*OptimizeByFilestamp:"               && 0,1,2 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
 							laOptions(09,2) = ".n_OptimizeByFilestamp"
 							laOptions(09,3) = 0
-							laOptions(10,1) = "*RemoveNullCharsFromCode:"           && 0,1 1=.t. 1=Drop NULL chars from source code
+							laOptions(10,1) = "*RemoveNullCharsFromCode:"           && 0,1 1=.t. 1=Drop .Null. chars from source code
 							laOptions(10,2) = ".l_RemoveNullCharsFromCode"
 							laOptions(10,3) = 1
 							laOptions(11,1) = "*RemoveZOrderSetFromProps:"          && 0,1 1=.t. 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
@@ -3861,10 +3949,10 @@ Define Class c_foxbin2prg As Session
 							laOptions(25,3) = 0
 							laOptions(26,1) = "*DBF_Conversion_Included:"           && n If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 							laOptions(26,2) = ".c_DBF_Conversion_Included"
-							laOptions(26,3) = 5
+							laOptions(26,3) = 6
 							laOptions(27,1) = "*DBF_Conversion_Excluded:"           && n If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
 							laOptions(27,2) = ".c_DBF_Conversion_Excluded"
-							laOptions(27,3) = 4
+							laOptions(27,3) = 5
 							laOptions(28,1) = "*OldFilesPerDBC:"                    && 0,1 1=.t. 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
 							laOptions(28,2) = ".l_OldFilesPerDBC"
 							laOptions(28,3) = 1
@@ -3928,9 +4016,12 @@ Define Class c_foxbin2prg As Session
 							laOptions(48,1) = "*extension: me2="                    && ext Text file to MEM
 							laOptions(48,2) = ".c_me2"
 							laOptions(48,3) = 2
-							laOptions(49,1) = "*BackgroundImage:"                    && ext Text file to MEM
+							laOptions(49,1) = "*BackgroundImage:"                   && Background image
 							laOptions(49,2) = ".c_BackgroundImage"
-							laOptions(49,3) = 6
+							laOptions(49,3) = 7
+							laOptions(50,1) = "*AllowInheritance:"                  && Inheritance out of config via parameter
+							laOptions(50,2) = ".l_AllowInheritance"
+							laOptions(50,3) = 4
 
 							For lnOption = 1 To m.lnOptions
 								lnLine = Ascan( m.laLines , m.laOptions( m.lnOption, 1 ), 1, -1, 1, 4)
@@ -3939,22 +4030,28 @@ Define Class c_foxbin2prg As Session
 									lcValue = Strextract( m.lcText , m.laOptions( m.lnOption, 1 ), '&'+'&' ,1 , 3)
 									Do Case
 										Case m.laOptions( m.lnOption, 3 ) = 0
+*numeric to numeric
 											lcReturn = Padr(' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) ), Len(m.lcValue) + 1 )
 
-										Case m.laOptions( m.lnOption, 3 ) = 1
+										Case m.laOptions( m.lnOption, 3 ) = 1 OR m.laOptions( m.lnOption, 3 ) = 4
+*logic to numeric
 											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '1', '0' ), Len(m.lcValue) + 1 )
 
 										Case m.laOptions( m.lnOption, 3 ) = 2
+*extension to text
 											lcReturn = Padr(Evaluate( m.laOptions( m.lnOption, 2 )), Len(m.lcValue) + 1 )
 
 										Case m.laOptions( m.lnOption, 3 ) = 3
+*logic to numeric, inverted
 											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '0', '1' ), Len(m.lcValue) + 1 )
 
-										Case m.laOptions( m.lnOption, 3 ) = 4
+										Case m.laOptions( m.lnOption, 3 ) = 5
+*special, Conversion Exclude for DBF
 											lcReturn = ' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
 											lcReturn = Padr( m.lcReturn , Max( Len ( m.lcReturn )+1, Len( m.lcValue ) + 1 ) )
 
-										Case m.laOptions( m.lnOption, 3 ) = 5
+										Case m.laOptions( m.lnOption, 3 ) = 6
+*special, Conversion Include for DBF (empty => *)
 											If Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
 												lcReturn = ' *'
 
@@ -3964,7 +4061,8 @@ Define Class c_foxbin2prg As Session
 											Endif &&Empty( Evaluate( m.laOptions( m.lnOption, 2 ) ) )
 											lcReturn = Padr( m.lcReturn , Max( Len ( m.lcReturn )+1, Len( m.lcValue ) + 1 ) )
 
-										Case m.laOptions( m.lnOption, 3 ) = 6
+										Case m.laOptions( m.lnOption, 3 ) = 7
+*special, Background Image (foxbin2prg.jpg => empty)
 											If Lower( Justfname ( Evaluate( m.laOptions( m.lnOption, 2 ) ) ) ) == 'foxbin2prg.jpg' Then
 												lcReturn = ''
 
@@ -3979,7 +4077,14 @@ Define Class c_foxbin2prg As Session
 											Loop
 
 									Endcase
-									laLines( m.lnLine ) = Substr(Strtran(m.laLines( m.lnLine ) , m.lcValue, m.lcReturn), 2 )
+									If m.laOptions( m.lnOption, 3 ) = 4 THEN
+*numeric to numeric, keep comment
+										laLines( m.lnLine ) = Strtran(m.laLines( m.lnLine ) , m.lcValue, m.lcReturn)
+									 
+									ELSE  &&m.laOptions( m.lnOption, 3 ) = 4
+										laLines( m.lnLine ) = Substr(Strtran(m.laLines( m.lnLine ) , m.lcValue, m.lcReturn), 2 )
+									
+									ENDIF &&m.laOptions( m.lnOption, 3 ) = 4 
 
 								Endif &&lnLine >0
 
@@ -3998,6 +4103,8 @@ Define Class c_foxbin2prg As Session
 							Endfor &&lnLine
 
 							Strtofile(  m.lcText, m.tc_InputFile )
+
+							.writeLog_Flush()
 
 *!*	/Changed by: LScheffler 07.3.2021
 
@@ -4033,7 +4140,7 @@ Define Class c_foxbin2prg As Session
 								Endif
 
 								loFrm_Interactive.Release()
-								loFrm_Interactive = Null
+								loFrm_Interactive = .Null.
 
 								Do Case
 									Case lnConversionOption = 1		&& Bin2Txt
@@ -4088,7 +4195,7 @@ Define Class c_foxbin2prg As Session
 									lnFileCount	= Adir( laFiles, lcFileSpec, '', 1 )
 
 									For I = 1 To lnFileCount
-										toModulo	= Null
+										toModulo	= .Null.
 										lcFile		= Forcepath( laFiles(m.I,1), Justpath( lcFileSpec ) )
 
 										Do Case
@@ -4201,7 +4308,7 @@ Define Class c_foxbin2prg As Session
 											.get_FilesFromDirectory( tc_InputFile, @laFiles, @lnFileCount )
 
 											For I = 1 To lnFileCount
-												toModulo	= Null
+												toModulo	= .Null.
 												lcFile		= laFiles(m.I)
 
 												If Not .hasSupport_Bin2Prg( lcFile ) Or Not Adir(laDirInfo, lcFile) > 0 Then
@@ -4272,7 +4379,7 @@ Define Class c_foxbin2prg As Session
 
 
 											For I = 1 To lnFileCount
-												toModulo	= Null
+												toModulo	= .Null.
 												lcFile		= laFiles(m.I)
 
 												If Not .hasSupport_Prg2Bin( lcFile ) Or Not Adir(laDirInfo, lcFile) > 0 Then
@@ -4533,7 +4640,7 @@ Define Class c_foxbin2prg As Session
 				Endif
 
 				Set Notify &lc_OldSetNotify.
-				Store Null To loFSO, loWSH, loDBF_CFG
+				Store .Null. To loFSO, loWSH, loDBF_CFG
 				Release I, lcPath, lcFileSpec, lcFile, laFiles, lnFileCount, lcErrorInfo, lcErrorFile, loEx, loFSO
 		Endtry
 
@@ -4650,7 +4757,7 @@ Define Class c_foxbin2prg As Session
 				Throw
 
 			Finally
-				Store Null To loLang
+				Store .Null. To loLang
 				Release loLang
 		Endtry
 	Endproc
@@ -4766,7 +4873,7 @@ Define Class c_foxbin2prg As Session
 				Throw
 
 			Finally
-				Store Null To loLang
+				Store .Null. To loLang
 				Release loLang
 		Endtry
 	Endproc
@@ -5000,7 +5107,7 @@ Define Class c_foxbin2prg As Session
 
 						Case lcExtension = 'DBF'
 							lnFileCount	= .get_DBF_Configuration( Forceext(.c_InputFile, 'DBF'), @loDBF_CFG )
-							If Not Inlist(.n_DBF_Conversion_Support, 1, 2, 4, 8)
+							If !Iif(Isnull(loDBF_CFG), Inlist(.n_DBF_Conversion_Support, 1, 2, 4, 8), Inlist(loDBF_CFG.n_DBF_Conversion_Support, 1, 2, 4, 8) )
 								Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 							Endif
 							.c_OutputFile	= Forceext( .c_InputFile, .c_DB2 )
@@ -5091,9 +5198,9 @@ Define Class c_foxbin2prg As Session
 							.changeFileAttribute( Forceext( .c_InputFile, 'LBT' ), lcForceAttribs )
 
 						Case lcExtension = .c_DB2
-							If Inlist(.n_DBF_Conversion_Support, 2, 8) Or Adir(laDirFile, Forceext(.c_InputFile, 'DBF') + '.CFG') = 1 Then
+							lnFileCount	= .get_DBF_Configuration( Forceext(.c_InputFile, 'DBF'), @loDBF_CFG )
+							If !Iif(Isnull(loDBF_CFG), Inlist(.n_DBF_Conversion_Support, 2, 8), Inlist(loDBF_CFG.n_DBF_Conversion_Support, 2, 8) ) 
 *-- Soporte txt-2-bin habilitado
-							Else
 								Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 							Endif
 							.c_OutputFile	= Forceext( .c_InputFile, 'DBF' )
@@ -5262,7 +5369,7 @@ Define Class c_foxbin2prg As Session
 					Unbindevents( loConversor )
 				Endif
 
-				Store Null To loConversor, loFSO
+				Store .Null. To loConversor, loFSO
 
 				If lnCodError = 0 And This.l_Error Then
 					This.updateProcessedFile( lnIDInputFile, '', '', 'E1' )
@@ -5292,7 +5399,7 @@ Define Class c_foxbin2prg As Session
 		Endif
 
 		If This.n_CFG_Actual = 0 Then
-			loCFG = Null
+			loCFG = .Null.
 		Else
 			loCFG = This.o_Configuration(This.n_CFG_Actual)
 		Endif
@@ -5311,7 +5418,7 @@ Define Class c_foxbin2prg As Session
 		lcText	= ''
 
 *-- Cabecera del PRG e inicio de DEF_CLASS
-*SF 20230822
+*!*	LScheffler 22.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources, added CPID value
 		TEXT TO lcText ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 			*--------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -5538,7 +5645,7 @@ Define Class c_foxbin2prg As Session
 				Throw
 
 			Finally
-				loFSO	= Null
+				loFSO	= .Null.
 				Release lcPath, lcEXE_CAPS, lcOutputFile, llRelanzarError, lcType, loFSO
 
 		Endtry
@@ -5613,7 +5720,7 @@ Define Class c_foxbin2prg As Session
 				lnCodError			= 0
 
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
-					Store Null To toModulo
+					Store .Null. To toModulo
 					lc_OldSetNotify	= Set("Notify")
 					Set Notify Off
 					loFSO			= .o_FSO
@@ -5776,7 +5883,7 @@ Define Class c_foxbin2prg As Session
 *	UNBINDEVENTS( loConversor )
 *ENDIF
 
-				Store Null To loConversor, loFSO
+				Store .Null. To loConversor, loFSO
 
 *IF lnCodError = 0 AND THIS.l_Error THEN
 *	THIS.updateProcessedFile( lnIDInputFile, '', '', 'E1' )
@@ -5870,7 +5977,7 @@ Define Class c_foxbin2prg As Session
 				Throw
 
 			Finally
-*loFSO	= NULL
+*loFSO	= .Null.
 		Endtry
 
 		Return
@@ -6136,8 +6243,8 @@ Define Class c_foxbin2prg As Session
 				#Define WAIT_TIMEOUT	0x00000102
 				#Define WAIT_FAILED		0xFFFFFFFF
 
-				tcProgFile		= Evl(tcProgFile, Null)
-				tcCmdLine		= Evl(tcCmdLine, Null)
+				tcProgFile		= Evl(tcProgFile, .Null.)
+				tcCmdLine		= Evl(tcCmdLine, .Null.)
 
 				Do Case
 					Case Vartype(tbWaitOnReturn) = "L"
@@ -7214,7 +7321,7 @@ Define Class c_conversor_base As Custom
 	l_ReportSort_Enabled	= .T.
 	c_OriginalFileName		= ''
 	c_ClaseActual			= ''
-	oFSO					= Null
+	oFSO					= .Null.
 	n_Methods_LineNo		= 0			&& Número de línea del error dentro de "Methods"
 *** DH 2021-03-04: added cOutputFolder property
 	cOutputFolder			= ''
@@ -7278,7 +7385,7 @@ Define Class c_conversor_base As Custom
 			This.writeLog( loLang.C_CONVERTER_UNLOAD_LOC )
 		Endif
 
-		This.oFSO	= Null
+		This.oFSO	= .Null.
 	Endproc
 
 
@@ -7414,7 +7521,7 @@ Define Class c_conversor_base As Custom
 							Exit
 						Endif
 
-						loObjeto	= Null
+						loObjeto	= .Null.
 					Endfor
 					If lnObjeto > 0
 						Exit
@@ -9058,7 +9165,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				.get_ListNamesWithValuesFrom_InLine_MetadataTag( @tcLine, @laPropsAndValues, @lnPropsAndValues_Count, C_FB2PRG_META_I, C_FB2PRG_META_F )
 				toModulo._Version		= .get_ValueByName_FromListNamesWithValues( 'Version', 'N', @laPropsAndValues )
 				toModulo._SourceFile	= .get_ValueByName_FromListNamesWithValues( 'SourceFile', 'C', @laPropsAndValues )
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 				toModulo._CPID			= .get_ValueByName_FromListNamesWithValues( 'CPID', 'I', @laPropsAndValues )
 			Endwith
@@ -9098,7 +9205,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		Local lcCodepage
 
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 		lcCodepage = Str(toProject._CPID) 
 
@@ -9198,7 +9305,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		Local lcCodepage
 
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 		lcCodepage = Str(toModulo._CPID) 
 
@@ -9264,7 +9371,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		Local lcCodepage
 
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 		lcCodepage = Str(toModulo._CPID) 
 
@@ -9333,7 +9440,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 		tcTableOrCursor	= Evl( tcTableOrCursor, 'TABLE' )
 		lcCursorName	= Icase( tcTableOrCursor = 'TABLE', This.c_OutputFile, 'TABLABIN' )
 
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 		lcCodepage = Icase(ISNULL(toReport),Str(Cpcurrent()),Str(toReport._CPID)) 
 
@@ -9432,7 +9539,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 		tcTableOrCursor	= Evl( tcTableOrCursor, 'TABLE' )
 		lcCursorName	= Icase( tcTableOrCursor = 'TABLE', This.c_OutputFile, 'TABLABIN' )
 		
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 		lcCodepage = Icase(Isnull(toMenu),Str(Cpcurrent()),Str(toMenu._CPID)) 
 
@@ -9608,7 +9715,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 *-- Recorrer los métodos
 		With This As c_conversor_prg_a_bin Of foxbin2prg.prg
 			For I = 1 To toClase._Procedure_Count
-				loProcedure	= Null
+				loProcedure	= .Null.
 				loProcedure	= toClase._Procedures(m.I)
 
 				If loProcedure._ProcLine_Count > 0 Then
@@ -9654,7 +9761,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			Endfor
 		Endwith
 
-		loProcedure	= Null
+		loProcedure	= .Null.
 		Release toClase, I, X, lcNombreObjeto, loProcedure
 		Return lcMemo
 	Endproc
@@ -9676,7 +9783,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 *-- Recorrer los métodos
 		This.updateProgressbar( 'Generating Object Methods for ' + toClase._Nombre + '.' + toObjeto._ObjName + '...', 0, 1, 2 )
 		For I = 1 To toObjeto._Procedure_Count
-			loProcedure	= Null
+			loProcedure	= .Null.
 			loProcedure	= toObjeto._Procedures(m.I)
 
 			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
@@ -9694,7 +9801,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			ENDTEXT
 		Endfor
 
-		loProcedure	= Null
+		loProcedure	= .Null.
 		Release toObjeto, toClase, I, X, lcNombreObjeto, loProcedure
 		Return lcMemo
 	Endproc
@@ -10000,7 +10107,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 		Try
 				Local N, X, lcObjName, loObjeto As CL_OBJETO Of 'FOXBIN2PRG.PRG'
-				loObjeto	= Null
+				loObjeto	= .Null.
 
 				With This As c_conversor_prg_a_bin Of 'FOXBIN2PRG.PRG'
 					If toClase._AddObject_Count > 0
@@ -10021,7 +10128,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 							laObjNames( m.X, 1 )	= loObjeto._Nombre
 							laObjNames( m.X, 2 )	= loObjeto._ZOrder
-							loObjeto			= Null
+							loObjeto			= .Null.
 						Endfor
 
 						Asort( laObjNames, 2, -1, 0, 1 )
@@ -10061,7 +10168,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				Throw
 
 			Finally
-				loObjeto	= Null
+				loObjeto	= .Null.
 				Release toClase, toFoxBin2Prg, N, X, lcObjName, loObjeto
 
 		Endtry
@@ -10096,7 +10203,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 					, loProcedure As CL_PROCEDURE Of 'FOXBIN2PRG.PRG' ;
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 				loLang		= _Screen.o_FoxBin2Prg_Lang
-				loProcedure	= Null
+				loProcedure	= .Null.
 
 				If '.' $ tcProcedureAbierto And Vartype(toObjeto) = 'O' And toObjeto._Procedure_Count > 0
 					loProcedure	= toObjeto._Procedures(toObjeto._Procedure_Count)
@@ -10154,7 +10261,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				Throw
 
 			Finally
-				loProcedure	= Null
+				loProcedure	= .Null.
 				Release toClase, toObjeto, tcLine, taCodeLines, I, tnCodeLines, tcProcedureAbierto, tc_Comentario ;
 					, taLineasExclusion, tnBloquesExclusion, llEsProcedureDeClase, loProcedure
 
@@ -10206,7 +10313,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 							toClase._Ini_Cuerpo	= m.I
 						Endif
 
-						toObjeto	= Null
+						toObjeto	= .Null.
 						lcNombre	= Alltrim( Chrtran( Strextract(tcLine, 'ADD OBJECT ', ' AS ', 1, 1), ['"], [] ) )
 						lcObjName	= Justext( '.' + lcNombre )
 						.updateProgressbar( 'Analyzing Block Add Object ' + toClase._Nombre + '.' + lcObjName + '...', m.I, tnCodeLines, 1 )
@@ -10987,7 +11094,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			llBloqueEncontrado	= .T.
 			toClase.l_ObjectMetadataInHeader = .T.
 
-			loObjeto	= Null
+			loObjeto	= .Null.
 			loObjeto	= Createobject('CL_OBJETO')
 			toClase.add_Object( loObjeto )
 
@@ -10998,7 +11105,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				loObjeto._UniqueID			= .get_ValueByName_FromListNamesWithValues( 'UniqueID', 'C', @laPropsAndValues )
 			Endwith && THIS
 
-			loObjeto	= Null
+			loObjeto	= .Null.
 			Release toClase, tcLine, laPropsAndValues, lnPropsAndValues_Count, loObjeto
 		Endif
 
@@ -11022,7 +11129,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 *< OLE: Nombre="frm_d.ole_ImageControl2" parent="frm_d" objname="ole_ImageControl2" checksum="4171274922" value="b64-value" />
 			Local laPropsAndValues(1,2), lnPropsAndValues_Count ;
 				, loOle As CL_OLE Of 'FOXBIN2PRG.PRG'
-			loOle			= Null
+			loOle			= .Null.
 			loOle			= Createobject('CL_OLE')
 
 			With This
@@ -11048,7 +11155,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				Endfor
 			Endif
 
-			loOle	= Null
+			loOle	= .Null.
 			Release loOle, laPropsAndValues, lnPropsAndValues_Count
 		Endif
 
@@ -11173,7 +11280,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 					toClase._Ini_Cuerpo	= m.I
 				Endif
 
-				loProcedure		= Null
+				loProcedure		= .Null.
 				loProcedure		= Createobject("CL_PROCEDURE")
 				loProcedure._Nombre			= tcProcName
 				loProcedure._ProcType		= tcProcType
@@ -11201,7 +11308,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 					If lnObjProc = 0
 *-- Procedimiento de clase
 						toClase.add_Procedure( loProcedure )
-						toObjeto	= Null
+						toObjeto	= .Null.
 					Else
 *-- Procedimiento de objeto
 						toObjeto	= toClase._AddObjects( lnObjProc )
@@ -11226,7 +11333,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				Throw
 
 			Finally
-				Store Null To loProcedure
+				Store .Null. To loProcedure
 				Release loProcedure, I, lcNombreObjeto, lnObjProc ;
 					, toClase, tc_Comentario, tcProcName, tcProcType, toObjeto
 		Endtry
@@ -11307,7 +11414,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				Throw
 
 			Finally
-				Store Null To loClase
+				Store .Null. To loClase
 				Release loClase, I ;
 					, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
 					, lc_Comentario, lcProcedureAbierto, lcLine
@@ -11401,7 +11508,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 				Throw
 
 			Finally
-				Store Null To loClase
+				Store .Null. To loClase
 				Release taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toModulo, loClase, I ;
 					, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
 					, lc_Comentario, lcProcedureAbierto, lcLine
@@ -11522,7 +11629,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 				With This As c_conversor_prg_a_vcx Of 'FOXBIN2PRG.PRG'
 					Store 0 To lnCodError, lnCodeLines
 					Store '' To C_FB2PRG_CODE, lcClassName
-					Store Null To toModulo
+					Store .Null. To toModulo
 
 					loLang				= _Screen.o_FoxBin2Prg_Lang
 					toModulo			= Createobject('CL_CLASSLIB')
@@ -11722,7 +11829,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 
 			Finally
 				Use In (Select("TABLABIN"))
-				Store Null To loClase
+				Store .Null. To loClase
 				Release lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
 					, laLineasExclusion, lnBloquesExclusion, I
 		Endtry
@@ -11814,7 +11921,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 				With This As c_conversor_prg_a_vcx Of 'FOXBIN2PRG.PRG'
 					loLang			= _Screen.o_FoxBin2Prg_Lang
 
-					Store Null To loFSO, loClase
+					Store .Null. To loFSO, loClase
 					loFSO	= .oFSO
 
 *-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
@@ -11882,7 +11989,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 *-- Recorro las CLASES
 						For X = 1 To 2
 							For I = 1 To toModulo._Clases_Count
-								loClase	= Null
+								loClase	= .Null.
 								loClase	= toModulo._Clases(m.I)
 
 *-- El dataenvironment debe estar primero, luego lo demás.
@@ -12061,7 +12168,7 @@ Define Class c_conversor_prg_a_vcx As c_conversor_prg_a_bin
 
 			Finally
 				Use In (Select("TABLABIN"))
-				Store Null To loFSO, loClase
+				Store .Null. To loFSO, loClase
 				Release lcObjName, I, X, loClase, loFSO
 
 		Endtry
@@ -12106,7 +12213,7 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 				With This As c_conversor_prg_a_vcx Of 'FOXBIN2PRG.PRG'
 					Store 0 To lnCodError, lnCodeLines
 					Store '' To C_FB2PRG_CODE
-					Store Null To toModulo
+					Store .Null. To toModulo
 
 					loLang				= _Screen.o_FoxBin2Prg_Lang
 					toModulo			= Createobject('CL_CLASSLIB')
@@ -12336,7 +12443,7 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 *-- Recorro las CLASES
 					For X = 1 To 2
 						For I = 1 To toModulo._Clases_Count
-							loClase	= Null
+							loClase	= .Null.
 							loClase	= toModulo._Clases(m.I)
 
 *-- El dataenvironment debe estar primero, luego lo demás.
@@ -12475,7 +12582,7 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 
 			Finally
 				Use In (Select("TABLABIN"))
-				Store Null To loClase, loEx
+				Store .Null. To loClase, loEx
 				Release lcObjName, lnCodError, I, X, loClase
 		Endtry
 
@@ -12525,7 +12632,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 
 				With This As c_conversor_prg_a_pjx Of 'FOXBIN2PRG.PRG'
 					Store 0 To lnCodeLines
-					Store Null To toModulo
+					Store .Null. To toModulo
 					lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 					If Not toFoxBin2Prg.l_ProcessFiles Then
@@ -12598,7 +12705,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 					, loFile As CL_PROJ_FILE Of 'FOXBIN2PRG.PRG'
 
 				With This As c_conversor_prg_a_pjx Of 'FOXBIN2PRG.PRG'
-					Store Null To loFile, loServerHead
+					Store .Null. To loFile, loServerHead
 					toProject._HomeDir	= Chrtran( toProject._HomeDir, ['], [] )
 					toProject._SccData	= Chr(3) + Chr(0) + Chr(1) + Replicate( Chr(0), 651 )
 
@@ -12713,7 +12820,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 
 			Finally
 				Use In (Select("TABLABIN"))
-				Store Null To loFile, loServerHead
+				Store .Null. To loFile, loServerHead
 				Release loFile, loServerHead
 
 		Endtry
@@ -12861,7 +12968,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 								Case Upper( Left( tcLine, 5 ) ) == '.ADD('
 * loFile: NAME,TYPE,EXCLUDE,COMMENTS
 									tcLine			= Chrtran( tcLine, ["] + '[]', "'''" )	&& Convierto "[] en '
-									Store Null To loFile
+									Store .Null. To loFile
 									loFile			= Createobject('CL_PROJ_FILE')
 									loFile._Name	= Alltrim( Strextract( tcLine, ['], ['] ) )
 
@@ -12901,7 +13008,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				Store Null To loFile
+				Store .Null. To loFile
 				Release toProject, tcLine, taCodeLines, I, tnCodeLines ;
 					, lcComment, lcMetadatos, luValor, laPropsAndValues, lnPropsAndValues_Count, loFile
 		Endtry
@@ -12979,7 +13086,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				If Left( tcLine, Len(C_SRV_HEAD_I) ) == C_SRV_HEAD_I
 					llBloqueEncontrado	= .T.
 
-					Store Null To loServerHead
+					Store .Null. To loServerHead
 					loServerHead	= toProject._ServerHead
 
 					With This As c_conversor_prg_a_pjx Of 'FOXBIN2PRG.PRG'
@@ -13011,7 +13118,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				Store Null To loServerHead
+				Store .Null. To loServerHead
 				Release loServerHead
 
 		Endtry
@@ -13039,7 +13146,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				If Left( tcLine, Len(C_SRV_DATA_I) ) == C_SRV_DATA_I
 					llBloqueEncontrado	= .T.
 
-					Store Null To loServerData, loServerHead
+					Store .Null. To loServerData, loServerHead
 					loServerHead	= toProject._ServerHead
 					loServerData	= loServerHead.getServerDataObject()
 
@@ -13073,7 +13180,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				Store Null To loServerData, loServerHead
+				Store .Null. To loServerData, loServerHead
 				Release loServerHead, loServerData
 
 		Endtry
@@ -13101,7 +13208,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 
 				If Left( tcLine, Len(C_FILE_CMTS_I) ) == C_FILE_CMTS_I
 					llBloqueEncontrado	= .T.
-					loFile	= Null
+					loFile	= .Null.
 
 					With This As c_conversor_prg_a_pjx Of 'FOXBIN2PRG.PRG'
 						For I = m.I + 1 To tnCodeLines
@@ -13120,7 +13227,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 									lcComment			= Alltrim( Chrtran( Strextract( tcLine, "=", "", 1, 2 ), ['], [] ) )
 									loFile				= toProject( lcFile )
 									loFile._Comments	= lcComment
-									loFile				= Null
+									loFile				= .Null.
 							Endcase
 						Endfor
 					Endwith && THIS
@@ -13136,7 +13243,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				loFile	= Null
+				loFile	= .Null.
 				Release lcFile, lcComment, loFile
 
 		Endtry
@@ -13164,7 +13271,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 
 				If Left( tcLine, Len(C_FILE_EXCL_I) ) == C_FILE_EXCL_I
 					llBloqueEncontrado	= .T.
-					loFile	= Null
+					loFile	= .Null.
 
 					With This As c_conversor_prg_a_pjx Of 'FOXBIN2PRG.PRG'
 						For I = m.I + 1 To tnCodeLines
@@ -13183,7 +13290,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 									llExclude		= Evaluate( Alltrim( Chrtran( Strextract( tcLine, "=", "", 1, 2 ), ['], [] ) ) )
 									loFile			= toProject( lcFile )
 									loFile._Exclude	= llExclude
-									loFile			= Null
+									loFile			= .Null.
 							Endcase
 						Endfor
 					Endwith && THIS
@@ -13199,7 +13306,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				loFile	= Null
+				loFile	= .Null.
 				Release lcFile, llExclude, loFile
 
 		Endtry
@@ -13227,7 +13334,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 
 				If Left( tcLine, Len(C_FILE_TXT_I) ) == C_FILE_TXT_I
 					llBloqueEncontrado	= .T.
-					loFile			= Null
+					loFile			= .Null.
 
 					With This As c_conversor_prg_a_pjx Of 'FOXBIN2PRG.PRG'
 						For I = m.I + 1 To tnCodeLines
@@ -13246,7 +13353,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 									lcType			= Alltrim( Chrtran( Strextract( tcLine, "=", "", 1, 2 ), ['], [] ) )
 									loFile			= toProject( lcFile )
 									loFile._Type	= lcType
-									loFile			= Null
+									loFile			= .Null.
 							Endcase
 						Endfor
 					Endwith && THIS
@@ -13262,7 +13369,7 @@ Define Class c_conversor_prg_a_pjx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				loFile	= Null
+				loFile	= .Null.
 				Release lcFile, lcType, loFile
 
 		Endtry
@@ -13371,7 +13478,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 
 				With This As c_conversor_prg_a_frx Of 'FOXBIN2PRG.PRG'
 					Store 0 To lnCodError, lnCodeLines
-					Store Null To toReport
+					Store .Null. To toReport
 					lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
 					If Not toFoxBin2Prg.l_ProcessFiles Then
@@ -13447,7 +13554,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 				loLang			= _Screen.o_FoxBin2Prg_Lang
 				Select TABLABIN
 				Afields( laFieldTypes )
-				loReg	= Null
+				loReg	= .Null.
 
 *-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
 				toFoxBin2Prg.addProcessedFile( This.c_OutputFile, 'O', 'P1', 'E0', 'S1', 'X0' )
@@ -13505,7 +13612,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 					Endfor
 
 					Insert Into TABLABIN From Name loReg
-					loReg	= Null
+					loReg	= .Null.
 				Endfor
 
 				Use In (Select("TABLABIN"))
@@ -13529,7 +13636,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 
 			Finally
 				Use In (Select("TABLABIN"))
-				loReg	= Null
+				loReg	= .Null.
 				Release loReg, I, lcFieldType, lnFieldLen, lnFieldDec, lnNumCampo, laFieldTypes, luValor
 
 		Endtry
@@ -13566,7 +13673,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 					.c_Type	= Upper(Justext(.c_OutputFile))
 
 					If tnCodeLines > 1
-						toReport			= Null
+						toReport			= .Null.
 						toReport			= Createobject('CL_REPORT')
 
 						For I = 1 To tnCodeLines
@@ -13739,7 +13846,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 
 				If Left( tcLine, Len(C_TAG_REPORTE) + 1 ) == '<' + C_TAG_REPORTE + ''
 					llBloqueEncontrado	= .T.
-					loReg	= Null
+					loReg	= .Null.
 
 					With This As c_conversor_prg_a_frx Of 'FOXBIN2PRG.PRG'
 						Scatter Memo Blank Name loReg
@@ -13803,7 +13910,7 @@ Define Class c_conversor_prg_a_frx As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				loReg	= Null
+				loReg	= .Null.
 				Release lcComment, lcMetadatos, luValor, laPropsAndValues, lnPropsAndValues_Count, loReg
 
 		Endtry
@@ -13850,7 +13957,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					, lnIDInputFile, lnFileCount, laConfig(1), lcConfigItem, lc_DBF_Conversion_Support, lcAlterTable ;
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG' ;
 					, lcTempDBC, llImportData ;
-					, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG'
+					, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG', ln_DBF_Conversion_Support
 				Store 0 To lnCodError, lnCodeLines
 
 				With This As c_conversor_prg_a_dbf Of 'FOXBIN2PRG.PRG'
@@ -13860,23 +13967,26 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 *-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
 					lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( Forceext(.c_InputFile, 'DBF'), @loDBF_CFG, .T. )
 					lcTempDBC	= Forcepath( '_FB2P', Justpath(.c_OutputFile) )
+					
+					ln_DBF_Conversion_Support = Iif(Isnull(loDBF_CFG), toFoxBin2Prg.n_DBF_Conversion_Support, loDBF_CFG.n_DBF_Conversion_Support )
 
 					Do Case
-						Case lnFileCount = 1 And loDBF_CFG.n_DBF_Conversion_Support > 0 And Not Inlist(loDBF_CFG.n_DBF_Conversion_Support, 2, 8)
+						Case Not Inlist(ln_DBF_Conversion_Support, 2, 8)
 							With toFoxBin2Prg
 								Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
 							Endwith
 
-						Case lnFileCount = 1 And loDBF_CFG.n_DBF_Conversion_Support > 0	&& Implica 2 u 8
-							llImportData	= (loDBF_CFG.n_DBF_Conversion_Support = 8)
+*!*							Case lnFileCount = 1 And loDBF_CFG.n_DBF_Conversion_Support > 0	&& Implica 2 u 8
+*!*								llImportData	= (loDBF_CFG.n_DBF_Conversion_Support = 8)
 
-						Case toFoxBin2Prg.n_DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
+*						Case toFoxBin2Prg.n_DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
+						CASE ln_DBF_Conversion_Support = 8	&& TXT2BIN (DATA IMPORT)
 							llImportData	= .T.
 
-						Case toFoxBin2Prg.n_DBF_Conversion_Support <> 2
-							With toFoxBin2Prg
-								Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
-							Endwith
+*!*							Case toFoxBin2Prg.n_DBF_Conversion_Support <> 2
+*!*								With toFoxBin2Prg
+*!*									Error (Textmerge(loLang.C_FILE_NAME_IS_NOT_SUPPORTED_LOC))
+*!*								Endwith
 
 						Otherwise
 * Asume llImportData = .F.
@@ -13959,7 +14069,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					Erase (Forceext(lcTempDBC,'DCX'))
 				Endif
 
-				Store Null To loDBF_CFG
+				Store .Null. To loDBF_CFG
 				Release loDBF_CFG
 
 		Endtry
@@ -13984,7 +14094,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					, lcCreateTable, lcLongDec, lcFieldDef, lcIndex, lcTempDBC, lnDataSessionID, lnSelect
 
 				With This As c_conversor_prg_a_dbf Of 'FOXBIN2PRG.PRG'
-					Store Null To loField, loIndex, loDBFUtils
+					Store .Null. To loField, loIndex, loDBFUtils
 					loDBFUtils			= Createobject('CL_DBF_UTILS')
 
 					Store 0 To lnCodError
@@ -14045,8 +14155,8 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 
 						lcFieldDef	= lcFieldDef + lcLongDec
 
-*-- Null
-						lcFieldDef	= lcFieldDef + Iif( loField._Null = '.T.', ' NULL', ' NOT NULL' )
+*-- .Null.
+						lcFieldDef	= lcFieldDef + Iif( loField._Null = '.T.', ' .Null.', ' NOT .Null.' )
 
 *-- NoCPTran
 						If loField._NoCPTran = '.T.'
@@ -14064,7 +14174,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 							Endif
 						Endif
 
-						loField			= Null
+						loField			= .Null.
 					Endfor
 
 					lcCreateTable	= lcCreateTable + lcFieldDef + ')'
@@ -14098,7 +14208,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				Store Null To loField, loDBFUtils
+				Store .Null. To loField, loDBFUtils
 				Release I, loField, loDBFUtils ;
 					, lcCreateTable, lcLongDec, lcFieldDef, lcTempDBC, lnDataSessionID, lnSelect
 
@@ -14126,7 +14236,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					, lcIndexFile
 
 				With This As c_conversor_prg_a_dbf Of 'FOXBIN2PRG.PRG'
-					Store Null To loIndex
+					Store .Null. To loIndex
 					Store 0 To lnCodError
 					Store '' To lcIndex
 					Store .Null. To lcIndexFile
@@ -14227,7 +14337,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Release I, loIndex, lcIndex, ldLastUpdate
 
 		Endtry
@@ -14262,7 +14372,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 					.c_Type	= Upper(Justext(.c_OutputFile))
 
 					If tnCodeLines > 1
-						toTable		= Null
+						toTable		= .Null.
 						toTable		= Createobject('CL_DBF_TABLE')
 
 						For I = 1 To tnCodeLines
@@ -14343,7 +14453,7 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 				Store 0 To lnCodError, lnCodeLines, lnFileCount
 				Store '' To lcLine, laLines, laCodeLines, lcBaseFilename, lcMemberType, lcLastMemberType, lcMemberName, lcInputFile
-				Store Null To loReg, toDatabase
+				Store .Null. To loReg, toDatabase
 
 				With This As c_conversor_prg_a_dbc Of 'FOXBIN2PRG.PRG'
 					loLang				= _Screen.o_FoxBin2Prg_Lang
@@ -14685,7 +14795,7 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 				Throw
 
 			Finally
-				Store Null To loClase
+				Store .Null. To loClase
 				Release taCodeLines, tnCodeLines, taLineasExclusion, tnBloquesExclusion, toDatabase, loClase, I ;
 					, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed ;
 					, lc_Comentario, lcProcedureAbierto, lcLine
@@ -14933,7 +15043,7 @@ Define Class c_conversor_prg_a_mnx As c_conversor_prg_a_bin
 					.c_Type	= Upper(Justext(.c_OutputFile))
 
 					If tnCodeLines > 1
-						toMenu		= Null
+						toMenu		= .Null.
 						toMenu		= Createobject('CL_MENU')
 
 						For I = 1 To tnCodeLines
@@ -16829,7 +16939,7 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 *!*				lnOLECount	= 0
 
 *!*				SCAN ALL FOR TABLABIN.PLATFORM = "WINDOWS" AND BASECLASS = 'olecontrol'
-*!*					loReg	= NULL
+*!*					loReg	= .Null.
 *!*					SCATTER MEMO NAME loReg
 
 *!*					IF toFoxBin2Prg.l_NoTimestamps
@@ -16883,7 +16993,7 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 *!*				THROW
 
 *!*			FINALLY
-*!*				loReg	= NULL
+*!*				loReg	= .Null.
 *!*				RELEASE loReg
 
 *!*			ENDTRY
@@ -17056,18 +17166,18 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 					, lnMethodCount, lnClassCount, lnStepCount, lnStep
 				Store '' To laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 					, C_FB2PRG_CODE, lcExternalHeader
-				Store Null To loRegClass, loRegObj
+				Store .Null. To loRegClass, loRegObj
 				loLang	= _Screen.o_FoxBin2Prg_Lang
 
 				With This As c_conversor_vcx_a_prg Of 'FOXBIN2PRG.PRG'
 					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG 
  
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 					toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
 					SET NOCPTRANS TO Class,CLASSLOC,BaseClass,OBJNAME,Parent,PROPERTIES,Protected,METHODS,OBJCODE,OLE,OLE2,;
 						RESERVED1,RESERVED2,RESERVED3,RESERVED4,RESERVED5,RESERVED6,RESERVED7,RESERVED8,User
-*/SF 20230820
+*/LScheffler 20.08.2023
 
 					If toFoxBin2Prg.n_UseClassPerFile = 0 Or Empty(toFoxBin2Prg.c_ClassToConvert) Then
 *-- Exportar la librería entera a texto
@@ -17083,7 +17193,6 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 
 					lnStepCount	= 7
 					Use In (Select("_TABLAORIG"))
-					
 
 * Issue#17: Error, The Specified Key already exists (Kirides)
 					.ignoreCorruptedObjects('TABLABIN')
@@ -17127,7 +17236,7 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 						lnClassCount	= lnClassCount + 1
 						Dimension laClasses(lnClassCount,3)
 
-						loRegClass	= Null
+						loRegClass	= .Null.
 						Scatter Memo Name loRegClass
 
 *-- Normalización de capitalización y de datos según parametrización
@@ -17179,7 +17288,7 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 								AND Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
 
 							lnObjCount	= lnObjCount + 1
-							loRegObj	= Null
+							loRegObj	= .Null.
 							Scatter Memo Name loRegObj
 
 *-- Normalización de capitalización y de datos según parametrización
@@ -17213,7 +17322,7 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 								loRegObj.UNIQUEID	= Alltrim(loRegObj.UNIQUEID)
 							Endif
 
-							loRegObj	= Null
+							loRegObj	= .Null.
 						Endscan
 
 						Goto Record (lnRecno)
@@ -17274,7 +17383,7 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 								FOR Upper( TABLABIN.PLATFORM ) = "WINDOWS" And Not Proper( TABLABIN.RESERVED1 ) == "Class" ;
 								WHILE Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
 
-							loRegObj	= Null
+							loRegObj	= .Null.
 							Scatter Memo Name loRegObj
 
 *-- Normalización de capitalización y de datos según parametrización
@@ -17391,7 +17500,7 @@ Define Class c_conversor_vcx_a_prg As c_conversor_bin_a_prg
 			Finally
 				Use In (Select("TABLABIN"))
 				Use In (Select("_TABLAORIG"))
-				Store Null To loRegClass, loRegObj
+				Store .Null. To loRegClass, loRegObj
 				Release toModulo, toEx, toFoxBin2Prg ;
 					, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
 					, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle ;
@@ -17438,18 +17547,18 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 					, lnMethodCount, lnClassCount, lnStepCount, lnStep
 				Store '' To laMethods, laCode, laProtected, laPropsAndComments, laObjs, lcCodigo, laClasses, lcOutputFile ;
 					, C_FB2PRG_CODE, lcExternalHeader
-				Store Null To loRegClass, loRegObj
+				Store .Null. To loRegClass, loRegObj
 				loLang	= _Screen.o_FoxBin2Prg_Lang
 
 				With This As c_conversor_scx_a_prg Of 'FOXBIN2PRG.PRG'
 					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
 
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 					toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
 					SET NOCPTRANS TO CLASS,CLASSLOC,BASECLASS,OBJNAME,PARENT,PROPERTIES,PROTECTED,METHODS;
 						,OBJCODE,OLE,OLE2,RESERVED1,RESERVED2,RESERVED3,RESERVED4,RESERVED5,RESERVED6,RESERVED7,RESERVED8,USER
-*/SF 20230820
+*/LScheffler 20.08.2023
 					
 					Select _TABLAORIG.*,Recno() regnum From _TABLAORIG Into Cursor TABLABIN Readwrite
 
@@ -17476,7 +17585,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 					Set Order To PARENT_OBJ
 					Goto Record 1	&& Class Library Header/Form Header
 
-					loRegClass	= Null
+					loRegClass	= .Null.
 					Scatter Fields RESERVED8,RESERVED7 Memo Name loRegClass
 
 					If Not Empty(loRegClass.RESERVED7) Then
@@ -17508,7 +17617,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						lnClassCount	= lnClassCount + 1
 						Dimension laClasses(lnClassCount,3)
 
-						loRegClass	= Null
+						loRegClass	= .Null.
 						Scatter Memo Name loRegClass
 
 *-- Normalización de capitalización y de datos según parametrización
@@ -17554,10 +17663,10 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						lnObjCount	= 0
 						lnRecno	= Recno()
 						Locate For Upper( TABLABIN.PLATFORM ) = "WINDOWS" And Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
-*SF 20230804
+*!*	LScheffler 04.08.2023
 						Scan Rest While Upper( TABLABIN.PLATFORM ) = "WINDOWS" And Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
 							lnObjCount	= lnObjCount + 1
-							loRegObj	= Null
+							loRegObj	= .Null.
 							Scatter Memo Name loRegObj
 
 *-- Normalización de capitalización y de datos según parametrización
@@ -17591,7 +17700,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 								loRegObj.UNIQUEID	= Alltrim(loRegObj.UNIQUEID)
 							Endif
 
-							loRegObj	= Null
+							loRegObj	= .Null.
 						Endscan
 
 						Goto Record (lnRecno)
@@ -17654,7 +17763,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 								AND ( Inlist( Lower( TABLABIN.BaseClass ), 'dataenvironment' , 'form', 'formset' ) ) ) ;
 								WHILE Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
 
-							loRegObj	= Null
+							loRegObj	= .Null.
 							Scatter Memo Name loRegObj
 
 *-- Normalización de capitalización y de datos según parametrización
@@ -17760,7 +17869,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 			Finally
 				Use In (Select("TABLABIN"))
 				Use In (Select("_TABLAORIG"))
-				Store Null To loRegClass, loRegObj
+				Store .Null. To loRegClass, loRegObj
 				Release toModulo, toEx, toFoxBin2Prg ;
 					, lnCodError, loRegClass, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen, lnObjCount ;
 					, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle ;
@@ -17808,7 +17917,7 @@ Define Class c_conversor_pjx_a_prg As c_conversor_bin_a_prg
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
 				loLang			= _Screen.o_FoxBin2Prg_Lang
-				Store Null To loProject, loReg, loServerHead
+				Store .Null. To loProject, loReg, loServerHead
 
 				With This As c_conversor_pjx_a_prg Of 'FOXBIN2PRG.PRG'
 					If toFoxBin2Prg.l_ProcessFiles Then
@@ -17952,7 +18061,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 								ENDTEXT
 							Endif
 
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -17978,7 +18087,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 								THIS.GetPathFromHome(m.loReg.Name, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg) +;
 								").Description = '" + loReg.COMMENTS + "'"
 							Endif
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 
@@ -17998,7 +18107,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 								THIS.GetPathFromHome(m.loReg.Name, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg) +;
 								").Exclude = .T."
 							Endif
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 
@@ -18018,7 +18127,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 								THIS.GetPathFromHome(m.loReg.Name, m.lcStr, "lcCurdir + '", "'", toFoxBin2Prg) +;
 								").Type = 'T'"
 							Endif
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 
@@ -18122,7 +18231,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 
 			Finally
 				Use In (Select("TABLABIN"))
-				Store Null To loProject, loReg, loServerHead
+				Store .Null. To loProject, loReg, loServerHead
 				Release toModulo, toEx, toFoxBin2Prg ;
 					, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 					, loProject, loServerHead
@@ -18156,16 +18265,16 @@ toFoxBin2Prg.n_CheckFileInPath=2
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
 				loLang			= _Screen.o_FoxBin2Prg_Lang
-				Store Null To loProject, loReg, loServerHead, loServerData
+				Store .Null. To loProject, loReg, loServerHead, loServerData
 
 				With This As c_conversor_pjx_a_prg Of 'FOXBIN2PRG.PRG'
 					Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
 				
-*SF 20230820
+*!*	LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 					toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
 					SET NOCPTRANS TO Name,OUTFILE,HomeDir,DEVINFO,SYMBOLS,Object,COMMENTS,RESERVED1,RESERVED2,SCCDATA,User	
-*/SF, 20230820
+*/LScheffler 20.08.2023
 
 					Select * From _TABLAORIG Into Cursor TABLABIN
 					Use In (Select("_TABLAORIG"))
@@ -18198,7 +18307,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 *-- Información de los Servidores definidos
 					If Not Empty(loProject._ServerInfo)
 						loServerHead.parseServerInfo( loProject._ServerInfo )
-						loServerHead	= Null
+						loServerHead	= .Null.
 					Endif
 
 
@@ -18229,7 +18338,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 
 *-- Escaneo el proyecto
 					Scan All For Not Inlist(Type, 'H','W','i' )
-						loReg	= Null
+						loReg	= .Null.
 						Scatter Fields Name,Type,EXCLUDE,COMMENTS,CPID,Timestamp,Id,OBJREV,User,DEVINFO Memo Name loReg
 
 						If toFoxBin2Prg.l_NoTimestamps
@@ -18276,7 +18385,7 @@ toFoxBin2Prg.n_CheckFileInPath=2
 			Finally
 				Use In (Select("TABLABIN"))
 				Use In (Select("_TABLAORIG"))
-				Store Null To loProject, loReg, loServerHead, loServerData
+				Store .Null. To loProject, loReg, loServerHead, loServerData
 				Release toModulo, toEx, toFoxBin2Prg ;
 					, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 					, loProject, loServerHead, loServerData
@@ -18373,7 +18482,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 						, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
 					loLang			= _Screen.o_FoxBin2Prg_Lang
-					Store Null To loProject, loReg, loServerHead, loServerData
+					Store .Null. To loProject, loReg, loServerHead, loServerData
 					lcStrPJM		= Filetostr( This.c_InputFile )
 					This.updateProgressbar( 'Scanning PJM...', 1, 2, 1 )
 
@@ -18394,7 +18503,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 						._ProjectHookClass		= ''
 						._ProjectHookLibrary	= ''
 						._SaveCode				= Strextract( lcStrPJM, 'SaveCode=', CR_LF )
-						._ServerHead			= Null
+						._ServerHead			= .Null.
 						._ServerInfo			= 'ServerData'
 						._SourceFile			= ''
 						._TimeStamp				= 0
@@ -18450,7 +18559,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 							Endwith
 
 							loServerHead.add_Server( loServerData )
-							loServerData	= Null
+							loServerData	= .Null.
 						Endif
 					Endfor
 
@@ -18459,7 +18568,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 *-- Escaneo el proyecto
 					For I = 1 To Alines( laLines, Strextract( lcStrPJM, '[ProjectFiles]', '[EOF]' ), 4 )
 						Alines( laProps, laLines(m.I) + ',', 1, ',' )
-						loReg	= Null
+						loReg	= .Null.
 						loReg	= Createobject("EMPTY")
 						AddProperty( loReg, 'ID', Iif( toFoxBin2Prg.l_ClearUniqueID, 0, Val( laProps(1) ) ) )
 						AddProperty( loReg, 'TYPE', laProps(2) )
@@ -18492,7 +18601,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 							Catch To loEx When loEx.ErrorNo = 2062	&& The specified key already exists ==> loProject.ADD( loReg, loReg.NAME )
 *-- Saltear y no agregar el archivo duplicado / Bypass and not add the duplicated file
 							Finally
-								loReg	= Null
+								loReg	= .Null.
 						Endtry
 					Endfor
 
@@ -18517,7 +18626,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 *-- Información de los Servidores definidos
 					If Not Empty(loProject._ServerInfo)
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + loServerHead.getFormattedServerText() + CR_LF
-						loServerHead	= Null
+						loServerHead	= .Null.
 					Endif
 
 					With This As c_conversor_pjm_a_prg Of 'FOXBIN2PRG.PRG'
@@ -18577,7 +18686,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 							User=""
 							<<C_FILE_META_F>>
 							ENDTEXT
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 						TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
@@ -18616,7 +18725,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 							If loReg.EXCLUDE
 								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Exclude = .T."
 							Endif
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 
@@ -18633,7 +18742,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 							If Inlist( Upper( Justext( loReg.Name ) ), 'H','FPW' )
 								C_FB2PRG_CODE = C_FB2PRG_CODE + Chr(13) + Chr(10) + Chr(9) + ".ITEM(lcCurdir + '" + loReg.Name + "').Type = 'T'"
 							Endif
-							loReg	= Null
+							loReg	= .Null.
 						Endfor
 
 
@@ -18733,7 +18842,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 
 			Finally
 *USE IN (SELECT("TABLABIN"))
-				Store Null To loProject, loReg, loServerHead, loServerData
+				Store .Null. To loProject, loReg, loServerHead, loServerData
 				Release toModulo, toEx, toFoxBin2Prg ;
 					, lnCodError, lcStr, lnPos, lnLen, lnServerCount, loReg, lnLen ;
 					, lcStrPJM, laLines, laProps, loProject, loServerHead, loServerData
@@ -18787,15 +18896,15 @@ Define Class c_conversor_frx_a_prg As c_conversor_bin_a_prg
 						loLang			= _Screen.o_FoxBin2Prg_Lang
 						Store 0 To lnCodError, lnLastClass
 						Store '' To laMethods(1), laCode(1), laProtected(1), laPropsAndComments(1)
-						Store Null To loRegObj, loRegCab, loRegDataEnv, loRegCur
+						Store .Null. To loRegObj, loRegCab, loRegDataEnv, loRegCur
 
 						Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG 
 						
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 						toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
 						SET NOCPTRANS TO NAME,EXPR,STYLE,PICTURE,ORDER,COMMENT,TAG,TAG2,FONTFACE,SUPEXPR,USER
-*/SF, 20230820
+*/LScheffler 20.08.2023
 						
 						This.updateProgressbar( 'Scanning FRX...', 1, 2, 1 )
 
@@ -18821,7 +18930,7 @@ INTO CURSOR TABLABIN_0 READWRITE
 						Locate For ObjType = 1
 
 						If Found()
-							loRegCab	= Null
+							loRegCab	= .Null.
 							Scatter Memo Name loRegCab
 
 							If toFoxBin2Prg.l_NoTimestamps
@@ -18845,7 +18954,7 @@ INTO CURSOR TABLABIN_0 READWRITE
 								INTO Cursor TABLABIN
 						Endif
 
-						loRegObj	= Null
+						loRegObj	= .Null.
 
 
 *-- Recorro los registros y genero el texto
@@ -18856,7 +18965,7 @@ INTO CURSOR TABLABIN_0 READWRITE
 						Select TABLABIN
 
 						Scan All
-							loRegObj	= Null
+							loRegObj	= .Null.
 							Scatter Memo Name loRegObj
 
 							If toFoxBin2Prg.l_NoTimestamps
@@ -18874,7 +18983,7 @@ INTO CURSOR TABLABIN_0 READWRITE
 						Locate For ObjType = 25
 
 						If Found()
-							loRegDataEnv	= Null
+							loRegDataEnv	= .Null.
 							Scatter Memo Name loRegDataEnv
 
 							If toFoxBin2Prg.l_NoTimestamps
@@ -18891,7 +19000,7 @@ INTO CURSOR TABLABIN_0 READWRITE
 						Select TABLABIN_0
 
 						Scan All For ObjType = 26
-							loRegCur	= Null
+							loRegCur	= .Null.
 							Scatter Memo Name loRegCur
 
 							If toFoxBin2Prg.l_NoTimestamps
@@ -18944,7 +19053,7 @@ INTO CURSOR TABLABIN_0 READWRITE
 				Use In (Select("TABLABIN"))
 				Use In (Select("TABLABIN_0"))
 				Use In (Select("_TABLAORIG"))
-				Store Null To loRegObj, loRegCab, loRegDataEnv, loRegCur
+				Store .Null. To loRegObj, loRegCab, loRegDataEnv, loRegCur
 				Release toModulo, toEx, toFoxBin2Prg ;
 					, lnCodError, loRegCab, loRegDataEnv, loRegCur, loRegObj, lnMethodCount, laMethods, laCode, laProtected, lnLen ;
 					, laPropsAndValues, laPropsAndComments, lnLastClass, lnRecno, lcMethods, lcObjName, la_NombresObjsOle
@@ -19015,7 +19124,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 
 						loLang			= _Screen.o_FoxBin2Prg_Lang
 						loFSO			= toFoxBin2Prg.o_FSO
-						Store Null To loTable, loDBFUtils
+						Store .Null. To loTable, loDBFUtils
 						Store 0 To lnCodError
 						loDBFUtils			= Createobject('CL_DBF_UTILS')
 						loDBC				= Createobject('CL_DBC')
@@ -19059,7 +19168,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 						Endif
 * LScheffler
 						Use (.c_InputFile) Shared Again Noupdate Alias TABLABIN
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 						toFoxBin2Prg.i_CPID = Cpdbf("TABLABIN")
 
@@ -19171,7 +19280,7 @@ Define Class c_conversor_dbf_a_prg As c_conversor_bin_a_prg
 						Endif
 					Endfor
 
-					Store Null To loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
+					Store .Null. To loTable, loDBFUtils, loTextStream, toFoxBin2Prg.o_TextStream
 *!*	Changed by: LScheffler 11.2.2021
 *!*	change date="{^2021-02-11,08:50:00}"
 * Release different, parts moved outsidef IF .. ENDIF
@@ -19239,18 +19348,18 @@ Define Class c_conversor_dbc_a_prg As c_conversor_bin_a_prg
 						, loTable As CL_DBC_TABLE Of 'FOXBIN2PRG.PRG' ;
 						, loView As CL_DBC_VIEW Of 'FOXBIN2PRG.PRG'
 
-					Store Null To loRelation, loView, loTable
+					Store .Null. To loRelation, loView, loTable
 					Store 0 To lnCodError, lnDatabases_Count, lnClassCount
 					Store '' To laDatabases, lcEventsFile, lcExternalHeader, laClasses, lcCodigo, C_FB2PRG_CODE
 
 					lnDatabases_Count	= Adatabases(laDatabases)
 					Use (.c_InputFile) Shared Again Noupdate Alias TABLABIN
 
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 					toFoxBin2Prg.i_CPID = Cpdbf("TABLABIN")
 					SET NOCPTRANS TO OBJECTNAME,USER
-*/SF, 20230820
+*/LScheffler 20.08.2023
 
 					If toFoxBin2Prg.l_ProcessFiles Then
 						toDatabase			= Createobject('CL_DBC')
@@ -19444,11 +19553,11 @@ Define Class c_conversor_mnx_a_prg As c_conversor_bin_a_prg
 
 						Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG
 
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 						toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
 						SET NOCPTRANS TO NAME,PROMPT,COMMAND,MESSAGE,PROCEDURE,SETUP,CLEANUP,KEYNAME,KEYLABEL,SKIPFOR
-*/SF, 20230820
+*/LScheffler 20.08.2023
 
 					
 						Select * From _TABLAORIG Into Cursor TABLABIN
@@ -20089,7 +20198,7 @@ Define Class CL_CLASSLIB As CL_CUS_BASE
 	Dimension _Ole_Objs[1], _Clases[1], _ExternalClasses(1,2)
 	_Version				= 0
 	_SourceFile				= ''
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	_cpid					= Cpcurrent()
 	_ExternalClasses_Count	= 0
@@ -20510,7 +20619,7 @@ Define Class CL_REPORT As CL_COL_BASE
 	_TimeStamp			= 0
 	_Version			= ''
 	_SourceFile			= ''
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	_cpid =      Cpcurrent()
 
@@ -20590,10 +20699,10 @@ Define Class CL_PROJECT As CL_COL_BASE
 	_ProjectHookClass	= ''
 	_ProjectHookLibrary	= ''
 	_SaveCode			= .T.
-	_ServerHead			= Null
+	_ServerHead			= .Null.
 	_ServerInfo			= ''
 	_SourceFile			= ''
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	_cpid				= Cpcurrent()
 	_TimeStamp			= 0
@@ -20911,11 +21020,11 @@ Define Class CL_DBC_COL_BASE As CL_COL_BASE
 *---------------------------------------------------------------------------------------------------
 		Lparameters tc_OutputFile, tnLastID, tnParentID
 		Local loObject
-		loObject    = Null
+		loObject    = .Null.
 
 		For Each loObject In This FoxObject
 			loObject.updateDBC( tc_OutputFile, @tnLastID, tnParentID )
-			loObject	= Null
+			loObject	= .Null.
 		Endfor
 
 		Return
@@ -22077,7 +22186,7 @@ Define Class CL_DBC As CL_DBC_BASE
 	_Members_Count			= 0
 	_Version				= 0
 	_SourceFile				= ''
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	_cpid =      Cpcurrent()
 	
@@ -22128,7 +22237,7 @@ Define Class CL_DBC As CL_DBC_BASE
 					, loView As CL_DBC_VIEW Of 'FOXBIN2PRG.PRG' ;
 					, llBloqueEncontrado, lcPropName, lcValue, loEx As Exception
 				Store '' To lcPropName, lcValue
-				Store Null To loConnections, loTables, loViews, loConnection, loTable, loView
+				Store .Null. To loConnections, loTables, loViews, loConnection, loTable, loView
 
 				If Left(tcLine, Len(C_DATABASE_I)) == C_DATABASE_I
 					llBloqueEncontrado	= .T.
@@ -22201,7 +22310,7 @@ Define Class CL_DBC As CL_DBC_BASE
 				Throw
 
 			Finally
-				Store Null To loConnections, loTables, loViews, loConnection, loTable, loView
+				Store .Null. To loConnections, loTables, loViews, loConnection, loTable, loView
 				Release loConnections, loTables, loViews, loConnection, loTable, loView
 		Endtry
 
@@ -22256,7 +22365,7 @@ Define Class CL_DBC As CL_DBC_BASE
 					, loConnections As CL_DBC_CONNECTIONS Of 'FOXBIN2PRG.PRG' ;
 					, loViews As CL_DBC_VIEWS Of 'FOXBIN2PRG.PRG'
 				Local lcStoredProcedures
-				Store Null To loTables, loConnections, loViews
+				Store .Null. To loTables, loConnections, loViews
 
 				With This As CL_DBC Of 'FOXBIN2PRG.PRG'
 					loTables			= ._Tables
@@ -22303,7 +22412,7 @@ Define Class CL_DBC As CL_DBC_BASE
 			Finally
 				Close Databases
 				Use In (Select("TABLABIN"))
-				Store Null To loTables, loConnections, loViews
+				Store .Null. To loTables, loConnections, loViews
 				Release loTables, loConnections, loViews
 
 		Endtry
@@ -22326,7 +22435,7 @@ Define Class CL_DBC As CL_DBC_BASE
 					, loTables As CL_DBC_TABLES Of 'FOXBIN2PRG.PRG' ;
 					, loViews As CL_DBC_VIEWS Of 'FOXBIN2PRG.PRG' ;
 					, loRelations As CL_DBC_RELATIONS Of 'FOXBIN2PRG.PRG'
-				Store Null To loRelations, loViews, loTables, loTables
+				Store .Null. To loRelations, loViews, loTables, loTables
 
 				With This As CL_DBC Of 'FOXBIN2PRG.PRG'
 					Store '' To lcText, lcConnections, lcTables, lcViews
@@ -22388,7 +22497,7 @@ Define Class CL_DBC As CL_DBC_BASE
 				Throw
 
 			Finally
-				Store Null To loRelations, loViews, loTables, loTables
+				Store .Null. To loRelations, loViews, loTables, loTables
 				Release I, lcDBC, laCode, loConnections, loTables, loViews, loRelations
 
 		Endtry
@@ -22447,7 +22556,7 @@ Define Class CL_DBC_CONNECTIONS As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loConnection As CL_DBC_CONNECTION Of 'FOXBIN2PRG.PRG'
-				Store Null To loConnection
+				Store .Null. To loConnection
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_CONNECTIONS_I)) == C_CONNECTIONS_I
@@ -22492,7 +22601,7 @@ Define Class CL_DBC_CONNECTIONS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loConnection
+				Store .Null. To loConnection
 				Release lcPropName, lcValue, loConnection
 
 		Endtry
@@ -22518,7 +22627,7 @@ Define Class CL_DBC_CONNECTIONS As CL_DBC_COL_BASE
 					, loConnection As CL_DBC_CONNECTION Of 'FOXBIN2PRG.PRG'
 
 				With This As CL_DBC_CONNECTIONS Of 'FOXBIN2PRG.PRG'
-					loConnection		= Null
+					loConnection		= .Null.
 					lcText				= ''
 					.read_BinDataToProperties()
 
@@ -22549,7 +22658,7 @@ Define Class CL_DBC_CONNECTIONS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				loConnection	= Null
+				loConnection	= .Null.
 				Release loConnection
 
 		Endtry
@@ -22579,7 +22688,7 @@ Define Class CL_DBC_CONNECTIONS As CL_DBC_COL_BASE
 						Exit
 					Endif
 
-					loConnection		= Null
+					loConnection		= .Null.
 					lnConnection_Count	= Adbobjects( laConnections,"CONNECTION" )
 
 					If lnConnection_Count > 0
@@ -22600,7 +22709,7 @@ Define Class CL_DBC_CONNECTIONS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				loConnection	= Null
+				loConnection	= .Null.
 				Release I, loConnection
 
 		Endtry
@@ -22854,7 +22963,7 @@ Define Class CL_DBC_TABLES As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loTable As CL_DBC_TABLE Of 'FOXBIN2PRG.PRG'
-				Store Null To loTable
+				Store .Null. To loTable
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_TABLES_I)) == C_TABLES_I
@@ -22896,7 +23005,7 @@ Define Class CL_DBC_TABLES As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loTable
+				Store .Null. To loTable
 				Release lcPropName, lcValue, loTable
 
 		Endtry
@@ -22922,7 +23031,7 @@ Define Class CL_DBC_TABLES As CL_DBC_COL_BASE
 					, loTable As CL_DBC_TABLE Of 'FOXBIN2PRG.PRG'
 
 				With This As CL_DBC_TABLES Of 'FOXBIN2PRG.PRG'
-					Store Null To loTable
+					Store .Null. To loTable
 					lcText	= ''
 					.read_BinDataToProperties()
 
@@ -22958,7 +23067,7 @@ Define Class CL_DBC_TABLES As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loTable
+				Store .Null. To loTable
 				Release loTable
 
 		Endtry
@@ -22988,7 +23097,7 @@ Define Class CL_DBC_TABLES As CL_DBC_COL_BASE
 						Exit
 					Endif
 
-					Store Null To loTable
+					Store .Null. To loTable
 					Store 0 To I, lnTable_Count
 					lnTable_Count	= Adbobjects( laTables,"TABLE" )
 
@@ -23012,7 +23121,7 @@ Define Class CL_DBC_TABLES As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				loTable	= Null
+				loTable	= .Null.
 				Release I, loTable
 
 		Endtry
@@ -23083,7 +23192,7 @@ Define Class CL_DBC_TABLE As CL_DBC_BASE
 					, loFields As CL_DBC_FIELDS_DB Of 'FOXBIN2PRG.PRG' ;
 					, loIndexes As CL_DBC_INDEXES_DB Of 'FOXBIN2PRG.PRG' ;
 					, loRelations As CL_DBC_RELATIONS Of 'FOXBIN2PRG.PRG'
-				Store Null To loRelations, loIndexes, loFields
+				Store .Null. To loRelations, loIndexes, loFields
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_TABLE_I)) == C_TABLE_I
@@ -23142,7 +23251,7 @@ Define Class CL_DBC_TABLE As CL_DBC_BASE
 				Throw
 
 			Finally
-				Store Null To loRelations, loIndexes, loFields
+				Store .Null. To loRelations, loIndexes, loFields
 				Release lcPropName, lcValue, loFields, loIndexes, loRelations
 
 		Endtry
@@ -23170,7 +23279,7 @@ Define Class CL_DBC_TABLE As CL_DBC_BASE
 					, loRelations As CL_DBC_RELATIONS Of 'FOXBIN2PRG.PRG'
 
 				With This As CL_DBC_TABLE Of 'FOXBIN2PRG.PRG'
-					Store Null To loRelations, loFields, loIndexes
+					Store .Null. To loRelations, loFields, loIndexes
 					Store '' To lcText, lcFields, lcIndexes, lcRelations
 					.read_BinDataToProperties(tcTable)
 
@@ -23215,7 +23324,7 @@ Define Class CL_DBC_TABLE As CL_DBC_BASE
 				Throw
 
 			Finally
-				Store Null To loRelations, loFields, loIndexes
+				Store .Null. To loRelations, loFields, loIndexes
 				Release loIndexes, loFields, loRelations
 
 		Endtry
@@ -23318,7 +23427,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, lnPos, loEx As Exception ;
 					, loField As CL_DBC_FIELD_DB Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_FIELDS_I)) == C_FIELDS_I
@@ -23374,7 +23483,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release lcPropName, lcValue, loField
 
 		Endtry
@@ -23396,7 +23505,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loField As CL_DBC_FIELD_DB Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_FIELD_ORDER_I)) == C_FIELD_ORDER_I
@@ -23431,7 +23540,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release lcPropName, lcValue, loField
 
 		Endtry
@@ -23457,7 +23566,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 					, loField As CL_DBC_FIELD_DB Of 'FOXBIN2PRG.PRG'
 
 				With This As CL_DBC_FIELDS_DB Of 'FOXBIN2PRG.PRG'
-					Store Null To loField
+					Store .Null. To loField
 					Store 0 To X, lnField_Count
 					lcText	= ''
 
@@ -23510,7 +23619,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release loField
 
 		Endtry
@@ -23541,7 +23650,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 						Exit
 					Endif
 
-					Store Null To loField
+					Store .Null. To loField
 					Store 0 To I, lnField_Count
 					_Tally	= 0
 
@@ -23573,7 +23682,7 @@ Define Class CL_DBC_FIELDS_DB As CL_DBC_COL_BASE
 			Finally
 				Use In (Select("TB"))
 				Use In (Select("TB2"))
-				loField	= Null
+				loField	= .Null.
 				Release I, loField
 
 		Endtry
@@ -23796,7 +23905,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loIndex As CL_DBC_INDEX_DB Of 'FOXBIN2PRG.PRG'
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_INDEXES_I)) == C_INDEXES_I
@@ -23814,7 +23923,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 									Exit
 
 								Case C_INDEX_I $ tcLine
-									loIndex = Null
+									loIndex = .Null.
 									loIndex = Createobject("CL_DBC_INDEX_DB")
 									loIndex.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 *-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
@@ -23839,7 +23948,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Release lcPropName, lcValue, loIndex
 
 		Endtry
@@ -23865,7 +23974,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 					, loIndex As CL_DBC_INDEX_DB Of 'FOXBIN2PRG.PRG'
 
 				With This As CL_DBC_INDEXES_DB Of 'FOXBIN2PRG.PRG'
-					Store Null To loIndex
+					Store .Null. To loIndex
 					lcText	= ''
 					.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
 
@@ -23898,7 +24007,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Release loIndex
 
 		Endtry
@@ -23929,7 +24038,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 						Exit
 					Endif
 
-					Store Null To loIndex
+					Store .Null. To loIndex
 					Store 0 To I, lnIndex_Count
 					_Tally	= 0
 					Select Lower(TB.ObjectName) From TABLABIN TB ;
@@ -23960,7 +24069,7 @@ Define Class CL_DBC_INDEXES_DB As CL_DBC_COL_BASE
 			Finally
 				Use In (Select("TB"))
 				Use In (Select("TB2"))
-				loIndex	= Null
+				loIndex	= .Null.
 				Release I, loIndex
 
 		Endtry
@@ -24150,7 +24259,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loView As CL_DBC_VIEW Of 'FOXBIN2PRG.PRG'
-				Store Null To loView
+				Store .Null. To loView
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_VIEWS_I)) == C_VIEWS_I
@@ -24168,7 +24277,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 									Exit
 
 								Case C_VIEW_I $ tcLine
-									loView = Null
+									loView = .Null.
 									loView = Createobject("CL_DBC_VIEW")
 									loView.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 *-- El siguiente PADR() es porque si no "estoXXX" está antes que "esto" cuando keysort=2 (raro...)
@@ -24193,7 +24302,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loView
+				Store .Null. To loView
 				Release lcPropName, lcValue, loView
 
 		Endtry
@@ -24218,7 +24327,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 					, loView As CL_DBC_VIEW Of 'FOXBIN2PRG.PRG'
 
 				With This As CL_DBC_VIEWS Of 'FOXBIN2PRG.PRG'
-					Store Null To loView
+					Store .Null. To loView
 					lcText	= ''
 					.read_BinDataToProperties()
 
@@ -24254,7 +24363,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loView
+				Store .Null. To loView
 				Release loView
 
 		Endtry
@@ -24278,7 +24387,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 				With This As CL_DBC_VIEWS Of 'FOXBIN2PRG.PRG'
 					Local I, lnView_Count, laViews(1), loEx As Exception ;
 						, loTable As CL_DBC_TABLE Of 'FOXBIN2PRG.PRG'
-					Store Null To loTable
+					Store .Null. To loTable
 					Store 0 To I, tnTable_Count
 
 					If ._Saved Then
@@ -24314,7 +24423,7 @@ Define Class CL_DBC_VIEWS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				loView	= Null
+				loView	= .Null.
 				Release I, loView
 
 		Endtry
@@ -24391,9 +24500,9 @@ Define Class CL_DBC_VIEW As CL_DBC_BASE
 	_WhereType				= 0
 
 *-- Sub-objects
-*_Fields				= NULL
-*_Indexes				= NULL
-*_Relations				= NULL
+*_Fields				= .Null.
+*_Indexes				= .Null.
+*_Relations				= .Null.
 
 
 	Procedure Init
@@ -24422,7 +24531,7 @@ Define Class CL_DBC_VIEW As CL_DBC_BASE
 					, loFields As CL_DBC_FIELDS_VW Of 'FOXBIN2PRG.PRG' ;
 					, loIndexes As CL_DBC_INDEXES_VW Of 'FOXBIN2PRG.PRG' ;
 					, loRelations As CL_DBC_RELATIONS Of 'FOXBIN2PRG.PRG'
-				Store Null To loRelations, loIndexes, loFields
+				Store .Null. To loRelations, loIndexes, loFields
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_VIEW_I)) == C_VIEW_I
@@ -24444,17 +24553,17 @@ Define Class CL_DBC_VIEW As CL_DBC_BASE
 									loFields.analyzeOrderCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 
 								Case C_FIELDS_I $ tcLine
-									loFields	= Null
+									loFields	= .Null.
 									loFields	= ._Fields
 									loFields.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 
 								Case C_INDEXES_I $ tcLine
-									loIndexes	= Null
+									loIndexes	= .Null.
 									loIndexes	= ._Indexes
 									loIndexes.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 
 								Case C_RELATIONS_I $ tcLine
-									loRelations	= Null
+									loRelations	= .Null.
 									loRelations	= ._Relations
 									loRelations.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 
@@ -24484,7 +24593,7 @@ Define Class CL_DBC_VIEW As CL_DBC_BASE
 				Throw
 
 			Finally
-				Store Null To loRelations, loIndexes, loFields
+				Store .Null. To loRelations, loIndexes, loFields
 				Local lcPropName, lcValue, loFields, loIndexes, loRelations
 
 		Endtry
@@ -24509,7 +24618,7 @@ Define Class CL_DBC_VIEW As CL_DBC_BASE
 					, loFields As CL_DBC_FIELDS_VW Of 'FOXBIN2PRG.PRG' ;
 					, loIndexes As CL_DBC_INDEXES_VW Of 'FOXBIN2PRG.PRG' ;
 					, loRelations As CL_DBC_RELATIONS Of 'FOXBIN2PRG.PRG'
-				Store Null To loRelations, loIndexes, loFields
+				Store .Null. To loRelations, loIndexes, loFields
 				Store '' To lcText, lcFields, lcIndexes, lcRelations
 
 				With This As CL_DBC_VIEW Of 'FOXBIN2PRG.PRG'
@@ -24584,7 +24693,7 @@ Define Class CL_DBC_VIEW As CL_DBC_BASE
 				Throw
 
 			Finally
-				Store Null To loRelations, loIndexes, loFields
+				Store .Null. To loRelations, loIndexes, loFields
 				Release loFields, loIndexes, loRelations
 
 		Endtry
@@ -24728,7 +24837,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loField As CL_DBC_FIELD_VW Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_FIELDS_I)) == C_FIELDS_I
@@ -24747,7 +24856,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 									Exit
 
 								Case C_FIELD_I $ tcLine
-									loField = Null
+									loField = .Null.
 									loField = Createobject("CL_DBC_FIELD_VW")
 									loField.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 
@@ -24785,7 +24894,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release lcPropName, lcValue, loField
 
 		Endtry
@@ -24808,7 +24917,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loField As CL_DBC_FIELD_DB Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_FIELD_ORDER_I)) == C_FIELD_ORDER_I
@@ -24843,7 +24952,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release lcPropName, lcValue, loField
 
 		Endtry
@@ -24867,7 +24976,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 		Try
 				Local lcText, loEx As Exception ;
 					, loField As CL_DBC_FIELD_VW Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				lcText	= ''
 
 				With This As CL_DBC_FIELDS_VW Of 'FOXBIN2PRG.PRG'
@@ -24920,7 +25029,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release loField
 
 		Endtry
@@ -24944,7 +25053,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 		Try
 				Local I, lcText, lnField_Count, laFields(1), loEx As Exception ;
 					, loField As CL_DBC_FIELD_VW Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				Store 0 To I, lnField_Count
 				lcText	= ''
 
@@ -24983,7 +25092,7 @@ Define Class CL_DBC_FIELDS_VW As CL_DBC_COL_BASE
 			Finally
 				Use In (Select("TB"))
 				Use In (Select("TB2"))
-				loField	= Null
+				loField	= .Null.
 				Release loField
 
 		Endtry
@@ -25219,7 +25328,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loRelation As CL_DBC_RELATION Of 'FOXBIN2PRG.PRG'
-				Store Null To loRelation
+				Store .Null. To loRelation
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_RELATIONS_I)) == C_RELATIONS_I
@@ -25237,7 +25346,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 									Exit
 
 								Case C_RELATION_I $ tcLine
-									loRelation = Null
+									loRelation = .Null.
 									loRelation = Createobject("CL_DBC_RELATION")
 									loRelation.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 
@@ -25267,7 +25376,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loRelation
+				Store .Null. To loRelation
 				Release lcPropName, lcValue, loRelation
 
 		Endtry
@@ -25292,7 +25401,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 				With This As CL_DBC_RELATIONS Of 'FOXBIN2PRG.PRG'
 					Local lcText, loEx As Exception ;
 						, loRelation As CL_DBC_RELATION Of 'FOXBIN2PRG.PRG'
-					Store Null To loRelation
+					Store .Null. To loRelation
 					lcText	= ''
 					.read_BinDataToProperties(tcTable, @toFoxBin2Prg)
 
@@ -25321,7 +25430,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loRelation
+				Store .Null. To loRelation
 				Release I, X, loRelation
 
 		Endtry
@@ -25347,7 +25456,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 					Local I, lnRelation_Count, laRelations(1,5), lcText, loEx As Exception ;
 						, loRelation As CL_DBC_RELATION Of 'FOXBIN2PRG.PRG'
 
-					Store Null To loRelation
+					Store .Null. To loRelation
 					lcText	= ''
 					I		= 0
 
@@ -25384,7 +25493,7 @@ Define Class CL_DBC_RELATIONS As CL_DBC_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loRelation
+				Store .Null. To loRelation
 				Release loRelation
 
 		Endtry
@@ -25596,7 +25705,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 *-- Modulo
 	_Version			= 0
 	_SourceFile			= ''
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	_cpid			    = Cpcurrent()
 	_I					= 0
@@ -25612,8 +25721,8 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 	_LastUpdate			= {}
 
 *-- Fields and Indexes
-*_Fields				= NULL
-*_Indexes			= NULL
+*_Fields				= .Null.
+*_Indexes			= .Null.
 
 
 	Procedure Init
@@ -25645,7 +25754,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 					, loFields As CL_DBF_FIELDS Of 'FOXBIN2PRG.PRG' ;
 					, loIndexes As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG' ;
 					, loRecords As CL_DBF_RECORDS Of 'FOXBIN2PRG.PRG'
-				Store Null To loIndexes, loFields, loRecords
+				Store .Null. To loIndexes, loFields, loRecords
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_TABLE_I)) == C_TABLE_I
@@ -25724,7 +25833,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 				Throw
 
 			Finally
-				Store Null To loIndexes, loFields, loRecords
+				Store .Null. To loIndexes, loFields, loRecords
 				Release lcPropName, lcValue, loFields, loIndexes, loRecords
 
 		Endtry
@@ -25760,13 +25869,13 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 					, loDBF_CFG As CL_DBF_CFG Of 'FOXBIN2PRG.PRG' ;
 					, loRecords As CL_DBF_RECORDS Of 'FOXBIN2PRG.PRG' ;
 					, loFields As CL_DBF_FIELDS Of 'FOXBIN2PRG.PRG' ;
-					, loIndexes As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG'
+					, loIndexes As CL_DBF_INDEXES Of 'FOXBIN2PRG.PRG', ln_DBF_Conversion_Support
 
 *** DH 06/02/2014: created variables
 				Local laFields[1], lnFieldCount
 				loFSO			= toFoxBin2Prg.o_FSO
 				loTextStream	= toFoxBin2Prg.o_TextStream
-				Store Null To loIndexes, loFields, loRecords
+				Store .Null. To loIndexes, loFields, loRecords
 				Store 0 To lnFileCount
 				lcText	= ''
 
@@ -25790,17 +25899,19 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 *-- If table CFG exists, use it for DBF-specific configuration. FDBOZZO. 2014/06/15
 				lnFileCount	= toFoxBin2Prg.get_DBF_Configuration( Forceext(tc_InputFile, 'DBF'), @loDBF_CFG, .T. )
 
+				ln_DBF_Conversion_Support = Iif(Isnull(loDBF_CFG), toFoxBin2Prg.n_DBF_Conversion_Support, loDBF_CFG.n_DBF_Conversion_Support )
+
 				Do Case
-					Case lnFileCount = 1 And Inlist(loDBF_CFG.n_DBF_Conversion_Support, 4, 8)
+					Case Inlist(ln_DBF_Conversion_Support, 4, 8)
 *-- Si hay un archivo DBF.CFG, manda sobre la configuración general
 						llExportData		= .T.
 
-					Case lnFileCount = 1 And loDBF_CFG.n_DBF_Conversion_Support > 0
+					Case ln_DBF_Conversion_Support > 0
 *-- Si hay un archivo DBF.CFG, manda sobre la configuración general
 * Asume llExportData=.F.
 
-					Case Inlist(toFoxBin2Prg.n_DBF_Conversion_Support, 4, 8)	&& BIN2TXT (DATA EXPORT FOR DIFF)
-						llExportData		= .T.
+*!*						Case Inlist(toFoxBin2Prg.n_DBF_Conversion_Support, 4, 8)	&& BIN2TXT (DATA EXPORT FOR DIFF)
+*!*							llExportData		= .T.
 
 					Otherwise
 * Asume llExportData=.F.
@@ -25884,7 +25995,7 @@ Define Class CL_DBF_TABLE As CL_CUS_BASE
 				Endif
 * /remove temporary order
 
-				Store Null To loIndexes, loFields, loRecords, loDBF_CFG, loTextStream
+				Store .Null. To loIndexes, loFields, loRecords, loDBF_CFG, loTextStream
 				Release loFields, loIndexes, loRecords, loDBF_CFG, loTextStream
 		Endtry
 
@@ -25917,7 +26028,7 @@ Define Class CL_DBF_FIELDS As CL_COL_BASE
 				Local llBloqueEncontrado, lcPropName, lcValue, loEx As Exception ;
 					, loField As CL_DBF_FIELD Of 'FOXBIN2PRG.PRG' ;
 					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG'
-				Store Null To loIndex, loField
+				Store .Null. To loIndex, loField
 				Store '' To lcPropName, lcValue
 
 				If Left(tcLine, Len(C_FIELDS_I)) == C_FIELDS_I
@@ -25935,7 +26046,7 @@ Define Class CL_DBF_FIELDS As CL_COL_BASE
 									Exit
 
 								Case C_FIELD_I $ tcLine
-									loField = Null
+									loField = .Null.
 									loField = Createobject("CL_DBF_FIELD")
 									loField.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines )
 									.Add( loField, loField._Name )
@@ -25959,7 +26070,7 @@ Define Class CL_DBF_FIELDS As CL_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loIndex, loField
+				Store .Null. To loIndex, loField
 				Release lcPropName, lcValue, loField, loIndex
 
 		Endtry
@@ -25986,7 +26097,7 @@ Define Class CL_DBF_FIELDS As CL_COL_BASE
 		Try
 				Local I, lcText, loEx As Exception ;
 					, loField As CL_DBF_FIELD Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				lcText	= ''
 				Dimension taFields(1,18)
 
@@ -26022,7 +26133,7 @@ Define Class CL_DBF_FIELDS As CL_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release I, loField
 
 		Endtry
@@ -26323,7 +26434,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 		Try
 				Local llBloqueEncontrado, loEx As Exception ;
 					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG'
-				Store Null To loIndex
+				Store .Null. To loIndex
 
 				If Left(tcLine, Len(C_INDEXES_I)) == C_INDEXES_I
 					llBloqueEncontrado	= .T.
@@ -26340,7 +26451,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 									Exit
 
 								Case C_INDEX_I $ tcLine
-									loIndex = Null
+									loIndex = .Null.
 									loIndex = Createobject("CL_DBF_INDEX")
 									loIndex.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, tcIndexFile, tlStandAlone )
 									.Add( loIndex, loIndex._TagName )
@@ -26360,7 +26471,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Release loIndex
 
 		Endtry
@@ -26391,7 +26502,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Local I, lcText, loEx As Exception ;
 					, loIndex As CL_DBF_INDEX Of 'FOXBIN2PRG.PRG' ;
 					loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
-				Store Null To loIndex
+				Store .Null. To loIndex
 				lcText	= ''
 				Dimension taTagInfo(1,6)
 
@@ -26506,7 +26617,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 								Throw
 
 							Finally
-								Store Null To m.loIndex
+								Store .Null. To m.loIndex
 								Release I, m.loIndex
 
 						Endtry
@@ -26531,7 +26642,7 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Release I, loIndex
 
 		Endtry
@@ -26710,7 +26821,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 				Local llBloqueEncontrado, lcPropName, lcValue, lcAlias, loEx As Exception ;
 					, loRecord As CL_DBF_RECORD Of 'FOXBIN2PRG.PRG' ;
 					, loRecordData As Object
-				Store Null To loIndex
+				Store .Null. To loIndex
 				Store '' To lcPropName, lcValue, lcAlias
 
 				If Left(tcLine, Len(C_RECORDS_I)) == C_RECORDS_I
@@ -26719,7 +26830,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 					With This As CL_DBF_RECORDSS Of 'FOXBIN2PRG.PRG'
 						lcAlias		= Alias()
 						CursorSetProp("Buffering", 3)
-						loRecord	= Null
+						loRecord	= .Null.
 						loRecord	= Createobject("CL_DBF_RECORD")
 
 						For I = m.I + 1 To tnCodeLines
@@ -26785,7 +26896,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 				Tablerevert(.T.)
 				CursorSetProp("Buffering", 1)
 
-				Store Null To loRecord
+				Store .Null. To loRecord
 				Release lcPropName, lcValue, loRecord
 
 		Endtry
@@ -26892,7 +27003,7 @@ Define Class CL_DBF_RECORDS As CL_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loRecord, loTextStream
+				Store .Null. To loRecord, loTextStream
 				Release loRecord, loTextStream
 
 		Endtry
@@ -27110,7 +27221,7 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 				Throw
 
 			Finally
-				Store Null To loField
+				Store .Null. To loField
 				Release loField
 
 		Endtry
@@ -27463,7 +27574,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 
 *-- Información de los servidores
 						For I = 1 To lnServerCount
-							loServerData	= Null
+							loServerData	= .Null.
 							loServerData	= .getServerDataObject()
 
 							loServerData._HelpContextID	= .getDataFromPair_LenData_Structure( @tcServerInfo, @lnPos, @lnLen )
@@ -27489,7 +27600,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 					Throw
 
 				Finally
-					loServerData	= Null
+					loServerData	= .Null.
 					Release loServerData
 
 			Endtry
@@ -27503,7 +27614,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 		Try
 				Local lcStr, lnLenH, lnLen, lnPos ;
 					, loServerData As CL_PROJ_SRV_DATA Of 'FOXBIN2PRG.PRG'
-				Store Null To loServerData
+				Store .Null. To loServerData
 				lcStr				= ''
 
 				With This As CL_PROJ_SRV_HEAD Of 'FOXBIN2PRG.PRG'
@@ -27537,7 +27648,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 				Throw
 
 			Finally
-				Store Null To loServerData
+				Store .Null. To loServerData
 				Release lnLenH, lnLen, lnPos, loServerData
 
 		Endtry
@@ -27551,7 +27662,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 		Try
 				Local lcText ;
 					, loServerData As CL_PROJ_SRV_DATA Of 'FOXBIN2PRG.PRG'
-				Store Null To loServerData
+				Store .Null. To loServerData
 				lcText	= ''
 
 				With This As CL_PROJ_SRV_HEAD Of 'FOXBIN2PRG.PRG'
@@ -27570,7 +27681,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 					For I = 1 To ._ServerCount
 						loServerData	= ._Servers(m.I)
 						lcText			= lcText + loServerData.getFormattedServerText()
-						loServerData	= Null
+						loServerData	= .Null.
 					Endfor
 				Endwith && THIS
 
@@ -27582,7 +27693,7 @@ Define Class CL_PROJ_SRV_HEAD As CL_CUS_BASE
 				Throw
 
 			Finally
-				Store Null To loServerData
+				Store .Null. To loServerData
 				Release loServerData
 
 		Endtry
@@ -27745,7 +27856,7 @@ Define Class CL_MENU_COL_BASE As CL_COL_BASE
 		Local This As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
 	#Endif
 
-	oReg			= Null
+	oReg			= .Null.
 
 
 	Procedure get_DataFromTablabin
@@ -27760,7 +27871,7 @@ Define Class CL_MENU_COL_BASE As CL_COL_BASE
 				Local I, lcLevelName, lnLastKey, llRetorno, llHayDatos, loReg ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
 					, loOption As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
-				Store Null To loOption, loBarPop
+				Store .Null. To loOption, loBarPop
 
 				With This As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
 					lnLastKey	= 0
@@ -27773,14 +27884,14 @@ Define Class CL_MENU_COL_BASE As CL_COL_BASE
 					Endif
 
 					Do While Not Eof()
-						loReg		= Null
+						loReg		= .Null.
 						Skip 1
 
 						If Eof()
 							Exit
 						Endif
 
-						loReg	= Null
+						loReg	= .Null.
 						Scatter Memo Name loReg
 
 						lnLastKey	= toCol_LastLevelName.GetKey(loReg.LevelName)
@@ -27806,24 +27917,24 @@ Define Class CL_MENU_COL_BASE As CL_COL_BASE
 								Exit
 
 							Case loReg.ObjType = C_OBJTYPE_MENUTYPE_BARorPOPUP	&& Bar or Popup
-								loBarPop	= Null
+								loBarPop	= .Null.
 								loBarPop	= Createobject('CL_MENU_BARPOP')
 								llHayDatos	= loBarPop.get_DataFromTablabin( loReg, toCol_LastLevelName )
 								llRetorno	= .T.
 								llRetorno	= llHayDatos
 								.Add( loBarPop )
-								loBarPop	= Null
+								loBarPop	= .Null.
 								If Not llHayDatos And toReg.ObjType = C_OBJTYPE_MENUTYPE_OPTION
 									Exit
 								Endif
 
 							Case loReg.ObjType = C_OBJTYPE_MENUTYPE_OPTION	&& Option
-								loOption	= Null
+								loOption	= .Null.
 								loOption	= Createobject('CL_MENU_OPTION')
 								llHayDatos	= loOption.get_DataFromTablabin( loReg, toCol_LastLevelName )
 								llRetorno	= llHayDatos
 								.Add( loOption )
-								loOption	= Null
+								loOption	= .Null.
 								If Not llHayDatos And toReg.ObjType = C_OBJTYPE_MENUTYPE_OPTION
 									Exit
 								Endif
@@ -27850,7 +27961,7 @@ Define Class CL_MENU_COL_BASE As CL_COL_BASE
 						toCol_LastLevelName.Remove(lnLastKey)
 					Endif
 				Endif
-				Store Null To loBarPop, loOption
+				Store .Null. To loBarPop, loOption
 				Release I, lcLevelName, lnLastKey, llHayDatos, loReg, loBarPop, loOption
 		Endtry
 
@@ -27983,7 +28094,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 *-- Modulo
 	_Version			= 0
 	_SourceFile			= ''
-*SF 20230820
+*LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	_cpid			    = Cpcurrent()
 
@@ -28009,7 +28120,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 					, llBloque_MenuType_Analizado, llBloque_Procedure_Analizado, llBloque_MenuLocation_Analizado ;
 					, loOptions As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG' ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
-				Store Null To loBarPop, loOptions
+				Store .Null. To loBarPop, loOptions
 				Store '' To lcComment
 
 				llBloqueEncontrado	= .T.
@@ -28078,7 +28189,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loBarPop, loOptions
+				Store .Null. To loBarPop, loOptions
 				Release loReg, lcComment, lcExpr, lcProcName, lcProcCode ;
 					, llBloque_SetupCode_Analizado, llBloque_CleanupCode_Analizado, llBloque_MenuCode_Analizado ;
 					, llBloque_MenuType_Analizado, llBloque_Procedure_Analizado, llBloque_MenuLocation_Analizado ;
@@ -28218,7 +28329,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 					, llBloque_SetupCode_Analizado ;
 					, loOptions As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG' ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
-				Store Null To loBarPop, loOptions
+				Store .Null. To loBarPop, loOptions
 				Store '' To lcExpr, lcProcName, lcProcCode, lcComment
 
 				With This As CL_MENU Of 'FOXBIN2PRG.PRG'
@@ -28269,7 +28380,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 										Endif
 									Endif
 
-									loBarPop	= Null
+									loBarPop	= .Null.
 									loBarPop	= Createobject('CL_MENU_BARPOP')
 									loBarPop.c_ParentName	= ''
 									loBarPop.n_ParentCode	= .oReg.OBJCODE
@@ -28298,7 +28409,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 										loReg.Procedure	= lcProcCode
 									Endif
 
-									loBarPop	= Null
+									loBarPop	= .Null.
 									loBarPop	= Createobject('CL_MENU_BARPOP')
 									loBarPop.c_ParentName	= ''
 									loBarPop.n_ParentCode	= .oReg.OBJCODE
@@ -28307,7 +28418,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 									.Add( loBarPop )
 
 *-- Creo option
-									loOption		= Null
+									loOption		= .Null.
 									loOption		= Createobject("CL_MENU_OPTION")
 									Scatter Memo Blank Name loOption.oReg
 
@@ -28321,19 +28432,19 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 										loBarPop.oReg.NUMITEMS	= loBarPop.Count
 										.ItemNum	= Str(loBarPop.Count,3)
 										.Scheme	= 0
-										loBarPop		= Null
+										loBarPop		= .Null.
 									Endwith
 
 *-- Creo BarPop
-									loBarPop		= Null
+									loBarPop		= .Null.
 									loBarPop		= Createobject('CL_MENU_BARPOP')
 									loBarPop.c_ParentName	= ''
 									loBarPop.n_ParentCode	= loOption.oReg.OBJCODE
 									loBarPop.n_ParentType	= loOption.oReg.ObjType
 									loBarPop.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, @tnCodeLines, toConversor )
 									loOption.Add( loBarPop )
-									loBarPop		= Null
-									loOption		= Null
+									loBarPop		= .Null.
+									loOption		= .Null.
 									Exit
 
 								Otherwise	&& Otro valor
@@ -28352,7 +28463,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loBarPop, loOptions
+				Store .Null. To loBarPop, loOptions
 				Release lcExpr, lcProcName, lcProcCode, lcComment, loReg, llBloque_SetupCode_Analizado ;
 					, loOptions, loBarPop
 
@@ -28426,7 +28537,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 					, loCol_LastLevelName As Collection ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
 					, loOption As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
-				Store Null To loOption, loBarPop, loCol_LastLevelName
+				Store .Null. To loOption, loBarPop, loCol_LastLevelName
 				Store '' To lcText, lcEndProcedures
 
 				With This As CL_MENU Of 'FOXBIN2PRG.PRG'
@@ -28557,7 +28668,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loOption, loBarPop, loCol_LastLevelName
+				Store .Null. To loOption, loBarPop, loCol_LastLevelName
 				Release loReg, loHeader, lnNivel, lcEndProcedures, lcExpr, lcProcName, lcProcCode, lcLocation ;
 					, loCol_LastLevelName, loBarPop, loOption
 
@@ -28572,12 +28683,12 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 *---------------------------------------------------------------------------------------------------
 		Local loReg, loCol_LastLevelName As Collection
-		Store Null To loReg, loCol_LastLevelName
+		Store .Null. To loReg, loCol_LastLevelName
 		Go Top
 		Scatter Memo Name loReg
 		loCol_LastLevelName	= Createobject('COLLECTION')
 		CL_MENU_COL_BASE::get_DataFromTablabin( loReg, loCol_LastLevelName )
-		Store Null To loReg, loCol_LastLevelName
+		Store .Null. To loReg, loCol_LastLevelName
 		Release loReg, loCol_LastLevelName
 	Endproc
 
@@ -28621,7 +28732,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 		Lparameters toObj As Collection, tnNivel, toConversor
 
 		Local loReg, lcTempName, loEx As Exception
-		Store Null To loReg
+		Store .Null. To loReg
 
 		#If .F.
 			Local toConversor As c_conversor_prg_a_mnx Of 'FOXBIN2PRG.PRG'
@@ -28684,7 +28795,7 @@ Define Class CL_MENU As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loReg
+				Store .Null. To loReg
 				Release loReg
 
 		Endtry
@@ -28732,7 +28843,7 @@ Define Class CL_MENU_BARPOP As CL_MENU_COL_BASE
 				Local llBloqueEncontrado, lcSubName, lcComment, lnLast_I, loReg, lcExpr, lcProcName, lcProcCode, lcMenuType ;
 					, loEx As Exception ;
 					, loOption As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
-				Store Null To loOption
+				Store .Null. To loOption
 				Store '' To lcSubName, lcComment, lcExpr, lcProcName, lcProcCode
 
 				With This As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
@@ -28798,7 +28909,7 @@ Define Class CL_MENU_BARPOP As CL_MENU_COL_BASE
 								Endif
 
 							Case Left( tcLine, 11 ) == 'DEFINE PAD ' Or Left( tcLine, 11 ) == 'DEFINE BAR '
-								loOption	= Null
+								loOption	= .Null.
 								loOption	= Createobject("CL_MENU_OPTION")
 								lnLast_I	= m.I
 								loOption.c_ParentName	= loReg.LevelName
@@ -28815,7 +28926,7 @@ Define Class CL_MENU_BARPOP As CL_MENU_COL_BASE
 								loOption.oReg.ItemNum	= Str(.Count,3)
 								loReg.NUMITEMS			= .Count
 								loReg.Scheme			= Iif( loReg.OBJCODE = C_OBJCODE_MENUBARPOPUP_MENUBAR, 3, 4 )
-								loOption	= Null
+								loOption	= .Null.
 
 								If I = lnLast_I	&& No avanzó, debe salir.
 									Exit
@@ -28836,7 +28947,7 @@ Define Class CL_MENU_BARPOP As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loOption
+				Store .Null. To loOption
 				Release lcSubName, lcComment, lnLast_I, loReg, lcExpr, lcProcName, lcProcCode, lcMenuType, loOption
 
 		Endtry
@@ -28859,7 +28970,7 @@ Define Class CL_MENU_BARPOP As CL_MENU_COL_BASE
 				Local loReg, I, lcText, lcTab, lcExpr, lcProcName, lcProcCode, loEx As Exception ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
 					, loOption As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
-				Store Null To loOption, loBarPop
+				Store .Null. To loOption, loBarPop
 				Store '' To lcText, lcExpr, lcProcName, lcProcCode
 				loReg	= This.oReg
 				lcTab	= Replicate(Chr(9),tnNivel)
@@ -28922,7 +29033,7 @@ Define Class CL_MENU_BARPOP As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loOption, loBarPop
+				Store .Null. To loOption, loBarPop
 				Release loReg, I, lcTab, lcExpr, lcProcName, lcProcCode, loBarPop, loOption
 
 		Endtry
@@ -28977,7 +29088,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcComment, loReg, lnLast_I, loEx As Exception, llPadOBar_Analizado ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG'
-				Store Null To loBarPop
+				Store .Null. To loBarPop
 				Store '' To lcComment
 
 				With This As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
@@ -29026,7 +29137,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 								Endif
 
 							Case Left( tcLine, 13 ) == 'DEFINE POPUP '
-								loBarPop	= Null
+								loBarPop	= .Null.
 								loBarPop	= Createobject("CL_MENU_BARPOP")
 								lnLast_I	= m.I
 								loBarPop.c_ParentName	= loReg.LevelName
@@ -29036,7 +29147,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 								If Not loBarPop.analyzeCodeBlock( @tcLine, @taCodeLines, @m.I, tnCodeLines, toConversor )
 									I	= m.I - 1
 								Endif
-								loBarPop	= Null
+								loBarPop	= .Null.
 								Exit
 
 							Otherwise	&& Otro valor
@@ -29059,7 +29170,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loBarPop
+				Store .Null. To loBarPop
 				Release lcComment, loReg, lnLast_I, llPadOBar_Analizado, loBarPop
 		Endtry
 
@@ -29459,7 +29570,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 		Try
 				Local llBloqueEncontrado, lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, loEx As Exception ;
 					, lnNegContainer, lnNegObject
-				Store Null To loReg
+				Store .Null. To loReg
 				Store '' To lcText, lcComment, lcPadName
 
 * Estructura ejemplo a analizar:
@@ -29642,7 +29753,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loReg
+				Store .Null. To loReg
 				Release tcLine, taCodeLines, I, tnCodeLines, toConversor ;
 					, lcText, loReg, lnPos, lcPadName, lcExpr, lcComment, lcProcName, lcProcCode, lnNegContainer, lnNegObject
 
@@ -29666,7 +29777,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Local loReg, I, lcText, lcTab, lcExpr, lcProcName, lcProcCode, loEx As Exception ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
 					, loOption As CL_MENU_OPTION Of 'FOXBIN2PRG.PRG'
-				Store Null To loOption, loBarPop, loReg
+				Store .Null. To loOption, loBarPop, loReg
 				lcText		= ''
 				lcProcName	= ''
 
@@ -29742,7 +29853,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loOption, loBarPop, loReg
+				Store .Null. To loOption, loBarPop, loReg
 				Release loReg, I, lcTab, lcExpr, lcProcName, lcProcCode, loBarPop, loOption
 
 		Endtry
@@ -29765,7 +29876,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Local lcText, lcTab, loEx As Exception ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
 					, lcName , lcName2
-				Store Null To loBarPop
+				Store .Null. To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
 				lcText		= ''
 *!*	Changed by LScheffler 22.4.2021
@@ -29851,7 +29962,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loBarPop
+				Store .Null. To loBarPop
 				Release lcTab, loBarPop
 
 		Endtry
@@ -29883,7 +29994,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Local lcText, lcTab, lnContainer, lnObject, loEx As Exception ;
 					, loBarPop As CL_MENU_BARPOP Of 'FOXBIN2PRG.PRG' ;
 					, lcName2
-				Store Null To loBarPop
+				Store .Null. To loBarPop
 				lcTab		= Replicate(Chr(9),tnNivel)
 				If !Empty(toReg.Name) And Left( toReg.Name, 1 ) = '_' Then
 					lcName2		= '"' + Alltrim(toReg.Name) + '"'
@@ -29969,7 +30080,7 @@ Define Class CL_MENU_OPTION As CL_MENU_COL_BASE
 				Throw
 
 			Finally
-				Store Null To loBarPop
+				Store .Null. To loBarPop
 				Release lcTab, lnContainer, lnObject, loBarPop
 
 		Endtry
@@ -30038,7 +30149,7 @@ Define Class CL_DBF_UTILS As Session
 	n_NumberOfRecords		= 0
 	n_NumberOfRecordsReal	= 0
 	n_PosOfFirstDataRecord	= 0
-	Fields					= Null
+	Fields					= .Null.
 
 
 	Procedure Init
@@ -30062,7 +30173,7 @@ Define Class CL_DBF_UTILS As Session
 				Local lnHandle, lcStr, lnDataPos, lnFieldCount, lnVal, I, loEx As Exception ;
 					, lnCodePage, lcCodePageDesc, lnFileLength ;
 					, loField As CL_DBF_UTILS_FIELD Of 'FOXBIN2PRG.PRG'
-				Store Null To loField
+				Store .Null. To loField
 				tn_HexFileType	= 0
 				Store '' To tcDBC_Name, lcStr
 				lnHandle		= Fopen(tc_FileName,0)
@@ -30139,7 +30250,7 @@ Define Class CL_DBF_UTILS As Session
 						Endwith
 
 						.Fields.Add(loField)
-						loField	= Null
+						loField	= .Null.
 					Endfor
 *---
 					lcStr						= Fread(lnHandle,1)		&& n+1			Header Record Terminator (0x0D)
@@ -30167,7 +30278,7 @@ Define Class CL_DBF_UTILS As Session
 
 			Finally
 				Fclose(lnHandle)
-				Store Null To loField
+				Store .Null. To loField
 				Release lcStr, lnDataPos, lnFieldCount, lnVal, I, lnCodePage, lcCodePageDesc, loField
 
 		Endtry
@@ -30405,9 +30516,9 @@ Define Class CL_DBF_UTILS As Session
 				---------------------------------------------------
 				Field flags Reference:
 				0x01   System Column (not visible to user)
-				0x02   Column can store null values
+				0x02   Column can store .Null. values
 				0x04   Binary column (for CHAR and MEMO only)
-				0x06   (0x02+0x04) When a field is NULL and binary (Integer, Currency, and Character/Memo fields)
+				0x06   (0x02+0x04) When a field is .Null. and binary (Integer, Currency, and Character/Memo fields)
 				0x0C   Column is autoincrementing
 
 			ENDTEXT
@@ -30703,65 +30814,66 @@ Define Class CL_CFG As Custom
 	c_Foxbin2prg_FullPath			= ''
 	c_Foxbin2prg_ConfigFile			= ''
 	c_CurDir						= ''
-	c_Language_In					= Null
-	n_Debug							= Null
-	n_BodyDevInfo					= Null
-	l_ShowErrors					= Null
-	n_ShowProgressbar				= Null
-	l_Recompile						= Null
-	l_NoTimestamps					= Null
-	l_ClearUniqueID					= Null
-	l_ClearDBFLastUpdate			= Null
-	n_OptimizeByFilestamp			= Null
-	n_ExcludeDBFAutoincNextval		= Null
-	l_RedirectClassPerFileToMain	= Null
-	n_RedirectClassType				= Null
-	l_RemoveNullCharsFromCode		= Null
-	l_RemoveZOrderSetFromProps		= Null
-	n_UseClassPerFile				= Null
-	n_CheckFileInPath				= Null
+	c_Language_In					= .Null.
+	n_Debug							= .Null.
+	n_BodyDevInfo					= .Null.
+	l_ShowErrors					= .Null.
+	n_ShowProgressbar				= .Null.
+	l_Recompile						= .Null.
+	l_NoTimestamps					= .Null.
+	l_ClearUniqueID					= .Null.
+	l_ClearDBFLastUpdate			= .Null.
+	n_OptimizeByFilestamp			= .Null.
+	n_ExcludeDBFAutoincNextval		= .Null.
+	l_RedirectClassPerFileToMain	= .Null.
+	n_RedirectClassType				= .Null.
+	l_RemoveNullCharsFromCode		= .Null.
+	l_RemoveZOrderSetFromProps		= .Null.
+	n_UseClassPerFile				= .Null.
+	n_CheckFileInPath				= .Null.
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
 *!*	/Changed by: LScheffler 21.02.2021
-	l_OldFilesPerDBC				= Null
-	n_UseFilesPerDBC				= Null
-	l_RedirectFilePerDBCToMain		= Null
-	l_ItemPerDBCCheck				= Null
-	l_DBF_BinChar_Base64            = Null
-	l_DBF_IncludeDeleted            = Null
+	l_OldFilesPerDBC				= .Null.
+	n_UseFilesPerDBC				= .Null.
+	l_RedirectFilePerDBCToMain		= .Null.
+	l_ItemPerDBCCheck				= .Null.
+	l_DBF_BinChar_Base64            = .Null.
+	l_DBF_IncludeDeleted            = .Null.
 *!*	/Changed by: LScheffler 21.02.2021
-	l_ClassPerFileCheck				= Null
-	n_ExtraBackupLevels				= Null
-	c_VC2							= Null
-	c_SC2							= Null
-	c_PJ2							= Null
-	c_FR2							= Null
-	c_LB2							= Null
-	c_DB2							= Null
-	c_DC2							= Null
-	c_MN2							= Null
-	c_FK2							= Null
-	c_ME2							= Null
-	n_PJX_Conversion_Support		= Null
-	n_VCX_Conversion_Support		= Null
-	n_SCX_Conversion_Support		= Null
-	n_FRX_Conversion_Support		= Null
-	n_LBX_Conversion_Support		= Null
-	n_MNX_Conversion_Support		= Null
-	n_DBC_Conversion_Support		= Null
-	n_DBF_Conversion_Support		= Null
-	n_FKY_Conversion_Support		= Null
-	n_MEM_Conversion_Support		= Null
-	c_DBF_Conversion_Included		= Null
-	c_DBF_Conversion_Excluded		= Null
-	c_BackgroundImage				= Null
-	n_PRG_Compat_Level				= Null
+	l_ClassPerFileCheck				= .Null.
+*!*	LScheffler 30.08.2023
+	l_AllowInheritance				= .Null.
+	n_ExtraBackupLevels				= .Null.
+	c_VC2							= .Null.
+	c_SC2							= .Null.
+	c_PJ2							= .Null.
+	c_FR2							= .Null.
+	c_LB2							= .Null.
+	c_DB2							= .Null.
+	c_DC2							= .Null.
+	c_MN2							= .Null.
+	c_FK2							= .Null.
+	c_ME2							= .Null.
+	n_PJX_Conversion_Support		= .Null.
+	n_VCX_Conversion_Support		= .Null.
+	n_SCX_Conversion_Support		= .Null.
+	n_FRX_Conversion_Support		= .Null.
+	n_LBX_Conversion_Support		= .Null.
+	n_MNX_Conversion_Support		= .Null.
+	n_DBC_Conversion_Support		= .Null.
+	n_DBF_Conversion_Support		= .Null.
+	n_FKY_Conversion_Support		= .Null.
+	n_MEM_Conversion_Support		= .Null.
+	c_DBF_Conversion_Included		= .Null.
+	c_DBF_Conversion_Excluded		= .Null.
+	c_BackgroundImage				= .Null.
+	n_PRG_Compat_Level				= .Null.
 *** DH 2021-03-04: added n_HomeDir property
-	n_HomeDir						= Null
-
+	n_HomeDir						= .Null.
 
 	Procedure CopyFrom
 *-- Copia las propiedades del CFG indicado
@@ -30800,6 +30912,8 @@ Define Class CL_CFG As Custom
 			.l_DBF_IncludeDeleted			= toParentCFG.l_DBF_IncludeDeleted
 *!*	/Changed by: LScheffler 21.02.2021
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
+*!*	LScheffler 30.08.2023
+			.l_AllowInheritance				= toParentCFG.l_AllowInheritance
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
 			.c_VC2							= toParentCFG.c_VC2
 			.c_SC2							= toParentCFG.c_SC2
@@ -30933,6 +31047,9 @@ Define Class CL_LANG As Custom
 	C_UNKNOWN_CLASS_NAME_LOC										= ""
 	C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= ""
 	C_USING_THIS_SETTINGS_LOC										= ""
+	C_USING_THIS_SETTINGS_LOC1										= ""
+	C_USING_THIS_SETTINGS_LOC2										= ""
+	C_USING_THIS_SETTINGS_LOC3										= ""
 	C_WARNING_LOC													= ""
 	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= ""
 	C_WITH_ERRORS_LOC												= ""
@@ -31041,12 +31158,12 @@ Define Class CL_LANG As Custom
 						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
 						<<>>cRecompile:        Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
 						<<>>cNoTimestamps:     Indicates if timestamp of several file types must be cleared ('1' or empty) or not ('0')
-						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>cCFG_File:         Indicates a CFG filename for using special default instead of the config file in foxbin2prg directory.
 						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
-						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
+						<<>>FOXBIN2PRG.EXE c|C|t [OutFileName [ cCFG_File[ cDebug]]]
+						<<>>DO FOXBIN2PRG.EXE WITH -c|-C|-t [, OutFileName [, cCFG_File[, cDebug]]]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
@@ -31055,13 +31172,16 @@ Define Class CL_LANG As Custom
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
+						<<>>cCFG_File:    Indicates a CFG filename for using special default instead of the config file in foxbin2prg directory.
+						<<>>cDebug:       '1' for generating process LOGs, stop on errors
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [VERNO]
-						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>FOXBIN2PRG.EXE VERNO
+						<<>>DO FOXBIN2PRG.EXE WITH "VERNO"|cPara
 						<<>>
 						<<>>-- Parameter details:
 						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
+						<<>>cPara          A parameter with the Value "VERNO", the version number is returned to this parameter
 						<<>>
 						<<>>
 							ENDTEXT
@@ -31073,27 +31193,31 @@ Define Class CL_LANG As Custom
 						<<>>Version: <<_Screen.c_FB2PRG_EXE_Version>>
 						<<>>****************************************************************************************************************
 						<<>>
-						<<>> Note, configuration files will follow an inheritance.
+						<<>> Note, configuration files will follow an inheritance.
 					    <<>> 1.  Default values
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+					    <<>>  or, if defined, a config file given by a parameter calling FOXBIN2PRG
+					    <<>>      if used, the AllowInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
 					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
-					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
 						<<>>DontShowErrors: 0              && Show message errors by default
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-						<<>>HomeDir: 1                     && Home Directory in PJX
+						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
 						<<>>                               && 1 save HomeDir in PJ2
+						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+						<<>>-- Settings for config file via parameter only
+						<<>>AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -31159,7 +31283,7 @@ Define Class CL_LANG As Custom
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -31250,6 +31374,9 @@ Define Class CL_LANG As Custom
 							.C_UNKNOWN_CLASS_NAME_LOC										= "Classe inconnue[<<THIS.CLASS>>]"
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Utilisez le fichier Optimisation d'horodatage"
 							.C_USING_THIS_SETTINGS_LOC										= "Utilisation de ce paramètre"
+							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, skipping all previous config!"
+							.C_USING_THIS_SETTINGS_LOC2										= " Parsing configuration of subdirectories allowed."
+							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration of subdirectories not allowed."
 							.C_WARNING_LOC													= "AVERTISSEMENT!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "avec des erreurs"
@@ -31336,12 +31463,12 @@ Define Class CL_LANG As Custom
 						<<>>cOriginalFileName: Sirve para los casos en los que inputFile es un nombre temporal y se quiere generar el nombre correcto en la cabecera de la versión texto
 						<<>>cRecompile:        Indica recompilar ('1') el binario una vez regenerado. También se puede indicar un Path (p.ej, el del proyecto)
 						<<>>cNoTimestamps:     Indica si se debe anular el timestamp ('1' o vacío) o no ('0')
-						<<>>cCFG_File:         Indica un nombre de archivo CFG para no usar el predeterminado en el directorio de foxbin2prg
+						<<>>cCFG_File:         Indicates a CFG filename for using special default instead of the config file in foxbin2prg directory.
 						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
-						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
+						<<>>FOXBIN2PRG.EXE c|C|t [OutFileName [ cCFG_File[ cDebug]]]
+						<<>>DO FOXBIN2PRG.EXE WITH -c|-C|-t [, OutFileName [, cCFG_File[, cDebug]]]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
@@ -31350,13 +31477,16 @@ Define Class CL_LANG As Custom
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
+						<<>>cCFG_File:    Indicates a CFG filename for using special default instead of the config file in foxbin2prg directory.
+						<<>>cDebug:       '1' for generating process LOGs, stop on errors ()
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [VERNO]
-						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>FOXBIN2PRG.EXE VERNO
+						<<>>DO FOXBIN2PRG.EXE WITH "VERNO"|cPara
 						<<>>
 						<<>>-- Parameter details:
 						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
+						<<>>cPara          A parameter with the Value "VERNO", the version number is returned to this parameter
 						<<>>
 						<<>>
 							ENDTEXT
@@ -31371,24 +31501,28 @@ Define Class CL_LANG As Custom
 						<<>> Note, configuration files will follow an inheritance.
 					    <<>> 1.  Default values
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+					    <<>>  or, if defined, a config file given by a parameter calling FOXBIN2PRG
+					    <<>>      if used, the AllowInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
 					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
-					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
 						<<>>DontShowErrors: 0              && Show message errors by default
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-						<<>>HomeDir: 1                     && Home Directory in PJX
+						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
 						<<>>                               && 1 save HomeDir in PJ2
+						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+						<<>>-- Settings for config file via parameter only
+						<<>>AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -31454,7 +31588,7 @@ Define Class CL_LANG As Custom
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -31545,6 +31679,9 @@ Define Class CL_LANG As Custom
 							.C_UNKNOWN_CLASS_NAME_LOC										= "Clase [<<THIS.CLASS>>] desconocida"
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Usar Optimización de filestamp de archivo"
 							.C_USING_THIS_SETTINGS_LOC										= "Usando esta configuración"
+							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, skipping all previous config!"
+							.C_USING_THIS_SETTINGS_LOC2										= " Parsing configuration of subdirectories allowed."
+							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration of subdirectories not allowed."
 							.C_WARNING_LOC													= "¡ATENCIÓN!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡ATENCIÓN!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
 							.C_WITH_ERRORS_LOC												= "con errores"
@@ -31626,17 +31763,17 @@ Define Class CL_LANG As Custom
 						<<>>cTextName:         Text Dateiname. Nur im SCCAPI (VSS) Kompatibilitätsmodus.
 						<<>>lGenText:          .T.=Erzeuge Text, .F.=Erzeuge Binary. Nur im SCCAPI (VSS) Kompatibilitätsmodus.
 						<<>>cDontShowErrors:   '1' Unterdrückt die Anzeige von Fehlern
-						<<>>cDebug:            '1' Erzeugt LOG Dateien, Halte bei Fehlern an
+						<<>>cDebug:            '1' Erzeugt LOG Dateien, hält bei Fehlern an
 						<<>>cDontShowProgress: '1' Zeige kein Fortschrittsfenster
 						<<>>cOriginalFileName: Falls als Inputdatei eine temporäre Datei genutzt wird, kann hier für den Kopf der Textdatei der richtige Name angegeben werden.
 						<<>>cRecompile:        '1' Die erzeugten Binädateien werden nach dem Erzeugen kompiliert. Eine Pfadangabe (d.h., die des Projektes) ist möglich.
 						<<>>cNoTimestamps:     Legt fest ob der Zeitstempel einiger Dateiarten gelöscht werden soll ('1' oder leer) oder nicht ('0')
-						<<>>cCFG_File:         Legt eine alternative Configurationsdate (CFG) fest, die statt der im foxbin2prg Verzeichnis genutzt werden soll. (Anm. des Übersetzers: Keine Angabe über Vererbung in der Verzeichnishierarchie)
+						<<>>cCFG_File:         Legt eine alternative Konfigurationsdatei (CFG) fest, die als Standard statt der im foxbin2prg Verzeichnis genutzt werden soll.
 						<<>>cOutputFolder:     Der Ordner in die die Ausgabedatei geschrieben werden soll. Wenn nicht angegeben, das Verzeichnis der Quelle.
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
-						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
+						<<>>FOXBIN2PRG.EXE c|C|t [OutFileName [ cCFG_File[ cDebug]]]
+						<<>>DO FOXBIN2PRG.EXE WITH -c|-C|-t [, OutFileName [, cCFG_File[, cDebug]]]
 						<<>>
 						<<>>-- Parameter:
 						<<>>Keine Parameter:   Startet dieses Formular
@@ -31646,13 +31783,16 @@ Define Class CL_LANG As Custom
 						<<>>-t (t)             Erzeugt eine Vorlage <OutFileName> für eine Tabellen-Config-Datei (wie <Tabellenname>.dbf.cfg)
 						<<>>                   Wird OutFileName nicht angegeben und ist eine Tabelle offen,
 						<<>>                   so wird eine Konfigurationsdatei <Tabellenname>.dbf._cfg im Verzeichnis der Tabelle angelegt.
+						<<>>cCFG_File:         Legt eine alternative Konfigurationsdatei (CFG) fest, die als Standard statt der im foxbin2prg Verzeichnis genutzt werden soll.
+						<<>>cDebug:            '1' Erzeugt LOG Dateien, hält bei Fehlern an
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [VERNO]
-						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>FOXBIN2PRG.EXE VERNO
+						<<>>DO FOXBIN2PRG.EXE WITH "VERNO"|cPara
 						<<>>
 						<<>>-- Parameter:
-						<<>>-VERNO (VERNO) Debe dies Versionnummer zurück.
+						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
+						<<>>cPara          A Ein Parameter mit dem Wert "VERNO", der Rückgabewert des Parameters die Versionsnummer
 						<<>>
 						<<>>
 							ENDTEXT
@@ -31667,17 +31807,18 @@ Define Class CL_LANG As Custom
 						<<>> Achtung, die Konfigurationsdateien werden vererbt.
 					    <<>> 1.  Defaultwerte
 					    <<>> 2., optional FOXBIN2PRG.CFG im Vereichnis aus dem FOXBIN2PRG.EXE startet
+					    <<>>   Oder, wenn definiert, eine Konfigurationsdatei die per parameter an FOXBIN2PRG übergeben wurde.
+					    <<>>       Wird diese genutzt, steuert die Einstellung AllowInheritance, ob folgende Konfigurationsdateien ausgewertet werden.  (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in der Wurzel des Arbeitsverzeichnises
 					    <<>> 4., optional FOXBIN2PRG.CFG in jedem Verzeichnis bis zum Arbeitsverzeichnis
 					    <<>> 5., optional Es können spezielle Einstellungen für einzelne DBF's erzeugt werden (Syntax: <TableName>.dbf.cfg im Verzeichnis der Tabelle)
-					    <<>> 6., Parameter des Aufrufs von FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Einige Parameter im Aufruf von FOXBIN2PRG.EXE übersteueren diese Vorgaben (bis auf die Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>Interne Einstellungen
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
-						<<>>ShowProgressbar: 1             && 0=Zeige Fortschrittsfenster, 1=Zeige es nicht, 2= Zeige Fortschrittsfenster nur, wenn mehrere Dateien konvertiert werden.
+						<<>>ShowProgressbar: 1             && 0=Zeige Fortschrittsfenster, 1=Zeige es nicht, 2=Zeige Fortschrittsfenster nur, wenn mehrere Dateien konvertiert werden.
 						<<>>DontShowErrors: 0              && 0=Zeige Fehler an, 1=Zeige keine Fehler an
 						<<>>ExtraBackupLevels: 1           && Anzahl der Backup-Ebenen der Binärdateien 0=kein Backup, 1=<Datei>.BAK, n>1= n-Backup-Ebenen, <Datei>.n.BAK
 						<<>>Debug: 0                       && 0=Individuelles Logging ist aus 1= Individuelles Log per Datei <Datei>.Log
@@ -31686,8 +31827,11 @@ Define Class CL_LANG As Custom
 						<<>>HomeDir: 1                     && Speichern der HomeDir Eigenschaft in die PJX
 						<<>>                               && 0 Die Eigenschaft HomeDir wird nicht in die PJ2 gespeichert
 						<<>>                               && 1 Die Eigenschaft wird gespeichert
-						<<>>
+						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+						<<>>-- Settings for config file via parameter only
+						<<>>AllowInheritance: 1            && 0=Verbiete, 1=Erlaube die Auswertung von "normaler" Konfigurationsdateien
 						<<>>----------------------------------------------------------------------------------------------------------------
+						<<>>
 						<<>>-- Konvertierungs Optionen:
 						<<>>PJX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
 						<<>>VCX_Conversion_Support: 2      && 0=Aus, 1=Erzeuge nur Textdatei (Diff), 2=Erzeuge Text- und Binärdatei (Merge)
@@ -31758,7 +31902,7 @@ Define Class CL_LANG As Custom
 						<<>>NoTimestamps: 1                && 0=Zeitstempel einiger Dateiarten werden nicht gelöscht 1=Zeitstempel werden zum Minimieren der Text-Datei-Unterschiede gelöscht
 						<<>>ClearUniqueID: 1               && 0=Erhalte die Unique ID in den Text-Dateien, 1=Lösche Unique ID. Nützlich für Diff und Merge
 						<<>>OptimizeByFilestamp: 0         && 0=Aus, 1=Optimierte Erzeugung der Binärdateien in Abhängigkeit vom Zeitstempel. Gefährlich beim Arbeiten mit Zweigen!
-						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche NULL (CHR(0)) Zeichen aus dem Quellcode
+						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche .Null. (CHR(0)) Zeichen aus dem Quellcode
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Aus, 1=Entferne ZOrderSet Eigenschaft von Objekten
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Nutze HELPSTRING als Class Procedure Kommentar
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -31864,6 +32008,9 @@ Define Class CL_LANG As Custom
 							.C_UNKNOWN_CLASS_NAME_LOC										= "Unbekannte Klasse [<<THIS.CLASS>>]"
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Verwenden Sie die Datei-Zeitstempel-Optimierung"
 							.C_USING_THIS_SETTINGS_LOC										= "Mit dieser Einstellung"
+							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, alle vorherigen Einstellungen werden zurückgesetzt!"
+							.C_USING_THIS_SETTINGS_LOC2										= " Auswertung der Konfiguration der Unterverzeichnisse gestattet."
+							.C_USING_THIS_SETTINGS_LOC3										= " Auswertung der Konfiguration der Unterverzeichnisse nicht gestattet."
 							.C_WARNING_LOC													= "WARNUNG!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!" + CR_LF+ "STELLEN SIE SICHER, DAS KEIN TABELLENALIAS IM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "mit Fehlern"
@@ -31952,12 +32099,12 @@ Define Class CL_LANG As Custom
 						<<>>cOriginalFileName: used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version
 						<<>>cRecompile:        Indicates recompile ('1') the binary once regenerated. You can specify a Path too (ie, the project one)
 						<<>>cNoTimestamps:     Indicates if timestamp of several file types must be cleared ('1' or empty) or not ('0')
-						<<>>cCFG_File:         Indicates a CFG filename for not using the default on foxbin2prg directory
+						<<>>cCFG_File:         Indicates a CFG filename for using special default instead of the config file in foxbin2prg directory.
 						<<>>cOutputFolder:     The output folder to write to. If it isn't specified, the same folder as the source is used.
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [c|C|t [OutFileName]]
-						<<>>DO FOXBIN2PRG.EXE WITH [-c|-C|-t [, OutFileName]]
+						<<>>FOXBIN2PRG.EXE c|C|t [OutFileName [ cCFG_File[ cDebug]]]
+						<<>>DO FOXBIN2PRG.EXE WITH -c|-C|-t [, OutFileName [, cCFG_File[, cDebug]]]
 						<<>>
 						<<>>-- Parameter details:
 						<<>>No parameter: Calls this info screen
@@ -31966,13 +32113,16 @@ Define Class CL_LANG As Custom
 						<<>>              If OutFileName is not given a FoxBin2Prg._cfg config file will be created at default folder
 						<<>>-t (t)        Creates a template table-config-file <OutFileName> (like <Tablename>.dbf.cfg)
 						<<>>              If OutFileName is not given, and a table is open a <Tablename>.dbf._cfg config file will be created at table folder.
+						<<>>cCFG_File:    Indicates a CFG filename for using special default instead of the config file in foxbin2prg directory.
+						<<>>cDebug:       '1' for generating process LOGs, stop on errors
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
-						<<>>FOXBIN2PRG.EXE [VERNO]
-						<<>>DO FOXBIN2PRG.EXE WITH [VERNO]
+						<<>>FOXBIN2PRG.EXE VERNO
+						<<>>DO FOXBIN2PRG.EXE WITH "VERNO"|cPara
 						<<>>
 						<<>>-- Parameter details:
 						<<>>-VERNO (VERNO) Return version number of FoxBin2Prg
+						<<>>cPara          A parameter with the Value "VERNO", the version number is returned to this parameter
 						<<>>
 						<<>>
 							ENDTEXT
@@ -31987,24 +32137,28 @@ Define Class CL_LANG As Custom
 						<<>> Note, configuration files will follow an inheritance.
 					    <<>> 1.  Default values
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+					    <<>>  or, if defined, a config file given by a parameter calling FOXBIN2PRG
+					    <<>>      if used, the AllowInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
 					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
-					    <<>> 6., Parameter calling FOXBIN2PRG.EXE.
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
 						<<>>
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
 						<<>>DontShowErrors: 0              && Show message errors by default
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 						<<>>Debug: 0                       && Don't Activate individual <file>.Log by default
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-						<<>>HomeDir: 1                     && Home Directory in PJX
+						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
 						<<>>                               && 1 save HomeDir in PJ2
+						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+						<<>>-- Settings for config file via parameter only
+						<<>>AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -32070,7 +32224,7 @@ Define Class CL_LANG As Custom
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-						<<>>RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 						<<>>----------------------------------------------------------------------------------------------------------------
@@ -32161,6 +32315,9 @@ Define Class CL_LANG As Custom
 							.C_UNKNOWN_CLASS_NAME_LOC										= "Unknown class [<<THIS.CLASS>>]"
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Use file timestamp Optimization"
 							.C_USING_THIS_SETTINGS_LOC										= "Using this settings"
+							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, skipping all previous config!"
+							.C_USING_THIS_SETTINGS_LOC2										= " Parsing configuration of subdirectories allowed."
+							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration of subdirectories not allowed."
 							.C_WARNING_LOC													= "WARNING!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "with errors"
@@ -32206,7 +32363,7 @@ Define Class CL_DBF_CFG As Custom
 
 
 *-- Configuration class. By default asumes master value, except when overriding one.
-	n_DBF_Conversion_Support	= Null
+	n_DBF_Conversion_Support	= .Null.
 	DBF_Conversion_Order		= ''
 	DBF_Conversion_Condition	= ''
 	DBF_IndexList				= ''
@@ -32237,7 +32394,7 @@ Define Class CL_MACRO As CL_COL_BASE
 	_Signature			= ''
 	_Debug				= .F.
 	_NumberOfMacros		= ''
-	_Macros				= Null		&& Colección de macros
+	_Macros				= .Null.		&& Colección de macros
 
 
 
@@ -32306,7 +32463,7 @@ Define Class CL_MACRO As CL_COL_BASE
 						Endif
 
 						loColl.Add( loMRec, loMRec.get_Macro_Keystrokes(loMRec.Keystroke, .T.) )
-						loMRec	= Null
+						loMRec	= .Null.
 					Endfor
 
 * Ordenar alfabéticamente por keystroke
@@ -33086,7 +33243,7 @@ Define Class CL_MEMVAR As CL_COL_BASE
 *	STRUCTURE OF VARIABLES
 *	Byte Offset Description
 *	----------- -------------------------------------------------------------------------------------------------
-*	0 - 10      NULL terminated VarName. If VarName is empty, then VarName starts at offset 32
+*	0 - 10      .Null. terminated VarName. If VarName is empty, then VarName starts at offset 32
 *	11          VarType (A,C,N,Y,B,F,I,Q,D,T,L,0). If VarType is lowercase, then next VarName
 *	            begins with 2 bytes for VarName length.
 *	12 - 15     Reserved
@@ -33095,7 +33252,7 @@ Define Class CL_MEMVAR As CL_COL_BASE
 *	18 - 24     Reserved
 *	25          0x00 if it is an array element, 0x03 if it isn't an array element
 *	26 - 31     Reserved
-*	32 - n      If VarName (offset 0-10) is NULL then goto TABLE 1, If VarType=A then continue in TABLE 2,
+*	32 - n      If VarName (offset 0-10) is .Null. then goto TABLE 1, If VarType=A then continue in TABLE 2,
 *	            if VarType=0 then continue in TABLE 3, else continue in TABLE 4
 *	...
 *	eof         Last character is EOF (0x1A) character
@@ -33121,7 +33278,7 @@ Define Class CL_MEMVAR As CL_COL_BASE
 *	-----------	-------------------------------------------------------------------------------------------------
 
 
-*	TABLE 3 - NULL VALUE STRUCTURE (VarType=0)
+*	TABLE 3 - .Null. VALUE STRUCTURE (VarType=0)
 *	Byte Offset Description
 *	----------- -------------------------------------------------------------------------------------------------
 *	n           VarType.
@@ -33151,7 +33308,7 @@ Define Class CL_MEMVAR As CL_COL_BASE
 
 	c_InputFile			= ''
 	_Debug				= .F.
-	_MemVars			= Null		&& Colección de variables de memoria
+	_MemVars			= .Null.		&& Colección de variables de memoria
 
 
 
@@ -33210,7 +33367,7 @@ Define Class CL_MEMVAR As CL_COL_BASE
 							Endif
 
 							loColl.Add( loMVRec, loMVRec.getName() + Padl(pnElement, 5, '0') )
-							loMVRec	= Null
+							loMVRec	= .Null.
 						Enddo
 
 * Ordenar alfabéticamente por nombre de variable
@@ -33356,10 +33513,10 @@ Define Class CL_MEMVAR_RECORD As CL_CUS_BASE
 							pnRows				= .getRows()
 
 						Case .MemVar_Type = '0'
-* NULL
+* .Null.
 * VarType
 							.MemVar_Type	= Fread(tnHandle, 1)
-							.MemVar_Value	= Null
+							.MemVar_Value	= .Null.
 
 						Otherwise
 * NORMAL VALUE
@@ -33428,7 +33585,7 @@ Define Class CL_MEMVAR_RECORD As CL_CUS_BASE
 
 			Do Case
 				Case Isnull(.MemVar_Value)
-					lxValue	= Null
+					lxValue	= .Null.
 
 				Case Upper(.MemVar_Type) = 'L'
 					lxValue	= ( Asc(.MemVar_Value) = 1 )

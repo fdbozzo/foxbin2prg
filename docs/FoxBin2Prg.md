@@ -22,6 +22,16 @@ As far as possible these are the original documents. Changes are added where fun
 ## Source
 Original repository at https://github.com/lscheffler/foxbin2prg.   
 
+## Download
+Regenerate after download / clone / pull from https://github.com/lscheffler/foxbin2prg.
+**Note: If you have cloned the project, you must run it against itself to create the binaries and exes.**
+Run   
+```
+CD "path_to_FoxBin2Prg"
+*This uses a special configuration
+DO ReCreate_FoxBin2Prg.prg
+```
+
 ## Requirements
 - A copy of MS VFP9 SP1, at least _3504_
 - Runs with VFPA (Note, you need to recompile the EXE or use the PRG)

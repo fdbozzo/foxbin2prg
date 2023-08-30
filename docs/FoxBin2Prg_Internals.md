@@ -110,9 +110,11 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | ShowProgressbar | 0, _1_, 2 | 0=Don't show progressbar,<br/>1=Always show a progress bar,<br/>2=Only show it when processing multiple-files |
 | DontShowErrors | _0_, 1 | 0=show message errors in a modal messagebox. (default)<br/>1=don't show errors |
 | ExtraBackupLevels | 0, _1_, n | <br/>0=No backup<br/>1=One backupfile _\_filename\_.BAK_ (default)<br/>n=n levels of backup in style _\_filename\_.n.BAK_ |
-| Debug | _0_, 1, 2 | 0=Off<br/>1=Normal<br/>2=Extended<br/>By default, don't generate individual <file>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
-| BackgroundImage | <cFile> | Backgroundimage for process form |
+| Debug | _0_, 1, 2 | 0=Off<br/>1=Normal<br/>2=Extended<br/>By default, don't generate individual \<file\>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging |
+| BackgroundImage | \<cFile\> | Backgroundimage for process form |
 | HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
+|||
+| AllowInheritance | 0, _1_ | 0=Not allow scanning "regular" config files,<br/>1=Allow scanning "regular" config files.<br/>This is valid only for config files that are parameters of FoxBin2Prg. |
 |||
 | XXX_Conversion_Support | n | Defines the conversion operation per filetype |
 | | | For code:<br/> 0=No support,<br/>1=Generate _Text_ (Diff),<br/>2=Generate _Text_ and _Bin_ (Merge) |
@@ -256,7 +258,7 @@ Views and Relations. All this to minimize the differences when diffing DBCs that
 </FIELD_ORDER>
 ````
 ### PAM Section
-This section is generated for classes and forms, it is delimited with the <DefinedPropArrayMethod> tag,
+This section is generated for classes and forms, it is delimited with the \<DefinedPropArrayMethod\> tag,
 	and have the definition of Properties, Arrays and Methods, with their comments, like this example:
 ````
 DEFINE CLASS c1 AS custom OLEPUBLIC        && Description of "c1" class
@@ -344,7 +346,7 @@ Example of multiple file masks (separte with ","):
 ````
 
 ### Configuration per table
-New <filename.dbf.cfg> configuration options. See [Configuration file per table](#configuration-file-per-table).
+New \<filename.dbf.cfg> configuration options. See [Configuration file per table](#configuration-file-per-table).
 	
 These options can be used in any combination inside a dbf particular cfg file,
 if you create a text file using your dbf filename and adding ".cfg".
@@ -740,4 +742,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 
 ----
-Last changed: _2023/08/26_
+Last changed: _2023/08/30_
