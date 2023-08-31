@@ -1,13 +1,13 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.20.01
+*Version: v1.20.02
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
 * 1.  Default values
 * 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 *  or, if defined, a config file given by a parameter calling FOXBIN2PRG
-*      if used, the AllowInheritance setting controls if other config files will be evaluated (default)
+*      if used, the AllowInheritance setting controls if other config files will be evaluated (default). See below.
 * 3., optional FOXBIN2PRG.CFG in root of working directory
 * 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
 * 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
@@ -27,7 +27,15 @@
 *                               && 1 save HomeDir in PJ2
 *~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 *-- Settings for config file via parameter only
-*AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
+*AllowInheritance: 0            && 0=Allow scanning "regular" config files (file via parameter is just additional default)
+*                               && 1=Only read tree from root of the file given by parameter, not FoxBin2Prg default
+*                               && 2=Only read folder and subfolder of the file given by parameter
+*                               && 3=Read no other file
+*                               && This is like
+*                               && 0 Default | Parameter file | Default near FoxBin2Prg | all other config files
+*                               && 1 Default | Parameter file | Inheritance from root to parent of folder | folder and subdirs
+*                               && 2 Default | Parameter file | folder and subdirs
+*                               && 3 Default | Parameter file
 *----------------------------------------------------------------------------------------------------------------
 
 *-- Conversion operation by type

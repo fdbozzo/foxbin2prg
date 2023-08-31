@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.20
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.01'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.02'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -306,11 +306,12 @@
 * 20/03/2023	LScheffler	v1.19.78	Enhancement: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
 * 06/08/2023	LScheffler	v1.20.00	Enhancement: Added option to return version number (LScheffler)
 * 20/08/2023	LScheffler	v1.20.00	Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL)
-* 30/08/2023	LScheffler	v1.20.21	Bug Fix: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler)
-* 30/08/2023	LScheffler	v1.20.21	Bug Fix: config file set by parameter would be ignored, if the folder contains FoxBin2Prg.cfg (LScheffler)
-* 30/08/2023	LScheffler	v1.20.21	Enhancement: For config file template new options to set config file and debug added
-* 30/08/2023	LScheffler	v1.20.21	Enhancement: New option for parameter set config file to control the use of "regular" config files
-* 30/08/2023	LScheffler	v1.20.21	Bug Fix: Fixed problems with table config files (LScheffler)
+* 30/08/2023	LScheffler	v1.20.01	Bug Fix: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler)
+* 30/08/2023	LScheffler	v1.20.01	Bug Fix: config file set by parameter would be ignored, if the folder contains FoxBin2Prg.cfg (LScheffler)
+* 30/08/2023	LScheffler	v1.20.01	Enhancement: For config file template new options to set config file and debug added
+* 30/08/2023	LScheffler	v1.20.01	Enhancement: New option for parameter set config file to control the use of "regular" config files
+* 30/08/2023	LScheffler	v1.20.01	Bug Fix: Fixed problems with table config files (LScheffler)
+* 31/08/2023	LScheffler	v1.20.02	Enhancement: New option for parameter set config file to control the use of "regular" config files enhanced.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -524,7 +525,8 @@
 *										generar errores de compilación, típicamente los #include.
 *										NOTA: Si en vez de '1' se indica un Path (p.ej, el del proyecto, se usará como base para recompilar
 * tcNoTimestamps			(v? IN    ) Indica si se debe anular el timestamp ('1') o no ('0' ó vacío)
-* tcCFG_File				(v? IN    ) Indica si se debe usar un archivo de configuración distinto al predeterminado
+* tcCFG_File				(v? IN    ) Config file. If a config file is set, the normal chain of inheritance is reset and this file is read atop of the defaults
+*										Normal inheritance may or may not run, see setting AllowInheritance
 *** DH 2021-03-04: added tcOutputFolder parameter
 * tcOutputFolder			(v? IN    ) The output folder to write to (optional: if it isn't specified, the same folder as the source is used)
 *---------------------------------------------------------------------------------------------------
@@ -536,11 +538,12 @@
 * Usage 2
 * PARAMETERS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tcType			(c! IN    ) Modus (case sensitive)
-*										-c Create config template "tcType" with default values
-*										-C Create config "tcType" with values of directory named by outputfile
-*										-t Create config template "tcType" for config-per-table file
+*								-c Create config template "tcType" with default values
+*								-C Create config "tcType" with values of directory named by outputfile
+*								-t Create config template "tcType" for config-per-table file
 * tc_OutputFile		(v? IN    ) file to create
-* tcCFG_File		(v? IN    ) Config file to load (no inheritance)
+* tcCFG_File		(v? IN    ) Config file. If a config file is set, the normal chain of inheritance is reset and this file is read atop of the defaults
+*								Normal inheritance may or may not run, see setting AllowInheritance
 * tcDebug			(v? IN    ) '1' write debug log (posiibly to GETENV("TEMP") )
 *---------------------------------------------------------------------------------------------------
 *** LScheffler 2023-08-06: added option to output version number
@@ -970,7 +973,6 @@ Define Class c_foxbin2prg As Session
 		+ [<memberdata name="l_cancelwithesckey" display="l_CancelWithEscKey"/>] ;
 		+ [<memberdata name="l_cfg_cachedaccess" display="l_CFG_CachedAccess"/>] ;
 		+ [<memberdata name="l_classperfilecheck" display="l_ClassPerFileCheck"/>] ;
-		+ [<memberdata name="l_allowinheritance" display="l_AllowInheritance"/>] ;
 		+ [<memberdata name="l_clearuniqueid" display="l_ClearUniqueID"/>] ;
 		+ [<memberdata name="l_cleardbflastupdate" display="l_ClearDBFLastUpdate"/>] ;
 		+ [<memberdata name="n_debug" display="n_Debug"/>] ;
@@ -991,7 +993,6 @@ Define Class c_foxbin2prg As Session
 		+ [<memberdata name="n_showprogressbar" display="n_ShowProgressbar"/>] ;
 		+ [<memberdata name="l_stdouthabilitado" display="l_StdOutHabilitado"/>] ;
 		+ [<memberdata name="l_test" display="l_Test"/>] ;
-		+ [<memberdata name="l_singleconfig" display="l_SingleConfig"/>] ;
 		+ [<memberdata name="n_useclassperfile" display="n_UseClassPerFile"/>] ;
 		+ [<memberdata name="n_cfg_actual" display="n_CFG_Actual"/>] ;
 		+ [<memberdata name="n_existecapitalizacion" display="n_ExisteCapitalizacion"/>] ;
@@ -1046,6 +1047,9 @@ Define Class c_foxbin2prg As Session
 *!*			+ [<memberdata name="c_language_in" display="c_Language_In"/>] ;
 *!*			+ [<memberdata name="writelog_flush" display="writeLog_Flush"/>] ;
 *!*			+ [<memberdata name="n_checkfileinpath" display="n_CheckFileInPath"/>] ;
+*!*			+ [<memberdata name="n_allowinheritance" display="n_AllowInheritance"/>] ;
+*!*			+ [<memberdata name="l_singleconfig" display="l_SingleConfig"/>] ;
+*!*			+ [<memberdata name="c_singleconfig_folder" display="c_SingleConfig_Folder"/>] ;
 
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
@@ -1119,7 +1123,7 @@ Define Class c_foxbin2prg As Session
 	n_ExcludeDBFAutoincNextval		= 0
 	l_ClassPerFileCheck				= .F.
 *!*	LScheffler 30.08.2023
-	l_AllowInheritance				= .T.
+	n_AllowInheritance				= 0
 	l_RedirectClassPerFileToMain	= .F.
 	n_RedirectClassType				= 0				&& 0=Redireccionar Todas las clases, 1=Redireccionar solo la clase indicada
 	l_NoTimestamps					= .T.
@@ -1177,6 +1181,8 @@ Define Class c_foxbin2prg As Session
 *!*	LScheffler 20.08.2023
 *issue #96, [KestasL] keep CodePage relavant information for binary sources
 	i_CPID							= 0 &&CPCURRENT(1) 
+*!*	LScheffler 31.08.2023 more sophisticated control of inheritance for para file
+    c_SingleConfig_Folder			= ''   
     
 	Procedure Init
 		Lparameters tcCFG_File, tcCancelWithEscKey
@@ -1699,12 +1705,12 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 *!*	LScheffler 30.08.2023
-	Procedure l_AllowInheritance_ACCESS
+	Procedure n_AllowInheritance_ACCESS
 *only from base config (and only if this is from parameter)
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( 1 ) )
-			Return This.l_AllowInheritance
+			Return This.n_AllowInheritance
 		Else
-			Return Nvl( This.o_Configuration( 1 ).l_AllowInheritance, This.l_AllowInheritance )
+			Return Nvl( This.o_Configuration( 1 ).n_AllowInheritance, This.n_AllowInheritance )
 		Endif
 	Endproc
 
@@ -2347,7 +2353,8 @@ Define Class c_foxbin2prg As Session
 * tc_InputFile_Type			(@? IN    ) Tipo de archivo de entrada: (D)irectory, (F)ile, (Q)uerySupport
 * toParentCFG				(@? IN    ) (Uso interno) Si se pasa un valor, el nuevo CFG copiará primero sus valores de aquí para heredarlos
 * tl_ForceLog				(v? IN    ) Force logging of settings. used on cfg setting as object
-* tcCFG_File				(v? IN    ) Config file. If a configfile is set, the normal chain of inheritance is stopped and only this file is used atop the defaults
+* tcCFG_File				(v? IN    ) Config file. If a config file is set, the normal chain of inheritance is reset and this file is read atop of the defaults
+*										Normal inheritance may or may not run, see setting AllowInheritance
 *--------------------------------------------------------------------------------------------------------------
 		Lparameters tcDontShowProgress, tcDontShowErrors, tcNoTimestamps, tcDebug, tcRecompile, tcExtraBackupLevels ;
 			, tcClearUniqueID, tcOptimizeByFilestamp, tc_InputFile, tcInputFile_Type, toParentCFG, tl_ForceLog, tcCFG_File
@@ -2362,8 +2369,8 @@ Define Class c_foxbin2prg As Session
 			, loCFG_Manual As CL_CFG Of 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration As Collection ;
 			, loLang As CL_LANG Of 'FOXBIN2PRG.PRG' ;
-			, loEx As Exception, llSetSingleConfig, lc_Foxbin2prg_ConfigFile
-			
+			, loEx As Exception, llSetSingleConfig, lc_Foxbin2prg_ConfigFile, lc_InputPath
+	
 		Try
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 					Store 0 To lnKey
@@ -2387,10 +2394,6 @@ Define Class c_foxbin2prg As Session
 
 					ENDIF &&VARTYPE(tcCFG_File)='C' AND !EMPTY(tcCFG_File) 
 
-*!*	LScheffler 30.08.2023, just the single config from programm parameter, or sub dirs of the config file given by the parameter
-					IF .l_SingleConfig AND !.l_AllowInheritance THEN 
-					  Exit
-					 ENDIF &&.l_SingleConfig AND !.l_AllowInheritance
 
 					lcConfigFile		= .c_Foxbin2prg_ConfigFile
 					tc_InputFile		= Evl(tc_InputFile, .c_InputFile)
@@ -2419,14 +2422,60 @@ Define Class c_foxbin2prg As Session
 						Do Case
 							Case Len(tc_InputFile) = 1
 								tcInputFile_Type	= C_FILETYPE_QUERYSUPPORT
+								lc_InputPath        = ""
 
 							Case Adir(laDirInfo, tc_InputFile, "D") = 1 And Substr( laDirInfo(1,5), 5, 1 ) = "D"
 								tcInputFile_Type	= C_FILETYPE_DIRECTORY
+								lc_InputPath        = tc_InputFile
 
 							Otherwise
 								tcInputFile_Type	= C_FILETYPE_FILE
+								lc_InputPath        = JUSTPATH(tc_InputFile)
+
 						Endcase
+					Else
+						If Empty(tc_InputFile) THEN 
+								lc_InputPath        = ""
+					 
+						ELSE  &&Empty(tc_InputFile) 
+							Do Case
+								Case tcInputFile_Type==C_FILETYPE_QUERYSUPPORT
+									lc_InputPath        = ""
+
+								Case tcInputFile_Type==C_FILETYPE_DIRECTORY
+									lc_InputPath        = tc_InputFile
+
+								Otherwise
+*								tcInputFile_Type	= C_FILETYPE_FILE
+									lc_InputPath        = JUSTPATH(tc_InputFile)
+
+							Endcase
+						ENDIF &&Empty(tc_InputFile)  
 					Endif
+
+*!*	LScheffler 30.08.2023, just the single config from programm parameter, or sub dirs of the config file given by the parameter
+*!*	LScheffler 31.08.2023 more sophisticated control of inheritance for para file
+					lc_InputPath = UPPER(lc_InputPath)
+					DO CASE
+					 CASE !.l_SingleConfig
+*just go ahead
+					 CASE .n_AllowInheritance=0
+*read all
+					 CASE Empty(lc_InputPath)
+*whatever, just go ahead
+					 CASE .n_AllowInheritance=3
+*read nothing
+					  Exit
+*!*						 CASE INLIST(.n_AllowInheritance,1,2)
+*!*	*not a config file in FoxBinPrg's own folder
+					 CASE INLIST(.n_AllowInheritance,1,2) AND lc_InputPath=.c_SingleConfig_Folder
+*just in the directory or subdirectory of the config file set by the parameter
+					 CASE .n_AllowInheritance=1 AND .c_SingleConfig_Folder=lc_InputPath
+*just above the config file set by the parameter
+					 Otherwise
+					  Exit
+					ENDCASE
+
 
 					If .l_Main_CFG_Loaded And Not Empty(tc_InputFile) And Not tcInputFile_Type == C_FILETYPE_QUERYSUPPORT Then
 						If .n_CFG_EvaluateFromParam = 1
@@ -2481,7 +2530,10 @@ Define Class c_foxbin2prg As Session
 
 *-- Si no se pasó un CFG padre y no hay CFGs o no encuentra el del PATH indicado, analizo la jararquía
 *!*	LScheffler 30.08.2023 only read path if no config by parameter
-						If Isnull(llSetSingleConfig) AND Isnull(toParentCFG) And (lo_Configuration.Count = 0 Or .n_CFG_Actual = 0) Then
+						If Isnull(llSetSingleConfig);
+								AND Isnull(toParentCFG);
+								And (lo_Configuration.Count = 0 Or .n_CFG_Actual = 0);
+								AND !This.c_Foxbin2prg_ConfigFile==tc_InputFile Then
 							llMasterEval	= .T.
 							toParentCFG		= This
 
@@ -2581,7 +2633,6 @@ ASSERT lo_Configuration.Count<6
 							Do Case
 								Case Empty( laConfig(m.I) ) Or Inlist( Left( laConfig(m.I), 1 ), '*', '#', '/', "'" )
 									Loop
-
 
 *settings for internal work, not processing
 * Depricated:
@@ -2771,9 +2822,9 @@ ASSERT lo_Configuration.Count<6
 *!*	LScheffler 30.08.2023
 								Case Left( laConfig(m.I), 17 ) == Lower('AllowInheritance:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
-									If Inlist( lcValue, '0', '1' ) Then
+									If Inlist( lcValue, '0', '1' , '2' , '3' ) Then
 										IF llSetSingleConfig THEN
-										 lo_CFG.l_AllowInheritance	= ( Transform(lcValue) == '1' )
+										 lo_CFG.n_AllowInheritance	=  Int( Val( lcValue ) )
 										ENDIF &&llSetSingleConfig 
 
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > AllowInheritance:           ' + Transform(lcValue) +;
@@ -3117,15 +3168,33 @@ ASSERT lo_Configuration.Count<6
 				Throw
 
 			Finally
-				This.l_SingleConfig = NVL(llSetSingleConfig,This.l_SingleConfig)
+				This.l_SingleConfig        = NVL(llSetSingleConfig,This.l_SingleConfig)
+*!*	LScheffler 31.08.2023 more sophisticated control of inheritance for para file
+
 				IF llSetSingleConfig THEN
-					 .c_Foxbin2prg_ConfigFile = lc_Foxbin2prg_ConfigFile
-					 .writeLog( '> ' + IIF(This.l_AllowInheritance, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
+					 This.c_SingleConfig_Folder   = UPPER(JUSTPATH(tcCFG_File))
+					 This.c_Foxbin2prg_ConfigFile = lc_Foxbin2prg_ConfigFile
+					 DO CASE
+					  CASE This.n_AllowInheritance=0
+					 This.writeLog( '> ' + IIF(This.n_AllowInheritance<3, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
+					  CASE This.n_AllowInheritance=1
+					 This.writeLog( '> ' + IIF(This.n_AllowInheritance<3, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
+					  CASE This.n_AllowInheritance=2
+					 This.writeLog( '> ' + IIF(This.n_AllowInheritance<3, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
+					  CASE This.n_AllowInheritance=3
+					 This.writeLog( '> ' + IIF(This.n_AllowInheritance<3, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
+					   
+					  OTHERWISE
+					   
+					 ENDCASE
+					 This.writeLog( '> ' + IIF(This.n_AllowInheritance<3, loLang.C_USING_THIS_SETTINGS_LOC2, loLang.C_USING_THIS_SETTINGS_LOC3 ))
 
-					IF This.l_AllowInheritance THEN
-						This.evaluateConfiguration( '', '', '', '', '', '', '', '', JUSTPATH(This.c_Foxbin2prg_ConfigFile), C_FILETYPE_DIRECTORY, @toParentCFG)
-
-					ENDIF &&This.l_AllowInheritance 
+					IF This.n_AllowInheritance=0 THEN
+						This.evaluateConfiguration( '', '', '', '', '', '', '', '', This.c_Foxbin2prg_ConfigFile, C_FILETYPE_FILE, @toParentCFG)
+*In case we run FoxBin2Prg against FoxBin2Prg folder. do not reread
+						This.n_AllowInheritance = 1 
+						
+					ENDIF &&This.n_AllowInheritance=0
 				ENDIF &&llSetSingleConfig 
 
 				Store .Null. To lo_Configuration, lo_CFG, loEx
@@ -3580,7 +3649,8 @@ ASSERT lo_Configuration.Count<6
 * tcBackupLevels			(v? IN    ) Indica la cantidad de niveles de backup a realizar (por defecto '1')
 * tcClearUniqueID			(v? IN    ) Indica si se debe limpiar el UniqueID ('1') o no ('0' ó vacío)
 * tcOptimizeByFilestamp		(v? IN    ) Indica si se debe optimizar por filestamp mayor o igual ('1'), solo igual ('2') o no optimizar ('0' ó vacío)
-* tcCFG_File				(v? IN    ) Indica si se debe usar un archivo de configuración distinto al predeterminado
+* tcCFG_File				(v? IN    ) Config file. If a config file is set, the normal chain of inheritance is reset and this file is read atop of the defaults
+*										Normal inheritance may or may not run, see setting AllowInheritance
 *--------------------------------------------------------------------------------------------------------------
 		Lparameters tc_InputFile, tcType, tcTextName, tlGenText, tcDontShowErrors, tcDebug, tcDontShowProgress ;
 			, toModulo, toEx As Exception, tlRelanzarError, tcOriginalFileName, tcRecompile, tcNoTimestamps ;
@@ -4020,7 +4090,7 @@ ASSERT lo_Configuration.Count<6
 							laOptions(49,2) = ".c_BackgroundImage"
 							laOptions(49,3) = 7
 							laOptions(50,1) = "*AllowInheritance:"                  && Inheritance out of config via parameter
-							laOptions(50,2) = ".l_AllowInheritance"
+							laOptions(50,2) = ".n_AllowInheritance"
 							laOptions(50,3) = 4
 
 							For lnOption = 1 To m.lnOptions
@@ -4029,11 +4099,11 @@ ASSERT lo_Configuration.Count<6
 									lcText  = m.laLines( m.lnLine )
 									lcValue = Strextract( m.lcText , m.laOptions( m.lnOption, 1 ), '&'+'&' ,1 , 3)
 									Do Case
-										Case m.laOptions( m.lnOption, 3 ) = 0
+										Case m.laOptions( m.lnOption, 3 ) = 0 OR m.laOptions( m.lnOption, 3 ) = 4
 *numeric to numeric
 											lcReturn = Padr(' ' + Transform( Evaluate( m.laOptions( m.lnOption, 2 ) ) ), Len(m.lcValue) + 1 )
 
-										Case m.laOptions( m.lnOption, 3 ) = 1 OR m.laOptions( m.lnOption, 3 ) = 4
+										Case m.laOptions( m.lnOption, 3 ) = 1
 *logic to numeric
 											lcReturn = Padr(' ' + Iif ( Evaluate( m.laOptions( m.lnOption, 2 )), '1', '0' ), Len(m.lcValue) + 1 )
 
@@ -5390,12 +5460,14 @@ ASSERT lo_Configuration.Count<6
 *---------------------------------------------------------------------------------------------------
 * PARÁMETROS:				(v=Pasar por valor | @=Pasar por referencia) (!=Obligatorio | ?=Opcional) (IN/OUT)
 * tcDir						(@? IN    ) Directorio del que devolver su configuración
+* tcCFG_File				(v? IN    ) Config file. If a config file is set, the normal chain of inheritance is reset and this file is read atop of the defaults
+*										Normal inheritance may or may not run, see setting AllowInheritance
 * RETORNO					(@?    OUT) Objeto CFG
 *---------------------------------------------------------------------------------------------------
-		Lparameters tcDir
+		Lparameters tcDir, tcCFG_File
 
 		If Not Empty(tcDir)
-			This.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D' )
+			This.evaluateConfiguration( '', '', '', '', '', '', '', '', tcDir, 'D', , , tcCFG_File )
 		Endif
 
 		If This.n_CFG_Actual = 0 Then
@@ -30846,7 +30918,7 @@ Define Class CL_CFG As Custom
 *!*	/Changed by: LScheffler 21.02.2021
 	l_ClassPerFileCheck				= .Null.
 *!*	LScheffler 30.08.2023
-	l_AllowInheritance				= .Null.
+	n_AllowInheritance				= .Null.
 	n_ExtraBackupLevels				= .Null.
 	c_VC2							= .Null.
 	c_SC2							= .Null.
@@ -30913,7 +30985,7 @@ Define Class CL_CFG As Custom
 *!*	/Changed by: LScheffler 21.02.2021
 			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 *!*	LScheffler 30.08.2023
-			.l_AllowInheritance				= toParentCFG.l_AllowInheritance
+			.n_AllowInheritance				= toParentCFG.n_AllowInheritance
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
 			.c_VC2							= toParentCFG.c_VC2
 			.c_SC2							= toParentCFG.c_SC2
@@ -31050,6 +31122,8 @@ Define Class CL_LANG As Custom
 	C_USING_THIS_SETTINGS_LOC1										= ""
 	C_USING_THIS_SETTINGS_LOC2										= ""
 	C_USING_THIS_SETTINGS_LOC3										= ""
+	C_USING_THIS_SETTINGS_LOC4										= ""
+	C_USING_THIS_SETTINGS_LOC5										= ""
 	C_WARNING_LOC													= ""
 	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= ""
 	C_WITH_ERRORS_LOC												= ""
@@ -31217,7 +31291,15 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 save HomeDir in PJ2
 						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 						<<>>-- Settings for config file via parameter only
-						<<>>AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
+						<<>>AllowInheritance: 0            && 0=Allow scanning "regular" config files (file via parameter is just additional default)
+						<<>>                               && 1=Only read directory branch from root to parent of folder and below, not FoxBin2Prg default
+						<<>>                               && 2=Only read folder and subfolder of the file given by parameter
+						<<>>                               && 3=Read no other file
+						<<>>                               && This is like
+						<<>>                               && 0 Default | Parameter file | Default near FoxBin2Prg | all other config files
+						<<>>                               && 1 Default | Parameter file | Inheritance from root to parent of folder | folder and subdirs
+						<<>>                               && 2 Default | Parameter file | folder and subdirs
+						<<>>                               && 3 Default | Parameter file
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -31375,8 +31457,10 @@ Define Class CL_LANG As Custom
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Utilisez le fichier Optimisation d'horodatage"
 							.C_USING_THIS_SETTINGS_LOC										= "Utilisation de ce paramètre"
 							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, skipping all previous config!"
-							.C_USING_THIS_SETTINGS_LOC2										= " Parsing configuration of subdirectories allowed."
-							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration of subdirectories not allowed."
+							.C_USING_THIS_SETTINGS_LOC2										= " Parsing of full configuration allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration in parent~ and subdirectories allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC4										= " Parsing configuration in subdirectories allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC5										= " Parsing of other configuration allowed."+0h0D0A
 							.C_WARNING_LOC													= "AVERTISSEMENT!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "avec des erreurs"
@@ -31522,7 +31606,15 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 save HomeDir in PJ2
 						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 						<<>>-- Settings for config file via parameter only
-						<<>>AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
+						<<>>AllowInheritance: 0            && 0=Allow scanning "regular" config files (file via parameter is just additional default)
+						<<>>                               && 1=Only read directory branch from root to parent of folder and below, not FoxBin2Prg default
+						<<>>                               && 2=Only read folder and subfolder of the file given by parameter
+						<<>>                               && 3=Read no other file
+						<<>>                               && This is like
+						<<>>                               && 0 Default | Parameter file | Default near FoxBin2Prg | all other config files
+						<<>>                               && 1 Default | Parameter file | Inheritance from root to parent of folder | folder and subdirs
+						<<>>                               && 2 Default | Parameter file | folder and subdirs
+						<<>>                               && 3 Default | Parameter file
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -31680,8 +31772,10 @@ Define Class CL_LANG As Custom
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Usar Optimización de filestamp de archivo"
 							.C_USING_THIS_SETTINGS_LOC										= "Usando esta configuración"
 							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, skipping all previous config!"
-							.C_USING_THIS_SETTINGS_LOC2										= " Parsing configuration of subdirectories allowed."
-							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration of subdirectories not allowed."
+							.C_USING_THIS_SETTINGS_LOC2										= " Parsing of full configuration allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration in parent~ and subdirectories allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC4										= " Parsing configuration in subdirectories allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC5										= " Parsing of other configuration allowed."+0h0D0A
 							.C_WARNING_LOC													= "¡ATENCIÓN!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡ATENCIÓN!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
 							.C_WITH_ERRORS_LOC												= "con errores"
@@ -31829,7 +31923,16 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 Die Eigenschaft wird gespeichert
 						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 						<<>>-- Settings for config file via parameter only
-						<<>>AllowInheritance: 1            && 0=Verbiete, 1=Erlaube die Auswertung von "normaler" Konfigurationsdateien
+						<<>>AllowInheritance: 0            && 0=Alle Konfiguration wird gelesen (Die Datei aus dem Parameter ist nur ein zusätzlicher default)
+						<<>>                               && 1=Nur die Vererbung in den Verezeichnissen , Im Verzeichnis der Konfiguration und Unterverzeichnisse werden gelesen
+						<<>>                               && 2=Nur die Konfiguration des Veruzeichnisses der Parameterdatei und Unterverzeichnisse werden gelesen
+						<<>>                               && 3=Keine weiter Konfiguration wird gelesen
+						<<>>                               && This is like
+						<<>>                               && 0 Default | Parameter Datei | Konfiguration im Programmverzeichnis von FoxBin2Prg | Alle anderen Konfigurationen
+						<<>>                               && 1 Default | Parameter Datei | Vererbung bis zum Verzeichnis der Parameter Datei | Das Verzeichnis und Unterverzeichnise der Parameter Datei
+						<<>>                               && 2 Default | Parameter Datei | Das Verzeichnis und Unterverzeichnise der Parameter Datei
+						<<>>                               && 3 Default | Parameter Datei
+
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Konvertierungs Optionen:
@@ -32009,8 +32112,10 @@ Define Class CL_LANG As Custom
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Verwenden Sie die Datei-Zeitstempel-Optimierung"
 							.C_USING_THIS_SETTINGS_LOC										= "Mit dieser Einstellung"
 							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, alle vorherigen Einstellungen werden zurückgesetzt!"
-							.C_USING_THIS_SETTINGS_LOC2										= " Auswertung der Konfiguration der Unterverzeichnisse gestattet."
-							.C_USING_THIS_SETTINGS_LOC3										= " Auswertung der Konfiguration der Unterverzeichnisse nicht gestattet."
+							.C_USING_THIS_SETTINGS_LOC2										= " Komplette Auswertung der Konfiguration gestattet."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC3										= " Konfigurationsdateien von Unterverzeichnissen und ererbete Konfigurationen aus dem Baum werden ausgewertet."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC4										= " Konfigurationsdateien von Unterverzeichnissen werden ausgewertet."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC5										= " Es werdenm keine anderen Konfigurationsdateien gelesen."+0h0D0A
 							.C_WARNING_LOC													= "WARNUNG!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!" + CR_LF+ "STELLEN SIE SICHER, DAS KEIN TABELLENALIAS IM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "mit Fehlern"
@@ -32138,7 +32243,7 @@ Define Class CL_LANG As Custom
 					    <<>> 1.  Default values
 					    <<>> 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
 					    <<>>  or, if defined, a config file given by a parameter calling FOXBIN2PRG
-					    <<>>      if used, the AllowInheritance setting controls if other config files will be evaluated (default)
+					    <<>>      if used, the AllowInheritance setting controls if other config files will be evaluated (default). See below.
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
 					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
@@ -32158,7 +32263,15 @@ Define Class CL_LANG As Custom
 						<<>>                               && 1 save HomeDir in PJ2
 						<<>>~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 						<<>>-- Settings for config file via parameter only
-						<<>>AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
+						<<>>AllowInheritance: 0            && 0=Allow scanning "regular" config files (file via parameter is just additional default)
+						<<>>                               && 1=Only read tree from root of the file given by parameter, not FoxBin2Prg default
+						<<>>                               && 2=Only read folder and subfolder of the file given by parameter
+						<<>>                               && 3=Read no other file
+						<<>>                               && This is like
+						<<>>                               && 0 Default | Parameter file | Default near FoxBin2Prg | all other config files
+						<<>>                               && 1 Default | Parameter file | Inheritance from root to parent of folder | folder and subdirs
+						<<>>                               && 2 Default | Parameter file | folder and subdirs
+						<<>>                               && 3 Default | Parameter file
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- Conversion operation by type
@@ -32316,8 +32429,10 @@ Define Class CL_LANG As Custom
 							.C_USE_FILE_TIMESTAMP_OPTIMIZATION_LOC							= "Use file timestamp Optimization"
 							.C_USING_THIS_SETTINGS_LOC										= "Using this settings"
 							.C_USING_THIS_SETTINGS_LOC1										= " BY PARAMETER, skipping all previous config!"
-							.C_USING_THIS_SETTINGS_LOC2										= " Parsing configuration of subdirectories allowed."
-							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration of subdirectories not allowed."
+							.C_USING_THIS_SETTINGS_LOC2										= " Parsing of full configuration allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC3										= " Parsing configuration in parent~ and subdirectories allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC4										= " Parsing configuration in subdirectories allowed."+0h0D0A
+							.C_USING_THIS_SETTINGS_LOC5										= " Parsing of other configuration allowed."+0h0D0A
 							.C_WARNING_LOC													= "WARNING!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "with errors"
