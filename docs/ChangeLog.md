@@ -24,6 +24,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2023/08/31 | LScheffler | [v1.20.03](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.03) | **Enhancement**: New option "tcCFG_File" for get_DirSettings method. |
 | 2023/08/31 | LScheffler | [v1.20.02](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.02) | New option for parameter set config file to control the use of "regular" config files enhanced |
 | 2023/08/30 | LScheffler | [v1.20.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.01) | **Bug Fix**: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler) |
 | | | | **Bug Fix**: Bug Fix: config file set by parameter would be ignored, if the folder contains FoxBin2Prg.cfg (LScheffler) |

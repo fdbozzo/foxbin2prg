@@ -1,6 +1,6 @@
 *################################################################################################################
 *-- Individual DBF configuration file (syntax: filename.dbf.cfg) Defaults see FoxBin2prg.cfg
-*Version: v1.20.02
+*Version: v1.20.03
 *****************************************************************************************************************
 
 *DBF_Conversion_Support: <0,1,2,4,8>         && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)

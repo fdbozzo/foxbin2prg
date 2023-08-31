@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.20
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.02'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.03'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -312,6 +312,7 @@
 * 30/08/2023	LScheffler	v1.20.01	Enhancement: New option for parameter set config file to control the use of "regular" config files
 * 30/08/2023	LScheffler	v1.20.01	Bug Fix: Fixed problems with table config files (LScheffler)
 * 31/08/2023	LScheffler	v1.20.02	Enhancement: New option for parameter set config file to control the use of "regular" config files enhanced.
+* 31/08/2023	LScheffler	v1.20.03	Enhancement: New option "tcCFG_File" for get_DirSettings method.
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
