@@ -24,6 +24,10 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | Enhancement: New option "tcDebug" for get_DirSettings method. |
+| | | | Enhancement: For better clearance, renamed setting AllowInheritance to InhibitInheritance. |
+| | | | Enhancement: The debug option set via parameter has precedence over value from config file. |
+| | | | Enhancement: For debug option set via parameter only first valid call is used |
 | 2023/08/31 | LScheffler | [v1.20.03](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.03) | **Enhancement**: New option "tcCFG_File" for get_DirSettings method. |
 | 2023/08/31 | LScheffler | [v1.20.02](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.02) | New option for parameter set config file to control the use of "regular" config files enhanced |
 | 2023/08/30 | LScheffler | [v1.20.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.01) | **Bug Fix**: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler) |
@@ -429,4 +433,4 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-Last changed: _2023/08/31_
+Last changed: _2023/09/01_

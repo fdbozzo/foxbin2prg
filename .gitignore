@@ -78,5 +78,5 @@ bin2txt.*
 *special, settings to create foxbin2prg binary
 !/foxbin2prg_self.cfg
 
-*re-include
-!foxbin2prg_keywords.*
+#re-include
+#!foxbin2prg_keywords.*

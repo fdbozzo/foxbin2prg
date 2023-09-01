@@ -87,7 +87,7 @@ just select and process each one independently, in parallel if you like, but in 
 | cTextName | Text filename. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. File to use. |
 | lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode.<br/>.T.=Generates _Text_, .F.=Generates _Binary_.<br/>**Note:** _cType_ have predominance over _lGenText_ |
 | cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX |
-| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log. |
+| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log.<br/>This has precedence over any value in the config files. |
 | cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing |
 | cOriginalFileName | text | used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the _Text_ version |
 | cRecompile | 0, _1_ | Indicates recompile ('1') the _Binary_ once generated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
@@ -119,7 +119,7 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 | | If cOutputFile is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
 | -t (t) | creates a template table-config-file _cOutputFile_ ( like \_TableName\_.dbf.cfg ) |
 | cCFG_File | Indicates a special CFG filename for default values<br/>Note, if the "regular" config files are used orn not, is controlled by the setting *AllowInheritance* in *this** file. | 
-| cDebug | '1' for generating process LOGs, stop on errors | 
+| cDebug | '1' for generating process LOGs, stop on errors<br/>This has precedence over any value in the config files. | 
 
 ### Usage 3
 `FOXBIN2PRG.EXE VERNO`   
@@ -178,4 +178,4 @@ FoxBin2Prg - Text2Binary.lnk  <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"
 FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 ```
 ----
-Last changed: _2023/08/30_
+Last changed: _2023/09/01_
