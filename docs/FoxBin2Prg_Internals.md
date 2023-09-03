@@ -114,7 +114,7 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | BackgroundImage | \<cFile\> | Backgroundimage for process form |
 | HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
 |||
-| InhibitInheritance | _0_, 1, 2, 3 | **This settings is for config file via parameter only**<br/>Settings for config file via parameter only0=Allow scanning "regular" config files (file via parameter is just additional default)<br/>1=Only read tree from root of the file given by parameter, not FoxBin2Prg default<br/>2=Only read folder and subfolder of the file given by parameter<br/>3=Read no other file<br/>This is like<br/>0 Default \| Parameter file \| Default near FoxBin2Prg \| all other config files<br/>1 Default \| Parameter file \| Inheritance from root to parent of folder \| folder and subdirs<br/>2 Default \| Parameter file \| folder and subdirs<br/>3 Default \| Parameter file |
+| InhibitInheritance | _0_, 1, 2, 3 | **This settings is for config file via parameter only** <br/>Settings for config file via parameter only0=Allow scanning "regular" config files (file via parameter is just additional default)<br/>1=Only read tree from root of the file given by parameter, not FoxBin2Prg default<br/>2=Only read folder and subfolder of the file given by parameter<br/>3=Read no other file<br/>This is like<br/>0 Default \| Parameter file \| Default near FoxBin2Prg \| all other config files<br/>1 Default \| Parameter file \| Inheritance from root to parent of folder \| folder and subdirs<br/>2 Default \| Parameter file \| folder and subdirs<br/>3 Default \| Parameter file |
 |||
 | XXX_Conversion_Support | n | Defines the conversion operation per filetype |
 | | | For code:<br/> 0=No support,<br/>1=Generate _Text_ (Diff),<br/>2=Generate _Text_ and _Bin_ (Merge) |
@@ -133,12 +133,21 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | CheckFileInPath | _0_, 1, 2, 3 |Determines how 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.<br />0 = Ignore. Default<br />1 = Check and error out if file is not on same structure (for source control)<br />2 = Create absolute path if file is on different drive.<br />3 = Create absolute path if file is not in structure<br />See [Storing paths for pjx](#storing-paths-for-pjx) |
 |||
 | UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
-| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vc2,<br/>1=Redirect to file.vc2 when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
+| [RedirectClassPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to file.vcx,<br/>1=Redirect to file.vcx when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
 | RedirectClassType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2 (vcx only) |
 | | | 0=creates / refresh class in file.VCX and add / replace all other classes of this library |
 | | | 1=creates / refresh class file[.baseclass].class.VCX and do not touch file.VCX |
 | | | 2=creates / refresh class in file.VCX and do not touch other classes of file.VCX |
 | [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
+|||
+| UseFormSettings | _0_, 1 | 0=Old Style, like the class settings<br/>1=Form style, special for form<br/>This controls the use of the _UseFormPerFile_, _RedirectFormPerFileToMain_, _RedirectFormType_ and _FormPerFileCheck_ options.<br/>Only if this option is set, the options will be read. |
+| UseFormPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple Form.Object.sc2 files,<br/>2=Multiple Form.baseclass.Object.sc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
+| [RedirectFormPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to Form.scx,<br/>1=Redirect to Form.scx when selecting Form.Object.sc2<br/>RedirectClassType: 1 precedes this setting |
+| RedirectFormType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form Form[.baseclass].Object.sx2 (scx only) |
+| | | 0=creates / refresh class in Form.SCX and add / replace all other classes of this library |
+| | | 1=creates / refresh class Form[.baseclass].Object.SCX and do not touch Form.SCX |
+| | | 2=creates / refresh class in Form.SCX and do not touch other classes of Form.SCX |
+| [FormPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check Form.Object.sc2 inclusion,<br/>1=Check Form.Object.sc2 inclusion<br/>Only used if import file is in Form[.baseclass].Object.sc2 syntax.<br/>Ignored for RedirectClassType: 2 |
 |||
 | OldFilesPerDBC | _0_, 1 | 0=Old Style,<br/>1=New style<br/>This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the options will be read. |
 | | | 0=New version inactive, options follow:<br/>UseFilesPerDBC=UseClassPerFile<br/>RedirectFilePerDBCToMain=RedirectClassPerFileToMain<br/>ItemPerDBCCheck=ClassPerFileCheck |

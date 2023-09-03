@@ -317,6 +317,8 @@
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: For better clearance, renamed setting AllowInheritance to InhibitInheritance.
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: The debug option set via parameter has precedence over value from config file.
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: For debug option set via parameter only first valid call is used
+* 02/09/2023	LScheffler	v1.20.05	Bug Fix: problems recreating menu files (introduced with codepage) (LScheffler)
+* 02/09/2023	LScheffler	v1.20.05	Enhancement: inserted options to allow splitting of SCX handling from VCX
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1056,6 +1058,11 @@ Define Class c_foxbin2prg As Session
 *!*			+ [<memberdata name="l_singleconfig" display="l_SingleConfig"/>] ;
 *!*			+ [<memberdata name="c_singleconfig_folder" display="c_SingleConfig_Folder"/>] ;
 *!*			+ [<memberdata name="n_debugp" display="n_DebugP"/>] ;
+*!*			+ [<memberdata name="l_useformsettings" display="l_UseFormSettings"/>] ;
+*!*			+ [<memberdata name="n_useformperfile" display="n_UseFormPerFile"/>] ;
+*!*			+ [<memberdata name="l_redirectformperfiletomain" display="l_RedirectFormPerFileToMain"/>] ;
+*!*			+ [<memberdata name="n_redirectformtype" display="n_RedirectFormType"/>] ;
+*!*			+ [<memberdata name="l_formperfilecheck" display="l_FormPerFileCheck"/>] ;
 
 	Dimension a_ProcessedFiles(1, 6)
 	Protected n_CFG_Actual, l_Main_CFG_Loaded, o_Configuration, l_CFG_CachedAccess
@@ -1125,14 +1132,19 @@ Define Class c_foxbin2prg As Session
 * files in non subpath of the PJX
 	n_CheckFileInPath 				= 0
 *!*	/Changed by: LScheffler 19.03.2023
-	n_UseClassPerFile 				= 0
 	n_PRG_Compat_Level				= 0				&& 0=COMPATIBLE WITH FoxBin2Prg v1.19.49 and earlier, 1=Include HELPSTRING
 	n_ExcludeDBFAutoincNextval		= 0
-	l_ClassPerFileCheck				= .F.
 *!*	LScheffler 30.08.2023
-	n_InhibitInheritance				= 0
+	n_InhibitInheritance			= 0
+	n_UseClassPerFile 				= 0
 	l_RedirectClassPerFileToMain	= .F.
 	n_RedirectClassType				= 0				&& 0=Redireccionar Todas las clases, 1=Redireccionar solo la clase indicada
+	l_ClassPerFileCheck				= .F.
+	l_UseFormSettings				= .F.
+	n_UseFormPerFile				= 0
+	l_RedirectFormPerFileToMain		= .F.
+	n_RedirectFormType				= 0
+	l_FormPerFileCheck				= .F.
 	l_NoTimestamps					= .T.
 	c_BackgroundImage				= ''
 	l_ClearUniqueID                 = .T.
@@ -1599,14 +1611,6 @@ Define Class c_foxbin2prg As Session
 	Endproc
 *!*	/Changed by: LScheffler 19.03.2023
 
-	Procedure n_UseClassPerFile_ACCESS
-		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.n_UseClassPerFile
-		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_UseClassPerFile, This.n_UseClassPerFile )
-		Endif
-	Endproc
-
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -1676,6 +1680,15 @@ Define Class c_foxbin2prg As Session
 *!*	/Changed by: LScheffler 21.02.2021
 
 
+	Procedure n_UseClassPerFile_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_UseClassPerFile
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_UseClassPerFile, This.n_UseClassPerFile )
+		Endif
+	Endproc
+
+
 	Procedure l_RedirectClassPerFileToMain_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.l_RedirectClassPerFileToMain
@@ -1694,6 +1707,62 @@ Define Class c_foxbin2prg As Session
 	Endproc
 
 
+	Procedure l_ClassPerFileCheck_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_ClassPerFileCheck
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_ClassPerFileCheck, This.l_ClassPerFileCheck )
+		Endif
+	Endproc
+
+
+****
+	Procedure l_UseFormSettings_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_UseFormSettings
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_UseFormSettings, This.l_UseFormSettings )
+		Endif
+	Endproc
+
+
+	Procedure n_UseFormPerFile_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_UseFormPerFile
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_UseFormPerFile, This.n_UseFormPerFile )
+		Endif
+	Endproc
+
+
+	Procedure l_RedirectFormPerFileToMain_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_RedirectFormPerFileToMain
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_RedirectFormPerFileToMain, This.l_RedirectFormPerFileToMain )
+		Endif
+	Endproc
+
+
+	Procedure n_RedirectFormType_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.n_RedirectFormType
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).n_RedirectFormType, This.n_RedirectFormType )
+		Endif
+	Endproc
+
+
+	Procedure l_FormPerFileCheck_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_FormPerFileCheck
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_FormPerFileCheck, This.l_FormPerFileCheck )
+		Endif
+	Endproc
+
+
+****
 	Procedure l_RemoveNullCharsFromCode_ACCESS
 		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
 			Return This.l_RemoveNullCharsFromCode
@@ -1708,15 +1777,6 @@ Define Class c_foxbin2prg As Session
 			Return This.l_RemoveZOrderSetFromProps
 		Else
 			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_RemoveZOrderSetFromProps, This.l_RemoveZOrderSetFromProps )
-		Endif
-	Endproc
-
-
-	Procedure l_ClassPerFileCheck_ACCESS
-		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
-			Return This.l_ClassPerFileCheck
-		Else
-			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_ClassPerFileCheck, This.l_ClassPerFileCheck )
 		Endif
 	Endproc
 
@@ -2840,6 +2900,7 @@ Define Class c_foxbin2prg As Session
 * additional options controlling
 * - splitt of DBC separated from VCX/SCX
 * - new operations of DBF
+*VCX
 								Case Left( laConfig(m.I), 16 ) == Lower('UseClassPerFile:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
 									If Inlist( lcValue, '0', '1', '2' ) Then
@@ -2849,29 +2910,10 @@ Define Class c_foxbin2prg As Session
 											lo_CFG.n_UseFilesPerDBC				= lo_CFG.n_UseClassPerFile
 											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => UseFilesPerDBC:           ' + Transform(lcValue) )
 										Endif
-									Endif
-
-								Case Left( laConfig(m.I), 18 ) == Lower('ClassPerFileCheck:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
-									If Inlist( lcValue, '0', '1' ) Then
-										lo_CFG.l_ClassPerFileCheck	= ( Transform(lcValue) == '1' )
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClassPerFileCheck:          ' + Transform(lcValue) )
-										If !lo_CFG.l_OldFilesPerDBC Then
-											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
-											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => ItemPerDBCCheck:          ' + Transform(lcValue) )
+										If !lo_CFG.l_UseFormSettings Then
+											lo_CFG.n_UseFormPerFile				= lo_CFG.n_UseClassPerFile
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => UseFormPerFile:           ' + Transform(lcValue) )
 										Endif
-									Endif
-
-*!*	LScheffler 30.08.2023
-								Case Left( laConfig(m.I), 19 ) == Lower('InhibitInheritance:')
-									lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
-									If Inlist( lcValue, '0', '1' , '2' , '3' ) Then
-										IF llSetSingleConfig THEN
-										 lo_CFG.n_InhibitInheritance	=  Int( Val( lcValue ) )
-										ENDIF &&llSetSingleConfig 
-
-										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > InhibitInheritance:         ' + Transform(lcValue) +;
-										IIF(m.llSetSingleConfig, "", ", will be ignored, standard configuration file." ) )
 									Endif
 
 								Case Left( laConfig(m.I), 27 ) == Lower('RedirectClassPerFileToMain:')
@@ -2883,8 +2925,11 @@ Define Class c_foxbin2prg As Session
 											lo_CFG.l_RedirectFilePerDBCToMain	= lo_CFG.l_RedirectClassPerFileToMain
 											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => RedirectFilePerDBCToMain: ' + Transform(lcValue) )
 										Endif
+										If !lo_CFG.l_UseFormSettings Then
+											lo_CFG.l_RedirectFormPerFileToMain	= lo_CFG.l_RedirectClassPerFileToMain
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => RedirectFormPerFileToMain ' + Transform(lcValue) )
+										Endif
 									Endif
-*!*	/Changed by: LScheffler 21.02.2021
 
 *!*	Changed by: LScheffler 04.3.2021
 *!*	change date="{^2021-03-04,13:12:00}"
@@ -2894,8 +2939,77 @@ Define Class c_foxbin2prg As Session
 									If Inlist( lcValue, '0', '1', '2' ) Then
 										lo_CFG.n_RedirectClassType	= Int( Val( lcValue ) )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectClassType:          ' + Transform(lcValue) )
+										If !lo_CFG.l_UseFormSettings Then
+											lo_CFG.n_RedirectFormType			= lo_CFG.n_RedirectClassType
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => RedirectFormType          ' + Transform(lcValue) )
+										Endif
 									Endif
 *!*	/Changed by: LScheffler 04.3.2021
+
+								Case Left( laConfig(m.I), 18 ) == Lower('ClassPerFileCheck:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 19 ) )
+									If Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_ClassPerFileCheck	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ClassPerFileCheck:          ' + Transform(lcValue) )
+										If !lo_CFG.l_OldFilesPerDBC Then
+											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => ItemPerDBCCheck:          ' + Transform(lcValue) )
+										Endif
+										If !lo_CFG.l_UseFormSettings Then
+											lo_CFG.l_FormPerFileCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + '  => FormPerFileCheck          ' + Transform(lcValue) )
+										Endif
+									Endif
+*!*	/Changed by: LScheffler 21.02.2021
+*/VCX
+
+*Forms
+								Case Left( laConfig(m.I), 16 ) == Lower('UseFormSettings:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
+									If Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_UseFormSettings	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseFormSettings:            ' + Transform(lcValue) )
+										If !lo_CFG.l_UseFormSettings Then
+											lo_CFG.n_UseFormPerFile				= lo_CFG.n_UseClassPerFile
+											lo_CFG.l_RedirectFormPerFileToMain	= lo_CFG.l_RedirectClassPerFileToMain
+											lo_CFG.n_RedirectFormType			= lo_CFG.n_RedirectClassType
+											lo_CFG.l_FormPerFileCheck			= lo_CFG.l_ClassPerFileCheck
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> UseFormPerFile:            ' + Transform(lo_CFG.n_UseFormPerFile) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> RedirectFormPerFileToMain: ' + Transform(lo_CFG.l_RedirectFormPerFileToMain) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> n_RedirectFormType:        ' + Transform(lo_CFG.n_RedirectFormType) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> FormPerFileCheck:          ' + Transform(lo_CFG.l_FormPerFileCheck) )
+										Endif
+									Endif
+
+								Case Left( laConfig(m.I), 15 ) == Lower('UseFormPerFile:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 16 ) )
+									If lo_CFG.l_UseFormSettings AND Inlist( lcValue, '0', '1', '2' ) Then
+										lo_CFG.n_UseFormPerFile	= Int( Val(lcValue) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > UseFormPerFile:             ' + Transform(lcValue) )
+									Endif
+
+								Case Left( laConfig(m.I), 26 ) == Lower('RedirectFormPerFileToMain:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 27 ) )
+									If lo_CFG.l_UseFormSettings AND Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_RedirectFormPerFileToMain	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectFormPerFileToMain:  ' + Transform(lcValue) )
+									Endif
+
+								Case Left( laConfig(m.I), 17 ) == Lower('RedirectFormType:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
+									If lo_CFG.l_UseFormSettings AND Inlist( lcValue, '0', '1', '2' ) Then
+										lo_CFG.n_RedirectFormType	= Int( Val( lcValue ) )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > RedirectFormType:           ' + Transform(lcValue) )
+									Endif
+*!*	/Changed by: LScheffler 04.3.2021
+
+								Case Left( laConfig(m.I), 17 ) == Lower('FormPerFileCheck:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
+									If lo_CFG.l_UseFormSettings AND Inlist( lcValue, '0', '1' ) Then
+										lo_CFG.l_FormPerFileCheck	= ( Transform(lcValue) == '1' )
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > FormPerFileCheck:           ' + Transform(lcValue) )
+									Endif
+*/Forms
 
 *Databases
 								Case Left( laConfig(m.I), 15 ) == Lower('OldFilesPerDBC:')
@@ -2907,9 +3021,9 @@ Define Class c_foxbin2prg As Session
 											lo_CFG.n_UseFilesPerDBC				= lo_CFG.n_UseClassPerFile
 											lo_CFG.l_RedirectFilePerDBCToMain	= lo_CFG.l_RedirectClassPerFileToMain
 											lo_CFG.l_ItemPerDBCCheck			= lo_CFG.l_ClassPerFileCheck
-											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> UseFilesPerDBC:           ' + Transform(lcValue) )
-											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> RedirectFilePerDBCToMain: ' + Transform(lcValue) )
-											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> ItemPerDBCCheck:          ' + Transform(lcValue) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> UseFilesPerDBC:           ' + Transform(lo_CFG.n_UseFilesPerDBC) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> RedirectFilePerDBCToMain: ' + Transform(lo_CFG.l_RedirectFilePerDBCToMain) )
+											.writeLog( C_TAB + Justfname(lcConfigFile) + ' ==> ItemPerDBCCheck:          ' + Transform(lo_CFG.l_ItemPerDBCCheck) )
 										Endif
 									Endif
 
@@ -2933,7 +3047,20 @@ Define Class c_foxbin2prg As Session
 										lo_CFG.l_ItemPerDBCCheck	= ( Transform(lcValue) == '1' )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ItemPerDBCCheck:            ' + Transform(lcValue) )
 									Endif
+*/Databases
 */-------- setting for container files (not pjx) --------
+
+*!*	LScheffler 30.08.2023
+								Case Left( laConfig(m.I), 19 ) == Lower('InhibitInheritance:')
+									lcValue	= Alltrim( Substr( laConfig(m.I), 20 ) )
+									If Inlist( lcValue, '0', '1' , '2' , '3' ) Then
+										IF llSetSingleConfig THEN
+										 lo_CFG.n_InhibitInheritance	=  Int( Val( lcValue ) )
+										ENDIF &&llSetSingleConfig 
+
+										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > InhibitInheritance:         ' + Transform(lcValue) +;
+										IIF(m.llSetSingleConfig, "", ", will be ignored, standard configuration file." ) )
+									ENDIF
 
 *general files
 								Case Left( laConfig(m.I), 13 ) == Lower('NoTimestamps:')
@@ -3143,11 +3270,18 @@ Define Class c_foxbin2prg As Session
 *!*	/Changed by: LScheffler 19.03.2023
 
 *setting for container files (not pjx)
-*Classes and forms ( vcx / scx)
+*Classes ( vcx )
 					.writeLog( C_TAB + 'UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
 					.writeLog( C_TAB + 'ClassPerFileCheck:          ' + Transform(.l_ClassPerFileCheck) )
 					.writeLog( C_TAB + 'RedirectClassPerFileToMain: ' + Transform(.l_RedirectClassPerFileToMain) )
 					.writeLog( C_TAB + 'RedirectClassType:          ' + Transform(.n_RedirectClassType) )
+
+*Forms ( scx)
+					.writeLog( C_TAB + 'UseFormSettings:            ' + Transform(.l_UseFormSettings) )
+					.writeLog( C_TAB + 'UseFormPerFile:             ' + Transform(.n_UseFormPerFile) )
+					.writeLog( C_TAB + 'FormPerFileCheck:           ' + Transform(.l_FormPerFileCheck) )
+					.writeLog( C_TAB + 'RedirectFormPerFileToMain:  ' + Transform(.l_RedirectFormPerFileToMain) )
+					.writeLog( C_TAB + 'RedirectFormType:           ' + Transform(.n_RedirectFormType) )
 
 *Databases
 *!*	Changed by: LScheffler 21.02.2021
@@ -3866,7 +4000,7 @@ Define Class c_foxbin2prg As Session
 						.writeLog( C_TAB + 'tcBackupLevels:               ' + Transform( Evl(tcBackupLevels, '(empty)  -> Will use Default [' + Transform(.n_ExtraBackupLevels) + ']' ) ) )
 						.writeLog( C_TAB + 'tcClearUniqueID:              ' + Transform( Evl(tcClearUniqueID, '(empty)  -> Will use Default [' + Transform(.l_ClearUniqueID) + ']' ) ) )
 						.writeLog( C_TAB + 'tcOptimizeByFilestamp:        ' + Transform( Evl(tcOptimizeByFilestamp, '(empty)  -> Will use Default [' + Transform(.n_OptimizeByFilestamp) + ']' ) ) )
-						.writeLog( C_TAB + 'tcCFG_File                    ' + Transform( Evl(tcCFG_File, '(empty)' ) ) )
+						.writeLog( C_TAB + 'tcCFG_File                    ' + Transform( IIF(VARTYPE(tcCFG_File)='O' AND !ISNULL(tcCFG_File),'(object)',Evl(tcCFG_File, '(empty)' ) ) ) )
 					ENDIF &&Upper(tcType)=='-C' Or tcType=='-t' OR Upper(tcType)=='C' Or tcType=='t' 
 					.writeLog( )
 
@@ -3885,31 +4019,68 @@ Define Class c_foxbin2prg As Session
 * allow to import only the class to file.VCX with n_RedirectClassType = 2
 * n_RedirectClassType = 0 will import all classes of file.VCX (as just handing file.vc2)
 * n_RedirectClassType = 1 will import the class to single lib file[.baseclass].class.VCX
+					lcExt = JUSTEXT( m.tc_InputFile ) 
+
 					Do Case
 						Case ( Lower(m.lcType)=='-c' Or Lower(m.lcType)=='c' )
 * not handled
 						Case ( m.lcType=='-t' Or m.lcType=='t' )
 * not handled
-						Case .n_RedirectClassType # 2
+						CASE lcExt==This.c_VC2 OR lcExt=="VCX"
+*ClassLib
+							DO Case
+								Case .n_RedirectClassType # 2
 * not handled
-						Case !Empty(.c_ClassToConvert)
+								Case !Empty(.c_ClassToConvert)
 * not otherwise
-						Case .n_UseClassPerFile = 0
+								Case .n_UseClassPerFile = 0
 * not handled
-						Case Occurs('.',m.tc_InputFile) > .n_UseClassPerFile
+								Case Occurs('.',m.tc_InputFile) > .n_UseClassPerFile
 * we must have more dots then UseClassPerFile, because there is an extension
 
 *class
-							.c_ClassToConvert = Lower( Justext( Juststem( m.tc_InputFile ) ) )
+									.c_ClassToConvert = Lower( Justext( Juststem( m.tc_InputFile ) ) )
 *remove class
-							tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+									tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
 *remove baseclass
-							If .n_UseClassPerFile = 2
+									If .n_UseClassPerFile = 2
 *remove baseclass
-								tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
-							Endif
+										tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+									Endif
 * count anything then -BIN2PRG as import
-							.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 OR Atc('-BIN2TEXT','-'+tcType) > 0, 'E', 'I')
+									.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 OR Atc('-BIN2TEXT','-'+tcType) > 0, 'E', 'I')
+
+								Otherwise
+* not handled
+							Endcase
+
+						CASE lcExt==This.c_SC2 OR lcExt=="SCX"
+*Form
+							DO Case
+								Case .n_RedirectFormType # 2
+* not handled
+								Case !Empty(.c_ClassToConvert)
+* not otherwise
+								Case .n_UseFormPerFile = 0
+* not handled
+								Case Occurs('.',m.tc_InputFile) > .n_UseFormPerFile
+* we must have more dots then UseClassPerFile, because there is an extension
+
+*Form name
+									.c_ClassToConvert = Lower( Justext( Juststem( m.tc_InputFile ) ) )
+*remove obkject
+									tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+*remove baseclass
+									If .n_UseFormPerFile = 2
+*remove baseclass
+										tc_InputFile = Lower( Justpath( m.tc_InputFile ) + '\' + Juststem( Juststem( m.tc_InputFile ) ) + '.' + Justext( m.tc_InputFile ) )
+									Endif
+* count anything then -BIN2PRG as import
+									.c_ClassOperationType = Iif( Atc('-BIN2PRG','-'+tcType) > 0 OR Atc('-BIN2TEXT','-'+tcType) > 0, 'E', 'I')
+
+								Otherwise
+* not handled
+							Endcase
 
 						Otherwise
 * not handled
@@ -3921,16 +4092,32 @@ Define Class c_foxbin2prg As Session
 * En el caso de importar, debo cambiar la sintaxis de tc_InputFile para poder usar
 * la conversión existente de clase vc2.
 * Esto deja un archivo con sintaxis "classlib.vcx::classname::import" en "classlib.classname.vc2"
-						If .n_UseClassPerFile = 2
-							tc_InputFile		= Forceext(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
+						IF .ATC(lcExt,c_VC2,"VCX")
+							If .n_UseClassPerFile = 2
+								tc_InputFile		= Forceext(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
 
-							If Adir(laFiles, tc_InputFile) = 1
-								tc_InputFile	= Fullpath( laFiles(1,1), tc_InputFile )
+								If Adir(laFiles, tc_InputFile) = 1
+									tc_InputFile	= Fullpath( laFiles(1,1), tc_InputFile )
+								Endif
+
+							Else && Asumo .n_UseClassPerFile = 1
+								tc_InputFile		= Forceext(tc_InputFile, '') + '.' + .c_ClassToConvert + '.' + .c_VC2
+
 							Endif
+						Endif
 
-						Else && Asumo .n_UseClassPerFile = 1
-							tc_InputFile		= Forceext(tc_InputFile, '') + '.' + .c_ClassToConvert + '.' + .c_VC2
+						IF .ATC(lcExt,c_SC2,"SCX")
+							If .n_UseFormPerFile = 2
+								tc_InputFile		= Forceext(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
 
+								If Adir(laFiles, tc_InputFile) = 1
+									tc_InputFile	= Fullpath( laFiles(1,1), tc_InputFile )
+								Endif
+
+							Else && Asumo .n_UseFormPerFile = 1
+								tc_InputFile		= Forceext(tc_InputFile, '') + '.' + .c_ClassToConvert + '.' + .c_VC2
+
+							Endif
 						Endif
 					Endif
 
@@ -3970,7 +4157,7 @@ Define Class c_foxbin2prg As Session
 								lnOptions As Number,;
 								lnOption  As Number
 
-							lnOptions = 50
+							lnOptions = 55
 
 							Local Array;
 								laLines(1),;
@@ -4132,6 +4319,21 @@ Define Class c_foxbin2prg As Session
 							laOptions(50,1) = "*InhibitInheritance:"                && Inheritance out of config via parameter
 							laOptions(50,2) = ".n_InhibitInheritance"
 							laOptions(50,3) = 4
+							laOptions(51,1) = "*UseFormSettings:"                   && 0,1 1=.t. 1=Turns the File per SCX options on, 0 uses the old UseClassPerFile etc settings.
+							laOptions(51,2) = ".l_UseFormSettings"
+							laOptions(51,3) = 1
+							laOptions(52,1) = "*UseFormPerFile:"                    && n 0=One library sc2 file, 1=Multiple Form.Obj.sc2 files, 2=Multiple Form.baseclass.Obj.sc2 files
+							laOptions(52,2) = ".n_UseFormPerFile"
+							laOptions(52,3) = 0
+							laOptions(53,1) = "*RedirectFormPerFileToMain:"         && 0,1 1=.t. 0=Don't redirect to Form.sc2, 1=Redirect to file.sc2 when selecting Form.Obj.sc2
+							laOptions(53,2) = ".l_RedirectFormPerFileToMain"
+							laOptions(53,3) = 1
+							laOptions(54,1) = "*RedirectFormType:"                  && 0,1,2 For Formes created with UseFormPerFile>0 in the form Form[.baseclass].Obj.sc2
+							laOptions(54,2) = ".n_RedirectFormType"
+							laOptions(54,3) = 0
+							laOptions(55,1) = "*FormPerFileCheck:"                  && 0,1 1=.t. 0=Don't check Form.Obj.sc2 inclusion, 1=Check Form.Obj.sc2 inclusion
+							laOptions(55,2) = ".l_FormPerFileCheck"
+							laOptions(55,3) = 1
 
 							For lnOption = 1 To m.lnOptions
 								lnLine = Ascan( m.laLines , m.laOptions( m.lnOption, 1 ), 1, -1, 1, 4)
@@ -5073,7 +5275,7 @@ Define Class c_foxbin2prg As Session
 * Added option for DBC split
 
 *-- OPTIMIZACIÓN VC2/SC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
-					If Inlist(lcExtension,"SCX","VCX",.c_VC2,.c_SC2);
+					If Inlist(lcExtension,"VCX",.c_VC2);
 							AND (.n_UseClassPerFile > 0 And .l_RedirectClassPerFileToMain ;
 							OR Not Empty(.c_ClassToConvert))
 
@@ -5086,7 +5288,7 @@ Define Class c_foxbin2prg As Session
 									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
 								Endif
 
-							Case .n_UseClassPerFile = 1 And Inlist(lcExtension,.c_VC2,.c_SC2)
+							Case .n_UseClassPerFile = 1 And Inlist(lcExtension,.c_VC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
@@ -5098,7 +5300,7 @@ Define Class c_foxbin2prg As Session
 									.c_InputFile	= lc_BaseFile
 								Endif
 ** LScheffler, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
-							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2,.c_SC2)
+							Case .n_UseClassPerFile = 2 And Inlist(lcExtension,.c_VC2)
 								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
 									lc_BaseFile	= .c_InputFile
 								Else
@@ -5113,6 +5315,45 @@ Define Class c_foxbin2prg As Session
 						Endcase
 					Endif
 
+					If Inlist(lcExtension,"SCX",.c_SC2);
+							AND (.n_UseFormPerFile > 0 And .l_RedirectFormPerFileToMain ;
+							OR Not Empty(.c_ClassToConvert))
+
+						Do Case
+
+							Case .n_RedirectFormType = 1 Or Not Empty(.c_ClassToConvert) && Redireccionar solo esta clase
+								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+									lc_BaseFile	= .c_InputFile
+								Else
+									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+								Endif
+
+							Case .n_UseFormPerFile = 1 And Inlist(lcExtension,.c_SC2)
+								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+									lc_BaseFile	= .c_InputFile
+								Else
+									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem(.c_InputFile) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+								Endif
+
+*-- Verifico si se debe forzar la redirección al archivo principal
+								If '.' $ Juststem(.c_InputFile)
+									.c_InputFile	= lc_BaseFile
+								Endif
+** LScheffler, Problem, Fehler: DC2 hier nicht, das muss anders mit UseFilesPerDBC
+							Case .n_UseFormPerFile = 2 And Inlist(lcExtension,.c_SC2)
+								If Occurs('.', Juststem(.c_InputFile)) = 0 Then
+									lc_BaseFile	= .c_InputFile
+								Else
+									lc_BaseFile	= Forcepath( Forceext( Juststem( Juststem( Juststem(.c_InputFile) ) ), Justext(.c_InputFile)) , Justpath(.c_InputFile) )
+								Endif
+
+*-- Verifico si se debe forzar la redirección al archivo principal
+								If '.' $ Juststem(.c_InputFile)
+									.c_InputFile	= lc_BaseFile
+								Endif
+
+						Endcase
+					Endif
 *****************************
 
 *-- OPTIMIZACIÓN DC2: VERIFICO SI EL ARCHIVO BASE FUE PROCESADO PARA DESCARTAR REPROCESOS
@@ -5406,12 +5647,22 @@ Define Class c_foxbin2prg As Session
 					Endif
 
 					Do Case
-						Case .n_UseClassPerFile = 0 And .n_OptimizeByFilestamp = 1 And .t_InputFile_TimeStamp < .t_OutputFile_TimeStamp
+						Case Inlist(lcExtension,"VCX",.c_VC2) AND .n_UseClassPerFile = 0 And .n_OptimizeByFilestamp = 1 And .t_InputFile_TimeStamp < .t_OutputFile_TimeStamp
 *-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
 *.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es más nuevo que el de entrada.' )
 							.writeLog( C_TAB + C_TAB + '* ' + Textmerge(loLang.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC) )
 
-						Case .n_UseClassPerFile = 0 And .n_OptimizeByFilestamp = 2 And .t_InputFile_TimeStamp = .t_OutputFile_TimeStamp
+						Case Inlist(lcExtension,"VCX",.c_VC2) AND .n_UseClassPerFile = 0 And .n_OptimizeByFilestamp = 2 And .t_InputFile_TimeStamp = .t_OutputFile_TimeStamp
+*-- Optimizado: El Origen es igual al Destino - No hace falta regenerar
+*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es igual que el de entrada.' )
+							.writeLog( C_TAB + C_TAB + '* ' + Textmerge(loLang.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC) )
+
+						Case Inlist(lcExtension,"SCX",.c_SC2) AND .n_UseFormPerFile = 0 And .n_OptimizeByFilestamp = 1 And .t_InputFile_TimeStamp < .t_OutputFile_TimeStamp
+*-- Optimizado: El Origen es anterior al Destino - No hace falta regenerar
+*.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es más nuevo que el de entrada.' )
+							.writeLog( C_TAB + C_TAB + '* ' + Textmerge(loLang.C_OUTPUTFILE_TIMESTAMP_NEWER_THAN_INPUTFILE_TIMESTAMP_LOC) )
+
+						Case Inlist(lcExtension,"SCX",.c_SC2) AND .n_UseFormPerFile = 0 And .n_OptimizeByFilestamp = 2 And .t_InputFile_TimeStamp = .t_OutputFile_TimeStamp
 *-- Optimizado: El Origen es igual al Destino - No hace falta regenerar
 *.writeLog( '> El archivo de salida [<<THIS.c_OutputFile>>] no se regenera porque su timestamp es igual que el de entrada.' )
 							.writeLog( C_TAB + C_TAB + '* ' + Textmerge(loLang.C_OUTPUTFILE_TIMESTAMP_EQUAL_THAN_INPUTFILE_TIMESTAMP_LOC) )
@@ -11563,9 +11814,11 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 		Try
 				Local I, loEx As Exception ;
 					, llFoxBin2Prg_Completed, llOLE_DEF_Completed, llINCLUDE_SCX_Completed, llLIBCOMMENT_Completed, llEXTERNAL_CLASS_Completed ;
-					, lc_Comentario, lcProcedureAbierto, lcLine ;
-					, loClase As CL_CLASE Of 'FOXBIN2PRG.PRG'
-
+					, lc_Comentario, lcProcedureAbierto, lcLine, lcExtension ;
+					, loClase As CL_CLASE Of 'FOXBIN2PRG.PRG',;
+					ln_UseXPerFile,;
+					ll_RedirectXPerFileToMain
+				
 				With This As c_conversor_prg_a_bin Of 'FOXBIN2PRG.PRG'
 					Store '' To lcProcedureAbierto
 
@@ -11573,10 +11826,23 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 
 					If tnCodeLines > 1
 
-						If toFoxBin2Prg.n_UseClassPerFile > 0 And toFoxBin2Prg.l_RedirectClassPerFileToMain
-						Else
+					lcExtension		= Upper( Justext(toFoxBin2Prg.c_InputFile) )
+						DO CASE
+							CASE INLIST(lcExtension,"SCX",toFoxBin2Prg.c_SC2)
+								ln_UseXPerFile            = toFoxBin2Prg.n_UseFormPerFile
+								ll_RedirectXPerFileToMain = toFoxBin2Prg.l_RedirectFormPerFileToMain
+							CASE INLIST(lcExtension,"DBC",toFoxBin2Prg.c_DB2)
+								ln_UseXPerFile            = toFoxBin2Prg.n_UseFilesPerDBC
+								ll_RedirectXPerFileToMain = toFoxBin2Prg.l_RedirectFilePerDBCToMain
+							OTHERWISE
+								ln_UseXPerFile            = toFoxBin2Prg.n_UseClassPerFile
+								ll_RedirectXPerFileToMain = toFoxBin2Prg.l_RedirectClassPerFileToMain
+			  
+						ENDCASE
+					 
+						IF !( ln_UseXPerFile > 0 And ll_RedirectXPerFileToMain)
 							llEXTERNAL_CLASS_Completed	= .T.
-						Endif
+						endif
 
 *-- Búsqueda del ID de inicio de bloque (DEFINE CLASS / PROCEDURE)
 						For I = 1 To tnCodeLines
@@ -11648,13 +11914,33 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			Local toFoxBin2Prg As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 		#Endif
 
-		Local lnItem, I, X, lcClaseExterna
-		Local loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
+		Local lnItem, I, X, lcClaseExterna, lcExtension
+		Local loLang As CL_LANG Of 'FOXBIN2PRG.PRG',;
+		lcExtension,;
+		ln_UseXPerFile,;
+		ll_RedirectXPerFileToMain,;
+		l_XPerFileCheck
+
 		loLang			= _Screen.o_FoxBin2Prg_Lang
+
+		lcExtension		= Upper( Justext(toFoxBin2Prg.c_InputFile) )
+
+		DO CASE
+			CASE INLIST(lcExtension,"SCX",toFoxBin2Prg.c_SC2)
+				ln_UseXPerFile   = toFoxBin2Prg.n_UseFormPerFile
+				ll_XPerFileCheck = toFoxBin2Prg.l_FormPerFileCheck
+			CASE INLIST(lcExtension,"DBC",toFoxBin2Prg.c_DB2)
+				ln_UseXPerFile   = toFoxBin2Prg.n_UseFilesPerDBC
+				ll_XPerFileCheck = toFoxBin2Prg.ItemPerDBCCheck
+			OTHERWISE
+				ln_UseXPerFile   = toFoxBin2Prg.n_UseClassPerFile
+				ll_XPerFileCheck = toFoxBin2Prg.l_ClassPerFileCheck
+			  
+		ENDCASE
 
 *-- Verificación de las Clases, si son Externas y se indicó chequearlas
 		Do Case
-			Case toFoxBin2Prg.n_UseClassPerFile = 1 And toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
+			Case ln_UseXPerFile = 1 And ll_XPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
 *-- El ClassPerFile original, con nomenclatura 'Libreria.NombreClase.vc2'
 				For I = 1 To toModulo._ExternalClasses_Count
 					lnItem	= 0
@@ -11675,7 +11961,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 					toModulo._Clases(lnItem)._Checked = .T.
 				Endfor
 
-			Case toFoxBin2Prg.n_UseClassPerFile = 2 And toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
+			Case ln_UseXPerFile = 2 And ll_XPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType)
 *-- El nuevo ClassPerFile, con nomenclatura 'Libreria.ClaseBase.NombreClase.vc2'
 				For I = 1 To toModulo._ExternalClasses_Count
 					lnItem	= 0
@@ -12319,7 +12605,7 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 		DoDefault( @toModulo, @toEx, @toFoxBin2Prg )
 
 		Try
-				Local lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles(1,5) ;
+				Local lnCodError, laCodeLines(1), lnCodeLines, lcInputFile, lcInputFile_Form, lnFileCount, laFiles(1,5) ;
 					, laLineasExclusion(1), lnBloquesExclusion, I, lnIDInputFile ;
 					, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
@@ -12332,7 +12618,7 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 					toModulo			= Createobject('CL_CLASSLIB')
 					lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
 
-					If toFoxBin2Prg.n_UseClassPerFile > 0 And toFoxBin2Prg.l_RedirectClassPerFileToMain
+					If toFoxBin2Prg.n_UseFormPerFile > 0 And toFoxBin2Prg.l_RedirectFormPerFileToMain
 						C_FB2PRG_CODE		= Filetostr( .c_InputFile )
 
 						lnCodeLines			= Alines( laCodeLines, C_FB2PRG_CODE )
@@ -12343,11 +12629,11 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 						.updateProgressbar( 'Loading Code...', 2, lnCodeLines, 1 )
 
 *-- MÁSCARA DE BÚSQUEDA
-						If toFoxBin2Prg.n_UseClassPerFile = 1 Then
+						If toFoxBin2Prg.n_UseFormPerFile = 1 Then
 *-- Esto crea la máscara de búsqueda "filename.*.ext" para encontrar las partes
 							lcBaseFilename		= Juststem( Juststem(.c_InputFile) )
 							lcInputFile			= Addbs( Justpath(.c_InputFile) ) + lcBaseFilename + '.*.' + Justext(.c_InputFile)
-						Else && toFoxBin2Prg.n_UseClassPerFile = 2
+						Else && toFoxBin2Prg.n_UseFormPerFile = 2
 *-- Esto crea la máscara de búsqueda "<path>Database.*.*.ext" para encontrar las partes
 *-- con la sintaxis "<path>Database.MemberType.MemberName.ext"
 							lcBaseFilename		= Juststem( Juststem( Juststem(.c_InputFile) ) )
@@ -12358,39 +12644,39 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 						Asort( laFiles, 1, 0, 0, 1)
 
 						For I = 1 To lnFileCount
-							If toFoxBin2Prg.n_UseClassPerFile = 1 Then
-								lcInputFile_Class	= Forcepath( Juststem( laFiles(m.I,1) ), Justpath( .c_InputFile ) ) + '.' + Justext( .c_InputFile )
-								lcClassName			= Lower( Getwordnum( Justfname( lcInputFile_Class ), 2, '.' ) )
+							If toFoxBin2Prg.n_UseFormPerFile = 1 Then
+								lcInputFile_Form	= Forcepath( Juststem( laFiles(m.I,1) ), Justpath( .c_InputFile ) ) + '.' + Justext( .c_InputFile )
+								lcFormName			= Lower( Getwordnum( Justfname( lcInputFile_Form ), 2, '.' ) )
 
 *-- Verificación de las Clases, si son Externas y se indicó chequearlas
-								If toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType) ;
-										AND Ascan( toModulo._ExternalClasses , lcClassName, 1, 0, 1, 1+2+4 ) = 0
-									.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
-									.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
+								If toFoxBin2Prg.l_FormPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType) ;
+										AND Ascan( toModulo._ExternalClasses , lcFormName, 1, 0, 1, 1+2+4 ) = 0
+									.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Form + ']' )
+									.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Form + ']' )
 									Loop	&& Salteo esta clase
 								Endif
-							Else && toFoxBin2Prg.n_UseClassPerFile = 2
-								lcInputFile_Class	= Forcepath( Juststem( laFiles(m.I,1) ), Justpath( .c_InputFile ) ) + '.' + Justext( .c_InputFile )
-								lcClassName			= Lower( Getwordnum( Justfname( lcInputFile_Class ), 2, '.' ) + '.' + Getwordnum( Justfname( lcInputFile_Class ), 3, '.' ) )
+							Else && toFoxBin2Prg.n_UseFormPerFile = 2
+								lcInputFile_Form	= Forcepath( Juststem( laFiles(m.I,1) ), Justpath( .c_InputFile ) ) + '.' + Justext( .c_InputFile )
+								lcFormName			= Lower( Getwordnum( Justfname( lcInputFile_Form ), 2, '.' ) + '.' + Getwordnum( Justfname( lcInputFile_Form ), 3, '.' ) )
 
 *-- Verificación de las Clases, si son Externas y se indicó chequearlas
-								If toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType) ;
-										AND Ascan( toModulo._ExternalClasses , lcClassName, 1, 0, 2, 1+2+4 ) = 0
-									.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
-									.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Class + ']' )
+								If toFoxBin2Prg.l_FormPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType) ;
+										AND Ascan( toModulo._ExternalClasses , lcFormName, 1, 0, 2, 1+2+4 ) = 0
+									.writeLog( C_TAB + '- ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Form + ']' )
+									.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_CLASS_DOES_NOT_MATCH_INNER_CLASSES_LOC + ' [' + lcInputFile_Form + ']' )
 									Loop	&& Salteo esta clase
 								Endif
 							Endif
 
-							.writeLog( C_TAB + C_TAB + '+ ' + loLang.C_INCLUDING_CLASS_LOC + ' ' + Justfname( lcInputFile_Class ) )
+							.writeLog( C_TAB + C_TAB + '+ ' + loLang.C_INCLUDING_CLASS_LOC + ' ' + Justfname( lcInputFile_Form ) )
 
 *-- addProcessedFile( tcFile, tcInOutType, tcProcessed, tcHasErrors, tcSupported, tcExpanded )
-							If toFoxBin2Prg.addProcessedFile( lcInputFile_Class, 'I', 'P1', 'E0', 'S1', 'X1' ) Then
+							If toFoxBin2Prg.addProcessedFile( lcInputFile_Form, 'I', 'P1', 'E0', 'S1', 'X1' ) Then
 								toFoxBin2Prg.updateProcessedFile()
 							Endif
 
-							toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Class )
-							C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + Filetostr( lcInputFile_Class )
+							toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Form )
+							C_FB2PRG_CODE	= C_FB2PRG_CODE + CR_LF + Filetostr( lcInputFile_Form )
 						Endfor
 
 						lnCodeLines			= Alines( laCodeLines, C_FB2PRG_CODE )
@@ -12449,7 +12735,7 @@ Define Class c_conversor_prg_a_scx As c_conversor_prg_a_bin
 
 			Finally
 				Use In (Select("TABLABIN"))
-				Release lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Class, lnFileCount, laFiles ;
+				Release lnCodError, laCodeLines, lnCodeLines, lcInputFile, lcInputFile_Form, lnFileCount, laFiles ;
 					, laLineasExclusion, lnBloquesExclusion, I
 		Endtry
 
@@ -14653,7 +14939,7 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 							Endif
 
 *-- Verificación de los Miembros, si son Externos y se indicó chequearlos
-							If toFoxBin2Prg.l_ClassPerFileCheck And Empty(toFoxBin2Prg.c_ClassOperationType) ;
+							If toFoxBin2Prg.l_ItemPerDBCCheck And Empty(toFoxBin2Prg.c_ClassOperationType) ;
 									AND Ascan( toDatabase._ExternalClasses, lcMemberType + '.' + lcMemberName, 1, 0, 1, 1+2+4 ) = 0
 								.writeLog( C_TAB + '- ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
 								.writeErrorLog( C_TAB + '- ' + loLang.C_WARNING_LOC + ' ' + loLang.C_OUTER_MEMBER_DOES_NOT_MATCH_INNER_MEMBERS_LOC + ' [' + lcInputFile_Class + ']' )
@@ -15068,6 +15354,7 @@ Define Class c_conversor_prg_a_mnx As c_conversor_prg_a_bin
 					, laLineasExclusion(1), lnBloquesExclusion, lnIDInputFile
 				Store 0 To lnCodError, lnCodeLines
 				Store '' To lcLine
+				Store .Null. To toMenu
 
 				With This As c_conversor_prg_a_mnx Of 'FOXBIN2PRG.PRG'
 					lnIDInputFile		= toFoxBin2Prg.n_ProcessedFiles
@@ -17758,7 +18045,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						Endif
 
 						lnStep			= lnStep + 1
-						.updateProgressbar( 'Processing Class ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
+						.updateProgressbar( 'Processing Form ' + lcObjName + '...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 						.write_DEFINE_CLASS( @la_NombresObjsOle, @loRegClass, @lcCodigo )
 
@@ -17766,7 +18053,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 
 						.write_CLASSMETADATA( @loRegClass, @lcCodigo )
 
-						If toFoxBin2Prg.n_UseClassPerFile > 0 Then
+						If toFoxBin2Prg.n_UseFormPerFile > 0 Then
 							.write_EXTERNAL_CLASS_HEADER( @loRegClass, @toFoxBin2Prg, @lcExternalHeader )
 						Endif
 
@@ -17832,7 +18119,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						.write_INCLUDE( @loRegClass, @lcCodigo )
 
 						lnStep			= lnStep + 1
-						.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+						.updateProgressbar( 'Processing Form ' + lcObjName + ' > Writing Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 						.write_CLASS_PROPERTIES( @loRegClass, @laPropsAndValues, @laPropsAndComments, @laProtected ;
 							, @lnPropsAndValues_Count, @lnPropsAndComments_Count, @lnProtected_Count, @lcCodigo, @toFoxBin2Prg )
@@ -17840,7 +18127,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						Asort(laObjs, 3, -1, 0, 0)	&& Orden Alfabético de objetos (del SCAN original)
 
 						lnStep			= lnStep + 1
-						.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
+						.updateProgressbar( 'Processing Form ' + lcObjName + ' > Writing Obtects with Properties...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 						For I = 1 To lnObjCount
 							.write_ADD_OBJECTS_WithProperties( laObjs(m.I,1), @lcCodigo, @toFoxBin2Prg )
@@ -17849,7 +18136,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 
 *-- OBTENGO LOS MÉTODOS DE LA CLASE PARA POSTERIOR TRATAMIENTO
 						lnStep			= lnStep + 1
-						.updateProgressbar( 'Processing Class ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+						.updateProgressbar( 'Processing Form ' + lcObjName + ' > Getting Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 						Dimension laMethods(1,3), laCode(1)
 						Store '' To laMethods, laCode
@@ -17865,7 +18152,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 
 *-- RECORRO LOS OBJETOS DENTRO DE LA CLASE ACTUAL PARA OBTENER SUS MÉTODOS
 						lnStep			= lnStep + 1
-						.updateProgressbar( 'Processing Class ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+						.updateProgressbar( 'Processing Form ' + lcObjName + ' > Getting Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 						lnRecno	= Recno()
 						Locate For TABLABIN.PLATFORM = "WINDOWS" And Lower( Alltrim( Getwordnum( TABLABIN.Parent, 1, '.' ) ) ) == Lower(lcObjName)
@@ -17898,7 +18185,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						Endscan
 
 						lnStep			= lnStep + 1
-						.updateProgressbar( 'Processing Class ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
+						.updateProgressbar( 'Processing Form ' + lcObjName + ' > Writing Objects Methods...', lnStep, lnClassTotal*lnStepCount, 1 )
 
 						.write_ALL_OBJECT_METHODS( @lcMethods, @laMethods, @laCode, @lnMethodCount, @laPropsAndComments, lnPropsAndComments_Count, @laProtected ;
 							, lnProtected_Count, @toFoxBin2Prg, @lcCodigo )
@@ -17908,7 +18195,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 						laClasses(lnClassCount,2)	= lcCodigo
 					Endscan
 
-					If toFoxBin2Prg.n_UseClassPerFile > 0 Then
+					If toFoxBin2Prg.n_UseFormPerFile > 0 Then
 						lcExternalHeader	= lcExternalHeader + CR_LF
 					Endif
 
@@ -17941,7 +18228,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 *toModulo	= lcCodigo
 					Else
 						Do Case
-							Case toFoxBin2Prg.n_UseClassPerFile = 1	&& LibName.ClassName.SC2
+							Case toFoxBin2Prg.n_UseFormPerFile = 1	&& LibName.ClassName.SC2
 								.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 								For I = 1 To lnClassCount
@@ -17950,7 +18237,7 @@ Define Class c_conversor_scx_a_prg As c_conversor_bin_a_prg
 									.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 								Endfor
 
-							Case toFoxBin2Prg.n_UseClassPerFile = 2	&& LibName.BaseClass.ClassName.SC2
+							Case toFoxBin2Prg.n_UseFormPerFile = 2	&& LibName.BaseClass.ClassName.SC2
 								.write_OutputFile( @lcCodigo, lcOutputFile, @toFoxBin2Prg )
 
 								For I = 1 To lnClassCount
@@ -30938,11 +31225,17 @@ Define Class CL_CFG As Custom
 	l_ClearDBFLastUpdate			= .Null.
 	n_OptimizeByFilestamp			= .Null.
 	n_ExcludeDBFAutoincNextval		= .Null.
-	l_RedirectClassPerFileToMain	= .Null.
-	n_RedirectClassType				= .Null.
 	l_RemoveNullCharsFromCode		= .Null.
 	l_RemoveZOrderSetFromProps		= .Null.
 	n_UseClassPerFile				= .Null.
+	l_RedirectClassPerFileToMain	= .Null.
+	n_RedirectClassType				= .Null.
+	l_ClassPerFileCheck				= .Null.
+	l_UseFormSettings				= .Null.
+	n_UseFormPerFile				= .Null.
+	l_RedirectFormPerFileToMain		= .Null.
+	n_RedirectFormType				= .Null.
+	l_FormPerFileCheck				= .Null.
 	n_CheckFileInPath				= .Null.
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
@@ -30957,7 +31250,6 @@ Define Class CL_CFG As Custom
 	l_DBF_BinChar_Base64            = .Null.
 	l_DBF_IncludeDeleted            = .Null.
 *!*	/Changed by: LScheffler 21.02.2021
-	l_ClassPerFileCheck				= .Null.
 *!*	LScheffler 30.08.2023
 	n_InhibitInheritance			= .Null.
 	n_ExtraBackupLevels				= .Null.
@@ -31012,11 +31304,18 @@ Define Class CL_CFG As Custom
 			.l_ClearDBFLastUpdate			= toParentCFG.l_ClearDBFLastUpdate
 			.n_OptimizeByFilestamp			= toParentCFG.n_OptimizeByFilestamp
 			.n_ExcludeDBFAutoincNextval		= toParentCFG.n_ExcludeDBFAutoincNextval
-			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
-			.n_RedirectClassType			= toParentCFG.n_RedirectClassType
 			.l_RemoveNullCharsFromCode		= toParentCFG.l_RemoveNullCharsFromCode
 			.l_RemoveZOrderSetFromProps		= toParentCFG.l_RemoveZOrderSetFromProps
 			.n_UseClassPerFile				= toParentCFG.n_UseClassPerFile
+			.l_RedirectClassPerFileToMain	= toParentCFG.l_RedirectClassPerFileToMain
+			.n_RedirectClassType			= toParentCFG.n_RedirectClassType
+			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
+			.l_UseFormSettings				= toParentCFG.l_UseFormSettings
+			.n_UseFormPerFile				= toParentCFG.n_UseFormPerFile
+			.l_RedirectFormPerFileToMain	= toParentCFG.l_RedirectFormPerFileToMain
+			.n_RedirectFormType				= toParentCFG.n_RedirectFormType
+			.l_FormPerFileCheck				= toParentCFG.l_FormPerFileCheck
+
 *!*	Changed by: LScheffler 21.02.2021
 *!*	change date="{^2021-02-21,10:57:00}"
 * additional options controlling
@@ -31029,7 +31328,6 @@ Define Class CL_CFG As Custom
 			.l_DBF_BinChar_Base64			= toParentCFG.l_DBF_BinChar_Base64
 			.l_DBF_IncludeDeleted			= toParentCFG.l_DBF_IncludeDeleted
 *!*	/Changed by: LScheffler 21.02.2021
-			.l_ClassPerFileCheck			= toParentCFG.l_ClassPerFileCheck
 *!*	LScheffler 30.08.2023
 			.n_InhibitInheritance			= toParentCFG.n_InhibitInheritance
 			.n_ExtraBackupLevels			= toParentCFG.n_ExtraBackupLevels
@@ -31375,15 +31673,16 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>Setting for container files (not pjx)
-						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+						<<>>-- CLASS (, FORM and DBC) options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+						<<>>-- FORM and DBC options default to this settings, id not set otherwise. See below.
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
 						<<>>                               && 0 One library.tx2 file
 						<<>>                               && 1 Multiple file.class.tx2 files
 						<<>>                               && 2 Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
-						<<>>                               && 0 Don't redirect to file.tx2
-						<<>>                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+						<<>>                               && 0 Don't redirect to file.vcx/scx
+						<<>>                               && 1 Redirect to file.vcx/scx when selecting file[.baseclass].class.tx2
 						<<>>                               &&   RedirectClassType: 1 has precedence
 						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
@@ -31398,17 +31697,43 @@ Define Class CL_LANG As Custom
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
+						<<>>-- FORM options
+						<<>>- Form per file options (UseFormSettings: 1)
+						<<>>UseFormSettings: 0             && 1=Turns the File per SCX options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if UseFormSettings is set 1 before!
+						<<>>                               &&   If UseFormSettings is set 0 later, all setting will be lost
+						<<>>UseFormPerFile: 0              && Determines how a form will handle included objects
+						<<>>                               && 0 One Form.sc2 file
+						<<>>                               && 1 Multiple Form.Obj.sc2 files
+						<<>>                               && 2 Multiple Form.baseclass.Obj.sc2 files
+						<<>>RedirectFormPerFileToMain: 0   && When regenerating binary files, determine target file
+						<<>>                               && 0 Don't redirect to Form.scx
+						<<>>                               && 1 Redirect to Form.scx when selecting Form[.baseclass].Obj.sc2
+						<<>>                               &&   RedirectFormType: 1 has precedence
+						<<>>RedirectFormType: 0            && For classes created with UseFormPerFile>0 in the form Form[.baseclass].Obj.sc2
+						<<>>                               && Those files could be imported like Form.sc2::Class::import or like Form[.baseclass].Obj.sc2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect Form[.baseclass].Obj.sc2 to Form.SCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect Form[.baseclass].Obj.sc2 to Form[.baseclass].Obj.SCX and do not touch Form.SCX
+						<<>>                               && 2 Redirect Form[.baseclass].Obj.sc2 to Form.SCX and do not touch other classes of Form.SCX
+						<<>>FormPerFileCheck: 0            && Check, if files listed in the main file of a library or form will be included
+						<<>>                               && 0 Don't check file inclusion
+						<<>>                               && 1 Check Form[.baseclass].Obj.sc2 inclusion
+						<<>>                               &&   Only used if import file is in Form[.baseclass].Obj.sc2 syntax
+						<<>>                               &&   Ignored for RedirectFormType: 2
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
 						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
 						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
-						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, all setting will be lost
 						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
 						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
 						<<>>                               && 1 creates a file.dc2 with DBC properties
 						<<>>                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
 						<<>>                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
+						<<>>RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.dc2 when selecting file.item.*.dc2
 						<<>>ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
@@ -31695,15 +32020,16 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>Setting for container files (not pjx)
-						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+						<<>>-- CLASS (, FORM and DBC) options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+						<<>>-- FORM and DBC options default to this settings, if not set otherwise. See below.
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
 						<<>>                               && 0 One library.tx2 file
 						<<>>                               && 1 Multiple file.class.tx2 files
 						<<>>                               && 2 Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
-						<<>>                               && 0 Don't redirect to file.tx2
-						<<>>                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+						<<>>                               && 0 Don't redirect to file.vcx/scx
+						<<>>                               && 1 Redirect to file.vcx/scx when selecting file[.baseclass].class.tx2
 						<<>>                               &&   RedirectClassType: 1 has precedence
 						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
@@ -31718,11 +32044,37 @@ Define Class CL_LANG As Custom
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
+						<<>>-- FORM options
+						<<>>- Form per file options (UseFormSettings 1)
+						<<>>UseFormSettings: 0             && 1=Turns the File per SCX options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if UseFormSettings is set 1 before!
+						<<>>                               &&   If UseFormSettings is set 0 later, all setting will be lost
+						<<>>UseFormPerFile: 0              && Determines how a form will handle included objects
+						<<>>                               && 0 One Form.sc2 file
+						<<>>                               && 1 Multiple Form.Obj.sc2 files
+						<<>>                               && 2 Multiple Form.baseclass.Obj.sc2 files
+						<<>>RedirectFormPerFileToMain: 0   && When regenerating binary files, determine target file
+						<<>>                               && 0 Don't redirect to Form.scx
+						<<>>                               && 1 Redirect to Form.scx when selecting Form[.baseclass].Obj.sc2
+						<<>>                               &&   RedirectFormType: 1 has precedence
+						<<>>RedirectFormType: 0            && For classes created with UseFormPerFile>0 in the form Form[.baseclass].Obj.sc2
+						<<>>                               && Those files could be imported like Form.sc2::Class::import or like Form[.baseclass].Obj.sc2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect Form[.baseclass].Obj.sc2 to Form.SCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect Form[.baseclass].Obj.sc2 to Form[.baseclass].Obj.SCX and do not touch Form.SCX
+						<<>>                               && 2 Redirect Form[.baseclass].Obj.sc2 to Form.SCX and do not touch other classes of Form.SCX
+						<<>>FormPerFileCheck: 0            && Check, if files listed in the main file of a library or form will be included
+						<<>>                               && 0 Don't check file inclusion
+						<<>>                               && 1 Check Form[.baseclass].Obj.sc2 inclusion
+						<<>>                               &&   Only used if import file is in Form[.baseclass].Obj.sc2 syntax
+						<<>>                               &&   Ignored for RedirectFormType: 2
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
 						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
 						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
-						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, all setting will be lost
 						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
 						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
 						<<>>                               && 1 creates a file.dc2 with DBC properties
@@ -32022,12 +32374,14 @@ Define Class CL_LANG As Custom
 						<<>>                               && 3 Erstelle absoluten Pfad für Dateien die nicht in der Ordnerstruktur sind.
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
-						<<>> ------Einstellungen für Container-Dateien (not pjx)
+						<<>> ------Einstellungen für Container-Dateien (nicht pjx)
 						<<>>-- Optionen für CLASS und FORM
-						<<>>- Optionen für Datei per Klasse (UseClassPerFile: 1) (für VCX: vc2, für SCX: sc2)
-						<<>>UseClassPerFile: 0             && Bestimmt wie die Klassen einer Bibliothek oder die objekte eines Formulars behandelt werden
+						<<>>-- CLASS (, FORM und DBC) Einstellungen (tx2 versteht sich als vc2 oder sc2, VCX kann auch SCX meinen)
+						<<>>-- FORM und DBC Einstellungen nutzen die folgenden Werte, solange nicht anders definiert. Siehe unten.
+						<<>>- Optionen für Datei per Klasse ( 1) (für VCX: vc2, für SCX: sc2)
+						<<>>UseClassPerFile: 0             && Bestimmt wie die Klassen einer Bibliothek oder die Objekte eines Formulars behandelt werden
 						<<>>                               && 0 Eine Textdatei pro VCX/SCX
-						<<>>                               && 1 Mehrere Dateien <Dateiname>.KlassenName.vc2 files
+						<<>>                               && 1 Mehrere Dateien <Dateiname>.KlassenName.vc2
 						<<>>                               && 2 Mehrere Dateien <Dateiname>.Basisklasse.KlassenName.vc2
 						<<>>                               &&   Für 1, 2 wird jeweils auch ein Headerdatei <Dateiname>.vc2 erzeugt
 						<<>>RedirectClassPerFileToMain: 0  && Bestimmt beim Erzeugen von Binardateien für Klassenbibliotheken und Formulare die Zieldatei
@@ -32040,16 +32394,43 @@ Define Class CL_LANG As Custom
 						<<>>                               && 0 Aus <Dateiname>[.Basisklasse].KlassenName.tx2 wird <Dateiname>.VCX und alle Klassen dieser Bibliothek werden neu gelesen
 						<<>>                               && 1 Aus <Dateiname>[.Basisklasse].KlassenName.tx2 wird <Dateiname>[.Basisklasse].KlassenName.VCX, die Bibliothek file.VCX wird ignoriert
 						<<>>                               && 2 Aus <Dateiname>[.Basisklasse].KlassenName.tx2 wird <Dateiname>.VCX aber alle anderen Klassen bleiben unverändert
-						<<>>ClassPerFileCheck: 0           && Test, ob dateien aus die in der Basisdatei definert wurden, einbezogen wurden.
+						<<>>ClassPerFileCheck: 0           && Test, ob Dateien die in der Basisdatei definert wurden, einbezogen wurden.
 						<<>>                               && 0 Kein Test
 						<<>>                               && 1 Teste, ob die Datei <Dateiname>[.Basisklasse].KlassenName.tx2 einbezogen wurde
 						<<>>                               &&   Nur für die <Dateiname>[.Basisklasse].KlassenName.tx2 Syntax
 						<<>>                               &&   Wird für RedirectClassType: 2 ignoriert
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
+						<<>>-- Optionen für FORM
+						<<>>- Optionen für Datei per Form (UseFormPerFile: 1)
+						<<>>UseFormSettings: 0             && 1=Die unten stehenden Form Optionen werden aktiviert, 0=Die UseClassPerFile Einstellungen werden genutzt.
+						<<>>                               &&   Die unten stehenden Optionen werden nur gelesen, wenn UseFormSettings vorher 1 ist!
+						<<>>                               &&   Wird UseFormSettings wieder auf 0 gesetzt, gehen diese Einstellungen verloren.
+						<<>>UseFormPerFile: 0              && Bestimmt wie die Objekte eines Formulars behandelt werden
+						<<>>                               && 0 Eine Textdatei Form.sc2  pro SCX
+						<<>>                               && 1 Mehrere Dateien Form.Obj.sc2 pro SCX
+						<<>>                               && 2 Mehrere Dateien Form.baseclass.Obj.sc2 pro SCX
+						<<>>                               && Für 1, 2 wird jeweils auch ein Headerdatei <Form>.sc2 erzeugt
+						<<>>RedirectFormPerFileToMain: 0   && Bestimmt beim Erzeugen von Binardateien für Formulare die Zieldatei
+						<<>>                               && 0 Keine Umlenkung
+						<<>>                               && 1 Objekte werden in die SCX geschrieben wenn eine Datei Form.sc2 when selecting Form[.baseclass].Obj.sc2 gewählt wurde
+						<<>>                               &&   RedirectFormType: 1 1 hat Vorrang
+						<<>>RedirectFormType: 0            && Für Textdateien die mit UseFormPerFile>0 in der Form Form[.baseclass].Obj.sc2 erstellt wurden.
+						<<>>                               && diese Dateien können als Form.sc2::Class::import oder als Form[.baseclass].Obj.sc2 importiert werden.
+						<<>>                               && Für die zweite Form gilt (jeweils VCX oder SCX ):
+						<<>>                               && 0 Aus Form[.baseclass].Obj.sc2 wird Form.SCX und alle Klassen dieser Bibliothek werden neu gelesen
+						<<>>                               && 1 Aus Form[.baseclass].Obj.sc2 wird Form[.baseclass].Obj.SCX, die Bibliothek file.VCX wird ignoriert
+						<<>>                               && 2 Aus Form[.baseclass].Obj.sc2 wird Form.SCX aber alle anderen Klassen bleiben unverändert
+						<<>>FormPerFileCheck: 0            && Test, ob Dateien die in der Basisdatei definert wurden, einbezogen wurden.
+						<<>>                               && 0 Kein Test
+						<<>>                               && 1 Teste, ob die Datei Form[.baseclass].Obj.sc2 einbezogen wurde
+						<<>>                               &&   Nur für die  Form[.baseclass].Obj.sc2 Syntax
+						<<>>                               &&   Wird für RedirectFormType: 2 ignoriert
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
 						<<>>-- Optionen für DBC
-						<<>>- Optionen für Datei per DBC options (UseFilesPerDBC: 1)
-						<<>>OldFilesPerDBC: 0              && 1=Die unten stehenden DBC Optionen werden aktiviert, 0=Die UseClassPerFile settings werden genutzt.
+						<<>>- Optionen für Datei per DBC (UseFilesPerDBC: 1)
+						<<>>OldFilesPerDBC: 0              && 1=Die unten stehenden DBC Optionen werden aktiviert, 0=Die UseClassPerFile Einstellungen werden genutzt.
 						<<>>                               &&   Die unten stehenden Optionen werden nur gelesen, wenn OldFilesPerDBC vorher 1 ist!
 						<<>>                               &&   Wird OldFilesPerDBC wieder auf 0 gesetzt, gehen diese Einstellungen verloren.
 						<<>>UseFilesPerDBC: 0              && 0=Erzeuge eine dc2 Datei, 1=Erzeuge mehrfache Dateien.*.*.dc2
@@ -32362,15 +32743,16 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>Setting for container files (not pjx)
-						<<>>-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+						<<>>-- CLASS (, FORM and DBC) options (tx2 is to read as vc2 or sc2, VCX might be SCX)
+						<<>>-- FORM and DBC options default to this settings, if not set otherwise. See below.
 						<<>>- Class per file options (UseClassPerFile: 1)
 						<<>>UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
 						<<>>                               && 0 One library.tx2 file
 						<<>>                               && 1 Multiple file.class.tx2 files
 						<<>>                               && 2 Multiple file.baseclass.class.tx2 files
 						<<>>RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
-						<<>>                               && 0 Don't redirect to file.tx2
-						<<>>                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
+						<<>>                               && 0 Don't redirect to file.vcx/scx
+						<<>>                               && 1 Redirect to file.vcx/scx when selecting file[.baseclass].class.tx2
 						<<>>                               &&   RedirectClassType: 1 has precedence
 						<<>>RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
 						<<>>                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
@@ -32385,11 +32767,37 @@ Define Class CL_LANG As Custom
 						<<>>                               &&   Ignored for RedirectClassType: 2
 						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 						<<>>
+						<<>>-- FORM options
+						<<>>- Form per file options (UseFormSettings: 1)
+						<<>>UseFormSettings: 0             && 1=Turns the File per SCX options on, 0 uses the old UseClassPerFile etc settings.
+						<<>>                               &&   Options below will only read if UseFormSettings is set 1 before!
+						<<>>                               &&   If UseFormSettings is set 0 later, all setting will be lost
+						<<>>UseFormPerFile: 0              && Determines how a form will handle included objects
+						<<>>                               && 0 One Form.sc2 file
+						<<>>                               && 1 Multiple Form.Obj.sc2 files
+						<<>>                               && 2 Multiple Form.baseclass.Obj.sc2 files
+						<<>>RedirectFormPerFileToMain: 0   && When regenerating binary files, determine target file
+						<<>>                               && 0 Don't redirect to Form.scx
+						<<>>                               && 1 Redirect to Form.scx when selecting Form[.baseclass].Obj.sc2
+						<<>>                               &&   RedirectFormType: 1 has precedence
+						<<>>RedirectFormType: 0            && For classes created with UseFormPerFile>0 in the form Form[.baseclass].Obj.sc2
+						<<>>                               && Those files could be imported like Form.sc2::Class::import or like Form[.baseclass].Obj.sc2
+						<<>>                               && For the second form:
+						<<>>                               && 0 Redirect Form[.baseclass].Obj.sc2 to Form.SCX and add / replace all other classes of this library
+						<<>>                               && 1 Redirect Form[.baseclass].Obj.sc2 to Form[.baseclass].Obj.SCX and do not touch Form.SCX
+						<<>>                               && 2 Redirect Form[.baseclass].Obj.sc2 to Form.SCX and do not touch other classes of Form.SCX
+						<<>>FormPerFileCheck: 0            && Check, if files listed in the main file of a library or form will be included
+						<<>>                               && 0 Don't check file inclusion
+						<<>>                               && 1 Check Form[.baseclass].Obj.sc2 inclusion
+						<<>>                               &&   Only used if import file is in Form[.baseclass].Obj.sc2 syntax
+						<<>>                               &&   Ignored for RedirectFormType: 2
+						<<>>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+						<<>>
 						<<>>-- DBC options
 						<<>>- File per DBC options (UseFilesPerDBC: 1)
 						<<>>OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
 						<<>>                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
-						<<>>                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
+						<<>>                               &&   If OldFilesPerDBC is set 0 later, all setting will be lost
 						<<>>UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
 						<<>>                               && 0 creates only a file.dc2 with all DBC (file) data
 						<<>>                               && 1 creates a file.dc2 with DBC properties
