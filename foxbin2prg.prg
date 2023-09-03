@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.20
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.04'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.05'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -317,8 +317,8 @@
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: For better clearance, renamed setting AllowInheritance to InhibitInheritance.
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: The debug option set via parameter has precedence over value from config file.
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: For debug option set via parameter only first valid call is used
-* 02/09/2023	LScheffler	v1.20.05	Bug Fix: problems recreating menu files (introduced with codepage) (LScheffler)
-* 02/09/2023	LScheffler	v1.20.05	Enhancement: inserted options to allow splitting of SCX handling from VCX
+* 03/09/2023	LScheffler	v1.20.05	Bug Fix: Problems recreating menu files (introduced with codepage) (LScheffler)
+* 03/09/2023	LScheffler	v1.20.05	Enhancement: Inserted options to allow splitting of SCX handling from VCX
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------

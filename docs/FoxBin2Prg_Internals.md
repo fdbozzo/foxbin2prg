@@ -35,6 +35,7 @@ As far as possible these are the original documents. Changes are added where fun
       - [Complementary options for the UseClassPerFile setting](#complementary-options-for-the-useclassperfile-setting)
          - [RedirectClassPerFileToMain](#redirectclassperfiletomain)
          - [ClassPerFileCheck](#classperfilecheck)
+   - [Create File-Per-Form](create_file_per_form)
    - [Create File-Per-DBC](#create-file-per-dbc)
       - [Complementary options for the UseFilesPerDBC setting](#complementary-options-for-the-usefilesperdbc-setting)
          - [RedirectFilePerDBCToMain](#redirectfileperdbctomain)
@@ -140,7 +141,8 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | | | 2=creates / refresh class in file.VCX and do not touch other classes of file.VCX |
 | [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 |||
-| UseFormSettings | _0_, 1 | 0=Old Style, like the class settings<br/>1=Form style, special for form<br/>This controls the use of the _UseFormPerFile_, _RedirectFormPerFileToMain_, _RedirectFormType_ and _FormPerFileCheck_ options.<br/>Only if this option is set, the options will be read. |
+| [UseFormSettings](create_file_per_form)
+ | _0_, 1 | 0=Old Style, like the class settings<br/>1=Form style, special for form<br/>This controls the use of the _UseFormPerFile_, _RedirectFormPerFileToMain_, _RedirectFormType_ and _FormPerFileCheck_ options.<br/>Only if this option is set, the options will be read. |
 | UseFormPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple Form.Object.sc2 files,<br/>2=Multiple Form.baseclass.Object.sc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
 | [RedirectFormPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to Form.scx,<br/>1=Redirect to Form.scx when selecting Form.Object.sc2<br/>RedirectClassType: 1 precedes this setting |
 | RedirectFormType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form Form[.baseclass].Object.sx2 (scx only) |
@@ -149,7 +151,7 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | | | 2=creates / refresh class in Form.SCX and do not touch other classes of Form.SCX |
 | [FormPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check Form.Object.sc2 inclusion,<br/>1=Check Form.Object.sc2 inclusion<br/>Only used if import file is in Form[.baseclass].Object.sc2 syntax.<br/>Ignored for RedirectClassType: 2 |
 |||
-| OldFilesPerDBC | _0_, 1 | 0=Old Style,<br/>1=New style<br/>This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the options will be read. |
+| OldFilesPerDBC | _0_, 1 | 0=Old Style,<br/>1=New style<br/>This controls the use of the _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ options.<br/>Only if this option is set, the **Form** options below will be read. |
 | | | 0=New version inactive, options follow:<br/>UseFilesPerDBC=UseClassPerFile<br/>RedirectFilePerDBCToMain=RedirectClassPerFileToMain<br/>ItemPerDBCCheck=ClassPerFileCheck |
 | | | 1=New version active, options active |
 | | | Note: The options will be set to old style, if option is turned off. |
@@ -443,10 +445,17 @@ This inheritance saves a lot of time and minimizes the CFGs needed \:\)
 ##### Note
 Options will be read outside in, top to down.   
 If an option is defined multiple times, even in the same file, last occurance wins.   
-This exception is the group controlling the new style to split DBC files.
-The options _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ will be ignored,
+
+The exception are the group controlling the new style to split DBC files and the one for forms.   
+The options _UseFilesPerDBC_, _RedirectFilePerDBCToMain_ and _ItemPerDBCCheck_ will be ignored for DBC,
 if _OldFilesPerDBC_ is set to 0.   
-If _OldFilesPerDBC_ is set to 0 after it was active, the values of the three options are rejected at all.
+Setting _OldFilesPerDBC_ to 1 will inhertit the values from the \*class\* options.   
+If _OldFilesPerDBC_ is set to 0 after it was active, the values of the three options are rejected at all and reset to the corresponding \*class\* values.   
+For Forms, options _UseFormPerFile_, _RedirectFormPerFileToMain_, _RedirectFormType_ and _FormPerFileCheck_ will be ignored,
+if _UseFormSettings_ is set to 0.   
+Setting _UseFormSettings_ to 1 will inhertit the values from the \*class\* options.   
+If _UseFormSettings_ is set to 0 after it was active, the values of the four options are rejected at all and reset to the corresponding \*class\* values.
+
 
 ### File Capitalization
 FoxBin2Prg takes care of file capitalization (their extension, specifically),
@@ -533,8 +542,19 @@ If you don't use the redirect setting, an individual vcx/scx file will be genera
 This can be useful if you want to divide a big library in smaller pieces.
 
 #### Note
-This is true for SCX files as well. SCX files may contain a form and a dataenvironment.
-It will create sc2 files.
+By default, these settings are valid for SCX and DBC files as well. SCX files may expand to header, form and dataenvironment, and a DBC may be split into header and several files of the objects contained.   
+If you like finer and independend control over forms and databases, check
+- [Create File-Per-Form](create_file_per_form) and
+- [Create File-Per-DBC](#create-file-per-dbc)
+
+### Create File-Per-Form
+Starting at 1.20.05 you can configure FoxBin2Prg to generate Form (sc2) files independent of classlibrary.   
+The major idea is, that the class settings to split a vcx into multiple files result into splitting a form(SCX into a form header, a from and a dataenvironment file, what might be overkill. (splitting classes is great, so one does not need to merge the whole lib, but a form is a form.)   
+To configure this, you must first enable it in foxbin2prg.cfg file:
+````
+UseFormSettings: 1
+````
+The settings of the four options are similar to the one of the [class options](#create-class-per-file), except they are named \*Form\* instead of \*Class\*.
 
 ### Create File-Per-DBC
 Starting at 1.19.55 you can configure FoxBin2Prg to generate one _Text_ file per dbc item using naming style "DatabaseName.item.name.dc2"
@@ -751,4 +771,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 
 ----
-Last changed: _2023/09/01_
+Last changed: _2023/09/03_
