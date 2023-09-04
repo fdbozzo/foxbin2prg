@@ -37,11 +37,11 @@ Stuff is a bit scattered, so this is where to look up.
 1. Please set the **minor** part of _DC_FB2PRG_VERSION_REAL_ to a new number.   
    **Do not** alter the **1.19** part. This is written to the text files.
    Alteration might force that the files must be newly commited, what is not everybodies taste.
-3. Add a meaningfull description of the change in the changes list on top of _FoxBin2Prg.prg_.
+3. Add a meaningful description of the change in the changes list on top of _FoxBin2Prg.prg_.
    The most recent entries for changes in the middle of this section around _* </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>_,   
    The most recent bugs are listed above _* </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>_
 4. Alter version in _README.md_
-4. Add a description to _docs\FoxBin2Prg_Changes.md_
+4. Add a description to _docs\Change_Log.md_
 6. Please alter the footer of *.md files touched to recent date.
 4. If a change to the config files is made please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings
@@ -79,7 +79,9 @@ In special:
      - the config files templates
    - Update the version number in _FoxBin2PrgVersion.txt_
 
+- Right-click CreateThorUpdate.ps1 in the ThorUpdater folder and choose Run with PowerShell
+
 Thanks
 
 ----
-Last changed: _2023/03/20_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/09/04_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)

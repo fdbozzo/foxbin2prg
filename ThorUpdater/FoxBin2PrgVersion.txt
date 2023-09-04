@@ -10,8 +10,8 @@ local;
 
 lcappName      = "FoxBin2Prg"
 *Set following two numbers on version
-ldDate         = date(2023,03,20)
-lcmajorVersion = "1.19.78"
+ldDate         = date(2023,09,04)
+lcmajorVersion = "1.20.05"
 
 *lnJulian = val(sys(11, m.ldDate)) - val(sys(11, {^2000-01-01}))
 *lcJulian = padl(transform(lnJulian), 4, '0')
@@ -38,6 +38,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2023-09-05 v1.20.05
+- Updated to @lscheffler's fork
 
 2023-03-20 v1.19.78
 **Enhancement**: Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
@@ -175,7 +178,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 - Bug Fix: Error 1098, Cannot find ... [ENDT] that closes ... [TEXT] Issue#26 when there is a field named TEXT as first line-word (KIRIDES)
 
 2018-06-20  v1.19.51.2
-- Bug Fix: When converting to text a DBF that belongs to a DBC with events disabled, conversion fails (Jairo Argüelles / Juan C. Perdomo)
+- Bug Fix: When converting to text a DBF that belongs to a DBC with events disabled, conversion fails (Jairo Arg elles / Juan C. Perdomo)
 
 2018-05-12  v1.19.51.1
 - Bug Fix: If capitalization is used on a DBC view info, then related information is not exported correctly or entirely, so could be lost (SkySurfer1)
@@ -266,14 +269,14 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 - Bug Fix: When processing a directory or a project with all the files, sometimes an "Alias already in use" error may occur (Dave Crozier)
 - Bug Fix mnx: When menu options contains '&&' in their texts, menu binary is corrupted when regenerated (Walter Nichols)
 - Bug Fix fb2p_diff: When calling fb2p_diff.exe from a directory out of FoxBin2Prg dir, an error is thrown because FoxBin2Prg is not found (Mike Potjer)
-- Feature: In some environments and under some conditions WSscript.Shell object can cause problems, so now it's replaced with Win32 native functions (Aurélien Dellieux)
+- Feature: In some environments and under some conditions WSscript.Shell object can cause problems, so now it's replaced with Win32 native functions (Aur lien Dellieux)
 - Bug Fix frx/lbx: Ordering of report objects changes the ZOrder of near objects that can overlap, which can cause bad visualization and printing (Ryan Harris)
 - Bug Fix frx/lbx: When regenerating reports or labels with multiline texts center or right aligned, alignment is not completely right (Ryan Harris)
 - Bug Fix frx/lbx: When grouping objects in design mode, generating text and regenerating binary cause the lost of the grouping (does not affect data) (Lutz Scheffler)
 - Bug Fix Pjx: SPR and MPR files are not correctly identified in the PJX Project info (Ralf Wagner)
 - Bug Fix Pj2: An error is thrown when regenerating a PJX from a PJ2 when some file have parenthesis in it's name (EddieC)
 - Feature (dbf): New ExcludeDBFAutoincNextval parameter for minimizing DB2 differences (edyshor)
-- Bug Fix: When processing a file on root dir, a 2062 error occurs (Aurélien Dellieux)
+- Bug Fix: When processing a file on root dir, a 2062 error occurs (Aur lien Dellieux)
 - Feature: Added VFP 9 runtimes (vfp9r.dll, vfp9renu.dll) so FoxBin2Prg can be used with VFP when VPF IDE is not installed
 
 
@@ -357,7 +360,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 2014/12/13	v1.19.38
 - Feature: Now is possible to use FoxBin2Prg for batch conversions directly from the File Explorer (see README.txt), without the need of vbs scripts, that sometimes can make trouble or are not permitted by IT department (Francisco Prieto)
 - Feature: Enhanced Multilanguage support by 3 ways: 1-Automatic [DEFAULT] (depending on VERSION(3)); 2-By parameter, using the new method ChangeLanguage(); 3-Using the new setting "Language" in foxbin2prg.cfg
-- Feature: Detection of duplicated methods on vc2/sc2 files to notify those cases of vcx/scx file corruption (Álvaro Castrillón)
+- Feature: Detection of duplicated methods on vc2/sc2 files to notify those cases of vcx/scx file corruption ( lvaro Castrill n)
 
 2014/11/30	v1.19.37
 - Feature: Added Class per file support, configurable with UseClassPerFile:1 (Ryan Harris/Lutz Scheffler)
@@ -413,12 +416,12 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 - Feature: Added support for exporting DBF data for DIFF (It's intended just for DIFF small DBFs, as config ones, not for true Data export. Binary fields are not exported and there is not an Import Data feature) (Doug Hennig)
 
 2014/07/06	v1.19.26
-- Feature: Drop asterisks between "ENDPROC" and "PROCEDURE", analyzed in that exact order, to regenerate binary without errors. (Daniel Sánchez)
+- Feature: Drop asterisks between "ENDPROC" and "PROCEDURE", analyzed in that exact order, to regenerate binary without errors. (Daniel S nchez)
 - Feature: Add the l_DropNullCharsFromCode configuration option, enabled by default, to allow droping NULLs from source code. (Matt Slay)
 - Bug Fix cfg: ExtraBackupLevel does not work when using multi-configuration
 
 2014/06/25	v1.19.25
-- When processing one or multiple files with vbs scripts, show a message indicating the status of the generation, and show the error log if any error occurs (Pedro Gutiérrez M.)
+- When processing one or multiple files with vbs scripts, show a message indicating the status of the generation, and show the error log if any error occurs (Pedro Guti rrez M.)
 - Code cleaning and normalization
 - ClearUniqueID is True by default for tx2 files
 - OptimizeByTimestamp is False by default, to avoid possible automatic modifications made by VFP when opening a form or a classlib
@@ -634,7 +637,7 @@ Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 - Unit testing cases with FoxUnit
 
 2013/11/27 	v1.5
-- Bug fix: On some forms dataenvironment didn't regenerate appropiately (Luis Martínez)
+- Bug fix: On some forms dataenvironment didn't regenerate appropiately (Luis Mart nez)
 
 2013/11/27 	v1.4
 - Added mask support

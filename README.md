@@ -1,4 +1,4 @@
-# FoxBin2Prg v1.19.79
+# FoxBin2Prg v1.20.05
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -128,7 +128,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ---
 ---
 ## Changes
-See [Changes](./docs/FoxBin2Prg_Changes.md)
+See [Changes](./docs/Change_Log.md)
 
 ### Changes to Settings
 To get the new settings in config file, use the new create-a-template function:
@@ -148,4 +148,4 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 ## Usage
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
-Last changed: _2023/08/04_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/09/04_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
