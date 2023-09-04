@@ -81,7 +81,68 @@ In special:
 
 - Right-click CreateThorUpdate.ps1 in the ThorUpdater folder and choose Run with PowerShell
 
-Thanks
+## Updating from @lshceffler's fork
+
+- Quit any code / IDE working on your FoxBin2Prg directory
+- Create a file in the FoxBin2Prg folder named get_fork.sh with the following content:
+
+```
+#!/bin/sh
+############################################################
+#
+#get_fork.sh
+#
+#get a second branch to work in parallel
+#because we can not simple merge
+#
+#Lutz Scheffler 2023-09-03
+#
+############################################################
+
+#create a new remote to fork lscheffler
+git remote add sf git@github.com:lscheffler/foxbin2prg.git
+#read lscheffler
+git fetch sf
+
+#create a new branch "lutz" and switch into it
+git switch -c lutz
+#reset this branch to the last common anchestor between lscheffler/fork_mod and fdbozzo/master
+git reset --hard c31b8106652
+
+#connect the new branch with lscheffler/fork_mod
+git branch --set-upstream-to=sf/fork_mod lutz
+#set branch to top of his remote branch
+git pull
+
+#switch back to master
+git switch master
+#create a new folder on drive, that shows the lscheffler data
+git worktree add ../FoxBin2Prg_Lutz lutz
+
+#you can now work in the one and in the other directory
+#that means you can copy files from the one to the other via normal function
+#or you can pick data from the one to the other like
+
+#for example FoxBin2Prg.prg
+#git checkout lutz FoxBin2Prg.prg
+
+#the file is not in the index, you can alter and then add and commit
+```
+
+- Right-click the FoxBin2Prg directory, and choose Git Bash Here
+- Run "./get_fork.sh"
+
+This will create a new directory "FoxBin2Prg_Lutz" in the parent of "FoxBin2Prg", with the recent state of my fork. You can work in this folder exactly the same way as in "FoxBin2Prg" (if you need the exe files, notice the README.md), only the branch is different. Those are two branches of the same repo, so one can work with git commands.
+
+Now you can work / copy the files via explorer, or, as suggested in the file attached, you can tell git to do the work.
+
+Open the bash in "FoxBin2Prg" directory, and run:
+
+```
+git checkout lutz <file_to_get_from_lutz_branch>
+```
+
+Then follow the earlier instructions for committing.
 
 ----
 Last changed: _2023/09/04_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
