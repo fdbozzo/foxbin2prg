@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.20.06
+*Version: v1.20.07
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.

@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.20
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.06'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.07'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -320,6 +320,7 @@
 * 03/09/2023	LScheffler	v1.20.05	Bug Fix: Problems recreating menu files (introduced with codepage) (LScheffler)
 * 03/09/2023	LScheffler	v1.20.05	Enhancement: Inserted options to allow splitting of SCX handling from VCX
 * 06/09/2023	LScheffler	v1.20.06	Bug Fix: Problems recreating tables (LScheffler)
+* 06/09/2023	LScheffler	v1.20.07	Enhancement: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -1204,6 +1205,7 @@ Define Class c_foxbin2prg As Session
 *!*	LScheffler 31.08.2023 more sophisticated control of inheritance for para file
     c_SingleConfig_Folder			= ''
     o_CFG							= .NULL. 
+    l_AllowFolder					= .T.
     
 	Procedure Init
 		Lparameters tcCFG_File, tcCancelWithEscKey
@@ -2062,6 +2064,13 @@ Define Class c_foxbin2prg As Session
 	Endproc
 *** DH 2021-03-04: end of new code
 
+	Procedure l_AllowFolder_ACCESS
+		If This.n_CFG_Actual = 0 Or Isnull( This.o_Configuration( This.n_CFG_Actual ) )
+			Return This.l_AllowFolder
+		Else
+			Return Nvl( This.o_Configuration( This.n_CFG_Actual ).l_AllowFolder, This.l_AllowFolder )
+		Endif
+	Endproc
 
 	Procedure changeFileAttribute
 * Using Win32 Functions in Visual FoxPro
@@ -2440,13 +2449,14 @@ Define Class c_foxbin2prg As Session
 			Local toParentCFG As CL_CFG Of 'FOXBIN2PRG.PRG'
 		#Endif
 
-		Local lcConfigFile, llExiste_CFG_EnDisco, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDirInfo(1,5) ;
+		Local lcConfigFile, lcLockFile, llExiste_CFG_EnDisco, llLockFileExists, llFirstRead, laConfig(1), I, lcConfData, lcExt, lcValue, lc_CFG_Path, lcConfigLine, laDirInfo(1,5) ;
 			, lnDirs, laDirs(1), llMasterEval, lcProp ;
 			, lo_CFG As CL_CFG Of 'FOXBIN2PRG.PRG' ;
 			, loCFG_Manual As CL_CFG Of 'FOXBIN2PRG.PRG' ;
 			, lo_Configuration As Collection ;
 			, loLang As CL_LANG Of 'FOXBIN2PRG.PRG' ;
 			, loEx As Exception, llSetSingleConfig, lc_Foxbin2prg_ConfigFile, lc_InputPath
+
 		Try
 				With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 
@@ -2589,13 +2599,13 @@ Define Class c_foxbin2prg As Session
 * INDICÓ DIRECTORIO
 								If Isnull(loCFG_Manual)
 *lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', ADDBS(tc_InputFile) )
-									lcConfigFile	= Fullpath( Justfname(lcConfigFile), Addbs(tc_InputFile) )
+									lcConfigFile = Fullpath( Justfname(lcConfigFile), Addbs(tc_InputFile) )
 								Endif
 							Else
 * INDICÓ ARCHIVO
 								If Isnull(loCFG_Manual)
 *lcConfigFile	= FULLPATH( 'foxbin2prg.cfg', tc_InputFile )
-									lcConfigFile	= Fullpath( Justfname(lcConfigFile), tc_InputFile )
+									lcConfigFile = Fullpath( Justfname(lcConfigFile), tc_InputFile )
 								Endif
 							Endif
 						Endif
@@ -2605,6 +2615,7 @@ Define Class c_foxbin2prg As Session
 					.n_CFG_Actual		= 0
 					.l_CFG_CachedAccess	= .F.
 					lc_CFG_Path			= Upper( Justpath( lcConfigFile ) )
+					lcLockFile          = FORCEPATH(".FoxBin2Prg_Ignore",lc_CFG_Path)
 					lo_CFG				= This
 
 *-- Búsqueda del CFG del PATH indicado en la caché
@@ -2679,6 +2690,7 @@ Define Class c_foxbin2prg As Session
 						Case .n_CFG_Actual = 0
 *-- Si no se encontró un CFG cacheado, se busca si existe un archivo CFG en disco
 							llExiste_CFG_EnDisco	= ( Adir( laDirInfo, lcConfigFile ) = 1 )
+							llLockFileExists        = ( Adir( laDirInfo, lcLockFile ) = 1 )
 
 							If Not llExiste_CFG_EnDisco
 								.l_CFG_CachedAccess	= .T.	&& Es cacheado porque sin archivo CFG usa config.interna
@@ -2710,7 +2722,8 @@ Define Class c_foxbin2prg As Session
 								toParentCFG	= lo_CFG
 *								.writeLog( C_TAB + '- ' + loLang.C_INHERITING_FROM_LOC + ': ' + lo_CFG.c_Foxbin2prg_ConfigFile )
 								.writeLog( C_TAB + '- ' + loLang.C_INHERITING_FROM_LOC + ': ' + lo_Configuration.GetKey(lo_Configuration.Count-1) )
-							Endif
+							ENDIF
+							llFirstRead = .T.
 						Endif
 
 					Else
@@ -2718,8 +2731,14 @@ Define Class c_foxbin2prg As Session
 						.n_CFG_Actual  	= lo_Configuration.Count
 					Endif
 
+*check for lockfile
+					If .l_Main_CFG_Loaded And llFirstRead AND llLockFileExists THEN 
+					 lo_CFG.l_AllowFolder = .F.
+					 .writeLog( C_TAB + Justfname(lcLockFile) + loLang.C_LOCKINGFOLDER_LOC )
+					ENDIF &&.l_Main_CFG_Loaded And llFirstRead AND llLockFileExists
+
 *-- NOTA: SOLO LOS QUE NO VENGAN DE PARÁMETROS EXTERNOS DEBEN ASIGNARSE A lo_CFG AQUÍ.
-					If llExiste_CFG_EnDisco And Not .l_CFG_CachedAccess Then
+					If llExiste_CFG_EnDisco And Not .l_CFG_CachedAccess AND lo_CFG.l_AllowFolder Then
 						.writeLog()
 						.writeLog( '> ' + loLang.C_READING_CFG_VALUES_FROM_DISK_LOC + ':' )
 						.writeLog( C_TAB + loLang.C_CONFIGFILE_LOC + ' ' + lcConfigFile )
@@ -3223,66 +3242,67 @@ Define Class c_foxbin2prg As Session
 					Endif
 * SF
 
-					.writeLog( '> ' + loLang.C_USING_THIS_SETTINGS_LOC + ':' )
+					If lo_CFG.l_AllowFolder THEN
+						.writeLog( '> ' + loLang.C_USING_THIS_SETTINGS_LOC + ':' )
 *internal info, just what is read to this moment
-					.writeLog( C_TAB + 'CFG_Actual:                 ' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
-					.writeLog( C_TAB + 'CFG_CachedAccess:           ' + Transform(.l_CFG_CachedAccess) )
-					.writeLog( C_TAB + 'tc_InputFile:               ' + Transform(Evl(tc_InputFile,'') ) )
-					.writeLog( C_TAB + 'Foxbin2prg_ConfigFile:      ' + Transform(Evl(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') ) )
+						.writeLog( C_TAB + 'CFG_Actual:                 ' + Transform(.n_CFG_Actual) + Icase(.n_CFG_Actual=1, ' [MASTER]', ' [SECONDARY]') )
+						.writeLog( C_TAB + 'CFG_CachedAccess:           ' + Transform(.l_CFG_CachedAccess) )
+						.writeLog( C_TAB + 'tc_InputFile:               ' + Transform(Evl(tc_InputFile,'') ) )
+						.writeLog( C_TAB + 'Foxbin2prg_ConfigFile:      ' + Transform(Evl(lo_CFG.c_Foxbin2prg_ConfigFile, '(Internal defaults)') ) )
 
 *settings for internal work, not processing
-					.writeLog( C_TAB + 'Language:                   ' + Transform(.c_Language) + ' (' + .c_Language_In + ')' )
-					.writeLog( C_TAB + 'ShowProgressbar:            ' + Transform(.n_ShowProgressbar) )
-					.writeLog( C_TAB + 'ShowErrors:                 ' + Transform(.l_ShowErrors) )
-					.writeLog( C_TAB + 'ExtraBackupLevels:          ' + Transform(.n_ExtraBackupLevels) )
-					Do Case
-						Case Empty ( .c_BackgroundImage )
-							.writeLog( C_TAB + 'BackgroundImage:            ' + '(Empty)' )
+						.writeLog( C_TAB + 'Language:                   ' + Transform(.c_Language) + ' (' + .c_Language_In + ')' )
+						.writeLog( C_TAB + 'ShowProgressbar:            ' + Transform(.n_ShowProgressbar) )
+						.writeLog( C_TAB + 'ShowErrors:                 ' + Transform(.l_ShowErrors) )
+						.writeLog( C_TAB + 'ExtraBackupLevels:          ' + Transform(.n_ExtraBackupLevels) )
+						Do Case
+							Case Empty ( .c_BackgroundImage )
+								.writeLog( C_TAB + 'BackgroundImage:            ' + '(Empty)' )
 
-						Case Lower( Justfname ( .c_BackgroundImage ) ) == 'foxbin2prg.jpg'
-							.writeLog( C_TAB + 'BackgroundImage:            ' + Transform(.c_BackgroundImage) +  '(Internal default)' )
+							Case Lower( Justfname ( .c_BackgroundImage ) ) == 'foxbin2prg.jpg'
+								.writeLog( C_TAB + 'BackgroundImage:            ' + Transform(.c_BackgroundImage) +  '(Internal default)' )
 
-						Otherwise
-							.writeLog( C_TAB + 'BackgroundImage:            ' + Transform(.c_BackgroundImage) )
+							Otherwise
+								.writeLog( C_TAB + 'BackgroundImage:            ' + Transform(.c_BackgroundImage) )
 
-					Endcase
-					.writeLog( C_TAB + 'Debug:                      ' + Transform(.n_Debug) )
+						Endcase
+						.writeLog( C_TAB + 'Debug:                      ' + Transform(.n_Debug) )
 
 * LScheffler, 2021/030/06: added DH HomeDir option
-					.writeLog( C_TAB + 'HomeDir:                    ' + Transform(.n_HomeDir) )
+						.writeLog( C_TAB + 'HomeDir:                    ' + Transform(.n_HomeDir) )
 
 *Conversion operation by type
-					.writeLog( C_TAB + 'PJX_Conversion_Support      ' + Transform(.n_PJX_Conversion_Support) )
-					.writeLog( C_TAB + 'VCX_Conversion_Support      ' + Transform(.n_VCX_Conversion_Support) )
-					.writeLog( C_TAB + 'SCX_Conversion_Support      ' + Transform(.n_SCX_Conversion_Support) )
-					.writeLog( C_TAB + 'FRX_Conversion_Support      ' + Transform(.n_FRX_Conversion_Support) )
-					.writeLog( C_TAB + 'LBX_Conversion_Support      ' + Transform(.n_LBX_Conversion_Support) )
-					.writeLog( C_TAB + 'MNX_Conversion_Support      ' + Transform(.n_MNX_Conversion_Support) )
-					.writeLog( C_TAB + 'DBF_Conversion_Support      ' + Transform(.n_DBF_Conversion_Support) )
-					.writeLog( C_TAB + 'DBC_Conversion_Support      ' + Transform(.n_DBC_Conversion_Support) )
-					.writeLog( C_TAB + 'FKY_Conversion_Support      ' + Transform(.n_FKY_Conversion_Support) )
-					.writeLog( C_TAB + 'MEM_Conversion_Support      ' + Transform(.n_MEM_Conversion_Support) )
+						.writeLog( C_TAB + 'PJX_Conversion_Support      ' + Transform(.n_PJX_Conversion_Support) )
+						.writeLog( C_TAB + 'VCX_Conversion_Support      ' + Transform(.n_VCX_Conversion_Support) )
+						.writeLog( C_TAB + 'SCX_Conversion_Support      ' + Transform(.n_SCX_Conversion_Support) )
+						.writeLog( C_TAB + 'FRX_Conversion_Support      ' + Transform(.n_FRX_Conversion_Support) )
+						.writeLog( C_TAB + 'LBX_Conversion_Support      ' + Transform(.n_LBX_Conversion_Support) )
+						.writeLog( C_TAB + 'MNX_Conversion_Support      ' + Transform(.n_MNX_Conversion_Support) )
+						.writeLog( C_TAB + 'DBF_Conversion_Support      ' + Transform(.n_DBF_Conversion_Support) )
+						.writeLog( C_TAB + 'DBC_Conversion_Support      ' + Transform(.n_DBC_Conversion_Support) )
+						.writeLog( C_TAB + 'FKY_Conversion_Support      ' + Transform(.n_FKY_Conversion_Support) )
+						.writeLog( C_TAB + 'MEM_Conversion_Support      ' + Transform(.n_MEM_Conversion_Support) )
 
 *!*	Changed by: LScheffler 19.03.2023
 * additional options controlling
 * files in non subpath of the PJX
 *setting for PJX files
-					.writeLog( C_TAB + 'CheckFileInPath:            ' + Transform(.n_CheckFileInPath) )
+						.writeLog( C_TAB + 'CheckFileInPath:            ' + Transform(.n_CheckFileInPath) )
 *!*	/Changed by: LScheffler 19.03.2023
 
 *setting for container files (not pjx)
 *Classes ( vcx )
-					.writeLog( C_TAB + 'UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
-					.writeLog( C_TAB + 'ClassPerFileCheck:          ' + Transform(.l_ClassPerFileCheck) )
-					.writeLog( C_TAB + 'RedirectClassPerFileToMain: ' + Transform(.l_RedirectClassPerFileToMain) )
-					.writeLog( C_TAB + 'RedirectClassType:          ' + Transform(.n_RedirectClassType) )
+						.writeLog( C_TAB + 'UseClassPerFile:            ' + Transform(.n_UseClassPerFile) )
+						.writeLog( C_TAB + 'ClassPerFileCheck:          ' + Transform(.l_ClassPerFileCheck) )
+						.writeLog( C_TAB + 'RedirectClassPerFileToMain: ' + Transform(.l_RedirectClassPerFileToMain) )
+						.writeLog( C_TAB + 'RedirectClassType:          ' + Transform(.n_RedirectClassType) )
 
 *Forms ( scx)
-					.writeLog( C_TAB + 'UseFormSettings:            ' + Transform(.l_UseFormSettings) )
-					.writeLog( C_TAB + 'UseFormPerFile:             ' + Transform(.n_UseFormPerFile) )
-					.writeLog( C_TAB + 'FormPerFileCheck:           ' + Transform(.l_FormPerFileCheck) )
-					.writeLog( C_TAB + 'RedirectFormPerFileToMain:  ' + Transform(.l_RedirectFormPerFileToMain) )
-					.writeLog( C_TAB + 'RedirectFormType:           ' + Transform(.n_RedirectFormType) )
+						.writeLog( C_TAB + 'UseFormSettings:            ' + Transform(.l_UseFormSettings) )
+						.writeLog( C_TAB + 'UseFormPerFile:             ' + Transform(.n_UseFormPerFile) )
+						.writeLog( C_TAB + 'FormPerFileCheck:           ' + Transform(.l_FormPerFileCheck) )
+						.writeLog( C_TAB + 'RedirectFormPerFileToMain:  ' + Transform(.l_RedirectFormPerFileToMain) )
+						.writeLog( C_TAB + 'RedirectFormType:           ' + Transform(.n_RedirectFormType) )
 
 *Databases
 *!*	Changed by: LScheffler 21.02.2021
@@ -3290,46 +3310,47 @@ Define Class c_foxbin2prg As Session
 * additional options controlling
 * - split of DBC separated from VCX/SCX
 * - new operations of DBF
-					.writeLog( C_TAB + 'OldFilesPerDBC:             ' + Transform(.l_OldFilesPerDBC) )
-					.writeLog( C_TAB + 'UseFilesPerDBC:             ' + Transform(.n_UseFilesPerDBC) )
-					.writeLog( C_TAB + 'RedirectFilePerDBCToMain:   ' + Transform(.l_RedirectFilePerDBCToMain) )
-					.writeLog( C_TAB + 'ItemPerDBCCheck:            ' + Transform(.l_ItemPerDBCCheck) )
-					.writeLog( C_TAB + 'DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
-					.writeLog( C_TAB + 'DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
+						.writeLog( C_TAB + 'OldFilesPerDBC:             ' + Transform(.l_OldFilesPerDBC) )
+						.writeLog( C_TAB + 'UseFilesPerDBC:             ' + Transform(.n_UseFilesPerDBC) )
+						.writeLog( C_TAB + 'RedirectFilePerDBCToMain:   ' + Transform(.l_RedirectFilePerDBCToMain) )
+						.writeLog( C_TAB + 'ItemPerDBCCheck:            ' + Transform(.l_ItemPerDBCCheck) )
+						.writeLog( C_TAB + 'DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
+						.writeLog( C_TAB + 'DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
 *!*	/Changed by: LScheffler 21.02.2021
 
 *general files
-					.writeLog( C_TAB + 'NoTimestamps:               ' + Transform(.l_NoTimestamps) )
-					.writeLog( C_TAB + 'ClearUniqueID:              ' + Transform(.l_ClearUniqueID) )
-					.writeLog( C_TAB + 'OptimizeByFilestamp:        ' + Transform(.n_OptimizeByFilestamp) )
-					.writeLog( C_TAB + 'RemoveNullCharsFromCode:    ' + Transform(.l_RemoveNullCharsFromCode) )
-					.writeLog( C_TAB + 'RemoveZOrderSetFromProps:   ' + Transform(.l_RemoveZOrderSetFromProps) )
-					.writeLog( C_TAB + 'PRG_Compat_Level:           ' + Transform(.n_PRG_Compat_Level) )
+						.writeLog( C_TAB + 'NoTimestamps:               ' + Transform(.l_NoTimestamps) )
+						.writeLog( C_TAB + 'ClearUniqueID:              ' + Transform(.l_ClearUniqueID) )
+						.writeLog( C_TAB + 'OptimizeByFilestamp:        ' + Transform(.n_OptimizeByFilestamp) )
+						.writeLog( C_TAB + 'RemoveNullCharsFromCode:    ' + Transform(.l_RemoveNullCharsFromCode) )
+						.writeLog( C_TAB + 'RemoveZOrderSetFromProps:   ' + Transform(.l_RemoveZOrderSetFromProps) )
+						.writeLog( C_TAB + 'PRG_Compat_Level:           ' + Transform(.n_PRG_Compat_Level) )
 
 *Parameter only:
-					.writeLog( C_TAB + 'Recompile:                  ' + Transform(.l_Recompile) + ' (' + tcRecompile + ')' )
+						.writeLog( C_TAB + 'Recompile:                  ' + Transform(.l_Recompile) + ' (' + tcRecompile + ')' )
 
 *pjx special
-					.writeLog( C_TAB + 'BodyDevInfo:                ' + Transform(.n_BodyDevInfo) )
+						.writeLog( C_TAB + 'BodyDevInfo:                ' + Transform(.n_BodyDevInfo) )
 
 *dbf special
-					.writeLog( C_TAB + 'ClearDBFLastUpdate:         ' + Transform(.l_ClearDBFLastUpdate) )
-					.writeLog( C_TAB + 'ExcludeDBFAutoincNextval:   ' + Transform(.n_ExcludeDBFAutoincNextval) )
-					.writeLog( C_TAB + 'DBF_Conversion_Included     ' + Transform(.c_DBF_Conversion_Included) )
-					.writeLog( C_TAB + 'DBF_Conversion_Excluded     ' + Transform(.c_DBF_Conversion_Excluded) )
-					.writeLog( C_TAB + 'DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
-					.writeLog( C_TAB + 'DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
+						.writeLog( C_TAB + 'ClearDBFLastUpdate:         ' + Transform(.l_ClearDBFLastUpdate) )
+						.writeLog( C_TAB + 'ExcludeDBFAutoincNextval:   ' + Transform(.n_ExcludeDBFAutoincNextval) )
+						.writeLog( C_TAB + 'DBF_Conversion_Included     ' + Transform(.c_DBF_Conversion_Included) )
+						.writeLog( C_TAB + 'DBF_Conversion_Excluded     ' + Transform(.c_DBF_Conversion_Excluded) )
+						.writeLog( C_TAB + 'DBF_BinChar_Base64:         ' + Transform(.l_DBF_BinChar_Base64) )
+						.writeLog( C_TAB + 'DBF_IncludeDeleted:         ' + Transform(.l_DBF_IncludeDeleted) )
 
 *Text file extensions
-					.writeLog( C_TAB + 'extension: VC2              ' + Transform(.c_VC2) )
-					.writeLog( C_TAB + 'extension: SC2              ' + Transform(.c_SC2) )
-					.writeLog( C_TAB + 'extension: FR2              ' + Transform(.c_FR2) )
-					.writeLog( C_TAB + 'extension: LB2              ' + Transform(.c_LB2) )
-					.writeLog( C_TAB + 'extension: MN2              ' + Transform(.c_MN2) )
-					.writeLog( C_TAB + 'extension: DB2              ' + Transform(.c_DB2) )
-					.writeLog( C_TAB + 'extension: DC2              ' + Transform(.c_DC2) )
-					.writeLog( C_TAB + 'extension: FK2              ' + Transform(.c_FK2) )
-					.writeLog( C_TAB + 'extension: ME2              ' + Transform(.c_ME2) )
+						.writeLog( C_TAB + 'extension: VC2              ' + Transform(.c_VC2) )
+						.writeLog( C_TAB + 'extension: SC2              ' + Transform(.c_SC2) )
+						.writeLog( C_TAB + 'extension: FR2              ' + Transform(.c_FR2) )
+						.writeLog( C_TAB + 'extension: LB2              ' + Transform(.c_LB2) )
+						.writeLog( C_TAB + 'extension: MN2              ' + Transform(.c_MN2) )
+						.writeLog( C_TAB + 'extension: DB2              ' + Transform(.c_DB2) )
+						.writeLog( C_TAB + 'extension: DC2              ' + Transform(.c_DC2) )
+						.writeLog( C_TAB + 'extension: FK2              ' + Transform(.c_FK2) )
+						.writeLog( C_TAB + 'extension: ME2              ' + Transform(.c_ME2) )
+					ENDIF &&lo_CFG.l_AllowFolder 
 
 					.writeLog( )
 					 
@@ -3663,7 +3684,7 @@ Define Class c_foxbin2prg As Session
 				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
 			Endif
 
-			llhasSupport	= Icase( lcExt == 'PJX', .n_PJX_Conversion_Support > 0 ;
+			llhasSupport	= .l_AllowFolder AND Icase( lcExt == 'PJX', .n_PJX_Conversion_Support > 0 ;
 				, lcExt == 'VCX', .n_VCX_Conversion_Support > 0 ;
 				, lcExt == 'SCX', .n_SCX_Conversion_Support > 0 ;
 				, lcExt == 'FRX', .n_FRX_Conversion_Support > 0 ;
@@ -3726,7 +3747,7 @@ Define Class c_foxbin2prg As Session
 				.evaluateConfiguration( '', '', '', '', '', '', '', '', lcDir, 'D' )
 			Endif
 
-			llhasSupport	= Icase( lcExt == .c_PJ2, .n_PJX_Conversion_Support = 2 ;
+			llhasSupport	= .l_AllowFolder AND Icase( lcExt == .c_PJ2, .n_PJX_Conversion_Support = 2 ;
 				, lcExt == .c_VC2, .n_VCX_Conversion_Support = 2 ;
 				, lcExt == .c_SC2, .n_SCX_Conversion_Support = 2 ;
 				, lcExt == .c_FR2, .n_FRX_Conversion_Support = 2 ;
@@ -3912,7 +3933,6 @@ Define Class c_foxbin2prg As Session
 *	ENDFOR
 *	EXIT
 *ENDIF
-
 
 *-- Reconocimiento de la clase indicada
 *-- Ej: [c:\desa\test\library.vcx::classname]
@@ -31280,6 +31300,7 @@ Define Class CL_CFG As Custom
 	n_PRG_Compat_Level				= .Null.
 *** DH 2021-03-04: added n_HomeDir property
 	n_HomeDir						= .Null.
+    l_AllowFolder					= .T.
 
 	Procedure CopyFrom
 *-- Copia las propiedades del CFG indicado
@@ -31358,6 +31379,7 @@ Define Class CL_CFG As Custom
 			.n_PRG_Compat_Level				= toParentCFG.n_PRG_Compat_Level
 *** DH 2021-03-04: handle n_HomeDir
 			.n_HomeDir						= toParentCFG.n_HomeDir
+			.l_AllowFolder					= toParentCFG.l_AllowFolder
 		Endwith
 	Endproc
 
@@ -31474,6 +31496,7 @@ Define Class CL_LANG As Custom
 	C_WARNING_LOC													= ""
 	C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= ""
 	C_WITH_ERRORS_LOC												= ""
+	C_LOCKINGFOLDER_LOC												= ""
 
 	C_INDEX2TXT_PROCESSING_LOC										= ""
 	C_INDEX2TXT_EXTRAFILES_LOC										= ""
@@ -31843,6 +31866,8 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "AVERTISSEMENT!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "AVERTISSEMENT!" + CR_LF+ "ASSUREZ VOUS NE UTILISEZ PAS UN ALIAS DE TABLE SUR LES EXPRESSIONS INDEX CLÉS!! (exemple: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "avec des erreurs"
+
+							.C_LOCKINGFOLDER_LOC											= " found, proccessing directory and subdirectories inhibited."
 							.C_INDEX2TXT_PROCESSING_LOC										= " Processing index"
 							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Additional index files"
 							.C_INDEX2TXT_NOFILE_LOC											= "     Not a File "
@@ -32190,6 +32215,8 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "¡ATENCIÓN!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "¡ATENCIÓN!" + CR_LF+ "ASEGÚRESE DE QUE NO ESTÁ USANDO UN ALIAS DE TABLA EN LAS EXPRESIONES DE LOS ÍNDICES!! (ej: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag nombreclave)"
 							.C_WITH_ERRORS_LOC												= "con errores"
+							.C_LOCKINGFOLDER_LOC											= " found, proccessing directory and subdirectories inhibited."
+
 							.C_INDEX2TXT_PROCESSING_LOC										= " Processing index"
 							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Additional index files"
 							.C_INDEX2TXT_NOFILE_LOC											= "     Not a File "
@@ -32564,6 +32591,7 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "WARNUNG!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNUNG!" + CR_LF+ "STELLEN SIE SICHER, DAS KEIN TABELLENALIAS IM INDEXAUSDRUCK BENUTZT WIRD!! (z.B.: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "mit Fehlern"
+							.C_LOCKINGFOLDER_LOC											= " gefunden, das Verzeichnis und Unterverzeichnisse werden ignoriert."
 
 							.C_INDEX2TXT_PROCESSING_LOC										= " Ermittle Index"
 							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Zusätzliche Index Dateien"
@@ -32913,6 +32941,7 @@ Define Class CL_LANG As Custom
 							.C_WARNING_LOC													= "WARNING!"
 							.C_WARN_TABLE_ALIAS_ON_INDEX_EXPRESSION_LOC						= "WARNING!" + CR_LF+ "MAKE SURE YOU ARE NOT USING A TABLE ALIAS ON INDEX KEY EXPRESSIONS!! (ex: index on <<UPPER(JUSTSTEM(THIS.c_InputFile))>>.campo tag keyname)"
 							.C_WITH_ERRORS_LOC												= "with errors"
+							.C_LOCKINGFOLDER_LOC											= " found, proccessing directory and subdirectories inhibited."
 
 							.C_INDEX2TXT_PROCESSING_LOC										= " Processing index"
 							.C_INDEX2TXT_EXTRAFILES_LOC										= "  Additional index files"

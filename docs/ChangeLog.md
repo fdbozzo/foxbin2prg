@@ -24,13 +24,14 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating tables (LScheffler) |
+| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
+| 2023/09/06 | LScheffler | [v1.20.06](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.06) | **Bug Fix**: Problems recreating tables (LScheffler) |
 | 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
-| | | | Enhancement: Inserted options to allow splitting of SCX handling from VCX.1 |
-| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | Enhancement: New option "tcDebug" for get_DirSettings method. |
-| | | | Enhancement: For better clearance, renamed setting AllowInheritance to InhibitInheritance. |
-| | | | Enhancement: The debug option set via parameter has precedence over value from config file. |
-| | | | Enhancement: For debug option set via parameter only first valid call is used. |
+| | | | **Enhancement:** Inserted options to allow splitting of SCX handling from VCX. |
+| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | **Enhancement**: New option "tcDebug" for get_DirSettings method. |
+| | | | **Enhancement:** For better clearance, renamed setting AllowInheritance to InhibitInheritance. |
+| | | | **Enhancement:** The debug option set via parameter has precedence over value from config file. |
+| | | | **Enhancement:** For debug option set via parameter only first valid call is used. |
 | 2023/08/31 | LScheffler | [v1.20.03](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.03) | **Enhancement**: New option "tcCFG_File" for get_DirSettings method. |
 | 2023/08/31 | LScheffler | [v1.20.02](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.02) | New option for parameter set config file to control the use of "regular" config files enhanced |
 | 2023/08/30 | LScheffler | [v1.20.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.01) | **Bug Fix**: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler) |

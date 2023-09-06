@@ -14,6 +14,7 @@ As far as possible these are the original documents. Changes are added where fun
 - [Limitations](#limitations)
 - [Configuration file](#configuration-file)
 - [Configuration file per table](#configuration-file-per-table)
+- [Excluding directories](#excluding-directories)
 - [FoxBin2Prg Internals](#foxbin2prg-internals)
    - [ZOrder](#zorder)
       - [RemoveZOrderSetFromProps setting](#removezordersetfromprops-setting)
@@ -89,7 +90,6 @@ You might freely change and merge code inside the text files, or data in a table
 but the result must be compilable and keep the structure.   
 All limitations that occur to a binary format must be kept on the text representation -
 the definition of a HEADER class to a VCX will fail.
-
 
 ## Configuration file
 It is possible to create a template or a config with all options and comments via   
@@ -217,6 +217,12 @@ These are the Table.dbf.cfg configuration file settings and their meaning:
 Setting **per file** could only be used via this configuration file.
 For defaults, see [Configuration file](#configuration-file).
  
+## Excluding directories
+It is possible to exclude directory structures from processing. Placing a file **.FoxBin2Prg_Ignore** into a directory will stop FoxBin2Prg from processing any file in this directory and it's subdirectories. The file must just exist and could otherwise be empty.   
+The difference to setting all *XXX_Conversion_Support to 0* is, that it could not be turned on again down the directory structure.
+
+This was set up to ignore the local GoFish_ settings and history folder, the file will be automatically created by GoFish starting with version 6.2.004.
+
 ## FoxBin2Prg Internals
 ### ZOrder
 In _Text_ files and starting from v1.19.12, the ZOrder,
@@ -771,4 +777,4 @@ For options on integrating FoxBin2Prg with SCM tools, look at this topic:
 See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 
 ----
-Last changed: _2023/09/03_
+Last changed: _2023/09/06_
