@@ -24,6 +24,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating tables (LScheffler) |
 | 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
 | | | | Enhancement: Inserted options to allow splitting of SCX handling from VCX.1 |
 | 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | Enhancement: New option "tcDebug" for get_DirSettings method. |
@@ -435,4 +436,4 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-Last changed: _2023/09/02_
+Last changed: _2023/09/06_

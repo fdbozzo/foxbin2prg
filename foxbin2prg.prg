@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.20
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.05'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.20.06'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -319,6 +319,7 @@
 * 01/09/2023	LScheffler	v1.20.04	Enhancement: For debug option set via parameter only first valid call is used
 * 03/09/2023	LScheffler	v1.20.05	Bug Fix: Problems recreating menu files (introduced with codepage) (LScheffler)
 * 03/09/2023	LScheffler	v1.20.05	Enhancement: Inserted options to allow splitting of SCX handling from VCX
+* 06/09/2023	LScheffler	v1.20.06	Bug Fix: Problems recreating tables (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -14555,7 +14556,7 @@ Define Class c_conversor_prg_a_dbf As c_conversor_prg_a_bin
 						lcFieldDef	= lcFieldDef + lcLongDec
 
 *-- .Null.
-						lcFieldDef	= lcFieldDef + Iif( loField._Null = '.T.', ' .Null.', ' NOT .Null.' )
+						lcFieldDef	= lcFieldDef + Iif( loField._Null = '.T.', ' Null', ' NOT Null' )
 
 *-- NoCPTran
 						If loField._NoCPTran = '.T.'
