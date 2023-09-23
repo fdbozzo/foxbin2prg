@@ -11,7 +11,7 @@ local;
 lcappName      = "FoxBin2Prg"
 *Set following two numbers on version
 ldDate         = date(2023,09,04)
-lcmajorVersion = "1.20.05"
+lcmajorVersion = "1.20.07"
 
 *lnJulian = val(sys(11, m.ldDate)) - val(sys(11, {^2000-01-01}))
 *lcJulian = padl(transform(lnJulian), 4, '0')
@@ -38,6 +38,9 @@ Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM
 Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
 
 +++++++++++++++++++++++ Change History +++++++++++++++++++++++
+
+2023-09-23 v1.20.07
+- Updated to @lscheffler's fork
 
 2023-09-05 v1.20.05
 - Updated to @lscheffler's fork

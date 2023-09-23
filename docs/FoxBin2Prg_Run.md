@@ -87,13 +87,13 @@ just select and process each one independently, in parallel if you like, but in 
 | cTextName | Text filename. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. File to use. |
 | lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode.<br/>.T.=Generates _Text_, .F.=Generates _Binary_.<br/>**Note:** _cType_ have predominance over _lGenText_ |
 | cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX |
-| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log. |
+| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log.<br/>This has precedence over any value in the config files. |
 | cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing |
 | cOriginalFileName | text | used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the _Text_ version |
 | cRecompile | 0, _1_ | Indicates recompile ('1') the _Binary_ once generated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
 |  | path | The _Binary_ is compiled from this path |
 | cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
-| cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
+| cCFG_File | filename | Indicates a special CFG filename for default values.<br/>Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this** file. | 
 | cOutputFolder | folder | Optional. A folder to write the output to. If not used, output be the source path. |
 
 #### Note #1
@@ -108,8 +108,8 @@ on which fixed parameters must be in the shortcut.
 The filename is an external variable parameter received when SendingTo FoxBin2Prg with right-click on File Manager.
 
 ### Usage 2
-`FoxBin2Prg.EXE [cCt [cOutputFile]]`   
-`DO FoxBin2Prg.EXE WITH ["-cCt" [,cOutputFile]]`   
+`FoxBin2Prg.EXE c|C|t [OutFileName [ cCFG_File[ cDebug]]]`   
+`DO FoxBin2Prg.EXE WITH -c|-C|-t [, OutFileName [, cCFG_File[, cDebug]]]`   
 
 | Parameter | Description |
 | ----- | ----- |
@@ -118,7 +118,18 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 | -C (C) | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
 | | If cOutputFile is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
 | -t (t) | creates a template table-config-file _cOutputFile_ ( like \_TableName\_.dbf.cfg ) |
-| | If cOutputFile is empty and a table is open is workarea, a file \<tablename\>.CFG will be created in table foder. | 
+| cCFG_File | Indicates a special CFG filename for default values<br/>Note, if the "regular" config files are used orn not, is controlled by the setting *AllowInheritance* in *this** file. | 
+| cDebug | '1' for generating process LOGs, stop on errors<br/>This has precedence over any value in the config files. | 
+
+### Usage 3
+`FOXBIN2PRG.EXE VERNO`   
+`DO FOXBIN2PRG.EXE WITH "VERNO"|cPara`   
+
+| Parameter | Description |
+| ----- | ----- |
+| -VERNO (VERNO) | Return version number of FoxBin2Prg |
+| cPara | A parameter with the Value "VERNO", the version number is returned to this parameter | 
+
 
 #### Note
 From command line the call with paramters like -c, -C -t is not possible. Those parameters will be removed by VFP itself.
@@ -166,10 +177,5 @@ FoxBin2Prg - Binary2Text.lnk  <path>\foxbin2prg.exe "BIN2PRG-SHOWMSG"
 FoxBin2Prg - Text2Binary.lnk  <path>\foxbin2prg.exe "PRG2BIN-SHOWMSG"
 FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 ```
-
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of [VFPX](https://vfpx.github.io/).   
-
-----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/09/01_

@@ -288,30 +288,34 @@ If I have to checkout old stuff - the setting will fit.
 ````
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.19.69
+*Version: v1.20.01
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
 * 1.  Default values
 * 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
+*  or, if defined, a config file given by a parameter calling FOXBIN2PRG
+*      if used, the AllowInheritance setting controls if other config files will be evaluated 
 * 3., optional FOXBIN2PRG.CFG in root of working directory
 * 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-* 5., optional Special settings per aingle DBF's Syntax: <Tabellenname>.dbf.cfg in tables folder)
-* 6., Parameter calling FOXBIN2PRG.EXE.
+* 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
 
 * Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 *****************************************************************************************************************
 
 *-- Settings for internal work, not processing
 *Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-*ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2= Show only for multi-file processing
+*ShowProgressbar: 1             && 0=Don't show, 1=Always show, 2=Show only for multi-file processing
 *DontShowErrors: 0              && Show message errors by default
 *ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 *Debug: 0                       && Don't Activate individual <file>.Log by default
 *BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-*HomeDir: 1                     && Home Directory in PJX
+*HomeDir: 1                     && Home directory in PJX
 *                               && 0 don't save HomeDir in PJ2
 *                               && 1 save HomeDir in PJ2
+*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+*-- Settings for config file via parameter only
+*AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
 *----------------------------------------------------------------------------------------------------------------
 
 *-- Conversion operation by type
@@ -325,6 +329,14 @@ If I have to checkout old stuff - the setting will fit.
 *DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
 *FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
 *MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
+*----------------------------------------------------------------------------------------------------------------
+
+*Setting for pjx files
+*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+*                               && 0 Ignore. Default
+*                               && 1 Check and error out if file is not on same structure (for source control)
+*                               && 2 Create absolute path if file is on different drive.
+*                               && 3 Create absolute path if file is not in structure
 *----------------------------------------------------------------------------------------------------------------
 
 *Setting for container files (not pjx)
@@ -369,7 +381,7 @@ If I have to checkout old stuff - the setting will fit.
 *NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
 *ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
 *OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-*RemoveNullCharsFromCode: 1     && 1=Drop NULL chars from source code
+*RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 *RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 *PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
 *----------------------------------------------------------------------------------------------------------------
@@ -419,4 +431,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/03/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
