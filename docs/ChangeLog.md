@@ -24,7 +24,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
+| 2023/10/20 | LScheffler | [v1.21.00](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with spanish characters in comment. (ccantrell72) |
+| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler) |
 | 2023/09/06 | LScheffler | [v1.20.06](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.06) | **Bug Fix**: Problems recreating tables (LScheffler) |
 | 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
 | | | | **Enhancement:** Inserted options to allow splitting of SCX handling from VCX. |
@@ -437,4 +438,4 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-Last changed: _2023/09/06_
+Last changed: _2023/10/20_
