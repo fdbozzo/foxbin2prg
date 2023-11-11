@@ -46,6 +46,8 @@
 !*.gitignore
 !/desktop.ini
 !data/*.jpg
+!/FileName_Caps.EXE
+!/Fb2P_Diff.EXE
 
 #gitlab
 !*.md
