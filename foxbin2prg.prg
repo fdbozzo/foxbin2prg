@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.00'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.01'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -321,7 +321,8 @@
 * 03/09/2023	LScheffler	v1.20.05	Enhancement: Inserted options to allow splitting of SCX handling from VCX
 * 06/09/2023	LScheffler	v1.20.06	Bug Fix: Problems recreating tables (LScheffler)
 * 06/09/2023	LScheffler	v1.20.07	Enhancement: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
-* 20/10/2023	LScheffler	v1.21.00	Problems with spanish characters in comment. (ccantrell72)
+* 20/10/2023	LScheffler	v1.21.00	Problems with Spanish characters in comment. (ccantrell72)
+* 19/11/2023	LScheffler	v1.21.01	Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -500,7 +501,9 @@
 * 04/08/2023	KestasL						Bug REPORT v1.19.78	Bin2Text: Forms with ole controls conversion error issue #95 (also: any vcx) (KestasL)
 * 04/08/2023	KestasL						Bug REPORT v1.19.78	Codepage is lost on recreation, issue #96 (KestasL)
 * 28/08/2023	LScheffler				Bug REPORT v1.20.00	Sometimes Language is not changed fitting to conmfig file
-* 20/10/2023	ccantrell72				Bug REPORT v1.20.07	Problems with spanish characters in comment.
+* 20/10/2023	ccantrell72				Bug REPORT v1.20.07	Problems with Spanish characters in comment.
+* 19/09/2023	LScheffler				Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
+
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -14979,7 +14982,28 @@ Define Class c_conversor_prg_a_dbc As c_conversor_prg_a_bin
 								toFoxBin2Prg.normalizeFileCapitalization( .T., lcInputFile_Class )
 								lcTempTxt		= Filetostr( lcInputFile_Class )
 
-								For Y = 7 To Alines( laLines, lcTempTxt )
+*!*	Changed by: SF 19.11.2023
+*!*	<pdm>
+*!*	<change date="{^2023-11-19,14:12:00}">Changed by: SF<br />
+*!*	Problem with removed Spanish comment, the fixed start at line 7 failes
+*!*	</change>
+*!*	</pdm>
+
+* 								For Y = 7 To Alines( laLines, lcTempTxt )
+								Local;
+									lnHeaderEnd as number
+* we just asume, Header is not longer then 9 lines
+								lnHeaderEnd = 10
+ 								For Y = 1 To Alines( laLines, lcTempTxt )
+									If m.Y < lnHeaderEnd Then
+										IF LEFT( laLines( m.Y), 23 ) = '*< FOXBIN2PRG: Version=' Then
+*Header ends two lines below										 
+											lnHeaderEnd = m.Y + 2
+										Endif &&LEFT( laLines( m.Y), 23 )  = '*< FOXBIN2PRG: Version=' 
+										Loop
+									Endif &&m.Y < lnHeaderEnd 
+									
+*!*	/Changed by: SF 19.11.2023
 									C_FB2PRG_CODE	= C_FB2PRG_CODE + laLines(m.Y) + CR_LF
 								Endfor
 

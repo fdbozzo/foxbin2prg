@@ -25,7 +25,7 @@ _LegalTrademark = "MIT License"
 _ProductName = "FOXBIN2PRG"
 _MajorVer = "1"
 _MinorVer = "21"
-_Revision = "0"
+_Revision = "1"
 _LanguageID = "1034"
 _AutoIncrement = "0"
 *</DevInfo>
@@ -39,14 +39,14 @@ FOR EACH loProject IN _VFP.Projects FOXOBJECT
 ENDFOR
 
 STRTOFILE( '', '__newproject.f2b' )
-BUILD PROJECT foxbin2prg.PJX FROM '__newproject.f2b'
+BUILD PROJECT foxbin2prg.pjx FROM '__newproject.f2b'
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
 ENDFOR
 
-MODIFY PROJECT 'foxbin2prg.PJX' NOWAIT NOSHOW NOPROJECTHOOK
+MODIFY PROJECT 'foxbin2prg.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 
-loProject = _VFP.Projects('foxbin2prg.PJX')
+loProject = _VFP.Projects('foxbin2prg.pjx')
 
 WITH loProject.FILES
 	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
@@ -55,7 +55,7 @@ WITH loProject.FILES
 	.ADD('foxbin2prg.dbf.cfg.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
 	.ADD('foxbin2prg.ico')		&& *< FileMetadata: Type="x" Cpid="0" Timestamp="0" ID="0" ObjRev="0" User="" />
 	.ADD('foxbin2prg.jpg')		&& *< FileMetadata: Type="x" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
-	.ADD('foxbin2prg.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="546" User="" />
+	.ADD('foxbin2prg.prg')		&& *< FileMetadata: Type="P" Cpid="1252" Timestamp="0" ID="0" ObjRev="544" User="" />
 	.ADD('props_all.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
 	.ADD('props_checkbox.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
 	.ADD('props_collection.txt')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
@@ -134,7 +134,7 @@ WITH loProject
 ENDWITH
 
 
-_VFP.Projects('foxbin2prg.PJX').Close()
+_VFP.Projects('foxbin2prg.pjx').Close()
 *ERASE '__newproject.f2b'
 CD (lcCurdir)
 RETURN

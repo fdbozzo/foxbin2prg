@@ -102,3 +102,8 @@ Return value is 0=OK, 1=Error.
 
 ----
 Last changed: _2023/09/01_
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of [VFPX](https://vfpx.github.io/).   
+
+----
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

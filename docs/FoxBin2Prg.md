@@ -20,18 +20,19 @@ As far as possible these are the original documents. Changes are added where fun
 - [Keep reading](#keep-reading)
 
 ## Source
-Original repository at https://github.com/lscheffler/foxbin2prg.   
+Original repository at https://github.com/fdbozzo/foxbin2prg.   
+Or install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ## Download
-Regenerate after download / clone / pull from https://github.com/lscheffler/foxbin2prg.
-**Note: If you have cloned the project, you must run it against itself to create the binaries and exes.**
-Run   
+Regenerate after download / clone / pull from https://github.com/lscheffler/foxbin2prg.   
+**Note: You you must run FoxBin2Prg against itself to create the binaries and exes.**   
+Run:
 ```
 CD "path_to_FoxBin2Prg"
 *This uses a special configuration
 DO ReCreate_FoxBin2Prg.prg
-```
-
+```   
+**Note: Do not run FoxBin2Prg.prg directly.**   
 ## Requirements
 - A copy of MS VFP9 SP1, at least _3504_
 - Runs with VFPA (Note, you need to recompile the EXE or use the PRG)
@@ -96,4 +97,8 @@ FoxBin2Prg can be used in tree ways:
 - [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 
 ----
-Last changed: _2023/08/26_
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of [VFPX](https://vfpx.github.io/).
+
+----
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

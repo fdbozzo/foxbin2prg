@@ -555,7 +555,7 @@ If you like finer and independend control over forms and databases, check
 
 ### Create File-Per-Form
 Starting at 1.20.05 you can configure FoxBin2Prg to generate Form (sc2) files independent of classlibrary.   
-The major idea is, that the class settings to split a vcx into multiple files result into splitting a form(SCX into a form header, a from and a dataenvironment file, what might be overkill. (splitting classes is great, so one does not need to merge the whole lib, but a form is a form.)   
+The major idea is, that the class settings to split a vcx into multiple files result into splitting a form (SCX into a form header, a from and a dataenvironment file, what might be overkill. (splitting classes is great, so one does not need to merge the whole lib, but a form is a form.)   
 To configure this, you must first enable it in foxbin2prg.cfg file:
 ````
 UseFormSettings: 1
@@ -778,3 +778,8 @@ See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 
 ----
 Last changed: _2023/09/06_
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of [VFPX](https://vfpx.github.io/).    
+
+----
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

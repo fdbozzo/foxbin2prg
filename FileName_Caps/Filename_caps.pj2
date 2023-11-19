@@ -39,14 +39,14 @@ FOR EACH loProject IN _VFP.Projects FOXOBJECT
 ENDFOR
 
 STRTOFILE( '', '__newproject.f2b' )
-BUILD PROJECT Filename_caps.PJX FROM '__newproject.f2b'
+BUILD PROJECT Filename_caps.pjx FROM '__newproject.f2b'
 FOR EACH loProject IN _VFP.Projects FOXOBJECT
 	loProject.Close()
 ENDFOR
 
-MODIFY PROJECT 'Filename_caps.PJX' NOWAIT NOSHOW NOPROJECTHOOK
+MODIFY PROJECT 'Filename_caps.pjx' NOWAIT NOSHOW NOPROJECTHOOK
 
-loProject = _VFP.Projects('Filename_caps.PJX')
+loProject = _VFP.Projects('Filename_caps.pjx')
 
 WITH loProject.FILES
 	.ADD('config\config.fpw')		&& *< FileMetadata: Type="T" Cpid="1252" Timestamp="0" ID="0" ObjRev="0" User="" />
@@ -80,7 +80,7 @@ WITH loProject
 ENDWITH
 
 
-_VFP.Projects('Filename_caps.PJX').Close()
+_VFP.Projects('Filename_caps.pjx').Close()
 *ERASE '__newproject.f2b'
 CD (lcCurdir)
 RETURN

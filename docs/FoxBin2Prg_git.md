@@ -38,7 +38,7 @@ CTRL+C, CTRL+V on Explorer might save the day. ;)
 ## Requirements
 ### #1
 A copy of FoxBin2Prg.   
-Or Install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
+Or install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ### #2
 It might be a good idea to have a copy of git.   
@@ -288,17 +288,18 @@ If I have to checkout old stuff - the setting will fit.
 ````
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.20.01
+*Version: v1.21.01
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
 * 1.  Default values
-* 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
-*  or, if defined, a config file given by a parameter calling FOXBIN2PRG
-*      if used, the AllowInheritance setting controls if other config files will be evaluated 
-* 3., optional FOXBIN2PRG.CFG in root of working directory
-* 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-* 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+* 2. optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE,
+*  or, if defined, a config file given by a parameter calling FOXBIN2PRG,
+*      if used, the AllowInheritance setting controls if other config files will be evaluated,
+* 3. optional FOXBIN2PRG.CFG in root of working directory,
+* 4. optional FOXBIN2PRG.CFG in every folder up to the working directory,
+* 5. optional Special settings per single DBF's Syntax:<TableName>.dbf.cfg in tables folder),
+* 6. Parameter calling FOXBIN2PRG.EXE.
 
 * Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 *****************************************************************************************************************
@@ -424,4 +425,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/03/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
