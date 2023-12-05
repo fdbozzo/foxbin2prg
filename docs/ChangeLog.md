@@ -27,6 +27,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
 | 2023/11/19 | LScheffler | [v1.21.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
 | 2023/10/20 | LScheffler | [v1.21.00](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with Spanish characters in comment. (ccantrell72) |
 | 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler) |

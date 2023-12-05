@@ -24,7 +24,7 @@ Original repository at https://github.com/fdbozzo/foxbin2prg.
 Or install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
 
 ## Download
-Regenerate after download / clone / pull from https://github.com/lscheffler/foxbin2prg.   
+Regenerate after download / clone / pull from https://github.com/fdbozzo/foxbin2prg.   
 **Note: You you must run FoxBin2Prg against itself to create the binaries and exes.**   
 Run:
 ```
@@ -101,4 +101,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/12/05_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

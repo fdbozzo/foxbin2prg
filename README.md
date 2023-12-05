@@ -4,10 +4,8 @@
 ## Lutz Scheffler
 
 This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
-It's the main tool with some bugs fixes and some new functions.
-I now maintain only [this project](https://github.com/lscheffler/foxbin2prg), https://github.com/fdbozzo/foxbin2prg is no longer in sync.
 
-The spanish documentation is not longer maintained - it would fade.
+The spanish documentation is not longer maintained.
 Remind yourself to compile the exe first.   
 
 ## Regenerate after download / clone / pull
@@ -31,6 +29,11 @@ If you like to see Fernandos blog, or value his work:
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
     Thank you for your support!
+
+----
+## Important Note
+To fix a bug, this version changes the text file header.
+It is suggested to create all text files and commit in one step.
 
 ----
 ## Contribution
@@ -132,7 +135,6 @@ This work is licensed under the Creative Commons Attribution 4.0 International L
 To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
 
 ---
----
 ## Changes
 See [Changes](./docs/ChangeLog.md)
 
@@ -155,17 +157,21 @@ See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
 ----
-![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
-This project is part of [VFPX](https://vfpx.github.io/).
+
+## Helping with FoxBin2PRG
+See [contribution](./.github/CONTRIBUTING.md)
+
+---
+
+## Note
+The spanish documentation is not longer maintained - it would fade.
+For fast access a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
+If you do not access FoxBin2Prg via [Thor](https://github.com/VFPX/Thor) remind yourself to compile the exe first.   
+
+If you like to see Fernando's blog, or value his work:   
+- Blog: http://fdbozzo.blogspot.com.es/
+- [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
 ----
-Last changed: _<!--CVERSIONDATE-->2023-08-09<!--/CVERSIONDATE-->_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
-<comment>
-Rework Thor_Update_FoxBin2Prg.prg, GetNotes() useless or to much.
 
-location der Dateien
-- remotes version file (version auf github) lcAppID + 'Version.txt'
-- locales version file (version im localen thor) lcAppID + 'VersionFile.txt'
-das muss nicht in der Wurzel liegen
-
-</comment>
+Last changed: _2023/12/05_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)

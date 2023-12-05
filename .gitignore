@@ -48,6 +48,7 @@
 !data/*.jpg
 !/FileName_Caps.EXE
 !/Fb2P_Diff.EXE
+!/"CLEAR ALL.exe"
 
 #gitlab
 !*.md
@@ -82,3 +83,10 @@ bin2txt.*
 
 #re-include
 #!foxbin2prg_keywords.*
+
+#Thor special
+!/BuildProcess/*.prg
+!/BuildProcess/*.txt
+!/BuildProcess/*.md
+!/BuildProcess/*.gitignore
+!/ThorUpdater/*.*
