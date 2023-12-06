@@ -288,24 +288,25 @@ If I have to checkout old stuff - the setting will fit.
 ````
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.20.01
+*Version: v1.21.01
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
 * 1.  Default values
-* 2., optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE
-*  or, if defined, a config file given by a parameter calling FOXBIN2PRG
-*      if used, the AllowInheritance setting controls if other config files will be evaluated 
-* 3., optional FOXBIN2PRG.CFG in root of working directory
-* 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-* 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+* 2. optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE,
+*  or, if defined, a config file given by a parameter calling FOXBIN2PRG,
+*      if used, the AllowInheritance setting controls if other config files will be evaluated,
+* 3. optional FOXBIN2PRG.CFG in root of working directory,
+* 4. optional FOXBIN2PRG.CFG in every folder up to the working directory,
+* 5. optional Special settings per single DBF's Syntax:<TableName>.dbf.cfg in tables folder),
+* 6. Parameter calling FOXBIN2PRG.EXE.
 
 * Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 *****************************************************************************************************************
 
 *-- Settings for internal work, not processing
 *Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-*ShowProgressbar: 1             && 0=Don't show, 1=Always show, 2=Show only for multi-file processing
+*ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
 *DontShowErrors: 0              && Show message errors by default
 *ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
 *Debug: 0                       && Don't Activate individual <file>.Log by default
@@ -413,13 +414,6 @@ If I have to checkout old stuff - the setting will fit.
 *-- Additional extensions
 *extension: fk2=fkx             && Text file to FKY
 *extension: me2=fkx             && Text file to MEM
-*
-*Settings changed
-*----------------
-UseClassPerFile: 2              && 0=One library tx2 file, 1=Multiple file.class.tx2 files, 2=Multiple file.baseclass.class.tx2 files
-RedirectClassPerFileToMain: 1   && 0=Don't redirect to file.tx2, 1=Redirect to file.tx2 when selecting file.class.tx2
-DBF_Conversion_Support: 0       && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-DBC_Conversion_Support: 0       && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
 ````
 All use off this are the last four lines. But I like to keep the template (recent as version 1.19.69).
 - Using single classes - because it's much more easy to merge a single class then a whole library.
@@ -431,4 +425,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/03/30_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

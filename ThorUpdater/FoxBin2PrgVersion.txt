@@ -1,30 +1,66 @@
 lparameters toUpdateObject
-local ldDate, ;
-	lnJulian, ;
-	lcJulian
-ldDate   = date(2023,9,23)
-lnJulian = val(sys(11, ldDate)) - val(sys(11, {^2000-01-01}))
-lcJulian = padl(transform(lnJulian), 4, '0')
-toUpdateObject.AvailableVersion = 'FoxBin2Prg-1.20.07' + lcJulian + ;
-	'-update-' + dtoc(ldDate, 1)
+
+* Set the properties of the passed updater object.
+
+with toUpdateObject
+	.VersionNumber    = '1.21.01 - 20231205'
+	.AvailableVersion = 'FoxBin2PRG-1.21.01-update-20231205'
+	.Notes            = GetNotes()
+    .RegisterWithThor = GetRegisterWithThor()
+endwith
 return toUpdateObject
 
-* Get the notes for the project. Edit this code as necessary.
+
+*!*	procedure GetRegisterWithThor
+*!*	 local lcCommand
+*!*	 text to lcCommand noshow
+*!*	lcBase = EXECSCRIPT(_SCREEN.cThorDispatcher, 'Thor_Proc_GetFoxBin2PrgFolder')
+*!*	IF FILE(m.lcBase+"clean_copied_memo.prg") THEN
+*!*	*remove old crap
+*!*	 DO m.lcBase+"clean_thorfolder.prg" WITH lcBase
+*!*	ENDIF &&FILE(m.lcBase+"clean_copied_memo.prg")
+*!*	
+*!*	DELETE FILE (m.lcBase+"clean_thorfolder.*")
+*!*	
+*!*	 endtext
+*!*	
+*!*	 return lcCommand
+*!*	endproc &&GetRegisterWithThor
+
+* Get the notes for the project.
 
 procedure GetNotes
 local lcNotes
 text to lcNotes noshow
+A 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Full or only Diff and Merge operations) or just for backup
+
+Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF, FKY, MEM 
+
+To fix a bug, this version changes the text file header. It is suggested to create all text files and commit in one step.
+
 Developed by Fernando D. Bozzo - GitHub: https://github.com/fdbozzo/foxbin2prg
 
-FoxBin2Prg is a 2-way conversor for Visual FoxPro 9 binary files intended to be used with SCM tools (Diff and Merge operations) or just for backup
-
-Supported formats are: PJX, PJM, SCX, VCX, FRX, LBX, MNX, DBC, DBF
-
-Demo video using FoxBin2Prg with PlasticSCM: http://youtu.be/sE4wQ50Itqg
-
-Change History -------------------------------------------------------------
-* look at https://github.com/fdbozzo/foxbin2prg/wiki/FoxBin2Prg-Full-Change-History
-
-EndText
-
+endtext
 return lcNotes
+
+* Register the tool with Thor. Note: Thor replaces ##InstallFolder## with the
+* installation path for the tool when this code is executed.
+
+
+* "FoxBin2PRG" is a Component. No procedure GetRegisterWithThor created by VFPX Deployment 
+
+
+* Register the tool with Thor. Note: Thor replaces ##InstallFolder## with the
+* installation path for the tool when this code is executed.
+
+procedure GetRegisterWithThor
+local lcCommand
+text to lcCommand noshow
+
+
+* "FoxBin2PRG" is a Component. No code created by VFPX Deployment 
+
+endtext
+return lcCommand
+
+*created by VFPX Deployment, 05.12.2023 16:03:02

@@ -25,21 +25,21 @@
 !*.h
 
 #libs (by FoxBin2prg)
-#!*.vc[xt]
-#!*.pj[xt]
-#!*.fr[xt]
-#!*.mn[xt]
-#!*.sc[xt]
-#!*.lb[xt]
+!*.vc[xt]
+!*.pj[xt]
+!*.fr[xt]
+!*.mn[xt]
+!*.sc[xt]
+!*.lb[xt]
 
 #FoxBin2prg
-!*.vc2
-!*.pj2
-!*.fr2
-!*.mn2
-!*.sc2
-!*.lb2
-!*.d[bc]2
+#!*.vc2
+#!*.pj2
+#!*.fr2
+#!*.mn2
+#!*.sc2
+#!*.lb2
+#!*.d[bc]2
 
 #include special
 #default git

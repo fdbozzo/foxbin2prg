@@ -105,4 +105,4 @@ Return value is 0=OK, 1=Error.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/09/23_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

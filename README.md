@@ -1,7 +1,45 @@
-# FoxBin2Prg v1.20.07
+# FoxBin2Prg
+## Version 1.21.01
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
-![VFPX Logo](https://vfpx.github.io/images/vfpxbanner_small.gif)
+## Lutz Scheffler
+
+This is the perpetuation of [Fernando D. Bozzo](https://github.com/fdbozzo) foxbin2prg.  
+
+The spanish documentation is not longer maintained.
+Remind yourself to compile the exe first.   
+
+## Regenerate after download / clone / pull
+**Note: If you have cloned or pulled the project, you must run it against itself to create the binaries and exes.**
+Run   
+```
+CD "path_to_FoxBin2Prg"
+*This uses a special configuration
+DO ReCreate_FoxBin2Prg.prg
+```   
+**Note: Do not run FoxBin2Prg.prg directly.**
+
+---
+If you like to value my work, support the Geeks at 
+[![Virtual Fox Fest!](https://virtualfoxfest.com/images/ZoomFoxSmall.png)](https://virtualfoxfest.com/) or [![Southwest Fox!](http://www.swfox.net/images/KokoWhite.jpg)](https://www.swfox.net).  
+I also do not reject invitations to a beer, next time in Arizona.
+
+---
+If you like to see Fernandos blog, or value his work:   
+- Blog: http://fdbozzo.blogspot.com.es/
+- [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
+
+    Thank you for your support!
+
+----
+## Important Note
+To fix a bug, this version changes the text file header.
+It is suggested to create all text files and commit in one step.
+
+----
+## Contribution
+See [contribution](./.github/CONTRIBUTING.md)
+
 ---
 
 ## What is FOXBIN2PRG?
@@ -137,4 +175,4 @@ If you like to see Fernando's blog, or value his work:
 
 ----
 
-Last changed: _2023/09/23_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2023/12/05_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)

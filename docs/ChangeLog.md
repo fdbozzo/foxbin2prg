@@ -15,6 +15,9 @@ As far as possible these are the original documents. Changes are added where fun
 - [Remark](#remark)
 - [Full Change History](#full-change-history)
 
+For recent verisons see 
+![Picture](./pictures/FoxBin2Prg_Full_Change_History_vfpxreleasesmall.png) [FoxBin2PRG](https://github.com/fdbozzo/foxbin2prg)   
+
 ## Full Change History
 This page is not only to get the history of the changes, but to keep a permanent list of people that have contributed to enhance FoxBin2Prg and that I feel as part of the ADN of this tool.
 
@@ -24,14 +27,17 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
+| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
+| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
+| 2023/10/20 | LScheffler | [v1.21.00](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with Spanish characters in comment. (ccantrell72) |
+| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler) |
 | 2023/09/06 | LScheffler | [v1.20.06](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.06) | **Bug Fix**: Problems recreating tables (LScheffler) |
 | 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
-| | | | Enhancement: Inserted options to allow splitting of SCX handling from VCX.1 |
-| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | Enhancement: New option "tcDebug" for get_DirSettings method. |
-| | | | Enhancement: For better clearance, renamed setting AllowInheritance to InhibitInheritance. |
-| | | | Enhancement: The debug option set via parameter has precedence over value from config file. |
-| | | | Enhancement: For debug option set via parameter only first valid call is used. |
+| | | | **Enhancement:** Inserted options to allow splitting of SCX handling from VCX. |
+| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | **Enhancement**: New option "tcDebug" for get_DirSettings method. |
+| | | | **Enhancement:** For better clearance, renamed setting AllowInheritance to InhibitInheritance. |
+| | | | **Enhancement:** The debug option set via parameter has precedence over value from config file. |
+| | | | **Enhancement:** For debug option set via parameter only first valid call is used. |
 | 2023/08/31 | LScheffler | [v1.20.03](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.03) | **Enhancement**: New option "tcCFG_File" for get_DirSettings method. |
 | 2023/08/31 | LScheffler | [v1.20.02](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.02) | New option for parameter set config file to control the use of "regular" config files enhanced |
 | 2023/08/30 | LScheffler | [v1.20.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.01) | **Bug Fix**: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler) |
@@ -437,4 +443,9 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-Last changed: _2023/09/02_
+Last changed: _2023/11/19_
+![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
+This project is part of [VFPX](https://vfpx.github.io/).   
+
+----
+Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
