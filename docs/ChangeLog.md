@@ -27,26 +27,27 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
-| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
-| 2023/10/20 | LScheffler | [v1.21.00](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with Spanish characters in comment. (ccantrell72) |
-| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler) |
-| 2023/09/06 | LScheffler | [v1.20.06](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.06) | **Bug Fix**: Problems recreating tables (LScheffler) |
-| 2023/09/03 | LScheffler | [v1.20.05](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
+| 2024/01/03 | LScheffler | [v1.21.02](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler) |
+| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
+| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
+| 2023/10/20 | LScheffler | [v1.21.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with Spanish characters in comment. (ccantrell72) |
+| 2023/09/06 | LScheffler | [v1.20.07](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler) |
+| 2023/09/06 | LScheffler | [v1.20.06](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.06) | **Bug Fix**: Problems recreating tables (LScheffler) |
+| 2023/09/03 | LScheffler | [v1.20.05](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
 | | | | **Enhancement:** Inserted options to allow splitting of SCX handling from VCX. |
-| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.04) | **Enhancement**: New option "tcDebug" for get_DirSettings method. |
+| 2023/09/01 | LScheffler | [v1.20.04](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.04) | **Enhancement**: New option "tcDebug" for get_DirSettings method. |
 | | | | **Enhancement:** For better clearance, renamed setting AllowInheritance to InhibitInheritance. |
 | | | | **Enhancement:** The debug option set via parameter has precedence over value from config file. |
 | | | | **Enhancement:** For debug option set via parameter only first valid call is used. |
-| 2023/08/31 | LScheffler | [v1.20.03](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.03) | **Enhancement**: New option "tcCFG_File" for get_DirSettings method. |
-| 2023/08/31 | LScheffler | [v1.20.02](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.02) | New option for parameter set config file to control the use of "regular" config files enhanced |
-| 2023/08/30 | LScheffler | [v1.20.01](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.01) | **Bug Fix**: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler) |
+| 2023/08/31 | LScheffler | [v1.20.03](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.03) | **Enhancement**: New option "tcCFG_File" for get_DirSettings method. |
+| 2023/08/31 | LScheffler | [v1.20.02](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.02) | New option for parameter set config file to control the use of "regular" config files enhanced |
+| 2023/08/30 | LScheffler | [v1.20.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.01) | **Bug Fix**: Some values of config file would not be read, if the inline comment "&&" was not in the line (LScheffler) |
 | | | | **Bug Fix**: Bug Fix: config file set by parameter would be ignored, if the folder contains FoxBin2Prg.cfg (LScheffler) |
 | | | | **Bug Fix**: Bug Fix: Fixed problems with table config files (LScheffler) |
 | | | | **Enhancement**: For config file template new options to set config file and debug added |
 | | | | **Enhancement**: New option for parameter set config file to control the use of "regular" config files |
-| 2023/08/27 | LScheffler | [v1.20.00](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.00) | **Enhancement**: Source now ships without binary source files. See [README.md](../README.md) how to regenerate. |
-| 2023/08/26 | LScheffler | [v1.20.00](https://github.com/lscheffler/foxbin2prg/releases/tag/v1.20.00) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
+| 2023/08/27 | LScheffler | [v1.20.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.00) | **Enhancement**: Source now ships without binary source files. See [README.md](../README.md) how to regenerate. |
+| 2023/08/26 | LScheffler | [v1.20.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.00) | **Bug Fix**: Issues with form charsets ( national letters in form and controls Caption field) (KestasL) <br /> This fixes also: Forms with ole controls conversion error (also: any vcx) #95 (KestasL) |
 | | | | **Enhancement**: Added option to return version number |
 | | | | **Bug Fix**: Bug Fix: codepage is lost on recreation, issue #96, fixes issue #95 (OLE) as well (KestasL) |
 | | | | Since all files will be rewritten due to the codepage stored, it's a good time to change version number too. |
@@ -448,4 +449,4 @@ Last changed: _2023/11/19_
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2024/01/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.01'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.02'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -323,6 +323,7 @@
 * 06/09/2023	LScheffler	v1.20.07	Enhancement: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
 * 20/10/2023	LScheffler	v1.21.00	Problems with Spanish characters in comment. (ccantrell72)
 * 19/11/2023	LScheffler	v1.21.01	Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler)
+* 03/01/2024	LScheffler	v1.21.02	Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -496,13 +497,14 @@
 * 08/06/2022	JoergSchneider		Bug REPORT v1.19.74	Multiple text2bin and bin2text conversion on MNX causes space grow (JoergSchneider)
 * 10/06/2022	JoergSchneider		Bug REPORT v1.19.75	On operation per folder, change of folder must change configuration (JoergSchneider)
 * 16/03/2023	JoergSchneider		Bug REPORT v1.19.76	Bin2Txt Operation on VCX loses leading spaces in Property Values #90  (JoergSchneider)
-* 16/03/2023	LScheffler		 		Bug REPORT v1.19.76	Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
-* 17/03/2023	ericbarte					Bug REPORT v1.19.76	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
-* 04/08/2023	KestasL						Bug REPORT v1.19.78	Bin2Text: Forms with ole controls conversion error issue #95 (also: any vcx) (KestasL)
-* 04/08/2023	KestasL						Bug REPORT v1.19.78	Codepage is lost on recreation, issue #96 (KestasL)
-* 28/08/2023	LScheffler				Bug REPORT v1.20.00	Sometimes Language is not changed fitting to conmfig file
-* 20/10/2023	ccantrell72				Bug REPORT v1.20.07	Problems with Spanish characters in comment.
-* 19/09/2023	LScheffler				Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
+* 16/03/2023	LScheffler		 	Bug REPORT v1.19.76	Txt2Bin Operation on VCX looses double ampersand in Property Values #91 (LScheffler)
+* 17/03/2023	ericbarte			Bug REPORT v1.19.76	Text2Bin on PJX errors out for projects with an attach icon that has a drive letter on its path. #93 (ericbarte)
+* 04/08/2023	KestasL				Bug REPORT v1.19.78	Bin2Text: Forms with ole controls conversion error issue #95 (also: any vcx) (KestasL)
+* 04/08/2023	KestasL				Bug REPORT v1.19.78	Codepage is lost on recreation, issue #96 (KestasL)
+* 28/08/2023	LScheffler			Bug REPORT v1.20.00	Sometimes Language is not changed fitting to conmfig file
+* 20/10/2023	ccantrell72			Bug REPORT v1.20.07	Problems with Spanish characters in comment.
+* 19/09/2023	LScheffler			Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
+* 03/01/2024	LScheffler			Bug REPORT v1.21.01	Problems regenerating single classes and forms from text files in class-per-file form; #105
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -4113,12 +4115,20 @@ Define Class c_foxbin2prg As Session
 					Endcase
 *!*	/Changed by: LScheffler 04.3.2021
 
+*!*	Changed By LScheffler 3.1.2024
+*!*	<pdm>
+*!*	<change date="{^2024-01-03,08:27:00}">Changed By LScheffler<br />
+*!*	Problem recreating ingle classes
+*!*	</change>
+*!*	</pdm>
+ 
 * Redefinir nombre archivo de entrada según el tipo de conversión (IMPORT/EXPORT)
 					If .c_ClassOperationType = 'I'
 * En el caso de importar, debo cambiar la sintaxis de tc_InputFile para poder usar
 * la conversión existente de clase vc2.
 * Esto deja un archivo con sintaxis "classlib.vcx::classname::import" en "classlib.classname.vc2"
-						IF .ATC(lcExt,c_VC2,"VCX")
+*						IF .ATC(lcExt,c_VC2,"VCX")
+						IF INLIST(lcExt,.c_VC2,"VCX")
 							If .n_UseClassPerFile = 2
 								tc_InputFile		= Forceext(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
 
@@ -4132,7 +4142,8 @@ Define Class c_foxbin2prg As Session
 							Endif
 						Endif
 
-						IF .ATC(lcExt,c_SC2,"SCX")
+*						IF .ATC(lcExt,c_SC2,"SCX")
+						IF INLIST(lcExt,.c_SC2,"SCX")
 							If .n_UseFormPerFile = 2
 								tc_InputFile		= Forceext(tc_InputFile, '') + '.*.' + .c_ClassToConvert + '.' + .c_VC2
 
@@ -4146,6 +4157,7 @@ Define Class c_foxbin2prg As Session
 							Endif
 						Endif
 					Endif
+*!*	/Changed By LScheffler 3.1.2024
 
 					loLang			= _Screen.o_FoxBin2Prg_Lang
 
