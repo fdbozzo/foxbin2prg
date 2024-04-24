@@ -27,7 +27,8 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2024/01/03 | LScheffler | [v1.21.02](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler) |
+| 2024/04/24 | LScheffler | [v1.21.03](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.03) | **Bug Fix**: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943) |
+| 2024/01/03 | LScheffler | [v1.21.02](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.02) | **Bug Fix**: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler) |
 | 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
 | 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
 | 2023/10/20 | LScheffler | [v1.21.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with Spanish characters in comment. (ccantrell72) |
@@ -444,9 +445,8 @@ _**Note:** you can click on the version number for downloading this version from
 | 2013/11/22 | FDBOZZO | [v1.0](https://github.com/fdbozzo/foxbin2prg/tree/v1.0---pública) | Initial creation of clases on prg and support of VCX/SCX/PJX files  |
 
 ----
-Last changed: _2023/11/19_
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2024/01/03_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2024/04/24_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

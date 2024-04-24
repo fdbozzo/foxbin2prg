@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.02'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.03'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -321,9 +321,10 @@
 * 03/09/2023	LScheffler	v1.20.05	Enhancement: Inserted options to allow splitting of SCX handling from VCX
 * 06/09/2023	LScheffler	v1.20.06	Bug Fix: Problems recreating tables (LScheffler)
 * 06/09/2023	LScheffler	v1.20.07	Enhancement: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler)
-* 20/10/2023	LScheffler	v1.21.00	Problems with Spanish characters in comment. (ccantrell72)
-* 19/11/2023	LScheffler	v1.21.01	Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler)
-* 03/01/2024	LScheffler	v1.21.02	Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler)
+* 20/10/2023	LScheffler	v1.21.00	Bug Fix: Problems with Spanish characters in comment. (ccantrell72)
+* 19/11/2023	LScheffler	v1.21.01	Bug Fix: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler)
+* 03/01/2024	LScheffler	v1.21.02	Bug Fix: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler)
+* 24/04/2024	LScheffler	v1.21.03	Bug Fix: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -505,6 +506,7 @@
 * 20/10/2023	ccantrell72			Bug REPORT v1.20.07	Problems with Spanish characters in comment.
 * 19/09/2023	LScheffler			Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
 * 03/01/2024	LScheffler			Bug REPORT v1.21.01	Problems regenerating single classes and forms from text files in class-per-file form; #105
+* 25/03/2024	griessbach14943		Bug REPORT v1.21.02	Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -27737,7 +27739,8 @@ Define Class CL_DBF_RECORD As CL_CUS_BASE
 						If lcFieldType == 'G'
 *-- Saltar campos de tipo General
 						Else
-							luValue		= Evaluate(lcField)
+
+							luValue		= Evaluate("TABLABIN."+lcField)
 
 							Do Case
 								Case lcFieldType $ 'GWQVCM' And luValue == '' ;	&& Vacío
