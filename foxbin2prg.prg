@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.03'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.04'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -325,6 +325,7 @@
 * 19/11/2023	LScheffler	v1.21.01	Bug Fix: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler)
 * 03/01/2024	LScheffler	v1.21.02	Bug Fix: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler)
 * 24/04/2024	LScheffler	v1.21.03	Bug Fix: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943)
+* 26/08/2024	DHennig		v1.21.04	Added support for BodyDevInfo = 2 in CFG file to prevent both DevInfo and ObjRev from being written to PJ2 file
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -3135,7 +3136,9 @@ Define Class c_foxbin2prg As Session
 *pjx special
 								Case Left( laConfig(m.I), 12 ) == Lower('BodyDevInfo:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 13 ) )
-									If Inlist( lcValue, '0', '1' ) Then
+*** DH 2024-08-26: support 2 as a value
+*									If Inlist( lcValue, '0', '1' ) Then
+									If Inlist( lcValue, '0', '1', '2' ) Then
 										lo_CFG.n_BodyDevInfo	= Int( Val( lcValue ) )
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > BodyDevInfo:                ' + Transform(lo_CFG.n_BodyDevInfo) )
 									Endif
@@ -4221,7 +4224,8 @@ Define Class c_foxbin2prg As Session
 							laOptions(04,1) = "*Debug:"                             && 0,1 Don't Activate individual <file>.Log by default
 							laOptions(04,2) = ".n_Debug"
 							laOptions(04,3) = 0
-							laOptions(05,1) = "*BodyDevInfo:"                       && 0,1 [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo
+*** DH 2024-08-26: added text for option 2
+							laOptions(05,1) = "*BodyDevInfo:"                       && 0,1 [0=Don't keep DevInfo for body pjx records], 1=Keep DevInfo, 2 = Don't keep DevInfo or ObjRev
 							laOptions(05,2) = ".n_BodyDevInfo"
 							laOptions(05,3) = 0
 							laOptions(06,1) = "*ExtraBackupLevels:"                 && n By default 1 BAK is created. With this you can make more .N.BAK, or none
@@ -18495,31 +18499,47 @@ toFoxBin2Prg.n_CheckFileInPath=2
 							<<>>	.ADD('<<loReg.NAME>>')
 							ENDTEXT
 
-							If toFoxBin2Prg.n_BodyDevInfo=1
+*** DH 2024-08-26: changed IF to CASE and added case for BodyDevInfo = 2 meaning omit DEVINFO and OBJREV
+*							If toFoxBin2Prg.n_BodyDevInfo=1
+							do case
+								 case toFoxBin2Prg.n_BodyDevInfo=1
 * Generates an extra DevInfo tag for each body PJX record
-								TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-								<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
-								Type="<<loReg.TYPE>>"
-								Cpid="<<INT( loReg.CPID )>>"
-								Timestamp="<<INT( loReg.TIMESTAMP )>>"
-								ID="<<INT( loReg.ID )>>"
-								ObjRev="<<INT( loReg.OBJREV )>>"
-								User="<<STRCONV(loReg.USER,13)>>"
-								DevInfo="<<STRCONV(loReg.DEVINFO,13)>>"
-								<<C_FILE_META_F>>
-								ENDTEXT
-							Else
-								TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
-								<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
-								Type="<<loReg.TYPE>>"
-								Cpid="<<INT( loReg.CPID )>>"
-								Timestamp="<<INT( loReg.TIMESTAMP )>>"
-								ID="<<INT( loReg.ID )>>"
-								ObjRev="<<INT( loReg.OBJREV )>>"
-								User="<<STRCONV(loReg.USER,13)>>"
-								<<C_FILE_META_F>>
-								ENDTEXT
-							Endif
+									TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+									<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
+									Type="<<loReg.TYPE>>"
+									Cpid="<<INT( loReg.CPID )>>"
+									Timestamp="<<INT( loReg.TIMESTAMP )>>"
+									ID="<<INT( loReg.ID )>>"
+									ObjRev="<<INT( loReg.OBJREV )>>"
+									User="<<STRCONV(loReg.USER,13)>>"
+									DevInfo="<<STRCONV(loReg.DEVINFO,13)>>"
+									<<C_FILE_META_F>>
+									ENDTEXT
+*							Else
+								case toFoxBin2Prg.n_BodyDevInfo=2
+									TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+									<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
+									Type="<<loReg.TYPE>>"
+									Cpid="<<INT( loReg.CPID )>>"
+									Timestamp="<<INT( loReg.TIMESTAMP )>>"
+									ID="<<INT( loReg.ID )>>"
+									User="<<STRCONV(loReg.USER,13)>>"
+									<<C_FILE_META_F>>
+									ENDTEXT
+								otherwise
+									TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2+4+8
+									<<>>		<<'&'>><<'&'>> <<C_FILE_META_I>>
+									Type="<<loReg.TYPE>>"
+									Cpid="<<INT( loReg.CPID )>>"
+									Timestamp="<<INT( loReg.TIMESTAMP )>>"
+									ID="<<INT( loReg.ID )>>"
+									ObjRev="<<INT( loReg.OBJREV )>>"
+									User="<<STRCONV(loReg.USER,13)>>"
+									<<C_FILE_META_F>>
+									ENDTEXT
+*							Endif
+							endcase
+*** DH 2024-08-26: end of changes
 
 							loReg	= .Null.
 						Endfor
@@ -19132,6 +19152,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 *-- Definir archivos del proyecto y metadata: CPID, Timestamp, ID, etc.
 						loProject.KeySort = 2
 
+messagebox('convert')
 						For Each loReg In loProject &&FOXOBJECT
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	.ADD('<<loReg.NAME>>')
@@ -31670,6 +31691,7 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 *** DH 2021-03-04: added HomeDir to text
+*** DH 2024-08-26: added text for option 2 for BodyDevInfo
 							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Options for folder <<.c_Recompile>>, read as of <<DATETIME()>>"
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
@@ -31811,7 +31833,7 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- PJX special
-						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
+						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo, 2 = Don't keep DevInfo or ObjRev
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- DBF special
@@ -32019,6 +32041,7 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 *** DH 2021-03-04: added HomeDir to text
+*** DH 2024-08-26: added text for option 2 for BodyDevInfo
 							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Options for folder <<.c_Recompile>>, read as of <<DATETIME()>>"
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
@@ -32160,7 +32183,7 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- PJX special
-						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
+						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo, 2 = Don't keep DevInfo or ObjRev
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- DBF special
@@ -32745,6 +32768,7 @@ Define Class CL_LANG As Custom
 						<<>>
 							ENDTEXT
 *** DH 2021-03-04: added HomeDir to text
+*** DH 2024-08-26: added text for option 2 for BodyDevInfo
 							.C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_Header4 = "*Options for folder <<.c_Recompile>>, read as of <<DATETIME()>>"
 							TEXT TO .C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 						<<>>################################################################################################################
@@ -32886,7 +32910,7 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- PJX special
-						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
+						<<>>BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo, 2 = Don't keep DevInfo or ObjRev
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- DBF special
