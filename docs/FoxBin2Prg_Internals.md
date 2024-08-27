@@ -36,7 +36,7 @@ As far as possible these are the original documents. Changes are added where fun
       - [Complementary options for the UseClassPerFile setting](#complementary-options-for-the-useclassperfile-setting)
          - [RedirectClassPerFileToMain](#redirectclassperfiletomain)
          - [ClassPerFileCheck](#classperfilecheck)
-   - [Create File-Per-Form](create_file_per_form)
+   - [Create File-Per-Form](#create-file-per-form)
    - [Create File-Per-DBC](#create-file-per-dbc)
       - [Complementary options for the UseFilesPerDBC setting](#complementary-options-for-the-usefilesperdbc-setting)
          - [RedirectFilePerDBCToMain](#redirectfileperdbctomain)
@@ -114,6 +114,7 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | Debug | _0_, 1, 2 | 0=Off<br/>1=Normal<br/>2=Extended<br/>By default, don't generate individual \<file\>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging.<br/>**If cDebug is set via parameter, this is ignored.** |
 | BackgroundImage | \<cFile\> | Backgroundimage for process form |
 | HomeDir | 0, _1_ | 0=don't save HomeDir in PJ2,<br/>1=save HomeDir in PJ2.<br/>Setting this to 0 prevents the PJ2 file from changing just because two developers have the project in different folders |
+| BodyDevInfo | _0_, 1, 2 | 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo, 2 = Don't keep DevInfo or ObjRev.<br/>Setting this to 2 prevents the PJ2 file from changing just because two developers built the project on their machines |
 |||
 | InhibitInheritance | _0_, 1, 2, 3 | **This settings is for config file via parameter only** <br/>Settings for config file via parameter only0=Allow scanning "regular" config files (file via parameter is just additional default)<br/>1=Only read tree from root of the file given by parameter, not FoxBin2Prg default<br/>2=Only read folder and subfolder of the file given by parameter<br/>3=Read no other file<br/>This is like<br/>0 Default \| Parameter file \| Default near FoxBin2Prg \| all other config files<br/>1 Default \| Parameter file \| Inheritance from root to parent of folder \| folder and subdirs<br/>2 Default \| Parameter file \| folder and subdirs<br/>3 Default \| Parameter file |
 |||
@@ -141,10 +142,9 @@ These are the FoxBin2Prg.cfg configuration file settings and their meaning:
 | | | 2=creates / refresh class in file.VCX and do not touch other classes of file.VCX |
 | [ClassPerFileCheck](#classperfilecheck) | _0_, 1 | 0=Don't check file.class.vc2 inclusion,<br/>1=Check file.class.vc2 inclusion<br/>Only used if import file is in file[.baseclass].class.tx2 syntax.<br/>Ignored for RedirectClassType: 2 |
 |||
-| [UseFormSettings](create_file_per_form)
- | _0_, 1 | 0=Old Style, like the class settings<br/>1=Form style, special for form<br/>This controls the use of the _UseFormPerFile_, _RedirectFormPerFileToMain_, _RedirectFormType_ and _FormPerFileCheck_ options.<br/>Only if this option is set, the options will be read. |
+| [UseFormSettings](#create-file-per-form) | _0_, 1 | 0=Old Style, like the class settings<br/>1=Form style, special for form<br/>This controls the use of the _UseFormPerFile_, _RedirectFormPerFileToMain_, _RedirectFormType_ and _FormPerFileCheck_ options.<br/>Only if this option is set, the options will be read. |
 | UseFormPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple Form.Object.sc2 files,<br/>2=Multiple Form.baseclass.Object.sc2 files<br/>See [Create Class-Per-File](#create-class-per-file) |
-| [RedirectFormPerFileToMain:](#redirectclassperfiletomain:) | _0_, 1 | 0=Don't redirect to Form.scx,<br/>1=Redirect to Form.scx when selecting Form.Object.sc2<br/>RedirectClassType: 1 precedes this setting |
+| [RedirectFormPerFileToMain](#redirectclassperfiletomain) | _0_, 1 | 0=Don't redirect to Form.scx,<br/>1=Redirect to Form.scx when selecting Form.Object.sc2<br/>RedirectClassType: 1 precedes this setting |
 | RedirectFormType | _0_, 1, 2 | For classes created with UseClassPerFile>0 in the form Form[.baseclass].Object.sx2 (scx only) |
 | | | 0=creates / refresh class in Form.SCX and add / replace all other classes of this library |
 | | | 1=creates / refresh class Form[.baseclass].Object.SCX and do not touch Form.SCX |
@@ -550,7 +550,7 @@ This can be useful if you want to divide a big library in smaller pieces.
 #### Note
 By default, these settings are valid for SCX and DBC files as well. SCX files may expand to header, form and dataenvironment, and a DBC may be split into header and several files of the objects contained.   
 If you like finer and independend control over forms and databases, check
-- [Create File-Per-Form](create_file_per_form) and
+- [Create File-Per-Form](#create-file-per-form) and
 - [Create File-Per-DBC](#create-file-per-dbc)
 
 ### Create File-Per-Form
