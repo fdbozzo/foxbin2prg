@@ -27,6 +27,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2024/08/26 | DHennig | v1.21.04 | **Enhancement**: Added support for BodyDevInfo = 2 in CFG file to prevent both DevInfo and ObjRev from being written to PJ2 file |
 | 2024/04/24 | LScheffler | [v1.21.03](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.03) | **Bug Fix**: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943) |
 | 2024/01/03 | LScheffler | [v1.21.02](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.02) | **Bug Fix**: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler) |
 | 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
@@ -449,4 +450,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2024/04/24_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2024/08/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

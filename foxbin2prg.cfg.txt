@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.03
+*Version: v1.21.04
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
@@ -137,7 +137,7 @@
 *----------------------------------------------------------------------------------------------------------------
 
 *-- PJX special
-*BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
+*BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo, 2 = Don't keep DevInfo or ObjRev
 *----------------------------------------------------------------------------------------------------------------
 
 *-- DBF special
