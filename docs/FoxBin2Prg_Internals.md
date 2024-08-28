@@ -782,4 +782,4 @@ Last changed: _2023/09/06_
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2024/08/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -450,4 +450,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2024/04/24_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2024/08/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

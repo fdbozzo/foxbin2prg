@@ -175,4 +175,4 @@ If you like to see Fernando's blog, or value his work:
 
 ----
 
-Last changed: _2024/02/24_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2024/08/26_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
