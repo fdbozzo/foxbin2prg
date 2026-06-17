@@ -3211,7 +3211,7 @@ Define Class c_foxbin2prg As Session
 *-- ESTOS SE EVALÚAN FUERA DEL IF PORQUE NO DEPENDEN DEL CFG
 *-- Y PUEDEN VENIR TAMBIÉN DE PARÁMETROS EXTERNOS.
 					If Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) Then
-						lo_CFG.n_ShowProgressbar		= Icase(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
+						lo_CFG.n_ShowProgressbar		= Icase(Transform(tcDontShowProgress)=='0',1, Transform(tcDontShowProgress)=='1',0, 2)
 					Endif
 					If Inlist( Transform(tcDontShowErrors), '0', '1' ) Then
 						lo_CFG.l_ShowErrors				= Not (Transform(tcDontShowErrors) == '1')
