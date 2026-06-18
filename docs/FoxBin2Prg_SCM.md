@@ -76,4 +76,4 @@ feel free to share how you are using it so others can benefit.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/17_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
