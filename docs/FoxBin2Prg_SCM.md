@@ -69,11 +69,11 @@ how to configure and how to begin working with Visual FoxPro 9 projects using br
 If you already are using FoxBin2Prg with another SCM tool,
 feel free to share how you are using it so others can benefit.
 
-- [Using FoxBin2Prg with PlasticSCM](Using-FoxBin2Prg-with-PlasticSCM)
+- [See YouTube demo video of FoxBin2Prg used with PlasticSCM](http://youtu.be/sE4wQ50Itqg)
 
 ----
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/03/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/17_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

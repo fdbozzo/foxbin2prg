@@ -27,14 +27,21 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
-| 2024/08/26 | DHennig | v1.21.04 | **Enhancement**: Added support for BodyDevInfo = 2 in CFG file to prevent both DevInfo and ObjRev from being written to PJ2 file |
+| 2026/06/18 | LScheffler | [v1.21.05](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.05) | **Bug Fix**: Brute force fixed Datatype error for tcDontShowProgress, #114 (omirian) |
+| | | | **Bug Fix**: Fixed missing link SCM documentation, #116 (ToniKoehler) |
+| | | | **Bug Fix**: Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118 (LScheffler) |
+| | | | **Enhancement**: Added documentation of properties of settings object |
+| | | | **Enhancement**: Better documentation if a settings us ignored when a parameter is set. Voth in in docu and setting files generated via -Cc options. |
+| | | | **Enhancement**: Some settings will not follow inheritence, documented in docu and setting files generated via -Cc options. |
+| | | | **Enhancement**: Minor changes |
+| 2024/08/26 | DHennig | [v1.21.04](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.04) | **Enhancement**: Added support for BodyDevInfo = 2 in CFG file to prevent both DevInfo and ObjRev from being written to PJ2 file |
 | 2024/04/24 | LScheffler | [v1.21.03](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.03) | **Bug Fix**: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943) |
 | 2024/01/03 | LScheffler | [v1.21.02](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.02) | **Bug Fix**: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler) |
 | 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Enhancement**: Source files not longer included in Thor. The file you will found are old and will be removed with subsequent installs. (LScheffler) |
-| 2023/11/19 | LScheffler | [v1.21.01](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.01) | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
+| | | | **Bug Fix**: Problems regenerating databases with splited contents due to the removed Spanish characters in comment. (LScheffler) |
 | 2023/10/20 | LScheffler | [v1.21.00](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.00) | **Bug Fix**: Problems with Spanish characters in comment. (ccantrell72) |
 | 2023/09/06 | LScheffler | [v1.20.07](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.07) | **Enhancement**: Option to block processing of directories. If file ".FoxBin2Prg_Ignore" is existing, this directories and all subdirectries will be ignored. (Mainly set up to ignore local GoFish settings) (LScheffler) |
-| 2023/09/06 | LScheffler | [v1.20.06](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.06) | **Bug Fix**: Problems recreating tables (LScheffler) |
+| | | | **Bug Fix**: Problems recreating tables (LScheffler) |
 | 2023/09/03 | LScheffler | [v1.20.05](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.05) | **Bug Fix**: Problems recreating menu files (introduced with codepage) (LScheffler) |
 | | | | **Enhancement:** Inserted options to allow splitting of SCX handling from VCX. |
 | 2023/09/01 | LScheffler | [v1.20.04](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.20.04) | **Enhancement**: New option "tcDebug" for get_DirSettings method. |
@@ -450,4 +457,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2024/08/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2016/06/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

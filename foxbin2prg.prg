@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.04'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.05'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -326,6 +326,13 @@
 * 03/01/2024	LScheffler	v1.21.02	Bug Fix: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler)
 * 24/04/2024	LScheffler	v1.21.03	Bug Fix: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943)
 * 26/08/2024	DHennig		v1.21.04	Added support for BodyDevInfo = 2 in CFG file to prevent both DevInfo and ObjRev from being written to PJ2 file
+* 18/06/2026	LScheffler	v1.21.05	Bug Fix: Brute force fixed Datatype error for tcDontShowProgress, #114 (omirian)
+* 18/06/2026	LScheffler	v1.21.05	Bug Fix: Fixed missing link SCM documentation, #116 (ToniKoehler)
+* 18/06/2026	LScheffler	v1.21.05	Bug Fix: Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118 (LScheffler)
+* 18/06/2026	LScheffler	v1.21.05	Docu: Added documentation of properties of settings object
+* 18/06/2026	LScheffler	v1.21.05	Docu: Better documentation if a settings us ignored when a parameter is set. Voth in in docu and setting files generated via -Cc options.
+* 18/06/2026	LScheffler	v1.21.05	Docu: Some settings will not follow inheritence, documented in docu and setting files generated via -Cc options.
+* 18/06/2026	LScheffler	v1.21.05	Docu: Minor changes
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -508,6 +515,9 @@
 * 19/09/2023	LScheffler			Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
 * 03/01/2024	LScheffler			Bug REPORT v1.21.01	Problems regenerating single classes and forms from text files in class-per-file form; #105
 * 25/03/2024	griessbach14943		Bug REPORT v1.21.02	Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106
+* 25/02/2026	omirian				Bug REPORT v1.21.05	Brute force fixed Datatype error for tcDontShowProgress, #114
+* 09/04/2026	ToniKoehler			Bug REPORT v1.21.05	Fixed missing link SCM documentation, #116
+* 18/06/2026	LScheffler			Bug REPORT v1.21.05	Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -2769,7 +2779,15 @@ Define Class c_foxbin2prg As Session
 								Case Left( laConfig(m.I), 17 ) == Lower('DontShowProgress:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
 									If Not Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) And Inlist( lcValue, '0', '1', '2' ) Then
-										tcDontShowProgress	= lcValue
+*!*	Changed by: SF 18.06.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-18,14:47:00}">Changed by: SF<br />
+*!*	No need for tcDontShowProgress, it runs on .n_ShowProgressbar
+*!*	</change>
+*!*	</pdm>
+*										tcDontShowProgress	= lcValue
+										tcDontShowProgress	= ''
+*!*	/Changed by: SF 18.06.2026
 										lo_CFG.n_ShowProgressbar	= Icase(lcValue=='0',1, lcValue=='1',0, 2)
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > tcDontShowProgress:         ' + Transform(tcDontShowProgress) )
 									Endif
@@ -2783,7 +2801,16 @@ Define Class c_foxbin2prg As Session
 
 								Case Left( laConfig(m.I), 16 ) == Lower('ShowProgressbar:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
-									If Inlist( lcValue, '0', '1', '2' ) Then
+*!*	Changed by: SF 18.06.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-18,14:49:00}">Changed by: SF<br />
+*!*	Parameter tcDontShowProgress has priority, as in DontShowProgress
+*!*	If tcDontShowProgress has a valid value, the setting will be ignored, and the parameter sets .n_ShowProgressbar further below.
+*!*	</change>
+*!*	</pdm>
+*									If Inlist( lcValue, '0', '1', '2' ) Then
+									If Not Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) And Inlist( lcValue, '0', '1', '2' ) Then
+*!*	/Changed by: SF 18.06.2026
 										lo_CFG.n_ShowProgressbar	= Int( Val(lcValue) )
 										tcDontShowProgress	= ''
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ShowProgressbar:            ' + lcValue )
@@ -3211,7 +3238,15 @@ Define Class c_foxbin2prg As Session
 *-- ESTOS SE EVALÚAN FUERA DEL IF PORQUE NO DEPENDEN DEL CFG
 *-- Y PUEDEN VENIR TAMBIÉN DE PARÁMETROS EXTERNOS.
 					If Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) Then
-						lo_CFG.n_ShowProgressbar		= Icase(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
+*!*	Changed by: SF 18.06.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-18,14:45:00}">Changed by: SF<br />
+*!*	Problem with removed type Error in tcDontShowProgress
+*!*	</change>
+*!*	</pdm>
+*						lo_CFG.n_ShowProgressbar		= Icase(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
+						lo_CFG.n_ShowProgressbar		= Icase(Transform(tcDontShowProgress)=='0',1, Transform(tcDontShowProgress)=='1',0, 2)
+*!*	/Changed by: SF 18.06.2026
 					Endif
 					If Inlist( Transform(tcDontShowErrors), '0', '1' ) Then
 						lo_CFG.l_ShowErrors				= Not (Transform(tcDontShowErrors) == '1')
@@ -31706,7 +31741,7 @@ Define Class CL_LANG As Custom
 					    <<>>      if used, the InhibitInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
@@ -31714,12 +31749,17 @@ Define Class CL_LANG As Custom
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+						<<>>                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 						<<>>                               && 1=Activate individual <file>.Log by default
 						<<>>                               && 2=???
-						<<>>                               && Only valid if not controlled by parameter
+						<<>>                               && Only valid if not controlled by parameter cDebug
+						<<>>                               && Note: This setting will be ignored, if cDebug parameter is set. 
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
@@ -31825,8 +31865,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- General files
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+						<<>>                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
@@ -32056,7 +32100,7 @@ Define Class CL_LANG As Custom
 					    <<>>      if used, the InhibitInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
@@ -32064,12 +32108,17 @@ Define Class CL_LANG As Custom
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+						<<>>                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 						<<>>                               && 1=Activate individual <file>.Log by default
 						<<>>                               && 2=???
-						<<>>                               && Only valid if not controlled by parameter
+						<<>>                               && Only valid if not controlled by parameter cDebug
+						<<>>                               && Note: This setting will be ignored, if cDebug parameter is set. 
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
@@ -32175,8 +32224,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- General files
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+						<<>>                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
@@ -32414,12 +32467,16 @@ Define Class CL_LANG As Custom
 						<<>>Interne Einstellungen
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Zeige Fortschrittsfenster, 1=Zeige es nicht, 2=Zeige Fortschrittsfenster nur, wenn mehrere Dateien konvertiert werden.
+						<<>>                               && Achtung: Wird der Parameter cDontShowProgress genutzt, wird diese einstellung ignoriert. 
 						<<>>DontShowErrors: 0              && 0=Zeige Fehler an, 1=Zeige keine Fehler an
+						<<>>                               && Achtung: Wird der Parameter cDontShowError genutzt, wird diese einstellung ignoriert. 
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>ExtraBackupLevels: 1           && Anzahl der Backup-Ebenen der Binärdateien 0=kein Backup, 1=<Datei>.BAK, n>1= n-Backup-Ebenen, <Datei>.n.BAK
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>Debug: 0                       && 0=Individuelles Logging ist aus 
 						<<>>                               && 1=Individuelles Log per Datei <Datei>.Log
 						<<>>                               && 2=???
-						<<>>                               && Nur gültig, wenn nicht durch einen Parameter übersteuert
+						<<>>                               && Nur gültig, wenn nicht durch einen Parameter cDebug übersteuert
 						<<>>BackgroundImage: <cFile>       && Hintergrundbild für das Formular zur Fortschrittsanzeige.
 						<<>>                               && Leer erzeugt kein Hintergrundbild. Wird die Datei nicht gefunden, wird der Standardhintergrund verwendet.
 						<<>>HomeDir: 1                     && Speichern der HomeDir Eigenschaft in die PJX
@@ -32536,15 +32593,19 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>Allgemeine Dateien
 						<<>>NoTimestamps: 1                && 0=Zeitstempel einiger Dateiarten werden nicht gelöscht 1=Zeitstempel werden zum Minimieren der Text-Datei-Unterschiede gelöscht
+						<<>>                               && Achtung: Wird der Parameter cNoTimestamps genutzt, wird diese einstellung ignoriert. 
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>ClearUniqueID: 1               && 0=Erhalte die Unique ID in den Text-Dateien, 1=Lösche Unique ID. Nützlich für Diff und Merge
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>OptimizeByFilestamp: 0         && 0=Aus, 1=Optimierte Erzeugung der Binärdateien in Abhängigkeit vom Zeitstempel. Gefährlich beim Arbeiten mit Zweigen!
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche .Null. (CHR(0)) Zeichen aus dem Quellcode
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Aus, 1=Entferne ZOrderSet Eigenschaft von Objekten
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Nutze HELPSTRING als Class Procedure Kommentar
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- speziell PJX
-						<<>>BodyDevInfo: 0                 && 0=DevInfo im body-pjx-Datensatz wird nicht erhalten], 1=DevInfo wird erhalten
+						<<>>BodyDevInfo: 0                 && 0=DevInfo im body-pjx-Datensatz wird nicht erhalten, 1=DevInfo wird erhalten, 2=DevInfo und ObjRev werden nicht erhalten.
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- speziell DBF
@@ -32783,7 +32844,7 @@ Define Class CL_LANG As Custom
 					    <<>>      if used, the InhibitInheritance setting controls if other config files will be evaluated (default). See below.
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
@@ -32791,12 +32852,16 @@ Define Class CL_LANG As Custom
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+						<<>>                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 						<<>>                               && 1=Activate individual <file>.Log by default
 						<<>>                               && 2=???
-						<<>>                               && Only valid if not controlled by parameter
+						<<>>                               && Only valid if not controlled by parameter cDebug
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
@@ -32902,8 +32967,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- General files
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+						<<>>                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
