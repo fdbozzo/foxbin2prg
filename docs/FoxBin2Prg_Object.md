@@ -74,8 +74,8 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | cBackupLevels | 0, _1_, .. | "0" no Bakup, "1", one level _filename_.bak, "n" n levels of Backup _filename_.n.bak |
 | cClearUniqueID | 0, _1_ | 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge |
 | cOptimizeByFilestamp | _0_, 1 | 1=Optimize file regeneration depending on file timestamp.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
-| cCFG_File | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
-|  | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation. |
+| cCFG_File<br/>or oCFG | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
+| | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation. |
 
 #### cOutputFolder
 The procedural call of FoxBin2Prg like
@@ -105,4 +105,4 @@ Return value is 0=OK, 1=Error.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
