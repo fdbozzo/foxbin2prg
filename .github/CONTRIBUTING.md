@@ -47,6 +47,8 @@ CD "path_to_FoxBin2Prg"
 DO ReCreate_FoxBin2Prg.prg
 ```   
 **Note: Do not run FoxBin2Prg.prg directly.**   
+**Note: There might be an FoxBin2Prg error around _tests\datos_readonly\vw_local_encuestas_. This is intended.
+The file is in the test suit and is intended to create an error for testing purposes.**   
 3. Do your changes   
 4. On top of _FoxBin2Prg.prg_ there are two version numbers:   
 ```
@@ -76,7 +78,10 @@ CD "path_to_FoxBin2Prg"
 DO Create_FoxBin2Prg.prg
 ```   
 **Note: Do not run FoxBin2Prg.prg directly.**   
-15. **The following steps are not neccesary, if you use *VPXDeployment* to create a new version that is applicable for Thor use.**   
+**Note: There might be an FoxBin2Prg error around _tests\datos_readonly\vw_local_encuestas.tbf_. This is intended.
+The file is in the test suit and is intended to create an error for testing purposes. This does not create a problem.   
+If you do not see this, it's just your config.**   
+15. **The following steps are not neccesary, if you use  [VPXDeployment](#using-vfpxdeployment) to create a new version that is applicable for Thor use.**   
 16. Compile to EXE **in VFP9 SP2**   
 17. Change Thor ([see below](#thor-conventions))   
 18. commit   
@@ -97,10 +102,11 @@ The standard procedure to create the Thor files is runing VFPXDeployment via Tho
 2. Run VFPXDeployment. It will set version number to EXE, compile, set several documentation and create the files for Thor.
 3. commit
 4. push to your fork
-5. create a pull request
+5. Create a pull request
 
 ### Without VFPXDeployment
-If you do not use VFPXDeployment
+If you do not use VFPXDeployment.   
+
 There are some considerations to make to add a new version to Thor.   
 Please check [Supporting Thor Updater](https://vfpx.github.io/thorupdate/)
 In special:

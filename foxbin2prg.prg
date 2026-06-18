@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.04'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.05'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -326,6 +326,13 @@
 * 03/01/2024	LScheffler	v1.21.02	Bug Fix: Problems regenerating single classes and forms from text files in class-per-file form; #105 (LScheffler)
 * 24/04/2024	LScheffler	v1.21.03	Bug Fix: Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106; #106 (griessbach14943)
 * 26/08/2024	DHennig		v1.21.04	Added support for BodyDevInfo = 2 in CFG file to prevent both DevInfo and ObjRev from being written to PJ2 file
+* 18/06/2026	LScheffler	v1.21.05	Bug Fix: Brute force fixed Datatype error for tcDontShowProgress, #114 (omirian)
+* 18/06/2026	LScheffler	v1.21.05	Bug Fix: Fixed missing link SCM documentation, #116 (ToniKoehler)
+* 18/06/2026	LScheffler	v1.21.05	Bug Fix: Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118 (LScheffler)
+* 18/06/2026	LScheffler	v1.21.05	Docu: Added documentation of properties of settings object
+* 18/06/2026	LScheffler	v1.21.05	Docu: Better documentation if a settings us ignored when a parameter is set. Voth in in docu and setting files generated via -Cc options.
+* 18/06/2026	LScheffler	v1.21.05	Docu: Some settings will not follow inheritence, documented in docu and setting files generated via -Cc options.
+* 18/06/2026	LScheffler	v1.21.05	Docu: Minor changes
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -508,6 +515,9 @@
 * 19/09/2023	LScheffler			Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
 * 03/01/2024	LScheffler			Bug REPORT v1.21.01	Problems regenerating single classes and forms from text files in class-per-file form; #105
 * 25/03/2024	griessbach14943		Bug REPORT v1.21.02	Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106
+* 25/02/2026	omirian				Bug REPORT v1.21.05	Brute force fixed Datatype error for tcDontShowProgress, #114
+* 09/04/2026	ToniKoehler			Bug REPORT v1.21.05	Fixed missing link SCM documentation, #116
+* 18/06/2026	LScheffler			Bug REPORT v1.21.05	Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -31731,7 +31741,7 @@ Define Class CL_LANG As Custom
 					    <<>>      if used, the InhibitInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
@@ -32090,7 +32100,7 @@ Define Class CL_LANG As Custom
 					    <<>>      if used, the InhibitInheritance setting controls if other config files will be evaluated (default)
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************
@@ -32834,7 +32844,7 @@ Define Class CL_LANG As Custom
 					    <<>>      if used, the InhibitInheritance setting controls if other config files will be evaluated (default). See below.
 					    <<>> 3., optional FOXBIN2PRG.CFG in root of working directory
 					    <<>> 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-					    <<>> 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+					    <<>> 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 						<<>>
 					    <<>> Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 						<<>>****************************************************************************************************************

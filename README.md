@@ -1,5 +1,5 @@
 # FoxBin2Prg
-## Version 1.21.04
+## Version 1.21.05
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -175,4 +175,4 @@ If you like to see Fernando's blog, or value his work:
 
 ----
 
-Last changed: _2024/08/26_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/18_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)

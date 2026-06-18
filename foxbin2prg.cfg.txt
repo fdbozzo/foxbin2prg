@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.04
+*Version: v1.21.05
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
@@ -10,7 +10,7 @@
 *      if used, the InhibitInheritance setting controls if other config files will be evaluated (default). See below.
 * 3., optional FOXBIN2PRG.CFG in root of working directory
 * 4., optional FOXBIN2PRG.CFG in every folder up to the working directory
-* 5., optional Special settings per single DBF's Syntax: <TableName>.dbf.cfg in tables folder)
+* 5., optional Special settings per single DBF's (Syntax: <TableName>.dbf.cfg in tables folder)
 
 * Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
 *****************************************************************************************************************
@@ -18,12 +18,16 @@
 *-- Settings for internal work, not processing
 *Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 *ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+*                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 *DontShowErrors: 0              && Show message errors by default
+*                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+*                               && Note: There is no inheritance for this setting. First occurance wins. 
 *ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+*                               && Note: There is no inheritance for this setting. First occurance wins. 
 *Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 *                               && 1=Activate individual <file>.Log by default
 *                               && 2=???
-*                               && Only valid if not controlled by parameter
+*                               && Only valid if not controlled by parameter cDebug
 *BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 *HomeDir: 1                     && Home directory in PJX
 *                               && 0 don't save HomeDir in PJ2
@@ -129,8 +133,12 @@
 
 *-- General files
 *NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+*                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+*                               && Note: There is no inheritance for this setting. First occurance wins. 
 *ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+*                               && Note: There is no inheritance for this setting. First occurance wins. 
 *OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+*                               && Note: There is no inheritance for this setting. First occurance wins. 
 *RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 *RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 *PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
