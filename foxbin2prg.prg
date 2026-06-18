@@ -31739,12 +31739,17 @@ Define Class CL_LANG As Custom
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+						<<>>                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 						<<>>                               && 1=Activate individual <file>.Log by default
 						<<>>                               && 2=???
-						<<>>                               && Only valid if not controlled by parameter
+						<<>>                               && Only valid if not controlled by parameter cDebug
+						<<>>                               && Note: This setting will be ignored, if cDebug parameter is set. 
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
@@ -31850,8 +31855,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- General files
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+						<<>>                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
@@ -32089,12 +32098,17 @@ Define Class CL_LANG As Custom
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+						<<>>                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 						<<>>                               && 1=Activate individual <file>.Log by default
 						<<>>                               && 2=???
-						<<>>                               && Only valid if not controlled by parameter
+						<<>>                               && Only valid if not controlled by parameter cDebug
+						<<>>                               && Note: This setting will be ignored, if cDebug parameter is set. 
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
@@ -32200,8 +32214,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- General files
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+						<<>>                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
@@ -32439,12 +32457,16 @@ Define Class CL_LANG As Custom
 						<<>>Interne Einstellungen
 						<<>>Language: (auto)               && Sprache für Anzeigen und Logs. EN=English, FR=Français, ES=Español, DE=Deutsch, Nicht definiert = Automatisch [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Zeige Fortschrittsfenster, 1=Zeige es nicht, 2=Zeige Fortschrittsfenster nur, wenn mehrere Dateien konvertiert werden.
+						<<>>                               && Achtung: Wird der Parameter cDontShowProgress genutzt, wird diese einstellung ignoriert. 
 						<<>>DontShowErrors: 0              && 0=Zeige Fehler an, 1=Zeige keine Fehler an
+						<<>>                               && Achtung: Wird der Parameter cDontShowError genutzt, wird diese einstellung ignoriert. 
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>ExtraBackupLevels: 1           && Anzahl der Backup-Ebenen der Binärdateien 0=kein Backup, 1=<Datei>.BAK, n>1= n-Backup-Ebenen, <Datei>.n.BAK
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>Debug: 0                       && 0=Individuelles Logging ist aus 
 						<<>>                               && 1=Individuelles Log per Datei <Datei>.Log
 						<<>>                               && 2=???
-						<<>>                               && Nur gültig, wenn nicht durch einen Parameter übersteuert
+						<<>>                               && Nur gültig, wenn nicht durch einen Parameter cDebug übersteuert
 						<<>>BackgroundImage: <cFile>       && Hintergrundbild für das Formular zur Fortschrittsanzeige.
 						<<>>                               && Leer erzeugt kein Hintergrundbild. Wird die Datei nicht gefunden, wird der Standardhintergrund verwendet.
 						<<>>HomeDir: 1                     && Speichern der HomeDir Eigenschaft in die PJX
@@ -32561,8 +32583,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>Allgemeine Dateien
 						<<>>NoTimestamps: 1                && 0=Zeitstempel einiger Dateiarten werden nicht gelöscht 1=Zeitstempel werden zum Minimieren der Text-Datei-Unterschiede gelöscht
+						<<>>                               && Achtung: Wird der Parameter cNoTimestamps genutzt, wird diese einstellung ignoriert. 
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>ClearUniqueID: 1               && 0=Erhalte die Unique ID in den Text-Dateien, 1=Lösche Unique ID. Nützlich für Diff und Merge
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>OptimizeByFilestamp: 0         && 0=Aus, 1=Optimierte Erzeugung der Binärdateien in Abhängigkeit vom Zeitstempel. Gefährlich beim Arbeiten mit Zweigen!
+						<<>>                               && Achtung: Diese Einstellung folgt nicht der Vererbung. Der erste Eintrag wird genutzt. 
 						<<>>RemoveNullCharsFromCode: 1     && 0=Aus 1=Lösche .Null. (CHR(0)) Zeichen aus dem Quellcode
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Aus, 1=Entferne ZOrderSet Eigenschaft von Objekten
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Nutze HELPSTRING als Class Procedure Kommentar
@@ -32816,12 +32842,16 @@ Define Class CL_LANG As Custom
 						<<>>-- Settings for internal work, not processing
 						<<>>Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
 						<<>>ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
+						<<>>                               && Note: This setting will be ignored, if cDontShowProgress parameter is set. 
 						<<>>DontShowErrors: 0              && Show message errors by default
+						<<>>                               && Note: This setting will be ignored, if cDontShowError parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>Debug: 0                       && 0=Don't Activate individual <file>.Log by default
 						<<>>                               && 1=Activate individual <file>.Log by default
 						<<>>                               && 2=???
-						<<>>                               && Only valid if not controlled by parameter
+						<<>>                               && Only valid if not controlled by parameter cDebug
 						<<>>BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
 						<<>>HomeDir: 1                     && Home directory in PJX
 						<<>>                               && 0 don't save HomeDir in PJ2
@@ -32927,8 +32957,12 @@ Define Class CL_LANG As Custom
 						<<>>
 						<<>>-- General files
 						<<>>NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
+						<<>>                               && Note: This setting will be ignored, if cNoTimestamps parameter is set. 
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
+						<<>>                               && Note: There is no inheritance for this setting. First occurance wins. 
 						<<>>RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
 						<<>>RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
 						<<>>PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
