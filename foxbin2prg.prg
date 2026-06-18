@@ -32595,7 +32595,7 @@ Define Class CL_LANG As Custom
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- speziell PJX
-						<<>>BodyDevInfo: 0                 && 0=DevInfo im body-pjx-Datensatz wird nicht erhalten], 1=DevInfo wird erhalten
+						<<>>BodyDevInfo: 0                 && 0=DevInfo im body-pjx-Datensatz wird nicht erhalten, 1=DevInfo wird erhalten, 2=DevInfo und ObjRev werden nicht erhalten.
 						<<>>----------------------------------------------------------------------------------------------------------------
 						<<>>
 						<<>>-- speziell DBF
