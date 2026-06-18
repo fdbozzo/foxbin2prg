@@ -47,7 +47,7 @@ CD "path_to_FoxBin2Prg"
 DO ReCreate_FoxBin2Prg.prg
 ```   
 **Note: Do not run FoxBin2Prg.prg directly.**   
-3. Do your changes
+3. Do your changes   
 4. On top of _FoxBin2Prg.prg_ there are two version numbers:   
 ```
 #DEFINE DN_FB2PRG_VERSION       1.21
@@ -119,4 +119,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2023/12/05_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/18_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
