@@ -2769,7 +2769,15 @@ Define Class c_foxbin2prg As Session
 								Case Left( laConfig(m.I), 17 ) == Lower('DontShowProgress:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 18 ) )
 									If Not Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) And Inlist( lcValue, '0', '1', '2' ) Then
-										tcDontShowProgress	= lcValue
+*!*	Changed by: SF 18.06.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-18,14:47:00}">Changed by: SF<br />
+*!*	No need for tcDontShowProgress, it runs on .n_ShowProgressbar
+*!*	</change>
+*!*	</pdm>
+*										tcDontShowProgress	= lcValue
+										tcDontShowProgress	= ''
+*!*	/Changed by: SF 18.06.2026
 										lo_CFG.n_ShowProgressbar	= Icase(lcValue=='0',1, lcValue=='1',0, 2)
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > tcDontShowProgress:         ' + Transform(tcDontShowProgress) )
 									Endif
@@ -2783,7 +2791,16 @@ Define Class c_foxbin2prg As Session
 
 								Case Left( laConfig(m.I), 16 ) == Lower('ShowProgressbar:')
 									lcValue	= Alltrim( Substr( laConfig(m.I), 17 ) )
-									If Inlist( lcValue, '0', '1', '2' ) Then
+*!*	Changed by: SF 18.06.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-18,14:49:00}">Changed by: SF<br />
+*!*	Parameter tcDontShowProgress has priority, as in DontShowProgress
+*!*	If tcDontShowProgress has a valid value, the setting will be ignored, and the parameter sets .n_ShowProgressbar further below.
+*!*	</change>
+*!*	</pdm>
+*									If Inlist( lcValue, '0', '1', '2' ) Then
+									If Not Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) And Inlist( lcValue, '0', '1', '2' ) Then
+*!*	/Changed by: SF 18.06.2026
 										lo_CFG.n_ShowProgressbar	= Int( Val(lcValue) )
 										tcDontShowProgress	= ''
 										.writeLog( C_TAB + Justfname(lcConfigFile) + ' > ShowProgressbar:            ' + lcValue )
@@ -3211,7 +3228,15 @@ Define Class c_foxbin2prg As Session
 *-- ESTOS SE EVALÚAN FUERA DEL IF PORQUE NO DEPENDEN DEL CFG
 *-- Y PUEDEN VENIR TAMBIÉN DE PARÁMETROS EXTERNOS.
 					If Inlist( Transform(tcDontShowProgress), '0', '1', '2' ) Then
+*!*	Changed by: SF 18.06.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-18,14:45:00}">Changed by: SF<br />
+*!*	Problem with removed type Error in tcDontShowProgress
+*!*	</change>
+*!*	</pdm>
+*						lo_CFG.n_ShowProgressbar		= Icase(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
 						lo_CFG.n_ShowProgressbar		= Icase(Transform(tcDontShowProgress)=='0',1, Transform(tcDontShowProgress)=='1',0, 2)
+*!*	/Changed by: SF 18.06.2026
 					Endif
 					If Inlist( Transform(tcDontShowErrors), '0', '1' ) Then
 						lo_CFG.l_ShowErrors				= Not (Transform(tcDontShowErrors) == '1')
