@@ -333,6 +333,8 @@
 * 18/06/2026	LScheffler	v1.21.05	Docu: Better documentation if a settings us ignored when a parameter is set. Voth in in docu and setting files generated via -Cc options.
 * 18/06/2026	LScheffler	v1.21.05	Docu: Some settings will not follow inheritence, documented in docu and setting files generated via -Cc options.
 * 18/06/2026	LScheffler	v1.21.05	Docu: Minor changes
+* 19/06/2026	LScheffler	v1.21.06	Bug Fix: Fixed a typo in toF1oxBin2Prg. The "1" is not needed. #121 (ccantrell72)
+* 19/06/2026	LScheffler	v1.21.06	Bug Fix: Unused methods set_BinTableFlags and set_NumTableFlags removed. #122
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -515,9 +517,11 @@
 * 19/09/2023	LScheffler			Bug REPORT v1.21.00	Splitted database file is not regenerated. Problem with removed Spanish comment.
 * 03/01/2024	LScheffler			Bug REPORT v1.21.01	Problems regenerating single classes and forms from text files in class-per-file form; #105
 * 25/03/2024	griessbach14943		Bug REPORT v1.21.02	Text To Bin with Fieldcaption = "NULL" (misnomer. it's the field name); #106
-* 25/02/2026	omirian				Bug REPORT v1.21.05	Brute force fixed Datatype error for tcDontShowProgress, #114
-* 09/04/2026	ToniKoehler			Bug REPORT v1.21.05	Fixed missing link SCM documentation, #116
-* 18/06/2026	LScheffler			Bug REPORT v1.21.05	Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118
+* 25/02/2026	omirian				Bug REPORT v1.21.04	Brute force fixed Datatype error for tcDontShowProgress, #114
+* 09/04/2026	ToniKoehler			Bug REPORT v1.21.04	Fixed missing link SCM documentation, #116
+* 18/06/2026	LScheffler			Bug REPORT v1.21.04	Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118
+* 19/06/2026	ccantrell72			Bug REPORT v1.21.05	Typo in toF1oxBin2Prg. The "1" is not needed. #121
+* 19/06/2026	k-dawg66			Bug REPORT v1.21.05	Parameter name mismatch 'tcTableFlags' vs 'tcBinTableFlags'. #122
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -2804,6 +2808,7 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: SF 18.06.2026
 *!*	<pdm>
 *!*	<change date="{^2026-06-18,14:49:00}">Changed by: SF<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/118 / Precedence of parameter cDontShowProgress over setting in config "." v1.21.04
 *!*	Parameter tcDontShowProgress has priority, as in DontShowProgress
 *!*	If tcDontShowProgress has a valid value, the setting will be ignored, and the parameter sets .n_ShowProgressbar further below.
 *!*	</change>
@@ -3241,7 +3246,7 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: SF 18.06.2026
 *!*	<pdm>
 *!*	<change date="{^2026-06-18,14:45:00}">Changed by: SF<br />
-*!*	Problem with removed type Error in tcDontShowProgress
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/114 / tcDontShowProgress type error "." v1.21.04
 *!*	</change>
 *!*	</pdm>
 *						lo_CFG.n_ShowProgressbar		= Icase(tcDontShowProgress=='0',1, tcDontShowProgress=='1',0, 2)
@@ -27081,7 +27086,18 @@ Define Class CL_DBF_INDEXES As CL_COL_BASE
 						laIndexFiles( 1 )
 
 					toFoxBin2Prg.writeLog( ' ' + Replicate('-', 98) )
-					toF1oxBin2Prg.writeLog( loLang.C_INDEX2TXT_EXTRAFILES_LOC )
+*!*	Changed by: LScheffler 19.6.2026
+*!*	<pdm>
+*!*	<change date="{^2026-06-19,18:25:00}">Changed by: LScheffler<br />
+*!*	https://github.com/fdbozzo/foxbin2prg/issues/121 / BUG - Line 27084 - '1' Typo v1.21.04
+*!*	Error in object name
+*!*	</change>
+*!*	</pdm>
+
+*					toF1oxBin2Prg.writeLog( loLang.C_INDEX2TXT_EXTRAFILES_LOC )
+					toFoxBin2Prg.writeLog( loLang.C_INDEX2TXT_EXTRAFILES_LOC )
+
+*!*	/Changed by LScheffler 19.6.2026
 					toFoxBin2Prg.writeLog( ' ' + Replicate('- ', 49) )
 
 *Additional index files
@@ -30639,8 +30655,6 @@ Define Class CL_DBF_UTILS As Session
 		+ [<memberdata name="get_bintableflags" display="get_BinTableFlags"/>] ;
 		+ [<memberdata name="get_numtableflags" display="get_NumTableFlags"/>] ;
 		+ [<memberdata name="get_structure" display="get_Structure"/>] ;
-		+ [<memberdata name="set_bintableflags" display="set_BinTableFlags"/>] ;
-		+ [<memberdata name="set_numtableflags" display="set_NumTableFlags"/>] ;
 		+ [<memberdata name="totext" display="toText"/>] ;
 		+ [<memberdata name="write_dbc_backlink" display="write_DBC_BackLink"/>] ;
 		+ [</VFPData>]
@@ -31166,27 +31180,6 @@ Define Class CL_DBF_UTILS As Session
 		Lparameters tcFile
 		Return Asc( This.get_BinTableFlags(tcFile) )
 	Endproc
-
-
-	Procedure set_BinTableFlags
-*-- Seteo los flags en la tabla indicada
-		Lparameters tcFile, tcBinTableFlags
-
-		Local lnHandle, lnWritten
-		lnHandle		= Fopen(tcFile,1)
-		Fseek(lnHandle,28)
-		lnWritten	= Fwrite(lnHandle, tcTableFlags, 1)
-		Fclose(lnHandle)
-		Return lnWritten
-	Endproc
-
-
-	Procedure set_NumTableFlags
-*-- Seteo los flags en la tabla indicada
-		Lparameters tcFile, tnNumTableFlags
-		Return This.set_BinTableFlags( tcFile, Chr(tnNumTableFlags) )
-	Endproc
-
 
 Enddefine
 
