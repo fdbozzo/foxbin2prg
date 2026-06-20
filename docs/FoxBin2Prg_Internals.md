@@ -108,7 +108,7 @@ in the settings object returned by get_DirSettings method of the API object. See
 
 | FoxBin2Prg.cfg keywords<br/>Property of settings object | Value (_Default_) | Description |
 | ----- | ----- | ----- |
-| Language | _(auto)_, EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
+| Language | _(auto)_,<br/>EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
 | DontShowProgress<br/>n_ShowProgressbar | 0 | **Deprecated**. Replaced by ShowProgressbar option from v1.19.40, see below.<br/>The values of 0 and 1 are inverted to ShowProgressbar. |
 | ShowProgressbar<br/>n_ShowProgressbar | 0, _1_, 2 | 0=Don't show progressbar,<br/>1=Always show a progress bar,<br/>2=Only show it when processing multiple-files.<br/>**If set via parameter _cDontShowProgress_, this is ignored.** |
 | DontShowErrors<br/>n/a | _0_, 1 | 0=show message errors in a modal messagebox. (default)<br/>1=don't show errors<br/>**If set via parameter _cDontShowError_, this is ignored.**<br/>**There is no inheritance for this setting. First occurance wins.** |
@@ -181,16 +181,16 @@ in the settings object returned by get_DirSettings method of the API object. See
 | | |  **Note:**<br/>This is only true for tables. Generating DBC to _Text_ and back to _Binary_ will act as PACK DATABASE.<br/>The data added by _DBF_IncludeDeleted: 1_ will be ignored by old versions generating _Binary_ files. |
 |||
 | extension: xx2 | | FoxBin2Prg extensions ends in '2' (pj2, vc2, sc2, etc), but you can change that. |
-| extension: pj2=<br/>c_pj2 | \<extension\> | Text file for project PJX |
-| extension: vc2=<br/>c_vc2 | \<extension\> | Text file for classlibray VCX, or a class out of a VCX |
-| extension: sc2=<br/>c_sc2 | \<extension\> | Text file for form SCX, or a class out of a SCX (Form; Dataenbironment) |
-| extension: fr2=<br/>c_fr2 | \<extension\> | Text file for report FRX |
-| extension: lb2=<br/>c_lb2 | \<extension\> | Text file for label LBX |
-| extension: mn2=<br/>c_mn2 | \<extension\> | Text file for menu MNX |
-| extension: db2=<br/>c_db2 | \<extension\> | Text file for table DBF, free or DBC bound |
-| extension: dc2=<br/>c_dc2 | \<extension\> | Text file for database container DBC, or records from database container DBC |
-| extension: fk2=<br/>c_fk2 | \<extension\> | Text file for macro file FKY |
-| extension: me2=<br/>c_me2 | \<extension\> | Text file for variable memory MEM, created with SAVE TO |
+| extension: pj2=<br/>c_pj2 | \<extension\> | Extension for text file representing project PJX |
+| extension: vc2=<br/>c_vc2 | \<extension\> | Extension for text file representing classlibray VCX, or a class out of a VCX |
+| extension: sc2=<br/>c_sc2 | \<extension\> | Extension for text file representing form SCX, or a class out of a SCX (Form; Dataenbironment) |
+| extension: fr2=<br/>c_fr2 | \<extension\> | Extension for text file representing report FRX |
+| extension: lb2=<br/>c_lb2 | \<extension\> | Extension for text file representing label LBX |
+| extension: mn2=<br/>c_mn2 | \<extension\> | Extension for text file representing menu MNX |
+| extension: db2=<br/>c_db2 | \<extension\> | Extension for text file representing table DBF, free or DBC bound |
+| extension: dc2=<br/>c_dc2 | \<extension\> | Extension for text file representing database container DBC, or records from database container DBC |
+| extension: fk2=<br/>c_fk2 | \<extension\> | Extension for text file representing macro file FKY |
+| extension: me2=<br/>c_me2 | \<extension\> | Extension for text file representing variable memory MEM, created with SAVE TO |
 |  | | **Example for for making it SourceSafe (sccapi v1) compatible:**<br/>extension: pj2=pja<br/>extension: vc2=vca<br/>extension: sc2=sca<br/>extension: fr2=fra<br/>extension: lb2=lba<br/>extension: mn2=mna<br/>extension: db2=dba<br/>extension: dc2=dca  |
 
 ### Note
@@ -200,7 +200,7 @@ The options will be read outside in, top to down. See [Multi-config](#multi-conf
 Those configuration files are valid for a single table only. The idea is to have special settings for single tables.   
 It is possible to create a template with all options and comments via
 ```
-DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  &&==> Generates a template for table.dbf.cfg per table config file with newest settings
+DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  &&==> Generates a template for table.dbf.cfg per table config file with newest settings.
 ```
 
 See [command line](./FoxBin2Prg_Run.md#usage-2).   
@@ -211,13 +211,13 @@ These are the Table.dbf.cfg configuration file settings and their meaning:
 | FoxBin2Prg.cfg keywords | Value | per<br/>file | Description |
 | ----- | ----- | ----- | ----- |
 | DBF_Conversion_Support | 0, 1, 2, 4, 8 | | 0=No support,<br/>1=Generate Header _Text_ only (Diff),<br/>2=Generate Header _Text_ and _Bin_ (Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
-| DBF_Conversion_Order | c_Expression | x | Field expresion (For _INDEX ON_). ie: name+str(age,3),<br/>Empty means no sort order. <br/> usefull only if _DBF_Conversion_Support_>0 |
-| DBF_Conversion_Condition | c_Expression | x | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all records, except _DBF_IncludeDeleted_ <br/> usefull only if _DBF_Conversion_Support_>0  |
-| DBF_IndexList | c_FileList | x | A comma delimited list of additional index files ( cdx or idx ). **Not the structural index file.** |
-| DBF_BinChar_Base64 | 0, 1 | | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform <br/> usefull only if _DBF_Conversion_Support_>2  |
-| DBF_IncludeDeleted | 0, 1 | | 0=Do not include deleted records,<br/>1=Include deleted records <br/> usefull only if _DBF_Conversion_Support_>2  |
+| DBF_Conversion_Order | c_Expression | x | Field expresion (For _INDEX ON_). ie: name+str(age,3),<br/>Empty means no sort order. <br/> usefull only if *DBF_Conversion_Support* >0 |
+| DBF_Conversion_Condition | c_Expression | x | Logical expression (For _SCAN FOR_). ie: age > 10 AND NOT DELETED(),<br/>empty means all records, except *DBF_IncludeDeleted* <br/> usefull only if *DBF_Conversion_Support* >0  |
+| DBF_IndexList | c_FileList | x | A comma delimited list of additional index files ( cdx or idx ). __Not the structural index file.__ |
+| DBF_BinChar_Base64 | 0, 1 | | 0=For character type fields, if NoCPTrans 0=do not transform,<br/>1=use Base64 transform <br/> usefull only if *DBF_Conversion_Support* > 2  |
+| DBF_IncludeDeleted | 0, 1 | | 0=Do not include deleted records,<br/>1=Include deleted records <br/> usefull only if *DBF_Conversion_Support* > 2  |
 
-Setting **per file** could only be used via this configuration file.
+Setting *per file** could only be used via this configuration file.
 For defaults, see [Configuration file](#configuration-file).
  
 ## Excluding directories
@@ -282,7 +282,7 @@ This section is generated for classes and forms, it is delimited with the \<Defi
 	and have the definition of Properties, Arrays and Methods, with their comments, like this example:
 ````
 DEFINE CLASS c1 AS custom OLEPUBLIC        && Description of "c1" class
-    *<DefinedPropArrayMethod>
+*    <DefinedPropArrayMethod>
         *m: emptymethod_with_comments        && This method have no code, just comments!
         *m: mymethod        && My Method
         *p: prop1        && My prop 1
@@ -291,7 +291,7 @@ DEFINE CLASS c1 AS custom OLEPUBLIC        && Description of "c1" class
         *a: array_1_d[1,0](1,0)        && 1 dimension array (1)
         *a: array_2_d[1,2](1,2)        && 2 dimension array (1,2)
         *p: _memberdata        && XML Metadata for customizable properties
-    *</DefinedPropArrayMethod>
+*    </DefinedPropArrayMethod>
 ````
 Starting from v1.19.21 arrays don't need to be preceded with "^" symbol, and methods don't need to be preceded with "*" symbol,
 which makes this section more easy to maintain.
@@ -318,9 +318,9 @@ and a list with all in it ("props_all.txt") for the second case, so in case of a
 rearranging some props will be an easy thing.   
 
 #### Warning
-These "props_**" files are necessary in the FoxBin2Prg install directory.
+These "props_*" files are necessary in the FoxBin2Prg install directory.
 
-It's recommended to use the EXE version that have all files included and is faster._   
+It's recommended to use the EXE version that have all files included and is faster. **Note, the EXE must fit your version of VFP**.   
 Several Unit Tests (in TESTS directory) are made to make the best effort to cover the most typical use cases.
 There is also an Excel spreedsheet with the compilation of properties of each class with the order that FoxPro uses internally,
 and a tab with the all-in-one order for the worst case.
@@ -785,4 +785,4 @@ Last changed: _2023/09/06_
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2026/06/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
