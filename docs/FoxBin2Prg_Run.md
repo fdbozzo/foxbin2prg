@@ -36,7 +36,7 @@ The exe contains the most controling structures and the program itself.
 Alongside the _FoxBin2Prg.exe_ must be _\_FileName\_Caps.exe_ .
 It is recomended to have a general _FoxBin2Prg.cfg_ configuration file in the folder with the EXE, but it will run without.   
 
-Remember, the Exe needs to be created first.
+Remember, the exe(s) needs to be created first, and they must be compiled with the version of VFP you use, for example VFPA.
 
 ### PRG
 The prg is just the program and needs to find the controling structures. In particular:
@@ -109,16 +109,17 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 
 ### Usage 2
 `FoxBin2Prg.EXE c|C|t [OutFileName [ cCFG_File[ cDebug]]]`   
-`DO FoxBin2Prg.EXE WITH -c|-C|-t [, OutFileName [, cCFG_File[, cDebug]]]`   
+`DO FoxBin2Prg.EXE WITH -c|-C|-t [, cOutputFile [, cCFG_File[, cDebug]]]`   
 
 | Parameter | Description |
 | ----- | ----- |
 | none | Call Info screen |
 | -c (c) | creates a template config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) |
 | -C (C) | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
-| | If cOutputFile is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
+| | If _cOutputFile_ is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
 | -t (t) | creates a template table-config-file _cOutputFile_ ( like \_TableName\_.dbf.cfg ) |
-| cCFG_File | Indicates a special CFG filename for default values<br/>Note, if the "regular" config files are used orn not, is controlled by the setting *AllowInheritance* in *this** file. | 
+| cOutputFile | config file to create<br/>**Note: if empty it creates *and overwrite* FOXBIN2PRG.CFG or the table config file in default folder.** |
+| cCFG_File | Indicates a special *input* CFG filename for default values<br/> **Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this* file.** | 
 | cDebug | '1' for generating process LOGs, stop on errors<br/>This has precedence over any value in the config files. | 
 
 ### Usage 3
@@ -132,7 +133,7 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 
 
 #### Note
-From command line the call with paramters like -c, -C -t is not possible. Those parameters will be removed by VFP itself.
+From MS Windows command line the call with paramters like -c, -C -t is not possible. Those parameters will be removed by VFP itself.
 Just call without the dash.
 Calling inside VFP with `DO FoxBin2Prg.EXE` works with this dashed parameters.
 
@@ -183,4 +184,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
