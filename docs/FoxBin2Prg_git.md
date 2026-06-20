@@ -15,6 +15,7 @@ See [Use with SCM tools](./FoxBin2Prg_SCM.md)
    - [settings per project](#settings-per-project)
      - [gitignore](#gitignore)
      - [gitattributes](#gitattributes)
+       - [Fixing line endings](#fixing-line-endings)
      - [config](#foxbin2prg-config)
 
 ## Introduction
@@ -137,9 +138,10 @@ Those settings are mainly per user (in _git_ terms **global**)
 Assuming you do a fresh install of git, you will be asked questions over questions. The most you left unchanged.   
 The one I recommend is the dealing with line endings. You know all the odd uses of LF and CR. 
 _git_ offers to alter this while dealing with your files. I recommend not.
-Just "Check in as is, check out as is" while installing _git for windows_.
+Just _Check in as is, check out as is_ while installing _git for windows_.
 This will keep your files, and any modern editor or WEB UI will not care anyway.   
 If you missed on install - just install again.   
+**If you have an issue with CRLF/LF so that you will get odd commits due to changing line endings, see [Fixing line endings](#fixing-line-endings).**
 
 Do not forget to set up username, email and a ssh key. The following script sets up git and creates the key.
 It will copy the public key to _clipboard_ too - ready to paste into github. Anyway, you allways can copy the contents of `~/.ssh/id_rsa.pub`.
@@ -186,11 +188,11 @@ For some odd reasons, the people on git-scm are going the way of evil. If you st
 If you not check _Run as Adminstrator_, it will install into your user folder. Even if installed in Programs folder earlier!
 
 ### Settings per project
-Those settings are mainly per project (in _git_ terms **local**). One can argue to put the one or other in different levels.
+Those settings are mainly per project (repository) (in _git_ terms **local**). One can argue to put the one or other in different levels.
 I recommend those inside the project to keep the repository as self contained as possible.
 #### gitignore
 The _.gitignore_ file controls which files **go not** into the git repository by default. It goes by folder with inheritance.
-If you understand the inheritance of .gitignore, you grok [FoXBin2Prg.cfg](#foxbin2prg-config) and vice versa. Very close.
+If you understand the inheritance of .gitignore, you grok [FoXBin2Prg.cfg](#https://github.com/fdbozzo/foxbin2prg/blob/master/docs/FoxBin2Prg_Internals.md#configuration-file) and vice versa. Very close.
 
 But git would not be git if one could not teach .gitignore to define the files **included**.
 Again, see pro-git.
@@ -266,19 +268,38 @@ I think I will swap to use them as _Text_ too, since version 1.19.55 of FoxBin2P
 Also this approach ignores any bak / log / tmp / err files by default.
 
 #### gitattributes
-The _.gitattributes_ file controls some things that might be set to as local computer / user / repository (via _git config_),
-but should be constant to the repository, no matter the local settings. This file is included into the repository.   
-for VFP purposes, it controls the processing of line ending on commit / checkout.   
+The _.gitattributes_ file controls some things that might be set to as local computer / user / repository (via `git config`). Note, using `git config` to alter the behaviour of the _repository_ will still be local to your computer, so a remote computer is not influenced. IOW, this is not pushed.   
+It should be constant to the repository, no matter the local settings of any collaborator. This while we should use _.gitattributes_ file and included into the repository.
+
+For VFP purposes, _.gitattributes_ controls the processing of line ending on git commit / checkout.   
 As mentioned [above](#git-settings) git might manipulate CRLF and LF. If the settings are different on different computers ,
 it might checkout with LF instead of CRLF. This creates useless files in the commit, but also might create havoc using the files.
-See [this](https://github.com/VFPX/GoFish/issues/27) for an example.   
+See [GoFish](https://github.com/VFPX/GoFish/issues/27) for an example.   
 To solve this, add a _.gitattributes_ file to any of your projects, next to the _.gitignore_ file. It should look like this:
 ````
 #.gitattributes
 # disable newline conversion on checkout with no conversion on check-in for all files
 * -text
 ````
-If you have a project running, check the line endings and make shure they follow DOS standard CRLF.
+If you have a project running, check the line endings and make shure they follow DOS standard CRLF:
+
+##### Fixing line endings
+If you run into the problem that you have set up different computers different for dealing with line endings so commits of all files or all lines of a file without reason, you might need to change to git to keep CRLF and set your files line endings to CRLF.
+- create a backup of your folder
+- create _.gitattributes_ file as above
+run following lines in bash:
+```
+git add . -u
+git commit -m "Saving files before refreshing line endings"
+git add --renormalize .
+git commit -m "Normalize all the line endings"
+```
+**Note: You must do this to *every repository* and, if there are several branches of a repository, with *every (active) branch*.**   
+**Note: Be careful, this will not alter any older commit, so `git reset` (or the like) to an old commit could create the problem again. Recreating _.gitattributes_ and the code snippet should solve the problem, for single files like:***
+```
+git add --renormalize filename
+git commit
+```
 
 #### FoxBin2Prg config
 The config of FoxBin2Prg using FoxBin2Prg.cfg files is relative simple. As you might see above, I carry the file within the repo.   
@@ -425,4 +446,4 @@ All use off this are the last four lines. But I like to keep the template (recen
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2023/11/26_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

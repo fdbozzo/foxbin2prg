@@ -92,6 +92,8 @@ All limitations that occur to a binary format must be kept on the text represent
 the definition of a HEADER class to a VCX will fail.
 
 ## Configuration file
+The configuration how to run FoxBin2Prg is stored in configuration files, FoxBin2Prg.cfg for general settings, and [Configuration file per table](#configuration-file-per-table).
+
 It is possible to create a template or a config with all options and comments via   
 ```
 DO FOXBIN2PRG.PRG WITH "-c","template.cfg"    &&==> Generates a template for FoxBin2Prg.cfg config file with newest settings
@@ -102,6 +104,10 @@ The config file is used to move local setting to a different comupter or for cha
  
 The options in the template (or in the config that ships with FoxBin2Prg) are commented out.
 To activate an option remove the asterix and set appropriate value.   
+
+There is a [Multi-config](#multi-config), that allows to have global settings with specific local settings.
+If a setting does not follow inheritance, it is mentioned in the table below.
+
 These are the FoxBin2Prg.cfg configuration file settings and their meaning.
 The second line in the keyword column is the name of the respective property (if there is one)
 in the settings object returned by get_DirSettings method of the API object. See [PEM](#pem).
@@ -110,7 +116,7 @@ in the settings object returned by get_DirSettings method of the API object. See
 | ----- | ----- | ----- |
 | Language | _(auto)_,<br/>EN, FR, ES, DE | Language of templates, shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC (using VERSION(3)) ||
 | DontShowProgress<br/>n_ShowProgressbar | 0 | **Deprecated**. Replaced by ShowProgressbar option from v1.19.40, see below.<br/>The values of 0 and 1 are inverted to ShowProgressbar. |
-| ShowProgressbar<br/>n_ShowProgressbar | 0, _1_, 2 | 0=Don't show progressbar,<br/>1=Always show a progress bar,<br/>2=Only show it when processing multiple-files.<br/>**If set via parameter _cDontShowProgress_, this is ignored.** |
+| ShowProgressbar<br/>n_ShowProgressbar | 0, _1_, 2 | 0=Don't show progressbar,<br/>1=Always show a progress bar,<br/>2=Only show it when processing multiple-files.<br/>**If set via parameter _cDontShowProgress_, this is ignored.<br/>_cDontShowProgress_ has value "0","1" inverted to the property.** |
 | DontShowErrors<br/>n/a | _0_, 1 | 0=show message errors in a modal messagebox. (default)<br/>1=don't show errors<br/>**If set via parameter _cDontShowError_, this is ignored.**<br/>**There is no inheritance for this setting. First occurance wins.** |
 | ExtraBackupLevels<br/>n/a | 0, _1_, n | <br/>0=No backup<br/>1=One backupfile _\_filename\_.BAK_ (default)<br/>n=n levels of backup in style _\_filename\_.n.BAK_<br/>**There is no inheritance for this setting. First occurance wins.** |
 | Debug<br/>n_Debug | _0_, 1, 2 | 0=Off<br/>1=Normal<br/>2=Extended<br/>By default, don't generate individual \<file\>.Log with process hints.<br/>Activate with "1" to find possible error causes and for debugging,<br/>"2" is special logging.<br/>**If set via parameter _cDebug_, this is ignored.** |
@@ -198,6 +204,7 @@ The options will be read outside in, top to down. See [Multi-config](#multi-conf
 
 ## Configuration file per table
 Those configuration files are valid for a single table only. The idea is to have special settings for single tables.   
+
 It is possible to create a template with all options and comments via
 ```
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  &&==> Generates a template for table.dbf.cfg per table config file with newest settings.
