@@ -16,8 +16,13 @@ As far as possible these are the original documents. Changes are added where fun
 - [PRG](#prg)
 - [Parameters](#parameters)
 - [Usage](#usage)
+  - [Usage 1](#usage-1)
+  - [Usage 2](#usage-2)
+  - [Usage 3](#usage-3)
 - [Return values](#return-values)
 - [Examples](#Examples)
+  - [Using the "EXE" version](#using-the-exe-version)
+  - [Using the "PRG" version](#using-the-prg-version)
 - [Explorer SendTo](#explorer-sendto)
 
 ----
@@ -28,13 +33,14 @@ Since the EXE is basically the prg packed with some controling files, the way to
 The knowledge of differences in calling, DO .. WITH syntax separating parameters with ","  and the DOS way off calling will be assumed.
 Do the similarity of the call, the prg version takes all parameters as strings too.
 
-For settings and other related stuff see [Internals](./FoxBin2Prg_Internals.md).
+For settings see [Configuration](./FoxBin2Prg_Settings.md), for API and other related stuff see [Internals](./FoxBin2Prg_Internals.md).
 
 ## Differences on excecution
 ### EXE
 The exe contains the most controling structures and the program itself.
-Alongside the _FoxBin2Prg.exe_ must be _\_FileName\_Caps.exe_ .
-It is recomended to have a general _FoxBin2Prg.cfg_ configuration file in the folder with the EXE, but it will run without.   
+Alongside the _FoxBin2Prg.exe_ must be _\_FileName\_Caps.exe_.  
+It is recomended to have a general _FoxBin2Prg.cfg_ configuration file in the folder with the EXE, but it will run without.
+See [Configuration](./FoxBin2Prg_Settings.md) for information about settings.   
 
 Remember, the exe(s) needs to be created first, and they must be compiled with the version of VFP you use, for example VFPA.
 
@@ -43,7 +49,7 @@ The prg is just the program and needs to find the controling structures. In part
 - _FileName_Caps.exe_
 - _Props*.txt_
 - _FileName_Caps.exe_
-- _FoxBin2Prg.cfg_ is recomended
+- _FoxBin2Prg.cfg_ is recomended, see [Configuration](./FoxBin2Prg_Settings.md)
 
 #### Note
 All mentioned files need to be in the same folder. You can't use just the PRG without the rest of the mentioned files.
@@ -61,12 +67,13 @@ Remember that using the prg style, parameters must be wrapped in string delimite
 #### Note
 Do to the compatibility with VSS the usage of _cInputFile_ and _cType_ is odd.
 
-#### Important note:
+#### Important note
 When you process a directory, it is used as the base for the compilation of _Binaries_,
 and because of this, never process more than one directory in the same process,
 because the compilation may not be ok. To process more than one directory (or project),
 just select and process each one independently, in parallel if you like, but in different processes.
 
+---
 ## Usage
 ### Usage 1
 `FoxBin2Prg.EXE cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cCFG_File [,cOutputFolder ] ] ] ] ] ] ] ] ] ] ] ]`
@@ -86,14 +93,14 @@ just select and process each one independently, in parallel if you like, but in 
 | | d, D, K, B, M, R, V | SCCAPI (SCCTEXT.PRG) compatibility mode, query the conversion support for the file type specified <br /> Types: d=DBC, D=DBF, K=Form, B=Label, M=Menu, R=Report, V=Class |
 | cTextName | Text filename. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. File to use. |
 | lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode.<br/>.T.=Generates _Text_, .F.=Generates _Binary_.<br/>**Note:** _cType_ have predominance over _lGenText_ |
-| cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX |
-| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log.<br/>This has precedence over any value in the config files. |
-| cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing |
+| cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX.<br/>This has Precedence Over The _Dontshowerrors_ setting.  |
+| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log.<br/>This has precedence over any value in the config files.<br/>This has Precedence Over The _Debug_ setting. |
+| cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing<br/>This has Precedence Over The _ShowProgressbar_ setting. Value "0","1" is inverted to the setting. |
 | cOriginalFileName | text | used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the _Text_ version |
 | cRecompile | 0, _1_ | Indicates recompile ('1') the _Binary_ once generated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
 |  | path | The _Binary_ is compiled from this path |
-| cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
-| cCFG_File | filename | Indicates a special CFG filename for default values.<br/>Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this** file. | 
+| cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0').<br/>This has Precedence Over The _NoTimestamps_ setting. |
+| cCFG_File | filename | Indicates a special CFG filename for default values.<br/>Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this** file.<br/>See [Configuration](./FoxBin2Prg_Settings.md) | 
 | cOutputFolder | folder | Optional. A folder to write the output to. If not used, output be the source path. |
 
 #### Note #1
@@ -119,7 +126,7 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 | | If _cOutputFile_ is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
 | -t (t) | creates a template table-config-file _cOutputFile_ ( like \_TableName\_.dbf.cfg ) |
 | cOutputFile | config file to create<br/>**Note: if empty it creates *and overwrite* FOXBIN2PRG.CFG or the table config file in default folder.** |
-| cCFG_File | Indicates a special *input* CFG filename for default values<br/> **Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this* file.** | 
+| cCFG_File | Indicates a special *input* CFG filename for default values<br/> **Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this* file.**<br/>See [Configuration](./FoxBin2Prg_Settings.md) | 
 | cDebug | '1' for generating process LOGs, stop on errors<br/>This has precedence over any value in the config files. | 
 
 ### Usage 3
@@ -141,7 +148,9 @@ Calling inside VFP with `DO FoxBin2Prg.EXE` works with this dashed parameters.
 Return value via _ErrorLevel_ is 0=OK, 1=Error.
 
 ## Examples
-### Using the "EXE" version: (useful for calling from 3rd party programs)
+### Using the "EXE" version
+**Useful for calling from 3rd party programs.**   
+Note, the EXE must be compiled to the VFP version you are using.
 
 | command | description |
 | - | - |
@@ -153,7 +162,8 @@ Return value via _ErrorLevel_ is 0=OK, 1=Error.
 | `FOXBIN2PRG.EXE "<path>\file.vcx::cus_client"` | Generates only the _Text_ version of the individual class cus_client of file.vcx (with UseClassPerFile:1 or 2) |
 | `FOXBIN2PRG.EXE "<path>\proj.pj2" "*" \| find /V ""` | Generates the _Binary_ files for all the files in the PJ2 and outputs to stdOut |
 
-### Using the "PRG" version:
+### Using the "PRG" version
+**Useful for calling from in IDE, in special if several versions of VFP are active.**
 
 | command | description |
 | - | - |
@@ -184,4 +194,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2026/06/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -12,17 +12,23 @@ As far as possible these are the original documents. Changes are added where fun
 ## Table of contents
 - [Use](#use)
 - [Download for development](#download-for-development)
+  - [Source](#source)
+  - [Rebuild additional files](#rebuild-additional-files)
 - [Requirements](#requirements)
+    - [Demo video](#demo-video)
 - [What is FoxBin2Prg](#what-is-foxbin2prg)
 - [Advantages](#advantages)
 - [Example](#example)
 - [Limitations](#limitations)
 - [Usage](#usage)
+- [**Configuration**](#configuration)
 - [Keep reading](#keep-reading)
 
 ## Use
 - Download the [runtime](https://github.com/fdbozzo/foxbin2prg/blob/master/ThorUpdater/FoxBin2Prg.zip) (same as used by Thor)
 - Or (best) install via [Thor](https://github.com/VFPX/Thor/blob/master/Docs/Thor_install.md), this keeps you on the latest version.
+
+See [Usage](#usage) for details and problems.
 
 ## Download for development
 ### Source
@@ -77,25 +83,30 @@ for which a _Text_ version is generated with pj2, sc2, vc2, fr2, lb2, dc2, db2, 
 The extensions may be reconfigured to be compatible with SCCAPI (just tested with SourceSafe).
 
 ## Example
-![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
-![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
+![FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png](./pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_scx_EN.png)   
+![FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png](./pictures/FoxBin2prg_scctextx-vs-FoxBin2Prg_mnx_EN.png)   
 
 ## Limitations
-If dealing with project files, FoxBin2Prg will fail if files of the project are not stored on the drive of the project.
+- If dealing with project files, FoxBin2Prg will fail if files of the project are not stored on the drive of the project.
 See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
+- FoxBin2Prg could be used as exe or prg. See [Usage](#usage) for details and problems.
 
 ## Usage
 FoxBin2Prg can be used in tree ways:
 1. [EXE version](./FoxBin2Prg_Run.md): (Recommended and fastest)   
-   - All-inclusive, you just need foxbin2prg.exe and filename_caps.exe/cfg.   
+   - All-inclusive, you just need _foxbin2prg.exe_ and _filename_caps.exe/cfg_.   
    - Runs from windows
    - **If run from IDE, the EXE needs to be compiled for the version of FoxPro.**
 1. [PRG version](./FoxBin2Prg_Run.md):   
-   - You need various files: foxbin2prg.prg, all the props*.txt files and filename_caps.exe/cfg. Keep in one folder.
+   - You need various files: _foxbin2prg.prg_, all the _props*.txt_ files and _filename_caps.exe/cfg_. Keep in one folder.
    - Runs out of VFP IDE, no problems mixing VFP 9 and VFPA
 1. [Object version](./FoxBin2Prg_Object.md):
+   - Based on EXE or PRG
    - Usable out of own code
    - expandable
+
+## Configuration
+See [Configuration](./FoxBin2Prg_Settings.md) for more information about configuration file(s).
 
 ## Keep reading
 - [FoxBin2Prg Full Change History](./ChangeLog.md)
@@ -108,4 +119,4 @@ FoxBin2Prg can be used in tree ways:
 This project is part of [VFPX](https://vfpx.github.io/).
 
 ----
-Last changed: _2026/06/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

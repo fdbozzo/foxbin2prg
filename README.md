@@ -32,16 +32,31 @@ If you like to see Fernandos blog, or value his work:
     Thank you for your support!
 
 ----
-## Important Note
-To fix a bug, this version changes the text file header.
-It is suggested to create all text files and commit in one step.
+## Table of contents
+- [Contribution](#contribution)
+- [What is FOXBIN2PRG](#what-is-foxbin2prg)
+  - [Advantages](#advantages)
+- [Examples](#examples)
+  - [Redefine extensions of _Text_](#redefine-extensions-of-text)
+  - [Use FoxBin2Prg](#use-foxbin2prg)
+  - [Interactive list of options](#interactive-list-of-options)
+  - [Use with MS Windows SendTo](#use-with-ms-windows-sendto)
+    - [How to use the links](#how-to-use-the-links)
+- [LOCALIZATION](#localization)
+- [FINAL NOTE](#final-note)
+- [LICENCE](#licence)
+- [Changes](#changes)
+  - [Changes to Configuration](#changes-to-settings)
+- [Limitations](#limitations)
+- [**Documentation**](#usage)
+- [**Helping with FoxBin2PRG / issues**](#helping-with-foxbin2prg--issues)
+- [Note](#note)
 
 ----
 ## Contribution
 See [contribution](./.github/CONTRIBUTING.md)
 
 ---
-
 ## What is FOXBIN2PRG?
 It is a program intended to be used with **SCM tools** (Source Code Managers, like VSS, CVS, SVN)
 and *DVCS tools* (Version Control Systems such as Git, Mercurial, Plastic, and others),
@@ -124,14 +139,14 @@ You can create up to three different shortcuts pointing to FoxBin2Prg.exe and in
 ##### How to use the links
 Select a file, right-click, SendTo -> FoxBin2Prg
 
-## LOCALIZATION:
+## LOCALIZATION
 Is automatic starting at v1.19.38 (Languages: EN,ES,FR,DE)
 
-## FINAL NOTE:
+## FINAL NOTE
 This program is Open Source and "libre", and I don't make any guaranties that it fulfills your expectations or that it will be free of bugs.
 I will try to fix bugs if my obligations let me do it.
 
-## LICENCE:
+## LICENCE
 This work is licensed under the Creative Commons Attribution 4.0 International License.
 To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0/.
 
@@ -139,7 +154,7 @@ To view a copy of this license, visit http://creativecommons.org/licenses/by/4.0
 ## Changes
 See [Changes](./docs/ChangeLog.md)
 
-### Changes to Settings
+### Changes to Configuration
 To get the new settings in config file, use the new create-a-template function:
 
 ```
@@ -147,23 +162,23 @@ DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with active settings
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
+See [Configuration](./FoxBin2Prg_Settings.md) for more information about configuration file(s).
 
 ----
 ## Limitations
-If dealing with project files, FoxBin2Prg will fail if files of the project are not stored on the drive of the project.
+- If dealing with project files, FoxBin2Prg will fail if files of the project are not stored on the drive of the project.
 See [issue #93](https://github.com/fdbozzo/foxbin2prg/issues/93).
+- FoxBin2Prg could be used as exe or prg. See [Usage](./docs/FoxBin2Prg.md#usage) for details and problems.
 
 ----
-## Usage
+## Documentation
 For usage see [documentation](./docs/FoxBin2Prg.md)
 
 ----
-
-## Helping with FoxBin2PRG
+## Helping with FoxBin2PRG / issues
 See [contribution](./.github/CONTRIBUTING.md)
 
 ---
-
 ## Note
 The spanish documentation is not longer maintained - it would fade.
 For fast access a quick run is [introduced](#use-foxbin2prg), more [complex](./docs/FoxBin2Prg_Run.md#usage-1), and a large [documentation](./docs/FoxBin2Prg.md) exists too.
@@ -174,5 +189,4 @@ If you like to see Fernando's blog, or value his work:
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
 ----
-
-Last changed: _2026/06/18_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/21_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)

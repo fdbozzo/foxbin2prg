@@ -109,7 +109,7 @@ Also on blame.
 If you go for the _lib.baseclass.classname.vc2_ or _lib.classname.vc2_ style is a matter of taste.
 I can see baseclass on classname, so there is not much value, other might think different.
 But split into classes makes life easy.   
-This is to be done in the [config file](#foxbin2prg-config), setting _UseClassPerFile_ option to 1 or 2.
+This is to be done in the [config file](./FoxBin2Prg_Settings.md), setting _UseClassPerFile_ option to 1 or 2.
 
 #### Forms
 Side effect of splitting VCX is that SCX will be split into 3 files too.
@@ -192,7 +192,7 @@ Those settings are mainly per project (repository) (in _git_ terms **local**). O
 I recommend those inside the project to keep the repository as self contained as possible.
 #### gitignore
 The _.gitignore_ file controls which files **go not** into the git repository by default. It goes by folder with inheritance.
-If you understand the inheritance of .gitignore, you grok [FoXBin2Prg.cfg](#https://github.com/fdbozzo/foxbin2prg/blob/master/docs/FoxBin2Prg_Internals.md#configuration-file) and vice versa. Very close.
+If you understand the inheritance of .gitignore, you grok [FoXBin2Prg.cfg](./FoxBin2Prg_Settings.md#configuration-file) and vice versa. Very close.
 
 But git would not be git if one could not teach .gitignore to define the files **included**.
 Again, see pro-git.
@@ -208,9 +208,9 @@ An example for _Text_ only use.
 
 #include general
 #dbx data
-!*.dbf
-!*.cdx
-!*.fpt
+#!*.dbf
+#!*.cdx
+#!*.fpt
 
 !*.dbc
 !*.dc[tx]
@@ -244,7 +244,7 @@ An example for _Text_ only use.
 !*.mn2
 !*.sc2
 !*.lb2
-#!*.d[bc]2
+!*.d[bc]2
 
 #include special
 #default git
@@ -262,8 +262,6 @@ An example for _Text_ only use.
 foxuser.*
 _command.prg
 ````
-As you see, this assumes that tables and databases are stored as binary.  
-I think I will swap to use them as _Text_ too, since version 1.19.55 of FoxBin2Prg eleminates some problems with this idea.
 
 Also this approach ignores any bak / log / tmp / err files by default.
 
@@ -304,146 +302,11 @@ git commit
 #### FoxBin2Prg config
 The config of FoxBin2Prg using FoxBin2Prg.cfg files is relative simple. As you might see above, I carry the file within the repo.   
 The good on this is, if I change my mind and alter settings in it, FoxBin2Prg will find the setting that fit to the data on each commit.
-If I have to checkout old stuff - the setting will fit.
-
-````
-*################################################################################################################
-*FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.01
-*****************************************************************************************************************
-
-* Note, configuration files will follow an inheritance.
-* 1.  Default values
-* 2. optional FOXBIN2PRG.CFG in folder of FOXBIN2PRG.EXE,
-*  or, if defined, a config file given by a parameter calling FOXBIN2PRG,
-*      if used, the AllowInheritance setting controls if other config files will be evaluated,
-* 3. optional FOXBIN2PRG.CFG in root of working directory,
-* 4. optional FOXBIN2PRG.CFG in every folder up to the working directory,
-* 5. optional Special settings per single DBF's Syntax:<TableName>.dbf.cfg in tables folder),
-* 6. Parameter calling FOXBIN2PRG.EXE.
-
-* Some Parameter calling FOXBIN2PRG.EXE overturn this settings (except Defaults)
-*****************************************************************************************************************
-
-*-- Settings for internal work, not processing
-*Language: (auto)               && Language of shown messages and LOGs. EN=English, FR=French, ES=Español, DE=German, Not defined = AUTOMATIC [DEFAULT]
-*ShowProgressbar: 1             && 0=Don't show, 1=Allways show, 2=Show only for multi-file processing
-*DontShowErrors: 0              && Show message errors by default
-*ExtraBackupLevels: 1           && By default 1 BAK is created. With this you can make more .N.BAK, or none
-*Debug: 0                       && Don't Activate individual <file>.Log by default
-*BackgroundImage: <cFile>       && Backgroundimage for process form. Empty for empty Background. File not found uses default.
-*HomeDir: 1                     && Home directory in PJX
-*                               && 0 don't save HomeDir in PJ2
-*                               && 1 save HomeDir in PJ2
-*~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-*-- Settings for config file via parameter only
-*AllowInheritance: 1            && 0=Not allow, 1=Allow scanning "regular" config files
-*----------------------------------------------------------------------------------------------------------------
-
-*-- Conversion operation by type
-*PJX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*VCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*SCX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*FRX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*LBX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*MNX_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*DBC_Conversion_Support: 2      && 0=No support, 1=Generate TXT only (Diff), 2=Generate TXT and BIN (Merge)
-*DBF_Conversion_Support: 1      && 0=No support, 1=Generate Header TXT only (Diff), 2=Generate Header TXT and BIN (Merge/Only Structure!), 4=Generate TXT with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data)
-*FKY_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
-*MEM_Conversion_Support: 1      && 0=No support, 1=Generate TXT only (Diff)
-*----------------------------------------------------------------------------------------------------------------
-
-*Setting for pjx files
-*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
-*                               && 0 Ignore. Default
-*                               && 1 Check and error out if file is not on same structure (for source control)
-*                               && 2 Create absolute path if file is on different drive.
-*                               && 3 Create absolute path if file is not in structure
-*----------------------------------------------------------------------------------------------------------------
-
-*Setting for container files (not pjx)
-*-- CLASS and FORM options (tx2 is to read as vc2 or sc2, VCX might be SCX)
-*- Class per file options (UseClassPerFile: 1)
-*UseClassPerFile: 0             && Determines how a library (or form) will handle included class (or, for forms, objects)
-*                               && 0 One library.tx2 file
-*                               && 1 Multiple file.class.tx2 files
-*                               && 2 Multiple file.baseclass.class.tx2 files
-*RedirectClassPerFileToMain: 0  && When regenerating binary files, determine target file
-*                               && 0 Don't redirect to file.tx2
-*                               && 1 Redirect to file.tx2 when selecting file[.baseclass].class.tx2
-*                               &&   RedirectClassType: 1 has precedence
-*RedirectClassType: 0           && For classes created with UseClassPerFile>0 in the form file[.baseclass].class.tx2
-*                               && Those files could be imported like file.tx2::Class::import or like file[.baseclass].class.tx2
-*                               && For the second form:
-*                               && 0 Redirect file[.baseclass].class.tx2 to file.VCX and add / replace all other classes of this library
-*                               && 1 Redirect file[.baseclass].class.tx2 to file[.baseclass].class.VCX and do not touch file.VCX
-*                               && 2 Redirect file[.baseclass].class.tx2 to file.VCX and do not touch other classes of file.VCX
-*ClassPerFileCheck: 0           && Check, if files listed in the main file of a library or form will be included
-*                               && 0 Don't check file inclusion
-*                               && 1 Check file[.baseclass].class.tx2 inclusion
-*                               &&   Only used if import file is in file[.baseclass].class.tx2 syntax
-*                               &&   Ignored for RedirectClassType: 2
-*- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
-*-- DBC options
-*- File per DBC options (UseFilesPerDBC: 1)
-*OldFilesPerDBC: 0              && 1=Turns the File per DBC options on, 0 uses the old UseClassPerFile etc settings.
-*                               &&   Options below will only read if OldFilesPerDBC is set 1 before!
-*                               &&   If OldFilesPerDBC is set 0 later, alle setting will be lost
-*UseFilesPerDBC: 0              && 0=One database dc2 file, 1=Multiple file.*.*.dc2 files
-*                               && 0 creates only a file.dc2 with all DBC (file) data
-*                               && 1 creates a file.dc2 with DBC properties
-*                               &&   and additional DBC files per DBC item (stored-proc, table, ..)
-*                               &&   Note: recration only if RedirectFilePerDBCToMain is 1
-*RedirectFilePerDBCToMain: 0    && 0=Don't redirect to file.dc2, 1=Redirect to file.tx2 when selecting file.item.*.dc2
-*ItemPerDBCCheck: 0             && 0=Don't check file.item.*.dc2 inclusion, 1=Check file.item.*.dc2 inclusion
-*----------------------------------------------------------------------------------------------------------------
-
-*-- General files
-*NoTimestamps: 1                && Clear timestamps of several file types by default for minimize text-file differences
-*ClearUniqueID: 1               && 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge
-*OptimizeByFilestamp: 0         && 1=Optimize file regeneration depending on file timestamp. Dangerous while working with branches!
-*RemoveNullCharsFromCode: 1     && 1=Drop .Null. chars from source code
-*RemoveZOrderSetFromProps: 0    && 0=Do not remove ZOrderSet property from object, 1=Remove ZOrderSet property from object
-*PRG_Compat_Level: 0            && 0=Legacy, 1=Use HELPSTRING as Class Procedure comment
-*----------------------------------------------------------------------------------------------------------------
-
-*-- PJX special
-*BodyDevInfo: 0                 && 0=Don't keep DevInfo for body pjx records, 1=Keep DevInfo
-*----------------------------------------------------------------------------------------------------------------
-
-*-- DBF special
-*ClearDBFLastUpdate: 1          && 0=Keep DBF LastUpdate, 1=Clear DBF LastUpdate. Useful for Diff.
-*ExcludeDBFAutoincNextval: 0    && 0=Do not exclude this value from db2, 1=Exclude this value from db2
-*DBF_Conversion_Included: *     && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-*DBF_Conversion_Excluded:       && If DBF_Conversion_Support:4, you can specify multiple filemasks: www,fb2p_free.dbf
-*DBF_BinChar_Base64: 1          && For character type fields, if NoCPTrans 0=do not transform, 1=use Base64 transform (default)
-*DBF_IncludeDeleted: 0          && 0=Do not include deleted records (default), 1=Include deleted records
-*----------------------------------------------------------------------------------------------------------------
-
-*-- Text file extensions
-*extension: tx2=newext          && Specify extensions to use. Default FoxBin2Prg extensions ends in '2' (see at the bottom)
-*-- Example configuration for SourceSafe compatibility:
-*extension: pj2=pja             && Text file to PJX
-*extension: vc2=vca             && Text file to VCX
-*extension: sc2=sca             && Text file to SCX
-*extension: fr2=fra             && Text file to FRX
-*extension: lb2=lba             && Text file to LBX
-*extension: mn2=mna             && Text file to MNX
-*extension: db2=dba             && Text file to DBF
-*extension: dc2=dca             && Text file to DBC
-*-- Additional extensions
-*extension: fk2=fkx             && Text file to FKY
-*extension: me2=fkx             && Text file to MEM
-````
-All use off this are the last four lines. But I like to keep the template (recent as version 1.19.69).
-- Using single classes - because it's much more easy to merge a single class then a whole library.
-- A single class selected might be added to the VCX
-- Turn off DBC and DBF conversion
+If I have to checkout old stuff - the setting will fit. See [Configuration file(s)](./FoxBin2Prg_Settings.md) for detailed information.
 
 ----
 ![VFPX logo](https://vfpx.github.io/images/vfpxbanner_small.gif)   
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2026/06/20_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

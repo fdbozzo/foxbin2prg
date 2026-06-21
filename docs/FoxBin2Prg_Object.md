@@ -5,7 +5,7 @@ Documentation of FoxBin2Prg - A Binary to Text converter for MS Visual Foxpro 9
 FoxBin2Prg might be used as an EXE either from Windows or VFP, or as as prg from inside VFP in a [command line](./FoxBin2Prg_Run.md) way.  
 This document deals with the integration as an VFP Object using VFP based objects.
 
-For settings, API and other realted stuff see [Internals](./FoxBin2Prg_Internals.md).
+For settings see [Configuration](./FoxBin2Prg_Settings.md), for API and other related stuff see [Internals](./FoxBin2Prg_Internals.md).
 
 The original document was created by [Fernando D. Bozzo](https://github.com/fdbozzo) whom I like to thank for the great project.   
 Pictures are taken from the original project.  
@@ -42,7 +42,10 @@ Transforming file(s) works like
 `obj.execute(cInputFile [,cType [,cTextName [,lGenText [,cDontShowErrors [,cDebug [,cDontShowProgress [,oModule [,oEx [,lRelanzarError [,cOriginalFileName [,cRecompile [,cNoTimestamps [,cBackupLevels [,cClearUniqueID [,cOptimizeByFilestamp [,cCFG_File] ] ] ] ] ] ] ] ] ] ] ] ] ] ])`   
 A lot of the parameters are the same as calling the [command line](./FoxBin2Prg_Run.md),
 some additional are added and some are not string type.   
-Some settings will overwrite configuration. Using an object as cCFG_File will overwrite all configuration.
+Some settings will overwrite configuration.  
+Using an file as cCFG_File with `InhibitInheritance=3` set will overwrite all configuration. See [Configuration file(s)](./FoxBin2Prg_Settings.md) for more information. This file will be read as first setting, see [Multi config](./FoxBin2Prg_Settings.md#multi-configuration).  
+Using an object as oCFG (instead of cCFG_File) will overwrite all configuration and only this settings will be used.
+
 
 | Parameter | Value (_Default_) | Description |
 | ----- | ----- | ----- |
@@ -61,21 +64,21 @@ Some settings will overwrite configuration. Using an object as cCFG_File will ov
 | | -t | Create per-table configuration file template <cInputFile> or, if first parameter is empty and a table open, \<tablename\>._cfg in table folder. With inactive default values. |
 | cTextName | Text filename. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. File to use. |
 | lGenText | .T., .F. | Only for SCCAPI (SCCTEXT.PRG) compatibility mode. .T.=Generates Text, .F.=Generates Binary. <br/> **Note:** _cType_ have predominance over _lGenText_ |
-| cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX |
-| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log.<br/>This has precedence over any value in the config files. Only the first valid value will be used. |
-| cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing |
+| cDontShowErrors | _0_, 1 | '1' for NOT showing errors in MESSAGEBOX.<br/>This has precedence over the _DontShowErrors_ setting. |
+| cDebug | _0_, 1, 2 | '0 'no debug, '1' for generating process LOGs, stop on errors, '2' like '1' and special log.<br/>This has precedence over the _Debug_ value in the config files. |
+| cDontShowProgress | 0, _1_, 2 | '0' show progress, '1' for **not** showing the process window, '2' Show only for multi-file processing.<br/>This has precedence over the _ShowProgressbar_ setting. Value "0","1" is inverted to the setting. |
 | oModule | | Internal use for Unit Testing |
 | oEx | | Exception object, return for errorhandling |
 | lRelanzarError | .T.. _.F._ | Throw error to caller of _.Execute()_ |
 | cOriginalFileName | text | used in those cases in which inputFile is a temporary filename and you want to generate the correct filename on the header of the text version |
 | cRecompile | 0, _1_ | Indicates recompile ('1') the binary once generated. <br/> True if called from SCCAPI (SCCTEXT.PRG) compatibility mode. |
 |  | path | The binary is compiled from this path |
-| cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0') |
+| cNoTimestamps | 0, _1_ | Indicates if timestamp must be cleared ('1' or empty) or not ('0'),<br/>This has precedence over the _NoTimestamps_ setting. |
 | cBackupLevels | 0, _1_, .. | "0" no Bakup, "1", one level _filename_.bak, "n" n levels of Backup _filename_.n.bak |
-| cClearUniqueID | 0, _1_ | 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge |
-| cOptimizeByFilestamp | _0_, 1 | 1=Optimize file regeneration depending on file timestamp.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
-| cCFG_File<br/>or oCFG | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path. |
-| | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation. |
+| cClearUniqueID | 0, _1_ | 0=Keep UniqueID in text files, 1=Clear Unique ID. Useful for Diff and Merge.<br/>This has precedence over the _ClearUniqueID_ setting. |
+| cOptimizeByFilestamp | _0_, 1 | 1=Optimize file regeneration depending on file timestamp.<br/>This has precedence over the _OptimizeByFilestamp_ setting.<br/><span style="background-color: gold;">Dangerous while working with branches!</span> |
+| cCFG_File<br/>or oCFG | filename | Indicates a CFG filename for not using the default on foxbin2prg directory or path.<br/>See [Configuration file(s)](./FoxBin2Prg_Settings.md) and [Multi config](./FoxBin2Prg_Settings.md#multi-configuration) for more information.   |
+| | object | An object containing configuration options to use. See [Internals](./FoxBin2Prg_Internals.md) for object creation.<br/>If this is set, no additional configuration file will be read. |
 
 #### cOutputFolder
 The procedural call of FoxBin2Prg like
@@ -105,4 +108,4 @@ Return value is 0=OK, 1=Error.
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2026/06/18_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
