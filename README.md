@@ -48,7 +48,7 @@ If you like to see Fernandos blog, or value his work:
 - [Changes](#changes)
   - [Changes to Configuration](#changes-to-settings)
 - [Limitations](#limitations)
-- [**Documentation**](#usage)
+- [**Documentation**](#documentation)
 - [**Helping with FoxBin2PRG / issues**](#helping-with-foxbin2prg--issues)
 - [Note](#note)
 
