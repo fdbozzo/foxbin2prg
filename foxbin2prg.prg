@@ -9697,6 +9697,10 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			Local toProject As CL_PROJECT Of 'FOXBIN2PRG.PRG'
 		#Endif
 
+		Local lcProjectName
+		lcProjectName = Forcepath( Evl(This.c_OriginalFileName, This.c_OutputFile), toProject._HomeDir)
+		lcProjectName = Upper( Forceext( lcProjectName, Justext( This.c_OutputFile ) ) ) + chr(0)
+
 		Insert Into TABLABIN ;
 			( Name ;
 			, Type ;
@@ -9718,7 +9722,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			, User ;
 			, Key ) ;
 			VALUES ;
-			( Upper( Forcepath( Evl(This.c_OriginalFileName,This.c_OutputFile), toProject._HomeDir) ) + Chr(0) ;
+			( lcProjectName ;
 			, 'H' ;
 			, 0 ;
 			, '<Source>' + Chr(0) ;
@@ -9731,7 +9735,7 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			, 260 ;
 			, toProject.getRowDeviceInfo() ;
 			, Lower(toProject._HomeDir) + Chr(0) ;
-			, Upper( Forcepath( Evl(This.c_OriginalFileName,This.c_OutputFile), toProject._HomeDir) ) + Chr(0) ;
+			, lcProjectName ;
 			, toProject._ServerHead.getRowServerInfo() ;
 			, toProject._SccData ;
 			, .T. ;
