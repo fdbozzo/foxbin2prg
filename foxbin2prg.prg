@@ -17401,7 +17401,8 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 
 				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<supexpr><![CDATA[" + toReg.supexpr + "]]>"
 				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<comment><![CDATA[" + toReg.Comment + "]]>"
-				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + toReg.User + "]]>"
+*-- 2026-10-22 oportorr: VFP 5-8 reports have no USER field; write an empty <user> tag for them
+				C_FB2PRG_CODE = C_FB2PRG_CODE + CR_LF + "	<user><![CDATA[" + Iif( Pemstatus( toReg, 'User', 5 ), toReg.User, '' ) + "]]>"
 
 				TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 				<<lc_TAG_REPORTE_F>>
@@ -19419,13 +19420,18 @@ Define Class c_conversor_frx_a_prg As c_conversor_bin_a_prg
 *LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 						toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
-						SET NOCPTRANS TO NAME,EXPR,STYLE,PICTURE,ORDER,COMMENT,TAG,TAG2,FONTFACE,SUPEXPR,USER
+*-- 2026-10-22 oportorr: reports made with VFP 5/6/7/8 have 74 fields, without USER (added in VFP 9).
+*-- SET NOCPTRANS ... USER failed with error 12 for them, before the format check below could run.
+						Local lcNoCPTrans
+						lcNoCPTrans	= 'NAME,EXPR,STYLE,PICTURE,ORDER,COMMENT,TAG,TAG2,FONTFACE,SUPEXPR' + Iif( Type('_TABLAORIG.USER') = 'U', '', ',USER' )
+						SET NOCPTRANS TO &lcNoCPTrans
 */LScheffler 20.08.2023
 						
 						This.updateProgressbar( 'Scanning FRX...', 1, 2, 1 )
 
 *-- Verificación de REPORTE VFP 9
-						If Fcount() < 75 Or Empty(Field("USER"))
+*-- 2026-10-22 oportorr: VFP 5-8 reports (74 fields, no USER) are accepted; the text file is always in VFP 9 format.
+						If Fcount() < 74
 *ERROR 'Report [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY REPORT ' + JUSTFNAME((.c_InputFile))
 							Error (Textmerge(loLang.C_REPORT_NOT_IN_VFP9_FORMAT_LOC))
 						Endif
