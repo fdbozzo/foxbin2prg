@@ -385,6 +385,7 @@ if you create a text file using your dbf filename and adding ".cfg".
 
 ## Excluding directories
 It is possible to exclude directory structures from processing. Placing a **.FoxBin2Prg_Ignore** file into a directory will stop FoxBin2Prg from processing any file in this directory and it's subdirectories. The file must just exist and could otherwise be empty.   
+Such a directory is not even scanned: its files and subdirectories are skipped while collecting the files to convert, so large ignored trees cost no time. The file is also recognised if it has the hidden attribute.   
 The difference to setting all *XXX_Conversion_Support to 0* is, that it could not be turned on again down the directory structure.
 
 This was set up to ignore the local GoFish_ settings and history folder, the file will be automatically created by GoFish starting with version 6.2.004.

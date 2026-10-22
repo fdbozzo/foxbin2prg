@@ -333,6 +333,7 @@
 * 18/06/2026	LScheffler	v1.21.05	Docu: Better documentation if a settings us ignored when a parameter is set. Voth in in docu and setting files generated via -Cc options.
 * 18/06/2026	LScheffler	v1.21.05	Docu: Some settings will not follow inheritence, documented in docu and setting files generated via -Cc options.
 * 18/06/2026	LScheffler	v1.21.05	Docu: Minor changes
+* 22/10/2026	NMarangon	v1.21.06	Bug Fix: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned. The directory and all subdirectories are skipped while collecting files, instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang). Hidden ".FoxBin2Prg_Ignore" files are recognised here too. (NMarangon)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6100,7 +6101,7 @@ Define Class c_foxbin2prg As Session
 		Lparameters tcDir, taFiles, tnFileCount
 		External Array taFiles
 
-		Local laFiles(1), I, lnFiles ;
+		Local laFiles(1), laDirInfo(1,5), I, lnFiles ;
 			, loLang As CL_LANG Of 'FOXBIN2PRG.PRG'
 
 		If Type("ALEN(laFiles)") # "N" Or Empty(tnFileCount)
@@ -6113,6 +6114,16 @@ Define Class c_foxbin2prg As Session
 		If Directory(tcDir)
 			With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 				loLang			= _Screen.o_FoxBin2Prg_Lang
+
+*!*	Changed by: NMarangon 22.10.2026
+*!*	change date="{^2026-10-22,12:00:00}"
+* a directory with .FoxBin2Prg_Ignore is not scanned, neither its files nor its subdirectories
+				If Adir( laDirInfo, tcDir + '.FoxBin2Prg_Ignore', 'H' ) = 1
+					.writeLog( C_TAB + tcDir + '.FoxBin2Prg_Ignore' + loLang.C_LOCKINGFOLDER_LOC )
+					Return
+				Endif &&Adir( laDirInfo, tcDir + '.FoxBin2Prg_Ignore', 'H' ) = 1
+*!*	/Changed by: NMarangon 22.10.2026
+
 				.updateProgressbar( loLang.C_SCANNING_FILE_AND_DIR_INFO_LOC + ' ' + tcDir + '...', 0, 0, 0 )
 				lnFiles = Adir( laFiles, tcDir + '*.*', 'D', 1)
 

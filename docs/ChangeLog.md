@@ -27,6 +27,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2026/10/22 | NMarangon | v1.21.06 | **Bug Fix**: Directories containing a `.FoxBin2Prg_Ignore` file are no longer scanned. The directory and all its subdirectories are skipped while collecting files, instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang). Hidden `.FoxBin2Prg_Ignore` files are recognised here too. (NMarangon) |
 | 2026/06/18 | LScheffler | [v1.21.05](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.05) | **Bug Fix**: Brute force fixed Datatype error for tcDontShowProgress, #114 (omirian) |
 | | | | **Bug Fix**: Fixed missing link SCM documentation, #116 (ToniKoehler) |
 | | | | **Bug Fix**: Fixed a problem that cDontShowProgress parameter will be ignored if ShowProgressbar property is used. #118 (LScheffler) |
