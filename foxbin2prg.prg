@@ -346,6 +346,10 @@
 * 22/06/2026	LScheffler	v1.21.06	Docu: Configuration now shows the related object properties
 * 22/06/2026	LScheffler	v1.21.06	Docu: API
 * 23/10/2026	LScheffler	v1.21.07	Bug Fix: Leftover Debugmessage  #133 (ToniKoehler)
+* 23/10/2026	NMarangon	v1.21.07	Bug Fix: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned.
+*											The directory and all subdirectories are skipped while collecting files,
+*											instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang).
+*											Hidden ".FoxBin2Prg_Ignore" files are recognised here too. (NMarangon)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -535,8 +539,8 @@
 * 19/06/2026	k-dawg66			Bug REPORT v1.21.05	Parameter name mismatch 'tcTableFlags' vs 'tcBinTableFlags'. #122
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Hard coded setting n_CheckFileInPath removed. #128 (LScheffler); from #119 (ccantrell72)
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Creating config without target fails. #130 (LScheffler)
-* 23/10/2026	ToniKoehler			Bug REPORT v1.21.06	Leftover Debugmessage  #133 (ToniKoehler)
-
+* 23/10/2026	LScheffler			Bug REPORT v1.21.06	Leftover Debugmessage  #133 (ToniKoehler)
+* 23/10/2026	NMarangon			Bug REPORT v1.21.06	Bug Fix: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned.  #134 (NMarangon)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6136,6 +6140,17 @@ Define Class c_foxbin2prg As Session
 		If Directory(tcDir)
 			With This As c_foxbin2prg Of 'FOXBIN2PRG.PRG'
 				loLang			= _Screen.o_FoxBin2Prg_Lang
+
+
+*!*	Changed by: NMarangon 23.10.2026
+*!*	change date="{^2026-10-23,12:00:00}"
+* a directory with .FoxBin2Prg_Ignore is not scanned, neither its files nor its subdirectories
+				If Adir( laFiles, tcDir + '.FoxBin2Prg_Ignore') = 1
+					.writeLog( C_TAB + tcDir + '.FoxBin2Prg_Ignore' + loLang.C_LOCKINGFOLDER_LOC )
+					RETURN
+				Endif &&Adir( laFiles, tcDir + '.FoxBin2Prg_Ignore) = 1
+*!*	/Changed by: NMarangon 23.10.2026
+
 				.updateProgressbar( loLang.C_SCANNING_FILE_AND_DIR_INFO_LOC + ' ' + tcDir + '...', 0, 0, 0 )
 				lnFiles = Adir( laFiles, tcDir + '*.*', 'D', 1)
 
