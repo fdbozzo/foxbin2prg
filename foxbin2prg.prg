@@ -346,10 +346,12 @@
 * 22/06/2026	LScheffler	v1.21.06	Docu: Configuration now shows the related object properties
 * 22/06/2026	LScheffler	v1.21.06	Docu: API
 * 23/10/2026	LScheffler	v1.21.07	Bug Fix: Leftover Debugmessage  #133 (ToniKoehler)
-* 23/10/2026	NMarangon	v1.21.07	Bug Fix: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned.
+* 23/10/2026	NMarangon	v1.21.07	Enhancement: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned.
 *											The directory and all subdirectories are skipped while collecting files,
 *											instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang).
-*											Hidden ".FoxBin2Prg_Ignore" files are recognised here too. (NMarangon)
+*											Hidden ".FoxBin2Prg_Ignore" files are recognised here too. (NMarangon https://github.com/fdbozzo/foxbin2prg/pull/134)
+* 23/10/2026	Oportorr	v1.21.07	Bug Fix: Reports with structure before VFP9 can not be converted, test fails (Oportorr https://github.com/fdbozzo/foxbin2prg/pull/135)
+
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -540,7 +542,7 @@
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Hard coded setting n_CheckFileInPath removed. #128 (LScheffler); from #119 (ccantrell72)
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Creating config without target fails. #130 (LScheffler)
 * 23/10/2026	LScheffler			Bug REPORT v1.21.06	Leftover Debugmessage  #133 (ToniKoehler)
-* 23/10/2026	NMarangon			Bug REPORT v1.21.06	Bug Fix: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned.  #134 (NMarangon)
+* 23/10/2026	Oportorr			Bug REPORT v1.21.06	Reports with structure before VFP9 can not be converted, test fails (Oportorr https://github.com/fdbozzo/foxbin2prg/pull/135)
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -6145,10 +6147,11 @@ Define Class c_foxbin2prg As Session
 *!*	Changed by: NMarangon 23.10.2026
 *!*	change date="{^2026-10-23,12:00:00}"
 * a directory with .FoxBin2Prg_Ignore is not scanned, neither its files nor its subdirectories
+* https://github.com/fdbozzo/foxbin2prg/pull/134
 				If Adir( laFiles, tcDir + '.FoxBin2Prg_Ignore') = 1
 					.writeLog( C_TAB + tcDir + '.FoxBin2Prg_Ignore' + loLang.C_LOCKINGFOLDER_LOC )
 					RETURN
-				Endif &&Adir( laFiles, tcDir + '.FoxBin2Prg_Ignore) = 1
+				Endif &&Adir( laFiles, tcDir + '.FoxBin2Prg_Igno) = 1
 *!*	/Changed by: NMarangon 23.10.2026
 
 				.updateProgressbar( loLang.C_SCANNING_FILE_AND_DIR_INFO_LOC + ' ' + tcDir + '...', 0, 0, 0 )
@@ -19508,6 +19511,17 @@ Define Class c_conversor_frx_a_prg As c_conversor_bin_a_prg
 
 						Use (.c_InputFile) Shared Again Noupdate Alias _TABLAORIG 
 						
+*LScheffler 23.10.2026
+*Test must be in fromnt of SET NOCPTRANS, or reports earlier then VFP9 will fail.
+*Moved up here (Oportorr https://github.com/fdbozzo/foxbin2prg/pull/135)
+*-- Verificación de REPORTE VFP 9
+						If Fcount() < 75 Or Empty(Field("USER"))
+*ERROR 'Report [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY REPORT ' + JUSTFNAME((.c_InputFile))
+							Error (Textmerge(loLang.C_REPORT_NOT_IN_VFP9_FORMAT_LOC))
+						Endif
+*/LScheffler 23.10.2026
+
+
 *LScheffler 20.08.2023
 *issue #96, including issue #95, [KestasL] keep CodePage relavant information for binary sources
 						toFoxBin2Prg.i_CPID = Cpdbf("_TABLAORIG")
@@ -19515,12 +19529,6 @@ Define Class c_conversor_frx_a_prg As c_conversor_bin_a_prg
 */LScheffler 20.08.2023
 						
 						This.updateProgressbar( 'Scanning FRX...', 1, 2, 1 )
-
-*-- Verificación de REPORTE VFP 9
-						If Fcount() < 75 Or Empty(Field("USER"))
-*ERROR 'Report [' + (.c_InputFile) + '] is NOT VFP 9 Format! - Please convert to VFP 9 with MODIFY REPORT ' + JUSTFNAME((.c_InputFile))
-							Error (Textmerge(loLang.C_REPORT_NOT_IN_VFP9_FORMAT_LOC))
-						Endif
 
 						C_FB2PRG_CODE	= C_FB2PRG_CODE + toFoxBin2Prg.get_PROGRAM_HEADER()
 
