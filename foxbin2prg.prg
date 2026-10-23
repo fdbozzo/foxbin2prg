@@ -345,6 +345,7 @@
 * 22/06/2026	LScheffler	v1.21.06	Docu: Better description of configuration, all configuration in one special file, better linked
 * 22/06/2026	LScheffler	v1.21.06	Docu: Configuration now shows the related object properties
 * 22/06/2026	LScheffler	v1.21.06	Docu: API
+* 23/10/2026	LScheffler	v1.21.07	Bug Fix: Leftover Debugmessage  #133 (ToniKoehler)
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *
 *---------------------------------------------------------------------------------------------------
@@ -534,6 +535,7 @@
 * 19/06/2026	k-dawg66			Bug REPORT v1.21.05	Parameter name mismatch 'tcTableFlags' vs 'tcBinTableFlags'. #122
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Hard coded setting n_CheckFileInPath removed. #128 (LScheffler); from #119 (ccantrell72)
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Creating config without target fails. #130 (LScheffler)
+* 23/10/2026	ToniKoehler			Bug REPORT v1.21.06	Leftover Debugmessage  #133 (ToniKoehler)
 
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
@@ -19262,7 +19264,7 @@ Define Class c_conversor_pjm_a_prg As c_conversor_bin_a_prg
 *-- Definir archivos del proyecto y metadata: CPID, Timestamp, ID, etc.
 						loProject.KeySort = 2
 
-messagebox('convert')
+*SF 20261023 Issue # 133 messagebox('convert')
 						For Each loReg In loProject &&FOXOBJECT
 							TEXT TO C_FB2PRG_CODE ADDITIVE TEXTMERGE NOSHOW FLAGS 1+2 PRETEXT 1+2
 							<<>>	.ADD('<<loReg.NAME>>')
