@@ -1,6 +1,6 @@
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.05
+*Version: v1.21.06
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
@@ -59,11 +59,14 @@
 *----------------------------------------------------------------------------------------------------------------
 
 *Setting for pjx files
-*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX.
 *                               && 0 Ignore. Default
 *                               && 1 Check and error out if file is not on same structure (for source control)
 *                               && 2 Create absolute path if file is on different drive.
 *                               && 3 Create absolute path if file is not in structure
+*                               && 4 like 1, but additional handler for UNC path.
+*                               && 5 like 2, but additional handler for UNC path.
+*                               && 6 like 3, but additional handler for UNC path.
 *----------------------------------------------------------------------------------------------------------------
 
 *Setting for container files (not pjx)

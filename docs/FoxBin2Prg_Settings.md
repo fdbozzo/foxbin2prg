@@ -52,18 +52,18 @@ in the settings object returned by get_DirSettings method of the API object. See
 | XXX_Conversion_Support | n | Defines the conversion operation per filetype |
 | | | For code:<br/> 0=No support,<br/>1=Generate _Text_ (Diff),<br/>2=Generate _Text_ and _Bin_ (Merge) |
 | | | For complex data:<br/> (PJX / DBC / DBF): 0=No support,<br/>1=Generate Header _Text_ only (Diff),<br/>2=Generate Header _Text_ and _Bin_ (Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff),<br/>8=Export and Import DATA (Merge/Structure & Data) |
-| PJX_Conversion_Support<br/>.n_PJX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional ((Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) and _bin_) support activated |
-| VCX_Conversion_Support<br/>.n_VCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| SCX_Conversion_Support<br/>.n_SCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| FRX_Conversion_Support<br/>.n_FRX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| LBX_Conversion_Support<br/>.n_LBX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| MNX_Conversion_Support<br/>.n_MNX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| DBC_Conversion_Support<br/>.n_DBC_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
-| DBF_Conversion_Support<br/>.n_DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated.<br/>The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!.<br/>A value of 4 is used to export Structure and Data, but exported data is not imported again.<br/>A value of 8 is used for bidirectional support (No General fields!). <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
-| FKY_Conversion_Support<br/>.n_FKY_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
-| MEM_Conversion_Support<br/>.n_MEM_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
+| PJX_Conversion_Support<br/>n_PJX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional ((Merge/Only Structure!),<br/>4=Generate _Text_ with DATA (Diff), 8=Export and Import DATA (Merge/Structure & Data) and _bin_) support activated |
+| VCX_Conversion_Support<br/>n_VCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
+| SCX_Conversion_Support<br/>n_SCX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
+| FRX_Conversion_Support<br/>n_FRX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
+| LBX_Conversion_Support<br/>n_LBX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
+| MNX_Conversion_Support<br/>n_MNX_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
+| DBC_Conversion_Support<br/>n_DBC_Conversion_Support | 0, 1, _2_ | Default value is 2 - Bidirectional (_Text_ and _bin_) support activated |
+| DBF_Conversion_Support<br/>n_DBF_Conversion_Support | 0, _1_, 2, 4, 8 | Default value is 1 - just _Text_ support activated.<br/>The support for regenerating DBFs structures (value = 2) are disabled by default to not overrite data accidentally. When activating bidirectional support, keep in mind that Data is not restored, just the structure and indexes!.<br/>A value of 4 is used to export Structure and Data, but exported data is not imported again.<br/>A value of 8 is used for bidirectional support (No General fields!). <br/> **Note:** This can be [changed per table](#configuration-file-per-table). |
+| FKY_Conversion_Support<br/>n_FKY_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
+| MEM_Conversion_Support<br/>n_MEM_Conversion_Support | 0, _1_ | Default value is 1 - _Text_ support activated |
 |||
-| CheckFileInPath<br/>n_CheckFileInPath | _0_, 1, 2, 3 |Determines how 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.<br />0 = Ignore. Default<br />1 = Check and error out if file is not on same structure (for source control)<br />2 = Create absolute path if file is on different drive.<br />3 = Create absolute path if file is not in structure<br />See [Storing paths for pjx](./FoxBin2Prg_Internals.md#storing-paths-for-pjx) |
+| CheckFileInPath<br/>n_CheckFileInPath | _0_, 1, 2, 3, 4, 5 | Determines how 2Txt deals with files not in the subfolders of the PJX.<br />0 = Ignore. Default<br />1 = Check and error out if file is not on same structure (for source control)<br />2 = Create absolute path if file is on different drive.<br />3 = Create absolute path if file is not in structure.<br />4 is like 1, just with additional handling UNC paths.<br />5 is like 2, just with additional handling UNC paths.<br />6 is like 3, just with additional handling UNC paths.<br />See [Storing paths for pjx](./FoxBin2Prg_Internals.md#storing-paths-for-pjx) |
 |||
 | UseClassPerFile<br/>n_UseClassPerFile | _0_, 1, 2 | 0=One library _Text_ file,<br/>1=Multiple file.class.vc2 files,<br/>2=Multiple file.baseclass.class.vc2 files<br/>See [Create Class-Per-File](./FoxBin2Prg_Internals.md#create-class-per-file) |
 | [RedirectClassPerFileToMain:](./FoxBin2Prg_Internals.md#redirectclassperfiletomain:)<br/>l_RedirectClassPerFileToMain | _0_, 1 | 0=Don't redirect to file.vcx,<br/>1=Redirect to file.vcx when selecting file.class.vc2<br/>RedirectClassType: 1 precedes this setting |
@@ -167,7 +167,7 @@ DO FOXBIN2PRG.PRG WITH "-c","template.cfg"    &&==> Generates a template for Fox
 ```
 *################################################################################################################
 *FOXBIN2PRG.CFG configuration options: (If no values given, these are the DEFAULTS)
-*Version: v1.21.05
+*Version: v1.21.06
 *****************************************************************************************************************
 
 * Note, configuration files will follow an inheritance.
@@ -226,11 +226,14 @@ DO FOXBIN2PRG.PRG WITH "-c","template.cfg"    &&==> Generates a template for Fox
 *----------------------------------------------------------------------------------------------------------------
 
 *Setting for pjx files
-*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX. No handler for UNC paths.
+*CheckFileInPath: 0             && Determines 2Txt deals with files not in the subfolders of the PJX.
 *                               && 0 Ignore. Default
 *                               && 1 Check and error out if file is not on same structure (for source control)
 *                               && 2 Create absolute path if file is on different drive.
 *                               && 3 Create absolute path if file is not in structure
+*                               && 4 like 1, but additional handler for UNC path.
+*                               && 5 like 2, but additional handler for UNC path.
+*                               && 6 like 3, but additional handler for UNC path.
 *----------------------------------------------------------------------------------------------------------------
 
 *Setting for container files (not pjx)
@@ -387,6 +390,8 @@ if you create a text file using your dbf filename and adding ".cfg".
 It is possible to exclude directory structures from processing. Placing a **.FoxBin2Prg_Ignore** file into a directory will stop FoxBin2Prg from processing any file in this directory and it's subdirectories. The file must just exist and could otherwise be empty.   
 The difference to setting all *XXX_Conversion_Support to 0* is, that it could not be turned on again down the directory structure.
 
+Such a directory is not even scanned: its files and subdirectories are skipped while collecting the files to convert, so large ignored trees cost no time.
+
 This was set up to ignore the local GoFish_ settings and history folder, the file will be automatically created by GoFish starting with version 6.2.004.
 
 ----
@@ -394,4 +399,4 @@ This was set up to ignore the local GoFish_ settings and history folder, the fil
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/10/23_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

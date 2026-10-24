@@ -67,6 +67,7 @@ The file is in the test suit and is intended to create an error for testing purp
 9. If a change to the config files is made, please add the description to the various properties (multi lang)
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_cfg:_ for general settings
    - _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_tab_cfg:_ for settings per table
+   - Alter document *FoxBin2Prg_Settings.md* in the docs folder. This rework the settings table<br/>Create a template using `DO FOXBIN2PRG.PRG WITH '-c','FoxBin.cfg'` and replace the example.
 10. If a change to the parameters is made, change _C_FOXBIN2PRG_SYNTAX_INFO_EXAMPLE_LOC_ properties.
 11. For changed functionality, add descriptive text on the appropriate _.md_ file in _docs_ folder.
 12. Please alter the footer of \*.md files touched to recent date.

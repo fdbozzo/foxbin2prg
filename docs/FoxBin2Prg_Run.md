@@ -38,8 +38,8 @@ For settings see [Configuration](./FoxBin2Prg_Settings.md), for API and other re
 ## Differences on excecution
 ### EXE
 The exe contains the most controling structures and the program itself.
-Alongside the _FoxBin2Prg.exe_ must be _\_FileName\_Caps.exe_.  
-It is recomended to have a general _FoxBin2Prg.cfg_ configuration file in the folder with the EXE, but it will run without.
+Alongside the _FoxBin2Prg.exe_ must be _\_FileName\_Caps.exe_ .
+It is recomended to have a general _FoxBin2Prg.cfg_ configuration file in the folder with the EXE, but it will run without.   
 See [Configuration](./FoxBin2Prg_Settings.md) for information about settings.   
 
 Remember, the exe(s) needs to be created first, and they must be compiled with the version of VFP you use, for example VFPA.
@@ -125,7 +125,7 @@ The filename is an external variable parameter received when SendingTo FoxBin2Pr
 | -C (C) | creates a config-file _cOutputFile_ ( like FOXBIN2PRG.CFG ) with the recent options used on the path of cOutputFile |
 | | If _cOutputFile_ is empty, a file FOXBIN2PRG.\_CFG will be created in default foder. | 
 | -t (t) | creates a template table-config-file _cOutputFile_ ( like \_TableName\_.dbf.cfg ) |
-| cOutputFile | config file to create<br/>**Note: if empty it creates *and overwrite* FOXBIN2PRG.CFG or the table config file in default folder.** |
+| cOutputFile | config file to create.<br/>If omited, for the -cC option 'FoxBin2PRG._cfg', for the -t option Dbf() + '._cfg' |
 | cCFG_File | Indicates a special *input* CFG filename for default values<br/> **Note, if the "regular" config files are used or not, is controlled by the setting *AllowInheritance* in *this* file.**<br/>See [Configuration](./FoxBin2Prg_Settings.md) | 
 | cDebug | '1' for generating process LOGs, stop on errors<br/>This has precedence over any value in the config files. | 
 
@@ -194,4 +194,4 @@ FoxBin2Prg.lnk                <path>\foxbin2prg.exe "INTERACTIVE-SHOWMSG"
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/22_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)

@@ -1,5 +1,5 @@
 # FoxBin2Prg
-## Version 1.21.05
+## Version 1.21.06
 **Binary/Text Converting program for Microsoft Visual FoxPro**
 
 ## Lutz Scheffler
@@ -46,7 +46,7 @@ If you like to see Fernandos blog, or value his work:
 - [FINAL NOTE](#final-note)
 - [LICENCE](#licence)
 - [Changes](#changes)
-  - [Changes to Configuration](#changes-to-settings)
+  - [Changes to Configuration](#changes-to-configuration)
 - [Limitations](#limitations)
 - [**Documentation**](#documentation)
 - [**Helping with FoxBin2PRG / issues**](#helping-with-foxbin2prg--issues)
@@ -162,7 +162,7 @@ DO FOXBIN2PRG.PRG WITH "-c","template.cfg"      ==> Generates a template for Fox
 DO FOXBIN2PRG.PRG WITH "-C","template.cfg"      ==> Generates a template for FoxBin2Prg.cfg config file with active settings
 DO FOXBIN2PRG.PRG WITH "-t","template.dbf.cfg"  ==> Generates a template for table.dbf.cfg per table config file with newest settings
 ```
-See [Configuration](./FoxBin2Prg_Settings.md) for more information about configuration file(s).
+See [Configuration](./docs/FoxBin2Prg_Settings.md) for more information about configuration file(s).
 
 ----
 ## Limitations
@@ -189,4 +189,4 @@ If you like to see Fernando's blog, or value his work:
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
 ----
-Last changed: _2026/06/21_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/22_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)

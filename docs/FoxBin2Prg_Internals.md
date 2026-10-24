@@ -17,8 +17,8 @@ As far as possible these are the original documents. Changes are added where fun
    - [Configuration per table](#configuration-per-table)
    - [Parameters](#parameters)
    - [ZOrder](#zorder)
-     - [RemoveZOrderSetFromProps setting](#removezordersetfromprops-setting)
-     - [VFP ZOrder bug and fix](#vfp-zorder-bug-and-fix)
+      - [RemoveZOrderSetFromProps setting](#removezordersetfromprops-setting)
+      - [VFP ZOrder bug and fix](#vfp-zorder-bug-and-fix)
    - [DBC ordered fields](#dbc-ordered-fields)
    - [PAM Section](#pam-section)
    - [Property Ordering](#property-ordering)
@@ -311,22 +311,40 @@ Debug messages are translated (+90% of debug messages), but capitalization proce
 and are available just in Spanish (-10% of debug messages).
 
 ### Storing paths for pjx
-The project is basicaly designed to deal with a file structure where all files of a PJX
+The project is basically designed to deal with a file structure where all files of a PJX
 are on the same folder or within the subfolders of the PJX.
 This looks like the most usefull way when using source control systems.
 Any way, some prefer to spread there files over different drives.
 In default mode, this will fail on recreating the PJX.
-The default is kept because it's the fastest way, and recreating projects on forks or different comps might break the drives.   
+The default is kept because it's the fastest way.   
 If files must be stored outside the structure,
-an option allows to store absolute paths for files not in the folder structure **only* in pj2 file.
+an option allows to store absolute paths for files not in the folder structure **only** in pj2 file.
 To configure this, starting with v1.19.78, you might enable it in foxbin2prg.cfg file:   
 ````
 *CheckFileInPath: && 0 = Ignore. Default, 1 = Check and error out if file is not on same structure (for source control), 2 = Create absolute path if file is on different drive.,3 = Create absolute path if file is not in structure
 ````
-- 0 - the way FoxBin2Prg works all the time
-- 1 - only testing. The process will stop if a file is not in the structure expected
-- 2 - Use an absolute path do store file location in pjx if the file is stored on a different drive.
-- 3 - Use an absolute path do store file location in pjx if the file is stored on a different drive or not in the folder structure but on same drive.
+- 0 - The way FoxBin2Prg works all the time
+- 1 - Only testing. The process will stop if a file is not in the structure expected
+- 2 - Use an absolute path to store file location in PJX if the file is stored on a different drive.
+- 3 - Use an absolute path to store file location in PJX if the file is stored on a different drive or not in the folder structure but on same drive.
+- 4 - Only testing. The process will stop if a file is not in the structure expected, with UNC path.
+- 5 - Use an absolute path to store file location in PJX if the file is stored on a different drive or UNC path.
+- 6 - Use an absolute path to store file location in PJX if the file is stored on a different drive or UNC path or not in the folder structure but on same drive.
+
+Option 1 is intended to test pj2 to make it usable for DVCS tools like git where one expect to get all the files in one structure. There are examples known where to pjx is in a subfolder of the "root" of a repository pointing through the "root".  
+Option 2, 3, 5 and 6 is not run for any file, it's mainly for the _Main program_, the _Icon_, files with an comment or excluded files, as well as '.h '.FPW' files wich need special treatment to be added as text files.
+
+### Some insights
+The whole problem is because of the PJX is not simply stored as table. It is stored in such a fashion that the result is a file that could be used either with compare tools, file history or, with some care, to edit. For that, the files in the PJX are stored just like they are in the name field of the PJX. The problem comes for special attributes of some of these files and for some special files.  
+Inside the PJX file, the files are mostly stored relative to the PJX. There is a _HomeDir_ property on the PJX (to edit via the project info form) that should give the start point for the placement of the files, but it seems to be ignored and the path of the PJX is used.   
+This is, files in the name field are stored like 'xyz.prg' or 'code\xyz.prg' or '..\foreigncode\xyz.prg'. Files on other _drives_ or _UNC paths_ are stored fully qualified.
+
+Add source files from PJ2 to PJX is simple. The problem comes for the _project icon_ and files with additional information like _main program, excluded, comment_ and to put '.h '.FPW' files into the text range preventing them to be compiled. To add this information to the project, a fully qualified file name is mandatory. The quick and dirty way `CheckFileInPath=0` works, is to create a string that will add the current directory to the file name used in the name field of the PJX. Works like an charm - as long as a file is not on an different drive or UNC path. (We remember, this is stored as fully qualified path to name field ...) So the result, for example for exclude would look like `.ITEM(lcCurdir + '\\Server\source\frame.h').Exclude = .T.`. lcCurdir is the current folder of the PJX, the result is nonsense and frame.h will silently not be excluded. This is bloat to the exe, but the same will happen to the _main program_ and this is major.  
+
+Fastest is 0, 1 and 4 are slow because it process any file, while 4, 5, 6. need additional processing for the UNC paths.
+
+**Note: Option 2, 3, 5 and 6 will not be suitable for projects shared with anybody. Option 0 will work, if all files are within the PJX directory structure, or somehow to be retrieved as one.**
+
 ### Create Class-Per-File
 Starting at v1.19.37 you can configure FoxBin2Prg to generate one class per file using TwoFox naming style "basefile.class.vc2"
 with the value "1"
@@ -612,4 +630,4 @@ See [FoxBin2Prg and use with git](./FoxBin2Prg_git.md)
 This project is part of [VFPX](https://vfpx.github.io/).    
 
 ----
-Last changed: _2026/06/21_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/06/22_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
