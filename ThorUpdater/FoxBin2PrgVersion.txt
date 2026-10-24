@@ -3,8 +3,8 @@ lparameters toUpdateObject
 * Set the properties of the passed updater object.
 
 with toUpdateObject
-	.VersionNumber    = '1.21.05 - 20260618'
-	.AvailableVersion = 'FoxBin2PRG-1.21.05-update-20260618'
+	.VersionNumber    = '1.21.06 - 20261024'
+	.AvailableVersion = 'FoxBin2PRG-1.21.06-update-20261024'
 	.Notes            = GetNotes()
     .RegisterWithThor = GetRegisterWithThor()
 endwith
@@ -63,4 +63,4 @@ text to lcCommand noshow
 endtext
 return lcCommand
 
-*created by VFPX Deployment, 18.06.2026 19:36:46
+*created by VFPX Deployment, 24.10.2026 17:38:41
