@@ -16619,7 +16619,7 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 *--		1.Bloque de código del método en su posición original
 		Try
 				Local lnLineCount, laLine(1), I, lnTextNodes, tcSorted, lnProtectedLine, lcMethod, lnLine_Len, lcLine, llProcOpen ;
-					, laLineasExclusion(1), lnBloquesExclusion, lcLastLine ;
+					, laLineasExclusion(1), lnBloquesExclusion, lcLastLine, lcProcType ;
 					, loEx As Exception
 
 				If Not Empty(m.tcMethod) And Left(m.tcMethod,9) == "ENDPROC"+Chr(13)+Chr(10)
@@ -16787,37 +16787,40 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 
 							Endcase
 						Endfor
-
-*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
-						For I = 1 To tnPropsAndComments_Count
-							lcMethod	= Chrtran( taPropsAndComments(m.I,1), '*', '' )
-							If Left( taPropsAndComments(m.I,1), 1 ) == '*' And Ascan( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
-								tnMethodCount	= tnMethodCount + 1
-								Dimension taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
-								taMethods(tnMethodCount, 1)	= lcMethod
-								taMethods(tnMethodCount, 2)	= 0
-
-								lnProtectedLine	= Ascan( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
-
-								If lnProtectedLine = 0 Then
-									If tnProtected_Count = 0
-										lnProtectedLine	= 0
-									Else
-										lnProtectedLine	= Ascan( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
-									Endif
-
-									If lnProtectedLine = 0 Then
-										taMethods(tnMethodCount, 3)	= ''
-									Else
-										taMethods(tnMethodCount, 3)	= 'HIDDEN '
-									Endif
-								Else
-									taMethods(tnMethodCount, 3)	= 'PROTECTED '
-								Endif
-							Endif
-						Endfor
 					Endwith && THIS AS c_conversor_bin_a_prg OF 'FOXBIN2PRG.PRG'
 				Endif
+
+*-- Agrego los métodos definidos, pero sin código (Protected/Reserved3)
+*-- Only PROTECTED and HIDDEN methods: their visibility is only kept in the PROCEDURE line.
+*-- A public method without code is fully described by its *m: line in <DefinedPropArrayMethod>.
+*-- Also when the methods memo is empty, otherwise the visibility is lost on the way back to the binary.
+				For I = 1 To tnPropsAndComments_Count
+					lcMethod	= Chrtran( taPropsAndComments(m.I,1), '*', '' )
+					If Left( taPropsAndComments(m.I,1), 1 ) == '*' And Ascan( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
+						lcProcType	= ''
+						lnProtectedLine	= Ascan( taProtected, lcMethod, 1, 0, 1, 1+2+4+8 )
+
+						If lnProtectedLine = 0 Then
+							If tnProtected_Count > 0
+								lnProtectedLine	= Ascan( taProtected, lcMethod + '^', 1, 0, 1, 1+2+4+8 )
+							Endif
+
+							If lnProtectedLine > 0 Then
+								lcProcType	= 'HIDDEN '
+							Endif
+						Else
+							lcProcType	= 'PROTECTED '
+						Endif
+
+						If Not Empty(lcProcType)
+							tnMethodCount	= tnMethodCount + 1
+							Dimension taMethods(tnMethodCount, 3) &&, taCode(tnMethodCount)
+							taMethods(tnMethodCount, 1)	= lcMethod
+							taMethods(tnMethodCount, 2)	= 0
+							taMethods(tnMethodCount, 3)	= lcProcType
+						Endif
+					Endif
+				Endfor
 
 			Catch To loEx
 				If This.n_Debug > 0 And _vfp.StartMode = 0
