@@ -1,8 +1,20 @@
 # How to contribute to FoxBin2Prg
 
-## Bug report?
-- Please check  [issues](https://github.com/fdbozzo/foxbin2prg/issues) if the bug is reported
-- If you're unable to find an open issue addressing the problem, open a new one. Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
+## Table of contents
+- [Bug report](#bug-report)
+- [Feature request](#feature-request)
+- [You just created a patch](#you-just-created-a-patch)
+- [Coding conventions](#coding-conventions)
+- [New version](#new-version)
+- [Thor conventions](#thor-conventions)
+  - [Using VFPXDeployment](#using-vfpxdeployment)
+  - [Without VFPXDeployment](#without-vfpxdeployment)
+
+## Bug report
+- Please check [issues](https://github.com/fdbozzo/foxbin2prg/issues) if the bug is reported.
+- If you're unable to find an open issue addressing the problem, open a new one.
+  - Use the _Bug report_ template.
+  - Be sure to include a title and clear description, as much relevant information as possible, and a code sample or an executable test case demonstrating the expected behavior that is not occurring.
 - Please add your current configuration creating a config file via   
 ```
 CD 'path-to-source'
@@ -10,11 +22,22 @@ DO FOXBIN2PRG.PRG WITH '-C','FoxBin.cfg'
 ```   
 **Do not include your normal config**
 
-### Did you write a patch that fixes a bug?
-- Open a new GitHub merge request with the patch.
-- Ensure the PR description clearly describes the problem and solution.
-  - Include the relevant version number if applicable.
+- If you solved the problem yourself, follow the points listed below.
+
+## Feature request
+- Please check [issues](https://github.com/fdbozzo/foxbin2prg/issues) first.
+- If found, participate or create a new issue. Use the _Feature request_ template. 
+- If you created code, follow the points listed below.
+
+## You just created a patch
+- **Create an [issue](https://github.com/fdbozzo/foxbin2prg/issues).**
+  - Mention if you solved the issue or are working on it.
 - See [New version](#new-version) for additional tasks
+- Open a new GitHub pull request with the patch.
+  - Create the pull request to the **from_forks**, not to master branch.
+  - Ensure the PR description clearly describes the problem and solution.
+    - Include the relevant version number if applicable.
+    - Include the number(s) of the issue like #112 this pull request adreses.
 
 ## Coding conventions
 Start reading our code and you'll get the hang of it. We optimize for readability:
@@ -126,4 +149,4 @@ In special:
 Thanks
 
 ----
-Last changed: _2026/06/18_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/11/13_ ![Picture](../docs/pictures/vfpxpoweredby_alternative.gif)
