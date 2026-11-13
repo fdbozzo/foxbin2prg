@@ -34,6 +34,7 @@ If you like to see Fernandos blog, or value his work:
 ----
 ## Table of contents
 - [Contribution](#contribution)
+  - [Bugs](#contribution)
 - [What is FOXBIN2PRG](#what-is-foxbin2prg)
   - [Advantages](#advantages)
 - [Examples](#examples)
@@ -54,7 +55,7 @@ If you like to see Fernandos blog, or value his work:
 
 ----
 ## Contribution
-See [contribution](./.github/CONTRIBUTING.md)
+For contribution or **bug reporting** see [contribution](./.github/CONTRIBUTING.md).
 
 ---
 ## What is FOXBIN2PRG?
@@ -189,4 +190,4 @@ If you like to see Fernando's blog, or value his work:
 - [![DONATE!](http://www.pngall.com/wp-content/uploads/2016/05/PayPal-Donate-Button-PNG-File-180x100.png)](https://www.paypal.com/cgi-bin/webscr?cmd=_donations&amp;business=fdbozzo%40gmail%2ecom&amp;lc=ES&amp;item_name=FoxBin2Prg&amp;item_number=FoxBin2Prg&amp;currency_code=USD&amp;bn=PP%2dDonationsBF%3abtn_donateCC_LG%2egif%3aNonHosted) 
 
 ----
-Last changed: _2026/06/22_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/11/13_ ![Picture](./docs/pictures/vfpxpoweredby_alternative.gif)
