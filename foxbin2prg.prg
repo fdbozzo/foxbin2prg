@@ -1,5 +1,5 @@
 #DEFINE	DN_FB2PRG_VERSION		1.21
-#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.06'
+#DEFINE	DC_FB2PRG_VERSION_REAL	'1.21.07'
 
 *---------------------------------------------------------------------------------------------------
 * Module.........: FOXBIN2PRG.PRG - FOR VISUAL FOXPRO 9.0
@@ -351,6 +351,7 @@
 *											instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang).
 *											Hidden ".FoxBin2Prg_Ignore" files are recognised here too. (NMarangon https://github.com/fdbozzo/foxbin2prg/pull/134)
 * 23/10/2026	Oportorr	v1.21.06	Bug Fix: Reports with structure before VFP9 can not be converted, test fails (Oportorr https://github.com/fdbozzo/foxbin2prg/pull/135)
+* 02/10/2026	LScheffler	v1.21.07	Bug Fix: Losing PROTECTED and HIDDEN attribute on empty custom methods (ToniKoehler https://github.com/fdbozzo/foxbin2prg/pull/137)
 * 13/11/2026	LScheffler	v1.21.07	Enhancement: New EXE icon (ToniKoehler)
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
@@ -544,6 +545,8 @@
 * 22/06/2026	LScheffler			Bug REPORT v1.21.05	Creating config without target fails. #130 (LScheffler)
 * 23/10/2026	LScheffler			Bug REPORT v1.21.05 Leftover Debugmessage  #133 (ToniKoehler)
 * 23/10/2026	Oportorr			Bug REPORT v1.21.05	Reports with structure before VFP9 can not be converted, test fails (Oportorr https://github.com/fdbozzo/foxbin2prg/pull/135)
+* 02/10/2026	LScheffler			Bug REPORT v1.21.06Losing PROTECTED and HIDDEN attribute on empty custom methods (ToniKoehler https://github.com/fdbozzo/foxbin2prg/pull/137)
+
 * </TESTEO Y REPORTE DE BUGS (AGRADECIMIENTOS)>
 *
 *---------------------------------------------------------------------------------------------------
@@ -16795,6 +16798,7 @@ Define Class c_conversor_bin_a_prg As c_conversor_base
 *-- Only PROTECTED and HIDDEN methods: their visibility is only kept in the PROCEDURE line.
 *-- A public method without code is fully described by its *m: line in <DefinedPropArrayMethod>.
 *-- Also when the methods memo is empty, otherwise the visibility is lost on the way back to the binary.
+* (ToniKoehler 2026/11/02)
 				For I = 1 To tnPropsAndComments_Count
 					lcMethod	= Chrtran( taPropsAndComments(m.I,1), '*', '' )
 					If Left( taPropsAndComments(m.I,1), 1 ) == '*' And Ascan( taMethods, lcMethod, 1, 0, 1, 1+2+4+8 ) = 0
