@@ -351,6 +351,7 @@
 *											instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang).
 *											Hidden ".FoxBin2Prg_Ignore" files are recognised here too. (NMarangon https://github.com/fdbozzo/foxbin2prg/pull/134)
 * 23/10/2026	Oportorr	v1.21.06	Bug Fix: Reports with structure before VFP9 can not be converted, test fails (Oportorr https://github.com/fdbozzo/foxbin2prg/pull/135)
+* 13/11/2026	LScheffler	v1.21.07	Enhancement: New EXE icon (ToniKoehler)
 
 * </HISTORIAL DE CAMBIOS Y NOTAS IMPORTANTES>
 *

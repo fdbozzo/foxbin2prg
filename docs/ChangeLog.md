@@ -27,6 +27,7 @@ _**Note:** you can click on the version number for downloading this version from
 
 | Rel.Date | Developer | Version | Details |
 | - | - | - | - |
+| 2026/11/13 | LScheffler | [v1.21.07](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.07) | **Enhancement**: New modern icon.<br/>https://github.com/fdbozzo/foxbin2prg/pull/138 (ToniKoehler) |
 | 2026/10/24 | LScheffler | [v1.21.06](https://github.com/fdbozzo/foxbin2prg/releases/tag/v1.21.06) | **Bug Fix**: Leftover Debugmessage  #133 (ToniKoehler) |
 | | | | **Bug Fix**: Bug Fix: Reports with structure before VFP9 can not be converted, test fails https://github.com/fdbozzo/foxbin2prg/pull/135 (Oportorr) |
 | | | | **Enhancement**: Directories containing ".FoxBin2Prg_Ignore" are no longer scanned.<br/>The directory and all its subdirectories are skipped while collecting files,<br/>instead of collecting every file and discarding it later (slow on large ignored trees, progressbar seemed to hang).<br/>https://github.com/fdbozzo/foxbin2prg/pull/134 (NMarangon) |
@@ -473,4 +474,4 @@ _**Note:** you can click on the version number for downloading this version from
 This project is part of [VFPX](https://vfpx.github.io/).   
 
 ----
-Last changed: _2026/10/24_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
+Last changed: _2026/11/13_ ![Picture](./pictures/vfpxpoweredby_alternative.gif)
