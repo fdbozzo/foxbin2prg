@@ -10273,6 +10273,12 @@ Define Class c_conversor_prg_a_bin As c_conversor_base
 			loProcedure	= .Null.
 			loProcedure	= toObjeto._Procedures(m.I)
 
+*-- PROCEDURE and ENDPROC without a line in between are dropped, as in classMethods2Memo.
+*-- Otherwise an empty method of a member object would override the code of its class.
+			If loProcedure._ProcLine_Count = 0 Then
+				Loop
+			Endif
+
 			TEXT TO lcMemo ADDITIVE TEXTMERGE NOSHOW FLAGS 1 PRETEXT 1+2
 				<<C_PROCEDURE>> <<loProcedure._Nombre>>
 			ENDTEXT
